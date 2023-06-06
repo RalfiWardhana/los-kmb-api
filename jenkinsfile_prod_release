@@ -1,0 +1,158 @@
+node {
+    dir ("${env.BUILD_ID}") {
+	    def APP_REPO_URL = "https://github.com/KB-FMF/los-kmb-api.git"
+        def APP_REPO_DEVOPS = "https://github.com/KB-FMF/los-devops.git"
+	    def CREDENTIAL_ID = "kjsbfjwehfm-kdsfb325jkbdfj-oij2358u2395"
+        def APP_NAME = "los-kmb-api"
+        def USER_CRED = "jenkins"
+        def CONFIG_TEMP = "./temp/prod/config-los-new/los-kmb-api"
+        def TEMPORARY = "/opt/go/src"
+        def DESTINATION_SERVER = "10.0.0.156"
+        def DESTINATION_SERVER_1 = "10.0.0.217"
+        def PORT = "22"
+        def DESTINATION_TEMP = "/opt/temp"
+        def DESTINATION_APPS = "/opt/go/src"
+        
+            checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[
+			credentialsId: "${CREDENTIAL_ID}", 
+		  	url: "${APP_REPO_URL}"]], 
+		  	//branches: [[name: "*/master"]
+		  	branches: [[name: "refs/tags/${tag}"]
+		]]     
+
+        env.TAG_NUMBER = "${tag}"  
+
+            currentBuild.displayName="#${BUILD_NUMBER}, ${JOB_NAME}, ${env.TAG_NUMBER}"
+            try {
+               notifyBuild('STARTED', APP_NAME, env.TAG_NUMBER)
+
+               stage ('Git Checkout') {
+                    echo 'Git Checkout'
+                    dir("temp"){
+                        checkout scm: [$class: 'GitSCM', userRemoteConfigs: [[
+                        credentialsId: "${CREDENTIAL_ID}", 
+                        url: "${APP_REPO_DEVOPS}"]], 
+                        branches: [[name: "*/master"]
+                      ]] 
+                   }   
+               }
+                stage ('Build') {
+                    echo 'Build'
+                    build(CONFIG_TEMP, APP_NAME, TEMPORARY)    
+                }
+
+                stage ('Deploy') {
+                    echo 'Deploy'
+                    deployToRemote(APP_NAME, USER_CRED, DESTINATION_SERVER, PORT, TEMPORARY, DESTINATION_TEMP, DESTINATION_APPS )
+                    deployToRemote(APP_NAME, USER_CRED, DESTINATION_SERVER_1, PORT, TEMPORARY, DESTINATION_TEMP, DESTINATION_APPS )  
+                }
+
+                stage ('Restart Service') {
+                    echo 'Restart service'
+                    restartService(USER_CRED, DESTINATION_SERVER, PORT, APP_NAME)
+                    restartService(USER_CRED, DESTINATION_SERVER_1, PORT, APP_NAME)  
+                }
+
+                stage ('Clean') {
+                    echo 'Clean'
+                    clean(TEMPORARY, APP_NAME)
+                }
+                    
+            }   catch (e) {
+            // If there was an exception thrown, the build failed
+            currentBuild.result = "FAILED"
+            throw e
+        } finally {
+            // Success or failure, always send notifications
+            notifyBuild(currentBuild.result, APP_NAME, env.TAG_NUMBER)
+            cleanWs()
+        }
+
+       
+    } //dir
+} //node
+
+def build(String ConfigTemp, String AppName, String Temporary) {
+    withEnv(["GOROOT=/usr/local/go", "PATH+GO=/usr/local/go/bin"]) {
+	echo "Build"
+
+		sh """
+			#!/bin/bash
+            cd ${WORKSPACE}/${BUILD_ID} && mkdir conf
+            cp ${ConfigTemp}/prod.env ${WORKSPACE}/${BUILD_ID}/conf/config.env
+		    chmod 755 ${WORKSPACE}/${BUILD_ID}/temp/shell/appVersionDevConf.sh && cd ${WORKSPACE}/${BUILD_ID}/temp/shell/ && ./appVersionDevConf.sh
+            cd ${WORKSPACE}/${BUILD_ID} && rm -rf temp*
+            cp -a ./* ${Temporary}/${AppName}/
+            cd ${Temporary}/${AppName}/ && go mod vendor
+            cd ${Temporary}/${AppName}/app/ && go build -o ${Temporary}/${AppName}/${AppName}
+            cd ${Temporary} && tar -czf ${AppName}.tar.gz ./${AppName}
+		"""
+    }
+}
+
+
+def deployToRemote(String AppName, String UserCred, String DestinationServer, String Port, String Temporary, String DestinationTemp, String DestinationApps) {
+	echo "Deploy to ${DestinationServer}"
+
+	sh """
+		#!/bin/bash
+        ssh ${UserCred}@${DestinationServer} -p ${Port} 'hostname'
+        scp -P ${Port} ${Temporary}/${AppName}.tar.gz ${UserCred}@${DestinationServer}:${DestinationTemp}
+        ssh ${UserCred}@${DestinationServer} -p ${Port} 'cd ${DestinationApps}/ && sudo rm -rf ./${AppName}/*'
+        ssh ${UserCred}@${DestinationServer} -p ${Port} 'sudo tar -xzf ${DestinationTemp}/${AppName}.tar.gz -C ${DestinationApps}'
+        ssh ${UserCred}@${DestinationServer} -p ${Port} 'sudo chown -R los-admin:los-admin ${DestinationApps}/${AppName}/'
+        ssh ${UserCred}@${DestinationServer} -p ${Port} 'sudo rm -rf ${DestinationTemp}/${AppName}.tar.gz'
+	"""
+}
+
+def restartService(String UserCred, String DestinationServer, String Port, String AppName) {
+	echo "restartService"
+
+	sh """
+		#!/bin/bash
+        ssh ${UserCred}@${DestinationServer} -p ${Port} 'sudo systemctl stop ${AppName}'
+        ssh ${UserCred}@${DestinationServer} -p ${Port} 'sudo systemctl start ${AppName}'
+	"""
+}
+
+def clean(String Temporary, String AppName) {
+	echo "clean"
+
+	sh """
+		#!/bin/bash
+        cd ${Temporary} && sudo rm -rf ${AppName}.tar.gz
+        cd ${Temporary} && sudo rm -rf ${AppName}/*
+	"""
+}
+
+def notifyBuild(String buildStatus = 'STARTED', String AppName, String TagNumber) {
+  // Build status of null means successful
+  buildStatus =  buildStatus ?: 'SUCCESS'
+
+  // Default values
+  def icons = [":rocket:", ":tada:", ":mega:", ":dancer:", ":technologist:", ":scientist:"]
+  def randomIndex = (new Random()).nextInt(icons.size())
+  def colorName = 'RED'
+  def colorCode = '#FF0000'
+  def subject = "${buildStatus}: Job `${env.JOB_NAME}` version `${TagNumber}` ${icons[randomIndex]} \n :diamond_shape_with_a_dot_inside: Service: `${AppName}`"
+  def summary = "${subject} \n (${env.BUILD_URL})"
+  def slackChannel = "los-builds"
+
+  // Override default values based on build status
+  if (buildStatus == 'STARTED') {
+    color = 'GREY'
+    colorCode = '#D4DADF'
+  } else if (buildStatus == 'SUCCESS') {
+    color = 'GREEN'
+    colorCode = '#00FF00'
+  } else if (buildStatus == 'UNSTABLE') {
+    color = 'YELLOW'
+    colorCode = '#FFFF00'
+  } else {
+    color = 'RED'
+    colorCode = '#FF0000'
+  }
+
+  // Send notifications
+  slackSend (color: colorCode, message: summary, channel: slackChannel)
+}
