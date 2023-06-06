@@ -103,7 +103,7 @@ func main() {
 		docs.SwaggerInfo.Title = "LOS-KMB-API"
 		docs.SwaggerInfo.Description = "This is a los kmb api server."
 		docs.SwaggerInfo.Version = "2.0"
-		docs.SwaggerInfo.Host = fmt.Sprintf("%s:%s", config.Env("APP_HOST"), config.Env("APP_PORT"))
+		docs.SwaggerInfo.Host = fmt.Sprintf("%s:%s", config.Env("SWAGGER_HOST"), config.Env("APP_PORT"))
 		docs.SwaggerInfo.BasePath = "/api/v2/kmb"
 		docs.SwaggerInfo.Schemes = []string{"http", "https"}
 		e.GET("/swagger/*", echoSwagger.WrapHandler)
