@@ -1,0 +1,316 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {
+            "name": "Kredit Plus",
+            "url": "https://kreditplus.com",
+            "email": "support@kreditplus.com"
+        },
+        "license": {}
+    },
+    "host": "localhost:9710",
+    "basePath": "/api/v2/pbk",
+    "paths": {
+        "/dupcheck-filtering": {
+            "post": {
+                "description": "FilteringKreditmu",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tools"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.BodyRequestKreditmu"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.DupcheckResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/kmb-filtering": {
+            "post": {
+                "description": "KmbFiltering",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tools"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.BodyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.DupcheckResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "request.BodyRequest": {
+            "type": "object",
+            "required": [
+                "client_key",
+                "data"
+            ],
+            "properties": {
+                "client_key": {
+                    "type": "string"
+                },
+                "data": {
+                    "$ref": "#/definitions/request.Data"
+                }
+            }
+        },
+        "request.BodyRequestKreditmu": {
+            "type": "object",
+            "required": [
+                "client_key",
+                "data"
+            ],
+            "properties": {
+                "client_key": {
+                    "type": "string"
+                },
+                "data": {
+                    "$ref": "#/definitions/request.Data"
+                },
+                "status_konsumen": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.Data": {
+            "type": "object",
+            "required": [
+                "BPKBName",
+                "BirthDate",
+                "BirthPlace",
+                "BranchID",
+                "Gender",
+                "IDNumber",
+                "LegalName",
+                "MaritalStatus",
+                "MobilePhone",
+                "ProfessionID",
+                "ProspectID",
+                "SurgateMotherName"
+            ],
+            "properties": {
+                "BPKBName": {
+                    "type": "string"
+                },
+                "BirthDate": {
+                    "type": "string"
+                },
+                "BirthPlace": {
+                    "type": "string"
+                },
+                "BranchID": {
+                    "type": "string"
+                },
+                "Gender": {
+                    "type": "string"
+                },
+                "IDNumber": {
+                    "type": "string"
+                },
+                "LegalName": {
+                    "type": "string"
+                },
+                "MaritalStatus": {
+                    "type": "string"
+                },
+                "MobilePhone": {
+                    "type": "string"
+                },
+                "ProfessionID": {
+                    "type": "string"
+                },
+                "ProspectID": {
+                    "type": "string"
+                },
+                "Spouse": {
+                    "$ref": "#/definitions/request.Spouse"
+                },
+                "SurgateMotherName": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.Spouse": {
+            "type": "object",
+            "required": [
+                "Spouse_BirthDate",
+                "Spouse_BirthPlace",
+                "Spouse_Gender",
+                "Spouse_IDNumber",
+                "Spouse_LegalName",
+                "Spouse_SurgateMotherName"
+            ],
+            "properties": {
+                "Spouse_BirthDate": {
+                    "type": "string"
+                },
+                "Spouse_BirthPlace": {
+                    "type": "string"
+                },
+                "Spouse_Gender": {
+                    "type": "string"
+                },
+                "Spouse_IDNumber": {
+                    "type": "string"
+                },
+                "Spouse_LegalName": {
+                    "type": "string"
+                },
+                "Spouse_SurgateMotherName": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.ApiResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "object"
+                },
+                "errors": {
+                    "type": "object"
+                },
+                "messages": {
+                    "type": "string"
+                },
+                "server_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.DupcheckResult": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "decision": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "status_konsumen": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.ErrorValidation": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

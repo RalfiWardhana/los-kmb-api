@@ -1,0 +1,200 @@
+basePath: /api/v2/pbk
+definitions:
+  request.BodyRequest:
+    properties:
+      client_key:
+        type: string
+      data:
+        $ref: '#/definitions/request.Data'
+    required:
+    - client_key
+    - data
+    type: object
+  request.BodyRequestKreditmu:
+    properties:
+      client_key:
+        type: string
+      data:
+        $ref: '#/definitions/request.Data'
+      status_konsumen:
+        type: string
+    required:
+    - client_key
+    - data
+    type: object
+  request.Data:
+    properties:
+      BPKBName:
+        type: string
+      BirthDate:
+        type: string
+      BirthPlace:
+        type: string
+      BranchID:
+        type: string
+      Gender:
+        type: string
+      IDNumber:
+        type: string
+      LegalName:
+        type: string
+      MaritalStatus:
+        type: string
+      MobilePhone:
+        type: string
+      ProfessionID:
+        type: string
+      ProspectID:
+        type: string
+      Spouse:
+        $ref: '#/definitions/request.Spouse'
+      SurgateMotherName:
+        type: string
+    required:
+    - BPKBName
+    - BirthDate
+    - BirthPlace
+    - BranchID
+    - Gender
+    - IDNumber
+    - LegalName
+    - MaritalStatus
+    - MobilePhone
+    - ProfessionID
+    - ProspectID
+    - SurgateMotherName
+    type: object
+  request.Spouse:
+    properties:
+      Spouse_BirthDate:
+        type: string
+      Spouse_BirthPlace:
+        type: string
+      Spouse_Gender:
+        type: string
+      Spouse_IDNumber:
+        type: string
+      Spouse_LegalName:
+        type: string
+      Spouse_SurgateMotherName:
+        type: string
+    required:
+    - Spouse_BirthDate
+    - Spouse_BirthPlace
+    - Spouse_Gender
+    - Spouse_IDNumber
+    - Spouse_LegalName
+    - Spouse_SurgateMotherName
+    type: object
+  response.ApiResponse:
+    properties:
+      data:
+        type: object
+      errors:
+        type: object
+      messages:
+        type: string
+      server_time:
+        type: string
+    type: object
+  response.DupcheckResult:
+    properties:
+      code:
+        type: integer
+      decision:
+        type: string
+      reason:
+        type: string
+      status_konsumen:
+        type: string
+    type: object
+  response.ErrorValidation:
+    properties:
+      field:
+        type: string
+      message:
+        type: string
+    type: object
+host: localhost:9710
+info:
+  contact:
+    email: support@kreditplus.com
+    name: Kredit Plus
+    url: https://kreditplus.com
+  license: {}
+paths:
+  /dupcheck-filtering:
+    post:
+      description: FilteringKreditmu
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.BodyRequestKreditmu'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.DupcheckResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Tools
+  /kmb-filtering:
+    post:
+      description: KmbFiltering
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.BodyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.DupcheckResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Tools
+swagger: "2.0"

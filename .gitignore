@@ -1,0 +1,27 @@
+.vscode
+.idea
+*.exe
+*.exe~
+Gopkg.lock
+*.env
+build/*.env
+*.rsa
+*.pub
+*.log
+*.DS_Store
+
+vendor
+# Temp
+tmp
+
+# conf
+conf
+
+# Log
+logs/*.log
+
+# Automation testing
+.github/workflows/go.yml
+
+# folder buat nyimpen backup query perubahan db
+database
