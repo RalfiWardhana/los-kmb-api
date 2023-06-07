@@ -24,4 +24,4 @@ logs/*.log
 .github/workflows/go.yml
 
 # folder buat nyimpen backup query perubahan db
-database
+#database
