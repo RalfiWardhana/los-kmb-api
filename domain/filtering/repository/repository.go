@@ -30,7 +30,7 @@ func NewRepository(kmbFiltering, KpLos, dummy *gorm.DB) interfaces.Repository {
 	}
 }
 
-func (r repoHandler) DummyData(query string) (data entity.DummyColumn, err error) {
+func (r repoHandler) DummyDataPbk(noktp string) (data entity.DummyPBK, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
@@ -41,49 +41,14 @@ func (r repoHandler) DummyData(query string) (data entity.DummyColumn, err error
 	db := r.dummy.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.dummy.Raw(query).Scan(&data).Error; err != nil {
+	if err = r.dummy.Raw("SELECT * FROM new_pefindo_kmb WHERE IDNumber = ?", noktp).Scan(&data).Error; err != nil {
 		return
 	}
 
 	return
 }
 
-func (r repoHandler) DummyDataPbk(query string) (data entity.DummyPBK, err error) {
-	var x sql.TxOptions
-
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.dummy.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	if err = r.dummy.Raw(query).Scan(&data).Error; err != nil {
-		return
-	}
-
-	return
-}
-
-func (r repoHandler) DataProfessionGroup(query string) (data entity.ProfessionGroup, err error) {
-	var x sql.TxOptions
-
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.kmbFiltering.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	if err = r.kmbFiltering.Raw(query).Scan(&data).Error; err != nil {
-		return
-	}
-
-	return
-}
-func (r repoHandler) DataGetMappingDp(query string) (data []entity.RangeBranchDp, err error) {
+func (r repoHandler) DataGetMappingDp(branchID, statusKonsumen string) (data []entity.RangeBranchDp, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
@@ -94,7 +59,7 @@ func (r repoHandler) DataGetMappingDp(query string) (data []entity.RangeBranchDp
 	db := r.KpLos.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.KpLos.Raw(query).Scan(&data).Error; err != nil {
+	if err = r.KpLos.Raw("SELECT mbd.* FROM dbo.mapping_branch_dp mdp LEFT JOIN dbo.mapping_baki_debet mbd ON mdp.baki_debet = mbd.id LEFT JOIN dbo.master_list_dp mld ON mdp.master_list_dp = mld.id WHERE mdp.branch = ? AND mdp.customer_status = ?").Scan(&data).Error; err != nil {
 		return
 	}
 

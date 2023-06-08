@@ -1,7 +1,7 @@
-//go:build tools
-// +build tools
+//go:build utils
+// +build utils
 
-package tools
+package utils
 
 import (
 	_ "github.com/maxbrunsfeld/counterfeiter/v6"

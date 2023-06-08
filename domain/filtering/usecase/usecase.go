@@ -578,85 +578,6 @@ func (u usecase) CheckStatusCategory(ctx context.Context, reqs request.Filtering
 	return
 }
 
-func (u usecase) FilteringKreditmu(ctx context.Context, reqs request.FilteringRequest, status_konsumen, accessToken string) (data response.DupcheckResult, err error) {
-
-	timeOut, _ := strconv.Atoi(os.Getenv("DUPCHECK_API_TIMEOUT"))
-
-	var updateFiltering entity.ApiDupcheckKmbUpdate
-
-	requestID, ok := ctx.Value(echo.HeaderXRequestID).(string)
-	if !ok {
-		requestID = ""
-	}
-
-	updateFiltering.RequestID = requestID
-
-	param, _ := json.Marshal(map[string]string{
-		"birth_date":          reqs.Data.BirthDate,
-		"id_number":           reqs.Data.IDNumber,
-		"legal_name":          reqs.Data.LegalName,
-		"surgate_mother_name": reqs.Data.SurgateMotherName,
-	})
-
-	resp, err := u.httpclient.EngineAPI(ctx, constant.FILTERING_LOG, os.Getenv("KREDITMU_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, reqs.Data.ProspectID, accessToken)
-
-	var check_kreditmu_konsumen response.KreditMuResponse
-
-	if err != nil || resp.StatusCode() != 200 && resp.StatusCode() != 400 {
-		err = fmt.Errorf("FAILED FETCHING DATA KREDITMU")
-		return
-	}
-
-	if err = json.Unmarshal(resp.Body(), &check_kreditmu_konsumen); err != nil {
-		err = fmt.Errorf("KMB FILTERING SERVICE UNAVAILABLE")
-		return
-	}
-
-	kreditmu_check_code, _ := utils.ItemExists(check_kreditmu_konsumen.Code, []string{constant.CORE_API_005, constant.CORE_API_019})
-
-	limit_inactive := strings.Split(check_kreditmu_konsumen.Data.LimitStatus, "_")
-
-	if kreditmu_check_code || resp.StatusCode() == 400 {
-		data.Code = constant.KREDITMU_NEW
-		data.StatusKonsumen = status_konsumen
-	} else {
-		if check_kreditmu_konsumen.Data.CustomerStatus == constant.KREDITMU_VERIFY {
-			if check_kreditmu_konsumen.Data.LimitStatus == constant.KREDITMU_ACTIVE || limit_inactive[0] == constant.KREDITMU_INACTIVE {
-				data.StatusKonsumen = "REGISTERED " + status_konsumen
-
-				if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
-					data.Code = constant.KREDITMU_STATUS_CODE_RO_AO
-					data.Decision = constant.DECISION_PASS
-					data.Reason = constant.REASON_KREDITMU_STATUS_CODE_RO_AO
-					data.StatusKonsumen = status_konsumen
-				} else if status_konsumen == constant.STATUS_KONSUMEN_NEW {
-					data.Code = constant.KREDITMU_STATUS_CODE_NEW
-					data.Decision = constant.DECISION_PASS
-					data.Reason = constant.REASON_KREDITMU_STATUS_CODE_NEW
-					data.StatusKonsumen = status_konsumen
-				}
-
-			} else {
-				data.Code = constant.KREDITMU_NEW
-				data.StatusKonsumen = status_konsumen
-			}
-
-		} else {
-			data.Code = constant.KREDITMU_NEW
-			data.StatusKonsumen = status_konsumen
-		}
-	}
-
-	updateFiltering.ResultKreditmu = string(resp.Body())
-
-	if err = u.repository.UpdateData(updateFiltering); err != nil {
-		err = fmt.Errorf("FAILED FETCHING DATA KREDITMU")
-		return
-	}
-
-	return
-}
-
 func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringRequest, status_konsumen, accessToken string) (data response.DupcheckResult, err error) {
 
 	timeOut, _ := strconv.Atoi(os.Getenv("DUPCHECK_API_TIMEOUT"))
@@ -692,7 +613,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 		var check_pefindo response.ResposePefindo
 
 		if dummy {
-			getdata, errs := u.GetDummyPBK(reqs.Data.IDNumber)
+			getdata, errs := u.repository.DummyDataPbk(reqs.Data.IDNumber)
 
 			if getdata == (entity.DummyPBK{}) {
 				check_pefindo.Code = "201"
@@ -950,7 +871,7 @@ func (u usecase) HitPefindoPrimePriority(ctx context.Context, reqs request.Filte
 		var check_pefindo response.ResposePefindo
 
 		if dummy {
-			getdata, errs := u.GetDummyPBK(reqs.Data.IDNumber)
+			getdata, errs := u.repository.DummyDataPbk(reqs.Data.IDNumber)
 
 			if getdata == (entity.DummyPBK{}) {
 				check_pefindo.Code = "201"
@@ -1072,61 +993,9 @@ func (u usecase) HitPefindoPrimePriority(ctx context.Context, reqs request.Filte
 	return
 }
 
-func (u usecase) GetDummyPBK(noktp string) (data entity.DummyPBK, err error) {
-
-	query := fmt.Sprintf("SELECT * FROM new_pefindo_kmb WHERE IDNumber = '%s'", noktp)
-
-	data, err = u.repository.DummyDataPbk(query)
-
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-func (u usecase) GetDummyData(noktp string) (data entity.DummyColumn, err error) {
-
-	query := fmt.Sprintf("SELECT * FROM dupcheck_confins_new WHERE NoKTP = '%s'", noktp)
-
-	data, err = u.repository.DummyData(query)
-
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-func (u usecase) GetDataProfessionGroup(prefix string) (data entity.ProfessionGroup, err error) {
-
-	query := fmt.Sprintf("SELECT * FROM profession_group WHERE prefix = '%s'", prefix)
-
-	data, err = u.repository.DataProfessionGroup(query)
-
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-func (u usecase) GetDataGetMappingDp(BranchID, StatusKonsumen string) (data []entity.RangeBranchDp, err error) {
-
-	query := fmt.Sprintf("SELECT mbd.* FROM dbo.mapping_branch_dp mdp LEFT JOIN dbo.mapping_baki_debet mbd ON mdp.baki_debet = mbd.id LEFT JOIN dbo.master_list_dp mld ON mdp.master_list_dp = mld.id WHERE mdp.branch = '%s' AND mdp.customer_status = '%s'", BranchID, StatusKonsumen)
-
-	data, err = u.repository.DataGetMappingDp(query)
-
-	if err != nil {
-		return
-	}
-
-	return
-}
-
 func (u usecase) GetBranchDp(BranchID, StatusKonsumen, ProfessionGroup string, totalBakiDebetNonAgunan int) (data entity.BranchDp, err error) {
 
-	get_data, _ := u.GetDataGetMappingDp(BranchID, StatusKonsumen)
+	get_data, _ := u.repository.DataGetMappingDp(BranchID, StatusKonsumen)
 
 	var queryAdd string
 
@@ -1138,27 +1007,6 @@ func (u usecase) GetBranchDp(BranchID, StatusKonsumen, ProfessionGroup string, t
 		}
 	} else {
 		queryAdd = fmt.Sprintf("AND c.range_start <= %d AND c.range_end >= %d", totalBakiDebetNonAgunan, totalBakiDebetNonAgunan)
-	}
-
-	query := fmt.Sprintf("SELECT TOP 1 a.branch,a.customer_status,a.profession_group,b.minimal_dp_name,b.minimal_dp_value FROM dbo.mapping_branch_dp a WITH (NOLOCK) INNER JOIN dbo.master_list_dp b WITH (NOLOCK) ON a.master_list_dp = b.id LEFT JOIN dbo.mapping_baki_debet c WITH (NOLOCK) ON a.baki_debet = c.id WHERE a.branch = '%s' %s ORDER BY a.created_at ASC", BranchID, queryAdd)
-
-	data, err = u.repository.BranchDpData(query)
-
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-func (u usecase) GetBranchDpTest(BranchID, StatusKonsumen, ProfessionGroup string, totalBakiDebetNonAgunan int) (data entity.BranchDp, err error) {
-
-	var queryAdd string
-
-	if StatusKonsumen == constant.STATUS_KONSUMEN_NEW {
-		queryAdd = fmt.Sprintf("AND a.customer_status = '%s'AND a.profession_group = '%s'", StatusKonsumen, ProfessionGroup)
-	} else {
-		queryAdd = fmt.Sprintf("AND a.customer_status = '%s'AND a.profession_group IS NULL", StatusKonsumen)
 	}
 
 	query := fmt.Sprintf("SELECT TOP 1 a.branch,a.customer_status,a.profession_group,b.minimal_dp_name,b.minimal_dp_value FROM dbo.mapping_branch_dp a WITH (NOLOCK) INNER JOIN dbo.master_list_dp b WITH (NOLOCK) ON a.master_list_dp = b.id LEFT JOIN dbo.mapping_baki_debet c WITH (NOLOCK) ON a.baki_debet = c.id WHERE a.branch = '%s' %s ORDER BY a.created_at ASC", BranchID, queryAdd)
