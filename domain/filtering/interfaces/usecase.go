@@ -14,5 +14,5 @@ type Usecase interface {
 }
 
 type MultiUsecase interface {
-	Filtering(ctx context.Context, reqs request.FilteringRequest, accessToken string) (data interface{}, err error)
+	Filtering(ctx context.Context, reqs request.FilteringRequest, accessToken string) (data response.DupcheckResult, err error)
 }

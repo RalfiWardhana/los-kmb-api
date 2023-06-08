@@ -49,7 +49,7 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 	}
 }
 
-func (u multiUsecase) Filtering(ctx context.Context, reqs request.FilteringRequest, accessToken string) (data interface{}, err error) {
+func (u multiUsecase) Filtering(ctx context.Context, reqs request.FilteringRequest, accessToken string) (data response.DupcheckResult, err error) {
 
 	var savedata entity.ApiDupcheckKmb
 

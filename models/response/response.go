@@ -16,15 +16,15 @@ type ErrorValidation struct {
 }
 
 type DupcheckResult struct {
-	Code                   string  `json:"code"`
-	Decision               string  `json:"decision"`
-	Reason                 string  `json:"reason"`
-	StatusKonsumen         string  `json:"status_konsumen"`
-	KategoriStatusKonsumen string  `json:"kategori_status_konsumen,omitempty"`
-	IsBlacklist            int     `json:"is_blacklist"`
-	NextProcess            int     `json:"next_process"`
-	TotalBakiDebet         float64 `json:"total_baki_debet,omitempty"`
-	PbkReport              string  `json:"pbk_report,omitempty"`
+	Code                   interface{} `json:"code"`
+	Decision               string      `json:"decision"`
+	Reason                 string      `json:"reason"`
+	StatusKonsumen         string      `json:"status_konsumen"`
+	KategoriStatusKonsumen string      `json:"kategori_status_konsumen,omitempty"`
+	IsBlacklist            int         `json:"is_blacklist"`
+	NextProcess            int         `json:"next_process"`
+	TotalBakiDebet         float64     `json:"total_baki_debet,omitempty"`
+	PbkReport              string      `json:"pbk_report,omitempty"`
 }
 
 type CustomerDomain struct {

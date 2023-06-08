@@ -36,14 +36,14 @@ type DummyPBK struct {
 }
 
 type ApiDupcheckKmb struct {
-	ProspectID string    `gorm:"type:varchar(50);column:ProspectID"`
-	RequestID  string    `gorm:"type:varchar(100);column:RequestID;primaryKey"`
-	Request    string    `gorm:"type:text;column:Request"`
-	Code       string    `gorm:"type:varchar(50);column:Code"`
-	Decision   string    `gorm:"type:varchar(50);column:Decision"`
-	Reason     string    `gorm:"type:varchar(200);column:Reason"`
-	DtmRequest time.Time `gorm:"column:DtmRequest"`
-	Timestamp  time.Time `gorm:"column:Timestamp"`
+	ProspectID string      `gorm:"type:varchar(50);column:ProspectID"`
+	RequestID  string      `gorm:"type:varchar(100);column:RequestID;primaryKey"`
+	Request    string      `gorm:"type:text;column:Request"`
+	Code       interface{} `gorm:"type:varchar(50);column:Code"`
+	Decision   string      `gorm:"type:varchar(50);column:Decision"`
+	Reason     string      `gorm:"type:varchar(200);column:Reason"`
+	DtmRequest time.Time   `gorm:"column:DtmRequest"`
+	Timestamp  time.Time   `gorm:"column:Timestamp"`
 }
 
 func (c *ApiDupcheckKmb) TableName() string {
@@ -60,7 +60,7 @@ type ApiDupcheckKmbUpdate struct {
 	Response               interface{} `gorm:"type:text;column:Response"`
 	CustomerType           interface{} `gorm:"type:text;column:CustomerType"`
 	DtmResponse            time.Time   `gorm:"column:DtmResponse"`
-	Code                   string      `gorm:"type:varchar(50);column:Code"`
+	Code                   interface{} `gorm:"type:varchar(50);column:Code"`
 	Decision               string      `gorm:"type:varchar(50);column:Decision"`
 	Reason                 string      `gorm:"type:varchar(200);column:Reason"`
 	Timestamp              time.Time   `gorm:"column:Timestamp"`

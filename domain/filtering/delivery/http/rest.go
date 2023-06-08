@@ -6,6 +6,7 @@ import (
 	"los-kmb-api/models/request"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/constant"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -69,6 +70,8 @@ func (c *handlerKmbFiltering) Filtering(ctx echo.Context) (err error) {
 	if err != nil {
 		return c.Json.ServiceUnavailableV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", r)
 	}
+
+	data.Code, _ = strconv.Atoi(data.Code.(string))
 
 	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", r, data)
 }
