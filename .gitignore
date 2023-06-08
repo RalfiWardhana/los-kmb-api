@@ -10,7 +10,6 @@ build/*.env
 *.log
 *.DS_Store
 
-vendor
 # Temp
 tmp
 
