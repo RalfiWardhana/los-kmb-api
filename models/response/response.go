@@ -7,6 +7,7 @@ type ApiResponse struct {
 	Errors     interface{} `json:"errors"`
 	Data       interface{} `json:"data"`
 	ServerTime string      `json:"server_time"`
+	RequestID  string      `json:"request_id"`
 }
 
 type ErrorValidation struct {
@@ -15,7 +16,7 @@ type ErrorValidation struct {
 }
 
 type DupcheckResult struct {
-	Code                   int     `json:"code"`
+	Code                   string  `json:"code"`
 	Decision               string  `json:"decision"`
 	Reason                 string  `json:"reason"`
 	StatusKonsumen         string  `json:"status_konsumen"`
@@ -181,4 +182,11 @@ type PefindoResultPasangan struct {
 	WoAdaAgunan            int         `json:"wo_ada_agunan"`
 	BakiDebetNonAgunan     float64     `json:"baki_debet_non_agunan"`
 	DetailReport           string      `json:"detail_report"`
+}
+
+type ElaborateResult struct {
+	Code     int    `json:"code"`
+	Decision string `json:"decision"`
+	Reason   string `json:"reason"`
+	LTV      int    `json:"ltv,omitempty"`
 }

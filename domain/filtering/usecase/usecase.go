@@ -1,13 +1,9 @@
 package usecase
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
-	"os"
-	"reflect"
-	"strconv"
-	"strings"
-
 	"los-kmb-api/domain/filtering/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
@@ -15,8 +11,13 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
+	"os"
+	"reflect"
+	"strconv"
+	"strings"
 
-	"github.com/google/uuid"
+	"github.com/go-resty/resty/v2"
+	"github.com/labstack/echo/v4"
 )
 
 type (
@@ -48,78 +49,89 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 	}
 }
 
-func (u multiUsecase) Filtering(reqs request.BodyRequest, accessToken string) (data interface{}, err error) {
+func (u multiUsecase) Filtering(ctx context.Context, reqs request.FilteringRequest, accessToken string) (data interface{}, err error) {
 
 	var savedata entity.ApiDupcheckKmb
 
-	id := uuid.New()
+	requestID, ok := ctx.Value(echo.HeaderXRequestID).(string)
+	if !ok {
+		requestID = ""
+	}
 
-	savedata.RequestID = id.String()
+	savedata.RequestID = requestID
 
 	request, _ := json.Marshal(reqs)
 	savedata.Request = string(request)
 	savedata.ProspectID = reqs.Data.ProspectID
+
 	if err = u.repository.SaveData(savedata); err != nil {
 		err = fmt.Errorf("failed process dupcheck")
 		return
 	}
 
-	check_blacklist, err := u.usecase.FilteringBlackList(reqs, savedata.RequestID)
+	checkBlacklist, err := u.usecase.FilteringBlackList(ctx, reqs, accessToken)
 	if err != nil {
 		err = fmt.Errorf("failed process check blacklist")
 		return
 	}
 
-	ints := utils.AizuArrayInt(constant.CODE_BLACKLIST, "17")
+	arrBlackList := strings.Split(constant.CODE_BLACKLIST, ",")
 
-	check_blacklist_code, _ := utils.ItemExists(check_blacklist.Code, ints)
+	var isBlacklist bool
 
 	var updateFiltering entity.ApiDupcheckKmbUpdate
 
-	// check status & kategori konsumen
-	if check_blacklist_code {
-		check_konsumen, errs := u.usecase.CheckStatusCategory(reqs, check_blacklist.StatusKonsumen, savedata.RequestID, accessToken)
-		if errs != nil {
-			err = fmt.Errorf("failed fetching data customer domain")
-			return
+	for _, v := range arrBlackList {
+		if v == checkBlacklist.Code {
+			isBlacklist = true
+			break
 		}
+	}
 
-		check_prime_priority, _ := utils.ItemExists(check_konsumen.KategoriStatusKonsumen, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
-
-		if !check_prime_priority { //bukan prime/priority
-			// hit ke pefindo
-			check_pefindo, errs := u.usecase.FilteringPefindo(reqs, check_konsumen.StatusKonsumen, savedata.RequestID)
-
-			if errs != nil {
-				err = fmt.Errorf("failed process pefindo")
-				return
-			}
-
-			check_pefindo.StatusKonsumen = check_blacklist.StatusKonsumen
-			check_pefindo.KategoriStatusKonsumen = check_konsumen.KategoriStatusKonsumen
-
-			check_pefindo.NextProcess = 1
-			if check_pefindo.Decision == constant.DECISION_REJECT {
-				check_pefindo.NextProcess = 0
-			}
-
-			updateFiltering.Code = utils.IntConvStr(check_pefindo.Code)
-			updateFiltering.Reason = check_pefindo.Reason
-			updateFiltering.Decision = check_pefindo.Decision
-			data = check_pefindo
-
-		} else {
-			updateFiltering.Code = utils.IntConvStr(check_konsumen.Code)
-			updateFiltering.Reason = check_konsumen.Reason
-			updateFiltering.Decision = check_konsumen.Decision
-			data = check_konsumen
-		}
+	if isBlacklist {
+		updateFiltering.Code = checkBlacklist.Code
+		updateFiltering.Reason = checkBlacklist.Reason
+		updateFiltering.Decision = checkBlacklist.Decision
+		data = checkBlacklist
 
 	} else {
-		updateFiltering.Code = utils.IntConvStr(check_blacklist.Code)
-		updateFiltering.Reason = check_blacklist.Reason
-		updateFiltering.Decision = check_blacklist.Decision
-		data = check_blacklist
+
+		konsumen, err := u.usecase.CheckStatusCategory(ctx, reqs, checkBlacklist.StatusKonsumen, accessToken)
+		if err != nil {
+			err = fmt.Errorf("failed fetching data customer domain")
+			return konsumen, err
+		}
+
+		check_prime_priority, _ := utils.ItemExists(konsumen.KategoriStatusKonsumen, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
+
+		if check_prime_priority {
+			updateFiltering.Code = konsumen.Code
+			updateFiltering.Reason = konsumen.Reason
+			updateFiltering.Decision = konsumen.Decision
+			data = konsumen
+
+		} else {
+
+			// hit ke pefindo
+			pefindo, err := u.usecase.FilteringPefindo(ctx, reqs, konsumen.StatusKonsumen, savedata.RequestID)
+			if err != nil {
+				err = fmt.Errorf("failed fetching data pefindo")
+				return pefindo, err
+			}
+
+			pefindo.StatusKonsumen = checkBlacklist.StatusKonsumen
+			pefindo.KategoriStatusKonsumen = konsumen.KategoriStatusKonsumen
+
+			pefindo.NextProcess = 1
+			if pefindo.Decision == constant.DECISION_REJECT {
+				pefindo.NextProcess = 0
+			}
+
+			updateFiltering.Code = pefindo.Code
+			updateFiltering.Reason = pefindo.Reason
+			updateFiltering.Decision = pefindo.Decision
+			data = pefindo
+		}
 	}
 
 	resp, _ := json.Marshal(data)
@@ -135,30 +147,37 @@ func (u multiUsecase) Filtering(reqs request.BodyRequest, accessToken string) (d
 	return
 }
 
-func (u usecase) FilteringBlackList(reqs request.BodyRequest, request_id string) (result response.DupcheckResult, err error) {
+func (u usecase) FilteringBlackList(ctx context.Context, reqs request.FilteringRequest, accessToken string) (result response.DupcheckResult, err error) {
 
 	timeOut, _ := strconv.Atoi(os.Getenv("DUPCHECK_API_TIMEOUT"))
 
 	var updateFiltering entity.ApiDupcheckKmbUpdate
 
-	updateFiltering.RequestID = request_id
+	requestID, ok := ctx.Value(echo.HeaderXRequestID).(string)
+	if !ok {
+		requestID = ""
+	}
 
-	param_konsumen := map[string]string{
+	updateFiltering.RequestID = requestID
+
+	param, _ := json.Marshal(map[string]string{
 		"birth_date":          reqs.Data.BirthDate,
 		"id_number":           reqs.Data.IDNumber,
 		"legal_name":          reqs.Data.LegalName,
 		"surgate_mother_name": reqs.Data.SurgateMotherName,
 		"transaction_id":      reqs.Data.ProspectID,
-	}
+	})
 
-	var dupcheck_data response.DupCheckData
-	var getdupcheck response.DataDupcheck
-	var dupcheck_data_spouse response.DupCheckData
-	var getdupcheckspouse response.DataDupcheck
+	var (
+		dupcheck_data        response.DupCheckData
+		getdupcheck          response.DataDupcheck
+		dupcheck_data_spouse response.DupCheckData
+		getdupcheckspouse    response.DataDupcheck
+	)
 
-	resp, errs := u.httpclient.CallWebSocket(os.Getenv("DUPCHECK_URL"), param_konsumen, map[string]string{}, timeOut)
+	resp, err := u.httpclient.EngineAPI(ctx, constant.FILTERING_LOG, os.Getenv("DUPCHECK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, reqs.Data.ProspectID, accessToken)
 
-	if errs != nil || resp.StatusCode() != 200 {
+	if err != nil || resp.StatusCode() != 200 {
 		err = fmt.Errorf("failed process dupcheck")
 		return
 	}
@@ -187,19 +206,19 @@ func (u usecase) FilteringBlackList(reqs request.BodyRequest, request_id string)
 
 		var updateFiltering entity.ApiDupcheckKmbUpdate
 
-		updateFiltering.RequestID = request_id
+		updateFiltering.RequestID = requestID
 
-		param_pasangan := map[string]string{
+		param, _ := json.Marshal(map[string]string{
 			"birth_date":          reqs.Data.Spouse.BirthDate,
 			"id_number":           reqs.Data.Spouse.IDNumber,
 			"legal_name":          reqs.Data.Spouse.LegalName,
 			"surgate_mother_name": reqs.Data.Spouse.SurgateMotherName,
 			"transaction_id":      reqs.Data.ProspectID,
-		}
+		})
 
-		resp, errs := u.httpclient.CallWebSocket(os.Getenv("DUPCHECK_URL"), param_pasangan, map[string]string{}, timeOut)
+		resp, err = u.httpclient.EngineAPI(ctx, constant.FILTERING_LOG, os.Getenv("DUPCHECK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, reqs.Data.ProspectID, accessToken)
 
-		if errs != nil || resp.StatusCode() != 200 {
+		if err != nil || resp.StatusCode() != 200 {
 			err = fmt.Errorf("failed process dupcheck spouse")
 			return
 		}
@@ -460,13 +479,16 @@ func (u usecase) FilteringBlackList(reqs request.BodyRequest, request_id string)
 	return
 }
 
-func (u usecase) CheckStatusCategory(reqs request.BodyRequest, status_konsumen, request_id string, accessToken string) (data response.DupcheckResult, err error) {
-
-	timeOut, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+func (u usecase) CheckStatusCategory(ctx context.Context, reqs request.FilteringRequest, status_konsumen, accessToken string) (data response.DupcheckResult, err error) {
 
 	var updateFiltering entity.ApiDupcheckKmbUpdate
 
-	updateFiltering.RequestID = request_id
+	requestID, ok := ctx.Value(echo.HeaderXRequestID).(string)
+	if !ok {
+		requestID = ""
+	}
+
+	updateFiltering.RequestID = requestID
 
 	param, _ := json.Marshal(map[string]interface{}{
 		"id_number":           reqs.Data.IDNumber,
@@ -476,7 +498,7 @@ func (u usecase) CheckStatusCategory(reqs request.BodyRequest, status_konsumen, 
 		"lob_id":              constant.LOBID_KMB,
 	})
 
-	resp, err := u.httpclient.CustomerDomain("/api/v3/customer/personal-data", param, map[string]string{}, constant.METHOD_POST, timeOut, accessToken)
+	resp, err := u.httpclient.CustomerAPI(ctx, constant.FILTERING_LOG, "/api/v3/customer/personal-data", param, constant.METHOD_POST, accessToken, reqs.Data.ProspectID, "DEFAULT_TIMEOUT_30S")
 
 	var check_customer_kategori response.CustomerDomain
 
@@ -517,7 +539,7 @@ func (u usecase) CheckStatusCategory(reqs request.BodyRequest, status_konsumen, 
 		if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
 			if customer_prime_priority { //PRIME/PRIORITY
 
-				ResposePefindo, errs := u.HitPefindoPrimePriority(reqs, status_konsumen, request_id)
+				ResposePefindo, errs := u.HitPefindoPrimePriority(ctx, reqs, status_konsumen, accessToken)
 
 				if errs != nil {
 					err = fmt.Errorf("failed process hit pefindo prime priority")
@@ -556,22 +578,27 @@ func (u usecase) CheckStatusCategory(reqs request.BodyRequest, status_konsumen, 
 	return
 }
 
-func (u usecase) FilteringKreditmu(reqs request.BodyRequest, status_konsumen, request_id string) (data response.DupcheckResult, err error) {
+func (u usecase) FilteringKreditmu(ctx context.Context, reqs request.FilteringRequest, status_konsumen, accessToken string) (data response.DupcheckResult, err error) {
 
 	timeOut, _ := strconv.Atoi(os.Getenv("DUPCHECK_API_TIMEOUT"))
 
 	var updateFiltering entity.ApiDupcheckKmbUpdate
 
-	updateFiltering.RequestID = request_id
+	requestID, ok := ctx.Value(echo.HeaderXRequestID).(string)
+	if !ok {
+		requestID = ""
+	}
 
-	paramKreditmu := map[string]string{
+	updateFiltering.RequestID = requestID
+
+	param, _ := json.Marshal(map[string]string{
 		"birth_date":          reqs.Data.BirthDate,
 		"id_number":           reqs.Data.IDNumber,
 		"legal_name":          reqs.Data.LegalName,
 		"surgate_mother_name": reqs.Data.SurgateMotherName,
-	}
+	})
 
-	resp, err := u.httpclient.CallWebSocket(os.Getenv("KREDITMU_URL"), paramKreditmu, map[string]string{}, timeOut)
+	resp, err := u.httpclient.EngineAPI(ctx, constant.FILTERING_LOG, os.Getenv("KREDITMU_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, reqs.Data.ProspectID, accessToken)
 
 	var check_kreditmu_konsumen response.KreditMuResponse
 
@@ -630,15 +657,21 @@ func (u usecase) FilteringKreditmu(reqs request.BodyRequest, status_konsumen, re
 	return
 }
 
-func (u usecase) FilteringPefindo(reqs request.BodyRequest, status_konsumen, request_id string) (data response.DupcheckResult, err error) {
+func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringRequest, status_konsumen, accessToken string) (data response.DupcheckResult, err error) {
 
 	timeOut, _ := strconv.Atoi(os.Getenv("DUPCHECK_API_TIMEOUT"))
 
-	var bpkbName string
+	requestID, ok := ctx.Value(echo.HeaderXRequestID).(string)
+	if !ok {
+		requestID = ""
+	}
 
-	var updateFiltering entity.ApiDupcheckKmbUpdate
+	var (
+		bpkbName        string
+		updateFiltering entity.ApiDupcheckKmbUpdate
+	)
 
-	updateFiltering.RequestID = request_id
+	updateFiltering.RequestID = requestID
 
 	namaSama := utils.AizuArrayString(os.Getenv("NAMA_SAMA"))
 	namaBeda := utils.AizuArrayString(os.Getenv("NAMA_BEDA"))
@@ -650,40 +683,6 @@ func (u usecase) FilteringPefindo(reqs request.BodyRequest, status_konsumen, req
 		bpkbName = constant.NAMA_SAMA
 	} else if bpkb_nama_beda {
 		bpkbName = constant.NAMA_BEDA
-	}
-
-	paramPefindo := map[string]string{
-		"ClientKey":         os.Getenv("CLIENTKEY_CORE_PBK"),
-		"IDMember":          constant.USER_PBK_KMB_FILTEERING,
-		"user":              constant.USER_PBK_KMB_FILTEERING,
-		"IDNumber":          reqs.Data.IDNumber,
-		"ProspectID":        reqs.Data.ProspectID,
-		"LegalName":         reqs.Data.LegalName,
-		"BirthDate":         reqs.Data.BirthDate,
-		"SurgateMotherName": reqs.Data.SurgateMotherName,
-		"Gender":            reqs.Data.Gender,
-		"MaritalStatus":     reqs.Data.MaritalStatus,
-	}
-
-	if reqs.Data.MaritalStatus == constant.MARRIED {
-
-		paramPefindo = map[string]string{
-			"ClientKey":                os.Getenv("CLIENTKEY_CORE_PBK"),
-			"IDMember":                 constant.USER_PBK_KMB_FILTEERING,
-			"user":                     constant.USER_PBK_KMB_FILTEERING,
-			"IDNumber":                 reqs.Data.IDNumber,
-			"ProspectID":               reqs.Data.ProspectID,
-			"LegalName":                reqs.Data.LegalName,
-			"BirthDate":                reqs.Data.BirthDate,
-			"SurgateMotherName":        reqs.Data.SurgateMotherName,
-			"Gender":                   reqs.Data.Gender,
-			"MaritalStatus":            reqs.Data.MaritalStatus,
-			"Spouse_IDNumber":          reqs.Data.Spouse.IDNumber,
-			"Spouse_LegalName":         reqs.Data.Spouse.LegalName,
-			"Spouse_BirthDate":         reqs.Data.Spouse.BirthDate,
-			"Spouse_SurgateMotherName": reqs.Data.Spouse.SurgateMotherName,
-			"Spouse_Gender":            reqs.Data.Spouse.Gender,
-		}
 	}
 
 	active, _ := strconv.ParseBool(os.Getenv("ACTIVE_PBK"))
@@ -722,9 +721,45 @@ func (u usecase) FilteringPefindo(reqs request.BodyRequest, status_konsumen, req
 
 		} else {
 
-			resp, errs := u.httpclient.CallWebSocket(os.Getenv("PBK_URL"), paramPefindo, map[string]string{}, timeOut)
+			var resp *resty.Response
 
-			if errs != nil || resp.StatusCode() != 200 && resp.StatusCode() != 400 {
+			param, _ := json.Marshal(map[string]string{
+				"ClientKey":         os.Getenv("CLIENTKEY_CORE_PBK"),
+				"IDMember":          constant.USER_PBK_KMB_FILTEERING,
+				"user":              constant.USER_PBK_KMB_FILTEERING,
+				"IDNumber":          reqs.Data.IDNumber,
+				"ProspectID":        reqs.Data.ProspectID,
+				"LegalName":         reqs.Data.LegalName,
+				"BirthDate":         reqs.Data.BirthDate,
+				"SurgateMotherName": reqs.Data.SurgateMotherName,
+				"Gender":            reqs.Data.Gender,
+				"MaritalStatus":     reqs.Data.MaritalStatus,
+			})
+
+			if reqs.Data.MaritalStatus == constant.MARRIED {
+
+				param, _ = json.Marshal(map[string]string{
+					"ClientKey":                os.Getenv("CLIENTKEY_CORE_PBK"),
+					"IDMember":                 constant.USER_PBK_KMB_FILTEERING,
+					"user":                     constant.USER_PBK_KMB_FILTEERING,
+					"IDNumber":                 reqs.Data.IDNumber,
+					"ProspectID":               reqs.Data.ProspectID,
+					"LegalName":                reqs.Data.LegalName,
+					"BirthDate":                reqs.Data.BirthDate,
+					"SurgateMotherName":        reqs.Data.SurgateMotherName,
+					"Gender":                   reqs.Data.Gender,
+					"MaritalStatus":            reqs.Data.MaritalStatus,
+					"Spouse_IDNumber":          reqs.Data.Spouse.IDNumber,
+					"Spouse_LegalName":         reqs.Data.Spouse.LegalName,
+					"Spouse_BirthDate":         reqs.Data.Spouse.BirthDate,
+					"Spouse_SurgateMotherName": reqs.Data.Spouse.SurgateMotherName,
+					"Spouse_Gender":            reqs.Data.Spouse.Gender,
+				})
+			}
+
+			resp, err = u.httpclient.EngineAPI(ctx, constant.FILTERING_LOG, os.Getenv("PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, reqs.Data.ProspectID, accessToken)
+
+			if err != nil || resp.StatusCode() != 200 && resp.StatusCode() != 400 {
 				err = fmt.Errorf("FAILED FETCHING DATA PEFINDO")
 				return
 			}
@@ -895,47 +930,18 @@ func (u usecase) FilteringPefindo(reqs request.BodyRequest, status_konsumen, req
 	return
 }
 
-func (u usecase) HitPefindoPrimePriority(reqs request.BodyRequest, status_konsumen, request_id string) (data response.DupcheckResult, err error) {
+func (u usecase) HitPefindoPrimePriority(ctx context.Context, reqs request.FilteringRequest, status_konsumen, accessToken string) (data response.DupcheckResult, err error) {
 
 	timeOut, _ := strconv.Atoi(os.Getenv("DUPCHECK_API_TIMEOUT"))
 
 	var updateFiltering entity.ApiDupcheckKmbUpdate
 
-	updateFiltering.RequestID = request_id
-
-	paramPefindo := map[string]string{
-		"ClientKey":         os.Getenv("CLIENTKEY_CORE_PBK"),
-		"IDMember":          constant.USER_PBK_KMB_FILTEERING,
-		"user":              constant.USER_PBK_KMB_FILTEERING,
-		"IDNumber":          reqs.Data.IDNumber,
-		"ProspectID":        reqs.Data.ProspectID,
-		"LegalName":         reqs.Data.LegalName,
-		"BirthDate":         reqs.Data.BirthDate,
-		"SurgateMotherName": reqs.Data.SurgateMotherName,
-		"Gender":            reqs.Data.Gender,
-		"MaritalStatus":     reqs.Data.MaritalStatus,
+	requestID, ok := ctx.Value(echo.HeaderXRequestID).(string)
+	if !ok {
+		requestID = ""
 	}
 
-	if reqs.Data.MaritalStatus == constant.MARRIED {
-
-		paramPefindo = map[string]string{
-			"ClientKey":                os.Getenv("CLIENTKEY_CORE_PBK"),
-			"IDMember":                 constant.USER_PBK_KMB_FILTEERING,
-			"user":                     constant.USER_PBK_KMB_FILTEERING,
-			"IDNumber":                 reqs.Data.IDNumber,
-			"ProspectID":               reqs.Data.ProspectID,
-			"LegalName":                reqs.Data.LegalName,
-			"BirthDate":                reqs.Data.BirthDate,
-			"SurgateMotherName":        reqs.Data.SurgateMotherName,
-			"Gender":                   reqs.Data.Gender,
-			"MaritalStatus":            reqs.Data.MaritalStatus,
-			"Spouse_IDNumber":          reqs.Data.Spouse.IDNumber,
-			"Spouse_LegalName":         reqs.Data.Spouse.LegalName,
-			"Spouse_BirthDate":         reqs.Data.Spouse.BirthDate,
-			"Spouse_SurgateMotherName": reqs.Data.Spouse.SurgateMotherName,
-			"Spouse_Gender":            reqs.Data.Spouse.Gender,
-		}
-	}
+	updateFiltering.RequestID = requestID
 
 	active, _ := strconv.ParseBool(os.Getenv("ACTIVE_PBK"))
 	dummy, _ := strconv.ParseBool(os.Getenv("DUMMY_DUPCHECK"))
@@ -973,7 +979,41 @@ func (u usecase) HitPefindoPrimePriority(reqs request.BodyRequest, status_konsum
 
 		} else {
 
-			resp, errs := u.httpclient.CallWebSocket(os.Getenv("PBK_URL"), paramPefindo, map[string]string{}, timeOut)
+			param, _ := json.Marshal(map[string]string{
+				"ClientKey":         os.Getenv("CLIENTKEY_CORE_PBK"),
+				"IDMember":          constant.USER_PBK_KMB_FILTEERING,
+				"user":              constant.USER_PBK_KMB_FILTEERING,
+				"IDNumber":          reqs.Data.IDNumber,
+				"ProspectID":        reqs.Data.ProspectID,
+				"LegalName":         reqs.Data.LegalName,
+				"BirthDate":         reqs.Data.BirthDate,
+				"SurgateMotherName": reqs.Data.SurgateMotherName,
+				"Gender":            reqs.Data.Gender,
+				"MaritalStatus":     reqs.Data.MaritalStatus,
+			})
+
+			if reqs.Data.MaritalStatus == constant.MARRIED {
+
+				param, _ = json.Marshal(map[string]string{
+					"ClientKey":                os.Getenv("CLIENTKEY_CORE_PBK"),
+					"IDMember":                 constant.USER_PBK_KMB_FILTEERING,
+					"user":                     constant.USER_PBK_KMB_FILTEERING,
+					"IDNumber":                 reqs.Data.IDNumber,
+					"ProspectID":               reqs.Data.ProspectID,
+					"LegalName":                reqs.Data.LegalName,
+					"BirthDate":                reqs.Data.BirthDate,
+					"SurgateMotherName":        reqs.Data.SurgateMotherName,
+					"Gender":                   reqs.Data.Gender,
+					"MaritalStatus":            reqs.Data.MaritalStatus,
+					"Spouse_IDNumber":          reqs.Data.Spouse.IDNumber,
+					"Spouse_LegalName":         reqs.Data.Spouse.LegalName,
+					"Spouse_BirthDate":         reqs.Data.Spouse.BirthDate,
+					"Spouse_SurgateMotherName": reqs.Data.Spouse.SurgateMotherName,
+					"Spouse_Gender":            reqs.Data.Spouse.Gender,
+				})
+			}
+
+			resp, errs := u.httpclient.EngineAPI(ctx, constant.FILTERING_LOG, os.Getenv("PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, reqs.Data.ProspectID, accessToken)
 
 			if errs != nil || resp.StatusCode() != 200 && resp.StatusCode() != 400 {
 				err = fmt.Errorf("failed fetching data pefindo")

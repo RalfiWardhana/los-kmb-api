@@ -1,13 +1,12 @@
 package common
 
 import (
+	"los-kmb-api/shared/utils"
 	"os"
 	"reflect"
 	"regexp"
 	"strings"
 	"sync"
-
-	"los-kmb-api/shared/utils"
 
 	"gopkg.in/go-playground/validator.v9"
 )

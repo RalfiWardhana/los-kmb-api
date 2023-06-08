@@ -1,6 +1,6 @@
 package request
 
-type BodyRequest struct {
+type FilteringRequest struct {
 	ClientKey string `json:"client_key" validate:"required,key"`
 	Data      Data   `json:"data" validate:"required"`
 }
@@ -49,4 +49,23 @@ type Spouse struct {
 
 type GenderCompare struct {
 	Gender bool `json:"Spouse_Gender" validate:"spouse_gender"`
+}
+
+type BodyRequestElaborate struct {
+	ClientKey string        `json:"client_key" validate:"required,key"`
+	Data      DataElaborate `json:"data" validate:"required"`
+}
+
+type DataElaborate struct {
+	ProspectID        string  `json:"ProspectID" validate:"required"`
+	BranchID          string  `json:"BranchID" validate:"required"`
+	BPKBName          string  `json:"BPKBName" validate:"required,bpkbname"`
+	CustomerStatus    string  `json:"CustomerStatus" validate:"required"`
+	CategoryCustomer  string  `json:"CategoryCustomer"`
+	ResultPefindo     string  `json:"ResultPefindo" validate:"required"`
+	TotalBakiDebet    float64 `json:"TotalBakiDebet"`
+	Tenor             int     `json:"Tenor" validate:"required"`
+	ManufacturingYear string  `json:"ManufacturingYear" validate:"required"`
+	OTR               float64 `json:"OTR" validate:"required"`
+	NTF               float64 `json:"NTF" validate:"required"`
 }

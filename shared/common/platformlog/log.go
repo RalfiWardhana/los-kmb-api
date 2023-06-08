@@ -2,12 +2,11 @@ package platformlog
 
 import (
 	"errors"
+	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 	"net/url"
 	"os"
 	"strings"
-
-	"los-kmb-api/shared/constant"
-	"los-kmb-api/shared/utils"
 
 	platformLog "github.com/KB-FMF/platform-library/log"
 )

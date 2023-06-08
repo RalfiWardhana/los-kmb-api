@@ -102,3 +102,49 @@ type AppConfig struct {
 	CreatedAt time.Time `gorm:"column:created_at"`
 	UpdatedAt time.Time `gorm:"column:updated_at"`
 }
+
+type ApiElaborateKmb struct {
+	ProspectID string    `gorm:"type:varchar(50);column:ProspectID"`
+	RequestID  string    `gorm:"type:varchar(100);column:RequestID;primaryKey"`
+	Request    string    `gorm:"type:text;column:Request"`
+	Code       int       `gorm:"type:varchar(50);column:Code"`
+	Decision   string    `gorm:"type:varchar(50);column:Decision"`
+	Reason     string    `gorm:"type:varchar(200);column:Reason"`
+	DtmRequest time.Time `gorm:"column:DtmRequest"`
+	Timestamp  time.Time `gorm:"column:Timestamp"`
+}
+
+func (c *ApiElaborateKmb) TableName() string {
+	return "api_elaborate_scheme"
+}
+
+type ApiElaborateKmbUpdate struct {
+	ProspectID  string      `gorm:"type:varchar(50);column:ProspectID"`
+	RequestID   string      `gorm:"type:varchar(100);column:RequestID;primaryKey"`
+	Response    interface{} `gorm:"type:text;column:Response"`
+	Code        int         `gorm:"type:varchar(50);column:Code"`
+	Decision    string      `gorm:"type:varchar(50);column:Decision"`
+	Reason      string      `gorm:"type:varchar(200);column:Reason"`
+	DtmResponse time.Time   `gorm:"column:DtmResponse"`
+	Timestamp   time.Time   `gorm:"column:Timestamp"`
+}
+
+func (c *ApiElaborateKmbUpdate) TableName() string {
+	return "api_elaborate_scheme"
+}
+
+type ResultElaborate struct {
+	BranchID       string `gorm:"type:varchar(10);column:branch_id"`
+	CustomerStatus string `gorm:"type:varchar(10);column:customer_status"`
+	BPKBNameType   int    `gorm:"column:bpkb_name_type"`
+	Cluster        string `gorm:"type:varchar(20);column:cluster"`
+	Decision       string `gorm:"type:varchar(10);column:decision"`
+	LTV            int    `gorm:"type:int;column:ltv_start"`
+}
+
+type ClusterBranch struct {
+	BranchID       string `gorm:"type:varchar(10);column:branch_id"`
+	CustomerStatus string `gorm:"type:varchar(10);column:customer_status"`
+	BPKBNameType   int    `gorm:"column:bpkb_name_type"`
+	Cluster        string `gorm:"type:varchar(20);column:cluster"`
+}

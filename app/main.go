@@ -1,24 +1,30 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"net/http"
-	"strconv"
-	"strings"
-	"time"
-
-	docs "los-kmb-api/docs"
-	delivery "los-kmb-api/domain/filtering/delivery/http"
-	"los-kmb-api/domain/filtering/repository"
-	"los-kmb-api/domain/filtering/usecase"
-
-	middlewares "los-kmb-api/middlewares"
+	"log"
+	"los-kmb-api/docs"
+	elaborateDelivery "los-kmb-api/domain/elaborate/delivery/http"
+	elaborateRepository "los-kmb-api/domain/elaborate/repository"
+	elaborateUsecase "los-kmb-api/domain/elaborate/usecase"
+	filteringDelivery "los-kmb-api/domain/filtering/delivery/http"
+	filteringRepository "los-kmb-api/domain/filtering/repository"
+	filteringUsecase "los-kmb-api/domain/filtering/usecase"
+	"los-kmb-api/middlewares"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/json"
 	"los-kmb-api/shared/config"
+	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/database"
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
+	"net/http"
+	"os"
+	"os/signal"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/allegro/bigcache/v3"
 	"github.com/labstack/echo/v4"
@@ -49,19 +55,21 @@ func main() {
 	e.Use(middleware.RequestID())
 	e.Debug = config.IsDevelopment
 
-	kmbFiltering, err := database.OpenDatabase()
+	constant.LOS_KMB_BASE_URL = os.Getenv("SWAGGER_HOST")
+
+	minilosKMB, err := database.OpenMinilosKMB()
 
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
 	}
 
-	dummykmbFiltering, err := database.OpenDummyDatabase()
+	catalog, err := database.OpenCatalogData()
 
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
 	}
 
-	kpLos, err := database.OpenDatabaseKpLos()
+	kpLos, err := database.OpenKpLos()
 
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
@@ -82,28 +90,35 @@ func main() {
 	}))
 
 	e.GET("/", func(c echo.Context) error {
-		return c.String(http.StatusOK, "KREDITPLUS INTEGERATOR INCOME PREDICTION")
+		return c.String(http.StatusOK, "KREDITPLUS LOS-KMB-API")
 	})
 
 	accessToken := middlewares.NewAccessMiddleware()
+	e.Use(accessToken.SetupHeadersAndContext())
 
-	config.CreateCustomLogFile("API_INT_KMB_FILTERING_LOG")
+	config.CreateCustomLogFile("FILTERING_LOG")
 
 	utils.NewCache(cache, kpLos, config.IsDevelopment)
 
+	jsonResponse := json.NewResponse()
+	apiGroup := e.Group("/api/v2/kmb")
+	httpClient := httpclient.NewHttpClient()
+
 	// define kmb filtering domain
-	kmbFilteringRepo := repository.NewRepository(kmbFiltering, kpLos, dummykmbFiltering)
-	kmbFilteringHttpClient := httpclient.NewHttpClient()
-	kmbFilteringMultiCase, kmbFilteringCase := usecase.NewMultiUsecase(kmbFilteringRepo, kmbFilteringHttpClient)
-	kmbFilteringJson := json.NewResponse()
-	kmbFilteringkGroup := e.Group("/api/v2/kmb")
-	delivery.FilteringHandler(kmbFilteringkGroup, kmbFilteringMultiCase, kmbFilteringCase, kmbFilteringRepo, kmbFilteringJson, accessToken)
+	kmbFilteringRepo := filteringRepository.NewRepository(minilosKMB, kpLos, catalog)
+	kmbFilteringMultiCase, kmbFilteringCase := filteringUsecase.NewMultiUsecase(kmbFilteringRepo, httpClient)
+	filteringDelivery.FilteringHandler(apiGroup, kmbFilteringMultiCase, kmbFilteringCase, kmbFilteringRepo, jsonResponse, accessToken)
+
+	// define kmb elaborate domain
+	kmbElaborateRepo := elaborateRepository.NewRepository(minilosKMB, kpLos)
+	kmbElaborateMultiCase, kmbElaborateCase := elaborateUsecase.NewMultiUsecase(kmbElaborateRepo, httpClient)
+	elaborateDelivery.ElaborateHandler(apiGroup, kmbElaborateMultiCase, kmbElaborateCase, kmbElaborateRepo, jsonResponse, accessToken)
 
 	if config.IsDevelopment {
 		docs.SwaggerInfo.Title = "LOS-KMB-API"
-		docs.SwaggerInfo.Description = "This is a los kmb api server."
-		docs.SwaggerInfo.Version = "2.0"
-		docs.SwaggerInfo.Host = fmt.Sprintf("%s:%s", config.Env("SWAGGER_HOST"), config.Env("APP_PORT"))
+		docs.SwaggerInfo.Description = "This is a orchestrator api server."
+		docs.SwaggerInfo.Version = "1.0"
+		docs.SwaggerInfo.Host = os.Getenv("SWAGGER_HOST")
 		docs.SwaggerInfo.BasePath = "/api/v2/kmb"
 		docs.SwaggerInfo.Schemes = []string{"http", "https"}
 		e.GET("/swagger/*", echoSwagger.WrapHandler)
@@ -118,5 +133,27 @@ func main() {
 	}
 
 	// Setup Server
-	e.Start(fmt.Sprintf(":%s", config.Env("APP_PORT")))
+	srv := &http.Server{
+		Addr:         fmt.Sprintf(":%s", os.Getenv("APP_PORT")),
+		Handler:      e,
+		WriteTimeout: 20 * time.Minute,
+		ReadTimeout:  20 * time.Minute,
+	}
+
+	go func() {
+		if err := e.StartServer(srv); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Error start server %v \n", err)
+		}
+	}()
+
+	// Wait for interrupt signal to gracefully shutdown the server with a timeout of 5 seconds.
+	// Use a buffered channel to avoid missing signals as recommended for signal.Notify
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	<-quit
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := e.Shutdown(ctx); err != nil {
+		e.Logger.Fatal(err)
+	}
 }

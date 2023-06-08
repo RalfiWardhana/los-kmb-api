@@ -29,9 +29,9 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/dupcheck-filtering": {
+        "/elaborate": {
             "post": {
-                "description": "FilteringKreditmu",
+                "description": "KmbElaborate",
                 "produces": [
                     "application/json"
                 ],
@@ -45,7 +45,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.BodyRequestKreditmu"
+                            "$ref": "#/definitions/request.BodyRequestElaborate"
                         }
                     }
                 ],
@@ -61,7 +61,7 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/response.DupcheckResult"
+                                            "$ref": "#/definitions/response.ElaborateResult"
                                         }
                                     }
                                 }
@@ -95,7 +95,7 @@ var doc = `{
                 }
             }
         },
-        "/kmb-filtering": {
+        "/filtering": {
             "post": {
                 "description": "KmbFiltering",
                 "produces": [
@@ -111,7 +111,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.BodyRequest"
+                            "$ref": "#/definitions/request.FilteringRequest"
                         }
                     }
                 ],
@@ -163,7 +163,7 @@ var doc = `{
         }
     },
     "definitions": {
-        "request.BodyRequest": {
+        "request.BodyRequestElaborate": {
             "type": "object",
             "required": [
                 "client_key",
@@ -174,25 +174,8 @@ var doc = `{
                     "type": "string"
                 },
                 "data": {
-                    "$ref": "#/definitions/request.Data"
-                }
-            }
-        },
-        "request.BodyRequestKreditmu": {
-            "type": "object",
-            "required": [
-                "client_key",
-                "data"
-            ],
-            "properties": {
-                "client_key": {
-                    "type": "string"
-                },
-                "data": {
-                    "$ref": "#/definitions/request.Data"
-                },
-                "status_konsumen": {
-                    "type": "string"
+                    "type": "object",
+                    "$ref": "#/definitions/request.DataElaborate"
                 }
             }
         },
@@ -247,10 +230,76 @@ var doc = `{
                     "type": "string"
                 },
                 "Spouse": {
+                    "type": "object",
                     "$ref": "#/definitions/request.Spouse"
                 },
                 "SurgateMotherName": {
                     "type": "string"
+                }
+            }
+        },
+        "request.DataElaborate": {
+            "type": "object",
+            "required": [
+                "BPKBName",
+                "BranchID",
+                "CustomerStatus",
+                "ManufacturingYear",
+                "NTF",
+                "OTR",
+                "ProspectID",
+                "ResultPefindo",
+                "Tenor"
+            ],
+            "properties": {
+                "BPKBName": {
+                    "type": "string"
+                },
+                "BranchID": {
+                    "type": "string"
+                },
+                "CategoryCustomer": {
+                    "type": "string"
+                },
+                "CustomerStatus": {
+                    "type": "string"
+                },
+                "ManufacturingYear": {
+                    "type": "string"
+                },
+                "NTF": {
+                    "type": "number"
+                },
+                "OTR": {
+                    "type": "number"
+                },
+                "ProspectID": {
+                    "type": "string"
+                },
+                "ResultPefindo": {
+                    "type": "string"
+                },
+                "Tenor": {
+                    "type": "integer"
+                },
+                "TotalBakiDebet": {
+                    "type": "number"
+                }
+            }
+        },
+        "request.FilteringRequest": {
+            "type": "object",
+            "required": [
+                "client_key",
+                "data"
+            ],
+            "properties": {
+                "client_key": {
+                    "type": "string"
+                },
+                "data": {
+                    "type": "object",
+                    "$ref": "#/definitions/request.Data"
                 }
             }
         },
@@ -297,6 +346,9 @@ var doc = `{
                 "messages": {
                     "type": "string"
                 },
+                "request_id": {
+                    "type": "string"
+                },
                 "server_time": {
                     "type": "string"
                 }
@@ -306,15 +358,47 @@ var doc = `{
             "type": "object",
             "properties": {
                 "code": {
-                    "type": "integer"
+                    "type": "string"
                 },
                 "decision": {
+                    "type": "string"
+                },
+                "is_blacklist": {
+                    "type": "integer"
+                },
+                "kategori_status_konsumen": {
+                    "type": "string"
+                },
+                "next_process": {
+                    "type": "integer"
+                },
+                "pbk_report": {
                     "type": "string"
                 },
                 "reason": {
                     "type": "string"
                 },
                 "status_konsumen": {
+                    "type": "string"
+                },
+                "total_baki_debet": {
+                    "type": "number"
+                }
+            }
+        },
+        "response.ElaborateResult": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "integer"
+                },
+                "decision": {
+                    "type": "string"
+                },
+                "ltv": {
+                    "type": "integer"
+                },
+                "reason": {
                     "type": "string"
                 }
             }

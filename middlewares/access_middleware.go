@@ -1,17 +1,18 @@
 package middlewares
 
 import (
+	"context"
 	"fmt"
+	"los-kmb-api/shared/common"
+	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 	"os"
 	"reflect"
 	"time"
 
-	"los-kmb-api/shared/common"
-	"los-kmb-api/shared/utils"
-
+	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/labstack/echo/v4"
-	"gopkg.in/resty.v1"
 )
 
 type AccessMiddleware struct {
@@ -102,4 +103,40 @@ func (m *AccessMiddleware) AccessMiddleware() echo.MiddlewareFunc {
 		}
 	}
 
+}
+
+func (m *AccessMiddleware) SetupHeadersAndContext() echo.MiddlewareFunc {
+	return func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(ctx echo.Context) error {
+			// Get Incoming Request Time and Request ID
+			startTime := time.Now().Local().UnixNano() / int64(time.Millisecond)
+			reqId := ctx.Request().Header.Get(echo.HeaderXRequestID)
+			if reqId == "" {
+				reqId = utils.GenerateUUID()
+			}
+
+			// Set Response Headers
+			ctx.Response().Header().Set(echo.HeaderXRequestID, reqId)
+			ctx.Response().Header().Set(constant.CTX_KEY_TAG_VERSION, os.Getenv("APP_VERSION"))
+			ctx.Response().Header().Set(constant.CTX_KEY_LOS_VERSION, os.Getenv("LOS_VERSION"))
+
+			// Set Echo Request Headers
+			incoming_request_url := constant.LOS_KMB_BASE_URL + ctx.Request().URL.Path
+
+			ctx.Set(constant.CTX_KEY_REQUEST_TIME, startTime)
+			ctx.Set(echo.HeaderXRequestID, reqId)
+			ctx.Set(constant.CTX_KEY_INCOMING_REQUEST_URL, incoming_request_url)
+			ctx.Set(constant.CTX_KEY_INCOMING_REQUEST_METHOD, ctx.Request().Method)
+
+			// Set Golang Context
+			reqCtx := ctx.Request().Context()
+			reqCtx = context.WithValue(reqCtx, constant.CTX_KEY_REQUEST_TIME, startTime)
+			reqCtx = context.WithValue(reqCtx, echo.HeaderXRequestID, reqId)
+			reqCtx = context.WithValue(reqCtx, constant.CTX_KEY_INCOMING_REQUEST_URL, incoming_request_url)
+			reqCtx = context.WithValue(reqCtx, constant.CTX_KEY_INCOMING_REQUEST_METHOD, ctx.Request().Method)
+			ctx.SetRequest(ctx.Request().WithContext(reqCtx))
+
+			return next(ctx)
+		}
+	}
 }

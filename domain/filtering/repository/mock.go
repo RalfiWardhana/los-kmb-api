@@ -6,6 +6,9 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
+//go:generate go run github.com/maxbrunsfeld/counterfeiter/v6 -generate
+
+//counterfeiter:generate . Repository
 type MockRepository struct {
 	mock.Mock
 }

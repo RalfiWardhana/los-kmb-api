@@ -1,23 +1,12 @@
 basePath: /api/v2/pbk
 definitions:
-  request.BodyRequest:
+  request.BodyRequestElaborate:
     properties:
       client_key:
         type: string
       data:
-        $ref: '#/definitions/request.Data'
-    required:
-    - client_key
-    - data
-    type: object
-  request.BodyRequestKreditmu:
-    properties:
-      client_key:
-        type: string
-      data:
-        $ref: '#/definitions/request.Data'
-      status_konsumen:
-        type: string
+        $ref: '#/definitions/request.DataElaborate'
+        type: object
     required:
     - client_key
     - data
@@ -48,6 +37,7 @@ definitions:
         type: string
       Spouse:
         $ref: '#/definitions/request.Spouse'
+        type: object
       SurgateMotherName:
         type: string
     required:
@@ -63,6 +53,52 @@ definitions:
     - ProfessionID
     - ProspectID
     - SurgateMotherName
+    type: object
+  request.DataElaborate:
+    properties:
+      BPKBName:
+        type: string
+      BranchID:
+        type: string
+      CategoryCustomer:
+        type: string
+      CustomerStatus:
+        type: string
+      ManufacturingYear:
+        type: string
+      NTF:
+        type: number
+      OTR:
+        type: number
+      ProspectID:
+        type: string
+      ResultPefindo:
+        type: string
+      Tenor:
+        type: integer
+      TotalBakiDebet:
+        type: number
+    required:
+    - BPKBName
+    - BranchID
+    - CustomerStatus
+    - ManufacturingYear
+    - NTF
+    - OTR
+    - ProspectID
+    - ResultPefindo
+    - Tenor
+    type: object
+  request.FilteringRequest:
+    properties:
+      client_key:
+        type: string
+      data:
+        $ref: '#/definitions/request.Data'
+        type: object
+    required:
+    - client_key
+    - data
     type: object
   request.Spouse:
     properties:
@@ -94,18 +130,41 @@ definitions:
         type: object
       messages:
         type: string
+      request_id:
+        type: string
       server_time:
         type: string
     type: object
   response.DupcheckResult:
     properties:
       code:
-        type: integer
+        type: string
       decision:
+        type: string
+      is_blacklist:
+        type: integer
+      kategori_status_konsumen:
+        type: string
+      next_process:
+        type: integer
+      pbk_report:
         type: string
       reason:
         type: string
       status_konsumen:
+        type: string
+      total_baki_debet:
+        type: number
+    type: object
+  response.ElaborateResult:
+    properties:
+      code:
+        type: integer
+      decision:
+        type: string
+      ltv:
+        type: integer
+      reason:
         type: string
     type: object
   response.ErrorValidation:
@@ -123,16 +182,16 @@ info:
     url: https://kreditplus.com
   license: {}
 paths:
-  /dupcheck-filtering:
+  /elaborate:
     post:
-      description: FilteringKreditmu
+      description: KmbElaborate
       parameters:
       - description: Body payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/request.BodyRequestKreditmu'
+          $ref: '#/definitions/request.BodyRequestElaborate'
       produces:
       - application/json
       responses:
@@ -143,7 +202,7 @@ paths:
             - $ref: '#/definitions/response.ApiResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/response.DupcheckResult'
+                  $ref: '#/definitions/response.ElaborateResult'
               type: object
         "400":
           description: Bad Request
@@ -160,7 +219,7 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Tools
-  /kmb-filtering:
+  /filtering:
     post:
       description: KmbFiltering
       parameters:
@@ -169,7 +228,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/request.BodyRequest'
+          $ref: '#/definitions/request.FilteringRequest'
       produces:
       - application/json
       responses:

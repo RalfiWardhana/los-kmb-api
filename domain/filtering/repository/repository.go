@@ -3,12 +3,11 @@ package repository
 import (
 	"context"
 	"database/sql"
-	"strconv"
-	"time"
-
 	"los-kmb-api/domain/filtering/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/shared/config"
+	"strconv"
+	"time"
 
 	"github.com/jinzhu/gorm"
 )

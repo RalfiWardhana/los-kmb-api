@@ -2,13 +2,12 @@ package config
 
 import (
 	"io"
+	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 	"os"
 	"strconv"
 	"strings"
 	"time"
-
-	"los-kmb-api/shared/constant"
-	"los-kmb-api/shared/utils"
 
 	"github.com/joho/godotenv"
 	logger "github.com/labstack/gommon/log"

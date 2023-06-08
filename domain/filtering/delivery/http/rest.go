@@ -2,10 +2,10 @@ package http
 
 import (
 	"los-kmb-api/domain/filtering/interfaces"
-	middlewares "los-kmb-api/middlewares"
+	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
 	"los-kmb-api/shared/common"
-	constants "los-kmb-api/shared/constant"
+	"los-kmb-api/shared/constant"
 
 	"github.com/labstack/echo/v4"
 )
@@ -31,46 +31,44 @@ func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase
 // @Description KmbFiltering
 // @Tags Tools
 // @Produce json
-// @Param body body request.BodyRequest true "Body payload"
+// @Param body body request.FilteringRequest true "Body payload"
 // @Success 200 {object} response.ApiResponse{data=response.DupcheckResult}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
-// @Router /kmb-filtering [post]
+// @Router /filtering [post]
 func (c *handlerKmbFiltering) Filtering(ctx echo.Context) (err error) {
 
-	var req request.BodyRequest
+	var r request.FilteringRequest
 
-	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerError(ctx, err)
+	if err := ctx.Bind(&r); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", err)
 	}
 
-	if err := ctx.Validate(&req); err != nil {
-		return c.Json.BadRequestErrorValidation(ctx, err)
+	if err := ctx.Validate(&r); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", r, err)
 	}
 
-	accessToken := middlewares.UserInfoData.AccessToken
-
-	data, err := c.multiusecase.Filtering(req, accessToken)
-
-	if req.Data.MaritalStatus == constants.MARRIED {
+	if r.Data.MaritalStatus == constant.MARRIED {
 
 		var genderSpouse request.GenderCompare
 
-		if req.Data.Gender != req.Data.Spouse.Gender {
+		if r.Data.Gender != r.Data.Spouse.Gender {
 			genderSpouse.Gender = true
 		} else {
 			genderSpouse.Gender = false
 		}
 
 		if err := ctx.Validate(&genderSpouse); err != nil {
-			return c.Json.BadRequestErrorValidation(ctx, err)
+			return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", r, err)
 		}
 
 	}
 
+	data, err := c.multiusecase.Filtering(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
+
 	if err != nil {
-		return c.Json.ServiceUnavailable(ctx)
+		return c.Json.ServiceUnavailableV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", r)
 	}
 
-	return c.Json.Ok(ctx, data)
+	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", r, data)
 }

@@ -12,7 +12,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/mysql"
 )
 
-func OpenDatabase() (*gorm.DB, error) {
+func OpenMinilosKMB() (*gorm.DB, error) {
 
 	user, pwd, host, port, database := config.GetFilteringDB()
 
@@ -36,7 +36,7 @@ func OpenDatabase() (*gorm.DB, error) {
 	return db, nil
 }
 
-func OpenDatabaseKpLos() (*gorm.DB, error) {
+func OpenKpLos() (*gorm.DB, error) {
 
 	user, pwd, host, port, database := config.GetKpLosDB()
 
@@ -59,7 +59,7 @@ func OpenDatabaseKpLos() (*gorm.DB, error) {
 	return db, nil
 }
 
-func OpenDummyDatabase() (*gorm.DB, error) {
+func OpenCatalogData() (*gorm.DB, error) {
 
 	user, pwd, host, port, database := config.GetDummyDB()
 

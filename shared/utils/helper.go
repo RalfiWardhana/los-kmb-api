@@ -3,10 +3,13 @@ package utils
 import (
 	"crypto/rand"
 	"fmt"
+	"math"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 func DiffTwoDate(date time.Time) time.Duration {
@@ -172,5 +175,18 @@ func GenerateTimeWithFormat(format string) string {
 
 	currentTime := time.Now().Local().Format(format)
 	return currentTime
+}
 
+func Round(num float64) int {
+	return int(num + math.Copysign(0.5, num))
+}
+
+func ToFixed(num float64, precision int) float64 {
+	output := math.Pow(10, float64(precision))
+	return float64(Round(num*output)) / output
+}
+
+func GenerateUUID() string {
+	id := uuid.Must(uuid.NewRandom())
+	return id.String()
 }

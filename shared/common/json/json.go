@@ -3,13 +3,12 @@ package json
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"strings"
-
 	models "los-kmb-api/models/response"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
+	"net/http"
+	"strings"
 
 	"github.com/iancoleman/strcase"
 	"github.com/labstack/echo/v4"
@@ -25,58 +24,126 @@ func NewResponse() common.JSON {
 	return &response{}
 }
 
-func (c *response) Ok(ctx echo.Context, data interface{}) error {
-	return ctx.JSON(http.StatusOK, models.ApiResponse{
-		Message:    constant.MESSAGE_KMB_FILTERING,
+func (c *response) SuccessV2(ctx echo.Context, accessToken, logFile, message string, req, data interface{}) error {
+
+	//create response
+	apiResponse := models.ApiResponse{
+		Message:    message,
 		Errors:     nil,
 		Data:       data,
 		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Get(echo.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx.Request().Context(), accessToken, common.CentralizeLogParameter{
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_INCOMING_REQUEST,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_INFO,
+		Request:    req,
+		Response:   apiResponse,
 	})
+
+	return ctx.JSON(http.StatusOK, apiResponse)
 }
 
-func (c *response) ServiceUnavailable(ctx echo.Context) error {
-	return ctx.JSON(http.StatusServiceUnavailable, models.ApiResponse{
-		Message:    constant.MESSAGE_KMB_FILTERING,
+func (c *response) ServiceUnavailableV2(ctx echo.Context, accessToken, logFile, message string, req interface{}) error {
+
+	apiResponse := models.ApiResponse{
+		Message:    message,
 		Errors:     "service_unavailable",
 		Data:       nil,
 		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Get(echo.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx.Request().Context(), accessToken, common.CentralizeLogParameter{
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_INCOMING_REQUEST,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_ERROR,
+		Request:    req,
+		Response:   apiResponse,
 	})
+
+	return ctx.JSON(http.StatusServiceUnavailable, apiResponse)
 }
 
-func (c *response) InternalServerError(ctx echo.Context, err error) error {
+func (c *response) InternalServerErrorCustomV2(ctx echo.Context, accessToken, logFile, message string, err error) error {
 	apiError := handleInternalError(err)
-	return ctx.JSON(http.StatusInternalServerError, models.ApiResponse{
-		Message:    constant.MESSAGE_KMB_FILTERING + " - " + apiError,
-		Errors:     "internal_server_error",
+
+	apiResponse := models.ApiResponse{
+		Message:    message + " - " + apiError,
+		Errors:     constant.INTERNAL_SERVER_ERROR,
 		Data:       nil,
 		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Get(echo.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx.Request().Context(), accessToken, common.CentralizeLogParameter{
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_INCOMING_REQUEST,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_ERROR,
+		Response:   apiResponse,
 	})
+	return ctx.JSON(http.StatusInternalServerError, apiResponse)
 }
 
-func (c *response) BadRequestErrorValidation(ctx echo.Context, err error) error {
+func (c *response) BadRequestErrorValidationV2(ctx echo.Context, accessToken, logFile, message string, req interface{}, err error) error {
 	var errors = make([]models.ErrorValidation, len(err.(validator.ValidationErrors)))
 
 	for k, v := range err.(validator.ValidationErrors) {
+		field := strcase.ToSnake(v.Field())
+
 		errors[k] = models.ErrorValidation{
-			Field:   strcase.ToSnake(v.Field()),
+			Field:   field,
 			Message: formatMessage(v),
 		}
+
 	}
-	return ctx.JSON(http.StatusBadRequest, models.ApiResponse{
-		Message:    constant.MESSAGE_KMB_FILTERING,
+	apiResponse := models.ApiResponse{
+		Message:    message,
 		Errors:     errors,
 		Data:       nil,
 		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Get(echo.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx.Request().Context(), accessToken, common.CentralizeLogParameter{
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_INCOMING_REQUEST,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_ERROR,
+		Request:    req,
+		Response:   apiResponse,
 	})
+
+	return ctx.JSON(http.StatusBadRequest, apiResponse)
 }
 
 func (c *response) BadGateway(ctx echo.Context, message string) error {
-	return ctx.JSON(http.StatusBadGateway, models.ApiResponse{
+
+	apiResponse := models.ApiResponse{
 		Message:    message,
 		Errors:     "upstream_service_error",
 		Data:       nil,
 		ServerTime: utils.GenerateTimeNow(),
-	})
+	}
+	requestID, ok := ctx.Get(echo.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	return ctx.JSON(http.StatusBadGateway, apiResponse)
 }
 
 func handleUnmarshalError(err error) []models.ErrorValidation {
@@ -139,29 +206,6 @@ func handleInternalError(err error) (apiErrors string) {
 	return
 }
 
-func (c *response) BadRequestWithSpecificFieldsV2(ctx echo.Context, accessToken, logFile, msg string, fields ...[]string) error {
-	errors := make([]models.ErrorValidation, len(fields))
-
-	for key, val := range fields {
-		errors[key] = formatMessage2(val[0], val[1])
-	}
-
-	apiResponse := models.ApiResponse{
-		Message:    msg,
-		Errors:     errors,
-		ServerTime: utils.GenerateTimeNow(),
-	}
-
-	_ = common.CentralizeLog(ctx.Request().Context(), accessToken, common.CentralizeLogParameter{
-		LogFile:    logFile,
-		MsgLogFile: constant.MSG_INCOMING_REQUEST,
-		LevelLog:   constant.PLATFORM_LOG_LEVEL_INFO,
-		Response:   apiResponse,
-	})
-
-	return ctx.JSON(http.StatusBadRequest, apiResponse)
-}
-
 func formatMessage(err validator.FieldError) string {
 
 	param := err.Param()
@@ -181,27 +225,4 @@ func formatMessage(err validator.FieldError) string {
 		message = fmt.Sprintf("accepted:min=%s", param)
 	}
 	return message
-}
-
-func formatMessage2(field string, tag string) models.ErrorValidation {
-	errors := models.ErrorValidation{
-		Field:   strcase.ToSnake(field),
-		Message: "required",
-	}
-
-	switch tag {
-	case "required":
-		errors.Message = "required"
-	case "mobilephone":
-		errors.Message = "accepted:start=08XXXXXXXXXX"
-	case "minphone":
-		errors.Message = "accepted:min=10"
-	case "maxphone":
-		errors.Message = "accepted:max=14"
-	case "number":
-		errors.Message = "accepted:number"
-	case "encryption":
-		errors.Message = "invalid encryption"
-	}
-	return errors
 }
