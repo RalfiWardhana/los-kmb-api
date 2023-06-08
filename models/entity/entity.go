@@ -64,6 +64,9 @@ type ApiDupcheckKmbUpdate struct {
 	Decision               string      `gorm:"type:varchar(50);column:Decision"`
 	Reason                 string      `gorm:"type:varchar(200);column:Reason"`
 	Timestamp              time.Time   `gorm:"column:Timestamp"`
+	PefindoID              interface{} `gorm:"column:pefindo_id"`
+	PefindoIDSpouse        interface{} `gorm:"column:pefindo_id_spouse"`
+	PefindoScore           interface{} `gorm:"column:pefindo_score"`
 }
 
 func (c *ApiDupcheckKmbUpdate) TableName() string {

@@ -114,7 +114,7 @@ func (u multiUsecase) Filtering(ctx context.Context, reqs request.FilteringReque
 		} else {
 
 			// hit ke pefindo
-			pefindo, err := u.usecase.FilteringPefindo(ctx, reqs, konsumen.StatusKonsumen, savedata.RequestID)
+			pefindo, err := u.usecase.FilteringPefindo(ctx, reqs, konsumen.StatusKonsumen, accessToken)
 			if err != nil {
 				err = fmt.Errorf("failed fetching data pefindo")
 				return pefindo, err
@@ -614,9 +614,12 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 		var check_pefindo response.ResposePefindo
 
 		if dummy {
-			getdata, errs := u.repository.DummyDataPbk(reqs.Data.IDNumber)
 
-			if getdata == (entity.DummyPBK{}) {
+			var getData entity.DummyPBK
+
+			getData, err = u.repository.DummyDataPbk(reqs.Data.IDNumber)
+
+			if getData == (entity.DummyPBK{}) {
 				check_pefindo.Code = "201"
 				check_pefindo.Result = "Pefindo Dummy Data Not Found"
 
@@ -624,21 +627,26 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 					"code":   check_pefindo.Code,
 					"result": "Pefindo Dummy Data Not Found",
 				}
-				ResponsePefindo, _ := json.Marshal(resp)
-				updateFiltering.ResultPefindo = ResponsePefindo
+
+				responsePefindo, _ := json.Marshal(resp)
+				updateFiltering.ResultPefindo = responsePefindo
 
 			} else {
-				if errs != nil {
+				if err != nil {
 					err = fmt.Errorf("FAILED FETCHING DATA PEFINDO")
 					return
 				}
 
-				if err = json.Unmarshal([]byte(getdata.Response), &check_pefindo); err != nil {
+				if err = json.Unmarshal([]byte(getData.Response), &check_pefindo); err != nil {
 					err = fmt.Errorf("KMB FILTERING SERVICE UNAVAILABLE")
 					return
 				}
+
 				ResponsePefindo, _ := json.Marshal(check_pefindo)
 				updateFiltering.ResultPefindo = ResponsePefindo
+				updateFiltering.PefindoID = &check_pefindo.Konsumen.PefindoID
+				updateFiltering.PefindoIDSpouse = &check_pefindo.Pasangan.PefindoID
+
 			}
 
 		} else {
@@ -699,6 +707,9 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 
 			c, _ := json.Marshal(check_pefindo.Result)
 			var pefindo_result response.PefindoResult
+
+			updateFiltering.PefindoID = &check_pefindo.Konsumen.PefindoID
+			updateFiltering.PefindoIDSpouse = &check_pefindo.Pasangan.PefindoID
 
 			if errs := json.Unmarshal(c, &pefindo_result); errs != nil {
 				err = fmt.Errorf("KMB FILTERING SERVICE UNAVAILABLE")
@@ -817,7 +828,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 			data.PbkReport = pefindo_result.DetailReport
 			data.TotalBakiDebet = pefindo_result.TotalBakiDebetNonAgunan
 
-		} else if check_pefindo.Code == "201" || check_pefindo.Result != "UNSCORE" {
+		} else if check_pefindo.Code == "201" || check_pefindo.Result == "UNSCORE" {
 
 			if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
 				data.Code = constant.NAMA_SAMA_UNSCORE_RO_AO_CODE
@@ -830,6 +841,9 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 				data.Decision = constant.DECISION_PASS
 				data.Reason = "PBK Tidak Ditemukan - " + status_konsumen
 			}
+
+			updateFiltering.PefindoID = &check_pefindo.Konsumen.PefindoID
+			updateFiltering.PefindoIDSpouse = &check_pefindo.Pasangan.PefindoID
 
 		} else if check_pefindo.Code == "202" {
 			data.Code = constant.SERVICE_PBK_UNAVAILABLE_CODE
