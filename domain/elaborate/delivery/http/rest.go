@@ -50,7 +50,7 @@ func (c *handlerKmbElaborate) Elaborate(ctx echo.Context) (err error) {
 
 	accessToken := middlewares.UserInfoData.AccessToken
 
-	data, err := c.multiusecase.Elaborate(req, accessToken)
+	data, err := c.multiusecase.Elaborate(ctx.Request().Context(), req, accessToken)
 
 	if err != nil {
 		return c.Json.ServiceUnavailableV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req)

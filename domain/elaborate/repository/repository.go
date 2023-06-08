@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"los-kmb-api/domain/elaborate/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/shared/config"
@@ -48,7 +49,7 @@ func (r repoHandler) UpdateDataElaborate(data entity.ApiElaborateKmbUpdate) (err
 	return
 }
 
-func (r repoHandler) GetClusterBranchElaborate(query string) (cluster entity.ClusterBranch, err error) {
+func (r repoHandler) GetClusterBranchElaborate(branch_id string, cust_status string, bpkb int) (cluster entity.ClusterBranch, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
@@ -59,14 +60,76 @@ func (r repoHandler) GetClusterBranchElaborate(query string) (cluster entity.Clu
 	db := r.KpLos.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.KpLos.Raw(query).Scan(&cluster).Error; err != nil {
+	if err = r.KpLos.Raw("SELECT cluster FROM kmb_mapping_cluster_branch WITH (nolock) WHERE branch_id = ? AND customer_status = ? AND bpkb_name_type = ?", branch_id, cust_status, bpkb).Scan(&cluster).Error; err != nil {
 		return
 	}
 
 	return
 }
 
-func (r repoHandler) GetResultElaborate(query string) (data entity.ResultElaborate, err error) {
+func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bpkb int, result_pefindo string, tenor int, age_vehicle string, ltv float64, baki_debet float64) (data entity.ResultElaborate, err error) {
+
+	var queryAdd string
+	var ltv_range int = int(ltv)
+	var total_baki_debet int = int(baki_debet)
+
+	// PEFINDO PASS
+	if result_pefindo == "PASS" {
+		if tenor >= 36 {
+			queryAdd = fmt.Sprintf("AND mes.bpkb_name_type = %d AND mes.tenor_start >= 36 AND mes.tenor_end = 0", bpkb)
+		} else {
+			queryAdd = fmt.Sprintf("AND mes.tenor_start <= %d AND mes.tenor_end >= %d", tenor, tenor)
+		}
+
+		if tenor >= 36 && bpkb == 1 {
+			queryAdd += fmt.Sprintf(" AND mes.age_vehicle = '%s'", age_vehicle)
+		}
+
+		if age_vehicle == "<=12" && bpkb == 1 {
+
+			if ltv_range != 0 && ltv_range <= 1000 {
+				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", ltv_range, ltv_range)
+			} else {
+				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= 1000", ltv_range)
+			}
+		}
+	}
+
+	// PEFINDO NO HIT
+	if result_pefindo == "NO HIT" {
+		if tenor >= 24 {
+			queryAdd = fmt.Sprintf("AND mes.bpkb_name_type = %d AND mes.tenor_start >= 24 AND mes.tenor_end = 0", bpkb)
+		} else {
+			queryAdd = fmt.Sprintf("AND mes.tenor_start <= %d AND mes.tenor_end >= %d", tenor, tenor)
+		}
+
+		if ltv_range != 0 && ltv_range <= 1000 {
+			queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", ltv_range, ltv_range)
+		} else {
+			queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= 1000", ltv_range)
+		}
+	}
+
+	// PEFINDO REJECT
+	if result_pefindo == "REJECT" {
+
+		queryAdd = fmt.Sprintf("AND mes.total_baki_debet_start <= %d AND mes.total_baki_debet_end >= %d", total_baki_debet, total_baki_debet)
+
+		if tenor >= 24 {
+			queryAdd += fmt.Sprintf(" AND mes.bpkb_name_type = %d AND mes.tenor_start >= '24' AND mes.tenor_end = 0", bpkb)
+		} else {
+			queryAdd += fmt.Sprintf(" AND mes.tenor_start <= %d AND mes.tenor_end >= %d", tenor, tenor)
+		}
+
+		if tenor < 24 {
+			if ltv_range != 0 && ltv_range <= 1000 {
+				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", ltv_range, ltv_range)
+			} else {
+				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= '1000'", ltv_range)
+			}
+		}
+	}
+
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
@@ -77,7 +140,7 @@ func (r repoHandler) GetResultElaborate(query string) (data entity.ResultElabora
 	db := r.KpLos.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.KpLos.Raw(query).Scan(&data).Error; err != nil {
+	if err = r.KpLos.Raw("SELECT mcb.cluster, mes.decision, mes.ltv_start FROM kmb_mapping_cluster_branch mcb JOIN kmb_mapping_elaborate_scheme mes ON mcb.cluster = mes.cluster WHERE mcb.branch_id = ? AND mcb.customer_status = ? AND mcb.bpkb_name_type = ? AND mes.result_pefindo = ? "+queryAdd, branch_id, cust_status, bpkb, result_pefindo).Scan(&data).Error; err != nil {
 		return
 	}
 

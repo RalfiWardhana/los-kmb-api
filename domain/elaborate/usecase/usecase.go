@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"los-kmb-api/domain/elaborate/interfaces"
@@ -45,7 +46,7 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 	}
 }
 
-func (u multiUsecase) Elaborate(reqs request.BodyRequestElaborate, accessToken string) (data response.ElaborateResult, err error) {
+func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestElaborate, accessToken string) (data response.ElaborateResult, err error) {
 
 	var savedata entity.ApiElaborateKmb
 
@@ -80,7 +81,7 @@ func (u multiUsecase) Elaborate(reqs request.BodyRequestElaborate, accessToken s
 			updateElaborate.Reason = constant.REASON_PASS_ELABORATE
 			updateElaborate.Decision = constant.DECISION_PASS
 		} else {
-			result_elaborate, errs := u.usecase.ResultElaborate(reqs)
+			result_elaborate, errs := u.usecase.ResultElaborate(ctx, reqs)
 			if errs != nil {
 				err = fmt.Errorf("failed get result elaborate")
 				return
@@ -95,7 +96,7 @@ func (u multiUsecase) Elaborate(reqs request.BodyRequestElaborate, accessToken s
 			updateElaborate.Decision = result_elaborate.Decision
 		}
 	} else { //NONE OF AO/RO PRIME PRIORITY
-		result_elaborate, errs := u.usecase.ResultElaborate(reqs)
+		result_elaborate, errs := u.usecase.ResultElaborate(ctx, reqs)
 		if errs != nil {
 			err = fmt.Errorf("failed get result elaborate")
 			return
@@ -128,7 +129,7 @@ func (u multiUsecase) Elaborate(reqs request.BodyRequestElaborate, accessToken s
 	return
 }
 
-func (u usecase) ResultElaborate(reqs request.BodyRequestElaborate) (data response.ElaborateResult, err error) {
+func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestElaborate) (data response.ElaborateResult, err error) {
 
 	// convert date to year for age_vehicle
 	date_string := reqs.Data.ManufacturingYear
@@ -180,7 +181,7 @@ func (u usecase) ResultElaborate(reqs request.BodyRequestElaborate) (data respon
 	ltv := utils.ToFixed((NTF/OTR)*100, 0)
 
 	// Get Cluster Branch
-	cluster_branch, err := u.GetClusterBranchElaborate(branch_id, status_konsumen, bpkbNameType)
+	cluster_branch, err := u.repository.GetClusterBranchElaborate(branch_id, status_konsumen, bpkbNameType)
 	if err != nil {
 		err = fmt.Errorf("failed get cluster branch elaborate")
 		return
@@ -201,7 +202,7 @@ func (u usecase) ResultElaborate(reqs request.BodyRequestElaborate) (data respon
 	}
 
 	// Get Result from Mapping Elaborate
-	result_elaborate, err := u.GetResultElaborate(branch_id, status_konsumen, bpkbNameType, result_pefindo, tenor, age_vehicle, ltv, baki_debet)
+	result_elaborate, err := u.repository.GetResultElaborate(branch_id, status_konsumen, bpkbNameType, result_pefindo, tenor, age_vehicle, ltv, baki_debet)
 	if err != nil {
 		err = fmt.Errorf("failed get result elaborate")
 		return
@@ -220,92 +221,5 @@ func (u usecase) ResultElaborate(reqs request.BodyRequestElaborate) (data respon
 	}
 	data.Decision = result_elaborate.Decision
 	data.Reason = reason
-	return
-}
-
-func (u usecase) GetClusterBranchElaborate(branch_id string, cust_status string, bpkb int) (cluster entity.ClusterBranch, err error) {
-
-	query := fmt.Sprintf("SELECT cluster FROM kmb_mapping_cluster_branch WHERE branch_id = '%s' AND customer_status = '%s' AND bpkb_name_type = %d", branch_id, cust_status, bpkb)
-
-	cluster, err = u.repository.GetClusterBranchElaborate(query)
-
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-func (u usecase) GetResultElaborate(branch_id string, cust_status string, bpkb int, result_pefindo string, tenor int, age_vehicle string, ltv float64, baki_debet float64) (data entity.ResultElaborate, err error) {
-
-	var queryAdd string
-	var ltv_range int = int(ltv)
-	var total_baki_debet int = int(baki_debet)
-
-	// PEFINDO PASS
-	if result_pefindo == "PASS" {
-		if tenor >= 36 {
-			queryAdd = fmt.Sprintf("AND mes.bpkb_name_type = %d AND mes.tenor_start >= 36 AND mes.tenor_end = 0", bpkb)
-		} else {
-			queryAdd = fmt.Sprintf("AND mes.tenor_start <= %d AND mes.tenor_end >= %d", tenor, tenor)
-		}
-
-		if tenor >= 36 && bpkb == 1 {
-			queryAdd += fmt.Sprintf(" AND mes.age_vehicle = '%s'", age_vehicle)
-		}
-
-		if age_vehicle == "<=12" && bpkb == 1 {
-
-			if ltv_range != 0 && ltv_range <= 1000 {
-				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", ltv_range, ltv_range)
-			} else {
-				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= 1000", ltv_range)
-			}
-		}
-	}
-
-	// PEFINDO NO HIT
-	if result_pefindo == "NO HIT" {
-		if tenor >= 24 {
-			queryAdd = fmt.Sprintf("AND mes.bpkb_name_type = %d AND mes.tenor_start >= 24 AND mes.tenor_end = 0", bpkb)
-		} else {
-			queryAdd = fmt.Sprintf("AND mes.tenor_start <= %d AND mes.tenor_end >= %d", tenor, tenor)
-		}
-
-		if ltv_range != 0 && ltv_range <= 1000 {
-			queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", ltv_range, ltv_range)
-		} else {
-			queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= 1000", ltv_range)
-		}
-	}
-
-	// PEFINDO REJECT
-	if result_pefindo == "REJECT" {
-
-		queryAdd = fmt.Sprintf("AND mes.total_baki_debet_start <= %d AND mes.total_baki_debet_end >= %d", total_baki_debet, total_baki_debet)
-
-		if tenor >= 24 {
-			queryAdd += fmt.Sprintf(" AND mes.bpkb_name_type = %d AND mes.tenor_start >= '24' AND mes.tenor_end = 0", bpkb)
-		} else {
-			queryAdd += fmt.Sprintf(" AND mes.tenor_start <= %d AND mes.tenor_end >= %d", tenor, tenor)
-		}
-
-		if tenor < 24 {
-			if ltv_range != 0 && ltv_range <= 1000 {
-				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", ltv_range, ltv_range)
-			} else {
-				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= '1000'", ltv_range)
-			}
-		}
-	}
-
-	query := fmt.Sprintf("SELECT mcb.cluster, mes.decision, mes.ltv_start FROM kmb_mapping_cluster_branch mcb JOIN kmb_mapping_elaborate_scheme mes ON mcb.cluster = mes.cluster WHERE mcb.branch_id = '%s' AND mcb.customer_status = '%s' AND mcb.bpkb_name_type = %d AND mes.result_pefindo = '%s' %s", branch_id, cust_status, bpkb, result_pefindo, queryAdd)
-
-	data, err = u.repository.GetResultElaborate(query)
-
-	if err != nil {
-		return
-	}
-
 	return
 }

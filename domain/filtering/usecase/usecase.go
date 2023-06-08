@@ -993,33 +993,6 @@ func (u usecase) HitPefindoPrimePriority(ctx context.Context, reqs request.Filte
 	return
 }
 
-func (u usecase) GetBranchDp(BranchID, StatusKonsumen, ProfessionGroup string, totalBakiDebetNonAgunan int) (data entity.BranchDp, err error) {
-
-	get_data, _ := u.repository.DataGetMappingDp(BranchID, StatusKonsumen)
-
-	var queryAdd string
-
-	if totalBakiDebetNonAgunan <= get_data[0].RangeEnd {
-		if StatusKonsumen == constant.STATUS_KONSUMEN_NEW {
-			queryAdd = fmt.Sprintf("AND a.customer_status = '%s'AND a.profession_group = '%s'", StatusKonsumen, ProfessionGroup)
-		} else {
-			queryAdd = fmt.Sprintf("AND a.customer_status = '%s'AND a.profession_group IS NULL", StatusKonsumen)
-		}
-	} else {
-		queryAdd = fmt.Sprintf("AND c.range_start <= %d AND c.range_end >= %d", totalBakiDebetNonAgunan, totalBakiDebetNonAgunan)
-	}
-
-	query := fmt.Sprintf("SELECT TOP 1 a.branch,a.customer_status,a.profession_group,b.minimal_dp_name,b.minimal_dp_value FROM dbo.mapping_branch_dp a WITH (NOLOCK) INNER JOIN dbo.master_list_dp b WITH (NOLOCK) ON a.master_list_dp = b.id LEFT JOIN dbo.mapping_baki_debet c WITH (NOLOCK) ON a.baki_debet = c.id WHERE a.branch = '%s' %s ORDER BY a.created_at ASC", BranchID, queryAdd)
-
-	data, err = u.repository.BranchDpData(query)
-
-	if err != nil {
-		return
-	}
-
-	return
-}
-
 func checkNullMaxOverdueLast12Months(MaxOverdueLast12Months interface{}) float64 {
 	var max_overdue_last12_months float64
 
