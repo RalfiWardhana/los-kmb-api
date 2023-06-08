@@ -75,15 +75,16 @@ func (u multiUsecase) Filtering(ctx context.Context, reqs request.FilteringReque
 		return
 	}
 
-	arrBlackList := strings.Split(constant.CODE_BLACKLIST, ",")
+	arrNonBlackList := strings.Split(constant.CODE_NON_BLACKLIST, ",")
 
-	var isBlacklist bool
+	var (
+		isBlacklist     bool = true
+		updateFiltering entity.ApiDupcheckKmbUpdate
+	)
 
-	var updateFiltering entity.ApiDupcheckKmbUpdate
-
-	for _, v := range arrBlackList {
+	for _, v := range arrNonBlackList {
 		if v == checkBlacklist.Code {
-			isBlacklist = true
+			isBlacklist = false
 			break
 		}
 	}
@@ -607,7 +608,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 	}
 
 	active, _ := strconv.ParseBool(os.Getenv("ACTIVE_PBK"))
-	dummy, _ := strconv.ParseBool(os.Getenv("DUMMY_DUPCHECK"))
+	dummy, _ := strconv.ParseBool(os.Getenv("DUMMY_PBK"))
 
 	if active {
 		var check_pefindo response.ResposePefindo
@@ -865,7 +866,7 @@ func (u usecase) HitPefindoPrimePriority(ctx context.Context, reqs request.Filte
 	updateFiltering.RequestID = requestID
 
 	active, _ := strconv.ParseBool(os.Getenv("ACTIVE_PBK"))
-	dummy, _ := strconv.ParseBool(os.Getenv("DUMMY_DUPCHECK"))
+	dummy, _ := strconv.ParseBool(os.Getenv("DUMMY_PBK"))
 
 	if active {
 		var check_pefindo response.ResposePefindo
