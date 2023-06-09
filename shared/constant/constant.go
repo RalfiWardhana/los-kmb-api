@@ -29,6 +29,8 @@ const (
 	IS_RESTRUCTURE                                               = 1
 	CODE_E                                                       = 701
 	MESSAGE_E                                                    = "ERROR"
+	PEFINDO_UNSCORE                                              = "UNSCORE"
+	RESPONSE_PEFINDO_DUMMY_NOT_FOUND                             = "Pefindo Dummy Data Not Found"
 	ERRORS_E                                                     = "Failed Process Blacklist Confins"
 	REASON_E                                                     = "Failed Process Blacklist Confins"
 	NAMA_SAMA                                                    = "nama_sama"
