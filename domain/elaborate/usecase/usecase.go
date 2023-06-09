@@ -211,8 +211,9 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 	if result_elaborate.Decision == constant.DECISION_PASS {
 		data.Code = constant.CODE_PASS_ELABORATE
 	} else {
-		data.Code = constant.CODE_REJECT_NTF_ELABORATE
+		data.Code = constant.CODE_REJECT_ELABORATE
 		if result_elaborate.LTV > 0 {
+			data.Code = constant.CODE_REJECT_NTF_ELABORATE
 			reason = constant.REASON_REJECT_NTF_ELABORATE
 			data.LTV = result_elaborate.LTV - 1
 		} else {

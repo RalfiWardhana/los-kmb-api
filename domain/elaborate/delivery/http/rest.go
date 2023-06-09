@@ -53,8 +53,8 @@ func (c *handlerKmbElaborate) Elaborate(ctx echo.Context) (err error) {
 	data, err := c.multiusecase.Elaborate(ctx.Request().Context(), req, accessToken)
 
 	if err != nil {
-		return c.Json.ServiceUnavailableV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req)
+		return c.Json.ServiceUnavailableV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB ELABORATE", req)
 	}
 
-	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, data)
+	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB ELABORATE", req, data)
 }
