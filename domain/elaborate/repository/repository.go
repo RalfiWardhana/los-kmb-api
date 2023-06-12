@@ -67,6 +67,24 @@ func (r repoHandler) GetClusterBranchElaborate(branch_id string, cust_status str
 	return
 }
 
+func (r repoHandler) GetFilteringResult(prospect_id string) (filtering entity.ApiDupcheckKmbUpdate, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.kmbElaborate.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.kmbElaborate.Raw("SELECT PefindoID, PefindoIDSpouse, PefindoScore FROM api_dupcheck_kmb WHERE ProspectID = ?", prospect_id).Scan(&filtering).Error; err != nil {
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bpkb int, result_pefindo string, tenor int, age_vehicle string, ltv float64, baki_debet float64) (data entity.ResultElaborate, err error) {
 
 	var queryAdd string

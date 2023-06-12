@@ -201,6 +201,25 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 		return
 	}
 
+	// Set Result Pefindo for HIT/NO HIT based on Filtering Result
+	filtering_result, err := u.repository.GetFilteringResult(reqs.Data.ProspectID)
+	if filtering_result == (entity.ApiDupcheckKmbUpdate{}) {
+		result_pefindo = reqs.Data.ResultPefindo
+	} else {
+		if err != nil {
+			err = fmt.Errorf("failed get result filtering")
+			return
+		}
+
+		if result_pefindo == constant.DECISION_PASS {
+			if (filtering_result.PefindoID != nil || filtering_result.PefindoIDSpouse != nil) && filtering_result.PefindoScore != constant.UNSCORE_PBK {
+				result_pefindo = constant.DECISION_PASS
+			} else {
+				result_pefindo = constant.DECISION_PBK_NO_HIT
+			}
+		}
+	}
+
 	// Get Result from Mapping Elaborate
 	result_elaborate, err := u.repository.GetResultElaborate(branch_id, status_konsumen, bpkbNameType, result_pefindo, tenor, age_vehicle, ltv, baki_debet)
 	if err != nil {
