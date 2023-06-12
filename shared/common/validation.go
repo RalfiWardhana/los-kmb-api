@@ -52,6 +52,7 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("customer_status", checkCustomerStatus)
 	v.validator.RegisterValidation("customer_category", checkCustomerCategory)
 	v.validator.RegisterValidation("result_pefindo", checkResultPefindo)
+	v.validator.RegisterValidation("required_baki_debet", checkBakiDebet)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
@@ -188,11 +189,14 @@ func checkCustomerCategory(fl validator.FieldLevel) (validator bool) {
 	regular := constant.RO_AO_REGULAR
 	prime := constant.RO_AO_PRIME
 	priority := constant.RO_AO_PRIORITY
+	customer_status := fl.Parent().FieldByName("CustomerStatus").String()
 
-	if fl.Field().String() == "" || regular == fl.Field().String() || prime == fl.Field().String() || priority == fl.Field().String() {
-		validator = true
+	if customer_status == constant.STATUS_KONSUMEN_RO_AO {
+		if regular == fl.Field().String() || prime == fl.Field().String() || priority == fl.Field().String() {
+			validator = true
+		}
 	} else {
-		validator = false
+		validator = true
 	}
 
 	return
@@ -207,6 +211,23 @@ func checkResultPefindo(fl validator.FieldLevel) (validator bool) {
 		validator = true
 	} else {
 		validator = false
+	}
+
+	return
+}
+
+func checkBakiDebet(fl validator.FieldLevel) (validator bool) {
+
+	result_pefindo := fl.Parent().FieldByName("ResultPefindo").String()
+
+	if result_pefindo == constant.DECISION_REJECT {
+		if fl.Field().Float() != 0 {
+			validator = true
+		} else {
+			validator = false
+		}
+	} else {
+		validator = true
 	}
 
 	return

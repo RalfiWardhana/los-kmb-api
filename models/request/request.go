@@ -63,9 +63,9 @@ type DataElaborate struct {
 	CustomerStatus    string  `json:"CustomerStatus" validate:"required,customer_status" ex:"NEW or RO/AO"`
 	CategoryCustomer  string  `json:"CategoryCustomer" validate:"customer_category" ex:"REGULAR, PRIME or PRIORITY"`
 	ResultPefindo     string  `json:"ResultPefindo" validate:"required,result_pefindo" ex:"PASS or REJECT"`
-	TotalBakiDebet    float64 `json:"TotalBakiDebet"`
+	TotalBakiDebet    float64 `json:"TotalBakiDebet" validate:"required_baki_debet"`
 	Tenor             int     `json:"Tenor" validate:"required"`
-	ManufacturingYear string  `json:"ManufacturingYear" validate:"required"`
+	ManufacturingYear string  `json:"ManufacturingYear" validate:"required,len=4,number"`
 	OTR               float64 `json:"OTR" validate:"required"`
 	NTF               float64 `json:"NTF" validate:"required"`
 }

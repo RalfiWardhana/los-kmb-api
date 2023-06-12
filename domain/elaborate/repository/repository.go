@@ -7,6 +7,7 @@ import (
 	"los-kmb-api/domain/elaborate/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/shared/config"
+	"los-kmb-api/shared/constant"
 	"strconv"
 	"time"
 
@@ -92,7 +93,7 @@ func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bp
 	var total_baki_debet int = int(baki_debet)
 
 	// PEFINDO PASS
-	if result_pefindo == "PASS" {
+	if result_pefindo == constant.DECISION_PASS {
 		if tenor >= 36 {
 			queryAdd = fmt.Sprintf("AND mes.bpkb_name_type = %d AND mes.tenor_start >= 36 AND mes.tenor_end = 0", bpkb)
 		} else {
@@ -114,7 +115,7 @@ func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bp
 	}
 
 	// PEFINDO NO HIT
-	if result_pefindo == "NO HIT" {
+	if result_pefindo == constant.DECISION_PBK_NO_HIT {
 		if tenor >= 24 {
 			queryAdd = fmt.Sprintf("AND mes.bpkb_name_type = %d AND mes.tenor_start >= 24 AND mes.tenor_end = 0", bpkb)
 		} else {
@@ -129,12 +130,12 @@ func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bp
 	}
 
 	// PEFINDO REJECT
-	if result_pefindo == "REJECT" {
+	if result_pefindo == constant.DECISION_REJECT {
 
 		queryAdd = fmt.Sprintf("AND mes.total_baki_debet_start <= %d AND mes.total_baki_debet_end >= %d", total_baki_debet, total_baki_debet)
 
 		if tenor >= 24 {
-			queryAdd += fmt.Sprintf(" AND mes.tenor_start >= '24' AND mes.tenor_end = 0")
+			queryAdd += " AND mes.tenor_start >= '24' AND mes.tenor_end = 0"
 		} else {
 			queryAdd += fmt.Sprintf(" AND mes.tenor_start <= %d AND mes.tenor_end >= %d", tenor, tenor)
 		}
