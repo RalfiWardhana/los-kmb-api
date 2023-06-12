@@ -134,7 +134,7 @@ func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bp
 		queryAdd = fmt.Sprintf("AND mes.total_baki_debet_start <= %d AND mes.total_baki_debet_end >= %d", total_baki_debet, total_baki_debet)
 
 		if tenor >= 24 {
-			queryAdd += fmt.Sprintf(" AND mes.bpkb_name_type = %d AND mes.tenor_start >= '24' AND mes.tenor_end = 0", bpkb)
+			queryAdd += fmt.Sprintf(" AND mes.tenor_start >= '24' AND mes.tenor_end = 0")
 		} else {
 			queryAdd += fmt.Sprintf(" AND mes.tenor_start <= %d AND mes.tenor_end >= %d", tenor, tenor)
 		}
