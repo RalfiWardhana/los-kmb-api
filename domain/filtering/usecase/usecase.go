@@ -125,7 +125,9 @@ func (u multiUsecase) Filtering(ctx context.Context, reqs request.FilteringReque
 			data = pefindo
 		}
 		data.StatusKonsumen = checkBlacklist.StatusKonsumen
-		data.KategoriStatusKonsumen = konsumen.KategoriStatusKonsumen
+		if data.StatusKonsumen != constant.STATUS_KONSUMEN_NEW {
+			data.KategoriStatusKonsumen = konsumen.KategoriStatusKonsumen
+		}
 	}
 
 	resp, _ := json.Marshal(data)
