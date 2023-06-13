@@ -117,7 +117,7 @@ func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bp
 	// PEFINDO NO HIT
 	if result_pefindo == constant.DECISION_PBK_NO_HIT {
 		if tenor >= 24 {
-			queryAdd = fmt.Sprintf("AND mes.bpkb_name_type = %d AND mes.tenor_start >= 24 AND mes.tenor_end = 0", bpkb)
+			queryAdd = "AND mes.tenor_start >= 24 AND mes.tenor_end = 0"
 		} else {
 			queryAdd = fmt.Sprintf("AND mes.tenor_start <= %d AND mes.tenor_end >= %d", tenor, tenor)
 		}
