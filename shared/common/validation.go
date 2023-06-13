@@ -220,14 +220,14 @@ func checkBakiDebet(fl validator.FieldLevel) (validator bool) {
 
 	result_pefindo := fl.Parent().FieldByName("ResultPefindo").String()
 
-	if result_pefindo == constant.DECISION_REJECT {
-		if fl.Field().Float() != 0 {
+	if result_pefindo == constant.DECISION_PASS {
+		validator = true
+	} else {
+		if fl.Field().Interface() != nil {
 			validator = true
 		} else {
 			validator = false
 		}
-	} else {
-		validator = true
 	}
 
 	return

@@ -173,7 +173,16 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 	tenor := reqs.Data.Tenor
 	NTF := reqs.Data.NTF
 	OTR := reqs.Data.OTR
-	baki_debet := utils.ToFixed(reqs.Data.TotalBakiDebet, 0)
+
+	var baki_debet float64
+	var ok bool
+
+	if reqs.Data.TotalBakiDebet != nil {
+		baki_debet, ok = reqs.Data.TotalBakiDebet.(float64)
+		if !ok {
+			baki_debet = 0
+		}
+	}
 
 	var reason = constant.REASON_PASS_ELABORATE
 
@@ -187,14 +196,14 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 		return
 	}
 
-	if reqs.Data.TotalBakiDebet > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT {
+	if baki_debet > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT {
 		if cluster_branch.Cluster == constant.CLUSTER_E || cluster_branch.Cluster == constant.CLUSTER_F {
 			data.Code = constant.CODE_REJECT_ELABORATE
 			data.Reason = constant.REASON_REJECT_ELABORATE
 			data.Decision = constant.DECISION_REJECT
 			return
 		}
-	} else if reqs.Data.TotalBakiDebet > constant.BAKI_DEBET { //This should be reject in Filtering tho
+	} else if baki_debet > constant.BAKI_DEBET { //This should be reject in Filtering tho
 		data.Code = constant.CODE_REJECT_ELABORATE
 		data.Reason = constant.REASON_REJECT_ELABORATE
 		data.Decision = constant.DECISION_REJECT

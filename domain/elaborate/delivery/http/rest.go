@@ -44,6 +44,10 @@ func (c *handlerKmbElaborate) Elaborate(ctx echo.Context) (err error) {
 		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB ELABORATE", err)
 	}
 
+	if req.Data.ResultPefindo == constant.DECISION_PASS && req.Data.TotalBakiDebet == nil {
+		req.Data.TotalBakiDebet = 0
+	}
+
 	if err := ctx.Validate(&req); err != nil {
 		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB ELABORATE", req, err)
 	}
