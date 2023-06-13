@@ -112,9 +112,6 @@ func (u multiUsecase) Filtering(ctx context.Context, reqs request.FilteringReque
 			return pefindo, err
 		}
 
-		data.StatusKonsumen = checkBlacklist.StatusKonsumen
-		data.KategoriStatusKonsumen = konsumen.KategoriStatusKonsumen
-
 		if check_prime_priority {
 			updateFiltering.Code = konsumen.Code
 			updateFiltering.Reason = konsumen.Reason
@@ -127,6 +124,8 @@ func (u multiUsecase) Filtering(ctx context.Context, reqs request.FilteringReque
 			updateFiltering.Decision = pefindo.Decision
 			data = pefindo
 		}
+		data.StatusKonsumen = checkBlacklist.StatusKonsumen
+		data.KategoriStatusKonsumen = konsumen.KategoriStatusKonsumen
 	}
 
 	resp, _ := json.Marshal(data)
