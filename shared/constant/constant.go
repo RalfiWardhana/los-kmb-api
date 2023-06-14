@@ -171,6 +171,7 @@ const (
 	PBK_NO_HIT                                                   = "9195"
 	DECISION_PBK_NO_HIT                                          = "NO HIT"
 	UNSCORE_PBK                                                  = "UNSCORE"
+	NOT_MATCH_PBK                                                = "NOT_MATCH"
 	WO_AGUNAN_REJECT_CODE                                        = "9107"
 	WO_AGUNAN_PASS_CODE                                          = "9108"
 

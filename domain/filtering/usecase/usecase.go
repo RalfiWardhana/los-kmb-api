@@ -692,11 +692,13 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 		// handling response pefindo
 		if checkPefindo.Code == "200" || checkPefindo.Code == "201" {
 			if checkPefindo.Result != constant.RESPONSE_PEFINDO_DUMMY_NOT_FOUND {
-				setPefindo, _ := json.Marshal(checkPefindo.Result)
+				if checkPefindo.Result != constant.NOT_MATCH_PBK {
+					setPefindo, _ := json.Marshal(checkPefindo.Result)
 
-				if errs := json.Unmarshal(setPefindo, &pefindoResult); errs != nil {
-					err = fmt.Errorf("error unmarshal data pefindo")
-					return
+					if errs := json.Unmarshal(setPefindo, &pefindoResult); errs != nil {
+						err = fmt.Errorf("error unmarshal data pefindo")
+						return
+					}
 				}
 			}
 		}
