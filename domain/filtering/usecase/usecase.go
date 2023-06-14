@@ -545,13 +545,13 @@ func (u usecase) CheckStatusCategory(ctx context.Context, reqs request.Filtering
 				data.Reason = constant.REASON_CUSTOMER_STATUS_CODE_RO_AO
 				data.StatusKonsumen = status_konsumen
 			}
+			data.KategoriStatusKonsumen = segmentName
 		} else if status_konsumen == constant.STATUS_KONSUMEN_NEW {
 			data.Code = constant.CUSTOMER_STATUS_CODE_NEW
 			data.Decision = constant.DECISION_PASS
 			data.Reason = constant.REASON_CUSTOMER_STATUS_CODE_NEW
 			data.StatusKonsumen = status_konsumen
 		}
-		data.KategoriStatusKonsumen = segmentName
 	}
 
 	updateFiltering.CustomerType = string(data.KategoriStatusKonsumen)
