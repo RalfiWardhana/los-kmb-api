@@ -114,6 +114,7 @@ type ApiElaborateKmb struct {
 	Decision   string    `gorm:"type:varchar(50);column:Decision"`
 	Reason     string    `gorm:"type:varchar(200);column:Reason"`
 	DtmRequest time.Time `gorm:"column:DtmRequest"`
+	IsMapping  int       `gorm:"column:IsMapping"`
 	Timestamp  time.Time `gorm:"column:Timestamp"`
 }
 
@@ -129,6 +130,7 @@ type ApiElaborateKmbUpdate struct {
 	Decision    string      `gorm:"type:varchar(50);column:Decision"`
 	Reason      string      `gorm:"type:varchar(200);column:Reason"`
 	DtmResponse time.Time   `gorm:"column:DtmResponse"`
+	IsMapping   int         `gorm:"column:IsMapping"`
 	Timestamp   time.Time   `gorm:"column:Timestamp"`
 }
 

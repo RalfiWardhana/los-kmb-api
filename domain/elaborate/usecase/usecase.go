@@ -75,17 +75,30 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 
 	var max_ltv int
 
-	if reqs.Data.CustomerStatus == constant.STATUS_KONSUMEN_RO_AO && check_prime_priority { //AO/RO PRIME PRIORITY
-		if tenor < 36 {
+	// get the result elaborated scheme
+	result_elaborate, err := u.usecase.ResultElaborate(ctx, reqs)
+
+	updateElaborate.IsMapping = 1 //default, for mapping is exist
+
+	// not found mapping elaborate scheme
+	if result_elaborate == (response.ElaborateResult{}) {
+		updateElaborate.IsMapping = 0 //set flag for mapping not found
+		updateElaborate.Code = constant.CODE_PASS_ELABORATE
+		updateElaborate.Decision = constant.DECISION_PASS
+		updateElaborate.Reason = constant.REASON_PASS_ELABORATE
+	} else {
+
+		if err != nil {
+			err = fmt.Errorf("failed get result elaborate")
+			return
+		}
+
+		//AO/RO PRIME PRIORITY
+		if tenor < 36 && reqs.Data.CustomerStatus == constant.STATUS_KONSUMEN_RO_AO && check_prime_priority {
 			updateElaborate.Code = constant.CODE_PASS_ELABORATE
 			updateElaborate.Reason = constant.REASON_PASS_ELABORATE
 			updateElaborate.Decision = constant.DECISION_PASS
 		} else {
-			result_elaborate, errs := u.usecase.ResultElaborate(ctx, reqs)
-			if errs != nil {
-				err = fmt.Errorf("failed get result elaborate")
-				return
-			}
 
 			if result_elaborate.Decision == constant.DECISION_REJECT {
 				max_ltv = result_elaborate.LTV
@@ -95,20 +108,6 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 			updateElaborate.Reason = result_elaborate.Reason
 			updateElaborate.Decision = result_elaborate.Decision
 		}
-	} else { //NONE OF AO/RO PRIME PRIORITY
-		result_elaborate, errs := u.usecase.ResultElaborate(ctx, reqs)
-		if errs != nil {
-			err = fmt.Errorf("failed get result elaborate")
-			return
-		}
-
-		if result_elaborate.Decision == constant.DECISION_REJECT {
-			max_ltv = result_elaborate.LTV
-		}
-
-		updateElaborate.Code = result_elaborate.Code
-		updateElaborate.Reason = result_elaborate.Reason
-		updateElaborate.Decision = result_elaborate.Decision
 	}
 
 	data.Code = updateElaborate.Code
@@ -196,7 +195,7 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 		return
 	}
 
-	if baki_debet > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT {
+	if baki_debet > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && baki_debet <= constant.BAKI_DEBET {
 		if cluster_branch.Cluster == constant.CLUSTER_E || cluster_branch.Cluster == constant.CLUSTER_F {
 			data.Code = constant.CODE_REJECT_ELABORATE
 			data.Reason = constant.REASON_REJECT_ELABORATE
