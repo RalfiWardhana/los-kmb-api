@@ -119,13 +119,34 @@ func SetCustomLog(keyConfig string, isError bool, data map[string]interface{}, m
 	}
 }
 
-func GetFilteringDB() (string, string, string, int, string) {
-	user, _ := utils.DecryptCredential(os.Getenv("KMB_FILTERING_DB_USERNAME"))
-	pwd, _ := utils.DecryptCredential(os.Getenv("KMB_FILTERING_DB_PASSWORD"))
-	host, _ := utils.DecryptCredential(os.Getenv("KMB_FILTERING_DB_HOST"))
-	strPort, _ := utils.DecryptCredential(os.Getenv("KMB_FILTERING_DB_PORT"))
+func GetMinilosKMBDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("MINILOS_KMB_DB_USERNAME"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("MINILOS_KMB_DB_PASSWORD"))
+	host, _ := utils.DecryptCredential(os.Getenv("MINILOS_KMB_DB_HOST"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("MINILOS_KMB_DB_PORT"))
 	port, _ := strconv.Atoi(strPort)
-	database, _ := utils.DecryptCredential(os.Getenv("KMB_FILTERING_DB_DATABASE"))
+	database, _ := utils.DecryptCredential(os.Getenv("MINILOS_KMB_DB_DATABASE"))
+
+	return user, pwd, host, port, database
+}
+
+func GetMinilosWGDB() (string, string, string, string, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("MINILOS_WG_DB_USERNAME"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("MINILOS_WG_DB_PASSWORD"))
+	host, _ := utils.DecryptCredential(os.Getenv("MINILOS_WG_DB_HOST"))
+	port, _ := utils.DecryptCredential(os.Getenv("MINILOS_WG_DB_PORT"))
+	database, _ := utils.DecryptCredential(os.Getenv("MINILOS_WG_DB_DATABASE"))
+
+	return user, pwd, host, port, database
+}
+
+func GetLosCatalogDataDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("LOS_CATALOG_DATA_DB_USERNAME"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("LOS_CATALOG_DATA_DB_PASSWORD"))
+	host, _ := utils.DecryptCredential(os.Getenv("LOS_CATALOG_DATA_DB_HOST"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("LOS_CATALOG_DATA_DB_PORT"))
+	port, _ := strconv.Atoi(strPort)
+	database, _ := utils.DecryptCredential(os.Getenv("LOS_CATALOG_DATA_DB_DATABASE"))
 
 	return user, pwd, host, port, database
 }
@@ -141,13 +162,35 @@ func GetKpLosDB() (string, string, string, int, string) {
 	return user, pwd, host, port, database
 }
 
-func GetDummyDB() (string, string, string, int, string) {
-	user, _ := utils.DecryptCredential(os.Getenv("DUMMY_KMB_FILTERING_DB_USERNAME"))
-	pwd, _ := utils.DecryptCredential(os.Getenv("DUMMY_KMB_FILTERING_DB_PASSWORD"))
-	host, _ := utils.DecryptCredential(os.Getenv("DUMMY_KMB_FILTERING_DB_HOST"))
-	strPort, _ := utils.DecryptCredential(os.Getenv("DUMMY_KMB_FILTERING_DB_PORT"))
+func GetKpLosLogsDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("KP_LOS_LOG_DB_USERNAME"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("KP_LOS_LOG_DB_PASSWORD"))
+	host, _ := utils.DecryptCredential(os.Getenv("KP_LOS_LOG_DB_HOST"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("KP_LOS_LOG_DB_PORT"))
 	port, _ := strconv.Atoi(strPort)
-	database, _ := utils.DecryptCredential(os.Getenv("DUMMY_KMB_FILTERING_DB_DATABASE"))
+	database, _ := utils.DecryptCredential(os.Getenv("KP_LOS_LOG_DB_DATABASE"))
+
+	return user, pwd, host, port, database
+}
+
+func GetConfinsDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_USERNAME"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_PASSWORD"))
+	host, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_HOST"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_PORT"))
+	port, _ := strconv.Atoi(strPort)
+	database, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_DATABASE"))
+
+	return user, pwd, host, port, database
+}
+
+func GetStagingDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("STAGING_DB_USERNAME"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("STAGING_DB_PASSWORD"))
+	host, _ := utils.DecryptCredential(os.Getenv("STAGING_DB_HOST"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("STAGING_DB_PORT"))
+	port, _ := strconv.Atoi(strPort)
+	database, _ := utils.DecryptCredential(os.Getenv("STAGING_DB_DATABASE"))
 
 	return user, pwd, host, port, database
 }

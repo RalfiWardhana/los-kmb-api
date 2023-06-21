@@ -1,0 +1,94 @@
+package dupcheck
+
+import "time"
+
+type AppConfig struct {
+	GroupName string    `gorm:"type:varchar(50);column:group_name"`
+	Lob       string    `gorm:"type:varchar(10);column:lob"`
+	Key       string    `gorm:"type:varchar(50);column:key"`
+	Value     string    `gorm:"type:varchar(255);column:value"`
+	IsActive  int       `gorm:"column:is_active"`
+	CreatedAt time.Time `gorm:"column:created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at"`
+}
+
+func (c *AppConfig) TableName() string {
+	return "app_config"
+}
+
+type NewDupcheck struct {
+	ProspectID     string    `gorm:"column:ProspectID"`
+	CustomerStatus string    `gorm:"column:customer_status"`
+	CustomerType   string    `gorm:"column:customer_type"`
+	CreatedAt      time.Time `gorm:"column:created_at"`
+}
+
+func (c *NewDupcheck) TableName() string {
+	return "new_dupcheck"
+}
+
+type DummyCustomerDomain struct {
+	IDNumber string `gorm:"type:varchar(50);column:id_number"`
+	Response string `gorm:"type:text;column:response"`
+	Note     string `gorm:"type:varchar(200);column:note"`
+}
+
+func (c *DummyCustomerDomain) TableName() string {
+	return "dummy_cusomer_domain"
+}
+
+type DummyLatestPaidInstallment struct {
+	IDNumber string `gorm:"type:varchar(50);column:id_number"`
+	Response string `gorm:"type:text;column:response"`
+	Note     string `gorm:"type:varchar(200);column:note"`
+}
+
+func (c *DummyLatestPaidInstallment) TableName() string {
+	return "dummy_latest_paid_installment"
+}
+
+type ScanInstallmentAmount struct {
+	IDNumber          string  `gorm:"column:IDNumber"`
+	LegalName         string  `gorm:"column:LegalName"`
+	BirthDate         string  `gorm:"column:BirthDate"`
+	SurgateMotherName string  `gorm:"column:SurgateMotherName"`
+	InstallmentAmount float64 `gorm:"column:InstallmentAmount"`
+	NTF               float64 `gorm:"column:NTF"`
+}
+
+type Encrypted struct {
+	LegalName         string `gorm:"column:LegalName"`
+	FullName          string `gorm:"column:FullName"`
+	SurgateMotherName string `gorm:"column:SurgateMotherName"`
+	Email             string `gorm:"column:Email"`
+	MobilePhone       string `gorm:"column:MobilePhone"`
+	BirthPlace        string `gorm:"column:BirthPlace"`
+	ResidenceAddress  string `gorm:"column:ResidenceAddress"`
+	LegalAddress      string `gorm:"column:LegalAddress"`
+	CompanyAddress    string `gorm:"column:CompanyAddress"`
+	EmergencyAddress  string `gorm:"column:EmergencyAddress"`
+	OwnerAddress      string `gorm:"column:OwnerAddress"`
+	LocationAddress   string `gorm:"column:LocationAddress"`
+	MailingAddress    string `gorm:"column:MailingAddress"`
+	IDNumber          string `gorm:"column:IDNumber"`
+}
+
+type ConfigPMK struct {
+	Data DataPMK `json:"data"`
+}
+
+type DataPMK struct {
+	MinAgeMarried    int  `json:"min_age_married"`
+	MinAgeSingle     int  `json:"min_age_single"`
+	MaritalChecking  bool `json:"marital_checking"`
+	MaxAgeLimit      int  `json:"max_age_limit"`
+	LengthOfBusiness int  `json:"length_of_business"`
+	LengthOfWork     int  `json:"length_of_work"`
+	LengthOfStay     struct {
+		RumahSendiri int `json:"sd"`
+		RumahDinas   int `json:"rd"`
+		RumahKontrak int `json:"rk"`
+	} `json:"length_of_stay"`
+	MinimalIncome     float64 `json:"minimal_income"`
+	ManufacturingYear int     `json:"manufacturing_year"`
+}

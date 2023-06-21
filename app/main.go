@@ -11,6 +11,9 @@ import (
 	filteringDelivery "los-kmb-api/domain/filtering/delivery/http"
 	filteringRepository "los-kmb-api/domain/filtering/repository"
 	filteringUsecase "los-kmb-api/domain/filtering/usecase"
+	dupcheckDelivery "los-kmb-api/domain/kmb/delivery/http"
+	dupcheckRepository "los-kmb-api/domain/kmb/repository"
+	dupcheckUsecase "los-kmb-api/domain/kmb/usecase"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/json"
@@ -57,20 +60,37 @@ func main() {
 
 	constant.LOS_KMB_BASE_URL = os.Getenv("SWAGGER_HOST")
 
-	minilosKMB, err := database.OpenMinilosKMB()
-
+	wgOff, err := database.OpenMinilosWG()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
 	}
 
-	catalog, err := database.OpenCatalogData()
+	minilosKMB, err := database.OpenMinilosKMB()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to open database connection: %s", err))
+	}
 
+	losCatalog, err := database.OpenCatalogData()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
 	}
 
 	kpLos, err := database.OpenKpLos()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to open database connection: %s", err))
+	}
 
+	kpLosLogs, err := database.OpenKpLosLogs()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to open database connection: %s", err))
+	}
+
+	confins, err := database.OpenConfins()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to open database connection: %s", err))
+	}
+
+	staging, err := database.OpenStaging()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
 	}
@@ -105,7 +125,7 @@ func main() {
 	httpClient := httpclient.NewHttpClient()
 
 	// define kmb filtering domain
-	kmbFilteringRepo := filteringRepository.NewRepository(minilosKMB, kpLos, catalog)
+	kmbFilteringRepo := filteringRepository.NewRepository(minilosKMB, kpLos, losCatalog)
 	kmbFilteringMultiCase, kmbFilteringCase := filteringUsecase.NewMultiUsecase(kmbFilteringRepo, httpClient)
 	filteringDelivery.FilteringHandler(apiGroup, kmbFilteringMultiCase, kmbFilteringCase, kmbFilteringRepo, jsonResponse, accessToken)
 
@@ -113,6 +133,11 @@ func main() {
 	kmbElaborateRepo := elaborateRepository.NewRepository(minilosKMB, kpLos)
 	kmbElaborateMultiCase, kmbElaborateCase := elaborateUsecase.NewMultiUsecase(kmbElaborateRepo, httpClient)
 	elaborateDelivery.ElaborateHandler(apiGroup, kmbElaborateMultiCase, kmbElaborateCase, kmbElaborateRepo, jsonResponse, accessToken)
+
+	// define kmb dupcheck domain
+	kmbDupcheckRepo := dupcheckRepository.NewRepository(kpLos, kpLosLogs, confins, staging, wgOff, minilosKMB)
+	kmbDupcheckMultiCase, kmbDupcheckCase := dupcheckUsecase.NewMultiUsecase(kmbDupcheckRepo, httpClient)
+	dupcheckDelivery.DupcheckHandler(apiGroup, kmbDupcheckMultiCase, kmbDupcheckCase, kmbDupcheckRepo, jsonResponse, accessToken)
 
 	if config.IsDevelopment {
 		docs.SwaggerInfo.Title = "LOS-KMB-API"
