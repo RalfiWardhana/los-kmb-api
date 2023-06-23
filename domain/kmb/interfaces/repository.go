@@ -8,6 +8,7 @@ type Repository interface {
 	SaveNewDupcheck(newDupcheck entity.NewDupcheck) (err error)
 	GetDummyCustomerDomain(idNumber string) (data entity.DummyCustomerDomain, err error)
 	GetDummyLatestPaidInstallment(idNumber string) (data entity.DummyLatestPaidInstallment, err error)
+	GetDummyAgreementChassisNumber(idNumber string) (data entity.DummyAgreementChassisNumber, err error)
 	GetEncryptedValue(idNumber string, legalName string, motherName string) (encrypted entity.Encrypted, err error)
 
 	ScanKmbOff(query string) (data entity.ScanInstallmentAmount, err error)
@@ -22,4 +23,7 @@ type Repository interface {
 	GetAllReject(idNumber string) (data []entity.DupcheckRejectionPMK, err error)
 	GetHistoryRejectAttempt(idNumber string) (data []entity.DupcheckRejectionPMK, err error)
 	GetCheckingRejectAttempt(idNumber, blackListDate string) (data entity.DupcheckRejectionPMK, err error)
+
+	SaveDataNoka(data entity.DupcheckRejectionNokaNosin) (err error)
+	SaveDataApiLog(data entity.TrxApiLog) (err error)
 }

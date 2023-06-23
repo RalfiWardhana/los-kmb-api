@@ -34,7 +34,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	}
 
 	// Exception Reject No. Rangka
-	rejectionNoka, err := u.usecase.RejectionNoka(req.RangkaNo, req.IDNumber)
+	rejectionNoka, err := u.usecase.RejectionNoka(req)
 
 	if err != nil {
 		CentralizeLog(constant.DUPCHECK_LOG, "Check Rejection Noka Nosin", constant.MESSAGE_E, "NOKA_NOSIN SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
@@ -44,7 +44,9 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	CentralizeLog(constant.DUPCHECK_LOG, "Check Rejection Noka Nosin", constant.MESSAGE_SUCCESS, "NOKA_NOSIN SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: rejectionNoka})
 
 	if rejectionNoka.Result == constant.DECISION_REJECT {
-		data = rejectionNoka
+		data.Code = rejectionNoka.Code
+		data.Result = rejectionNoka.Result
+		data.Reason = rejectionNoka.Reason
 		mapping.Reason = data.Reason
 		return
 	}
@@ -96,6 +98,23 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 	if ageVehicle.Result == constant.DECISION_REJECT {
 		data = ageVehicle
+		mapping.Reason = data.Reason
+		return
+	}
+
+	fmt.Println(rejectionNoka)
+	// Check Reject No. Rangka
+	checkNoka, err := u.usecase.CheckNoka(ctx, req, rejectionNoka, rejectionNoka.CurrentBannedEmpty, accessToken)
+
+	if err != nil {
+		CentralizeLog(constant.DUPCHECK_LOG, "Check Noka Nosin", constant.MESSAGE_E, "NOKA_NOSIN SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
+		return
+	}
+
+	CentralizeLog(constant.DUPCHECK_LOG, "Check Noka Nosin", constant.MESSAGE_SUCCESS, "NOKA_NOSIN SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: checkNoka})
+
+	if checkNoka.Result == constant.DECISION_REJECT {
+		data = checkNoka
 		mapping.Reason = data.Reason
 		return
 	}

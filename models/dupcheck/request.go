@@ -9,11 +9,13 @@ type DupcheckApi struct {
 	MonthlyVariableIncome float64            `json:"monthly_variable_income"`
 	SpouseIncome          float64            `json:"spouse_income"`
 	JobPosition           string             `json:"job_position" validate:"required"`
+	ProfessionID          string             `json:"profession_id" validate:"required"`
 	EmploymentSinceYear   string             `json:"employment_since_year" validate:"required,len=4"`
 	EmploymentSinceMonth  string             `json:"employment_since_month" validate:"required,len=2"`
 	StaySinceYear         string             `json:"stay_since_year" validate:"required,len=4"`
 	StaySinceMonth        string             `json:"stay_since_month" validate:"required,len=2"`
 	BirthDate             string             `json:"birth_date" validate:"required,dateformat"`
+	BirthPlace            string             `json:"birth_place" validate:"required,allowcharsname"`
 	Tenor                 int                `json:"tenor" validate:"required"`
 	IDNumber              string             `json:"id_number" validate:"required,len=16,number"`
 	LegalName             string             `json:"legal_name" validate:"required,allowcharsname"`
@@ -22,6 +24,12 @@ type DupcheckApi struct {
 	EngineNo              string             `json:"no_engine" validate:"required"`
 	RangkaNo              string             `json:"no_rangka" validate:"required"`
 	ManufactureYear       string             `json:"manufacture_year" validate:"required,len=4,number"`
+	BPKBName              string             `json:"bpkb_name" validate:"required,bpkbname"`
+	NumOfDependence       int                `json:"num_of_dependence" validate:"required"`
+	OTRPrice              float64            `json:"otr" validate:"required"`
+	NTF                   float64            `json:"ntf" validate:"required"`
+	LegalZipCode          string             `json:"legal_zip_code" validate:"required"`
+	CompanyZipCode        string             `json:"company_zip_code" validate:"required"`
 	Gender                string             `json:"gender" validate:"required"`
 	InstallmentAmount     float64            `json:"installment_amount" validate:"required"`
 	MaritalStatus         string             `json:"marital_status"`

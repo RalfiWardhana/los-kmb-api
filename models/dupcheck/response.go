@@ -175,3 +175,53 @@ type SpDupcekChasisNo struct {
 	DownPayment       interface{} `json:"down_payment"`
 	TotalOTR          interface{} `json:"total_otr"`
 }
+
+type RejectionNoka struct {
+	Code                 string  `json:"code"`
+	Result               string  `json:"result"`
+	Reason               string  `json:"reason"`
+	NumberOfRetry        int     `json:"NumberOfRetry"`
+	IsBanned             int     `json:"IsBanned"`
+	ProspectID           string  `json:"ProspectID"`
+	IDNumber             string  `json:"IDNumber"`
+	LegalName            string  `json:"LegalName"`
+	BirthPlace           string  `json:"BirthPlace"`
+	BirthDate            string  `json:"BirthDate"`
+	MonthlyFixedIncome   float64 `json:"MonthlyFixedIncome"`
+	EmploymentSinceYear  string  `json:"EmploymentSinceYear"`
+	EmploymentSinceMonth string  `json:"EmploymentSinceMonth"`
+	StaySinceYear        string  `json:"StaySinceYear"`
+	StaySinceMonth       string  `json:"StaySinceMonth"`
+	BPKBName             string  `json:"BPKBName"`
+	Gender               string  `json:"Gender"`
+	MaritalStatus        string  `json:"MaritalStatus"`
+	NumOfDependence      int     `json:"NumOfDependence"`
+	NTF                  float64 `json:"NTF"`
+	OTRPrice             float64 `json:"OTRPrice"`
+	LegalZipCode         string  `json:"LegalZipCode"`
+	CompanyZipCode       string  `json:"CompanyZipCode"`
+	Tenor                int     `json:"Tenor"`
+	ManufacturingYear    string  `json:"ManufacturingYear"`
+	ProfessionID         string  `json:"ProfessionID"`
+	HomeStatus           string  `json:"HomeStatus"`
+	IsBannedActive       bool    `json:"IsBannedActive"`
+	CurrentBannedEmpty   bool    `json:"CurrentBannedEmpty"`
+}
+
+type ResAgreementChassisNumber struct {
+	Code      string                 `json:"code"`
+	Message   string                 `json:"message"`
+	Data      AgreementChassisNumber `json:"data"`
+	Errors    interface{}            `json:"errors"`
+	RequestID string                 `json:"request_id"`
+	Timestamp string                 `json:"timestamp"`
+}
+
+type AgreementChassisNumber struct {
+	IsRegistered bool   `json:"is_registered"`
+	IsActive     bool   `json:"is_active"`
+	LegalName    string `json:"legal_name"`
+	IDNumber     string `json:"id_number"`
+	Status       string `json:"status"`
+	GoLiveDate   string `json:"go_live_date"`
+}

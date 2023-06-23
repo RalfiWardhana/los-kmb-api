@@ -164,7 +164,7 @@ func (r repoHandler) GetKMOBOff() (config entity.AppConfig, err error) {
 
 func (r repoHandler) GetLatestBannedRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error) {
 
-	if err = r.kmbOffDB.Raw(fmt.Sprintf("SELECT IsBanned, created_at FROM dupcheck_rejection_nokanosin WHERE NoRangka = '%s' AND IsBanned = 1 ORDER BY created_at DESC LIMIT 1", noRangka)).Scan(&data).Error; err != nil {
+	if err = r.kmbOffDB.Raw(fmt.Sprintf("SELECT * FROM dupcheck_rejection_nokanosin WHERE NoRangka = '%s' AND IsBanned = 1 ORDER BY created_at DESC LIMIT 1", noRangka)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.ERROR_NOT_FOUND)
 		}
@@ -178,7 +178,7 @@ func (r repoHandler) GetLatestRejectionNoka(noRangka string) (data entity.Dupche
 
 	currentDate := time.Now().Format(constant.FORMAT_DATE)
 
-	if err = r.kmbOffDB.Raw(fmt.Sprintf("SELECT IsBanned, created_at FROM dupcheck_rejection_nokanosin WHERE NoRangka = '%s' AND CAST(created_at as DATE) = '%s' ORDER BY created_at DESC LIMIT 1", noRangka, currentDate)).Scan(&data).Error; err != nil {
+	if err = r.kmbOffDB.Raw(fmt.Sprintf("SELECT * FROM dupcheck_rejection_nokanosin WHERE NoRangka = '%s' AND CAST(created_at as DATE) = '%s' ORDER BY created_at DESC LIMIT 1", noRangka, currentDate)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.ERROR_NOT_FOUND)
 		}
@@ -226,5 +226,31 @@ func (r repoHandler) GetCheckingRejectAttempt(idNumber, blackListDate string) (d
 		return
 	}
 
+	return
+}
+
+func (r repoHandler) SaveDataNoka(data entity.DupcheckRejectionNokaNosin) (err error) {
+	data.CreatedAt = time.Now()
+	if err = r.kmbOffDB.Create(data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) SaveDataApiLog(data entity.TrxApiLog) (err error) {
+	data.Timestamps = time.Now()
+	if err = r.kmbOffDB.Create(data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetDummyAgreementChassisNumber(idNumber string) (data entity.DummyAgreementChassisNumber, err error) {
+
+	if err = r.logsDB.Raw(fmt.Sprintf("SELECT * FROM dummy_agreement_chassis_number WITH (nolock) WHERE id_number = '%s'", idNumber)).Scan(&data).Error; err != nil {
+		return
+	}
 	return
 }

@@ -17,6 +17,7 @@ import (
 	"los-kmb-api/shared/config"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
+	"los-kmb-api/shared/utils"
 
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
@@ -223,21 +224,22 @@ func (u usecase) CustomerDomainGetData(ctx context.Context, req request.ReqCusto
 	return
 }
 
-func (u usecase) RejectionNoka(noRangka, idNumber string) (data response.UsecaseApi, err error) {
+func (u usecase) RejectionNoka(req request.DupcheckApi) (data response.RejectionNoka, err error) {
 
 	var (
-		inRejectionNoka  bool
-		getHistoryReject []response.DupcheckRejectionPMK
-		rejection        []response.DupcheckRejectionPMK
+		inRejectionNoka    bool
+		getHistoryReject   []entity.DupcheckRejectionPMK
+		rejection          []entity.DupcheckRejectionPMK
+		checkHistoryReject entity.DupcheckRejectionPMK
 	)
 
-	nokaBanned30D, err := u.repository.GetLatestBannedRejectionNoka(noRangka)
+	nokaBanned30D, err := u.repository.GetLatestBannedRejectionNoka(req.RangkaNo)
 	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
 		err = errors.New("upstream_service_error - Error Get Latest Banned Rejection Noka")
 		return
 	}
 
-	nokaBannedCurrentDate, err := u.repository.GetLatestRejectionNoka(noRangka)
+	nokaBannedCurrentDate, err := u.repository.GetLatestRejectionNoka(req.RangkaNo)
 	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
 		err = errors.New("upstream_service_error - Error Get Latest Rejection Noka")
 		return
@@ -246,20 +248,45 @@ func (u usecase) RejectionNoka(noRangka, idNumber string) (data response.Usecase
 	inRejectionNoka = false
 	if nokaBanned30D != (entity.DupcheckRejectionNokaNosin{}) || nokaBannedCurrentDate != (entity.DupcheckRejectionNokaNosin{}) {
 
-		var IsBannedActive bool
-
 		if nokaBanned30D != (entity.DupcheckRejectionNokaNosin{}) && nokaBanned30D.IsBanned == 1 {
 			bannedDate := nokaBanned30D.CreatedAt
 			dueDate := bannedDate.AddDate(0, 0, constant.DAY_RANGE_BANNED_REJECT_NOKA)
 			dueDateString := dueDate.Format("2006-01-02")
 
-			IsBannedActive = false
+			data.IsBannedActive = false
 			if time.Now().Format(constant.FORMAT_DATE) <= dueDateString {
-				IsBannedActive = true
+				data.IsBannedActive = true
 			}
 		}
 
-		if nokaBannedCurrentDate != (entity.DupcheckRejectionNokaNosin{}) || IsBannedActive {
+		// Must be simplified
+		data.CurrentBannedEmpty = true
+		if nokaBannedCurrentDate != (entity.DupcheckRejectionNokaNosin{}) {
+			data.CurrentBannedEmpty = false
+			data.IDNumber = nokaBannedCurrentDate.IDNumber
+			data.LegalName = nokaBannedCurrentDate.LegalName
+			data.BirthPlace = nokaBannedCurrentDate.BirthPlace
+			data.BirthDate = nokaBannedCurrentDate.BirthDate
+			data.MonthlyFixedIncome = nokaBannedCurrentDate.MonthlyFixedIncome
+			data.EmploymentSinceYear = nokaBannedCurrentDate.EmploymentSinceYear
+			data.EmploymentSinceMonth = nokaBannedCurrentDate.EmploymentSinceMonth
+			data.StaySinceYear = nokaBannedCurrentDate.StaySinceYear
+			data.StaySinceMonth = nokaBannedCurrentDate.StaySinceMonth
+			data.BPKBName = nokaBannedCurrentDate.BPKBName
+			data.Gender = nokaBannedCurrentDate.Gender
+			data.MaritalStatus = nokaBannedCurrentDate.MaritalStatus
+			data.NumOfDependence = nokaBannedCurrentDate.NumOfDependence
+			data.NTF = nokaBannedCurrentDate.NTF
+			data.OTRPrice = nokaBannedCurrentDate.OTRPrice
+			data.LegalZipCode = nokaBannedCurrentDate.LegalZipCode
+			data.Tenor = nokaBannedCurrentDate.Tenor
+			data.ManufacturingYear = nokaBannedCurrentDate.ManufacturingYear
+			data.ProfessionID = nokaBannedCurrentDate.ProfessionID
+			data.CompanyZipCode = nokaBannedCurrentDate.CompanyZipCode
+			data.HomeStatus = nokaBannedCurrentDate.HomeStatus
+		}
+
+		if nokaBannedCurrentDate != (entity.DupcheckRejectionNokaNosin{}) || data.IsBannedActive {
 			inRejectionNoka = true
 			data.Code = constant.CODE_REJECTION_OK
 			data.Result = constant.RESULT_REJECTION_OK
@@ -270,7 +297,7 @@ func (u usecase) RejectionNoka(noRangka, idNumber string) (data response.Usecase
 
 	if !inRejectionNoka {
 
-		rejection, err = u.repository.GetAllReject(idNumber)
+		rejection, err = u.repository.GetAllReject(req.IDNumber)
 		if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
 			err = errors.New("upstream_service_error - Error Get All Rejection")
 			return
@@ -292,7 +319,7 @@ func (u usecase) RejectionNoka(noRangka, idNumber string) (data response.Usecase
 			return
 
 		} else {
-			getHistoryReject, err = u.repository.GetHistoryRejectAttempt(idNumber)
+			getHistoryReject, err = u.repository.GetHistoryRejectAttempt(req.IDNumber)
 			if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
 				err = errors.New("upstream_service_error - Error Get All Rejection")
 				return
@@ -317,7 +344,11 @@ func (u usecase) RejectionNoka(noRangka, idNumber string) (data response.Usecase
 					date, _ := time.Parse(time.RFC3339, blackListDate)
 					dateString := date.Format("2006-01-02")
 
-					checkHistoryReject, _ := u.repository.GetCheckingRejectAttempt(idNumber, dateString)
+					checkHistoryReject, err = u.repository.GetCheckingRejectAttempt(req.IDNumber, dateString)
+					if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
+						err = errors.New("upstream_service_error - Error Get Checking Reject Attempt")
+						return
+					}
 
 					if checkHistoryReject.RejectAttempt >= constant.ATTEMPT_REJECT_PMK_DSR {
 						data.Code = constant.CODE_REJECT_PMK_DSR
@@ -333,5 +364,172 @@ func (u usecase) RejectionNoka(noRangka, idNumber string) (data response.Usecase
 			return
 		}
 	}
+	return
+}
+
+func (u usecase) CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBanned response.RejectionNoka, isBanning bool, accessToken string) (data response.UsecaseApi, err error) {
+
+	var (
+		nokaData                       entity.DupcheckRejectionNokaNosin
+		trxApiLog                      entity.TrxApiLog
+		responseAgreementChassisNumber entity.AgreementChassisNumber
+		response_api_log               []byte
+	)
+
+	data.Code = constant.CODE_REJECTION_NOTIF
+	data.Result = constant.RESULT_NOTIF
+	data.Reason = constant.REASON_NOTIF
+
+	if nokaBanned != (response.RejectionNoka{}) && nokaBanned.IsBannedActive {
+		data.Code = constant.CODE_REJECT_NOKA_NOSIN
+		data.Result = constant.DECISION_REJECT
+		data.Reason = constant.REASON_REJECT_NOKA_NOSIN
+		return
+	}
+
+	// Noka Data to Save
+	nokaData.Id = utils.UniqueID(15)
+	nokaData.NoRangka = reqs.RangkaNo
+	nokaData.NoMesin = reqs.EngineNo
+	nokaData.ProspectID = reqs.ProspectID
+	nokaData.IDNumber = reqs.IDNumber
+	nokaData.LegalName = reqs.LegalName
+	nokaData.BirthPlace = reqs.BirthPlace
+	nokaData.BirthDate = reqs.BirthDate
+	nokaData.MonthlyFixedIncome = reqs.MonthlyFixedIncome
+	nokaData.EmploymentSinceYear = reqs.EmploymentSinceYear
+	nokaData.EmploymentSinceMonth = reqs.EmploymentSinceMonth
+	nokaData.StaySinceYear = reqs.StaySinceYear
+	nokaData.StaySinceMonth = reqs.StaySinceMonth
+	nokaData.BPKBName = reqs.BPKBName
+	nokaData.Gender = reqs.Gender
+	nokaData.MaritalStatus = reqs.MaritalStatus
+	nokaData.NumOfDependence = reqs.NumOfDependence
+	nokaData.NTF = reqs.NTF
+	nokaData.OTRPrice = reqs.OTRPrice
+	nokaData.LegalZipCode = reqs.LegalZipCode
+	nokaData.Tenor = reqs.Tenor
+	nokaData.ManufacturingYear = reqs.ManufactureYear
+	nokaData.ProfessionID = reqs.ProfessionID
+	nokaData.CompanyZipCode = reqs.CompanyZipCode
+	nokaData.HomeStatus = reqs.HomeStatus
+
+	// Check Current Date Banned Status
+	if !isBanning {
+		numberOfRetry := nokaBanned.NumberOfRetry + 1
+
+		if numberOfRetry == 1 {
+			nokaData.NumberOfRetry = numberOfRetry
+			// nokaData.IsBanned = 0
+		} else if numberOfRetry > 1 && numberOfRetry < constant.ATTEMPT_BANNED_REJECTION_NOKA {
+			nokaData.NumberOfRetry = numberOfRetry
+
+			// Maybe could be simplified
+			if nokaBanned.IDNumber != reqs.IDNumber && nokaBanned.LegalName != reqs.LegalName && nokaBanned.BirthPlace != reqs.BirthPlace && nokaBanned.BirthDate != reqs.BirthDate && nokaBanned.MonthlyFixedIncome != reqs.MonthlyFixedIncome && nokaBanned.EmploymentSinceYear != reqs.EmploymentSinceYear && nokaBanned.EmploymentSinceMonth != reqs.EmploymentSinceMonth && nokaBanned.StaySinceYear != reqs.StaySinceYear && nokaBanned.StaySinceMonth != reqs.StaySinceMonth && nokaBanned.BPKBName != reqs.BPKBName && nokaBanned.Gender != reqs.Gender && nokaBanned.MaritalStatus != reqs.MaritalStatus && nokaBanned.NumOfDependence != reqs.NumOfDependence && nokaBanned.NTF != reqs.NTF && nokaBanned.OTRPrice != reqs.OTRPrice && nokaBanned.LegalZipCode != reqs.LegalZipCode && nokaBanned.Tenor != reqs.Tenor && nokaBanned.ManufacturingYear != reqs.ManufactureYear && nokaBanned.ProfessionID != reqs.ProfessionID && nokaBanned.CompanyZipCode != reqs.CompanyZipCode && nokaBanned.HomeStatus != reqs.HomeStatus {
+				// MAKSUDNYA -> KETIKA ADA DATA DALAM KETENTUAN PARAMETER KREDIT BERBEDA DENGAN INPUTAN SEBELUMNYA, MAKA NO. RANGKA TSB DI BANNED 30 HARI
+				nokaBanned.IsBanned = 1
+			}
+		} else if numberOfRetry >= constant.ATTEMPT_BANNED_REJECTION_NOKA {
+			nokaBanned.NumberOfRetry = numberOfRetry
+			nokaBanned.IsBanned = 1
+		}
+
+		if err = u.repository.SaveDataNoka(nokaData); err != nil {
+			err = errors.New("upstream_service_error - Error Save Data Noka Nosin")
+			return
+		}
+
+		data.Code = constant.CODE_REJECT_NOKA_NOSIN
+		data.Result = constant.DECISION_REJECT
+		data.Reason = constant.REASON_REJECT_NOKA_NOSIN
+		return
+	}
+
+	trxApiLog.ProspectID = reqs.ProspectID
+	trxApiLog.Request = os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL") + reqs.RangkaNo
+	trxApiLog.DtmRequest = time.Now()
+
+	// Hit Integrator Get Chasis Number
+	dummyChassis, _ := strconv.ParseBool(os.Getenv("DUMMY_AGREEMENT_OF_CHASSIS_NUMBER"))
+
+	if dummyChassis {
+		dummyChassisAgreementNumber, _ := u.repository.GetDummyAgreementChassisNumber(reqs.IDNumber)
+
+		var resAgreementChassisNumber response.ResAgreementChassisNumber
+
+		json.Unmarshal([]byte(dummyChassisAgreementNumber.Response), &resAgreementChassisNumber)
+
+		responseAgreementChassisNumber = resAgreementChassisNumber.Data
+
+	} else {
+
+		var hitChassisNumber *resty.Response
+
+		hitChassisNumber, err = u.httpclient.EngineAPI(ctx, constant.DUPCHECK_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+reqs.RangkaNo, nil, map[string]string{}, constant.METHOD_GET, true, 6, 60, reqs.ProspectID, accessToken)
+
+		if err != nil {
+			err = errors.New("upstream_service_timeout - Call Get Agreement of Chassis Number Timeout")
+			return
+		}
+
+		if hitChassisNumber.StatusCode() != 200 {
+			err = errors.New("upstream_service_error - Call Get Agreement of Chassis Number Error")
+			return
+		}
+
+		json.Unmarshal([]byte(jsoniter.Get(hitChassisNumber.Body(), "data").ToString()), &responseAgreementChassisNumber)
+	}
+
+	response_api_log, _ = json.Marshal(responseAgreementChassisNumber)
+	trxApiLog.Response = string(response_api_log)
+	trxApiLog.DtmResponse = time.Now()
+	trxApiLog.Type = constant.TYPE_API_LOGS_NOKA
+
+	if err = u.repository.SaveDataApiLog(trxApiLog); err != nil {
+		err = errors.New("upstream_service_error - Error Save Data to API Logs")
+		return
+	}
+
+	if responseAgreementChassisNumber == (response.AgreementChassisNumber{}) {
+		return
+	}
+
+	agreement := responseAgreementChassisNumber
+	if agreement.IsRegistered && agreement.IsActive && len(agreement.IDNumber) > 0 {
+		listNikKonsumenDanPasangan := make([]string, 0)
+
+		listNikKonsumenDanPasangan = append(listNikKonsumenDanPasangan, reqs.IDNumber)
+		if reqs.Spouse != nil && reqs.Spouse.IDNumber != "" {
+			listNikKonsumenDanPasangan = append(listNikKonsumenDanPasangan, reqs.Spouse.IDNumber)
+		}
+
+		if !utils.Contains(listNikKonsumenDanPasangan, agreement.IDNumber) {
+			nokaData.NumberOfRetry = 0
+
+			if err = u.repository.SaveDataNoka(nokaData); err != nil {
+				err = errors.New("upstream_service_error - Error Save Data Noka Nosin")
+				return
+			}
+
+			data.Code = constant.CODE_REJECT_CHASSIS_NUMBER
+			data.Result = constant.DECISION_REJECT
+			data.Reason = constant.REASON_REJECT_CHASSIS_NUMBER
+		} else {
+			if agreement.IDNumber == reqs.IDNumber {
+				data.Code = constant.CODE_OK_CONSUMEN_MATCH
+				data.Result = constant.RESULT_OK
+				data.Reason = constant.REASON_OK_CONSUMEN_MATCH
+			} else {
+				data.Code = constant.CODE_REJECTION_FRAUD_POTENTIAL
+				data.Result = constant.DECISION_REJECT
+				data.Reason = constant.REASON_REJECTION_FRAUD_POTENTIAL
+			}
+		}
+	} else {
+		data.Code = constant.CODE_AGREEMENT_NOT_FOUND
+		data.Result = constant.RESULT_OK
+		data.Reason = constant.REASON_AGREEMENT_NOT_FOUND
+	}
+
 	return
 }

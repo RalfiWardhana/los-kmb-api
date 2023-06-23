@@ -1,9 +1,11 @@
 package utils
 
 import (
-	"crypto/rand"
+	"crypto/md5"
+	"encoding/hex"
 	"fmt"
 	"math"
+	"math/rand"
 	"reflect"
 	"strconv"
 	"strings"
@@ -206,4 +208,38 @@ func HumanAgeCalculator(birthdate, today time.Time) int {
 		age--
 	}
 	return age
+}
+
+func UniqueID(length int) string {
+	rand.Seed(time.Now().UnixNano())
+	randomID := fmt.Sprintf("%s%d", UniqueIDFromTime(), rand.Intn(1000))
+	return randomID[:length]
+}
+
+func UniqueIDFromTime() string {
+	timestamp := time.Now().UnixNano()
+	uniqueID := fmt.Sprintf("%s%d", MD5Hash(fmt.Sprintf("%s%d", UniqueIDFromUniqid(), timestamp)), rand.Intn(1000))
+	return uniqueID
+}
+
+func UniqueIDFromUniqid() string {
+	return fmt.Sprintf("%s%d", Uniqid(), rand.Intn(1000))
+}
+
+func Uniqid() string {
+	return fmt.Sprintf("%d", time.Now().UnixNano())
+}
+
+func MD5Hash(text string) string {
+	hash := md5.Sum([]byte(text))
+	return hex.EncodeToString(hash[:])
+}
+
+func Contains(list []string, value string) bool {
+	for _, item := range list {
+		if item == value {
+			return true
+		}
+	}
+	return false
 }

@@ -295,15 +295,31 @@ const (
 	REASON_VEHICLE_AGE_MAX          = "Usia Kendaraan >"
 
 	//NOKA NOSIN
-	ATTEMPT_REJECT               = 2
-	ATTEMPT_REJECT_PMK_DSR       = 2
-	DAY_RANGE_BANNED_REJECT_NOKA = 30
-	DAY_RANGE_BLACKLIST_PMK      = 30
-	CODE_REJECTION_OK            = "660"
-	RESULT_REJECTION_OK          = "Rejection Check OK, Next Process"
-	REASON_REJECTION_OK          = "Skip Check Rejection NIK & DSR karena sudah reject NOKA"
-	CODE_REJECT_NIK_KTP          = "651"
-	CODE_REJECT_PMK_DSR          = "652"
-	REASON_REJECT_PMK_DSR        = "Reject karena PMK atau DSR"
-	REASON_REJECT_NIK_KTP        = "Reject karena NIK KTP"
+	ATTEMPT_REJECT                   = 2
+	ATTEMPT_REJECT_PMK_DSR           = 2
+	ATTEMPT_BANNED_REJECTION_NOKA    = 3
+	DAY_RANGE_BANNED_REJECT_NOKA     = 30
+	DAY_RANGE_BLACKLIST_PMK          = 30
+	TYPE_API_LOGS_NOKA               = "API_CHECK_NOKA"
+	RESULT_NOTIF                     = "NOTIF"
+	RESULT_OK                        = "OK"
+	REASON_NOTIF                     = "Failed to check status agreement based on Chassis Number"
+	RESULT_REJECTION_OK              = "Rejection Check OK, Next Process"
+	REASON_REJECTION_OK              = "Skip Check Rejection NIK & DSR karena sudah reject NOKA"
+	CODE_REJECT_NIK_KTP              = "651"
+	CODE_REJECT_PMK_DSR              = "652"
+	CODE_REJECT_CHASSIS_NUMBER       = "653"
+	CODE_OK_CONSUMEN_MATCH           = "654"
+	CODE_REJECT_NOKA_NOSIN           = "655"
+	CODE_AGREEMENT_NOT_FOUND         = "656"
+	CODE_REJECTION_NOTIF             = "666"
+	CODE_REJECTION_FRAUD_POTENTIAL   = "667"
+	CODE_REJECTION_OK                = "660"
+	REASON_REJECT_PMK_DSR            = "Reject karena PMK atau DSR"
+	REASON_REJECT_NIK_KTP            = "Reject karena NIK KTP"
+	REASON_REJECT_NOKA_NOSIN         = "Reject NokaNosin"
+	REASON_REJECT_CHASSIS_NUMBER     = "Chassis number has been registered on active agreement"
+	REASON_OK_CONSUMEN_MATCH         = "Pass Rejection Check Chassis Number - Active Agreement Consumen Match"
+	REASON_REJECTION_FRAUD_POTENTIAL = "Fraud Potential, Chassis number has been registered on spouse's active agreement"
+	REASON_AGREEMENT_NOT_FOUND       = "Pass Rejection Check Chassis Number - Active Agreement Not Found"
 )
