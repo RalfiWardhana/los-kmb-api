@@ -20,6 +20,7 @@ type DupcheckApi struct {
 	MotherName            string             `json:"surgate_mother_name" validate:"required,allowcharsname"`
 	Spouse                *DupcheckApiSpouse `json:"spouse" validate:"omitempty"`
 	EngineNo              string             `json:"no_engine" validate:"required"`
+	RangkaNo              string             `json:"no_rangka" validate:"required"`
 	ManufactureYear       string             `json:"manufacture_year" validate:"required,len=4,number"`
 	Gender                string             `json:"gender" validate:"required"`
 	InstallmentAmount     float64            `json:"installment_amount" validate:"required"`

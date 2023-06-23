@@ -96,8 +96,8 @@ type Dsr struct {
 }
 
 type UsecaseApi struct {
-	Result         string  `json:"result"`
 	Code           string  `json:"code"`
+	Result         string  `json:"result"`
 	Reason         string  `json:"reason"`
 	StatusKonsumen string  `json:"status_konsumen,omitempty"`
 	Dsr            float64 `json:"dsr,omitempty"`

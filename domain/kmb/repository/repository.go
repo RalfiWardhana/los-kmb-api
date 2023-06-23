@@ -161,3 +161,70 @@ func (r repoHandler) GetKMOBOff() (config entity.AppConfig, err error) {
 
 	return
 }
+
+func (r repoHandler) GetLatestBannedRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error) {
+
+	if err = r.kmbOffDB.Raw(fmt.Sprintf("SELECT IsBanned, created_at FROM dupcheck_rejection_nokanosin WHERE NoRangka = '%s' AND IsBanned = 1 ORDER BY created_at DESC LIMIT 1", noRangka)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.ERROR_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetLatestRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error) {
+
+	currentDate := time.Now().Format(constant.FORMAT_DATE)
+
+	if err = r.kmbOffDB.Raw(fmt.Sprintf("SELECT IsBanned, created_at FROM dupcheck_rejection_nokanosin WHERE NoRangka = '%s' AND CAST(created_at as DATE) = '%s' ORDER BY created_at DESC LIMIT 1", noRangka, currentDate)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.ERROR_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetAllReject(idNumber string) (data []entity.DupcheckRejectionPMK, err error) {
+
+	currentDate := time.Now().Format(constant.FORMAT_DATE)
+
+	if err = r.kmbOffDB.Raw(fmt.Sprintf("SELECT di.BranchID, di.ProspectID, di.IDNumber, di.DtmUpd, dr.reject_pmk, dr.reject_dsr, fi.final_approval, fi.dtm_final_approval FROM data_inquiry di LEFT JOIN final_inquiry fi ON di.ProspectID = fi.ProspectID LEFT JOIN dupcheck_rejection_pmk dr ON di.ProspectID = dr.ProspectID LEFT JOIN dupcheck_inquiry dup ON di.ProspectID = dup.ProspectID WHERE fi.final_approval = 0 AND di.IDNumber = '%s' AND CAST(di.DtmUpd as DATE) = '%s' AND (dup.code NOT IN ('653','655','667') OR dup.code IS NULL) ORDER BY di.DtmUpd ASC", idNumber, currentDate)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.ERROR_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetHistoryRejectAttempt(idNumber string) (data []entity.DupcheckRejectionPMK, err error) {
+
+	searchRange := time.Now().AddDate(0, 0, -30)
+	searchRangeString := searchRange.Format("2006-01-02")
+
+	if err = r.kmbOffDB.Raw(fmt.Sprintf("SELECT x.* FROM (SELECT COUNT(*) AS reject_attempt, DATE(fi.dtm_final_approval) as date FROM data_inquiry di LEFT JOIN final_inquiry fi ON di.ProspectID = fi.ProspectID LEFT JOIN dupcheck_rejection_pmk dr ON di.ProspectID = dr.ProspectID LEFT JOIN dupcheck_inquiry dup ON di.ProspectID = dup.ProspectID WHERE fi.final_approval = 0 AND (dr.reject_pmk IS NOT NULL OR dr.reject_dsr IS NOT NULL) AND di.IDNumber = '%s' AND CAST(di.DtmUpd as DATE) >= '%s' AND (dup.code NOT IN ('653','655','667') OR dup.code IS NULL) GROUP BY date) x ORDER BY x.date DESC LIMIT 1", idNumber, searchRangeString)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.ERROR_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetCheckingRejectAttempt(idNumber, blackListDate string) (data entity.DupcheckRejectionPMK, err error) {
+
+	if err = r.kmbOffDB.Raw(fmt.Sprintf("SELECT x.* FROM (SELECT COUNT(*) AS reject_attempt, DATE(fi.dtm_final_approval) as date FROM data_inquiry di LEFT JOIN final_inquiry fi ON di.ProspectID = fi.ProspectID LEFT JOIN dupcheck_rejection_pmk dr ON di.ProspectID = dr.ProspectID LEFT JOIN dupcheck_inquiry dup ON di.ProspectID = dup.ProspectID WHERE fi.final_approval = 0 AND di.IDNumber = '%s' AND CAST(di.DtmUpd as DATE) = '%s' AND (dup.code NOT IN ('653','655','667') OR dup.code IS NULL) GROUP BY date) x ORDER BY x.date DESC", idNumber, blackListDate)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.ERROR_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}

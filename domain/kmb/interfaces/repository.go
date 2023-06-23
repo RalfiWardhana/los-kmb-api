@@ -16,4 +16,10 @@ type Repository interface {
 	ScanWgOnl(query string) (data entity.ScanInstallmentAmount, err error)
 	GetDSRBypass() (config entity.AppConfig, err error)
 	GetKMOBOff() (config entity.AppConfig, err error)
+
+	GetLatestBannedRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error)
+	GetLatestRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error)
+	GetAllReject(idNumber string) (data []entity.DupcheckRejectionPMK, err error)
+	GetHistoryRejectAttempt(idNumber string) (data []entity.DupcheckRejectionPMK, err error)
+	GetCheckingRejectAttempt(idNumber, blackListDate string) (data entity.DupcheckRejectionPMK, err error)
 }

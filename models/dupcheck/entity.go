@@ -92,3 +92,22 @@ type DataPMK struct {
 	MinimalIncome     float64 `json:"minimal_income"`
 	ManufacturingYear int     `json:"manufacturing_year"`
 }
+
+type DupcheckRejectionNokaNosin struct {
+	Id            string    `gorm:"column:Id"`
+	NoRangka      string    `gorm:"column:NoRangka"`
+	NumberOfRetry int       `gorm:"column:NumberOfRetry"`
+	IsBanned      int       `gorm:"column:IsBanned"`
+	CreatedAt     time.Time `gorm:"column:created_at"`
+}
+
+func (c *DupcheckRejectionNokaNosin) TableName() string {
+	return "dupcheck_rejection_nokanosin"
+}
+
+type DupcheckRejectionPMK struct {
+	RejectAttempt int    `gorm:"column:reject_attempt"`
+	Date          string `gorm:"column:date"`
+	RejectPMK     int    `gorm:"column:reject_pmk"`
+	RejectDSR     int    `gorm:"column:reject_dsr"`
+}

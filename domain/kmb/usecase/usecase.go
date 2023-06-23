@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"los-kmb-api/domain/kmb/interfaces"
+	entity "los-kmb-api/models/dupcheck"
 	request "los-kmb-api/models/dupcheck"
 	response "los-kmb-api/models/dupcheck"
 	"los-kmb-api/models/other"
@@ -219,5 +220,118 @@ func (u usecase) CustomerDomainGetData(ctx context.Context, req request.ReqCusto
 		CentralizeLog(constant.DUPCHECK_LOG, "Customer Domain", constant.MESSAGE_SUCCESS, "GET_DATA", false, other.CustomLog{Info: other.ResultLog{Request: req, Response: customerDomain}})
 	}
 
+	return
+}
+
+func (u usecase) RejectionNoka(noRangka, idNumber string) (data response.UsecaseApi, err error) {
+
+	var (
+		inRejectionNoka  bool
+		getHistoryReject []response.DupcheckRejectionPMK
+		rejection        []response.DupcheckRejectionPMK
+	)
+
+	nokaBanned30D, err := u.repository.GetLatestBannedRejectionNoka(noRangka)
+	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
+		err = errors.New("upstream_service_error - Error Get Latest Banned Rejection Noka")
+		return
+	}
+
+	nokaBannedCurrentDate, err := u.repository.GetLatestRejectionNoka(noRangka)
+	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
+		err = errors.New("upstream_service_error - Error Get Latest Rejection Noka")
+		return
+	}
+
+	inRejectionNoka = false
+	if nokaBanned30D != (entity.DupcheckRejectionNokaNosin{}) || nokaBannedCurrentDate != (entity.DupcheckRejectionNokaNosin{}) {
+
+		var IsBannedActive bool
+
+		if nokaBanned30D != (entity.DupcheckRejectionNokaNosin{}) && nokaBanned30D.IsBanned == 1 {
+			bannedDate := nokaBanned30D.CreatedAt
+			dueDate := bannedDate.AddDate(0, 0, constant.DAY_RANGE_BANNED_REJECT_NOKA)
+			dueDateString := dueDate.Format("2006-01-02")
+
+			IsBannedActive = false
+			if time.Now().Format(constant.FORMAT_DATE) <= dueDateString {
+				IsBannedActive = true
+			}
+		}
+
+		if nokaBannedCurrentDate != (entity.DupcheckRejectionNokaNosin{}) || IsBannedActive {
+			inRejectionNoka = true
+			data.Code = constant.CODE_REJECTION_OK
+			data.Result = constant.RESULT_REJECTION_OK
+			data.Reason = constant.REASON_REJECTION_OK
+			return
+		}
+	}
+
+	if !inRejectionNoka {
+
+		rejection, err = u.repository.GetAllReject(idNumber)
+		if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
+			err = errors.New("upstream_service_error - Error Get All Rejection")
+			return
+		}
+
+		if len(rejection) >= constant.ATTEMPT_REJECT {
+			for i := 0; i < len(rejection); i++ {
+				if rejection[i].RejectPMK == 1 || rejection[i].RejectDSR == 1 {
+					data.Code = constant.CODE_REJECT_PMK_DSR
+					data.Result = constant.DECISION_REJECT
+					data.Reason = constant.REASON_REJECT_PMK_DSR
+					return
+				}
+			}
+
+			data.Code = constant.CODE_REJECT_NIK_KTP
+			data.Result = constant.DECISION_REJECT
+			data.Reason = constant.REASON_REJECT_NIK_KTP
+			return
+
+		} else {
+			getHistoryReject, err = u.repository.GetHistoryRejectAttempt(idNumber)
+			if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
+				err = errors.New("upstream_service_error - Error Get All Rejection")
+				return
+			}
+
+			if len(getHistoryReject) > 0 {
+				historyResult := getHistoryReject[0]
+				blackListDate := historyResult.Date
+
+				if historyResult.RejectAttempt >= constant.ATTEMPT_REJECT_PMK_DSR {
+					parsedDate, _ := time.Parse("2006-01-02", blackListDate)
+					dueDate := parsedDate.AddDate(0, 0, 30)
+					dueDateString := dueDate.Format("2006-01-02")
+
+					if time.Now().Format(constant.FORMAT_DATE) < dueDateString {
+						data.Code = constant.CODE_REJECT_PMK_DSR
+						data.Result = constant.DECISION_REJECT
+						data.Reason = constant.REASON_REJECT_PMK_DSR
+						return
+					}
+				} else {
+					date, _ := time.Parse(time.RFC3339, blackListDate)
+					dateString := date.Format("2006-01-02")
+
+					checkHistoryReject, _ := u.repository.GetCheckingRejectAttempt(idNumber, dateString)
+
+					if checkHistoryReject.RejectAttempt >= constant.ATTEMPT_REJECT_PMK_DSR {
+						data.Code = constant.CODE_REJECT_PMK_DSR
+						data.Result = constant.DECISION_REJECT
+						data.Reason = constant.REASON_REJECT_PMK_DSR
+						return
+					}
+				}
+			}
+
+			data.Code = constant.CODE_REJECTION_OK
+			data.Result = constant.RESULT_REJECTION_OK
+			return
+		}
+	}
 	return
 }

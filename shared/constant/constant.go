@@ -293,4 +293,17 @@ const (
 	REASON_REJECT_MAX_AGE           = "Umur Diatas Limit Ketentuan"
 	REASON_VEHICLE_SESUAI           = "Umur Kendaraan Sesuai Ketentuan"
 	REASON_VEHICLE_AGE_MAX          = "Usia Kendaraan >"
+
+	//NOKA NOSIN
+	ATTEMPT_REJECT               = 2
+	ATTEMPT_REJECT_PMK_DSR       = 2
+	DAY_RANGE_BANNED_REJECT_NOKA = 30
+	DAY_RANGE_BLACKLIST_PMK      = 30
+	CODE_REJECTION_OK            = "660"
+	RESULT_REJECTION_OK          = "Rejection Check OK, Next Process"
+	REASON_REJECTION_OK          = "Skip Check Rejection NIK & DSR karena sudah reject NOKA"
+	CODE_REJECT_NIK_KTP          = "651"
+	CODE_REJECT_PMK_DSR          = "652"
+	REASON_REJECT_PMK_DSR        = "Reject karena PMK atau DSR"
+	REASON_REJECT_NIK_KTP        = "Reject karena NIK KTP"
 )

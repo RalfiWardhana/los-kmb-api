@@ -33,6 +33,22 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		customer = append(customer, request.SpouseDupcheck{IDNumber: req.Spouse.IDNumber, LegalName: req.Spouse.LegalName, BirthDate: req.Spouse.BirthDate, MotherName: req.Spouse.MotherName})
 	}
 
+	// Exception Reject No. Rangka
+	rejectionNoka, err := u.usecase.RejectionNoka(req.RangkaNo, req.IDNumber)
+
+	if err != nil {
+		CentralizeLog(constant.DUPCHECK_LOG, "Check Rejection Noka Nosin", constant.MESSAGE_E, "NOKA_NOSIN SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
+		return
+	}
+
+	CentralizeLog(constant.DUPCHECK_LOG, "Check Rejection Noka Nosin", constant.MESSAGE_SUCCESS, "NOKA_NOSIN SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: rejectionNoka})
+
+	if rejectionNoka.Result == constant.DECISION_REJECT {
+		data = rejectionNoka
+		mapping.Reason = data.Reason
+		return
+	}
+
 	// Loop check Blacklist customer and spouse
 	for i := 0; i < len(customer); i++ {
 
@@ -151,6 +167,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		}
 	}
 
+	// Check PMK
 	pmk := u.usecase.PMK(req.MonthlyFixedIncome, req.HomeStatus, req.JobPosition, req.EmploymentSinceYear, req.EmploymentSinceMonth, req.StaySinceYear, req.StaySinceMonth, req.BirthDate, req.Tenor, req.MaritalStatus)
 
 	CentralizeLog(constant.DUPCHECK_LOG, "Check PMK", constant.MESSAGE_SUCCESS, "PMK_SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: pmk})
@@ -226,6 +243,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		}
 	}
 
+	// Check DSR
 	dsr, _, instOther, instOtherSpouse, instTopup, err := u.usecase.DsrCheck(ctx, req.ProspectID, req.EngineNo, customerData, req.InstallmentAmount, mapping.InstallmentAmountFMF, mapping.InstallmentAmountSpouseFMF, income, newDupcheck, accessToken)
 	if err != nil {
 		CentralizeLog(constant.DUPCHECK_LOG, "Check DSR", constant.MESSAGE_E, "DSR_SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: err.Error()})
