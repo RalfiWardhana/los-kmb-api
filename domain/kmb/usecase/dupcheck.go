@@ -33,20 +33,39 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		customer = append(customer, request.SpouseDupcheck{IDNumber: req.Spouse.IDNumber, LegalName: req.Spouse.LegalName, BirthDate: req.Spouse.BirthDate, MotherName: req.Spouse.MotherName})
 	}
 
-	// Exception Reject No. Rangka
-	rejectionNoka, err := u.usecase.RejectionNoka(req)
+	// Exception Reject No. Rangka Banned 30 Days
+	nokaBanned30D, err := u.usecase.NokaBanned30D(req)
 
-	if err != nil {
-		CentralizeLog(constant.DUPCHECK_LOG, "Check Rejection Noka Nosin", constant.MESSAGE_E, "NOKA_NOSIN SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
+	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
+		CentralizeLog(constant.DUPCHECK_LOG, "Check Banned 30D Noka Nosin", constant.MESSAGE_E, "NOKA_NOSIN SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
 		return
 	}
 
-	CentralizeLog(constant.DUPCHECK_LOG, "Check Rejection Noka Nosin", constant.MESSAGE_SUCCESS, "NOKA_NOSIN SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: rejectionNoka})
+	CentralizeLog(constant.DUPCHECK_LOG, "Check Banned 30D Noka Nosin", constant.MESSAGE_SUCCESS, "NOKA_NOSIN SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: nokaBanned30D})
 
-	if rejectionNoka.Result == constant.DECISION_REJECT {
-		data.Code = rejectionNoka.Code
-		data.Result = rejectionNoka.Result
-		data.Reason = rejectionNoka.Reason
+	if nokaBanned30D.Result == constant.DECISION_REJECT {
+		data.Code = nokaBanned30D.Code
+		data.Result = nokaBanned30D.Result
+		data.Reason = nokaBanned30D.Reason
+		mapping.Reason = data.Reason
+		return
+	}
+
+	// Exception Reject History No. Rangka
+	checkRejectionNoka, err := u.usecase.CheckRejectionNoka(req)
+
+	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
+		CentralizeLog(constant.DUPCHECK_LOG, "Check Histiory Rejection Noka Nosin", constant.MESSAGE_E, "NOKA_NOSIN SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
+		return
+	}
+
+	CentralizeLog(constant.DUPCHECK_LOG, "Check Histiory Rejection Noka Nosin", constant.MESSAGE_SUCCESS, "NOKA_NOSIN SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: checkRejectionNoka})
+
+	fmt.Println(checkRejectionNoka)
+	if checkRejectionNoka.Result == constant.DECISION_REJECT {
+		data.Code = checkRejectionNoka.Code
+		data.Result = checkRejectionNoka.Result
+		data.Reason = checkRejectionNoka.Reason
 		mapping.Reason = data.Reason
 		return
 	}
@@ -102,9 +121,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
-	fmt.Println(rejectionNoka)
 	// Check Reject No. Rangka
-	checkNoka, err := u.usecase.CheckNoka(ctx, req, rejectionNoka, rejectionNoka.CurrentBannedEmpty, accessToken)
+	checkNoka, err := u.usecase.CheckNoka(ctx, req, checkRejectionNoka, accessToken)
 
 	if err != nil {
 		CentralizeLog(constant.DUPCHECK_LOG, "Check Noka Nosin", constant.MESSAGE_E, "NOKA_NOSIN SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
@@ -115,6 +133,22 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 	if checkNoka.Result == constant.DECISION_REJECT {
 		data = checkNoka
+		mapping.Reason = data.Reason
+		return
+	}
+
+	// Check Chassis Number with Active Aggrement
+	checkChassisNumber, err := u.usecase.CheckChassisNumber(ctx, req, checkRejectionNoka, accessToken)
+
+	if err != nil {
+		CentralizeLog(constant.DUPCHECK_LOG, "Check Chassis Number", constant.MESSAGE_E, "NOKA_NOSIN SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
+		return
+	}
+
+	CentralizeLog(constant.DUPCHECK_LOG, "Check Chassis Number", constant.MESSAGE_SUCCESS, "NOKA_NOSIN SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: checkChassisNumber})
+
+	if checkChassisNumber.Result == constant.DECISION_REJECT {
+		data = checkChassisNumber
 		mapping.Reason = data.Reason
 		return
 	}

@@ -67,12 +67,12 @@ func (u usecase) DupcheckIntegrator(ctx context.Context, prospectID, idNumber, l
 	custDupcheck, err := u.httpclient.EngineAPI(ctx, constant.FILTERING_LOG, os.Getenv("DUPCHECK_URL"), req, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, prospectID, accessToken)
 
 	if err != nil {
-		err = errors.New("upstream_service_timeout - Call Dupcheck Timeout")
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Dupcheck Timeout")
 		return
 	}
 
 	if custDupcheck.StatusCode() != 200 {
-		err = errors.New("upstream_service_error - Call Dupcheck Error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call Dupcheck Error")
 		return
 	}
 
@@ -109,7 +109,7 @@ func (u usecase) VehicleCheck(manufactureYear string) (data response.UsecaseApi,
 	config, err := u.repository.GetDupcheckConfig()
 
 	if err != nil {
-		err = errors.New("upstream_service_error - Error Get Parameterize Config")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error Get Parameterize Config")
 		return
 	}
 
@@ -156,12 +156,12 @@ func (u usecase) GetLatestPaidInstallment(ctx context.Context, req request.ReqLa
 		dupcheckMDM, err = u.httpclient.EngineAPI(ctx, constant.DUPCHECK_LOG, fmt.Sprintf("%s/%s/3", os.Getenv("DUPCHECK_GET_LATEST_PAID_INSTALLMENT"), req.CustomerID), nil, map[string]string{}, constant.METHOD_GET, true, 6, 60, prospectID, accessToken)
 
 		if err != nil {
-			err = errors.New("upstream_service_timeout - Call Dupcheck MDM Latest Paid Installment Timeout")
+			err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Dupcheck MDM Latest Paid Installment Timeout")
 			return
 		}
 
 		if dupcheckMDM.StatusCode() != 200 {
-			err = errors.New("upstream_service_error - Call Dupcheck MDM Latest Paid Installment Error")
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call Dupcheck MDM Latest Paid Installment Error")
 			return
 		}
 
@@ -207,8 +207,7 @@ func (u usecase) CustomerDomainGetData(ctx context.Context, req request.ReqCusto
 		resp, err := u.httpclient.EngineAPI(ctx, constant.DUPCHECK_LOG, url, param, header, constant.METHOD_POST, false, 0, 60, prospectID, accessToken)
 
 		if err != nil && resp.StatusCode() != 200 {
-			err = errors.New("upstream_service_error - Call Customer Domain")
-			CentralizeLog(constant.DUPCHECK_LOG, "Customer Domain", constant.MESSAGE_SUCCESS, "GET_DATA", true, other.CustomLog{Info: req, Error: err.Error()})
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call Customer Domain")
 			return customerDomainData, err
 		}
 
@@ -224,7 +223,39 @@ func (u usecase) CustomerDomainGetData(ctx context.Context, req request.ReqCusto
 	return
 }
 
-func (u usecase) RejectionNoka(req request.DupcheckApi) (data response.RejectionNoka, err error) {
+func (u usecase) NokaBanned30D(req request.DupcheckApi) (data response.RejectionNoka, err error) {
+
+	data.Code = constant.CODE_REJECTION_OK
+	data.Result = constant.RESULT_REJECTION_OK
+	data.Reason = constant.REASON_REJECTION_OK
+
+	nokaBanned30D, err := u.repository.GetLatestBannedRejectionNoka(req.RangkaNo)
+	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error Get Latest Banned Rejection Noka")
+		return
+	}
+
+	data.IsBannedActive = false
+	if nokaBanned30D != (response.DupcheckRejectionNokaNosin{}) && nokaBanned30D.IsBanned == 1 {
+		bannedDate := nokaBanned30D.CreatedAt
+		dueDate := bannedDate.AddDate(0, 0, constant.DAY_RANGE_BANNED_REJECT_NOKA)
+		dueDateString := dueDate.Format("2006-01-02")
+
+		if time.Now().Format(constant.FORMAT_DATE) <= dueDateString {
+			data.IsBannedActive = true
+		}
+
+		if data.IsBannedActive {
+			data.Code = constant.CODE_REJECT_NOKA_NOSIN
+			data.Result = constant.DECISION_REJECT
+			data.Reason = constant.REASON_REJECT_NOKA_NOSIN
+			return
+		}
+	}
+	return
+}
+
+func (u usecase) CheckRejectionNoka(req request.DupcheckApi) (data response.RejectionNoka, err error) {
 
 	var (
 		inRejectionNoka    bool
@@ -233,73 +264,55 @@ func (u usecase) RejectionNoka(req request.DupcheckApi) (data response.Rejection
 		checkHistoryReject entity.DupcheckRejectionPMK
 	)
 
-	nokaBanned30D, err := u.repository.GetLatestBannedRejectionNoka(req.RangkaNo)
-	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
-		err = errors.New("upstream_service_error - Error Get Latest Banned Rejection Noka")
-		return
-	}
-
 	nokaBannedCurrentDate, err := u.repository.GetLatestRejectionNoka(req.RangkaNo)
+
 	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
-		err = errors.New("upstream_service_error - Error Get Latest Rejection Noka")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error Get Latest Rejection Noka")
 		return
 	}
 
 	inRejectionNoka = false
-	if nokaBanned30D != (entity.DupcheckRejectionNokaNosin{}) || nokaBannedCurrentDate != (entity.DupcheckRejectionNokaNosin{}) {
-
-		if nokaBanned30D != (entity.DupcheckRejectionNokaNosin{}) && nokaBanned30D.IsBanned == 1 {
-			bannedDate := nokaBanned30D.CreatedAt
-			dueDate := bannedDate.AddDate(0, 0, constant.DAY_RANGE_BANNED_REJECT_NOKA)
-			dueDateString := dueDate.Format("2006-01-02")
-
-			data.IsBannedActive = false
-			if time.Now().Format(constant.FORMAT_DATE) <= dueDateString {
-				data.IsBannedActive = true
-			}
-		}
+	data.CurrentBannedNotEmpty = false
+	if nokaBannedCurrentDate != (response.DupcheckRejectionNokaNosin{}) {
 
 		// Must be simplified
-		data.CurrentBannedEmpty = true
-		if nokaBannedCurrentDate != (entity.DupcheckRejectionNokaNosin{}) {
-			data.CurrentBannedEmpty = false
-			data.IDNumber = nokaBannedCurrentDate.IDNumber
-			data.LegalName = nokaBannedCurrentDate.LegalName
-			data.BirthPlace = nokaBannedCurrentDate.BirthPlace
-			data.BirthDate = nokaBannedCurrentDate.BirthDate
-			data.MonthlyFixedIncome = nokaBannedCurrentDate.MonthlyFixedIncome
-			data.EmploymentSinceYear = nokaBannedCurrentDate.EmploymentSinceYear
-			data.EmploymentSinceMonth = nokaBannedCurrentDate.EmploymentSinceMonth
-			data.StaySinceYear = nokaBannedCurrentDate.StaySinceYear
-			data.StaySinceMonth = nokaBannedCurrentDate.StaySinceMonth
-			data.BPKBName = nokaBannedCurrentDate.BPKBName
-			data.Gender = nokaBannedCurrentDate.Gender
-			data.MaritalStatus = nokaBannedCurrentDate.MaritalStatus
-			data.NumOfDependence = nokaBannedCurrentDate.NumOfDependence
-			data.NTF = nokaBannedCurrentDate.NTF
-			data.OTRPrice = nokaBannedCurrentDate.OTRPrice
-			data.LegalZipCode = nokaBannedCurrentDate.LegalZipCode
-			data.Tenor = nokaBannedCurrentDate.Tenor
-			data.ManufacturingYear = nokaBannedCurrentDate.ManufacturingYear
-			data.ProfessionID = nokaBannedCurrentDate.ProfessionID
-			data.CompanyZipCode = nokaBannedCurrentDate.CompanyZipCode
-			data.HomeStatus = nokaBannedCurrentDate.HomeStatus
-		}
+		inRejectionNoka = true
+		data.CurrentBannedNotEmpty = true
 
-		if nokaBannedCurrentDate != (entity.DupcheckRejectionNokaNosin{}) || data.IsBannedActive {
-			inRejectionNoka = true
-			data.Code = constant.CODE_REJECTION_OK
-			data.Result = constant.RESULT_REJECTION_OK
-			data.Reason = constant.REASON_REJECTION_OK
-			return
-		}
+		data.IDNumber = nokaBannedCurrentDate.IDNumber
+		data.LegalName = nokaBannedCurrentDate.LegalName
+		data.BirthPlace = nokaBannedCurrentDate.BirthPlace
+		data.BirthDate = nokaBannedCurrentDate.BirthDate
+		data.MonthlyFixedIncome = nokaBannedCurrentDate.MonthlyFixedIncome
+		data.EmploymentSinceYear = nokaBannedCurrentDate.EmploymentSinceYear
+		data.EmploymentSinceMonth = nokaBannedCurrentDate.EmploymentSinceMonth
+		data.StaySinceYear = nokaBannedCurrentDate.StaySinceYear
+		data.StaySinceMonth = nokaBannedCurrentDate.StaySinceMonth
+		data.BPKBName = nokaBannedCurrentDate.BPKBName
+		data.Gender = nokaBannedCurrentDate.Gender
+		data.MaritalStatus = nokaBannedCurrentDate.MaritalStatus
+		data.NumOfDependence = nokaBannedCurrentDate.NumOfDependence
+		data.NTF = nokaBannedCurrentDate.NTF
+		data.OTRPrice = nokaBannedCurrentDate.OTRPrice
+		data.LegalZipCode = nokaBannedCurrentDate.LegalZipCode
+		data.Tenor = nokaBannedCurrentDate.Tenor
+		data.ManufacturingYear = nokaBannedCurrentDate.ManufacturingYear
+		data.ProfessionID = nokaBannedCurrentDate.ProfessionID
+		data.CompanyZipCode = nokaBannedCurrentDate.CompanyZipCode
+		data.HomeStatus = nokaBannedCurrentDate.HomeStatus
+
+		data.Code = constant.CODE_REJECTION_OK
+		data.Result = constant.RESULT_REJECTION_OK
+		data.Reason = constant.REASON_REJECTION_OK
+		return
 	}
 
 	if !inRejectionNoka {
 
 		rejection, err = u.repository.GetAllReject(req.IDNumber)
+
 		if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
-			err = errors.New("upstream_service_error - Error Get All Rejection")
+			err = errors.New(constant.ERROR_UPSTREAM + " - Error Get All Rejection")
 			return
 		}
 
@@ -320,8 +333,9 @@ func (u usecase) RejectionNoka(req request.DupcheckApi) (data response.Rejection
 
 		} else {
 			getHistoryReject, err = u.repository.GetHistoryRejectAttempt(req.IDNumber)
+
 			if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
-				err = errors.New("upstream_service_error - Error Get All Rejection")
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error Get All Rejection")
 				return
 			}
 
@@ -346,7 +360,7 @@ func (u usecase) RejectionNoka(req request.DupcheckApi) (data response.Rejection
 
 					checkHistoryReject, err = u.repository.GetCheckingRejectAttempt(req.IDNumber, dateString)
 					if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
-						err = errors.New("upstream_service_error - Error Get Checking Reject Attempt")
+						err = errors.New(constant.ERROR_UPSTREAM + " - Error Get Checking Reject Attempt")
 						return
 					}
 
@@ -367,25 +381,15 @@ func (u usecase) RejectionNoka(req request.DupcheckApi) (data response.Rejection
 	return
 }
 
-func (u usecase) CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBanned response.RejectionNoka, isBanning bool, accessToken string) (data response.UsecaseApi, err error) {
+func (u usecase) CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBanned response.RejectionNoka, accessToken string) (data response.UsecaseApi, err error) {
 
 	var (
-		nokaData                       entity.DupcheckRejectionNokaNosin
-		trxApiLog                      entity.TrxApiLog
-		responseAgreementChassisNumber entity.AgreementChassisNumber
-		response_api_log               []byte
+		nokaData entity.DupcheckRejectionNokaNosin
 	)
 
 	data.Code = constant.CODE_REJECTION_NOTIF
 	data.Result = constant.RESULT_NOTIF
 	data.Reason = constant.REASON_NOTIF
-
-	if nokaBanned != (response.RejectionNoka{}) && nokaBanned.IsBannedActive {
-		data.Code = constant.CODE_REJECT_NOKA_NOSIN
-		data.Result = constant.DECISION_REJECT
-		data.Reason = constant.REASON_REJECT_NOKA_NOSIN
-		return
-	}
 
 	// Noka Data to Save
 	nokaData.Id = utils.UniqueID(15)
@@ -415,12 +419,12 @@ func (u usecase) CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBa
 	nokaData.HomeStatus = reqs.HomeStatus
 
 	// Check Current Date Banned Status
-	if !isBanning {
+	if nokaBanned.CurrentBannedNotEmpty {
 		numberOfRetry := nokaBanned.NumberOfRetry + 1
 
 		if numberOfRetry == 1 {
 			nokaData.NumberOfRetry = numberOfRetry
-			// nokaData.IsBanned = 0
+
 		} else if numberOfRetry > 1 && numberOfRetry < constant.ATTEMPT_BANNED_REJECTION_NOKA {
 			nokaData.NumberOfRetry = numberOfRetry
 
@@ -435,7 +439,7 @@ func (u usecase) CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBa
 		}
 
 		if err = u.repository.SaveDataNoka(nokaData); err != nil {
-			err = errors.New("upstream_service_error - Error Save Data Noka Nosin")
+			err = errors.New(constant.ERROR_UPSTREAM + " - Error Save Data Noka Nosin")
 			return
 		}
 
@@ -444,6 +448,18 @@ func (u usecase) CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBa
 		data.Reason = constant.REASON_REJECT_NOKA_NOSIN
 		return
 	}
+
+	return
+}
+
+func (u usecase) CheckChassisNumber(ctx context.Context, reqs request.DupcheckApi, nokaBanned response.RejectionNoka, accessToken string) (data response.UsecaseApi, err error) {
+
+	var (
+		nokaData                       entity.DupcheckRejectionNokaNosin
+		trxApiLog                      entity.TrxApiLog
+		responseAgreementChassisNumber entity.AgreementChassisNumber
+		response_api_log               []byte
+	)
 
 	trxApiLog.ProspectID = reqs.ProspectID
 	trxApiLog.Request = os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL") + reqs.RangkaNo
@@ -468,12 +484,12 @@ func (u usecase) CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBa
 		hitChassisNumber, err = u.httpclient.EngineAPI(ctx, constant.DUPCHECK_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+reqs.RangkaNo, nil, map[string]string{}, constant.METHOD_GET, true, 6, 60, reqs.ProspectID, accessToken)
 
 		if err != nil {
-			err = errors.New("upstream_service_timeout - Call Get Agreement of Chassis Number Timeout")
+			err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Get Agreement of Chassis Number Timeout")
 			return
 		}
 
 		if hitChassisNumber.StatusCode() != 200 {
-			err = errors.New("upstream_service_error - Call Get Agreement of Chassis Number Error")
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call Get Agreement of Chassis Number Error")
 			return
 		}
 
@@ -486,7 +502,7 @@ func (u usecase) CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBa
 	trxApiLog.Type = constant.TYPE_API_LOGS_NOKA
 
 	if err = u.repository.SaveDataApiLog(trxApiLog); err != nil {
-		err = errors.New("upstream_service_error - Error Save Data to API Logs")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error Save Data to API Logs")
 		return
 	}
 
@@ -504,10 +520,37 @@ func (u usecase) CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBa
 		}
 
 		if !utils.Contains(listNikKonsumenDanPasangan, agreement.IDNumber) {
+			// Noka Data to Save
+			nokaData.Id = utils.UniqueID(15)
+			nokaData.NoRangka = reqs.RangkaNo
+			nokaData.NoMesin = reqs.EngineNo
+			nokaData.ProspectID = reqs.ProspectID
+			nokaData.IDNumber = reqs.IDNumber
+			nokaData.LegalName = reqs.LegalName
+			nokaData.BirthPlace = reqs.BirthPlace
+			nokaData.BirthDate = reqs.BirthDate
+			nokaData.MonthlyFixedIncome = reqs.MonthlyFixedIncome
+			nokaData.EmploymentSinceYear = reqs.EmploymentSinceYear
+			nokaData.EmploymentSinceMonth = reqs.EmploymentSinceMonth
+			nokaData.StaySinceYear = reqs.StaySinceYear
+			nokaData.StaySinceMonth = reqs.StaySinceMonth
+			nokaData.BPKBName = reqs.BPKBName
+			nokaData.Gender = reqs.Gender
+			nokaData.MaritalStatus = reqs.MaritalStatus
+			nokaData.NumOfDependence = reqs.NumOfDependence
+			nokaData.NTF = reqs.NTF
+			nokaData.OTRPrice = reqs.OTRPrice
+			nokaData.LegalZipCode = reqs.LegalZipCode
+			nokaData.Tenor = reqs.Tenor
+			nokaData.ManufacturingYear = reqs.ManufactureYear
+			nokaData.ProfessionID = reqs.ProfessionID
+			nokaData.CompanyZipCode = reqs.CompanyZipCode
+			nokaData.HomeStatus = reqs.HomeStatus
+
 			nokaData.NumberOfRetry = 0
 
 			if err = u.repository.SaveDataNoka(nokaData); err != nil {
-				err = errors.New("upstream_service_error - Error Save Data Noka Nosin")
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error Save Data Noka Nosin")
 				return
 			}
 
@@ -530,6 +573,5 @@ func (u usecase) CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBa
 		data.Result = constant.RESULT_OK
 		data.Reason = constant.REASON_AGREEMENT_NOT_FOUND
 	}
-
 	return
 }

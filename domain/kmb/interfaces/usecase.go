@@ -21,8 +21,10 @@ type Usecase interface {
 	DsrCheck(ctx context.Context, prospectID, engineNo string, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, newDupcheck entity.NewDupcheck, accessToken string) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error)
 	CustomerDomainGetData(ctx context.Context, req request.ReqCustomerDomain, prospectID, accessToken string) (customerDomainData response.CustomerDomainData, err error)
 	GetLatestPaidInstallment(ctx context.Context, req request.ReqLatestPaidInstallment, prospectID, accessToken string) (data response.LatestPaidInstallmentData, err error)
-	RejectionNoka(reqs request.DupcheckApi) (data response.RejectionNoka, err error)
-	CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBanned30D response.RejectionNoka, status bool, accessToken string) (data response.UsecaseApi, err error)
+	NokaBanned30D(reqs request.DupcheckApi) (data response.RejectionNoka, err error)
+	CheckRejectionNoka(reqs request.DupcheckApi) (data response.RejectionNoka, err error)
+	CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBanned30D response.RejectionNoka, accessToken string) (data response.UsecaseApi, err error)
+	CheckChassisNumber(ctx context.Context, reqs request.DupcheckApi, nokaBanned response.RejectionNoka, accessToken string) (data response.UsecaseApi, err error)
 }
 
 type MultiUsecase interface {

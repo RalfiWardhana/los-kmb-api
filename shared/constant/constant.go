@@ -177,9 +177,11 @@ const (
 	WO_AGUNAN_PASS_CODE                                          = "9108"
 
 	// Error Message
-	INTERNAL_SERVER_ERROR = "internal_server_error"
-	ERROR_CONNECTION      = "connection error"
-	ERROR_UNMARSHAL       = "unmarshal error"
+	INTERNAL_SERVER_ERROR  = "internal_server_error"
+	ERROR_CONNECTION       = "connection error"
+	ERROR_UNMARSHAL        = "unmarshal error"
+	ERROR_UPSTREAM         = "upstream_service_error"
+	ERROR_UPSTREAM_TIMEOUT = "upstream_service_timeout"
 
 	// Key
 	CTX_KEY_REQUEST_TIME            = "RequestTime"

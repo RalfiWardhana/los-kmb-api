@@ -2,8 +2,9 @@ package dupcheck
 
 type DupcheckApi struct {
 	ProspectID            string             `json:"prospect_id" validate:"required"`
-	Image1                string             `json:"ktp_image" validate:"required,url"`
-	Image2                string             `json:"selfie_image" validate:"required,url"`
+	ImageSelfie1          string             `json:"image_selfie_1" validate:"required"`
+	ImageSelfie2          string             `json:"image_selfie_2" validate:"required"`
+	ImageKtp              string             `json:"ktp_url" validate:"required"`
 	MonthlyFixedIncome    float64            `json:"monthly_fixed_income" validate:"required"`
 	HomeStatus            string             `json:"home_status" validate:"required,max=2"`
 	MonthlyVariableIncome float64            `json:"monthly_variable_income"`
