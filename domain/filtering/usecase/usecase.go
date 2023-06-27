@@ -787,11 +787,17 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 							data.Decision = constant.DECISION_REJECT
 							data.NextProcess = 0
 							data.Reason = "NAMA " + nama + " & Baki Debet > 20 Juta"
-						} else {
+						} else if bpkbName == constant.NAMA_SAMA && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 							data.Code = constant.WO_AGUNAN_PASS_CODE
 							data.StatusKonsumen = status_konsumen
 							data.Decision = constant.DECISION_REJECT
 							data.NextProcess = 1
+							data.Reason = "NAMA " + nama + " & Baki Debet Sesuai Ketentuan"
+						} else {
+							data.Code = constant.WO_AGUNAN_PASS_CODE
+							data.StatusKonsumen = status_konsumen
+							data.Decision = constant.DECISION_REJECT
+							data.NextProcess = 0
 							data.Reason = "NAMA " + nama + " & Baki Debet Sesuai Ketentuan"
 						}
 
@@ -809,11 +815,17 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 						data.Decision = constant.DECISION_REJECT
 						data.NextProcess = 0
 						data.Reason = "NAMA " + nama + " & Baki Debet > 20 Juta"
-					} else {
+					} else if bpkbName == constant.NAMA_SAMA && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 						data.Code = constant.WO_AGUNAN_PASS_CODE
 						data.StatusKonsumen = status_konsumen
 						data.Decision = constant.DECISION_REJECT
 						data.NextProcess = 1
+						data.Reason = "NAMA " + nama + " & Baki Debet Sesuai Ketentuan"
+					} else {
+						data.Code = constant.WO_AGUNAN_PASS_CODE
+						data.StatusKonsumen = status_konsumen
+						data.Decision = constant.DECISION_REJECT
+						data.NextProcess = 0
 						data.Reason = "NAMA " + nama + " & Baki Debet Sesuai Ketentuan"
 					}
 
