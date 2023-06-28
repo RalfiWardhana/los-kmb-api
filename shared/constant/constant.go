@@ -337,9 +337,10 @@ const (
 	REASON_CONFIDENCE_UPPER_THRESHOLD = "Confidence Di Atas Threshold"
 
 	//LOB
-	LOB_WG      = "WG"
-	LOB_NEW_WG  = "NEW_WG"
+	LOB_NEW_KMB = "NEW-KMB"
 	LOB_KMB     = "KMB"
-	LOB_KMB_NEW = "KMB-NEW"
-	LOB_KMOB    = "KMOB"
+
+	//
+	LOG_FILTERING_LOG = "FILTERING_LOG"
+	LOG_JOURNEY_LOG   = "KMB_LOG"
 )

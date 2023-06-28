@@ -53,6 +53,27 @@ type FakeHttpClient struct {
 		result1 *resty.Response
 		result2 error
 	}
+	MediaClientStub        func(context.Context, string, string, string, interface{}, map[string]string, int, int, string) (*resty.Response, error)
+	mediaClientMutex       sync.RWMutex
+	mediaClientArgsForCall []struct {
+		arg1 context.Context
+		arg2 string
+		arg3 string
+		arg4 string
+		arg5 interface{}
+		arg6 map[string]string
+		arg7 int
+		arg8 int
+		arg9 string
+	}
+	mediaClientReturns struct {
+		result1 *resty.Response
+		result2 error
+	}
+	mediaClientReturnsOnCall map[int]struct {
+		result1 *resty.Response
+		result2 error
+	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
@@ -212,6 +233,78 @@ func (fake *FakeHttpClient) EngineAPIReturnsOnCall(i int, result1 *resty.Respons
 	}{result1, result2}
 }
 
+func (fake *FakeHttpClient) MediaClient(arg1 context.Context, arg2 string, arg3 string, arg4 string, arg5 interface{}, arg6 map[string]string, arg7 int, arg8 int, arg9 string) (*resty.Response, error) {
+	fake.mediaClientMutex.Lock()
+	ret, specificReturn := fake.mediaClientReturnsOnCall[len(fake.mediaClientArgsForCall)]
+	fake.mediaClientArgsForCall = append(fake.mediaClientArgsForCall, struct {
+		arg1 context.Context
+		arg2 string
+		arg3 string
+		arg4 string
+		arg5 interface{}
+		arg6 map[string]string
+		arg7 int
+		arg8 int
+		arg9 string
+	}{arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9})
+	stub := fake.MediaClientStub
+	fakeReturns := fake.mediaClientReturns
+	fake.recordInvocation("MediaClient", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9})
+	fake.mediaClientMutex.Unlock()
+	if stub != nil {
+		return stub(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeHttpClient) MediaClientCallCount() int {
+	fake.mediaClientMutex.RLock()
+	defer fake.mediaClientMutex.RUnlock()
+	return len(fake.mediaClientArgsForCall)
+}
+
+func (fake *FakeHttpClient) MediaClientCalls(stub func(context.Context, string, string, string, interface{}, map[string]string, int, int, string) (*resty.Response, error)) {
+	fake.mediaClientMutex.Lock()
+	defer fake.mediaClientMutex.Unlock()
+	fake.MediaClientStub = stub
+}
+
+func (fake *FakeHttpClient) MediaClientArgsForCall(i int) (context.Context, string, string, string, interface{}, map[string]string, int, int, string) {
+	fake.mediaClientMutex.RLock()
+	defer fake.mediaClientMutex.RUnlock()
+	argsForCall := fake.mediaClientArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6, argsForCall.arg7, argsForCall.arg8, argsForCall.arg9
+}
+
+func (fake *FakeHttpClient) MediaClientReturns(result1 *resty.Response, result2 error) {
+	fake.mediaClientMutex.Lock()
+	defer fake.mediaClientMutex.Unlock()
+	fake.MediaClientStub = nil
+	fake.mediaClientReturns = struct {
+		result1 *resty.Response
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeHttpClient) MediaClientReturnsOnCall(i int, result1 *resty.Response, result2 error) {
+	fake.mediaClientMutex.Lock()
+	defer fake.mediaClientMutex.Unlock()
+	fake.MediaClientStub = nil
+	if fake.mediaClientReturnsOnCall == nil {
+		fake.mediaClientReturnsOnCall = make(map[int]struct {
+			result1 *resty.Response
+			result2 error
+		})
+	}
+	fake.mediaClientReturnsOnCall[i] = struct {
+		result1 *resty.Response
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeHttpClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -219,6 +312,8 @@ func (fake *FakeHttpClient) Invocations() map[string][][]interface{} {
 	defer fake.customerAPIMutex.RUnlock()
 	fake.engineAPIMutex.RLock()
 	defer fake.engineAPIMutex.RUnlock()
+	fake.mediaClientMutex.RLock()
+	defer fake.mediaClientMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value

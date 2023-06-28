@@ -171,6 +171,7 @@ func (u usecase) CustomerDomainGetData(ctx context.Context, req request.ReqCusto
 	dummy, _ := strconv.ParseBool(os.Getenv("DUMMY_CUSTOMER_DOMAIN_GET_DATA"))
 
 	if dummy {
+
 		dummyCustomerDomain, _ := u.repository.GetDummyCustomerDomain(req.IDNumber)
 
 		var customerDomain response.CustomerDomain

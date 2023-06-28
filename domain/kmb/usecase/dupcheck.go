@@ -42,7 +42,6 @@ func (u metrics) Dupcheck(ctx context.Context, req request.DupcheckApi, married 
 		spMap          response.SpDupcheckMap
 		customerType   string
 		newDupcheck    entity.NewDupcheck
-		getPhotoInfo   map[string]interface{}
 		faceCompareReq request.FaceCompareRequest
 	)
 
@@ -65,19 +64,9 @@ func (u metrics) Dupcheck(ctx context.Context, req request.DupcheckApi, married 
 	faceCompareReq.LegalName = req.LegalName
 	faceCompareReq.Lob = constant.LOB_KMB
 
-	selfie1, selfie2, isBlur, err := u.multiUsecase.GetPhoto(ctx, faceCompareReq, accessToken)
+	selfie1, selfie2, err := u.multiUsecase.GetPhoto(ctx, faceCompareReq, accessToken)
 
-	if err != nil {
-		getPhotoInfo = map[string]interface{}{
-			"error": err.Error(),
-		}
-	} else {
-		getPhotoInfo = map[string]interface{}{
-			"is_blur": isBlur,
-		}
-	}
-
-	faceCompare, err := u.usecase.FacePlus(ctx, selfie1, selfie2, faceCompareReq, accessToken, getPhotoInfo)
+	faceCompare, err := u.usecase.FacePlus(ctx, selfie1, selfie2, faceCompareReq, accessToken)
 
 	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
 		CentralizeLog(constant.DUPCHECK_LOG, "Check Face Compare", constant.MESSAGE_E, "FACE_COMPARE SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
@@ -376,4 +365,263 @@ func (u metrics) Dupcheck(ctx context.Context, req request.DupcheckApi, married 
 
 	return
 
+}
+
+func (u usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerByID) (data response.UsecaseApi, customerType string) {
+
+	// index 0 = consument
+	// index 1 = spouse
+
+	customerType = constant.MESSAGE_BERSIH
+
+	if spDupcheck != (response.SpDupCekCustomerByID{}) {
+
+		data.StatusKonsumen = constant.STATUS_KONSUMEN_AO
+
+		if (spDupcheck.TotalInstallment <= 0 && spDupcheck.RRDDate != nil) || (spDupcheck.TotalInstallment > 0 && spDupcheck.RRDDate != nil && spDupcheck.NumberOfPaidInstallment == nil) {
+			data.StatusKonsumen = constant.STATUS_KONSUMEN_RO
+		}
+
+		if spDupcheck.IsSimiliar == 1 && index == 0 {
+			data.Result = constant.DECISION_REJECT
+			data.Code = constant.CODE_KONSUMEN_SIMILIAR
+			data.Reason = constant.REASON_KONSUMEN_SIMILIAR
+			customerType = constant.MESSAGE_BLACKLIST
+
+		} else if spDupcheck.BadType == constant.BADTYPE_B {
+			data.Result = constant.DECISION_REJECT
+			customerType = constant.MESSAGE_BLACKLIST
+			if index == 0 {
+				data.Code = constant.CODE_KONSUMEN_BLACKLIST
+				data.Reason = constant.REASON_KONSUMEN_BLACKLIST
+
+			} else {
+				data.Code = constant.CODE_PASANGAN_BLACKLIST
+				data.Reason = constant.REASON_PASANGAN_BLACKLIST
+			}
+			return
+
+		} else if spDupcheck.MaxOverdueDays > 90 {
+			data.Result = constant.DECISION_REJECT
+			customerType = constant.MESSAGE_BLACKLIST
+			if index == 0 {
+				data.Code = constant.CODE_KONSUMEN_BLACKLIST
+				data.Reason = constant.REASON_KONSUMEN_BLACKLIST_OVD_90DAYS
+
+			} else {
+				data.Code = constant.CODE_PASANGAN_BLACKLIST
+				data.Reason = constant.REASON_PASANGAN_BLACKLIST_OVD_90DAYS
+			}
+			return
+
+		} else if spDupcheck.NumOfAssetInventoried > 0 {
+			data.Result = constant.DECISION_REJECT
+			customerType = constant.MESSAGE_BLACKLIST
+			if index == 0 {
+				data.Code = constant.CODE_KONSUMEN_BLACKLIST
+				data.Reason = constant.REASON_KONSUMEN_BLACKLIST_ASSET_INVENTORY
+
+			} else {
+				data.Code = constant.CODE_PASANGAN_BLACKLIST
+				data.Reason = constant.REASON_PASANGAN_BLACKLIST_ASSET_INVENTORY
+			}
+			return
+
+		} else if spDupcheck.IsRestructure == 1 {
+			data.Result = constant.DECISION_REJECT
+			customerType = constant.MESSAGE_BLACKLIST
+			if index == 0 {
+				data.Code = constant.CODE_KONSUMEN_BLACKLIST
+				data.Reason = constant.REASON_KONSUMEN_BLACKLIST_RESTRUCTURE
+
+			} else {
+				data.Code = constant.CODE_PASANGAN_BLACKLIST
+				data.Reason = constant.REASON_PASANGAN_BLACKLIST_RESTRUCTURE
+			}
+			return
+
+		} else if spDupcheck.BadType == constant.BADTYPE_W {
+			customerType = constant.MESSAGE_WARNING
+		}
+
+	} else {
+		data.StatusKonsumen = constant.STATUS_KONSUMEN_NEW
+	}
+
+	data = response.UsecaseApi{StatusKonsumen: data.StatusKonsumen, Code: constant.CODE_NON_BLACKLIST, Reason: constant.REASON_NON_BLACKLIST, Result: constant.DECISION_PASS}
+
+	return
+}
+
+func (u usecase) ConsumentCheck(req response.SpDupCekCustomerByID) (data response.UsecaseApi, mapping response.SpDupcheckMap, err error) {
+
+	if req != (response.SpDupCekCustomerByID{}) {
+
+		var config entity.AppConfig
+
+		config, err = u.repository.GetDupcheckConfig()
+
+		if err != nil {
+			err = errors.New("upstream_service_error - Error Get Parameterize Config")
+			return
+		}
+
+		var configValue response.DupcheckConfig
+
+		json.Unmarshal([]byte(config.Value), &configValue)
+
+		if req.MaxOverdueDaysROAO != nil {
+			mapping.MaxOverdueDaysROAO = *req.MaxOverdueDaysROAO
+		}
+
+		if req.NumberOfPaidInstallment != nil {
+			mapping.NumberOfPaidInstallment = *req.NumberOfPaidInstallment
+		}
+
+		if req.MaxOverdueDaysforActiveAgreement != nil {
+			mapping.MaxOverdueDaysforActiveAgreement = *req.MaxOverdueDaysforActiveAgreement
+		}
+
+		mapping.CustomerID = req.CustomerID
+
+		if (req.TotalInstallment <= 0 && req.RRDDate != nil) || (req.TotalInstallment > 0 && req.RRDDate != nil && req.NumberOfPaidInstallment == nil) {
+			data.StatusKonsumen = constant.STATUS_KONSUMEN_RO
+
+			if mapping.MaxOverdueDaysROAO <= configValue.Data.MinOvd {
+
+				data.Result = constant.DECISION_PASS
+				data.Code = constant.CODE_RO_OVDLTE30
+				data.Reason = fmt.Sprintf("RO - OVD Maks <= %d days", configValue.Data.MinOvd)
+
+			} else if mapping.MaxOverdueDaysROAO <= configValue.Data.MaxOvd {
+
+				data.Result = constant.DECISION_PASS
+				data.Code = constant.CODE_RO_OVDGT30_LTE90
+				data.Reason = fmt.Sprintf("RO - OVD Maks > %d-%d days", configValue.Data.MinOvd, configValue.Data.MaxOvd)
+
+			} else {
+
+				data.Result = constant.DECISION_REJECT
+				data.Code = constant.CODE_RO_OVDGT90
+				data.Reason = fmt.Sprintf("RO - OVD Maks > %d days", configValue.Data.MaxOvd)
+
+			}
+
+			return
+
+		} else if req.TotalInstallment > 0 {
+
+			if req.NumberOfPaidInstallment != nil && mapping.NumberOfPaidInstallment >= 0 {
+
+				data.StatusKonsumen = constant.STATUS_KONSUMEN_AO
+
+				if req.OSInstallmentDue <= 0 {
+
+					if req.MaxOverdueDaysROAO != nil && mapping.NumberOfPaidInstallment >= configValue.Data.AngsuranBerjalan {
+
+						if mapping.MaxOverdueDaysROAO <= configValue.Data.MinOvd {
+
+							data.Result = constant.DECISION_PASS
+							data.Code = constant.CODE_AO_LANCAR_ANGSGT6_OVDLTE30
+							data.Reason = fmt.Sprintf("AO - Lancar >= %d bulan Angsuran - OVD Maks <= %d days", configValue.Data.AngsuranBerjalan, configValue.Data.MinOvd)
+
+						} else if mapping.MaxOverdueDaysROAO <= configValue.Data.MaxOvd {
+
+							data.Result = constant.DECISION_PASS
+							data.Code = constant.CODE_AO_LANCAR_ANGSGT6_OVDGT30_LTE90
+							data.Reason = fmt.Sprintf("AO - Lancar >= %d bulan Angsuran - OVD maks > %d-%d days", configValue.Data.AngsuranBerjalan, configValue.Data.MinOvd, configValue.Data.MaxOvd)
+
+						} else {
+
+							data.Result = constant.DECISION_REJECT
+							data.Code = constant.CODE_AO_LANCAR_ANGSGT6_OVDGT90
+							data.Reason = fmt.Sprintf("AO - Lancar >= %d bulan Angsuran - OVD maks > %d days", configValue.Data.AngsuranBerjalan, configValue.Data.MaxOvd)
+
+						}
+
+					} else if req.MaxOverdueDaysROAO != nil && mapping.NumberOfPaidInstallment < configValue.Data.AngsuranBerjalan {
+
+						if mapping.MaxOverdueDaysROAO > configValue.Data.MaxOvd {
+
+							data.Result = constant.DECISION_REJECT
+							data.Code = constant.CODE_AO_OVDGT90
+							data.Reason = fmt.Sprintf("AO - OVD Maks > %d days", configValue.Data.MaxOvd)
+
+						} else if mapping.MaxOverdueDaysROAO <= configValue.Data.MinOvd {
+
+							data.Result = constant.DECISION_PASS
+							data.Code = constant.CODE_AO_LANCAR_ANGSLTE6_OVDLTE30
+							data.Reason = fmt.Sprintf("AO - Lancar < %d bulan Angsuran - OVD maks <= %d days", configValue.Data.AngsuranBerjalan, configValue.Data.MinOvd)
+						} else {
+
+							data.Result = constant.DECISION_PASS
+							data.Code = constant.CODE_AO_LANCAR_ANGSLTE6_OVDGT30
+							data.Reason = fmt.Sprintf("AO - Lancar < %d bulan Angsuran - OVD maks > %d days", configValue.Data.AngsuranBerjalan, configValue.Data.MinOvd)
+						}
+					}
+
+				} else {
+
+					if req.MaxOverdueDaysROAO != nil && mapping.NumberOfPaidInstallment >= configValue.Data.AngsuranBerjalan {
+
+						if mapping.MaxOverdueDaysROAO <= configValue.Data.MinOvd {
+
+							data.Result = constant.DECISION_PASS
+							data.Code = constant.CODE_AO_MENUNGGAK_ANGSGT6_OVDLTE30
+							data.Reason = fmt.Sprintf("AO - Menunggak >= %d bulan Angsuran - OVD Maks <= %d days", configValue.Data.AngsuranBerjalan, configValue.Data.MinOvd)
+
+						} else if mapping.MaxOverdueDaysROAO <= configValue.Data.MaxOvd {
+
+							data.Result = constant.DECISION_PASS
+							data.Code = constant.CODE_AO_MENUNGGAK_ANGSGT6_OVDGT30_LTE90
+							data.Reason = fmt.Sprintf("AO - Menunggak >= %d bulan Angsuran - OVD maks > %d - %d days", configValue.Data.AngsuranBerjalan, configValue.Data.MinOvd, configValue.Data.MaxOvd)
+						} else {
+
+							data.Result = constant.DECISION_REJECT
+							data.Code = constant.CODE_AO_MENUNGGAK_ANGSGT6_OVDGT90
+							data.Reason = fmt.Sprintf("AO - Menunggak >= %d bulan Angsuran - OVD maks > %d days", configValue.Data.AngsuranBerjalan, configValue.Data.MaxOvd)
+
+						}
+
+					} else if req.MaxOverdueDaysROAO != nil && mapping.NumberOfPaidInstallment < configValue.Data.AngsuranBerjalan {
+
+						if mapping.MaxOverdueDaysROAO > configValue.Data.MaxOvd {
+
+							data.Result = constant.DECISION_REJECT
+							data.Code = constant.CODE_AO_OVDGT90
+							data.Reason = fmt.Sprintf("AO - OVD Maks > %d days", configValue.Data.MaxOvd)
+
+						} else if mapping.MaxOverdueDaysROAO <= configValue.Data.MinOvd {
+
+							data.Result = constant.DECISION_PASS
+							data.Code = constant.CODE_AO_MENUNGGAK_ANGSLTE6_OVDLTE30
+							data.Reason = fmt.Sprintf("AO - Menunggak < %d bulan Angsuran - OVD maks <= %d days", configValue.Data.AngsuranBerjalan, configValue.Data.MinOvd)
+
+						} else {
+
+							data.Result = constant.DECISION_PASS
+							data.Code = constant.CODE_AO_MENUNGGAK_ANGSLTE6_OVDGT30
+							data.Reason = fmt.Sprintf("AO - Menunggak < %d bulan Angsuran - OVD maks > %d days", configValue.Data.AngsuranBerjalan, configValue.Data.MinOvd)
+						}
+					}
+				}
+
+			}
+
+		} else {
+			data.StatusKonsumen = constant.STATUS_KONSUMEN_NEW
+			data.Result = constant.DECISION_PASS
+			data.Code = constant.CODE_KONSUMEN_UNIDENTIFIED
+			data.Reason = constant.REASON_KONSUMEN_UNIDENTIFIED
+
+		}
+
+	} else {
+		data.StatusKonsumen = constant.STATUS_KONSUMEN_NEW
+		data.Result = constant.DECISION_PASS
+		data.Code = constant.CODE_KONSUMEN_NEW
+		data.Reason = constant.REASON_KONSUMEN_NEW
+	}
+
+	return
 }

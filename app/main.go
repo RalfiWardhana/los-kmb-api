@@ -51,7 +51,7 @@ func main() {
 
 	config.LoadEnv()
 
-	env := strings.ToLower(config.Env("APP_ENV"))
+	env := strings.ToLower(os.Getenv("APP_ENV"))
 
 	config.NewConfiguration(env)
 	e.Pre(middleware.RemoveTrailingSlash())
@@ -116,7 +116,8 @@ func main() {
 	accessToken := middlewares.NewAccessMiddleware()
 	e.Use(accessToken.SetupHeadersAndContext())
 
-	config.CreateCustomLogFile("FILTERING_LOG")
+	config.CreateCustomLogFile(constant.LOG_FILTERING_LOG)
+	config.CreateCustomLogFile(constant.LOG_JOURNEY_LOG)
 
 	utils.NewCache(cache, kpLos, config.IsDevelopment)
 

@@ -21,12 +21,11 @@ type Usecase interface {
 	CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBanned30D response.RejectionNoka, accessToken string) (data response.UsecaseApi, err error)
 	CheckChassisNumber(ctx context.Context, reqs request.DupcheckApi, nokaBanned response.RejectionNoka, accessToken string) (data response.UsecaseApi, err error)
 	DecodeMedia(ctx context.Context, url string, customerID int, accessToken string) (base64Image string, err error)
-	DetectBlurness(ctx context.Context, selfie1 string) (decision bool, err error)
-	FacePlus(ctx context.Context, selfie1 string, selfie2 string, req request.FaceCompareRequest, accessToken string, getPhotoInfo interface{}) (result response.FaceCompareResponse, err error)
+	FacePlus(ctx context.Context, selfie1 string, selfie2 string, req request.FaceCompareRequest, accessToken string) (result response.FaceCompareResponse, err error)
 }
 
 type MultiUsecase interface {
-	GetPhoto(ctx context.Context, req request.FaceCompareRequest, accessToken string) (selfie1 string, selfie2 string, isBlur bool, err error)
+	GetPhoto(ctx context.Context, req request.FaceCompareRequest, accessToken string) (selfie1 string, selfie2 string, err error)
 }
 
 type Metrics interface {
