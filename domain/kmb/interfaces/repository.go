@@ -26,4 +26,7 @@ type Repository interface {
 
 	SaveDataNoka(data entity.DupcheckRejectionNokaNosin) (err error)
 	SaveDataApiLog(data entity.TrxApiLog) (err error)
+
+	GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig)
+	SaveVerificationFaceCompare(data entity.VerificationFaceCompare) error
 }

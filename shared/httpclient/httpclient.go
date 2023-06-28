@@ -30,6 +30,7 @@ func NewHttpClient() HttpClient {
 type HttpClient interface {
 	EngineAPI(ctx context.Context, logFile, link string, param []byte, header map[string]string, method string, retry bool, retryNumber int, timeOut int, prospectID string, accessToken string) (resp *resty.Response, err error)
 	CustomerAPI(ctx context.Context, logFile, endpoint string, param []byte, method string, accessToken string, prospectID string, keyTimeout string) (resp *resty.Response, err error)
+	MediaClient(ctx context.Context, logFile, link, method string, param interface{}, header map[string]string, timeOut int, customerID int, accessToken string) (resp *resty.Response, err error)
 }
 
 func (h httpClientHandler) EngineAPI(ctx context.Context, logFile, link string, param []byte, header map[string]string, method string, retry bool, retryNumber int, timeOut int, prospectID string, accessToken string) (resp *resty.Response, err error) { // nambahin accessToken buat logging
@@ -227,6 +228,56 @@ func (h httpClientHandler) CustomerAPI(ctx context.Context, logFile, endpoint st
 		LevelLog:   levelLog,
 		Request:    mapRequest,
 		Response:   kreditmuResponse,
+	})
+
+	return
+
+}
+
+func (h httpClientHandler) MediaClient(ctx context.Context, logFile, link, method string, param interface{}, header map[string]string, timeOut int, customerID int, accessToken string) (resp *resty.Response, err error) {
+	var levelLog string
+	mapRequest := map[string]interface{}{}
+
+	client := resty.New()
+
+	client.SetTimeout(time.Second * time.Duration(timeOut))
+
+	switch method {
+	case constant.METHOD_GET:
+		resp, err = client.R().SetHeaders(header).Get(link)
+	}
+
+	if err != nil {
+		common.CentralizeLog(ctx, accessToken, common.CentralizeLogParameter{
+			Link:       link,
+			Method:     method,
+			LogFile:    logFile,
+			MsgLogFile: constant.MSG_PLATFORM_API,
+			LevelLog:   levelLog,
+			Request:    mapRequest,
+			Response:   map[string]interface{}{"errors": err.Error()},
+		})
+		err = errors.New(constant.CONNECTION_ERROR)
+		return
+	}
+
+	var mediaResponse interface{}
+	json.Unmarshal(resp.Body(), &mediaResponse)
+
+	levelLog = constant.PLATFORM_LOG_LEVEL_INFO
+
+	if resp.StatusCode() != 200 {
+		levelLog = constant.PLATFORM_LOG_LEVEL_ERROR
+	}
+
+	common.CentralizeLog(ctx, accessToken, common.CentralizeLogParameter{
+		Link:       link,
+		Method:     method,
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_PLATFORM_API,
+		LevelLog:   levelLog,
+		Request:    mapRequest,
+		Response:   mediaResponse,
 	})
 
 	return

@@ -225,3 +225,60 @@ type AgreementChassisNumber struct {
 	Status       string `json:"status"`
 	GoLiveDate   string `json:"go_live_date"`
 }
+
+type FaceCompareResponse struct {
+	CustomerID int    `json:"customer_id" validate:"required"`
+	RequestID  string `json:"request_id"`
+	Result     string `json:"result"`
+	Reason     string `json:"reason"`
+}
+
+type DetectImageResponse struct {
+	Meta struct {
+		Code          int    `json:"code"`
+		Status        string `json:"status"`
+		Message       string `json:"message"`
+		Error         string `json:"error"`
+		ExecutionTime string `json:"executionTime"`
+	} `json:"meta"`
+	Data struct {
+		Facetoken string  `json:"face_token"`
+		BlurValue float64 `json:"blur_value"`
+	} `json:"data"`
+}
+
+type CompareResponse struct {
+	Meta struct {
+		Code          int    `json:"code"`
+		Status        string `json:"status"`
+		Message       string `json:"message"`
+		Error         string `json:"error"`
+		ExecutionTime string `json:"executionTime"`
+	} `json:"meta"`
+	Data struct {
+		Confidence string `json:"confidence"`
+		Facetoken1 string `json:"face_token_1"`
+		Facetoken2 string `json:"face_token_2"`
+	} `json:"data"`
+}
+
+type ImageDecodeResponse struct {
+	Messages string `json:"messages"`
+	Data     struct {
+		Encode string `json:"encode"`
+	} `json:"data"`
+	Errors interface{} `json:"errors"`
+	Code   string      `json:"code"`
+}
+
+type Config struct {
+	Data struct {
+		WG struct {
+			Online  int `json:"online"`
+			Offline int `json:"offline"`
+		} `json:"wg"`
+		Kmb  int `json:"kmb"`
+		Kmob int `json:"kmob"`
+		Blur int `json:"blur"`
+	} `json:"data"`
+}

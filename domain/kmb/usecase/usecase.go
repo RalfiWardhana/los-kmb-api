@@ -24,26 +24,11 @@ import (
 )
 
 type (
-	multiUsecase struct {
-		repository interfaces.Repository
-		httpclient httpclient.HttpClient
-		usecase    interfaces.Usecase
-	}
 	usecase struct {
 		repository interfaces.Repository
 		httpclient httpclient.HttpClient
 	}
 )
-
-func NewMultiUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient) (interfaces.MultiUsecase, interfaces.Usecase) {
-	usecase := NewUsecase(repository, httpclient)
-
-	return &multiUsecase{
-		usecase:    usecase,
-		repository: repository,
-		httpclient: httpclient,
-	}, usecase
-}
 
 func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient) interfaces.Usecase {
 	return &usecase{

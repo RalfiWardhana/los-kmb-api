@@ -162,3 +162,19 @@ type DummyAgreementChassisNumber struct {
 func (c *DummyAgreementChassisNumber) TableName() string {
 	return "dummy_agreement_chassis_number"
 }
+
+type VerificationFaceCompare struct {
+	ID             string      `gorm:"column:id;primary_key:true"`
+	CustomerID     int         `gorm:"column:customer_id"`
+	ResultGetPhoto interface{} `gorm:"column:result_get_photo"`
+	ResultFacePlus interface{} `gorm:"column:result_faceplus"`
+	ResultASLIRI   interface{} `gorm:"column:result_asliri"`
+	Decision       string      `gorm:"column:decision"`
+	Result         interface{} `gorm:"column:result"`
+	CreatedAt      time.Time   `gorm:"column:created_at;"`
+	UpdatedAt      time.Time   `gorm:"column:updated_at"`
+}
+
+func (c *VerificationFaceCompare) TableName() string {
+	return "verification_face_compare"
+}

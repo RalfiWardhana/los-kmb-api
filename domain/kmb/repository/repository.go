@@ -254,3 +254,29 @@ func (r repoHandler) GetDummyAgreementChassisNumber(idNumber string) (data entit
 	}
 	return
 }
+
+func (r *repoHandler) GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig) {
+	if lob == "" || key == "" {
+		if err := r.losDB.
+			Raw(fmt.Sprintf("SELECT [value] FROM app_config WITH (nolock) WHERE group_name = '%s'", groupName)).
+			Scan(&appConfig).Error; err != nil {
+			return appConfig
+		}
+
+		return
+	}
+	if err := r.losDB.
+		Raw(fmt.Sprintf("SELECT [value] FROM app_config WITH (nolock) WHERE group_name = '%s' AND lob = '%s' AND [key]= '%s' AND is_active = 1", groupName, lob, key)).
+		Scan(&appConfig).Error; err != nil {
+		return appConfig
+	}
+
+	return appConfig
+}
+
+func (r *repoHandler) SaveVerificationFaceCompare(data entity.VerificationFaceCompare) error {
+	if err := r.losDB.Create(&data).Error; err != nil {
+		return fmt.Errorf("save verification face compare error: %w", err)
+	}
+	return nil
+}

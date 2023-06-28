@@ -1,11 +1,16 @@
 package utils
 
 import (
+	"bufio"
 	"crypto/md5"
+	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"math/rand"
+	"net/http"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -242,4 +247,37 @@ func Contains(list []string, value string) bool {
 		}
 	}
 	return false
+}
+
+func GetIsMedia(urlImage string) bool {
+
+	urlMedia := strings.Split(os.Getenv("URL_MEDIA"), ",")
+
+	for _, url := range urlMedia {
+		if strings.Contains(urlImage, url) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func DecodeNonMedia(url string) (base64Image string, err error) {
+
+	image, err := http.Get(url)
+
+	if err != nil {
+		return
+	}
+
+	reader := bufio.NewReader(image.Body)
+	ioutil, err := ioutil.ReadAll(reader)
+
+	if err != nil {
+		return
+	}
+
+	base64Image = base64.StdEncoding.EncodeToString(ioutil)
+
+	return
 }

@@ -1,6 +1,7 @@
 package dupcheck
 
 type DupcheckApi struct {
+	CustomerID            int                `json:"customer_id" validate:"required"`
 	ProspectID            string             `json:"prospect_id" validate:"required"`
 	ImageSelfie1          string             `json:"image_selfie_1" validate:"required"`
 	ImageSelfie2          string             `json:"image_selfie_2" validate:"required"`
@@ -74,4 +75,17 @@ type ReqCustomerDomain struct {
 type ReqLatestPaidInstallment struct {
 	IDNumber   string `json:"id_number"`
 	CustomerID string `json:"customer_id"`
+}
+
+type FaceCompareRequest struct {
+	CustomerID   int     `json:"customer_id" validate:"required"`
+	ImageSelfie1 string  `json:"image_selfie_1" validate:"required"`
+	ImageSelfie2 string  `json:"image_selfie_2" validate:"required"`
+	ImageKtp     string  `json:"ktp_url" validate:"required"`
+	Lob          string  `json:"lob"  validate:"required"`
+	IDNumber     string  `json:"id_number" validate:"required,len=16,number"`
+	BirthDate    string  `json:"birth_date" validate:"required,dateformat"`
+	BirthPlace   string  `json:"birth_place" validate:"required"`
+	LegalName    string  `json:"legal_name" validate:"min=2,allowcharsname" example:"JONATHAN"`
+	FaceType     *string `json:"type" validate:"omitempty,oneof=null PIN DEVICE"`
 }

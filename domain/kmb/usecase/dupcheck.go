@@ -5,24 +5,45 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"los-kmb-api/domain/kmb/interfaces"
 	entity "los-kmb-api/models/dupcheck"
 	request "los-kmb-api/models/dupcheck"
 	response "los-kmb-api/models/dupcheck"
 	"los-kmb-api/models/other"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/httpclient"
 	"strings"
 )
 
-func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, err error) {
+type metrics struct {
+	repository   interfaces.Repository
+	httpclient   httpclient.HttpClient
+	usecase      interfaces.Usecase
+	multiUsecase interfaces.MultiUsecase
+}
+
+func NewMetrics(repository interfaces.Repository, httpclient httpclient.HttpClient, usecase interfaces.Usecase, multiUsecase interfaces.MultiUsecase) interfaces.Metrics {
+
+	return &metrics{
+		repository:   repository,
+		httpclient:   httpclient,
+		usecase:      usecase,
+		multiUsecase: multiUsecase,
+	}
+}
+
+func (u metrics) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, err error) {
 
 	var (
-		customer     []request.SpouseDupcheck
-		blackList    response.UsecaseApi
-		sp           response.SpDupCekCustomerByID
-		dataCustomer []response.SpDupCekCustomerByID
-		spMap        response.SpDupcheckMap
-		customerType string
-		newDupcheck  entity.NewDupcheck
+		customer       []request.SpouseDupcheck
+		blackList      response.UsecaseApi
+		sp             response.SpDupCekCustomerByID
+		dataCustomer   []response.SpDupCekCustomerByID
+		spMap          response.SpDupcheckMap
+		customerType   string
+		newDupcheck    entity.NewDupcheck
+		getPhotoInfo   map[string]interface{}
+		faceCompareReq request.FaceCompareRequest
 	)
 
 	prospectID := req.ProspectID
@@ -31,6 +52,46 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 	if married {
 		customer = append(customer, request.SpouseDupcheck{IDNumber: req.Spouse.IDNumber, LegalName: req.Spouse.LegalName, BirthDate: req.Spouse.BirthDate, MotherName: req.Spouse.MotherName})
+	}
+
+	// Face Compare with Faceplus
+	faceCompareReq.CustomerID = req.CustomerID
+	faceCompareReq.ImageSelfie1 = req.ImageSelfie1
+	faceCompareReq.ImageSelfie2 = req.ImageSelfie2
+	faceCompareReq.ImageKtp = req.ImageKtp
+	faceCompareReq.IDNumber = req.IDNumber
+	faceCompareReq.BirthDate = req.BirthDate
+	faceCompareReq.BirthPlace = req.BirthPlace
+	faceCompareReq.LegalName = req.LegalName
+	faceCompareReq.Lob = constant.LOB_KMB
+
+	selfie1, selfie2, isBlur, err := u.multiUsecase.GetPhoto(ctx, faceCompareReq, accessToken)
+
+	if err != nil {
+		getPhotoInfo = map[string]interface{}{
+			"error": err.Error(),
+		}
+	} else {
+		getPhotoInfo = map[string]interface{}{
+			"is_blur": isBlur,
+		}
+	}
+
+	faceCompare, err := u.usecase.FacePlus(ctx, selfie1, selfie2, faceCompareReq, accessToken, getPhotoInfo)
+
+	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
+		CentralizeLog(constant.DUPCHECK_LOG, "Check Face Compare", constant.MESSAGE_E, "FACE_COMPARE SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
+		return
+	}
+
+	CentralizeLog(constant.DUPCHECK_LOG, "Check Face Compare", constant.MESSAGE_SUCCESS, "FACE_COMPARE SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: faceCompare})
+
+	if faceCompare.Result == constant.DECISION_REJECT {
+		data.Code = constant.CODE_REJECT_FACE_COMPARE
+		data.Result = faceCompare.Result
+		data.Reason = faceCompare.Reason
+		mapping.Reason = data.Reason
+		return
 	}
 
 	// Exception Reject No. Rangka Banned 30 Days
