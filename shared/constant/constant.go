@@ -201,10 +201,12 @@ const (
 	// Format
 	FORMAT_DATE_TIME_MS = "2006/01/02 15:04:05.000"
 	FORMAT_DATE         = "2006-01-02"
+	FORMAT_DATE_TIME    = "2006-01-02 15:04:05"
 
 	//LogFile
-	FILTERING_LOG = "FILTERING_LOG"
-	DUPCHECK_LOG  = "DUPCHECK_LOG"
+	FILTERING_LOG        = "FILTERING_LOG"
+	DUPCHECK_LOG         = "DUPCHECK_LOG"
+	LOG_FACE_COMPARE_TRX = "LOG_FACE_COMPARE_TRX"
 
 	// ELABORATE SCHEME
 	MESSAGE_KMB_ELABORATE           = "KMB-ELABORATE"
@@ -221,6 +223,7 @@ const (
 	//HTTP MSG
 	MSG_CORE_API          = "CORE_API"
 	MSG_INT_API           = "INTEGRATOR_API"
+	MSG_PLATFORM_API      = "PLATFORM_API"
 	CORE_TOKEN_EXPIRED    = "CORE-AUTH-004"
 	TOKEN_INVALID         = "token tidak valid."
 	RESTY_MAX_RETRY_ERROR = "Max retry attempt exceeded"
@@ -324,4 +327,19 @@ const (
 	REASON_OK_CONSUMEN_MATCH         = "Pass Rejection Check Chassis Number - Active Agreement Consumen Match"
 	REASON_REJECTION_FRAUD_POTENTIAL = "Fraud Potential, Chassis number has been registered on spouse's active agreement"
 	REASON_AGREEMENT_NOT_FOUND       = "Pass Rejection Check Chassis Number - Active Agreement Not Found"
+
+	//FACE COMPARE
+	RESULT_COMPARE                    = true
+	CODE_REJECT_FACE_COMPARE          = "661"
+	CANNOT_GET_IMAGE                  = "bypass get image error"
+	GROUP_FPP                         = "face_plus"
+	REASON_CONFIDENCE_BELOW_THRESHOLD = "Confidence Di Bawah Threshold"
+	REASON_CONFIDENCE_UPPER_THRESHOLD = "Confidence Di Atas Threshold"
+
+	//LOB
+	LOB_WG      = "WG"
+	LOB_NEW_WG  = "NEW_WG"
+	LOB_KMB     = "KMB"
+	LOB_KMB_NEW = "KMB-NEW"
+	LOB_KMOB    = "KMOB"
 )

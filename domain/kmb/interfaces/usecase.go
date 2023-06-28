@@ -7,11 +7,6 @@ import (
 	response "los-kmb-api/models/dupcheck"
 )
 
-// check face compare => los-api : domain face compare
-// bypass reject no. rangka
-// check rejection history
-// check rejection no. rangka
-
 type Usecase interface {
 	DupcheckIntegrator(ctx context.Context, prospectID, idNumber, legalName, birthDate, surgateName string, accessToken string) (spDupcheck response.SpDupCekCustomerByID, err error)
 	BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerByID) (data response.UsecaseApi, customerType string)
@@ -25,8 +20,15 @@ type Usecase interface {
 	CheckRejectionNoka(reqs request.DupcheckApi) (data response.RejectionNoka, err error)
 	CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBanned30D response.RejectionNoka, accessToken string) (data response.UsecaseApi, err error)
 	CheckChassisNumber(ctx context.Context, reqs request.DupcheckApi, nokaBanned response.RejectionNoka, accessToken string) (data response.UsecaseApi, err error)
+	DecodeMedia(ctx context.Context, url string, customerID int, accessToken string) (base64Image string, err error)
+	DetectBlurness(ctx context.Context, selfie1 string) (decision bool, err error)
+	FacePlus(ctx context.Context, selfie1 string, selfie2 string, req request.FaceCompareRequest, accessToken string, getPhotoInfo interface{}) (result response.FaceCompareResponse, err error)
 }
 
 type MultiUsecase interface {
+	GetPhoto(ctx context.Context, req request.FaceCompareRequest, accessToken string) (selfie1 string, selfie2 string, isBlur bool, err error)
+}
+
+type Metrics interface {
 	Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, err error)
 }

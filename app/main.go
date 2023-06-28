@@ -136,8 +136,11 @@ func main() {
 
 	// define kmb dupcheck domain
 	kmbDupcheckRepo := dupcheckRepository.NewRepository(kpLos, kpLosLogs, confins, staging, wgOff, minilosKMB)
-	kmbDupcheckMultiCase, kmbDupcheckCase := dupcheckUsecase.NewMultiUsecase(kmbDupcheckRepo, httpClient)
-	dupcheckDelivery.DupcheckHandler(apiGroup, kmbDupcheckMultiCase, kmbDupcheckCase, kmbDupcheckRepo, jsonResponse, accessToken)
+	kmbDupcheckUsecase := dupcheckUsecase.NewUsecase(kmbDupcheckRepo, httpClient)
+	kmbDupcheckMultiUsecase := dupcheckUsecase.NewMultiUsecase(kmbDupcheckUsecase)
+	kmbDupcheckMetrics := dupcheckUsecase.NewMetrics(kmbDupcheckRepo, httpClient, kmbDupcheckUsecase, kmbDupcheckMultiUsecase)
+
+	dupcheckDelivery.DupcheckHandler(apiGroup, kmbDupcheckMetrics, kmbDupcheckUsecase, kmbDupcheckRepo, jsonResponse, accessToken)
 
 	if config.IsDevelopment {
 		docs.SwaggerInfo.Title = "LOS-KMB-API"

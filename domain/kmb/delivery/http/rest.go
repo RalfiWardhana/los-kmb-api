@@ -11,18 +11,18 @@ import (
 )
 
 type handlerKmbDupcheck struct {
-	multiusecase interfaces.MultiUsecase
-	usecase      interfaces.Usecase
-	repository   interfaces.Repository
-	Json         common.JSON
+	metrics    interfaces.Metrics
+	usecase    interfaces.Usecase
+	repository interfaces.Repository
+	Json       common.JSON
 }
 
-func DupcheckHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware) {
+func DupcheckHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware) {
 	handler := handlerKmbDupcheck{
-		multiusecase: multiUsecase,
-		usecase:      usecase,
-		repository:   repository,
-		Json:         json,
+		metrics:    metrics,
+		usecase:    usecase,
+		repository: repository,
+		Json:       json,
 	}
 	kmbroute.POST("/dupcheck", handler.Dupcheck, middlewares.AccessMiddleware())
 }
@@ -76,7 +76,7 @@ func (c *handlerKmbDupcheck) Dupcheck(ctx echo.Context) (err error) {
 
 	accessToken := middlewares.UserInfoData.AccessToken
 
-	_, _, data, err := c.multiusecase.Dupcheck(ctx.Request().Context(), req, married, accessToken)
+	_, _, data, err := c.metrics.Dupcheck(ctx.Request().Context(), req, married, accessToken)
 
 	if err != nil {
 		return c.Json.ServiceUnavailableV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", req)
