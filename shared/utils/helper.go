@@ -183,7 +183,7 @@ func Round(num float64) int {
 
 func ToFixed(num float64, precision int) float64 {
 	output := math.Pow(10, float64(precision))
-	return float64(Round(num*output)) / output
+	return float64(math.Ceil(num*output)) / output
 }
 
 func GenerateUUID() string {
