@@ -62,6 +62,10 @@ func (r repoHandler) GetClusterBranchElaborate(branch_id string, cust_status str
 	defer db.Commit()
 
 	if err = r.KpLos.Raw("SELECT cluster FROM kmb_mapping_cluster_branch WITH (nolock) WHERE branch_id = ? AND customer_status = ? AND bpkb_name_type = ?", branch_id, cust_status, bpkb).Scan(&cluster).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+
 		return
 	}
 

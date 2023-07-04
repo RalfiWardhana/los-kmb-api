@@ -48,7 +48,12 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 
 func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestElaborate, accessToken string) (data response.ElaborateResult, err error) {
 
-	var savedata entity.ApiElaborateKmb
+	var (
+		max_ltv         int
+		savedata        entity.ApiElaborateKmb
+		updateElaborate entity.ApiElaborateKmbUpdate
+		parameter       entity.MappingElaborateScheme
+	)
 
 	id := uuid.New()
 
@@ -62,8 +67,6 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 		return
 	}
 
-	var updateElaborate entity.ApiElaborateKmbUpdate
-
 	status_konsumen := reqs.Data.CustomerStatus
 	if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
 		status_konsumen = "AO/RO"
@@ -73,15 +76,13 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 
 	tenor := reqs.Data.Tenor
 
-	var max_ltv int
-
 	// get the result elaborated scheme
 	result_elaborate, err := u.usecase.ResultElaborate(ctx, reqs)
 
 	updateElaborate.IsMapping = 1 //default, for mapping is exist
 
 	// not found mapping elaborate scheme
-	if result_elaborate == (response.ElaborateResult{}) {
+	if result_elaborate.Decision == "" {
 		updateElaborate.IsMapping = 0 //set flag for mapping not found
 		updateElaborate.Code = constant.CODE_PASS_ELABORATE
 		updateElaborate.Decision = constant.DECISION_PASS
@@ -119,6 +120,20 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 
 	updateElaborate.RequestID = savedata.RequestID
 	updateElaborate.Response = string(resp)
+
+	parameter.ResultPefindo = result_elaborate.ResultPefindo
+	parameter.BranchID = reqs.Data.BranchID
+	parameter.CustomerStatus = status_konsumen
+	parameter.BPKBNameType = result_elaborate.BPKBNameType
+	parameter.Cluster = result_elaborate.Cluster
+	parameter.Tenor = tenor
+	parameter.AgeVehicle = result_elaborate.AgeVehicle
+	parameter.LTV = result_elaborate.LTVOrigin
+	parameter.TotalBakiDebet = int(result_elaborate.TotalBakiDebet)
+	parameter.Decision = result_elaborate.Decision
+
+	mapping, _ := json.Marshal(parameter)
+	updateElaborate.MappingParameter = string(mapping)
 
 	if err = u.repository.UpdateDataElaborate(updateElaborate); err != nil {
 		err = fmt.Errorf("failed update data api elaborate")
@@ -188,11 +203,21 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 	// Hitung LTV
 	ltv := utils.ToFixed((NTF/OTR)*100, 0)
 
+	data.ResultPefindo = result_pefindo
+	data.BPKBNameType = bpkbNameType
+	data.AgeVehicle = age_vehicle
+	data.LTVOrigin = ltv
+	data.TotalBakiDebet = baki_debet
+
 	// Get Cluster Branch
 	cluster_branch, err := u.repository.GetClusterBranchElaborate(branch_id, status_konsumen, bpkbNameType)
-	if err != nil {
+	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
 		err = fmt.Errorf("failed get cluster branch elaborate")
 		return
+	}
+
+	if cluster_branch != (entity.ClusterBranch{}) {
+		data.Cluster = cluster_branch.Cluster
 	}
 
 	if baki_debet > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && baki_debet <= constant.BAKI_DEBET {
@@ -227,6 +252,7 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 			}
 		}
 	}
+	data.ResultPefindo = result_pefindo
 
 	// Get Result from Mapping Elaborate
 	result_elaborate, err := u.repository.GetResultElaborate(branch_id, status_konsumen, bpkbNameType, result_pefindo, tenor, age_vehicle, ltv, baki_debet)

@@ -185,8 +185,14 @@ type PefindoResultPasangan struct {
 }
 
 type ElaborateResult struct {
-	Code     int    `json:"code"`
-	Decision string `json:"decision"`
-	Reason   string `json:"reason"`
-	LTV      int    `json:"ltv,omitempty"`
+	Code           int     `json:"code"`
+	Decision       string  `json:"decision"`
+	Reason         string  `json:"reason"`
+	LTV            int     `json:"ltv,omitempty"`
+	ResultPefindo  string  `json:"result_pefindo,omitempty"`
+	BPKBNameType   int     `json:"bpkb_name_type,omitempty"`
+	Cluster        string  `json:"cluster,omitempty"`
+	AgeVehicle     string  `json:"age_vehicle,omitempty"`
+	LTVOrigin      float64 `json:"ltv_origin,omitempty"`
+	TotalBakiDebet float64 `json:"total_balki_debet,omitempty"`
 }

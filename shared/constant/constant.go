@@ -220,4 +220,5 @@ const (
 	CORE_TOKEN_EXPIRED    = "CORE-AUTH-004"
 	TOKEN_INVALID         = "token tidak valid."
 	RESTY_MAX_RETRY_ERROR = "Max retry attempt exceeded"
+	ERROR_NOT_FOUND       = "data_not_found"
 )
