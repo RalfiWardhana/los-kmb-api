@@ -3,8 +3,8 @@ package usecase
 import (
 	"encoding/json"
 	"fmt"
-	entity "los-kmb-api/models/dupcheck"
-	response "los-kmb-api/models/dupcheck"
+	"los-kmb-api/models/entity"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"time"

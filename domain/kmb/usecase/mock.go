@@ -1,9 +1,9 @@
 package usecase
 
 import (
-	entity "los-kmb-api/models/dupcheck"
-	request "los-kmb-api/models/dupcheck"
-	response "los-kmb-api/models/dupcheck"
+	"los-kmb-api/models/entity"
+	"los-kmb-api/models/request"
+	"los-kmb-api/models/response"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -46,9 +46,9 @@ func (m MockUsecase) DsrCheck(prospectID, engineNo string, customerData []reques
 	return args.Get(0).(response.UsecaseApi), args.Get(1).(response.Dsr), args.Get(2).(float64), args.Get(3).(float64), args.Get(4).(float64), args.Error(5)
 }
 
-func (mock MockUsecase) CustomerDomainGetData(req request.CustomerDomain, accessToken string) (customerDomainData response.CustomerDomainData, err error) {
+func (mock MockUsecase) CustomerDomainGetData(req request.CustomerDomain, accessToken string) (customerDomainData response.DataCustomer, err error) {
 	args := mock.Called(req, accessToken)
-	return args.Get(0).(response.CustomerDomainData), args.Error(1)
+	return args.Get(0).(response.DataCustomer), args.Error(1)
 }
 
 func (mock MockUsecase) GetLatestPaidInstallment(req request.LatestPaidInstallment) (data response.LatestPaidInstallmentData, err error) {

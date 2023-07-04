@@ -5,34 +5,15 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"los-kmb-api/domain/kmb/interfaces"
-	entity "los-kmb-api/models/dupcheck"
-	request "los-kmb-api/models/dupcheck"
-	response "los-kmb-api/models/dupcheck"
+	"los-kmb-api/models/entity"
 	"los-kmb-api/models/other"
+	"los-kmb-api/models/request"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
-	"los-kmb-api/shared/httpclient"
 	"strings"
 )
 
-type metrics struct {
-	repository   interfaces.Repository
-	httpclient   httpclient.HttpClient
-	usecase      interfaces.Usecase
-	multiUsecase interfaces.MultiUsecase
-}
-
-func NewMetrics(repository interfaces.Repository, httpclient httpclient.HttpClient, usecase interfaces.Usecase, multiUsecase interfaces.MultiUsecase) interfaces.Metrics {
-
-	return &metrics{
-		repository:   repository,
-		httpclient:   httpclient,
-		usecase:      usecase,
-		multiUsecase: multiUsecase,
-	}
-}
-
-func (u metrics) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, err error) {
+func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, err error) {
 
 	var (
 		customer       []request.SpouseDupcheck
@@ -64,7 +45,15 @@ func (u metrics) Dupcheck(ctx context.Context, req request.DupcheckApi, married 
 	faceCompareReq.LegalName = req.LegalName
 	faceCompareReq.Lob = constant.LOB_KMB
 
-	selfie1, selfie2, err := u.multiUsecase.GetPhoto(ctx, faceCompareReq, accessToken)
+	selfie1, err := u.usecase.GetBase64Media(ctx, req.ImageSelfie1, req.CustomerID, accessToken)
+	if err != nil {
+		return
+	}
+
+	selfie2, err := u.usecase.GetBase64Media(ctx, req.ImageSelfie2, req.CustomerID, accessToken)
+	if err != nil {
+		return
+	}
 
 	faceCompare, err := u.usecase.FacePlus(ctx, selfie1, selfie2, faceCompareReq, accessToken)
 
@@ -327,7 +316,7 @@ func (u metrics) Dupcheck(ctx context.Context, req request.DupcheckApi, married 
 				LobID:      constant.LOBID_KMB,
 			}
 
-			var customerDomainData response.CustomerDomainData
+			var customerDomainData response.DataCustomer
 			customerDomainData, err = u.usecase.CustomerDomainGetData(ctx, reqCustomerDomain, req.ProspectID, accessToken)
 			if err != nil {
 				return

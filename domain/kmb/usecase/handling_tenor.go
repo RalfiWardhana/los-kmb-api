@@ -3,8 +3,8 @@ package usecase
 import (
 	"context"
 	"errors"
-	response "los-kmb-api/models/dupcheck"
 	"los-kmb-api/models/other"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"strings"
 )

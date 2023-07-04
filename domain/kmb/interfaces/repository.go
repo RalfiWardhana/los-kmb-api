@@ -1,6 +1,6 @@
 package interfaces
 
-import entity "los-kmb-api/models/dupcheck"
+import "los-kmb-api/models/entity"
 
 type Repository interface {
 	GetDupcheckConfig() (config entity.AppConfig, err error)

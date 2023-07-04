@@ -3,22 +3,23 @@ package http
 import (
 	"los-kmb-api/domain/kmb/interfaces"
 	"los-kmb-api/middlewares"
-	request "los-kmb-api/models/dupcheck"
+	"los-kmb-api/models/request"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/constant"
 
 	"github.com/labstack/echo/v4"
 )
 
-type handlerKmbDupcheck struct {
-	metrics    interfaces.Metrics
-	usecase    interfaces.Usecase
-	repository interfaces.Repository
-	Json       common.JSON
+type handlerKMOB struct {
+	metrics      interfaces.Metrics
+	multiUsecase interfaces.MultiUsecase
+	usecase      interfaces.Usecase
+	repository   interfaces.Repository
+	Json         common.JSON
 }
 
-func DupcheckHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware) {
-	handler := handlerKmbDupcheck{
+func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware) {
+	handler := handlerKMOB{
 		metrics:    metrics,
 		usecase:    usecase,
 		repository: repository,
@@ -36,7 +37,7 @@ func DupcheckHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase i
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
 // @Router /dupcheck [post]
-func (c *handlerKmbDupcheck) Dupcheck(ctx echo.Context) (err error) {
+func (c *handlerKMOB) Dupcheck(ctx echo.Context) (err error) {
 
 	var (
 		req     request.DupcheckApi
@@ -76,7 +77,7 @@ func (c *handlerKmbDupcheck) Dupcheck(ctx echo.Context) (err error) {
 
 	accessToken := middlewares.UserInfoData.AccessToken
 
-	_, _, data, err := c.metrics.Dupcheck(ctx.Request().Context(), req, married, accessToken)
+	_, _, data, err := c.multiUsecase.Dupcheck(ctx.Request().Context(), req, married, accessToken)
 
 	if err != nil {
 		return c.Json.ServiceUnavailableV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", req)

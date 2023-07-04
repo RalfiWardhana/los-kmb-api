@@ -11,9 +11,9 @@ import (
 	filteringDelivery "los-kmb-api/domain/filtering/delivery/http"
 	filteringRepository "los-kmb-api/domain/filtering/repository"
 	filteringUsecase "los-kmb-api/domain/filtering/usecase"
-	dupcheckDelivery "los-kmb-api/domain/kmb/delivery/http"
-	dupcheckRepository "los-kmb-api/domain/kmb/repository"
-	dupcheckUsecase "los-kmb-api/domain/kmb/usecase"
+	kmbDelivery "los-kmb-api/domain/kmb/delivery/http"
+	kmbRepository "los-kmb-api/domain/kmb/repository"
+	kmbUsecase "los-kmb-api/domain/kmb/usecase"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/json"
@@ -135,13 +135,13 @@ func main() {
 	kmbElaborateMultiCase, kmbElaborateCase := elaborateUsecase.NewMultiUsecase(kmbElaborateRepo, httpClient)
 	elaborateDelivery.ElaborateHandler(apiGroup, kmbElaborateMultiCase, kmbElaborateCase, kmbElaborateRepo, jsonResponse, accessToken)
 
-	// define kmb dupcheck domain
-	kmbDupcheckRepo := dupcheckRepository.NewRepository(kpLos, kpLosLogs, confins, staging, wgOff, minilosKMB)
-	kmbDupcheckUsecase := dupcheckUsecase.NewUsecase(kmbDupcheckRepo, httpClient)
-	kmbDupcheckMultiUsecase := dupcheckUsecase.NewMultiUsecase(kmbDupcheckUsecase)
-	kmbDupcheckMetrics := dupcheckUsecase.NewMetrics(kmbDupcheckRepo, httpClient, kmbDupcheckUsecase, kmbDupcheckMultiUsecase)
+	// define kmb journey
+	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, confins, staging, wgOff, minilosKMB)
+	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
+	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
+	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
 
-	dupcheckDelivery.DupcheckHandler(apiGroup, kmbDupcheckMetrics, kmbDupcheckUsecase, kmbDupcheckRepo, jsonResponse, accessToken)
+	kmbDelivery.KMBHandler(apiGroup, kmbMetrics, kmbUsecases, kmbRepositories, jsonResponse, accessToken)
 
 	if config.IsDevelopment {
 		docs.SwaggerInfo.Title = "LOS-KMB-API"

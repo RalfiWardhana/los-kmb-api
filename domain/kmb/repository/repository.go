@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"los-kmb-api/domain/kmb/interfaces"
-	entity "los-kmb-api/models/dupcheck"
+	"los-kmb-api/models/entity"
 	"los-kmb-api/shared/constant"
 	"time"
 

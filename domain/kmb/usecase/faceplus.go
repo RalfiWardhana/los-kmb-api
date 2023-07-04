@@ -3,86 +3,15 @@ package usecase
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
-	request "los-kmb-api/models/dupcheck"
-	response "los-kmb-api/models/dupcheck"
+	"los-kmb-api/models/request"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
-	"los-kmb-api/shared/utils"
 	"os"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
-
-func (u multiUsecase) GetPhoto(ctx context.Context, req request.FaceCompareRequest, accessToken string) (selfie1 string, selfie2 string, err error) {
-
-	selfie1Media := utils.GetIsMedia(req.ImageSelfie1)
-
-	if selfie1Media {
-		selfie1, err = u.usecase.DecodeMedia(ctx, req.ImageSelfie1, req.CustomerID, accessToken)
-		if err != nil {
-			return
-		}
-
-	} else {
-		selfie1, err = utils.DecodeNonMedia(req.ImageSelfie1)
-		if err != nil {
-			return
-		}
-	}
-
-	selfie2Media := utils.GetIsMedia(req.ImageSelfie2)
-
-	if selfie2Media {
-		selfie2, err = u.usecase.DecodeMedia(ctx, req.ImageSelfie2, req.CustomerID, accessToken)
-		if err != nil {
-			return
-		}
-
-	} else {
-		selfie2, err = utils.DecodeNonMedia(req.ImageSelfie2)
-		if err != nil {
-			return
-		}
-	}
-
-	return
-}
-
-func (u usecase) DecodeMedia(ctx context.Context, url string, customerID int, accessToken string) (base64Image string, err error) {
-
-	timeOut, _ := strconv.Atoi(os.Getenv("MEDIA_TIMEOUT"))
-
-	var decode response.ImageDecodeResponse
-
-	requestID, ok := ctx.Value(echo.HeaderXRequestID).(string)
-	if !ok {
-		requestID = ""
-	}
-
-	header := map[string]string{
-		"Content-Type":        "application/json",
-		"Authorization":       os.Getenv("MEDIA_KEY"),
-		echo.HeaderXRequestID: requestID,
-	}
-
-	image, err := u.httpclient.MediaClient(ctx, constant.LOG_JOURNEY_LOG, url+"?type=base64", constant.METHOD_GET, nil, header, timeOut, customerID, accessToken)
-
-	if image.StatusCode() != 200 || err != nil {
-		err = errors.New(constant.CANNOT_GET_IMAGE)
-		return
-	}
-
-	err = json.Unmarshal([]byte(image.Body()), &decode)
-
-	if err != nil {
-		return
-	}
-
-	base64Image = decode.Data.Encode
-	return
-}
 
 func (u usecase) FacePlus(ctx context.Context, selfie1 string, selfie2 string, req request.FaceCompareRequest, accessToken string) (result response.FaceCompareResponse, err error) {
 

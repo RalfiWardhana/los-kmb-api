@@ -1,7 +1,7 @@
 package repository
 
 import (
-	entity "los-kmb-api/models/dupcheck"
+	"los-kmb-api/models/entity"
 
 	"github.com/stretchr/testify/mock"
 )

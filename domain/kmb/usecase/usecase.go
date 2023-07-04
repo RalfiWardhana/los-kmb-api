@@ -10,10 +10,10 @@ import (
 	"time"
 
 	"los-kmb-api/domain/kmb/interfaces"
-	entity "los-kmb-api/models/dupcheck"
-	request "los-kmb-api/models/dupcheck"
-	response "los-kmb-api/models/dupcheck"
+	"los-kmb-api/models/entity"
 	"los-kmb-api/models/other"
+	"los-kmb-api/models/request"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/config"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
@@ -28,13 +28,44 @@ type (
 		repository interfaces.Repository
 		httpclient httpclient.HttpClient
 	}
+	multiUsecase struct {
+		repository interfaces.Repository
+		httpclient httpclient.HttpClient
+		usecase    interfaces.Usecase
+	}
+	metrics struct {
+		repository   interfaces.Repository
+		httpclient   httpclient.HttpClient
+		usecase      interfaces.Usecase
+		multiUsecase interfaces.MultiUsecase
+	}
 )
+
+func NewMultiUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient, usecase interfaces.Usecase) interfaces.MultiUsecase {
+	return &multiUsecase{
+		repository: repository,
+		httpclient: httpclient,
+		usecase:    usecase,
+	}
+}
 
 func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient) interfaces.Usecase {
 	return &usecase{
 		repository: repository,
 		httpclient: httpclient,
 	}
+}
+
+func NewMetrics(repository interfaces.Repository, httpclient httpclient.HttpClient, usecase interfaces.Usecase, multiUsecase interfaces.MultiUsecase) interfaces.Metrics {
+	return &metrics{
+		repository:   repository,
+		httpclient:   httpclient,
+		usecase:      usecase,
+		multiUsecase: multiUsecase,
+	}
+}
+func (u metrics) MetricsLos(req request.Metrics) (data interface{}, err error) {
+	return
 }
 
 func (u usecase) DupcheckIntegrator(ctx context.Context, prospectID, idNumber, legalName, birthDate, surgateName string, accessToken string) (spDupcheck response.SpDupCekCustomerByID, err error) {
@@ -166,7 +197,7 @@ func CentralizeLog(logFile, message, status, context string, isError bool, logge
 
 }
 
-func (u usecase) CustomerDomainGetData(ctx context.Context, req request.ReqCustomerDomain, prospectID string, accessToken string) (customerDomainData response.CustomerDomainData, err error) {
+func (u usecase) CustomerDomainGetData(ctx context.Context, req request.ReqCustomerDomain, prospectID string, accessToken string) (customerDomainData response.DataCustomer, err error) {
 
 	dummy, _ := strconv.ParseBool(os.Getenv("DUMMY_CUSTOMER_DOMAIN_GET_DATA"))
 
@@ -222,7 +253,7 @@ func (u usecase) NokaBanned30D(req request.DupcheckApi) (data response.Rejection
 	}
 
 	data.IsBannedActive = false
-	if nokaBanned30D != (response.DupcheckRejectionNokaNosin{}) && nokaBanned30D.IsBanned == 1 {
+	if nokaBanned30D != (entity.DupcheckRejectionNokaNosin{}) && nokaBanned30D.IsBanned == 1 {
 		bannedDate := nokaBanned30D.CreatedAt
 		dueDate := bannedDate.AddDate(0, 0, constant.DAY_RANGE_BANNED_REJECT_NOKA)
 		dueDateString := dueDate.Format("2006-01-02")
@@ -259,7 +290,7 @@ func (u usecase) CheckRejectionNoka(req request.DupcheckApi) (data response.Reje
 
 	inRejectionNoka = false
 	data.CurrentBannedNotEmpty = false
-	if nokaBannedCurrentDate != (response.DupcheckRejectionNokaNosin{}) {
+	if nokaBannedCurrentDate != (entity.DupcheckRejectionNokaNosin{}) {
 
 		// Must be simplified
 		inRejectionNoka = true
@@ -443,7 +474,7 @@ func (u usecase) CheckChassisNumber(ctx context.Context, reqs request.DupcheckAp
 	var (
 		nokaData                       entity.DupcheckRejectionNokaNosin
 		trxApiLog                      entity.TrxApiLog
-		responseAgreementChassisNumber entity.AgreementChassisNumber
+		responseAgreementChassisNumber response.AgreementChassisNumber
 		response_api_log               []byte
 	)
 
