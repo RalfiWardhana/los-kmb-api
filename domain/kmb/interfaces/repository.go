@@ -29,4 +29,6 @@ type Repository interface {
 
 	GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig)
 	SaveVerificationFaceCompare(data entity.VerificationFaceCompare) error
+
+	GetDataInquiry(idNumber string) (data []entity.DataInquiry, err error)
 }

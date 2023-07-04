@@ -22,6 +22,7 @@ type Usecase interface {
 	CheckChassisNumber(ctx context.Context, reqs request.DupcheckApi, nokaBanned response.RejectionNoka, accessToken string) (data response.UsecaseApi, err error)
 	DecodeMedia(ctx context.Context, url string, customerID int, accessToken string) (base64Image string, err error)
 	FacePlus(ctx context.Context, selfie1 string, selfie2 string, req request.FaceCompareRequest, accessToken string) (result response.FaceCompareResponse, err error)
+	RejectTenor36(ctx context.Context, prospectID, idNumber, accessToken string) (result response.UsecaseApi, err error)
 }
 
 type MultiUsecase interface {

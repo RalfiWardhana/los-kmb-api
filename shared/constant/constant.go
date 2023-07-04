@@ -274,6 +274,7 @@ const (
 	REASON_KONSUMEN_BLACKLIST_RESTRUCTURE     = "Konsumen Blacklist - Konsumen Restructure"
 	REASON_PASANGAN_BLACKLIST_RESTRUCTURE     = "Pasangan Blacklist - Konsumen Restructure"
 	REASON_NON_BLACKLIST                      = "Non Blacklist"
+
 	//DSR
 	CODE_DSRLTE35   = "2701"
 	CODE_DSRGT35    = "2702"
@@ -281,6 +282,7 @@ const (
 	REASON_DSRGT    = "- DSR >"
 	REASON_DSRLTE35 = "- Confins DSR <="
 	REASON_DSRGT35  = "- Confins DSR >"
+
 	//PMK
 	CODE_REJECT_WORK_EXPERIENCE     = "401"
 	CODE_REJECT_INCOME              = "402"
@@ -343,4 +345,10 @@ const (
 	//
 	LOG_FILTERING_LOG = "FILTERING_LOG"
 	LOG_JOURNEY_LOG   = "KMB_LOG"
+
+	//Reject Tenor
+	CODE_PASS_TENOR     = "010"
+	CODE_REJECT_TENOR   = "013"
+	REASON_PASS_TENOR   = "Pass Tenor Pengajuan"
+	REASON_REJECT_TENOR = "Tenor > Threshold"
 )

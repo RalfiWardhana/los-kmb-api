@@ -178,3 +178,16 @@ type VerificationFaceCompare struct {
 func (c *VerificationFaceCompare) TableName() string {
 	return "verification_face_compare"
 }
+
+type DataInquiry struct {
+	ProspectID    string    `gorm:"type:varchar(20);column:ProspectID"`
+	IDNumber      string    `gorm:"type:varchar(50);column:IDNumber"`
+	LegalName     string    `gorm:"type:varchar(100);column:LegalName"`
+	FinalApproval int       `gorm:"column:final_approval"`
+	DtmUpd        time.Time `gorm:"column:DtmUpd"`
+	RejectDSR     int       `gorm:"column:reject_dsr"`
+}
+
+func (c *DataInquiry) TableName() string {
+	return "data_inquiry"
+}
