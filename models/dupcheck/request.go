@@ -89,3 +89,8 @@ type FaceCompareRequest struct {
 	LegalName    string  `json:"legal_name" validate:"min=2,allowcharsname" example:"JONATHAN"`
 	FaceType     *string `json:"type" validate:"omitempty,oneof=null PIN DEVICE"`
 }
+
+type ReqRejectTenor struct {
+	ProspectID string `json:"prospect_id" validate:"required"`
+	IDNumber   string `json:"id_number" validate:"required,len=16,number" example:"1234XXXXXXXX0001"`
+}

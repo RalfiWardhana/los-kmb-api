@@ -25,6 +25,7 @@ func DupcheckHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase i
 		Json:       json,
 	}
 	kmbroute.POST("/dupcheck", handler.Dupcheck, middlewares.AccessMiddleware())
+	kmbroute.POST("/reject-tenor", handler.RejectTenor36, middlewares.AccessMiddleware())
 }
 
 // KmbDupcheck Tools godoc
@@ -77,6 +78,40 @@ func (c *handlerKmbDupcheck) Dupcheck(ctx echo.Context) (err error) {
 	accessToken := middlewares.UserInfoData.AccessToken
 
 	_, _, data, err := c.metrics.Dupcheck(ctx.Request().Context(), req, married, accessToken)
+
+	if err != nil {
+		return c.Json.ServiceUnavailableV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", req)
+	}
+
+	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", req, data)
+}
+
+// KmbDupcheck Tools godoc
+// @Description KmbDupcheck
+// @Tags Tools
+// @Produce json
+// @Param body body request.ReqRejectTenor true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.UsecaseApi}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /reject-tenor [post]
+func (c *handlerKmbDupcheck) RejectTenor36(ctx echo.Context) (err error) {
+
+	var (
+		req request.ReqRejectTenor
+	)
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", req, err)
+	}
+
+	accessToken := middlewares.UserInfoData.AccessToken
+
+	data, err := c.usecase.RejectTenor36(ctx.Request().Context(), req.ProspectID, req.IDNumber, accessToken)
 
 	if err != nil {
 		return c.Json.ServiceUnavailableV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", req)
