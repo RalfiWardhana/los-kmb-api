@@ -156,6 +156,11 @@ type FaceCompareRequest struct {
 	FaceType     *string `json:"type" validate:"omitempty,oneof=null PIN DEVICE"`
 }
 
+type ReqRejectTenor struct {
+	ProspectID string `json:"prospect_id" validate:"required"`
+	IDNumber   string `json:"id_number" validate:"required,len=16,number" example:"1234XXXXXXXX0001"`
+}
+
 type GetImagePlatform struct {
 	CustomerID int    `json:"customer_id" validate:"required"`
 	ImageURL   string `json:"image_url" validate:"required"`
