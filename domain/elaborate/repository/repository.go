@@ -19,21 +19,21 @@ var (
 )
 
 type repoHandler struct {
-	kmbElaborate *gorm.DB
-	KpLos        *gorm.DB
+	minilosKmb *gorm.DB
+	KpLos      *gorm.DB
 }
 
-func NewRepository(kmbElaborate, KpLos *gorm.DB) interfaces.Repository {
+func NewRepository(minilosKmb, KpLos *gorm.DB) interfaces.Repository {
 	return &repoHandler{
-		kmbElaborate: kmbElaborate,
-		KpLos:        KpLos,
+		minilosKmb: minilosKmb,
+		KpLos:      KpLos,
 	}
 }
 
 func (r repoHandler) SaveDataElaborate(data entity.ApiElaborateKmb) (err error) {
 	data.DtmRequest = DtmRequest
 	data.Timestamp = time.Now()
-	if err = r.kmbElaborate.Create(data).Error; err != nil {
+	if err = r.minilosKmb.Create(data).Error; err != nil {
 		return
 	}
 
@@ -43,7 +43,7 @@ func (r repoHandler) SaveDataElaborate(data entity.ApiElaborateKmb) (err error) 
 func (r repoHandler) UpdateDataElaborate(data entity.ApiElaborateKmbUpdate) (err error) {
 	data.DtmResponse = time.Now()
 	data.Timestamp = time.Now()
-	if err = r.kmbElaborate.Table("api_elaborate_scheme").Where("RequestID = ?", data.RequestID).UpdateColumns(data).Error; err != nil {
+	if err = r.minilosKmb.Table("api_elaborate_scheme").Where("RequestID = ?", data.RequestID).UpdateColumns(data).Error; err != nil {
 		return
 	}
 
@@ -80,10 +80,10 @@ func (r repoHandler) GetFilteringResult(prospect_id string) (filtering entity.Ap
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
 
-	db := r.kmbElaborate.BeginTx(ctx, &x)
+	db := r.minilosKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.kmbElaborate.Raw("SELECT PefindoID, PefindoIDSpouse, PefindoScore FROM api_dupcheck_kmb WHERE ProspectID = ?", prospect_id).Scan(&filtering).Error; err != nil {
+	if err = r.minilosKmb.Raw("SELECT PefindoID, PefindoIDSpouse, PefindoScore FROM api_dupcheck_kmb WHERE ProspectID = ?", prospect_id).Scan(&filtering).Error; err != nil {
 		return
 	}
 
