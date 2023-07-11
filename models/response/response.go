@@ -438,3 +438,73 @@ type Config struct {
 		Blur int `json:"blur"`
 	} `json:"data"`
 }
+
+type InfoEkyc struct {
+	Vd     interface{} `json:"vd"`
+	Fr     interface{} `json:"fr"`
+	Asliri interface{} `json:"asliri"`
+	Ktp    interface{} `json:"ktp"`
+}
+
+type Ekyc struct {
+	Result      string      `json:"result"`
+	Code        string      `json:"code"`
+	Reason      string      `json:"reason"`
+	Source      string      `json:"source"`
+	Info        interface{} `json:"info"`
+	Similiarity interface{} `json:"similiarity"`
+}
+
+type AsliriIntegrator struct {
+	Name        interface{} `json:"name"`
+	PDOB        interface{} `json:"pdob"`
+	SelfiePhoto interface{} `json:"selfie_photo"`
+	NotFound    bool        `json:"not_found"`
+	RefID       string      `json:"ref_id"`
+}
+
+type KtpValidator struct {
+	Code   string `json:"code"`
+	Result string `json:"result"`
+	Reason string `json:"reason"`
+}
+
+type VerifyDataIntegratorResponse struct {
+	TransactionID string  `json:"transaction_id"`
+	Threshold     string  `json:"threshold"`
+	RefID         string  `json:"ref_id"`
+	IsValid       bool    `json:"is_valid"`
+	Reason        *string `json:"reason,omitempty"`
+	VerifyDataDetailIntegratorResponse
+}
+
+type VerifyDataDetailIntegratorResponse struct {
+	NoKk        string `json:"no_kk,omitempty"`
+	NamaLgkp    string `json:"nama_lgkp,omitempty"`
+	TmptLhr     string `json:"tmpt_lhr,omitempty"`
+	TglLhr      string `json:"tgl_lhr,omitempty"`
+	PropName    string `json:"prop_name,omitempty"`
+	KabName     string `json:"kab_name,omitempty"`
+	KecName     string `json:"kec_name,omitempty"`
+	KelName     string `json:"kel_name,omitempty"`
+	NoRt        string `json:"no_rt,omitempty"`
+	NoRw        string `json:"no_rw,omitempty"`
+	Alamat      string `json:"alamat,omitempty"`
+	NamaLgkpIbu string `json:"nama_lgkp_ibu,omitempty"`
+	StatusKawin string `json:"status_kawin,omitempty"`
+	JenisPkrjn  string `json:"jenis_pkrjn,omitempty"`
+	JenisKlmin  string `json:"jenis_klmin,omitempty"`
+	NoProp      string `json:"no_prop,omitempty"`
+	NoKab       string `json:"no_kab,omitempty"`
+	NoKec       string `json:"no_kec,omitempty"`
+	NoKel       string `json:"no_kel,omitempty"`
+	Nik         string `json:"nik,omitempty"`
+}
+
+type FaceRecognitionIntegratorData struct {
+	TransactionID string `json:"transaction_id"`
+	RuleCode      string `json:"rule_code"`
+	Reason        string `json:"reason"`
+	Threshold     string `json:"threshold"`
+	RefID         string `json:"ref_id"`
+}

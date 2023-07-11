@@ -333,3 +333,14 @@ type DataInquiry struct {
 func (c *DataInquiry) TableName() string {
 	return "data_inquiry"
 }
+
+type AsliriConfig struct {
+	Data struct {
+		KMB struct {
+			AsliriActive bool `json:"asliri_service_active"`
+			AsliriPhoto  int  `json:"asliri_photo_threshold"`
+			AsliriName   int  `json:"asliri_name_threshold"`
+			AsliriPDOB   int  `json:"asliri_pdob_threshold"`
+		} `json:"kmb"`
+	} `json:"data"`
+}
