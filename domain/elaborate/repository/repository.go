@@ -115,7 +115,7 @@ func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bp
 			} else {
 				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= 1000", ltv_range)
 			}
-		} else if bpkb < 36 {
+		} else if tenor < 36 {
 			if ltv_range != 0 && ltv_range <= 1000 {
 				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", ltv_range, ltv_range)
 			} else {
