@@ -17,6 +17,7 @@ import (
 	"strings"
 
 	"github.com/go-resty/resty/v2"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/labstack/echo/v4"
 )
 
@@ -691,11 +692,12 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 
 		// handling response pefindo
 		if checkPefindo.Code == "200" || checkPefindo.Code == "201" {
-			if checkPefindo.Result != constant.RESPONSE_PEFINDO_DUMMY_NOT_FOUND {
+
+			if reflect.TypeOf(checkPefindo.Result).String() != "string" {
 				if checkPefindo.Result != constant.NOT_MATCH_PBK {
 					setPefindo, _ := json.Marshal(checkPefindo.Result)
 
-					if errs := json.Unmarshal(setPefindo, &pefindoResult); errs != nil {
+					if errs := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(setPefindo, &pefindoResult); errs != nil {
 						err = fmt.Errorf("error unmarshal data pefindo")
 						return
 					}
