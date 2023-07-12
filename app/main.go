@@ -63,7 +63,7 @@ func main() {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
 	}
 
-	catalog, err := database.OpenCatalogData()
+	kpLosLogs, err := database.OpenKpLosLog()
 
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
@@ -105,7 +105,7 @@ func main() {
 	httpClient := httpclient.NewHttpClient()
 
 	// define kmb filtering domain
-	kmbFilteringRepo := filteringRepository.NewRepository(minilosKMB, kpLos, catalog)
+	kmbFilteringRepo := filteringRepository.NewRepository(minilosKMB, kpLos, kpLosLogs)
 	kmbFilteringMultiCase, kmbFilteringCase := filteringUsecase.NewMultiUsecase(kmbFilteringRepo, httpClient)
 	filteringDelivery.FilteringHandler(apiGroup, kmbFilteringMultiCase, kmbFilteringCase, kmbFilteringRepo, jsonResponse, accessToken)
 

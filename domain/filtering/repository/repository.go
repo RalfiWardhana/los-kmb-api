@@ -17,16 +17,16 @@ var (
 )
 
 type repoHandler struct {
-	kmbFiltering *gorm.DB
-	KpLos        *gorm.DB
-	dummy        *gorm.DB
+	minilosKmb *gorm.DB
+	KpLos      *gorm.DB
+	dummy      *gorm.DB
 }
 
-func NewRepository(kmbFiltering, KpLos, dummy *gorm.DB) interfaces.Repository {
+func NewRepository(minilosKmb, KpLos, dummy *gorm.DB) interfaces.Repository {
 	return &repoHandler{
-		dummy:        dummy,
-		kmbFiltering: kmbFiltering,
-		KpLos:        KpLos,
+		minilosKmb: minilosKmb,
+		KpLos:      KpLos,
+		dummy:      dummy,
 	}
 }
 
@@ -41,7 +41,7 @@ func (r repoHandler) DummyDataPbk(noktp string) (data entity.DummyPBK, err error
 	db := r.dummy.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.dummy.Raw("SELECT * FROM new_pefindo_kmb WHERE IDNumber = ?", noktp).Scan(&data).Error; err != nil {
+	if err = r.dummy.Raw("SELECT * FROM dbo.dummy_pefindo_kmb WHERE IDNumber = ?", noktp).Scan(&data).Error; err != nil {
 		return
 	}
 
@@ -87,7 +87,7 @@ func (r repoHandler) BranchDpData(query string) (data entity.BranchDp, err error
 func (r repoHandler) SaveData(data entity.ApiDupcheckKmb) (err error) {
 	data.DtmRequest = DtmRequest
 	data.Timestamp = time.Now()
-	if err = r.kmbFiltering.Create(data).Error; err != nil {
+	if err = r.minilosKmb.Create(data).Error; err != nil {
 		return
 	}
 
@@ -97,7 +97,7 @@ func (r repoHandler) SaveData(data entity.ApiDupcheckKmb) (err error) {
 func (r repoHandler) UpdateData(data entity.ApiDupcheckKmbUpdate) (err error) {
 	data.DtmResponse = time.Now()
 	data.Timestamp = time.Now()
-	if err = r.kmbFiltering.Table("api_dupcheck_kmb").Where("RequestID = ?", data.RequestID).UpdateColumns(data).Error; err != nil {
+	if err = r.minilosKmb.Table("api_dupcheck_kmb").Where("RequestID = ?", data.RequestID).UpdateColumns(data).Error; err != nil {
 		return
 	}
 

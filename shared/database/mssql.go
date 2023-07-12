@@ -14,7 +14,7 @@ import (
 
 func OpenMinilosKMB() (*gorm.DB, error) {
 
-	user, pwd, host, port, database := config.GetFilteringDB()
+	user, pwd, host, port, database := config.GetMinilosKmbDB()
 
 	connString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s"+"?charset=utf8mb4&parseTime=True&loc=Local",
 		user, pwd, host, port, database,
@@ -25,8 +25,8 @@ func OpenMinilosKMB() (*gorm.DB, error) {
 		return nil, err
 	}
 
-	maxIdle, _ := strconv.Atoi(os.Getenv("KMB_FILTERING_DB_MAX_IDLE_CONNECTION"))
-	maxOpen, _ := strconv.Atoi(os.Getenv("KMB_FILTERING_DB_MAX_OPEN_CONNECTION"))
+	maxIdle, _ := strconv.Atoi(os.Getenv("MINILOS_KMB_DB_MAX_IDLE_CONNECTION"))
+	maxOpen, _ := strconv.Atoi(os.Getenv("MINILOS_KMB_DB_MAX_OPEN_CONNECTION"))
 
 	db.DB().SetMaxIdleConns(maxIdle)
 	db.DB().SetMaxOpenConns(maxOpen)
@@ -59,21 +59,21 @@ func OpenKpLos() (*gorm.DB, error) {
 	return db, nil
 }
 
-func OpenCatalogData() (*gorm.DB, error) {
+func OpenKpLosLog() (*gorm.DB, error) {
 
-	user, pwd, host, port, database := config.GetDummyDB()
+	user, pwd, host, port, database := config.GetKpLosLogDB()
 
-	connString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s"+"?charset=utf8mb4&parseTime=True&loc=Local",
+	connString := fmt.Sprintf("sqlserver://%s:%s@%s:%d?database=%s",
 		user, pwd, host, port, database,
 	)
 
-	db, err := gorm.Open("mysql", connString)
+	db, err := gorm.Open("mssql", connString)
 	if err != nil {
 		return nil, err
 	}
 
-	maxIdle, _ := strconv.Atoi(os.Getenv("DUMMY_DB_MAX_IDLE_CONNECTION"))
-	maxOpen, _ := strconv.Atoi(os.Getenv("DUMMY_DB_MAX_OPEN_CONNECTION"))
+	maxIdle, _ := strconv.Atoi(os.Getenv("KP_LOS_LOG_DB_MAX_IDLE_CONNECTION"))
+	maxOpen, _ := strconv.Atoi(os.Getenv("KP_LOS_LOG_DB_MAX_OPEN_CONNECTION"))
 
 	db.DB().SetMaxIdleConns(maxIdle)
 	db.DB().SetMaxOpenConns(maxOpen)

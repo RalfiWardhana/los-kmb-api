@@ -48,7 +48,12 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 
 func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestElaborate, accessToken string) (data response.ElaborateResult, err error) {
 
-	var savedata entity.ApiElaborateKmb
+	var (
+		max_ltv         int
+		savedata        entity.ApiElaborateKmb
+		updateElaborate entity.ApiElaborateKmbUpdate
+		parameter       entity.MappingElaborateScheme
+	)
 
 	id := uuid.New()
 
@@ -62,8 +67,6 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 		return
 	}
 
-	var updateElaborate entity.ApiElaborateKmbUpdate
-
 	status_konsumen := reqs.Data.CustomerStatus
 	if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
 		status_konsumen = "AO/RO"
@@ -73,19 +76,30 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 
 	tenor := reqs.Data.Tenor
 
-	var max_ltv int
+	// get the result elaborated scheme
+	result_elaborate, err := u.usecase.ResultElaborate(ctx, reqs)
 
-	if reqs.Data.CustomerStatus == constant.STATUS_KONSUMEN_RO_AO && check_prime_priority { //AO/RO PRIME PRIORITY
-		if tenor < 36 {
+	updateElaborate.IsMapping = 1 //default, for mapping is exist
+
+	// not found mapping elaborate scheme
+	if result_elaborate.Decision == "" {
+		updateElaborate.IsMapping = 0 //set flag for mapping not found
+		updateElaborate.Code = constant.CODE_PASS_ELABORATE
+		updateElaborate.Decision = constant.DECISION_PASS
+		updateElaborate.Reason = constant.REASON_PASS_ELABORATE
+	} else {
+
+		if err != nil {
+			err = fmt.Errorf("failed get result elaborate")
+			return
+		}
+
+		//AO/RO PRIME PRIORITY
+		if tenor < 36 && reqs.Data.CustomerStatus == constant.STATUS_KONSUMEN_RO_AO && check_prime_priority {
 			updateElaborate.Code = constant.CODE_PASS_ELABORATE
 			updateElaborate.Reason = constant.REASON_PASS_ELABORATE
 			updateElaborate.Decision = constant.DECISION_PASS
 		} else {
-			result_elaborate, errs := u.usecase.ResultElaborate(ctx, reqs)
-			if errs != nil {
-				err = fmt.Errorf("failed get result elaborate")
-				return
-			}
 
 			if result_elaborate.Decision == constant.DECISION_REJECT {
 				max_ltv = result_elaborate.LTV
@@ -95,20 +109,6 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 			updateElaborate.Reason = result_elaborate.Reason
 			updateElaborate.Decision = result_elaborate.Decision
 		}
-	} else { //NONE OF AO/RO PRIME PRIORITY
-		result_elaborate, errs := u.usecase.ResultElaborate(ctx, reqs)
-		if errs != nil {
-			err = fmt.Errorf("failed get result elaborate")
-			return
-		}
-
-		if result_elaborate.Decision == constant.DECISION_REJECT {
-			max_ltv = result_elaborate.LTV
-		}
-
-		updateElaborate.Code = result_elaborate.Code
-		updateElaborate.Reason = result_elaborate.Reason
-		updateElaborate.Decision = result_elaborate.Decision
 	}
 
 	data.Code = updateElaborate.Code
@@ -120,6 +120,20 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 
 	updateElaborate.RequestID = savedata.RequestID
 	updateElaborate.Response = string(resp)
+
+	parameter.ResultPefindo = result_elaborate.ResultPefindo
+	parameter.BranchID = reqs.Data.BranchID
+	parameter.CustomerStatus = status_konsumen
+	parameter.BPKBNameType = result_elaborate.BPKBNameType
+	parameter.Cluster = result_elaborate.Cluster
+	parameter.Tenor = tenor
+	parameter.AgeVehicle = result_elaborate.AgeVehicle
+	parameter.LTV = result_elaborate.LTVOrigin
+	parameter.TotalBakiDebet = int(result_elaborate.TotalBakiDebet)
+	parameter.Decision = result_elaborate.Decision
+
+	mapping, _ := json.Marshal(parameter)
+	updateElaborate.MappingParameter = string(mapping)
 
 	if err = u.repository.UpdateDataElaborate(updateElaborate); err != nil {
 		err = fmt.Errorf("failed update data api elaborate")
@@ -173,33 +187,72 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 	tenor := reqs.Data.Tenor
 	NTF := reqs.Data.NTF
 	OTR := reqs.Data.OTR
-	baki_debet := utils.ToFixed(reqs.Data.TotalBakiDebet, 0)
+
+	var baki_debet float64
+	var ok bool
+
+	if reqs.Data.TotalBakiDebet != nil {
+		baki_debet, ok = reqs.Data.TotalBakiDebet.(float64)
+		if !ok {
+			baki_debet = 0
+		}
+	}
 
 	var reason = constant.REASON_PASS_ELABORATE
 
 	// Hitung LTV
 	ltv := utils.ToFixed((NTF/OTR)*100, 0)
 
+	data.ResultPefindo = result_pefindo
+	data.BPKBNameType = bpkbNameType
+	data.AgeVehicle = age_vehicle
+	data.LTVOrigin = ltv
+	data.TotalBakiDebet = baki_debet
+
 	// Get Cluster Branch
 	cluster_branch, err := u.repository.GetClusterBranchElaborate(branch_id, status_konsumen, bpkbNameType)
-	if err != nil {
+	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
 		err = fmt.Errorf("failed get cluster branch elaborate")
 		return
 	}
 
-	if reqs.Data.TotalBakiDebet > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT {
+	if cluster_branch != (entity.ClusterBranch{}) {
+		data.Cluster = cluster_branch.Cluster
+	}
+
+	if baki_debet > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && baki_debet <= constant.BAKI_DEBET {
 		if cluster_branch.Cluster == constant.CLUSTER_E || cluster_branch.Cluster == constant.CLUSTER_F {
 			data.Code = constant.CODE_REJECT_ELABORATE
 			data.Reason = constant.REASON_REJECT_ELABORATE
 			data.Decision = constant.DECISION_REJECT
 			return
 		}
-	} else if reqs.Data.TotalBakiDebet > constant.BAKI_DEBET { //This should be reject in Filtering tho
+	} else if baki_debet > constant.BAKI_DEBET { //This should be reject in Filtering tho
 		data.Code = constant.CODE_REJECT_ELABORATE
 		data.Reason = constant.REASON_REJECT_ELABORATE
 		data.Decision = constant.DECISION_REJECT
 		return
 	}
+
+	// Set Result Pefindo for HIT/NO HIT based on Filtering Result
+	filtering_result, err := u.repository.GetFilteringResult(reqs.Data.ProspectID)
+	if filtering_result == (entity.ApiDupcheckKmbUpdate{}) {
+		result_pefindo = reqs.Data.ResultPefindo
+	} else {
+		if err != nil {
+			err = fmt.Errorf("failed get result filtering")
+			return
+		}
+
+		if result_pefindo == constant.DECISION_PASS {
+			if (filtering_result.PefindoID != nil || filtering_result.PefindoIDSpouse != nil) && filtering_result.PefindoScore != constant.UNSCORE_PBK {
+				result_pefindo = constant.DECISION_PASS
+			} else {
+				result_pefindo = constant.DECISION_PBK_NO_HIT
+			}
+		}
+	}
+	data.ResultPefindo = result_pefindo
 
 	// Get Result from Mapping Elaborate
 	result_elaborate, err := u.repository.GetResultElaborate(branch_id, status_konsumen, bpkbNameType, result_pefindo, tenor, age_vehicle, ltv, baki_debet)
@@ -211,8 +264,9 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 	if result_elaborate.Decision == constant.DECISION_PASS {
 		data.Code = constant.CODE_PASS_ELABORATE
 	} else {
-		data.Code = constant.CODE_REJECT_NTF_ELABORATE
+		data.Code = constant.CODE_REJECT_ELABORATE
 		if result_elaborate.LTV > 0 {
+			data.Code = constant.CODE_REJECT_NTF_ELABORATE
 			reason = constant.REASON_REJECT_NTF_ELABORATE
 			data.LTV = result_elaborate.LTV - 1
 		} else {

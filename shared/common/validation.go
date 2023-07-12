@@ -1,6 +1,7 @@
 package common
 
 import (
+	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
 	"reflect"
@@ -48,6 +49,10 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("profession", professionValidation)
 	v.validator.RegisterValidation("bpkbname", checkBpkbname)
 	v.validator.RegisterValidation("number", numberValidation)
+	v.validator.RegisterValidation("customer_status", checkCustomerStatus)
+	v.validator.RegisterValidation("customer_category", checkCustomerCategory)
+	v.validator.RegisterValidation("result_pefindo", checkResultPefindo)
+	v.validator.RegisterValidation("required_baki_debet", checkBakiDebet)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
@@ -163,4 +168,67 @@ func contains(arr []string, str string) bool {
 		}
 	}
 	return false
+}
+
+func checkCustomerStatus(fl validator.FieldLevel) (validator bool) {
+
+	customer_new := constant.STATUS_KONSUMEN_NEW
+	customer_roao := constant.STATUS_KONSUMEN_RO_AO
+
+	if customer_new == fl.Field().String() || customer_roao == fl.Field().String() {
+		validator = true
+	} else {
+		validator = false
+	}
+
+	return
+}
+
+func checkCustomerCategory(fl validator.FieldLevel) (validator bool) {
+
+	regular := constant.RO_AO_REGULAR
+	prime := constant.RO_AO_PRIME
+	priority := constant.RO_AO_PRIORITY
+	customer_status := fl.Parent().FieldByName("CustomerStatus").String()
+
+	if customer_status == constant.STATUS_KONSUMEN_RO_AO {
+		if regular == fl.Field().String() || prime == fl.Field().String() || priority == fl.Field().String() {
+			validator = true
+		}
+	} else {
+		validator = true
+	}
+
+	return
+}
+
+func checkResultPefindo(fl validator.FieldLevel) (validator bool) {
+
+	pass := constant.DECISION_PASS
+	reject := constant.DECISION_REJECT
+
+	if pass == fl.Field().String() || reject == fl.Field().String() {
+		validator = true
+	} else {
+		validator = false
+	}
+
+	return
+}
+
+func checkBakiDebet(fl validator.FieldLevel) (validator bool) {
+
+	result_pefindo := fl.Parent().FieldByName("ResultPefindo").String()
+
+	if result_pefindo == constant.DECISION_PASS {
+		validator = true
+	} else {
+		if fl.Field().Interface() != nil {
+			validator = true
+		} else {
+			validator = false
+		}
+	}
+
+	return
 }

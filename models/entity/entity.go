@@ -36,14 +36,14 @@ type DummyPBK struct {
 }
 
 type ApiDupcheckKmb struct {
-	ProspectID string    `gorm:"type:varchar(50);column:ProspectID"`
-	RequestID  string    `gorm:"type:varchar(100);column:RequestID;primaryKey"`
-	Request    string    `gorm:"type:text;column:Request"`
-	Code       string    `gorm:"type:varchar(50);column:Code"`
-	Decision   string    `gorm:"type:varchar(50);column:Decision"`
-	Reason     string    `gorm:"type:varchar(200);column:Reason"`
-	DtmRequest time.Time `gorm:"column:DtmRequest"`
-	Timestamp  time.Time `gorm:"column:Timestamp"`
+	ProspectID string      `gorm:"type:varchar(50);column:ProspectID"`
+	RequestID  string      `gorm:"type:varchar(100);column:RequestID;primaryKey"`
+	Request    string      `gorm:"type:text;column:Request"`
+	Code       interface{} `gorm:"type:varchar(50);column:Code"`
+	Decision   string      `gorm:"type:varchar(50);column:Decision"`
+	Reason     string      `gorm:"type:varchar(200);column:Reason"`
+	DtmRequest time.Time   `gorm:"column:DtmRequest"`
+	Timestamp  time.Time   `gorm:"column:Timestamp"`
 }
 
 func (c *ApiDupcheckKmb) TableName() string {
@@ -60,10 +60,13 @@ type ApiDupcheckKmbUpdate struct {
 	Response               interface{} `gorm:"type:text;column:Response"`
 	CustomerType           interface{} `gorm:"type:text;column:CustomerType"`
 	DtmResponse            time.Time   `gorm:"column:DtmResponse"`
-	Code                   string      `gorm:"type:varchar(50);column:Code"`
+	Code                   interface{} `gorm:"type:varchar(50);column:Code"`
 	Decision               string      `gorm:"type:varchar(50);column:Decision"`
 	Reason                 string      `gorm:"type:varchar(200);column:Reason"`
 	Timestamp              time.Time   `gorm:"column:Timestamp"`
+	PefindoID              interface{} `gorm:"column:PefindoID"`
+	PefindoIDSpouse        interface{} `gorm:"column:PefindoIDSpouse"`
+	PefindoScore           interface{} `gorm:"column:PefindoScore"`
 }
 
 func (c *ApiDupcheckKmbUpdate) TableName() string {
@@ -104,14 +107,16 @@ type AppConfig struct {
 }
 
 type ApiElaborateKmb struct {
-	ProspectID string    `gorm:"type:varchar(50);column:ProspectID"`
-	RequestID  string    `gorm:"type:varchar(100);column:RequestID;primaryKey"`
-	Request    string    `gorm:"type:text;column:Request"`
-	Code       int       `gorm:"type:varchar(50);column:Code"`
-	Decision   string    `gorm:"type:varchar(50);column:Decision"`
-	Reason     string    `gorm:"type:varchar(200);column:Reason"`
-	DtmRequest time.Time `gorm:"column:DtmRequest"`
-	Timestamp  time.Time `gorm:"column:Timestamp"`
+	ProspectID       string    `gorm:"type:varchar(50);column:ProspectID"`
+	RequestID        string    `gorm:"type:varchar(100);column:RequestID;primaryKey"`
+	Request          string    `gorm:"type:text;column:Request"`
+	Code             int       `gorm:"type:varchar(50);column:Code"`
+	Decision         string    `gorm:"type:varchar(50);column:Decision"`
+	Reason           string    `gorm:"type:varchar(200);column:Reason"`
+	DtmRequest       time.Time `gorm:"column:DtmRequest"`
+	IsMapping        int       `gorm:"column:IsMapping"`
+	MappingParameter string    `gorm:"type:text;column:MappingParameter"`
+	Timestamp        time.Time `gorm:"column:Timestamp"`
 }
 
 func (c *ApiElaborateKmb) TableName() string {
@@ -119,14 +124,16 @@ func (c *ApiElaborateKmb) TableName() string {
 }
 
 type ApiElaborateKmbUpdate struct {
-	ProspectID  string      `gorm:"type:varchar(50);column:ProspectID"`
-	RequestID   string      `gorm:"type:varchar(100);column:RequestID;primaryKey"`
-	Response    interface{} `gorm:"type:text;column:Response"`
-	Code        int         `gorm:"type:varchar(50);column:Code"`
-	Decision    string      `gorm:"type:varchar(50);column:Decision"`
-	Reason      string      `gorm:"type:varchar(200);column:Reason"`
-	DtmResponse time.Time   `gorm:"column:DtmResponse"`
-	Timestamp   time.Time   `gorm:"column:Timestamp"`
+	ProspectID       string      `gorm:"type:varchar(50);column:ProspectID"`
+	RequestID        string      `gorm:"type:varchar(100);column:RequestID;primaryKey"`
+	Response         interface{} `gorm:"type:text;column:Response"`
+	Code             int         `gorm:"type:varchar(50);column:Code"`
+	Decision         string      `gorm:"type:varchar(50);column:Decision"`
+	Reason           string      `gorm:"type:varchar(200);column:Reason"`
+	DtmResponse      time.Time   `gorm:"column:DtmResponse"`
+	IsMapping        int         `gorm:"column:IsMapping"`
+	MappingParameter string      `gorm:"type:text;column:MappingParameter"`
+	Timestamp        time.Time   `gorm:"column:Timestamp"`
 }
 
 func (c *ApiElaborateKmbUpdate) TableName() string {
@@ -147,4 +154,21 @@ type ClusterBranch struct {
 	CustomerStatus string `gorm:"type:varchar(10);column:customer_status"`
 	BPKBNameType   int    `gorm:"column:bpkb_name_type"`
 	Cluster        string `gorm:"type:varchar(20);column:cluster"`
+}
+
+type MappingElaborateScheme struct {
+	ResultPefindo  string  `gorm:"type:varchar(10);column:result_pefindo"`
+	BranchID       string  `gorm:"type:varchar(10);column:branch_id"`
+	CustomerStatus string  `gorm:"type:varchar(10);column:customer_status"`
+	BPKBNameType   int     `gorm:"column:bpkb_name_type"`
+	Cluster        string  `gorm:"type:varchar(20);column:cluster"`
+	TotalBakiDebet int     `gorm:"column:total_baki_debet"`
+	Tenor          int     `gorm:"column:tenor"`
+	AgeVehicle     string  `gorm:"type:varchar(5);column:age_vehicle"`
+	LTV            float64 `gorm:"column:ltv"`
+	Decision       string  `gorm:"type:varchar(10);column:decision"`
+}
+
+func (c *MappingElaborateScheme) TableName() string {
+	return "kmb_mapping_elaborate_scheme"
 }

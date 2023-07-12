@@ -24,12 +24,12 @@ type Blacklist struct {
 
 type Data struct {
 	BPKBName          string  `json:"BPKBName" validate:"required,bpkbname"`
-	ProspectID        string  `json:"ProspectID" validate:"required"`
+	ProspectID        string  `json:"ProspectID" validate:"required,max=20"`
 	BranchID          string  `json:"BranchID" validate:"required"`
-	IDNumber          string  `json:"IDNumber" validate:"required,number"`
+	IDNumber          string  `json:"IDNumber" validate:"required,number,len=16"`
 	LegalName         string  `json:"LegalName" validate:"required,allowcharsname"`
 	BirthPlace        string  `json:"BirthPlace" validate:"required,allowcharsname"`
-	BirthDate         string  `json:"BirthDate" validate:"required"`
+	BirthDate         string  `json:"BirthDate" validate:"required,dateformat"`
 	SurgateMotherName string  `json:"SurgateMotherName" validate:"required,allowcharsname"`
 	Gender            string  `json:"Gender" validate:"required,gender"`
 	MaritalStatus     string  `json:"MaritalStatus" validate:"required,marital"`
@@ -39,12 +39,12 @@ type Data struct {
 }
 
 type Spouse struct {
-	IDNumber          string `json:"Spouse_IDNumber"  validate:"required,number"`
+	IDNumber          string `json:"Spouse_IDNumber"  validate:"required,number,len=16"`
 	LegalName         string `json:"Spouse_LegalName"  validate:"required,allowcharsname"`
 	BirthPlace        string `json:"Spouse_BirthPlace"  validate:"required,allowcharsname"`
-	BirthDate         string `json:"Spouse_BirthDate"  validate:"required"`
+	BirthDate         string `json:"Spouse_BirthDate"  validate:"required,dateformat"`
 	SurgateMotherName string `json:"Spouse_SurgateMotherName"  validate:"required,allowcharsname"`
-	Gender            string `json:"Spouse_Gender"  validate:"required"`
+	Gender            string `json:"Spouse_Gender"  validate:"required,gender"`
 }
 
 type GenderCompare struct {
@@ -57,15 +57,15 @@ type BodyRequestElaborate struct {
 }
 
 type DataElaborate struct {
-	ProspectID        string  `json:"ProspectID" validate:"required"`
-	BranchID          string  `json:"BranchID" validate:"required"`
-	BPKBName          string  `json:"BPKBName" validate:"required,bpkbname"`
-	CustomerStatus    string  `json:"CustomerStatus" validate:"required"`
-	CategoryCustomer  string  `json:"CategoryCustomer"`
-	ResultPefindo     string  `json:"ResultPefindo" validate:"required"`
-	TotalBakiDebet    float64 `json:"TotalBakiDebet"`
-	Tenor             int     `json:"Tenor" validate:"required"`
-	ManufacturingYear string  `json:"ManufacturingYear" validate:"required"`
-	OTR               float64 `json:"OTR" validate:"required"`
-	NTF               float64 `json:"NTF" validate:"required"`
+	ProspectID        string      `json:"ProspectID" validate:"required,max=20"`
+	BranchID          string      `json:"BranchID" validate:"required"`
+	BPKBName          string      `json:"BPKBName" validate:"required,bpkbname"`
+	CustomerStatus    string      `json:"CustomerStatus" validate:"required,customer_status" ex:"NEW or RO/AO"`
+	CategoryCustomer  string      `json:"CategoryCustomer" validate:"customer_category" ex:"REGULAR, PRIME or PRIORITY"`
+	ResultPefindo     string      `json:"ResultPefindo" validate:"required,result_pefindo" ex:"PASS or REJECT"`
+	TotalBakiDebet    interface{} `json:"TotalBakiDebet" validate:"required_baki_debet"`
+	Tenor             int         `json:"Tenor" validate:"required"`
+	ManufacturingYear string      `json:"ManufacturingYear" validate:"required,len=4,number"`
+	OTR               float64     `json:"OTR" validate:"required"`
+	NTF               float64     `json:"NTF" validate:"required"`
 }

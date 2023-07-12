@@ -7,6 +7,7 @@ import (
 	"los-kmb-api/domain/elaborate/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/shared/config"
+	"los-kmb-api/shared/constant"
 	"strconv"
 	"time"
 
@@ -18,21 +19,21 @@ var (
 )
 
 type repoHandler struct {
-	kmbElaborate *gorm.DB
-	KpLos        *gorm.DB
+	minilosKmb *gorm.DB
+	KpLos      *gorm.DB
 }
 
-func NewRepository(kmbElaborate, KpLos *gorm.DB) interfaces.Repository {
+func NewRepository(minilosKmb, KpLos *gorm.DB) interfaces.Repository {
 	return &repoHandler{
-		kmbElaborate: kmbElaborate,
-		KpLos:        KpLos,
+		minilosKmb: minilosKmb,
+		KpLos:      KpLos,
 	}
 }
 
 func (r repoHandler) SaveDataElaborate(data entity.ApiElaborateKmb) (err error) {
 	data.DtmRequest = DtmRequest
 	data.Timestamp = time.Now()
-	if err = r.kmbElaborate.Create(data).Error; err != nil {
+	if err = r.minilosKmb.Create(data).Error; err != nil {
 		return
 	}
 
@@ -42,7 +43,7 @@ func (r repoHandler) SaveDataElaborate(data entity.ApiElaborateKmb) (err error) 
 func (r repoHandler) UpdateDataElaborate(data entity.ApiElaborateKmbUpdate) (err error) {
 	data.DtmResponse = time.Now()
 	data.Timestamp = time.Now()
-	if err = r.kmbElaborate.Table("api_elaborate_scheme").Where("RequestID = ?", data.RequestID).UpdateColumns(data).Error; err != nil {
+	if err = r.minilosKmb.Table("api_elaborate_scheme").Where("RequestID = ?", data.RequestID).UpdateColumns(data).Error; err != nil {
 		return
 	}
 
@@ -61,6 +62,28 @@ func (r repoHandler) GetClusterBranchElaborate(branch_id string, cust_status str
 	defer db.Commit()
 
 	if err = r.KpLos.Raw("SELECT cluster FROM kmb_mapping_cluster_branch WITH (nolock) WHERE branch_id = ? AND customer_status = ? AND bpkb_name_type = ?", branch_id, cust_status, bpkb).Scan(&cluster).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetFilteringResult(prospect_id string) (filtering entity.ApiDupcheckKmbUpdate, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.minilosKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.minilosKmb.Raw("SELECT PefindoID, PefindoIDSpouse, PefindoScore FROM api_dupcheck_kmb WHERE ProspectID = ?", prospect_id).Scan(&filtering).Error; err != nil {
 		return
 	}
 
@@ -74,7 +97,7 @@ func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bp
 	var total_baki_debet int = int(baki_debet)
 
 	// PEFINDO PASS
-	if result_pefindo == "PASS" {
+	if result_pefindo == constant.DECISION_PASS {
 		if tenor >= 36 {
 			queryAdd = fmt.Sprintf("AND mes.bpkb_name_type = %d AND mes.tenor_start >= 36 AND mes.tenor_end = 0", bpkb)
 		} else {
@@ -85,8 +108,14 @@ func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bp
 			queryAdd += fmt.Sprintf(" AND mes.age_vehicle = '%s'", age_vehicle)
 		}
 
-		if age_vehicle == "<=12" && bpkb == 1 {
+		if (age_vehicle == "<=12" && bpkb == 1) || (age_vehicle == "<=12" && bpkb == 0 && tenor < 36) {
 
+			if ltv_range != 0 && ltv_range <= 1000 {
+				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", ltv_range, ltv_range)
+			} else {
+				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= 1000", ltv_range)
+			}
+		} else if tenor < 36 {
 			if ltv_range != 0 && ltv_range <= 1000 {
 				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", ltv_range, ltv_range)
 			} else {
@@ -96,9 +125,9 @@ func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bp
 	}
 
 	// PEFINDO NO HIT
-	if result_pefindo == "NO HIT" {
+	if result_pefindo == constant.DECISION_PBK_NO_HIT {
 		if tenor >= 24 {
-			queryAdd = fmt.Sprintf("AND mes.bpkb_name_type = %d AND mes.tenor_start >= 24 AND mes.tenor_end = 0", bpkb)
+			queryAdd = "AND mes.tenor_start >= 24 AND mes.tenor_end = 0"
 		} else {
 			queryAdd = fmt.Sprintf("AND mes.tenor_start <= %d AND mes.tenor_end >= %d", tenor, tenor)
 		}
@@ -111,12 +140,12 @@ func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bp
 	}
 
 	// PEFINDO REJECT
-	if result_pefindo == "REJECT" {
+	if result_pefindo == constant.DECISION_REJECT {
 
 		queryAdd = fmt.Sprintf("AND mes.total_baki_debet_start <= %d AND mes.total_baki_debet_end >= %d", total_baki_debet, total_baki_debet)
 
 		if tenor >= 24 {
-			queryAdd += fmt.Sprintf(" AND mes.bpkb_name_type = %d AND mes.tenor_start >= '24' AND mes.tenor_end = 0", bpkb)
+			queryAdd += " AND mes.tenor_start >= '24' AND mes.tenor_end = 0"
 		} else {
 			queryAdd += fmt.Sprintf(" AND mes.tenor_start <= %d AND mes.tenor_end >= %d", tenor, tenor)
 		}

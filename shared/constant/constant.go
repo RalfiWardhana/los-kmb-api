@@ -29,6 +29,8 @@ const (
 	IS_RESTRUCTURE                                               = 1
 	CODE_E                                                       = 701
 	MESSAGE_E                                                    = "ERROR"
+	PEFINDO_UNSCORE                                              = "UNSCORE"
+	RESPONSE_PEFINDO_DUMMY_NOT_FOUND                             = "Pefindo Dummy Data Not Found"
 	ERRORS_E                                                     = "Failed Process Blacklist Confins"
 	REASON_E                                                     = "Failed Process Blacklist Confins"
 	NAMA_SAMA                                                    = "nama_sama"
@@ -168,6 +170,8 @@ const (
 	SERVICE_PBK_UNAVAILABLE_CODE                                 = "9194"
 	PBK_NO_HIT                                                   = "9195"
 	DECISION_PBK_NO_HIT                                          = "NO HIT"
+	UNSCORE_PBK                                                  = "UNSCORE"
+	NOT_MATCH_PBK                                                = "NOT_MATCH"
 	WO_AGUNAN_REJECT_CODE                                        = "9107"
 	WO_AGUNAN_PASS_CODE                                          = "9108"
 
@@ -216,4 +220,5 @@ const (
 	CORE_TOKEN_EXPIRED    = "CORE-AUTH-004"
 	TOKEN_INVALID         = "token tidak valid."
 	RESTY_MAX_RETRY_ERROR = "Max retry attempt exceeded"
+	ERROR_NOT_FOUND       = "data_not_found"
 )
