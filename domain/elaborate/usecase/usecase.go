@@ -234,20 +234,22 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 	}
 
 	// Set Result Pefindo for HIT/NO HIT based on Filtering Result
-	filtering_result, err := u.repository.GetFilteringResult(reqs.Data.ProspectID)
-	if filtering_result == (entity.ApiDupcheckKmbUpdate{}) {
-		result_pefindo = reqs.Data.ResultPefindo
-	} else {
-		if err != nil {
-			err = fmt.Errorf("failed get result filtering")
-			return
-		}
+	kategori_status_konsumen := reqs.Data.CategoryCustomer
+	check_prime_priority, _ := utils.ItemExists(kategori_status_konsumen, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
 
-		if result_pefindo == constant.DECISION_PASS {
-			if (filtering_result.PefindoID != nil || filtering_result.PefindoIDSpouse != nil) && filtering_result.PefindoScore != constant.UNSCORE_PBK {
-				result_pefindo = constant.DECISION_PASS
-			} else {
-				result_pefindo = constant.DECISION_PBK_NO_HIT
+	if !check_prime_priority {
+		var filtering_result entity.ApiDupcheckKmbUpdate
+		filtering_result, _ = u.repository.GetFilteringResult(reqs.Data.ProspectID)
+
+		if filtering_result == (entity.ApiDupcheckKmbUpdate{}) {
+			result_pefindo = reqs.Data.ResultPefindo
+		} else {
+			if result_pefindo == constant.DECISION_PASS {
+				if (filtering_result.PefindoID != nil || filtering_result.PefindoIDSpouse != nil) && filtering_result.PefindoScore != constant.UNSCORE_PBK {
+					result_pefindo = constant.DECISION_PASS
+				} else {
+					result_pefindo = constant.DECISION_PBK_NO_HIT
+				}
 			}
 		}
 	}
