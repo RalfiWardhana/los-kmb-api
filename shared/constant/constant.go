@@ -64,7 +64,7 @@ const (
 	CODE_MAX_OVER_DUE_DAYS_SPOSE_BADTYPE_B                       = "7031"
 	CODE_MAX_OVER_DUE_DAYS_SPOSE_MAX_OVER_DUE_DAYS               = "7032"
 	CODE_MAX_OVER_DUE_DAYS_SPOSE_NUM_OF_ASSET_INVENTORIED        = "7033"
-	CODE_MAX_OVER_DUE_DAYS_SPOSE_BADTYPE_W                       = "7034"
+	CODE_MAX_OVER_DUE_DAYS_SPOSE_IS_RESTRUCTURE                  = "7034"
 	CODE_MAX_OVER_DUE_DAYS_SPOSE_BERSIH                          = "7035"
 	CODE_MAX_OVER_DUE_DAYS_SPOSE                                 = "7036"
 	CODE_NUM_OF_ASSET_INVENTORIED                                = "704"
