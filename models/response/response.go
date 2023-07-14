@@ -196,3 +196,17 @@ type ElaborateResult struct {
 	LTVOrigin      float64 `json:"ltv_origin,omitempty"`
 	TotalBakiDebet float64 `json:"total_balki_debet,omitempty"`
 }
+
+type ResponseMappingElaborateScheme struct {
+	ResultPefindo  string  `json:"result_pefindo"`
+	BranchID       string  `json:"branch_id"`
+	BranchIDMask   string  `json:"branch_id_masking,omitempty"`
+	CustomerStatus string  `json:"customer_status"`
+	BPKBNameType   int     `json:"bpkb_name_type"`
+	Cluster        string  `json:"cluster"`
+	TotalBakiDebet int     `json:"total_baki_debet"`
+	Tenor          int     `json:"tenor"`
+	AgeVehicle     string  `json:"age_vehicle"`
+	LTV            float64 `json:"ltv"`
+	Decision       string  `json:"decision"`
+}

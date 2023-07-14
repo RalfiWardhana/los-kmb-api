@@ -52,7 +52,7 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 		max_ltv         int
 		savedata        entity.ApiElaborateKmb
 		updateElaborate entity.ApiElaborateKmbUpdate
-		parameter       entity.MappingElaborateScheme
+		parameter       response.ResponseMappingElaborateScheme
 	)
 
 	id := uuid.New()
@@ -71,8 +71,16 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 	if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
 		status_konsumen = "AO/RO"
 	}
+
 	kategori_status_konsumen := reqs.Data.CategoryCustomer
 	check_prime_priority, _ := utils.ItemExists(kategori_status_konsumen, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
+
+	parameter.BranchID = reqs.Data.BranchID
+
+	if reqs.Data.CustomerStatus == constant.STATUS_KONSUMEN_RO_AO && check_prime_priority {
+		parameter.BranchIDMask = constant.BRANCH_ID_PRIME_PRIORITY
+		reqs.Data.BranchID = constant.BRANCH_ID_PRIME_PRIORITY
+	}
 
 	tenor := reqs.Data.Tenor
 
@@ -94,21 +102,13 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 			return
 		}
 
-		//AO/RO PRIME PRIORITY
-		if tenor < 36 && reqs.Data.CustomerStatus == constant.STATUS_KONSUMEN_RO_AO && check_prime_priority {
-			updateElaborate.Code = constant.CODE_PASS_ELABORATE
-			updateElaborate.Reason = constant.REASON_PASS_ELABORATE
-			updateElaborate.Decision = constant.DECISION_PASS
-		} else {
-
-			if result_elaborate.Decision == constant.DECISION_REJECT {
-				max_ltv = result_elaborate.LTV
-			}
-
-			updateElaborate.Code = result_elaborate.Code
-			updateElaborate.Reason = result_elaborate.Reason
-			updateElaborate.Decision = result_elaborate.Decision
+		if result_elaborate.Decision == constant.DECISION_REJECT {
+			max_ltv = result_elaborate.LTV
 		}
+
+		updateElaborate.Code = result_elaborate.Code
+		updateElaborate.Reason = result_elaborate.Reason
+		updateElaborate.Decision = result_elaborate.Decision
 	}
 
 	data.Code = updateElaborate.Code
@@ -122,7 +122,6 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 	updateElaborate.Response = string(resp)
 
 	parameter.ResultPefindo = result_elaborate.ResultPefindo
-	parameter.BranchID = reqs.Data.BranchID
 	parameter.CustomerStatus = status_konsumen
 	parameter.BPKBNameType = result_elaborate.BPKBNameType
 	parameter.Cluster = result_elaborate.Cluster
