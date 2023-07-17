@@ -21,7 +21,7 @@ type Usecase interface {
 	CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBanned30D response.RejectionNoka, accessToken string) (data response.UsecaseApi, err error)
 	CheckChassisNumber(ctx context.Context, reqs request.DupcheckApi, nokaBanned response.RejectionNoka, accessToken string) (data response.UsecaseApi, err error)
 	GetBase64Media(ctx context.Context, url string, customerID int, accessToken string) (base64Image string, err error)
-	FacePlus(ctx context.Context, selfie1 string, selfie2 string, req request.FaceCompareRequest, accessToken string) (result response.FaceCompareResponse, err error)
+	FacePlus(ctx context.Context, imageKtp string, imageSelfie string, req request.FaceCompareRequest, accessToken string) (result response.FaceCompareResponse, err error)
 	RejectTenor36(ctx context.Context, prospectID, idNumber, accessToken string) (result response.UsecaseApi, err error)
 }
 
@@ -30,5 +30,5 @@ type MultiUsecase interface {
 }
 
 type Metrics interface {
-	MetricsLos(req request.Metrics) (data interface{}, err error)
+	MetricsLos(ctx context.Context, req request.Metrics, accessToken string) (data interface{}, err error)
 }

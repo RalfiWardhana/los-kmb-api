@@ -1,18 +1,20 @@
 package common
 
 import (
+	"fmt"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 
 	"gopkg.in/go-playground/validator.v9"
 )
 
-var Key, Gender, Tenor, Marital, ProfID, ClientKey string
+var Key, ClientKey, Gender, StatusKonsumen, Channel, Lob, Incoming, Home, Education, Marital, ProfID, Photo, Relationship, AppSource, Address, Tenor, Relation string
 
 func NewValidator() *Validator {
 
@@ -53,6 +55,26 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("customer_category", checkCustomerCategory)
 	v.validator.RegisterValidation("result_pefindo", checkResultPefindo)
 	v.validator.RegisterValidation("required_baki_debet", checkBakiDebet)
+	v.validator.RegisterValidation("url", urlFormatValidation)
+	v.validator.RegisterValidation("status_konsumen", consumentStatusValidation)
+	v.validator.RegisterValidation("recom", recomValidation)
+	v.validator.RegisterValidation("channel", channelValidation)
+	v.validator.RegisterValidation("lob", lobValidation)
+	v.validator.RegisterValidation("incoming", incomingValidation)
+	v.validator.RegisterValidation("ktp", ktpValidation)
+	v.validator.RegisterValidation("home", homeValidation)
+	v.validator.RegisterValidation("address", addressValidation)
+	v.validator.RegisterValidation("education", educationValidation)
+	v.validator.RegisterValidation("marital", maritalValidation)
+	v.validator.RegisterValidation("profession", professionValidation)
+	v.validator.RegisterValidation("photo", photoValidation)
+	v.validator.RegisterValidation("relationship", relationshipValidation)
+	v.validator.RegisterValidation("relation", relationValidation)
+	v.validator.RegisterValidation("appsource", appsourceValidation)
+	v.validator.RegisterValidation("prospectID", ftrProspectIDValidation)
+	v.validator.RegisterValidation("tenor", tenorValidation)
+	v.validator.RegisterValidation("notnull", notNullValidation)
+	v.validator.RegisterValidation("mustnull", mustNullValidation)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
@@ -231,4 +253,256 @@ func checkBakiDebet(fl validator.FieldLevel) (validator bool) {
 	}
 
 	return
+}
+
+func notNullValidation(fl validator.FieldLevel) bool {
+	fmt.Println(fl.Field().Bool())
+	return fl.Field().Bool()
+}
+
+func mustNullValidation(fl validator.FieldLevel) bool {
+	fmt.Println(fl.Field().Bool())
+	return fl.Field().Bool()
+}
+
+func ftrProspectIDValidation(fl validator.FieldLevel) bool {
+
+	arr := strings.Split(fl.Field().String(), " - ")
+	validator, _ := strconv.ParseBool(arr[1])
+
+	return validator
+}
+
+func urlFormatValidation(fl validator.FieldLevel) bool {
+
+	re := regexp.MustCompile(`^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$`)
+
+	return re.MatchString(fl.Field().String())
+}
+
+func ktpValidation(fl validator.FieldLevel) bool {
+	return fl.Field().String() == "KTP"
+}
+
+func tenorValidation(fl validator.FieldLevel) bool {
+
+	tenor, err := utils.ValidatorFromCache("group_tenor_kmob")
+
+	if err != nil {
+		return false
+	}
+
+	arrTenor := strings.Split(tenor.Value, ",")
+
+	validator := contains(arrTenor, fl.Field().String())
+
+	Tenor = tenor.Value
+
+	return validator
+}
+
+func photoValidation(fl validator.FieldLevel) bool {
+
+	photo, err := utils.ValidatorFromCache("group_label_photo_kmob")
+
+	if err != nil {
+		return false
+
+	}
+
+	arrPhoto := strings.Split(photo.Value, ",")
+
+	validator := contains(arrPhoto, fl.Field().String())
+
+	Photo = photo.Value
+
+	return validator
+}
+
+func educationValidation(fl validator.FieldLevel) bool {
+
+	education, err := utils.ValidatorFromCache("group_education")
+
+	if err != nil {
+		return false
+	}
+
+	arrEducation := strings.Split(education.Value, ",")
+
+	validator := contains(arrEducation, fl.Field().String())
+
+	Education = education.Value
+
+	return validator
+
+}
+
+func homeValidation(fl validator.FieldLevel) bool {
+
+	home, err := utils.ValidatorFromCache("group_home_status")
+
+	if err != nil {
+		return false
+	}
+
+	arrHome := strings.Split(home.Value, ",")
+
+	validator := contains(arrHome, fl.Field().String())
+
+	Home = home.Value
+
+	return validator
+}
+
+func lobValidation(fl validator.FieldLevel) bool {
+
+	lob, err := utils.ValidatorFromCache("group_lob")
+
+	if err != nil {
+		return false
+
+	}
+
+	arrLob := strings.Split(lob.Value, ",")
+
+	validator := contains(arrLob, fl.Field().String())
+
+	Lob = lob.Value
+
+	return validator
+}
+
+func incomingValidation(fl validator.FieldLevel) bool {
+
+	incoming, err := utils.ValidatorFromCache("los_incoming_source")
+
+	if err != nil {
+		return false
+
+	}
+
+	arrIncoming := strings.Split(incoming.Value, ",")
+
+	validator := contains(arrIncoming, fl.Field().String())
+
+	Incoming = incoming.Value
+
+	return validator
+}
+
+func channelValidation(fl validator.FieldLevel) bool {
+
+	channel, err := utils.ValidatorFromCache("group_channel")
+
+	if err != nil {
+		return false
+
+	}
+
+	arrChannel := strings.Split(channel.Value, ",")
+
+	validator := contains(arrChannel, fl.Field().String())
+
+	Channel = channel.Value
+
+	return validator
+}
+
+func consumentStatusValidation(fl validator.FieldLevel) (validator bool) {
+
+	consument := "NEW,RO,AO"
+
+	arrConsument := strings.Split(consument, ",")
+
+	validator = contains(arrConsument, fl.Field().String())
+
+	StatusKonsumen = consument
+
+	return
+}
+
+func recomValidation(fl validator.FieldLevel) (validator bool) {
+
+	if fl.Field().String() == "0" || fl.Field().String() == "1" {
+		validator = true
+		return
+	}
+
+	return
+
+}
+
+func addressValidation(fl validator.FieldLevel) (validator bool) {
+
+	conf, err := utils.ValidatorFromCache("group_type_address_kmob")
+
+	if err != nil {
+		return false
+
+	}
+
+	arrAddress := strings.Split(conf.Value, ",")
+
+	validator = contains(arrAddress, fl.Field().String())
+
+	Address = conf.Value
+
+	return validator
+
+}
+
+func relationshipValidation(fl validator.FieldLevel) bool {
+
+	conf, err := utils.ValidatorFromCache("group_relationship")
+
+	if err != nil {
+		return false
+
+	}
+
+	arrRelation := strings.Split(conf.Value, ",")
+
+	validator := contains(arrRelation, fl.Field().String())
+
+	Relationship = conf.Value
+
+	return validator
+}
+
+func appsourceValidation(fl validator.FieldLevel) bool {
+
+	app, err := utils.ValidatorFromCache("group_application_source")
+
+	if err != nil {
+		return false
+
+	}
+
+	arrApp := strings.Split(app.Value, ",")
+
+	validator := contains(arrApp, fl.Field().String())
+
+	AppSource = app.Value
+
+	return validator
+
+}
+
+func relationValidation(fl validator.FieldLevel) bool {
+
+	conf, err := utils.ValidatorFromCache("group_relation_kmob")
+
+	if err != nil {
+		return false
+
+	}
+
+	arrRelation := strings.Split(conf.Value, ",")
+
+	validator := contains(arrRelation, fl.Field().String())
+
+	Relation = conf.Value
+
+	return validator
+
 }

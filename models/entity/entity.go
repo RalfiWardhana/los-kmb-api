@@ -344,3 +344,63 @@ type AsliriConfig struct {
 		} `json:"kmb"`
 	} `json:"data"`
 }
+
+type TrxMaster struct {
+	ProspectID        string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	BranchID          string    `gorm:"type:varchar(5);column:BranchID"`
+	TransactionType   *string   `gorm:"type:varchar(30);column:transaction_type"`
+	ApplicationSource string    `gorm:"type:varchar(3);column:application_source"`
+	MerchantID        *string   `gorm:"type:varchar(20);column:merchant_id"`
+	MerchantName      *string   `gorm:"type:varchar(100);column:merchant_name"`
+	Channel           string    `gorm:"type:varchar(5);column:channel"`
+	Lob               string    `gorm:"type:varchar(5);column:lob"`
+	OrderAt           string    `gorm:"type:varchar(30);column:order_at"`
+	IncomingSource    string    `gorm:"type:varchar(10);column:incoming_source"`
+	CreatedAt         time.Time `gorm:"column:created_at"`
+	UpdatedAt         time.Time `gorm:"column:updated_at"`
+}
+
+func (c *TrxMaster) TableName() string {
+	return "trx_master"
+}
+
+type FilteringKMB struct {
+	ProspectID             string      `gorm:"column:ProspectID;type:varchar(20)" json:"prospect_id"`
+	RequestID              interface{} `gorm:"column:RequestID;type:varchar(100)" json:"request_id"`
+	Request                interface{} `gorm:"column:Request;type:text" json:"request"`
+	DtmRequest             time.Time   `gorm:"column:DtmRequest" json:"dtm_request"`
+	ResultDupcheckKonsumen interface{} `gorm:"column:ResultDupcheckKonsumen;type:text" json:"result_dupcheck_konsumen"`
+	ResultDupcheckPasangan interface{} `gorm:"column:ResultDupcheckPasangan;type:text" json:"result_dupcheck_pasangan"`
+	Response               string      `gorm:"column:Response;type:text" json:"response"`
+	DtmResponse            time.Time   `gorm:"column:DtmResponse" json:"dtm_response"`
+	ResultPefindo          interface{} `gorm:"column:ResultBiro;type:text" json:"result_pefindo"`
+	Decision               string      `gorm:"column:decision;type:varchar(20)" json:"decision"`
+	PassType               interface{} `gorm:"column:pass_type;type:varchar(5)" json:"pass_type"`
+	SourceCreditBiro       interface{} `gorm:"column:source_credit_biro;type:varchar(5)" json:"source_credit_biro"`
+	StatusKonsumen         interface{} `gorm:"column:status_konsumen;type:varchar(10)" json:"status_konsumen"`
+	Kontigensi             interface{} `gorm:"column:kontigensi" json:"kontigensi"`
+	DataAkkk               interface{} `gorm:"column:data_akkk" json:"data_akkk"`
+	CreatedAt              time.Time   `gorm:"column:created_at" json:"created_at"`
+}
+
+func (c *FilteringKMB) TableName() string {
+	return "filtering_kmob"
+}
+
+type TrxDetail struct {
+	ProspectID     string      `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	StatusProcess  string      `gorm:"type:varchar(3);column:status_process"`
+	Activity       string      `gorm:"type:varchar(4);column:activity"`
+	Decision       string      `gorm:"type:varchar(3);column:decision"`
+	RuleCode       interface{} `gorm:"type:varchar(4);column:rule_code"`
+	SourceDecision string      `gorm:"type:varchar(3);column:source_decision"`
+	NextStep       interface{} `gorm:"type:varchar(3);column:next_step"`
+	Type           interface{} `gorm:"type:varchar(3);column:type"`
+	Info           interface{} `gorm:"type:text;column:info"`
+	CreatedBy      string      `gorm:"type:varchar(100);column:created_by"`
+	CreatedAt      time.Time   `gorm:"column:created_at"`
+}
+
+func (c *TrxDetail) TableName() string {
+	return "trx_details"
+}

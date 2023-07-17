@@ -31,4 +31,6 @@ type Repository interface {
 	SaveVerificationFaceCompare(data entity.VerificationFaceCompare) error
 
 	GetDataInquiry(idNumber string) (data []entity.DataInquiry, err error)
+	ScanPreTrxJourney(prospectID string) (countMaster, countFiltering int, err error)
+	GetBiroData(prospectID string) (data entity.FilteringKMB, err error)
 }

@@ -71,10 +71,8 @@ type DataElaborate struct {
 }
 
 type DupcheckApi struct {
-	CustomerID            int                `json:"customer_id" validate:"required"`
 	ProspectID            string             `json:"prospect_id" validate:"required"`
-	ImageSelfie1          string             `json:"image_selfie_1" validate:"required"`
-	ImageSelfie2          string             `json:"image_selfie_2" validate:"required"`
+	ImageSelfie           string             `json:"image_selfie" validate:"required"`
 	ImageKtp              string             `json:"ktp_url" validate:"required"`
 	MonthlyFixedIncome    float64            `json:"monthly_fixed_income" validate:"required"`
 	HomeStatus            string             `json:"home_status" validate:"required,max=2"`
@@ -144,16 +142,15 @@ type ReqLatestPaidInstallment struct {
 }
 
 type FaceCompareRequest struct {
-	CustomerID   int     `json:"customer_id" validate:"required"`
-	ImageSelfie1 string  `json:"image_selfie_1" validate:"required"`
-	ImageSelfie2 string  `json:"image_selfie_2" validate:"required"`
-	ImageKtp     string  `json:"ktp_url" validate:"required"`
-	Lob          string  `json:"lob"  validate:"required"`
-	IDNumber     string  `json:"id_number" validate:"required,len=16,number"`
-	BirthDate    string  `json:"birth_date" validate:"required,dateformat"`
-	BirthPlace   string  `json:"birth_place" validate:"required"`
-	LegalName    string  `json:"legal_name" validate:"min=2,allowcharsname" example:"JONATHAN"`
-	FaceType     *string `json:"type" validate:"omitempty,oneof=null PIN DEVICE"`
+	ProspectID  string  `json:"prospect_id" validate:"required"`
+	ImageSelfie string  `json:"image_selfie" validate:"required"`
+	ImageKtp    string  `json:"ktp_url" validate:"required"`
+	Lob         string  `json:"lob"  validate:"required"`
+	IDNumber    string  `json:"id_number" validate:"required,len=16,number"`
+	BirthDate   string  `json:"birth_date" validate:"required,dateformat"`
+	BirthPlace  string  `json:"birth_place" validate:"required"`
+	LegalName   string  `json:"legal_name" validate:"min=2,allowcharsname" example:"JONATHAN"`
+	FaceType    *string `json:"type" validate:"omitempty,oneof=null PIN DEVICE"`
 }
 
 type ReqRejectTenor struct {
@@ -561,29 +558,8 @@ type Filtering struct {
 	BirthDate  string           `json:"birth_date" validate:"required,dateformat" example:"YYYY-MM-DD"`
 	Gender     string           `json:"gender" validate:"required" example:"M"`
 	MotherName string           `json:"surgate_mother_name" validate:"required,allowcharsname" example:"SURGATE MOTHER NAME"`
+	BPKBName   string           `json:"bpkb_name" validate:"required,bpkbname" example:"K"`
 	Spouse     *FilteringSpouse `json:"spouse" validate:"omitempty"`
-}
-
-type FilteringAlco struct {
-	ProspectID       string  `json:"prospect_id" validate:"required" example:"TEST-DEV"`
-	BranchID         string  `json:"branch_id" validate:"required" example:"426"`
-	OTR              float64 `json:"otr" validate:"required" example:"175000000"`
-	NTF              float64 `json:"ntf" validate:"required" example:"185000000"`
-	ResidenceZipCode string  `json:"residence_zipcode" validate:"required" example:"13470"`
-	CompanyZipCode   string  `json:"company_zipcode" validate:"required" example:"13470"`
-	StaySinceYear    string  `json:"stay_since_year" validate:"len=4" example:"2018"`
-	StaySinceMonth   string  `json:"stay_since_month" validate:"len=2" example:"03"`
-	ProfessionID     string  `json:"profession_id" validate:"profession" example:"WRST"`
-	BPKBName         string  `json:"bpkb_name" validate:"len=1" example:"B"`
-	Tenor            int     `json:"tenor" validate:"required" example:"36"`
-	Education        string  `json:"education" validate:"education"  example:"S1"`
-	MobilePhone      string  `json:"mobile_phone" validate:"min=9,max=14" example:"085689XXX01"`
-	Brand            string  `json:"brand" validate:"required" example:"TOYOTA"`
-	ExpiredDate      string  `json:"expired_date" validate:"required" example:"2021-07-29"`
-	HomeStatus       string  `json:"home_status" validate:"home" example:"SD"`
-	CategoryID       string  `json:"category_id" validate:"required" example:"TRUCK"`
-	DPAmount         float64 `json:"down_payment_amount" validate:"required" example:"22000000"`
-	SupplierID       string  `json:"supplier_id" validate:"required" example:"42600342"`
 }
 
 type FilteringSpouse struct {
@@ -655,58 +631,6 @@ type DataScoreProROAO struct {
 	TotBakiDebet3160Dpd int     `json:"tot_bakidebet_31_60dpd"`
 }
 
-type IntegratorSlik struct {
-	ProspectID        string      `json:"ProspectID,omitempty"`
-	BranchID          string      `json:"branch_id"`
-	TransactionID     string      `json:"transaction_id"`
-	IDNumber          string      `json:"id_number"`
-	LegalName         string      `json:"legal_name"`
-	BirthDate         string      `json:"birth_date"`
-	Gender            string      `json:"gender"`
-	SurgateMotherName string      `json:"surgate_mother_name"`
-	Spouse            *SpouseSlik `json:"spouse"`
-	StatusKonsumen    string      `json:"status_konsumen"`
-}
-
-type IntegratorSlikAlco struct {
-	ProspectID        string      `json:"ProspectID,omitempty"`
-	BranchID          string      `json:"branch_id"`
-	TransactionID     string      `json:"transaction_id"`
-	IDNumber          string      `json:"id_number"`
-	LegalName         string      `json:"legal_name"`
-	BirthDate         string      `json:"birth_date"`
-	Gender            string      `json:"gender"`
-	SurgateMotherName string      `json:"surgate_mother_name"`
-	Spouse            *SpouseSlik `json:"spouse"`
-	StatusKonsumen    string      `json:"status_konsumen"`
-	CustomerID        interface{} `json:"customer_id"`
-	OTR               float64     `json:"otr"`
-	NTF               float64     `json:"ntf"`
-	ResidenceZipCode  string      `json:"residence_zip_code"`
-	CompanyZipCode    string      `json:"company_zip_code"`
-	StaySinceYear     string      `json:"stay_since_year"`
-	StaySinceMonth    string      `json:"stay_since_month"`
-	ProfessionID      string      `json:"profession_id"`
-	BPKBName          string      `json:"bpkb_name"`
-	Tenor             int         `json:"tenor"`
-	Education         string      `json:"education"`
-	MobilePhone       string      `json:"mobile_phone"`
-	Brand             string      `json:"brand"`
-	ExpiredDate       string      `json:"expired_date"`
-	HomeStatus        string      `json:"home_status"`
-	CategoryID        string      `json:"category_id"`
-	DPAmount          float64     `json:"down_payment_amount"`
-	SupplierID        string      `json:"supplier_id"`
-}
-
-type SpouseSlik struct {
-	IDNumber          string `json:"spouse_id_number"`
-	LegalName         string `json:"spouse_legal_name"`
-	BirthDate         string `json:"spouse_birth_date"`
-	Gender            string `json:"spouse_gender"`
-	SurgateMotherName string `json:"spouse_surgate_mother_name"`
-}
-
 type OrderIDCheck struct {
 	ProspectID string `json:"prospect_id" validate:"prospectID"`
 }
@@ -742,151 +666,6 @@ type PefindoIDX struct {
 	PefindoIDCustomer interface{} `json:"pefindo_id_customer"`
 	CBFoundSpouse     bool        `json:"cb_found_spouse"`
 	PefindoIDSpouse   interface{} `json:"pefindo_id_spouse"`
-}
-
-type CustomerPersonalNE struct {
-	IDNumber          string  `json:"id_number" validate:"len=16,number" example:"3172024508XXX002"`
-	FullName          string  `json:"full_name" validate:"min=2,allowcharsname" example:"JONATHAN"`
-	LegalName         string  `json:"legal_name" validate:"min=2,allowcharsname" example:"JONATHAN"`
-	BirthPlace        string  `json:"birth_place" validate:"min=3" example:"JAKARTA"`
-	BirthDate         string  `json:"birth_date" validate:"dateformat" example:"1991-01-12"`
-	SurgateMotherName string  `json:"surgate_mother_name" validate:"min=2,allowcharsname" example:"JONATHAN MOTHER NAME"`
-	Gender            string  `json:"gender" validate:"gender" example:"M"`
-	MobilePhone       string  `json:"mobile_phone" validate:"min=9,max=14" example:"085689XXX01"`
-	Email             string  `json:"email" validate:"email,max=100" example:"jonathaxx@gmail.com"`
-	StaySinceYear     string  `json:"stay_since_year" validate:"len=4" example:"2018"`
-	StaySinceMonth    string  `json:"stay_since_month" validate:"len=2" example:"03"`
-	HomeStatus        string  `json:"home_status" validate:"home" example:"KL"`
-	NPWP              *string `json:"npwp" example:"994646808XXX895"`
-	Education         string  `json:"education" validate:"education"  example:"S1"`
-	MaritalStatus     string  `json:"marital_status" validate:"marital"  example:"M"`
-	NumOfDependence   *int    `json:"num_of_dependence" validate:"required"  example:"1"`
-}
-
-type AddressNE struct {
-	Type      string `json:"type" validate:"address"  example:"RESIDENCE"`
-	Address   string `json:"address" validate:"required"  example:"JL.PEGANGSAAN 1"`
-	Kelurahan string `json:"kelurahan" validate:"required"  example:"TEGAL PARANG"`
-	Kecamatan string `json:"kecamatan" validate:"required"  example:"MAMPANG PRAPATAN"`
-	City      string `json:"city" validate:"required"  example:"JAKARTA SELATAN"`
-	ZipCode   string `json:"zip_code" validate:"required"  example:"12790"`
-}
-
-type AgentNE struct {
-	CmoRecom  string `json:"cmo_recom" validate:"recom" example:"1"`
-	CmoName   string `json:"cmo_name" validate:"required" example:"SETO MULYA"`
-	RecomDate string `json:"recom_date" validate:"required" example:"2021-07-15"`
-}
-
-type ApkNE struct {
-	Dealer            string  `json:"dealer"`
-	Tenor             int     `json:"tenor" validate:"required" example:"36"`
-	OTR               float64 `json:"otr" validate:"required" example:"105000000"`
-	DPAmount          float64 `json:"down_payment_amount" example:"22000000"`
-	NTF               float64 `json:"ntf" validate:"required" example:"150528000"`
-	InstallmentAmount float64 `json:"installment_amount" validate:"required" example:"4181333"`
-	InsuranceAmount   float64 `json:"insurance_amount" example:"3150000"`
-}
-
-type CustomerEmconNE struct {
-	Name         string `json:"name" validate:"min=2,allowcharsname" example:"MULYADI"`
-	Relationship string `json:"relationship" validate:"relationship" example:"FM"`
-	MobilePhone  string `json:"mobile_phone" validate:"min=9,max=14" example:"0856789XXX1"`
-}
-
-type CustomerEmploymentNE struct {
-	ProfessionID          string   `json:"profession_id" validate:"profession" example:"WRST"`
-	EmploymentSinceYear   string   `json:"employment_since_year" validate:"len=4" example:"2020"`
-	EmploymentSinceMonth  string   `json:"employment_since_month" validate:"len=2" example:"02"`
-	MonthlyFixedIncome    float64  `json:"monthly_fixed_income" validate:"gt=0" example:"5000000"`
-	JobType               string   `json:"job_type" validate:"required" example:"008"`
-	MonthlyVariableIncome *float64 `json:"monthly_variable_income" validate:"required" example:"3000000"`
-	SpouseIncome          *float64 `json:"spouse_income" validate:"required" example:"6000000"`
-	SourceOtherIncome     *string  `json:"source_other_income" example:"TOKO MAKMUR"`
-}
-
-type CustomerPhotoNE struct {
-	ID  string `json:"id" validate:"photo" example:"KTP"`
-	Url string `json:"url" validate:"required" example:"http://10.0.0.17/minilos_static_files/data/assets/mandatory_kmob/4d739e050456a8439224ede28beece1c.jpeg"`
-}
-
-type CustomerSpouseNE struct {
-	IDNumber          string `json:"id_number" validate:"len=16,number" example:"177105550374XX01"`
-	FullName          string `json:"full_name" validate:"min=2,allowcharsname" example:"SUSI BUNGA"`
-	LegalName         string `json:"legal_name" validate:"min=2,allowcharsname" example:"SUSI BUNGA"`
-	BirthDate         string `json:"birth_date"  validate:"dateformat" example:"1991-01-29"`
-	SurgateMotherName string `json:"surgate_mother_name" validate:"min=2,allowcharsname" example:"TUTI"`
-	Gender            string `json:"gender" validate:"gender" example:"F"`
-}
-
-type ItemNE struct {
-	AssetCode        string `json:"asset_code" validate:"required" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
-	ManufactureYear  string `json:"manufacture_year" validate:"len=4" example:"2020"`
-	NoChassis        string `json:"chassis_number" validate:"required" example:"MHKV1AA2JBK107322"`
-	NoEngine         string `json:"engine_number" validate:"required" example:"73218JAJK"`
-	Condition        string `json:"condition" validate:"required" example:"N"`
-	CategoryID       string `json:"category_id" validate:"required" example:"SEDAN"`
-	AssetDescription string `json:"asset_description" validate:"required" example:"SUZUKI.KMOBIL.GRAND VITARA.JLX 2,0 AT"`
-	BPKBName         string `json:"bpkb_name" validate:"len=1" example:"B"`
-	OwnerAsset       string `json:"owner_asset" validate:"required" example:"JONATHAN"`
-	Color            string `json:"color" validate:"required" example:"HITAM"`
-	Brand            string `json:"brand" validate:"required" example:"TOYOTA"`
-}
-
-type TransactionNE struct {
-	ProspectID        string `json:"prospect_id" validate:"required" example:"EFM01426202106100001"`
-	BranchID          string `json:"branch_id" validate:"min=2" example:"426"`
-	ApplicationSource string `json:"application_source" validate:"required" example:"H"`
-	Channel           string `json:"channel" validate:"channel" example:"OFF"`
-	Lob               string `json:"lob" validate:"lob" example:"KMOB"`
-	OrderAt           string `json:"order_at" validate:"required" example:"2021-07-15T11:44:05+07:00"`
-	IncomingSource    string `json:"incoming_source" validate:"required" example:"SLY"`
-}
-
-type MetricsNE struct {
-	Transaction        TransactionNE        `json:"transaction" validate:"required"`
-	Apk                ApkNE                `json:"apk" validate:"required"`
-	CustomerPersonal   CustomerPersonalNE   `json:"customer_personal" validate:"required"`
-	CustomerEmployment CustomerEmploymentNE `json:"customer_employment" validate:"required"`
-	Address            []AddressNE          `json:"address" validate:"len=4,dive"`
-	CustomerPhoto      []CustomerPhotoNE    `json:"customer_photo" validate:"dive"`
-	CustomerEmcon      CustomerEmconNE      `json:"customer_emcon" validate:"required"`
-	CustomerSpouse     *CustomerSpouseNE    `json:"customer_spouse"`
-	Item               ItemNE               `json:"item" validate:"required"`
-	Agent              AgentNE              `json:"agent" validate:"required"`
-}
-
-type Alco struct {
-	ProspectID       string      `json:"prospect_id" validate:"required"`
-	BranchID         string      `json:"branch_id"`
-	CategoryID       string      `json:"category_id"`
-	Scorepro         string      `json:"scorepro"`
-	BPKBName         string      `json:"bpkb_name"`
-	OTR              float64     `json:"otr"`
-	NTF              float64     `json:"ntf"`
-	ResponseScorepro interface{} `json:"response_scorepro"`
-}
-
-type Deviation struct {
-	ProspectID string   `json:"prospect_id" validate:"required" example:"EFM01426202106100001"`
-	Code       []string `json:"code" validate:"required,min=1"`
-	Document   string   `json:"document" validate:"required"`
-}
-
-type ReviewDeviation struct {
-	ProspectID string `json:"prospect_id" validate:"required" example:"EFM01426202106100001"`
-	Status     string `json:"status" validate:"required"`
-	Note       string `json:"notes" validate:"required"`
-}
-
-type SallyCallbackStatus struct {
-	ProspectID           string  `json:"prospect_id" example:"EFM01426202106100001"`
-	Status               string  `json:"status"`
-	NewDP                float64 `json:"new_dp"`
-	Reason               string  `json:"reason"`
-	Recalculate          bool    `json:"recalculate"`
-	DeviationCode        string  `json:"deviasi_code"`
-	DeviationDescription string  `json:"deviasi_description"`
 }
 
 type FaceRecognitionRequest struct {

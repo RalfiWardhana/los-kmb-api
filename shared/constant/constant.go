@@ -5,11 +5,48 @@ var LOS_KMB_BASE_URL string
 const (
 	FLAG_LOS                                                     = "LOS"
 	LOBID_KMB                                                    = 2
+	TAG_MAX                                                      = "max"
+	TAG_GT                                                       = "gt"
 	TAG_REQUIRED                                                 = "required"
 	TAG_DATE_FORMAT                                              = "dateformat"
 	TAG_LEN                                                      = "len"
+	TAG_URL                                                      = "url"
 	TAG_ALLOW_CHARS_NAME                                         = "allowcharsname"
 	TAG_MIN                                                      = "min"
+	TAG_NUMBER                                                   = "number"
+	TAG_GENDER                                                   = "gender"
+	TAG_SPOUSE_GENDER                                            = "spouse_gender"
+	TAG_STATUS_KONSUMEN                                          = "status_konsumen"
+	TAG_RECOM                                                    = "recom"
+	TAG_CHANNEL                                                  = "channel"
+	TAG_LOB                                                      = "lob"
+	TAG_INCOMING                                                 = "incoming"
+	TAG_HOME                                                     = "home"
+	TAG_KTP                                                      = "ktp"
+	TAG_ADDRESS                                                  = "address"
+	TAG_MARITAL                                                  = "marital"
+	TAG_EDUCATION                                                = "education"
+	TAG_PROFESSION                                               = "profession"
+	TAG_PHOTO                                                    = "photo"
+	TAG_RELATIONSHIP                                             = "relationship"
+	TAG_FTR_PROSPECTID                                           = "prospectID"
+	TAG_TENOR                                                    = "tenor"
+	TAG_SPOUSE_NULL                                              = "mustnull"
+	TAG_SPOUSE_NOT_NULL                                          = "notnull"
+	TAG_RELATION                                                 = "relation"
+	TAG_BPKB_NAME                                                = "bpkbname"
+	ACTIVITY_UNPROCESS                                           = "UNPR"
+	ACTIVITY_STOP                                                = "STOP"
+	ACTIVITY_PROCESS                                             = "PRCD"
+	STATUS_FINAL                                                 = "FIN"
+	STATUS_ONPROCESS                                             = "ONP"
+	DECISION_CREDIT_PROCESS                                      = "CREDIT_PROCESS"
+	DB_DECISION_PASS                                             = "PAS"
+	DB_DECISION_REJECT                                           = "REJ"
+	DB_DECISION_CREDIT_PROCESS                                   = "CPR"
+	JSON_DECISION_PASS                                           = "PASS"
+	JSON_DECISION_REJECT                                         = "REJECTED"
+	JSON_DECISION_CREDIT_PROCESS                                 = "CREDIT_PROCESS"
 	RECORD_NOT_FOUND                                             = "record not found"
 	NEW                                                          = "NEW"
 	METHOD_POST                                                  = "POST"
@@ -177,11 +214,14 @@ const (
 	WO_AGUNAN_PASS_CODE                                          = "9108"
 
 	// Error Message
-	INTERNAL_SERVER_ERROR  = "internal_server_error"
-	ERROR_CONNECTION       = "connection error"
-	ERROR_UNMARSHAL        = "unmarshal error"
-	ERROR_UPSTREAM         = "upstream_service_error"
-	ERROR_UPSTREAM_TIMEOUT = "upstream_service_timeout"
+	INTERNAL_SERVER_ERROR     = "internal_server_error"
+	ERROR_CONNECTION          = "connection error"
+	ERROR_UNMARSHAL           = "unmarshal error"
+	ERROR_UPSTREAM            = "upstream_service_error"
+	ERROR_UPSTREAM_TIMEOUT    = "upstream_service_timeout"
+	ERROR_BAD_REQUEST         = "bad_request"
+	ERROR_SERVICE_UNAVAILABLE = "service_unavailable"
+	ERROR_DATA_CONFLICT       = "data_conflict"
 
 	// Key
 	CTX_KEY_REQUEST_TIME            = "RequestTime"
@@ -230,6 +270,7 @@ const (
 	ERROR_NOT_FOUND       = "data_not_found"
 
 	//DUPCHECK
+	SOURCE_DECISION_DUPCHECK                = "DCK"
 	FLAG_ON                                 = "ON"
 	AGREEMENT_AKTIF                         = "AKTIF"
 	AGREEMENT_LUNAS                         = "LUNAS"
@@ -342,7 +383,7 @@ const (
 	LOB_NEW_KMB = "NEW-KMB"
 	LOB_KMB     = "KMB"
 
-	//
+	//LOG
 	LOG_FILTERING_LOG = "FILTERING_LOG"
 	LOG_JOURNEY_LOG   = "KMB_LOG"
 
@@ -379,4 +420,15 @@ const (
 	DATA_INACTIVE                       = "Data Inactive"
 	DATA_NOT_FOUND                      = "Data Not Found"
 	EKYC_VALID                          = "Ekyc Valid"
+
+	// Address Type
+	ADDRESS_TYPE_LEGAL     = "LEGAL"
+	ADDRESS_TYPE_RESIDENCE = "RESIDENCE"
+	ADDRESS_TYPE_COMPANY   = "COMPANY"
+	ADDRESS_TYPE_EMERGENCY = "EMERGENCY"
+	ADDRESS_TYPE_LOCATION  = "LOCATION"
+	ADDRESS_TYPE_MAILING   = "MAILING"
+
+	// BIRO
+	SOURCE_DECISION_BIRO = "BIR"
 )

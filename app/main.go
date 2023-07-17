@@ -11,6 +11,9 @@ import (
 	filteringDelivery "los-kmb-api/domain/filtering/delivery/http"
 	filteringRepository "los-kmb-api/domain/filtering/repository"
 	filteringUsecase "los-kmb-api/domain/filtering/usecase"
+	newKmbFilteringDelivery "los-kmb-api/domain/filtering_new/delivery/http"
+	newKmbFilteringRepository "los-kmb-api/domain/filtering_new/repository"
+	newKmbFilteringUsecase "los-kmb-api/domain/filtering_new/usecase"
 	kmbDelivery "los-kmb-api/domain/kmb/delivery/http"
 	kmbRepository "los-kmb-api/domain/kmb/repository"
 	kmbUsecase "los-kmb-api/domain/kmb/usecase"
@@ -123,6 +126,7 @@ func main() {
 
 	jsonResponse := json.NewResponse()
 	apiGroup := e.Group("/api/v2/kmb")
+	apiGroupv3 := e.Group("/api/v3/kmb")
 	httpClient := httpclient.NewHttpClient()
 
 	// define kmb filtering domain
@@ -135,20 +139,25 @@ func main() {
 	kmbElaborateMultiCase, kmbElaborateCase := elaborateUsecase.NewMultiUsecase(kmbElaborateRepo, httpClient)
 	elaborateDelivery.ElaborateHandler(apiGroup, kmbElaborateMultiCase, kmbElaborateCase, kmbElaborateRepo, jsonResponse, accessToken)
 
-	// define kmb journey
+	// define new kmb filtering domain
+	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs)
+	newKmbFilteringMultiCase, newKmbFilteringCase := newKmbFilteringUsecase.NewMultiUsecase(newKmbFilteringRepo, httpClient)
+	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken)
+
+	// define new kmb journey
 	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, confins, staging, wgOff, minilosKMB)
 	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
 	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
 
-	kmbDelivery.KMBHandler(apiGroup, kmbMetrics, kmbUsecases, kmbRepositories, jsonResponse, accessToken)
+	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, jsonResponse, accessToken)
 
 	if config.IsDevelopment {
 		docs.SwaggerInfo.Title = "LOS-KMB-API"
 		docs.SwaggerInfo.Description = "This is a orchestrator api server."
-		docs.SwaggerInfo.Version = "1.0"
+		docs.SwaggerInfo.Version = "3.0"
 		docs.SwaggerInfo.Host = os.Getenv("SWAGGER_HOST")
-		docs.SwaggerInfo.BasePath = "/api/v2/kmb"
+		docs.SwaggerInfo.BasePath = "/"
 		docs.SwaggerInfo.Schemes = []string{"http", "https"}
 		e.GET("/swagger/*", echoSwagger.WrapHandler)
 	} else {

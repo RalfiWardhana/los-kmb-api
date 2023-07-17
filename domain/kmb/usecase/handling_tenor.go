@@ -3,10 +3,8 @@ package usecase
 import (
 	"context"
 	"errors"
-	"los-kmb-api/models/other"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
-	"strings"
 )
 
 func (u usecase) RejectTenor36(ctx context.Context, prospectID, idNumber, accessToken string) (result response.UsecaseApi, err error) {
@@ -19,7 +17,6 @@ func (u usecase) RejectTenor36(ctx context.Context, prospectID, idNumber, access
 
 	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Error Get Data Inquiry")
-		CentralizeLog(constant.DUPCHECK_LOG, "Get Data Inquiry", constant.MESSAGE_E, "DUPCHECK SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
 		return
 	}
 

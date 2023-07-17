@@ -41,13 +41,14 @@ func (u usecase) GetBase64Media(ctx context.Context, url string, customerID int,
 		image1, err = u.httpclient.MediaClient(ctx, constant.LOG_JOURNEY_LOG, url+"?type=base64", constant.METHOD_GET, nil, header, timeOut, customerID, accessToken)
 
 		if image1.StatusCode() != 200 || err != nil {
-			err = errors.New(constant.CANNOT_GET_IMAGE)
+			err = errors.New(constant.ERROR_UPSTREAM + " - Platform Media Request Error")
 			return
 		}
 
 		err = json.Unmarshal([]byte(image1.Body()), &decode)
 
 		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Platform Media Unmarshal Error")
 			return
 		}
 
@@ -57,6 +58,7 @@ func (u usecase) GetBase64Media(ctx context.Context, url string, customerID int,
 
 		base64Media, err = utils.DecodeNonMedia(url)
 		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Non Media Error")
 			return
 		}
 

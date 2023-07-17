@@ -6,6 +6,7 @@ import (
 	"los-kmb-api/domain/kmb/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/shared/constant"
+	"os"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -286,6 +287,42 @@ func (r repoHandler) GetDataInquiry(idNumber string) (data []entity.DataInquiry,
 	currentDate := time.Now().Format(constant.FORMAT_DATE)
 
 	if err = r.kmbOffDB.Raw(fmt.Sprintf("SELECT di.ProspectID, di.IDNumber, di.LegalName, fi.final_approval, CAST(di.DtmUpd as DATE) AS DtmUpd, drp.reject_dsr FROM data_inquiry di LEFT JOIN final_inquiry fi ON di.ProspectID = fi.ProspectID LEFT JOIN dupcheck_rejection_pmk drp ON (di.ProspectID = drp.ProspectID AND drp.reject_dsr = 1) WHERE di.IDNumber = '%s' AND fi.final_approval IS NOT NULL AND CAST(di.DtmUpd as DATE) = '%s' ORDER BY di.tst DESC", idNumber, currentDate)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.ERROR_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) ScanPreTrxJourney(prospectID string) (countMaster, countFiltering int, err error) {
+
+	var (
+		ftr    []entity.FilteringKMB
+		master []entity.TrxMaster
+	)
+
+	if err = r.losDB.Raw(fmt.Sprintf("SELECT ProspectID FROM filtering_kmob WITH (nolock) WHERE ProspectID = '%s'", prospectID)).Scan(&ftr).Error; err != nil {
+		return
+	}
+
+	countFiltering = len(ftr)
+
+	if err = r.losDB.Raw(fmt.Sprintf("SELECT ProspectID FROM trx_master WITH (nolock) WHERE ProspectID = '%s'", prospectID)).Scan(&master).Error; err != nil {
+		return
+	}
+
+	countMaster = len(master)
+
+	return
+}
+
+func (r repoHandler) GetBiroData(prospectID string) (data entity.FilteringKMB, err error) {
+
+	resultValid := os.Getenv("BIRO_VALID_DAYS")
+
+	if err = r.losDB.Raw(fmt.Sprintf("SELECT TOP 1 ProspectID, ResultBiro FROM filtering_kmob WITH (nolock) WHERE ProspectID = '%s' AND ResultBiro IS NOT NULL AND source_credit_biro IS NOT NULL AND DATEADD(day, -%s, CAST(GETDATE() AS date)) <= CAST(DtmResponse AS date) ORDER BY created_at DESC", prospectID, resultValid)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.ERROR_NOT_FOUND)
 		}

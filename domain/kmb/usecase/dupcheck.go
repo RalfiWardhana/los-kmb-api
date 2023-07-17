@@ -6,11 +6,16 @@ import (
 	"errors"
 	"fmt"
 	"los-kmb-api/models/entity"
-	"los-kmb-api/models/other"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
-	"strings"
+	"los-kmb-api/shared/utils"
+	"os"
+	"strconv"
+	"time"
+
+	"github.com/go-resty/resty/v2"
+	jsoniter "github.com/json-iterator/go"
 )
 
 func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, err error) {
@@ -35,34 +40,30 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	}
 
 	// Face Compare with Faceplus
-	faceCompareReq.CustomerID = req.CustomerID
-	faceCompareReq.ImageSelfie1 = req.ImageSelfie1
-	faceCompareReq.ImageSelfie2 = req.ImageSelfie2
+	faceCompareReq.ProspectID = req.ProspectID
 	faceCompareReq.ImageKtp = req.ImageKtp
+	faceCompareReq.ImageSelfie = req.ImageSelfie
 	faceCompareReq.IDNumber = req.IDNumber
 	faceCompareReq.BirthDate = req.BirthDate
 	faceCompareReq.BirthPlace = req.BirthPlace
 	faceCompareReq.LegalName = req.LegalName
 	faceCompareReq.Lob = constant.LOB_KMB
 
-	selfie1, err := u.usecase.GetBase64Media(ctx, req.ImageSelfie1, req.CustomerID, accessToken)
+	imageKtp, err := u.usecase.GetBase64Media(ctx, req.ImageKtp, 0, accessToken)
 	if err != nil {
 		return
 	}
 
-	selfie2, err := u.usecase.GetBase64Media(ctx, req.ImageSelfie2, req.CustomerID, accessToken)
+	imageSelfie, err := u.usecase.GetBase64Media(ctx, req.ImageSelfie, 0, accessToken)
 	if err != nil {
 		return
 	}
 
-	faceCompare, err := u.usecase.FacePlus(ctx, selfie1, selfie2, faceCompareReq, accessToken)
+	faceCompare, err := u.usecase.FacePlus(ctx, imageKtp, imageSelfie, faceCompareReq, accessToken)
 
 	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
-		CentralizeLog(constant.DUPCHECK_LOG, "Check Face Compare", constant.MESSAGE_E, "FACE_COMPARE SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
 		return
 	}
-
-	CentralizeLog(constant.DUPCHECK_LOG, "Check Face Compare", constant.MESSAGE_SUCCESS, "FACE_COMPARE SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: faceCompare})
 
 	if faceCompare.Result == constant.DECISION_REJECT {
 		data.Code = constant.CODE_REJECT_FACE_COMPARE
@@ -76,11 +77,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	nokaBanned30D, err := u.usecase.NokaBanned30D(req)
 
 	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
-		CentralizeLog(constant.DUPCHECK_LOG, "Check Banned 30D Noka Nosin", constant.MESSAGE_E, "NOKA_NOSIN SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
 		return
 	}
-
-	CentralizeLog(constant.DUPCHECK_LOG, "Check Banned 30D Noka Nosin", constant.MESSAGE_SUCCESS, "NOKA_NOSIN SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: nokaBanned30D})
 
 	if nokaBanned30D.Result == constant.DECISION_REJECT {
 		data.Code = nokaBanned30D.Code
@@ -94,13 +92,9 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	checkRejectionNoka, err := u.usecase.CheckRejectionNoka(req)
 
 	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
-		CentralizeLog(constant.DUPCHECK_LOG, "Check Histiory Rejection Noka Nosin", constant.MESSAGE_E, "NOKA_NOSIN SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
 		return
 	}
 
-	CentralizeLog(constant.DUPCHECK_LOG, "Check Histiory Rejection Noka Nosin", constant.MESSAGE_SUCCESS, "NOKA_NOSIN SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: checkRejectionNoka})
-
-	fmt.Println(checkRejectionNoka)
 	if checkRejectionNoka.Result == constant.DECISION_REJECT {
 		data.Code = checkRejectionNoka.Code
 		data.Result = checkRejectionNoka.Result
@@ -116,7 +110,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		sp, err = u.usecase.DupcheckIntegrator(ctx, prospectID, customer[i].IDNumber, customer[i].LegalName, customer[i].BirthDate, customer[i].MotherName, accessToken)
 
 		if err != nil {
-			CentralizeLog(constant.DUPCHECK_LOG, "Check SP Dupcheck", constant.MESSAGE_E, "CALL_DUPCHECK", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
 			return
 		}
 
@@ -135,7 +128,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 			mapping.CustomerType = spMap.CustomerType
 			mapping.SpouseType = spMap.SpouseType
 			mapping.Reason = data.Reason
-			CentralizeLog(constant.DUPCHECK_LOG, "Check BlackList", constant.MESSAGE_SUCCESS, "BLACKLIST_SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: data})
 			return
 		}
 	}
@@ -148,11 +140,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	ageVehicle, err := u.usecase.VehicleCheck(req.ManufactureYear)
 
 	if err != nil {
-		CentralizeLog(constant.DUPCHECK_LOG, "Check Vehicle", constant.MESSAGE_E, "VEHICLE_SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
 		return
 	}
-
-	CentralizeLog(constant.DUPCHECK_LOG, "Check Vehicle", constant.MESSAGE_SUCCESS, "VEHICLE_SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: ageVehicle})
 
 	if ageVehicle.Result == constant.DECISION_REJECT {
 		data = ageVehicle
@@ -164,11 +153,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	checkNoka, err := u.usecase.CheckNoka(ctx, req, checkRejectionNoka, accessToken)
 
 	if err != nil {
-		CentralizeLog(constant.DUPCHECK_LOG, "Check Noka Nosin", constant.MESSAGE_E, "NOKA_NOSIN SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
 		return
 	}
-
-	CentralizeLog(constant.DUPCHECK_LOG, "Check Noka Nosin", constant.MESSAGE_SUCCESS, "NOKA_NOSIN SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: checkNoka})
 
 	if checkNoka.Result == constant.DECISION_REJECT {
 		data = checkNoka
@@ -180,11 +166,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	checkChassisNumber, err := u.usecase.CheckChassisNumber(ctx, req, checkRejectionNoka, accessToken)
 
 	if err != nil {
-		CentralizeLog(constant.DUPCHECK_LOG, "Check Chassis Number", constant.MESSAGE_E, "NOKA_NOSIN SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
 		return
 	}
-
-	CentralizeLog(constant.DUPCHECK_LOG, "Check Chassis Number", constant.MESSAGE_SUCCESS, "NOKA_NOSIN SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: checkChassisNumber})
 
 	if checkChassisNumber.Result == constant.DECISION_REJECT {
 		data = checkChassisNumber
@@ -202,7 +185,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		customerKMB, err = u.usecase.CustomerKMB(mainCustomer)
 
 		if err != nil {
-			CentralizeLog(constant.DUPCHECK_LOG, "Check Dupcheck KMOB", constant.MESSAGE_E, "STATUS_CUSTOMER_CHECK", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
 			return
 		}
 	}
@@ -228,7 +210,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 	if err != nil {
 		err = errors.New("upstream_service_error - Error Get Parameterize Config")
-		CentralizeLog(constant.DUPCHECK_LOG, "Check Dupcheck Config", constant.MESSAGE_E, "GET_DUPCHECK_PARAMETERIZE", true, other.CustomLog{ProspectID: prospectID, Error: strings.Split(err.Error(), " - ")[1]})
 		return
 	}
 
@@ -261,8 +242,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 	// Check PMK
 	pmk := u.usecase.PMK(req.MonthlyFixedIncome, req.HomeStatus, req.JobPosition, req.EmploymentSinceYear, req.EmploymentSinceMonth, req.StaySinceYear, req.StaySinceMonth, req.BirthDate, req.Tenor, req.MaritalStatus)
-
-	CentralizeLog(constant.DUPCHECK_LOG, "Check PMK", constant.MESSAGE_SUCCESS, "PMK_SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: pmk})
 
 	if pmk.Result == constant.DECISION_REJECT {
 		data = pmk
@@ -338,7 +317,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	// Check DSR
 	dsr, _, instOther, instOtherSpouse, instTopup, err := u.usecase.DsrCheck(ctx, req.ProspectID, req.EngineNo, customerData, req.InstallmentAmount, mapping.InstallmentAmountFMF, mapping.InstallmentAmountSpouseFMF, income, newDupcheck, accessToken)
 	if err != nil {
-		CentralizeLog(constant.DUPCHECK_LOG, "Check DSR", constant.MESSAGE_E, "DSR_SERVICE", true, other.CustomLog{ProspectID: prospectID, Error: err.Error()})
 		return
 	}
 
@@ -346,8 +324,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	mapping.InstallmentAmountOtherSpouse = instOtherSpouse
 	mapping.InstallmentTopup = instTopup
 	mapping.Dsr = dsr.Dsr
-
-	CentralizeLog(constant.DUPCHECK_LOG, "Check DSR", constant.MESSAGE_SUCCESS, "DSR_SERVICE", false, other.CustomLog{ProspectID: prospectID, Info: dsr})
 
 	data = dsr
 	mapping.Reason = data.Reason
@@ -610,6 +586,520 @@ func (u usecase) ConsumentCheck(req response.SpDupCekCustomerByID) (data respons
 		data.Result = constant.DECISION_PASS
 		data.Code = constant.CODE_KONSUMEN_NEW
 		data.Reason = constant.REASON_KONSUMEN_NEW
+	}
+
+	return
+}
+
+func (u usecase) CustomerDomainGetData(ctx context.Context, req request.ReqCustomerDomain, prospectID string, accessToken string) (customerDomainData response.DataCustomer, err error) {
+
+	dummy, _ := strconv.ParseBool(os.Getenv("DUMMY_CUSTOMER_DOMAIN_GET_DATA"))
+
+	if dummy {
+
+		dummyCustomerDomain, _ := u.repository.GetDummyCustomerDomain(req.IDNumber)
+
+		var customerDomain response.CustomerDomain
+
+		json.Unmarshal([]byte(dummyCustomerDomain.Response), &customerDomain)
+
+		customerDomainData = customerDomain.Data
+
+	} else {
+
+		param, _ := json.Marshal(req)
+
+		header := map[string]string{
+			"Authorization": accessToken,
+		}
+
+		url := os.Getenv("CUSTOMER_DOMAIN_GET_DATA")
+
+		resp, err := u.httpclient.EngineAPI(ctx, constant.DUPCHECK_LOG, url, param, header, constant.METHOD_POST, false, 0, 60, prospectID, accessToken)
+
+		if err != nil && resp.StatusCode() != 200 {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call Customer Domain")
+			return customerDomainData, err
+		}
+
+		var customerDomain response.CustomerDomain
+
+		json.Unmarshal(resp.Body(), &customerDomain)
+
+		customerDomainData = customerDomain.Data
+
+	}
+
+	return
+}
+
+func (u usecase) NokaBanned30D(req request.DupcheckApi) (data response.RejectionNoka, err error) {
+
+	data.Code = constant.CODE_REJECTION_OK
+	data.Result = constant.RESULT_REJECTION_OK
+	data.Reason = constant.REASON_REJECTION_OK
+
+	nokaBanned30D, err := u.repository.GetLatestBannedRejectionNoka(req.RangkaNo)
+	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error Get Latest Banned Rejection Noka")
+		return
+	}
+
+	data.IsBannedActive = false
+	if nokaBanned30D != (entity.DupcheckRejectionNokaNosin{}) && nokaBanned30D.IsBanned == 1 {
+		bannedDate := nokaBanned30D.CreatedAt
+		dueDate := bannedDate.AddDate(0, 0, constant.DAY_RANGE_BANNED_REJECT_NOKA)
+		dueDateString := dueDate.Format("2006-01-02")
+
+		if time.Now().Format(constant.FORMAT_DATE) <= dueDateString {
+			data.IsBannedActive = true
+		}
+
+		if data.IsBannedActive {
+			data.Code = constant.CODE_REJECT_NOKA_NOSIN
+			data.Result = constant.DECISION_REJECT
+			data.Reason = constant.REASON_REJECT_NOKA_NOSIN
+			return
+		}
+	}
+	return
+}
+
+func (u usecase) CheckRejectionNoka(req request.DupcheckApi) (data response.RejectionNoka, err error) {
+
+	var (
+		inRejectionNoka    bool
+		getHistoryReject   []entity.DupcheckRejectionPMK
+		rejection          []entity.DupcheckRejectionPMK
+		checkHistoryReject entity.DupcheckRejectionPMK
+	)
+
+	nokaBannedCurrentDate, err := u.repository.GetLatestRejectionNoka(req.RangkaNo)
+
+	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error Get Latest Rejection Noka")
+		return
+	}
+
+	inRejectionNoka = false
+	data.CurrentBannedNotEmpty = false
+	if nokaBannedCurrentDate != (entity.DupcheckRejectionNokaNosin{}) {
+
+		// Must be simplified
+		inRejectionNoka = true
+		data.CurrentBannedNotEmpty = true
+
+		data.IDNumber = nokaBannedCurrentDate.IDNumber
+		data.LegalName = nokaBannedCurrentDate.LegalName
+		data.BirthPlace = nokaBannedCurrentDate.BirthPlace
+		data.BirthDate = nokaBannedCurrentDate.BirthDate
+		data.MonthlyFixedIncome = nokaBannedCurrentDate.MonthlyFixedIncome
+		data.EmploymentSinceYear = nokaBannedCurrentDate.EmploymentSinceYear
+		data.EmploymentSinceMonth = nokaBannedCurrentDate.EmploymentSinceMonth
+		data.StaySinceYear = nokaBannedCurrentDate.StaySinceYear
+		data.StaySinceMonth = nokaBannedCurrentDate.StaySinceMonth
+		data.BPKBName = nokaBannedCurrentDate.BPKBName
+		data.Gender = nokaBannedCurrentDate.Gender
+		data.MaritalStatus = nokaBannedCurrentDate.MaritalStatus
+		data.NumOfDependence = nokaBannedCurrentDate.NumOfDependence
+		data.NTF = nokaBannedCurrentDate.NTF
+		data.OTRPrice = nokaBannedCurrentDate.OTRPrice
+		data.LegalZipCode = nokaBannedCurrentDate.LegalZipCode
+		data.Tenor = nokaBannedCurrentDate.Tenor
+		data.ManufacturingYear = nokaBannedCurrentDate.ManufacturingYear
+		data.ProfessionID = nokaBannedCurrentDate.ProfessionID
+		data.CompanyZipCode = nokaBannedCurrentDate.CompanyZipCode
+		data.HomeStatus = nokaBannedCurrentDate.HomeStatus
+
+		data.Code = constant.CODE_REJECTION_OK
+		data.Result = constant.RESULT_REJECTION_OK
+		data.Reason = constant.REASON_REJECTION_OK
+		return
+	}
+
+	if !inRejectionNoka {
+
+		rejection, err = u.repository.GetAllReject(req.IDNumber)
+
+		if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Error Get All Rejection")
+			return
+		}
+
+		if len(rejection) >= constant.ATTEMPT_REJECT {
+			for i := 0; i < len(rejection); i++ {
+				if rejection[i].RejectPMK == 1 || rejection[i].RejectDSR == 1 {
+					data.Code = constant.CODE_REJECT_PMK_DSR
+					data.Result = constant.DECISION_REJECT
+					data.Reason = constant.REASON_REJECT_PMK_DSR
+					return
+				}
+			}
+
+			data.Code = constant.CODE_REJECT_NIK_KTP
+			data.Result = constant.DECISION_REJECT
+			data.Reason = constant.REASON_REJECT_NIK_KTP
+			return
+
+		} else {
+			getHistoryReject, err = u.repository.GetHistoryRejectAttempt(req.IDNumber)
+
+			if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error Get All Rejection")
+				return
+			}
+
+			if len(getHistoryReject) > 0 {
+				historyResult := getHistoryReject[0]
+				blackListDate := historyResult.Date
+
+				if historyResult.RejectAttempt >= constant.ATTEMPT_REJECT_PMK_DSR {
+					parsedDate, _ := time.Parse("2006-01-02", blackListDate)
+					dueDate := parsedDate.AddDate(0, 0, 30)
+					dueDateString := dueDate.Format("2006-01-02")
+
+					if time.Now().Format(constant.FORMAT_DATE) < dueDateString {
+						data.Code = constant.CODE_REJECT_PMK_DSR
+						data.Result = constant.DECISION_REJECT
+						data.Reason = constant.REASON_REJECT_PMK_DSR
+						return
+					}
+				} else {
+					date, _ := time.Parse(time.RFC3339, blackListDate)
+					dateString := date.Format("2006-01-02")
+
+					checkHistoryReject, err = u.repository.GetCheckingRejectAttempt(req.IDNumber, dateString)
+					if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
+						err = errors.New(constant.ERROR_UPSTREAM + " - Error Get Checking Reject Attempt")
+						return
+					}
+
+					if checkHistoryReject.RejectAttempt >= constant.ATTEMPT_REJECT_PMK_DSR {
+						data.Code = constant.CODE_REJECT_PMK_DSR
+						data.Result = constant.DECISION_REJECT
+						data.Reason = constant.REASON_REJECT_PMK_DSR
+						return
+					}
+				}
+			}
+
+			data.Code = constant.CODE_REJECTION_OK
+			data.Result = constant.RESULT_REJECTION_OK
+			return
+		}
+	}
+	return
+}
+
+func (u usecase) CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBanned response.RejectionNoka, accessToken string) (data response.UsecaseApi, err error) {
+
+	var (
+		nokaData entity.DupcheckRejectionNokaNosin
+	)
+
+	data.Code = constant.CODE_REJECTION_NOTIF
+	data.Result = constant.RESULT_NOTIF
+	data.Reason = constant.REASON_NOTIF
+
+	// Noka Data to Save
+	nokaData.Id = utils.UniqueID(15)
+	nokaData.NoRangka = reqs.RangkaNo
+	nokaData.NoMesin = reqs.EngineNo
+	nokaData.ProspectID = reqs.ProspectID
+	nokaData.IDNumber = reqs.IDNumber
+	nokaData.LegalName = reqs.LegalName
+	nokaData.BirthPlace = reqs.BirthPlace
+	nokaData.BirthDate = reqs.BirthDate
+	nokaData.MonthlyFixedIncome = reqs.MonthlyFixedIncome
+	nokaData.EmploymentSinceYear = reqs.EmploymentSinceYear
+	nokaData.EmploymentSinceMonth = reqs.EmploymentSinceMonth
+	nokaData.StaySinceYear = reqs.StaySinceYear
+	nokaData.StaySinceMonth = reqs.StaySinceMonth
+	nokaData.BPKBName = reqs.BPKBName
+	nokaData.Gender = reqs.Gender
+	nokaData.MaritalStatus = reqs.MaritalStatus
+	nokaData.NumOfDependence = reqs.NumOfDependence
+	nokaData.NTF = reqs.NTF
+	nokaData.OTRPrice = reqs.OTRPrice
+	nokaData.LegalZipCode = reqs.LegalZipCode
+	nokaData.Tenor = reqs.Tenor
+	nokaData.ManufacturingYear = reqs.ManufactureYear
+	nokaData.ProfessionID = reqs.ProfessionID
+	nokaData.CompanyZipCode = reqs.CompanyZipCode
+	nokaData.HomeStatus = reqs.HomeStatus
+
+	// Check Current Date Banned Status
+	if nokaBanned.CurrentBannedNotEmpty {
+		numberOfRetry := nokaBanned.NumberOfRetry + 1
+
+		if numberOfRetry == 1 {
+			nokaData.NumberOfRetry = numberOfRetry
+
+		} else if numberOfRetry > 1 && numberOfRetry < constant.ATTEMPT_BANNED_REJECTION_NOKA {
+			nokaData.NumberOfRetry = numberOfRetry
+
+			// Maybe could be simplified
+			if nokaBanned.IDNumber != reqs.IDNumber && nokaBanned.LegalName != reqs.LegalName && nokaBanned.BirthPlace != reqs.BirthPlace && nokaBanned.BirthDate != reqs.BirthDate && nokaBanned.MonthlyFixedIncome != reqs.MonthlyFixedIncome && nokaBanned.EmploymentSinceYear != reqs.EmploymentSinceYear && nokaBanned.EmploymentSinceMonth != reqs.EmploymentSinceMonth && nokaBanned.StaySinceYear != reqs.StaySinceYear && nokaBanned.StaySinceMonth != reqs.StaySinceMonth && nokaBanned.BPKBName != reqs.BPKBName && nokaBanned.Gender != reqs.Gender && nokaBanned.MaritalStatus != reqs.MaritalStatus && nokaBanned.NumOfDependence != reqs.NumOfDependence && nokaBanned.NTF != reqs.NTF && nokaBanned.OTRPrice != reqs.OTRPrice && nokaBanned.LegalZipCode != reqs.LegalZipCode && nokaBanned.Tenor != reqs.Tenor && nokaBanned.ManufacturingYear != reqs.ManufactureYear && nokaBanned.ProfessionID != reqs.ProfessionID && nokaBanned.CompanyZipCode != reqs.CompanyZipCode && nokaBanned.HomeStatus != reqs.HomeStatus {
+				// MAKSUDNYA -> KETIKA ADA DATA DALAM KETENTUAN PARAMETER KREDIT BERBEDA DENGAN INPUTAN SEBELUMNYA, MAKA NO. RANGKA TSB DI BANNED 30 HARI
+				nokaBanned.IsBanned = 1
+			}
+		} else if numberOfRetry >= constant.ATTEMPT_BANNED_REJECTION_NOKA {
+			nokaBanned.NumberOfRetry = numberOfRetry
+			nokaBanned.IsBanned = 1
+		}
+
+		if err = u.repository.SaveDataNoka(nokaData); err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Error Save Data Noka Nosin")
+			return
+		}
+
+		data.Code = constant.CODE_REJECT_NOKA_NOSIN
+		data.Result = constant.DECISION_REJECT
+		data.Reason = constant.REASON_REJECT_NOKA_NOSIN
+		return
+	}
+
+	return
+}
+
+func (u usecase) CheckChassisNumber(ctx context.Context, reqs request.DupcheckApi, nokaBanned response.RejectionNoka, accessToken string) (data response.UsecaseApi, err error) {
+
+	var (
+		nokaData                       entity.DupcheckRejectionNokaNosin
+		trxApiLog                      entity.TrxApiLog
+		responseAgreementChassisNumber response.AgreementChassisNumber
+		response_api_log               []byte
+	)
+
+	trxApiLog.ProspectID = reqs.ProspectID
+	trxApiLog.Request = os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL") + reqs.RangkaNo
+	trxApiLog.DtmRequest = time.Now()
+
+	// Hit Integrator Get Chasis Number
+	dummyChassis, _ := strconv.ParseBool(os.Getenv("DUMMY_AGREEMENT_OF_CHASSIS_NUMBER"))
+
+	if dummyChassis {
+		dummyChassisAgreementNumber, _ := u.repository.GetDummyAgreementChassisNumber(reqs.IDNumber)
+
+		var resAgreementChassisNumber response.ResAgreementChassisNumber
+
+		json.Unmarshal([]byte(dummyChassisAgreementNumber.Response), &resAgreementChassisNumber)
+
+		responseAgreementChassisNumber = resAgreementChassisNumber.Data
+
+	} else {
+
+		var hitChassisNumber *resty.Response
+
+		hitChassisNumber, err = u.httpclient.EngineAPI(ctx, constant.DUPCHECK_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+reqs.RangkaNo, nil, map[string]string{}, constant.METHOD_GET, true, 6, 60, reqs.ProspectID, accessToken)
+
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Get Agreement of Chassis Number Timeout")
+			return
+		}
+
+		if hitChassisNumber.StatusCode() != 200 {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call Get Agreement of Chassis Number Error")
+			return
+		}
+
+		json.Unmarshal([]byte(jsoniter.Get(hitChassisNumber.Body(), "data").ToString()), &responseAgreementChassisNumber)
+	}
+
+	response_api_log, _ = json.Marshal(responseAgreementChassisNumber)
+	trxApiLog.Response = string(response_api_log)
+	trxApiLog.DtmResponse = time.Now()
+	trxApiLog.Type = constant.TYPE_API_LOGS_NOKA
+
+	if err = u.repository.SaveDataApiLog(trxApiLog); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error Save Data to API Logs")
+		return
+	}
+
+	if responseAgreementChassisNumber == (response.AgreementChassisNumber{}) {
+		return
+	}
+
+	agreement := responseAgreementChassisNumber
+	if agreement.IsRegistered && agreement.IsActive && len(agreement.IDNumber) > 0 {
+		listNikKonsumenDanPasangan := make([]string, 0)
+
+		listNikKonsumenDanPasangan = append(listNikKonsumenDanPasangan, reqs.IDNumber)
+		if reqs.Spouse != nil && reqs.Spouse.IDNumber != "" {
+			listNikKonsumenDanPasangan = append(listNikKonsumenDanPasangan, reqs.Spouse.IDNumber)
+		}
+
+		if !utils.Contains(listNikKonsumenDanPasangan, agreement.IDNumber) {
+			// Noka Data to Save
+			nokaData.Id = utils.UniqueID(15)
+			nokaData.NoRangka = reqs.RangkaNo
+			nokaData.NoMesin = reqs.EngineNo
+			nokaData.ProspectID = reqs.ProspectID
+			nokaData.IDNumber = reqs.IDNumber
+			nokaData.LegalName = reqs.LegalName
+			nokaData.BirthPlace = reqs.BirthPlace
+			nokaData.BirthDate = reqs.BirthDate
+			nokaData.MonthlyFixedIncome = reqs.MonthlyFixedIncome
+			nokaData.EmploymentSinceYear = reqs.EmploymentSinceYear
+			nokaData.EmploymentSinceMonth = reqs.EmploymentSinceMonth
+			nokaData.StaySinceYear = reqs.StaySinceYear
+			nokaData.StaySinceMonth = reqs.StaySinceMonth
+			nokaData.BPKBName = reqs.BPKBName
+			nokaData.Gender = reqs.Gender
+			nokaData.MaritalStatus = reqs.MaritalStatus
+			nokaData.NumOfDependence = reqs.NumOfDependence
+			nokaData.NTF = reqs.NTF
+			nokaData.OTRPrice = reqs.OTRPrice
+			nokaData.LegalZipCode = reqs.LegalZipCode
+			nokaData.Tenor = reqs.Tenor
+			nokaData.ManufacturingYear = reqs.ManufactureYear
+			nokaData.ProfessionID = reqs.ProfessionID
+			nokaData.CompanyZipCode = reqs.CompanyZipCode
+			nokaData.HomeStatus = reqs.HomeStatus
+
+			nokaData.NumberOfRetry = 0
+
+			if err = u.repository.SaveDataNoka(nokaData); err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error Save Data Noka Nosin")
+				return
+			}
+
+			data.Code = constant.CODE_REJECT_CHASSIS_NUMBER
+			data.Result = constant.DECISION_REJECT
+			data.Reason = constant.REASON_REJECT_CHASSIS_NUMBER
+		} else {
+			if agreement.IDNumber == reqs.IDNumber {
+				data.Code = constant.CODE_OK_CONSUMEN_MATCH
+				data.Result = constant.RESULT_OK
+				data.Reason = constant.REASON_OK_CONSUMEN_MATCH
+			} else {
+				data.Code = constant.CODE_REJECTION_FRAUD_POTENTIAL
+				data.Result = constant.DECISION_REJECT
+				data.Reason = constant.REASON_REJECTION_FRAUD_POTENTIAL
+			}
+		}
+	} else {
+		data.Code = constant.CODE_AGREEMENT_NOT_FOUND
+		data.Result = constant.RESULT_OK
+		data.Reason = constant.REASON_AGREEMENT_NOT_FOUND
+	}
+	return
+}
+
+func (u usecase) DupcheckIntegrator(ctx context.Context, prospectID, idNumber, legalName, birthDate, surgateName string, accessToken string) (spDupcheck response.SpDupCekCustomerByID, err error) {
+
+	timeOut, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	req, _ := json.Marshal(map[string]interface{}{
+		"transaction_id":      prospectID,
+		"id_number":           idNumber,
+		"legal_name":          legalName,
+		"birth_date":          birthDate,
+		"surgate_mother_name": surgateName,
+	})
+
+	custDupcheck, err := u.httpclient.EngineAPI(ctx, constant.FILTERING_LOG, os.Getenv("DUPCHECK_URL"), req, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, prospectID, accessToken)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Dupcheck Timeout")
+		return
+	}
+
+	if custDupcheck.StatusCode() != 200 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call Dupcheck Error")
+		return
+	}
+
+	json.Unmarshal([]byte(jsoniter.Get(custDupcheck.Body(), "data").ToString()), &spDupcheck)
+
+	return
+
+}
+
+func (u usecase) CustomerKMB(spDupcheck response.SpDupCekCustomerByID) (statusKonsumen string, err error) {
+
+	if spDupcheck == (response.SpDupCekCustomerByID{}) {
+		statusKonsumen = constant.STATUS_KONSUMEN_NEW
+		return
+	}
+
+	if (spDupcheck.TotalInstallment <= 0 && spDupcheck.RRDDate != nil) || (spDupcheck.TotalInstallment > 0 && spDupcheck.RRDDate != nil && spDupcheck.NumberOfPaidInstallment == nil) {
+		statusKonsumen = constant.STATUS_KONSUMEN_RO
+		return
+
+	} else if spDupcheck.TotalInstallment > 0 {
+		statusKonsumen = constant.STATUS_KONSUMEN_AO
+		return
+
+	} else {
+		statusKonsumen = constant.STATUS_KONSUMEN_NEW
+		return
+	}
+
+}
+
+func (u usecase) VehicleCheck(manufactureYear string) (data response.UsecaseApi, err error) {
+
+	config, err := u.repository.GetDupcheckConfig()
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error Get Parameterize Config")
+		return
+	}
+
+	var configValue response.DupcheckConfig
+
+	json.Unmarshal([]byte(config.Value), &configValue)
+
+	currentYear, _ := strconv.Atoi(time.Now().Format("2006-01-02")[0:4])
+	BPKBYear, _ := strconv.Atoi(manufactureYear)
+
+	ageVehicle := currentYear - BPKBYear
+
+	if ageVehicle <= configValue.Data.VehicleAge {
+		data.Result = constant.DECISION_PASS
+		data.Code = constant.CODE_VEHICLE_SESUAI
+		data.Reason = constant.REASON_VEHICLE_SESUAI
+		return
+
+	} else {
+		data.Result = constant.DECISION_REJECT
+		data.Code = constant.CODE_VEHICLE_AGE_MAX
+		data.Reason = fmt.Sprintf("%s %d Tahun", constant.REASON_VEHICLE_AGE_MAX, configValue.Data.VehicleAge)
+		return
+	}
+
+}
+
+func (u usecase) GetLatestPaidInstallment(ctx context.Context, req request.ReqLatestPaidInstallment, prospectID string, accessToken string) (data response.LatestPaidInstallmentData, err error) {
+
+	dummy, _ := strconv.ParseBool(os.Getenv("DUMMY_LATEST_PAID_INSTALLMENT"))
+
+	if dummy {
+		dummyLatestPaidInstallment, _ := u.repository.GetDummyLatestPaidInstallment(req.IDNumber)
+
+		var latestPaidInstallment response.LatestPaidInstallment
+
+		json.Unmarshal([]byte(dummyLatestPaidInstallment.Response), &latestPaidInstallment)
+
+		data = latestPaidInstallment.Data
+
+	} else {
+
+		var dupcheckMDM *resty.Response
+		dupcheckMDM, err = u.httpclient.EngineAPI(ctx, constant.DUPCHECK_LOG, fmt.Sprintf("%s/%s/3", os.Getenv("DUPCHECK_GET_LATEST_PAID_INSTALLMENT"), req.CustomerID), nil, map[string]string{}, constant.METHOD_GET, true, 6, 60, prospectID, accessToken)
+
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Dupcheck MDM Latest Paid Installment Timeout")
+			return
+		}
+
+		if dupcheckMDM.StatusCode() != 200 {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call Dupcheck MDM Latest Paid Installment Error")
+			return
+		}
+
+		json.Unmarshal([]byte(jsoniter.Get(dupcheckMDM.Body(), "data").ToString()), &data)
 	}
 
 	return

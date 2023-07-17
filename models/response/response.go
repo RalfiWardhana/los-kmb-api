@@ -27,6 +27,19 @@ type DupcheckResult struct {
 	PbkReport              string      `json:"pbk_report,omitempty"`
 }
 
+type Filtering struct {
+	ProspectID        string      `json:"prospect_id"`
+	Code              interface{} `json:"code"`
+	Decision          string      `json:"decision"`
+	Reason            string      `json:"reason"`
+	CustomerStatus    string      `json:"customer_status"`
+	CustomerSegment   interface{} `json:"customer_segment"`
+	IsBlacklist       bool        `json:"is_blacklist"`
+	NextProcess       bool        `json:"next_process"`
+	PbkReportCustomer interface{} `json:"pbk_report_customer"`
+	PbkReportSpouse   interface{} `json:"pbk_report_spouse"`
+}
+
 type CustomerDomain struct {
 	Code      string       `json:"code"`
 	Message   string       `json:"message"`
@@ -135,7 +148,7 @@ type LimitAvailable struct {
 	TenorLimit   int   `json:"tenor_limit"`
 }
 
-type ResposePefindo struct {
+type ResponsePefindo struct {
 	Code         string                `json:"code"`
 	Status       string                `json:"status"`
 	Result       interface{}           `json:"result"`
@@ -263,6 +276,8 @@ type SpDupCekCustomerByID struct {
 	OSInstallmentDue                 float64     `json:"os_installmentdue"`
 	IsRestructure                    int         `json:"is_restructure"`
 	IsSimiliar                       int         `json:"is_similiar"`
+	CustomerSegment                  string      `json:"customer_segment"`
+	CustomerStatus                   string      `json:"customer_status"`
 }
 
 type Dsr struct {
@@ -383,10 +398,11 @@ type AgreementChassisNumber struct {
 }
 
 type FaceCompareResponse struct {
-	CustomerID int    `json:"customer_id" validate:"required"`
+	ProspectID string `json:"prospect_id" validate:"required"`
 	RequestID  string `json:"request_id"`
 	Result     string `json:"result"`
 	Reason     string `json:"reason"`
+	Info       interface{}
 }
 
 type DetectImageResponse struct {
@@ -507,4 +523,54 @@ type FaceRecognitionIntegratorData struct {
 	Reason        string `json:"reason"`
 	Threshold     string `json:"threshold"`
 	RefID         string `json:"ref_id"`
+}
+
+type Additional struct {
+	DupcheckData            SpDupcheckMap `json:"dupcheck_data"`
+	CustomerStatus          string        `json:"customer_status"`
+	ScsDecision             ScsDecision   `json:"scs_decision"`
+	PDFCustomer             interface{}   `json:"pdf_customer"`
+	PDFSpouse               interface{}   `json:"pdf_spouse"`
+	Reprocess               bool          `json:"reprocess"`
+	CustomerType            interface{}   `json:"customer_type"`
+	SpouseType              interface{}   `json:"spouse_type"`
+	AsliriSimiliarity       interface{}   `json:"asliri_similiarity"`
+	AsliriReason            interface{}   `json:"asliri_reason"`
+	DSR                     interface{}   `json:"dsr"`
+	DataAkkk                BiroAkkk      `json:"biro_akkk"`
+	AngsuranAktifBiro       float64       `json:"angsuran_aktif_biro"`
+	AngsuranAktifSpouseBiro float64       `json:"angsuran_aktif_biro_spouse"`
+}
+
+type ScsDecision struct {
+	ScsDate   interface{} `json:"scs_date"`
+	ScsScore  interface{} `json:"scs_score"`
+	ScsStatus interface{} `json:"scs_status"`
+}
+
+type BiroAkkk struct {
+	PefindoPlafon                    interface{} `json:"pefindo_plafon,omitempty"`
+	PefindoBakiDebet                 interface{} `json:"pefindo_baki_debet,omitempty"`
+	PefindoTotalFasilitasAktif       interface{} `json:"pefindo_total_fasilitas_aktif,omitempty"`
+	PefindoSpousePlafon              interface{} `json:"pefindo_spouse_plafon,omitempty"`
+	PefindoSpouseBakiDebet           interface{} `json:"pefindo_spouse_baki_debet,omitempty"`
+	PefindoSpouseTotalFasilitasAktif interface{} `json:"pefindo_spouse_total_fasilitas_aktif,omitempty"`
+	Score                            interface{} `json:"score"`
+	MaxOvd                           interface{} `json:"max_overdue"`
+	WorstQualityStatus               interface{} `json:"worst_quality_status"`
+	WorstQualityStatusMonth          interface{} `json:"worst_quality_status_month"`
+	LastQualityCredit                interface{} `json:"last_quality_credit"`
+	LastQualityCreditMonth           interface{} `json:"last_quality_credit_month"`
+	SpouseScore                      interface{} `json:"spouse_score"`
+	SpouseMaxOvd                     interface{} `json:"spouse_max_overdue"`
+	SpouseWorstQualityStatus         interface{} `json:"spouse_worst_quality_status"`
+	SpouseWorstQualityStatusMonth    interface{} `json:"spouse_worst_quality_status_month"`
+	SpouseLastQualityCredit          interface{} `json:"spouse_last_quality_credit"`
+	SpouseLastQualityCreditMonth     interface{} `json:"spouse_last_quality_credit_month"`
+	PefindoDetailPdf                 interface{} `json:"pefindo_detail_pdf"`
+	PefindoSpouseDetailPdf           interface{} `json:"pefindo_spouse_detail_pdf"`
+	PefindoBakiDebetWo               interface{} `json:"pefindo_baki_debet_wo"`
+	PefindoSpouseBakiDebetWo         interface{} `json:"pefindo_spouse_baki_debet_wo"`
+	PefindoAgunan                    interface{} `json:"pefindo_agunan"`
+	PefindoSpouseAgunan              interface{} `json:"pefindo_spouse_agunan"`
 }

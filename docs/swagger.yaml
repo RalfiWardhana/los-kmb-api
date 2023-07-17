@@ -6,7 +6,6 @@ definitions:
         type: string
       data:
         $ref: '#/definitions/request.DataElaborate'
-        type: object
     required:
     - client_key
     - data
@@ -37,7 +36,6 @@ definitions:
         type: string
       Spouse:
         $ref: '#/definitions/request.Spouse'
-        type: object
       SurgateMotherName:
         type: string
     required:
@@ -77,7 +75,7 @@ definitions:
       Tenor:
         type: integer
       TotalBakiDebet:
-        type: number
+        type: object
     required:
     - BPKBName
     - BranchID
@@ -89,16 +87,203 @@ definitions:
     - ResultPefindo
     - Tenor
     type: object
+  request.DupcheckApi:
+    properties:
+      birth_date:
+        type: string
+      birth_place:
+        type: string
+      bpkb_name:
+        type: string
+      company_zip_code:
+        type: string
+      employment_since_month:
+        type: string
+      employment_since_year:
+        type: string
+      gender:
+        type: string
+      home_status:
+        type: string
+      id_number:
+        type: string
+      image_selfie:
+        type: string
+      installment_amount:
+        type: number
+      job_position:
+        type: string
+      ktp_url:
+        type: string
+      legal_name:
+        type: string
+      legal_zip_code:
+        type: string
+      manufacture_year:
+        type: string
+      marital_status:
+        type: string
+      monthly_fixed_income:
+        type: number
+      monthly_variable_income:
+        type: number
+      no_engine:
+        type: string
+      no_rangka:
+        type: string
+      ntf:
+        type: number
+      num_of_dependence:
+        type: integer
+      otr:
+        type: number
+      profession_id:
+        type: string
+      prospect_id:
+        type: string
+      spouse:
+        $ref: '#/definitions/request.DupcheckApiSpouse'
+      spouse_income:
+        type: number
+      stay_since_month:
+        type: string
+      stay_since_year:
+        type: string
+      surgate_mother_name:
+        type: string
+      tenor:
+        type: integer
+    required:
+    - birth_date
+    - birth_place
+    - bpkb_name
+    - company_zip_code
+    - employment_since_month
+    - employment_since_year
+    - gender
+    - home_status
+    - id_number
+    - image_selfie
+    - installment_amount
+    - job_position
+    - ktp_url
+    - legal_name
+    - legal_zip_code
+    - manufacture_year
+    - monthly_fixed_income
+    - no_engine
+    - no_rangka
+    - ntf
+    - num_of_dependence
+    - otr
+    - profession_id
+    - prospect_id
+    - stay_since_month
+    - stay_since_year
+    - surgate_mother_name
+    - tenor
+    type: object
+  request.DupcheckApiSpouse:
+    properties:
+      spouse_birth_date:
+        type: string
+      spouse_gender:
+        type: string
+      spouse_id_number:
+        type: string
+      spouse_legal_name:
+        type: string
+      spouse_surgate_mother_name:
+        type: string
+    required:
+    - spouse_birth_date
+    - spouse_gender
+    - spouse_id_number
+    - spouse_legal_name
+    - spouse_surgate_mother_name
+    type: object
+  request.Filtering:
+    properties:
+      birth_date:
+        example: YYYY-MM-DD
+        type: string
+      bpkb_name:
+        example: K
+        type: string
+      branch_id:
+        example: "426"
+        type: string
+      gender:
+        example: M
+        type: string
+      id_number:
+        example: 1234XXXXXXXX0001
+        type: string
+      legal_name:
+        example: LEGAL NAME
+        type: string
+      prospect_id:
+        example: TEST-DEV
+        type: string
+      spouse:
+        $ref: '#/definitions/request.FilteringSpouse'
+      surgate_mother_name:
+        example: SURGATE MOTHER NAME
+        type: string
+    required:
+    - birth_date
+    - bpkb_name
+    - branch_id
+    - gender
+    - id_number
+    - legal_name
+    - prospect_id
+    - surgate_mother_name
+    type: object
   request.FilteringRequest:
     properties:
       client_key:
         type: string
       data:
         $ref: '#/definitions/request.Data'
-        type: object
     required:
     - client_key
     - data
+    type: object
+  request.FilteringSpouse:
+    properties:
+      spouse_birth_date:
+        example: YYYY-MM-DD
+        type: string
+      spouse_gender:
+        example: F
+        type: string
+      spouse_id_number:
+        example: 1234XXXXXXXX0001
+        type: string
+      spouse_legal_name:
+        example: LEGAL NAME
+        type: string
+      spouse_surgate_mother_name:
+        example: SURGATE MOTHER NAME
+        type: string
+    required:
+    - spouse_birth_date
+    - spouse_gender
+    - spouse_id_number
+    - spouse_legal_name
+    - spouse_surgate_mother_name
+    type: object
+  request.ReqRejectTenor:
+    properties:
+      id_number:
+        example: 1234XXXXXXXX0001
+        type: string
+      prospect_id:
+        type: string
+    required:
+    - id_number
+    - prospect_id
     type: object
   request.Spouse:
     properties:
@@ -138,7 +323,7 @@ definitions:
   response.DupcheckResult:
     properties:
       code:
-        type: string
+        type: object
       decision:
         type: string
       is_blacklist:
@@ -174,15 +359,29 @@ definitions:
       message:
         type: string
     type: object
+  response.UsecaseApi:
+    properties:
+      code:
+        type: string
+      confidence:
+        type: string
+      dsr:
+        type: number
+      reason:
+        type: string
+      result:
+        type: string
+      status_konsumen:
+        type: string
+    type: object
 host: localhost:9710
 info:
   contact:
     email: support@kreditplus.com
     name: Kredit Plus
     url: https://kreditplus.com
-  license: {}
 paths:
-  /elaborate:
+  /api/v2/kmb/elaborate:
     post:
       description: KmbElaborate
       parameters:
@@ -219,7 +418,7 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Tools
-  /filtering:
+  /api/v2/kmb/filtering:
     post:
       description: KmbFiltering
       parameters:
@@ -240,6 +439,117 @@ paths:
             - properties:
                 data:
                   $ref: '#/definitions/response.DupcheckResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Tools
+  /api/v3/kmb/dupcheck:
+    post:
+      description: KmbDupcheck
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.DupcheckApi'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.DupcheckResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Tools
+  /api/v3/kmb/filtering:
+    post:
+      description: KmbFiltering
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.Filtering'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.DupcheckResult'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Tools
+  /api/v3/kmb/reject-tenor:
+    post:
+      description: KmbDupcheck
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqRejectTenor'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.UsecaseApi'
               type: object
         "400":
           description: Bad Request
