@@ -3,7 +3,7 @@ module los-kmb-api
 go 1.16
 
 require (
-	github.com/KB-FMF/platform-library v1.0.11
+	github.com/KB-FMF/platform-library v1.0.13
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/go-resty/resty/v2 v2.7.0
@@ -13,10 +13,10 @@ require (
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/joho/godotenv v1.4.0
 	github.com/json-iterator/go v1.1.9
-	github.com/labstack/echo v3.3.10+incompatible
 	github.com/labstack/echo/v4 v4.6.1
 	github.com/labstack/gommon v0.3.0
 	github.com/maxbrunsfeld/counterfeiter/v6 v6.4.1
+	github.com/mitchellh/mapstructure v1.5.0
 	github.com/newrelic/go-agent/v3 v3.19.2
 	github.com/newrelic/go-agent/v3/integrations/nrecho-v4 v1.0.3
 	github.com/sirupsen/logrus v1.7.0

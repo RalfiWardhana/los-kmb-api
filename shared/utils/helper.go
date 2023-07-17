@@ -1,9 +1,16 @@
 package utils
 
 import (
-	"crypto/rand"
+	"bufio"
+	"crypto/md5"
+	"encoding/base64"
+	"encoding/hex"
 	"fmt"
+	"io/ioutil"
 	"math"
+	"math/rand"
+	"net/http"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -189,4 +196,88 @@ func ToFixed(num float64, precision int) float64 {
 func GenerateUUID() string {
 	id := uuid.Must(uuid.NewRandom())
 	return id.String()
+}
+
+func HumanAgeCalculator(birthdate, today time.Time) int {
+	today = today.In(birthdate.Location())
+	ty, tm, td := today.Date()
+	today = time.Date(ty, tm, td, 0, 0, 0, 0, time.UTC)
+	by, bm, bd := birthdate.Date()
+	birthdate = time.Date(by, bm, bd, 0, 0, 0, 0, time.UTC)
+	if today.Before(birthdate) {
+		return 0
+	}
+	age := ty - by
+	anniversary := birthdate.AddDate(age, 0, 0)
+	if anniversary.After(today) {
+		age--
+	}
+	return age
+}
+
+func UniqueID(length int) string {
+	rand.Seed(time.Now().UnixNano())
+	randomID := fmt.Sprintf("%s%d", UniqueIDFromTime(), rand.Intn(1000))
+	return randomID[:length]
+}
+
+func UniqueIDFromTime() string {
+	timestamp := time.Now().UnixNano()
+	uniqueID := fmt.Sprintf("%s%d", MD5Hash(fmt.Sprintf("%s%d", UniqueIDFromUniqid(), timestamp)), rand.Intn(1000))
+	return uniqueID
+}
+
+func UniqueIDFromUniqid() string {
+	return fmt.Sprintf("%s%d", Uniqid(), rand.Intn(1000))
+}
+
+func Uniqid() string {
+	return fmt.Sprintf("%d", time.Now().UnixNano())
+}
+
+func MD5Hash(text string) string {
+	hash := md5.Sum([]byte(text))
+	return hex.EncodeToString(hash[:])
+}
+
+func Contains(list []string, value string) bool {
+	for _, item := range list {
+		if item == value {
+			return true
+		}
+	}
+	return false
+}
+
+func GetIsMedia(urlImage string) bool {
+
+	urlMedia := strings.Split(os.Getenv("URL_MEDIA"), ",")
+
+	for _, url := range urlMedia {
+		if strings.Contains(urlImage, url) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func DecodeNonMedia(url string) (base64Image string, err error) {
+
+	image, err := http.Get(url)
+
+	if err != nil {
+		return
+	}
+
+	reader := bufio.NewReader(image.Body)
+	ioutil, err := ioutil.ReadAll(reader)
+
+	if err != nil {
+		return
+	}
+
+	base64Image = base64.StdEncoding.EncodeToString(ioutil)
+
+	return
 }

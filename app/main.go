@@ -11,6 +11,12 @@ import (
 	filteringDelivery "los-kmb-api/domain/filtering/delivery/http"
 	filteringRepository "los-kmb-api/domain/filtering/repository"
 	filteringUsecase "los-kmb-api/domain/filtering/usecase"
+	newKmbFilteringDelivery "los-kmb-api/domain/filtering_new/delivery/http"
+	newKmbFilteringRepository "los-kmb-api/domain/filtering_new/repository"
+	newKmbFilteringUsecase "los-kmb-api/domain/filtering_new/usecase"
+	kmbDelivery "los-kmb-api/domain/kmb/delivery/http"
+	kmbRepository "los-kmb-api/domain/kmb/repository"
+	kmbUsecase "los-kmb-api/domain/kmb/usecase"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/json"
@@ -48,7 +54,7 @@ func main() {
 
 	config.LoadEnv()
 
-	env := strings.ToLower(config.Env("APP_ENV"))
+	env := strings.ToLower(os.Getenv("APP_ENV"))
 
 	config.NewConfiguration(env)
 	e.Pre(middleware.RemoveTrailingSlash())
@@ -58,19 +64,26 @@ func main() {
 	constant.LOS_KMB_BASE_URL = os.Getenv("SWAGGER_HOST")
 
 	minilosKMB, err := database.OpenMinilosKMB()
-
-	if err != nil {
-		panic(fmt.Sprintf("Failed to open database connection: %s", err))
-	}
-
-	kpLosLogs, err := database.OpenKpLosLog()
-
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
 	}
 
 	kpLos, err := database.OpenKpLos()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to open database connection: %s", err))
+	}
 
+	kpLosLogs, err := database.OpenKpLosLogs()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to open database connection: %s", err))
+	}
+
+	confins, err := database.OpenConfins()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to open database connection: %s", err))
+	}
+
+	staging, err := database.OpenStaging()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
 	}
@@ -96,12 +109,14 @@ func main() {
 	accessToken := middlewares.NewAccessMiddleware()
 	e.Use(accessToken.SetupHeadersAndContext())
 
-	config.CreateCustomLogFile("FILTERING_LOG")
+	config.CreateCustomLogFile(constant.LOG_FILTERING_LOG)
+	config.CreateCustomLogFile(constant.LOG_JOURNEY_LOG)
 
 	utils.NewCache(cache, kpLos, config.IsDevelopment)
 
 	jsonResponse := json.NewResponse()
 	apiGroup := e.Group("/api/v2/kmb")
+	apiGroupv3 := e.Group("/api/v3/kmb")
 	httpClient := httpclient.NewHttpClient()
 
 	// define kmb filtering domain
@@ -114,12 +129,25 @@ func main() {
 	kmbElaborateMultiCase, kmbElaborateCase := elaborateUsecase.NewMultiUsecase(kmbElaborateRepo, httpClient)
 	elaborateDelivery.ElaborateHandler(apiGroup, kmbElaborateMultiCase, kmbElaborateCase, kmbElaborateRepo, jsonResponse, accessToken)
 
+	// define new kmb filtering domain
+	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs)
+	newKmbFilteringMultiCase, newKmbFilteringCase := newKmbFilteringUsecase.NewMultiUsecase(newKmbFilteringRepo, httpClient)
+	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken)
+
+	// define new kmb journey
+	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, confins, staging, wgOff, minilosKMB)
+	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
+	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
+	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
+
+	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, jsonResponse, accessToken)
+
 	if config.IsDevelopment {
 		docs.SwaggerInfo.Title = "LOS-KMB-API"
 		docs.SwaggerInfo.Description = "This is a orchestrator api server."
-		docs.SwaggerInfo.Version = "1.0"
+		docs.SwaggerInfo.Version = "3.0"
 		docs.SwaggerInfo.Host = os.Getenv("SWAGGER_HOST")
-		docs.SwaggerInfo.BasePath = "/api/v2/kmb"
+		docs.SwaggerInfo.BasePath = "/"
 		docs.SwaggerInfo.Schemes = []string{"http", "https"}
 		e.GET("/swagger/*", echoSwagger.WrapHandler)
 	} else {

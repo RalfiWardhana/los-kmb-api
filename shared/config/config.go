@@ -151,3 +151,25 @@ func GetKpLosLogDB() (string, string, string, int, string) {
 
 	return user, pwd, host, port, database
 }
+
+func GetConfinsDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_USERNAME"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_PASSWORD"))
+	host, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_HOST"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_PORT"))
+	port, _ := strconv.Atoi(strPort)
+	database, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_DATABASE"))
+
+	return user, pwd, host, port, database
+}
+
+func GetStagingDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("STAGING_DB_USERNAME"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("STAGING_DB_PASSWORD"))
+	host, _ := utils.DecryptCredential(os.Getenv("STAGING_DB_HOST"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("STAGING_DB_PORT"))
+	port, _ := strconv.Atoi(strPort)
+	database, _ := utils.DecryptCredential(os.Getenv("STAGING_DB_DATABASE"))
+
+	return user, pwd, host, port, database
+}

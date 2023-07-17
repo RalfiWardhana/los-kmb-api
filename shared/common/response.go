@@ -8,4 +8,5 @@ type JSON interface {
 	InternalServerErrorCustomV2(ctx echo.Context, accessToken, logFile, message string, err error) error
 	BadRequestErrorValidationV2(ctx echo.Context, accessToken, logFile, message string, req interface{}, err error) error
 	BadGateway(ctx echo.Context, message string) error
+	ServerSideErrorV2(ctx echo.Context, accessToken, logFile, message string, req interface{}, err error) error
 }
