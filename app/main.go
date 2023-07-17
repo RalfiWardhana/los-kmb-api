@@ -135,7 +135,7 @@ func main() {
 	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken)
 
 	// define new kmb journey
-	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, confins, staging, wgOff, minilosKMB)
+	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, confins, staging, minilosKMB)
 	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
 	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
