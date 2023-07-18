@@ -51,6 +51,8 @@ func (c *handlerKmbFiltering) Filtering(ctx echo.Context) (err error) {
 
 	if r.Data.MaritalStatus == constant.MARRIED {
 
+		r.Data.Spouse.BirthDate = r.Data.Spouse.BirthDate[0:10]
+
 		var genderSpouse request.GenderCompare
 
 		if r.Data.Gender != r.Data.Spouse.Gender {
