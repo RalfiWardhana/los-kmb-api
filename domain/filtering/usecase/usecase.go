@@ -774,63 +774,152 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 			}
 
 			if data.Decision == constant.DECISION_REJECT {
-				var nama string
+
+				data.StatusKonsumen = status_konsumen
+				data.Code = constant.WO_AGUNAN_REJECT_CODE
+
+				// BPKB Nama Sama
 				if bpkbName == constant.NAMA_SAMA {
-					nama = "SAMA"
-				} else {
-					nama = "BEDA"
-				}
-				if pefindoResult.WoContract {
+					if pefindoResult.WoContract { //Wo Contract Yes
 
-					if !pefindoResult.WoAdaAgunan { //wo_agunan No
-						if pefindoResult.TotalBakiDebetNonAgunan > constant.BAKI_DEBET {
-							data.Code = constant.WO_AGUNAN_REJECT_CODE
-							data.StatusKonsumen = status_konsumen
-							data.Decision = constant.DECISION_REJECT
-							data.NextProcess = 0
-							data.Reason = "NAMA " + nama + " & Baki Debet > 20 Juta"
-						} else if bpkbName == constant.NAMA_SAMA && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-							data.Code = constant.WO_AGUNAN_PASS_CODE
-							data.StatusKonsumen = status_konsumen
-							data.Decision = constant.DECISION_REJECT
-							data.NextProcess = 1
-							data.Reason = "NAMA " + nama + " & Baki Debet Sesuai Ketentuan"
-						} else {
-							data.Code = constant.WO_AGUNAN_PASS_CODE
-							data.StatusKonsumen = status_konsumen
-							data.Decision = constant.DECISION_REJECT
-							data.NextProcess = 0
-							data.Reason = "NAMA " + nama + " & Baki Debet Sesuai Ketentuan"
+						if pefindoResult.WoAdaAgunan { //Wo Agunan Yes
+
+							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+									data.NextProcess = 0
+									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_SESUAI
+								} else {
+									data.NextProcess = 0
+									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+								}
+							} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+									data.NextProcess = 1
+									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_SESUAI
+								} else {
+									data.NextProcess = 0
+									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+								}
+							} else {
+								data.NextProcess = 0
+								data.Reason = constant.ADA_FASILITAS_WO_AGUNAN
+							}
+
+						} else { //Wo Agunan No
+							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+									data.NextProcess = 1
+									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_SESUAI
+								} else {
+									data.NextProcess = 0
+									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+								}
+							} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+									data.NextProcess = 1
+									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_SESUAI
+								} else {
+									data.NextProcess = 0
+									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+								}
+							}
 						}
+					} else { //Wo Contract No
+						if status_konsumen == constant.STATUS_KONSUMEN_NEW {
+							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+								data.NextProcess = 1
+								data.Reason = constant.NAMA_SAMA_BAKI_DEBET_SESUAI
+							} else {
+								data.NextProcess = 0
+								data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+							}
 
-					} else { //wo_agunan Yes
-						data.Code = constant.WO_AGUNAN_REJECT_CODE
-						data.StatusKonsumen = status_konsumen
-						data.Decision = constant.DECISION_REJECT
-						data.NextProcess = 0
-						data.Reason = "NAMA " + nama + " & Ada Fasilitas WO Agunan"
+						} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
+							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+								data.NextProcess = 1
+								data.Reason = constant.NAMA_SAMA_BAKI_DEBET_SESUAI
+							} else {
+								data.NextProcess = 0
+								data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+							}
+						} else {
+							data.NextProcess = 1
+							data.Code = constant.WO_AGUNAN_PASS_CODE
+							data.Reason = constant.TIDAK_ADA_FASILITAS_WO_AGUNAN
+						}
 					}
-				} else { //wo_contract No
-					if pefindoResult.TotalBakiDebetNonAgunan > constant.BAKI_DEBET {
-						data.Code = constant.WO_AGUNAN_REJECT_CODE
-						data.StatusKonsumen = status_konsumen
-						data.Decision = constant.DECISION_REJECT
-						data.NextProcess = 0
-						data.Reason = "NAMA " + nama + " & Baki Debet > 20 Juta"
-					} else if bpkbName == constant.NAMA_SAMA && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-						data.Code = constant.WO_AGUNAN_PASS_CODE
-						data.StatusKonsumen = status_konsumen
-						data.Decision = constant.DECISION_REJECT
-						data.NextProcess = 1
-						data.Reason = "NAMA " + nama + " & Baki Debet Sesuai Ketentuan"
-					} else {
-						data.Code = constant.WO_AGUNAN_PASS_CODE
-						data.StatusKonsumen = status_konsumen
-						data.Decision = constant.DECISION_REJECT
-						data.NextProcess = 0
-						data.Reason = "NAMA " + nama + " & Baki Debet Sesuai Ketentuan"
-					}
+				}
 
+				// BPKB Nama Beda
+				if bpkbName == constant.NAMA_BEDA {
+					if pefindoResult.WoContract { //Wo Contract Yes
+
+						if pefindoResult.WoAdaAgunan { //Wo Agunan Yes
+
+							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+									data.NextProcess = 0
+									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
+								} else {
+									data.NextProcess = 0
+									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
+								}
+							} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+									data.NextProcess = 1
+									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
+								} else {
+									data.NextProcess = 0
+									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
+								}
+							} else {
+								data.NextProcess = 0
+								data.Reason = constant.ADA_FASILITAS_WO_AGUNAN
+							}
+
+						} else { //Wo Agunan No
+							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+									data.NextProcess = 1
+									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
+								} else {
+									data.NextProcess = 0
+									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
+								}
+							} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+									data.NextProcess = 1
+									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
+								} else {
+									data.NextProcess = 0
+									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
+								}
+							}
+						}
+					} else { //Wo Contract No
+						if status_konsumen == constant.STATUS_KONSUMEN_NEW {
+							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+								data.NextProcess = 1
+								data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
+							} else {
+								data.NextProcess = 0
+								data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
+							}
+
+						} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
+							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+								data.NextProcess = 1
+								data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
+							} else {
+								data.NextProcess = 0
+								data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
+							}
+						} else {
+							data.NextProcess = 1
+							data.Code = constant.WO_AGUNAN_PASS_CODE
+							data.Reason = constant.TIDAK_ADA_FASILITAS_WO_AGUNAN
+						}
+					}
 				}
 			}
 

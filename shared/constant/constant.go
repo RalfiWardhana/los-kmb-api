@@ -174,6 +174,12 @@ const (
 	NOT_MATCH_PBK                                                = "NOT_MATCH"
 	WO_AGUNAN_REJECT_CODE                                        = "9107"
 	WO_AGUNAN_PASS_CODE                                          = "9108"
+	NAMA_SAMA_BAKI_DEBET_SESUAI                                  = "Nama Sama & Baki Debet Sesuai Ketentuan"
+	NAMA_BEDA_BAKI_DEBET_SESUAI                                  = "Nama Beda & Baki Debet Sesuai Ketentuan"
+	NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI                            = "Nama Sama & Baki Debet > 20 Juta"
+	NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI                            = "Nama Beda & Baki Debet > 20 Juta"
+	ADA_FASILITAS_WO_AGUNAN                                      = "Ada Fasilitas WO Agunan"
+	TIDAK_ADA_FASILITAS_WO_AGUNAN                                = "Tidak Ada Fasilitas WO Agunan"
 
 	// Error Message
 	INTERNAL_SERVER_ERROR = "internal_server_error"
