@@ -787,7 +787,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = 0
-									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_SESUAI
+									data.Reason = "Nama Sama & " + constant.ADA_FASILITAS_WO_AGUNAN
 								} else {
 									data.NextProcess = 0
 									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
@@ -859,7 +859,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = 0
-									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
+									data.Reason = "Nama Beda & " + constant.ADA_FASILITAS_WO_AGUNAN
 								} else {
 									data.NextProcess = 0
 									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
