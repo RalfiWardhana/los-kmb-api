@@ -90,7 +90,7 @@ type DataDupcheck struct {
 	NumOfAssetInventoried            int     `json:"num_of_asset_inventoried"`
 	NumOfDependence                  int     `json:"num_of_dependence"`
 	NumberOfAgreement                int     `json:"number_of_agreement"`
-	OsInstallmentdue                 int     `json:"os_installmentdue"`
+	OsInstallmentdue                 float64 `json:"os_installmentdue"`
 	OutstandingPrincipal             float64 `json:"outstanding_principal"`
 	OverduedaysAging                 int     `json:"overduedays_aging"`
 	PersonalNpwp                     string  `json:"personal_npwp"`
@@ -102,10 +102,10 @@ type DataDupcheck struct {
 	ResidenceZipcode                 string  `json:"residence_zipcode"`
 	RrdDate                          string  `json:"rrd_date"`
 	SisaJumlahAngsuran               int     `json:"sisa_jumlah_angsuran"`
-	SpouseIncome                     int     `json:"spouse_income"`
+	SpouseIncome                     float64 `json:"spouse_income"`
 	SurgateMotherName                string  `json:"surgate_mother_name"`
-	TotalInstallment                 int     `json:"total_installment"`
-	TotalInstallmentNap              int     `json:"total_installment_nap"`
+	TotalInstallment                 float64 `json:"total_installment"`
+	TotalInstallmentNap              float64 `json:"total_installment_nap"`
 	WorkSinceYear                    string  `json:"work_since_year"`
 	InstallmentAmount_ChassisNo      string  `json:"installment_amount_chassis_no"`
 }
@@ -195,4 +195,18 @@ type ElaborateResult struct {
 	AgeVehicle     string  `json:"age_vehicle,omitempty"`
 	LTVOrigin      float64 `json:"ltv_origin,omitempty"`
 	TotalBakiDebet float64 `json:"total_balki_debet,omitempty"`
+}
+
+type ResponseMappingElaborateScheme struct {
+	ResultPefindo  string  `json:"result_pefindo"`
+	BranchID       string  `json:"branch_id"`
+	BranchIDMask   string  `json:"branch_id_masking,omitempty"`
+	CustomerStatus string  `json:"customer_status"`
+	BPKBNameType   int     `json:"bpkb_name_type"`
+	Cluster        string  `json:"cluster"`
+	TotalBakiDebet int     `json:"total_baki_debet"`
+	Tenor          int     `json:"tenor"`
+	AgeVehicle     string  `json:"age_vehicle"`
+	LTV            float64 `json:"ltv"`
+	Decision       string  `json:"decision"`
 }

@@ -315,8 +315,8 @@ func (u usecase) FilteringBlackList(ctx context.Context, reqs request.FilteringR
 					result.Code = constant.CODE_MAX_OVER_DUE_DAYS_SPOSE_NUM_OF_ASSET_INVENTORIED
 					result.Decision = constant.DECISION_REJECT
 					result.Reason = constant.REASON_MAX_OVER_DUE_DAYS + " & " + spouse_result.Reason
-				} else if spouse_result.Code == constant.CODE_SPOSE_BADTYPE_W {
-					result.Code = constant.CODE_MAX_OVER_DUE_DAYS_SPOSE_BADTYPE_W
+				} else if spouse_result.Code == constant.CODE_SPOSE_IS_RESTRUCTURE {
+					result.Code = constant.CODE_MAX_OVER_DUE_DAYS_SPOSE_IS_RESTRUCTURE
 					result.Decision = constant.DECISION_REJECT
 					result.Reason = constant.REASON_MAX_OVER_DUE_DAYS + " & " + spouse_result.Reason
 				} else if spouse_result.Code == constant.CODE_SPOSE_BERSIH {
@@ -370,23 +370,23 @@ func (u usecase) FilteringBlackList(ctx context.Context, reqs request.FilteringR
 				if spouse_result.Code == constant.CODE_IS_RESTRUCTURE_SPOSE_BADTYPE_B {
 					result.Code = constant.CODE_IS_RESTRUCTURE_SPOSE_BADTYPE_B
 					result.Decision = constant.DECISION_REJECT
-					result.Reason = constant.REASON_SPOSE_IS_RESTRUCTURE_BADTYPE_B + " & " + spouse_result.Reason
+					result.Reason = constant.REASON_SPOSE_IS_RESTRUCTURE + " & " + spouse_result.Reason
 				} else if spouse_result.Code == constant.CODE_IS_RESTRUCTURE_SPOSE_MAX_OVER_DUE_DAYS {
 					result.Code = constant.CODE_IS_RESTRUCTURE_SPOSE_MAX_OVER_DUE_DAYS
 					result.Decision = constant.DECISION_REJECT
-					result.Reason = constant.REASON_SPOSE_IS_RESTRUCTURE_MAX_OVER_DUE_DAYS + " & " + spouse_result.Reason
+					result.Reason = constant.REASON_SPOSE_IS_RESTRUCTURE + " & " + spouse_result.Reason
 				} else if spouse_result.Code == constant.CODE_IS_RESTRUCTURE_SPOSE_NUM_OF_ASSET_INVENTORIED {
 					result.Code = constant.CODE_IS_RESTRUCTURE_SPOSE_NUM_OF_ASSET_INVENTORIED
 					result.Decision = constant.DECISION_REJECT
-					result.Reason = constant.REASON_SPOSE_IS_RESTRUCTURE_NUM_OF_ASSET_INVENTORIED + " & " + spouse_result.Reason
+					result.Reason = constant.REASON_SPOSE_IS_RESTRUCTURE + " & " + spouse_result.Reason
 				} else if spouse_result.Code == constant.CODE_IS_RESTRUCTURE_SPOSE_BADTYPE_W {
 					result.Code = constant.CODE_IS_RESTRUCTURE_SPOSE_BADTYPE_W
 					result.Decision = constant.DECISION_REJECT
-					result.Reason = constant.REASON_SPOSE_IS_RESTRUCTURE_BADTYPE_W + " & " + spouse_result.Reason
+					result.Reason = constant.REASON_SPOSE_IS_RESTRUCTURE + " & " + spouse_result.Reason
 				} else if spouse_result.Code == constant.CODE_IS_RESTRUCTURE_SPOSE_BERSIH {
 					result.Code = constant.CODE_IS_RESTRUCTURE_SPOSE_BERSIH
 					result.Decision = constant.DECISION_REJECT
-					result.Reason = constant.REASON_SPOSE_IS_RESTRUCTURE_BERSIH + " & " + spouse_result.Reason
+					result.Reason = constant.REASON_SPOSE_IS_RESTRUCTURE + " & " + spouse_result.Reason
 				} else {
 					result.Code = constant.CODE_IS_RESTRUCTURE
 					result.Decision = constant.DECISION_REJECT
@@ -414,7 +414,7 @@ func (u usecase) FilteringBlackList(ctx context.Context, reqs request.FilteringR
 				} else if spouse_result.Code == constant.CODE_SPOSE_IS_RESTRUCTURE {
 					result.Code = constant.CODE_SPOSE_IS_RESTRUCTURE
 					result.Decision = constant.DECISION_REJECT
-					result.Reason = constant.REASON_IS_RESTRUCTURE + " & " + spouse_result.Reason
+					result.Reason = constant.REASON_BERSIH + " & " + spouse_result.Reason
 				} else if spouse_result.Code == constant.CODE_SPOSE_BERSIH {
 					result.Code = constant.CODE_BERSIH_SPOSE_BERSIH
 					result.Decision = constant.DECISION_PASS

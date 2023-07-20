@@ -155,20 +155,3 @@ type ClusterBranch struct {
 	BPKBNameType   int    `gorm:"column:bpkb_name_type"`
 	Cluster        string `gorm:"type:varchar(20);column:cluster"`
 }
-
-type MappingElaborateScheme struct {
-	ResultPefindo  string  `gorm:"type:varchar(10);column:result_pefindo"`
-	BranchID       string  `gorm:"type:varchar(10);column:branch_id"`
-	CustomerStatus string  `gorm:"type:varchar(10);column:customer_status"`
-	BPKBNameType   int     `gorm:"column:bpkb_name_type"`
-	Cluster        string  `gorm:"type:varchar(20);column:cluster"`
-	TotalBakiDebet int     `gorm:"column:total_baki_debet"`
-	Tenor          int     `gorm:"column:tenor"`
-	AgeVehicle     string  `gorm:"type:varchar(5);column:age_vehicle"`
-	LTV            float64 `gorm:"column:ltv"`
-	Decision       string  `gorm:"type:varchar(10);column:decision"`
-}
-
-func (c *MappingElaborateScheme) TableName() string {
-	return "kmb_mapping_elaborate_scheme"
-}
