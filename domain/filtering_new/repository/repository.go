@@ -48,42 +48,6 @@ func (r repoHandler) DummyDataPbk(noktp string) (data entity.DummyPBK, err error
 	return
 }
 
-func (r repoHandler) DataGetMappingDp(branchID, statusKonsumen string) (data []entity.RangeBranchDp, err error) {
-	var x sql.TxOptions
-
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.KpLos.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	if err = r.KpLos.Raw("SELECT mbd.* FROM dbo.mapping_branch_dp mdp LEFT JOIN dbo.mapping_baki_debet mbd ON mdp.baki_debet = mbd.id LEFT JOIN dbo.master_list_dp mld ON mdp.master_list_dp = mld.id WHERE mdp.branch = ? AND mdp.customer_status = ?").Scan(&data).Error; err != nil {
-		return
-	}
-
-	return
-}
-
-func (r repoHandler) BranchDpData(query string) (data entity.BranchDp, err error) {
-	var x sql.TxOptions
-
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.KpLos.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	if err = r.KpLos.Raw(query).Scan(&data).Error; err != nil {
-		return
-	}
-
-	return
-}
-
 func (r repoHandler) SaveDupcheckResult(data entity.FilteringKMB) (err error) {
 
 	var x sql.TxOptions
