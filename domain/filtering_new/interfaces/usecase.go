@@ -8,7 +8,6 @@ import (
 )
 
 type Usecase interface {
-	FilteringBlackList(ctx context.Context, reqs request.FilteringRequest, request_id string) (result response.DupcheckResult, err error)
 	FilteringPefindo(ctx context.Context, reqs request.FilteringRequest, status_konsumen, request_id string) (data response.Filtering, responsePefindo interface{}, err error)
 	CheckStatusCategory(ctx context.Context, reqs request.FilteringRequest, status_konsumen, accessToken string) (data response.DupcheckResult, err error)
 	DupcheckIntegrator(ctx context.Context, prospectID, idNumber, legalName, birthDate, surgateName, accessToken string) (spDupcheck response.SpDupCekCustomerByID, err error)

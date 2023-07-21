@@ -119,6 +119,17 @@ func SetCustomLog(keyConfig string, isError bool, data map[string]interface{}, m
 	}
 }
 
+func GetMinilosWgDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("MINILOS_WG_DB_USERNAME"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("MINILOS_WG_DB_PASSWORD"))
+	host, _ := utils.DecryptCredential(os.Getenv("MINILOS_WG_DB_HOST"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("MINILOS_WG_DB_PORT"))
+	port, _ := strconv.Atoi(strPort)
+	database, _ := utils.DecryptCredential(os.Getenv("MINILOS_WG_DB_DATABASE"))
+
+	return user, pwd, host, port, database
+}
+
 func GetMinilosKmbDB() (string, string, string, int, string) {
 	user, _ := utils.DecryptCredential(os.Getenv("MINILOS_KMB_DB_USERNAME"))
 	pwd, _ := utils.DecryptCredential(os.Getenv("MINILOS_KMB_DB_PASSWORD"))
@@ -148,6 +159,17 @@ func GetKpLosLogDB() (string, string, string, int, string) {
 	strPort, _ := utils.DecryptCredential(os.Getenv("KP_LOS_LOG_DB_PORT"))
 	port, _ := strconv.Atoi(strPort)
 	database, _ := utils.DecryptCredential(os.Getenv("KP_LOS_LOG_DB_DATABASE"))
+
+	return user, pwd, host, port, database
+}
+
+func GetNewKmbDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("NEW_KMB_DB_USERNAME"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("NEW_KMB_DB_PASSWORD"))
+	host, _ := utils.DecryptCredential(os.Getenv("NEW_KMB_DB_HOST"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("NEW_KMB_DB_PORT"))
+	port, _ := strconv.Atoi(strPort)
+	database, _ := utils.DecryptCredential(os.Getenv("NEW_KMB_DB_DATABASE"))
 
 	return user, pwd, host, port, database
 }

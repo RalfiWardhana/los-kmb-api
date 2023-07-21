@@ -102,7 +102,7 @@ const (
 	CODE_MAX_OVER_DUE_DAYS_SPOSE_BADTYPE_B                       = "7031"
 	CODE_MAX_OVER_DUE_DAYS_SPOSE_MAX_OVER_DUE_DAYS               = "7032"
 	CODE_MAX_OVER_DUE_DAYS_SPOSE_NUM_OF_ASSET_INVENTORIED        = "7033"
-	CODE_MAX_OVER_DUE_DAYS_SPOSE_BADTYPE_W                       = "7034"
+	CODE_MAX_OVER_DUE_DAYS_SPOSE_IS_RESTRUCTURE                  = "7034"
 	CODE_MAX_OVER_DUE_DAYS_SPOSE_BERSIH                          = "7035"
 	CODE_MAX_OVER_DUE_DAYS_SPOSE                                 = "7036"
 	CODE_NUM_OF_ASSET_INVENTORIED                                = "704"
@@ -259,6 +259,7 @@ const (
 	REASON_REJECT_NTF_ELABORATE     = "REJECT - NTF Tidak Sesuai Threshold"
 	CLUSTER_E                       = "Cluster E"
 	CLUSTER_F                       = "Cluster F"
+	BRANCH_ID_PRIME_PRIORITY        = "000"
 
 	//HTTP MSG
 	MSG_CORE_API          = "CORE_API"

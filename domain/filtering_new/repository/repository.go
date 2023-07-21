@@ -19,14 +19,16 @@ var (
 )
 
 type repoHandler struct {
-	KpLos *gorm.DB
-	dummy *gorm.DB
+	KpLos     *gorm.DB
+	KpLosLogs *gorm.DB
+	NewKmb    *gorm.DB
 }
 
-func NewRepository(KpLos, dummy *gorm.DB) interfaces.Repository {
+func NewRepository(kpLos, kpLosLogs, newKmb *gorm.DB) interfaces.Repository {
 	return &repoHandler{
-		KpLos: KpLos,
-		dummy: dummy,
+		KpLos:     kpLos,
+		KpLosLogs: kpLosLogs,
+		NewKmb:    newKmb,
 	}
 }
 
@@ -38,10 +40,10 @@ func (r repoHandler) DummyDataPbk(noktp string) (data entity.DummyPBK, err error
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
 
-	db := r.dummy.BeginTx(ctx, &x)
+	db := r.KpLosLogs.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.dummy.Raw("SELECT * FROM new_pefindo_kmb WHERE IDNumber = ?", noktp).Scan(&data).Error; err != nil {
+	if err = r.KpLosLogs.Raw("SELECT * FROM dbo.dummy_pefindo_kmb WHERE IDNumber = ?", noktp).Scan(&data).Error; err != nil {
 		return
 	}
 

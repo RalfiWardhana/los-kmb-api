@@ -23,15 +23,18 @@ type repoHandler struct {
 	stagingDB *gorm.DB
 	wgOffDB   *gorm.DB
 	kmbOffDB  *gorm.DB
+	newKmbDB  *gorm.DB
 }
 
-func NewRepository(los, logs, confins, staging, kmbOff *gorm.DB) interfaces.Repository {
+func NewRepository(los, logs, confins, staging, wgOffDB, kmbOff, newKmbDB *gorm.DB) interfaces.Repository {
 	return &repoHandler{
 		losDB:     los,
 		logsDB:    logs,
 		confinsDB: confins,
 		stagingDB: staging,
+		wgOffDB:   wgOffDB,
 		kmbOffDB:  kmbOff,
+		newKmbDB:  newKmbDB,
 	}
 }
 

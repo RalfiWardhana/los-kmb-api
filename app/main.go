@@ -63,6 +63,11 @@ func main() {
 
 	constant.LOS_KMB_BASE_URL = os.Getenv("SWAGGER_HOST")
 
+	minilosWG, err := database.OpenMinilosWG()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to open database connection: %s", err))
+	}
+
 	minilosKMB, err := database.OpenMinilosKMB()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
@@ -74,6 +79,11 @@ func main() {
 	}
 
 	kpLosLogs, err := database.OpenKpLosLogs()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to open database connection: %s", err))
+	}
+
+	newKMB, err := database.OpenNewKmb()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
 	}
@@ -130,12 +140,12 @@ func main() {
 	elaborateDelivery.ElaborateHandler(apiGroup, kmbElaborateMultiCase, kmbElaborateCase, kmbElaborateRepo, jsonResponse, accessToken)
 
 	// define new kmb filtering domain
-	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs)
+	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs, newKMB)
 	newKmbFilteringMultiCase, newKmbFilteringCase := newKmbFilteringUsecase.NewMultiUsecase(newKmbFilteringRepo, httpClient)
 	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken)
 
 	// define new kmb journey
-	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, confins, staging, minilosKMB)
+	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, confins, staging, minilosWG, minilosKMB, newKMB)
 	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
 	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
