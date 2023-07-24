@@ -50,7 +50,7 @@ func (r repoHandler) DummyDataPbk(noktp string) (data entity.DummyPBK, err error
 	return
 }
 
-func (r repoHandler) SaveDupcheckResult(data entity.FilteringKMB) (err error) {
+func (r repoHandler) SaveDupcheckResult(data entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro) (err error) {
 
 	var x sql.TxOptions
 
@@ -59,11 +59,19 @@ func (r repoHandler) SaveDupcheckResult(data entity.FilteringKMB) (err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
 
-	db := r.KpLos.BeginTx(ctx, &x)
+	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
 	if err = db.Create(&data).Error; err != nil {
 		return
+	}
+
+	if len(trxDetailBiro) > 0 {
+		for _, v := range trxDetailBiro {
+			if err = db.Create(&v).Error; err != nil {
+				return
+			}
+		}
 	}
 
 	return

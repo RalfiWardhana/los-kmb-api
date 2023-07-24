@@ -314,7 +314,7 @@ const (
 	REASON_KONSUMEN_BLACKLIST_ASSET_INVENTORY = "Konsumen Blacklist - Asset Inventory > 0"
 	REASON_PASANGAN_BLACKLIST_ASSET_INVENTORY = "Pasangan Blacklist - Asset Inventory > 0"
 	REASON_KONSUMEN_BLACKLIST_RESTRUCTURE     = "Konsumen Blacklist - Konsumen Restructure"
-	REASON_PASANGAN_BLACKLIST_RESTRUCTURE     = "Pasangan Blacklist - Konsumen Restructure"
+	REASON_PASANGAN_BLACKLIST_RESTRUCTURE     = "Pasangan Blacklist - Pasangan Restructure"
 	REASON_NON_BLACKLIST                      = "Non Blacklist"
 
 	//DSR

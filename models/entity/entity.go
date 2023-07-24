@@ -384,26 +384,27 @@ func (c *TrxMaster) TableName() string {
 }
 
 type FilteringKMB struct {
-	ProspectID             string      `gorm:"column:ProspectID;type:varchar(20)" json:"prospect_id"`
-	RequestID              interface{} `gorm:"column:RequestID;type:varchar(100)" json:"request_id"`
-	Request                interface{} `gorm:"column:Request;type:text" json:"request"`
-	DtmRequest             time.Time   `gorm:"column:DtmRequest" json:"dtm_request"`
-	ResultDupcheckKonsumen interface{} `gorm:"column:ResultDupcheckKonsumen;type:text" json:"result_dupcheck_konsumen"`
-	ResultDupcheckPasangan interface{} `gorm:"column:ResultDupcheckPasangan;type:text" json:"result_dupcheck_pasangan"`
-	Response               string      `gorm:"column:Response;type:text" json:"response"`
-	DtmResponse            time.Time   `gorm:"column:DtmResponse" json:"dtm_response"`
-	ResultPefindo          interface{} `gorm:"column:ResultBiro;type:text" json:"result_pefindo"`
-	Decision               string      `gorm:"column:decision;type:varchar(20)" json:"decision"`
-	PassType               interface{} `gorm:"column:pass_type;type:varchar(5)" json:"pass_type"`
-	SourceCreditBiro       interface{} `gorm:"column:source_credit_biro;type:varchar(5)" json:"source_credit_biro"`
-	StatusKonsumen         interface{} `gorm:"column:status_konsumen;type:varchar(10)" json:"status_konsumen"`
-	Kontigensi             interface{} `gorm:"column:kontigensi" json:"kontigensi"`
-	DataAkkk               interface{} `gorm:"column:data_akkk" json:"data_akkk"`
-	CreatedAt              time.Time   `gorm:"column:created_at" json:"created_at"`
+	ProspectID                      string      `gorm:"column:prospect_id;type:varchar(20)" json:"prospect_id"`
+	RequestID                       interface{} `gorm:"column:request_id;type:varchar(100)" json:"request_id"`
+	BpkbName                        string      `gorm:"column:bpkb_name;type:varchar(2)" json:"bpkb_name"`
+	BranchID                        string      `gorm:"column:branch_id;type:varchar(5)" json:"branch_id"`
+	Decision                        string      `gorm:"column:decision;type:varchar(20)" json:"decision"`
+	CustomerStatus                  interface{} `gorm:"column:customer_status;type:varchar(5)" json:"customer_status"`
+	CustomerSegment                 interface{} `gorm:"column:customer_segment;type:varchar(20)" json:"customer_segment"`
+	IsBlacklist                     int         `gorm:"column:is_blacklist" json:"is_blacklist"`
+	NextProcess                     int         `gorm:"column:next_process" json:"next_process"`
+	MaxOverdueBiro                  interface{} `gorm:"column:max_overdue_biro" json:"max_overdue_biro"`
+	MaxOverdueLast12monthsBiro      interface{} `gorm:"column:max_overdue_last12months_biro" json:"max_overdue_last12months_biro"`
+	IsWoContractBiro                interface{} `gorm:"column:is_wo_contract_biro" json:"is_wo_contract_biro"`
+	IsWoWithCollateralBiro          interface{} `gorm:"column:is_wo_with_collateral_biro" json:"is_wo_with_collateral_biro"`
+	TotalInstallmentAmountBiro      interface{} `gorm:"column:total_installment_amount_biro" json:"total_installment_amount_biro"`
+	TotalBakiDebetNonCollateralBiro interface{} `gorm:"column:total_baki_debet_non_collateral_biro" json:"total_baki_debet_non_collateral_biro"`
+	Cluster                         interface{} `gorm:"column:cluster;type:varchar(20)" json:"cluster"`
+	CreatedAt                       time.Time   `gorm:"column:created_at" json:"created_at"`
 }
 
 func (c *FilteringKMB) TableName() string {
-	return "filtering_kmob"
+	return "trx_filtering"
 }
 
 type TrxDetail struct {
@@ -424,3 +425,22 @@ func (c *TrxDetail) TableName() string {
 	return "trx_details"
 }
 
+type TrxDetailBiro struct {
+	ProspectID             string      `gorm:"type:varchar(20);column:prospect_id;primary_key:true"`
+	Subject                string      `gorm:"type:varchar(10);column:subject"`
+	Source                 string      `gorm:"type:varchar(5);column:source"`
+	BiroID                 string      `gorm:"type:varchar(20);column:biro_id"`
+	Score                  string      `gorm:"type:varchar(20);column:score"`
+	MaxOverdue             interface{} `gorm:"column:max_overdue"`
+	MaxOverdueLast12months interface{} `gorm:"column:max_overdue_last12months"`
+	InstallmentAmount      interface{} `gorm:"column:installment_amount"`
+	WoContract             int         `gorm:"column:wo_contract"`
+	WoWithCollateral       int         `gorm:"column:wo_with_collateral"`
+	BakiDebetNonCollateral float64     `gorm:"column:baki_debet_non_collateral"`
+	UrlPdfReport           string      `gorm:"type:varchar(200);column:url_pdf_report"`
+	CreatedAt              time.Time   `gorm:"column:created_at"`
+}
+
+func (c *TrxDetailBiro) TableName() string {
+	return "trx_detail_biro"
+}

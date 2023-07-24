@@ -32,7 +32,7 @@ type Filtering struct {
 	Code              interface{} `json:"code"`
 	Decision          string      `json:"decision"`
 	Reason            string      `json:"reason"`
-	CustomerStatus    string      `json:"customer_status"`
+	CustomerStatus    interface{} `json:"customer_status"`
 	CustomerSegment   interface{} `json:"customer_segment"`
 	IsBlacklist       bool        `json:"is_blacklist"`
 	NextProcess       bool        `json:"next_process"`
