@@ -1,7 +1,7 @@
 node {
     dir ("${env.BUILD_ID}") {
 	    def APP_REPO_URL = "https://github.com/KB-FMF/los-kmb-api.git"
-        def APP_REPO_DEVOPS = "https://github.com/KB-FMF/los-devops.git"
+        def APP_REPO_DEVOPS = "https://github.com/KB-FMF/devops-config.git"
 	    def CREDENTIAL_ID = "kjsbfjwehfm-kdsfb325jkbdfj-oij2358u2395"
         def APP_NAME = "los-kmb-api"
         def USER_CRED = "jenkins"
