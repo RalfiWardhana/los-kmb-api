@@ -880,7 +880,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 						} else { //Wo Agunan No
 							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-									data.NextProcess = 1
+									data.NextProcess = 0
 									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
 								} else {
 									data.NextProcess = 0
