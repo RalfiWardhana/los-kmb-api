@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
@@ -25,7 +26,7 @@ func DiffTwoDate(date time.Time) time.Duration {
 	currentTime := time.Now().In(loc)
 	//differnce between pastdate and current date
 	diff := currentTime.Sub(date)
-	fmt.Printf("time difference is %v or %v in minutes\n", diff, diff.Minutes())
+	// fmt.Printf("time difference is %v or %v in minutes\n", diff, diff.Minutes())
 	return diff
 }
 
@@ -34,6 +35,13 @@ func GenerateTimeNow() string {
 	loc, _ := time.LoadLocation("Asia/Jakarta")
 	currentTime := time.Now().In(loc).Format(time.RFC3339)
 	//differnce between pastdate and current date
+	return currentTime
+}
+
+func GenerateUnixTimeNow() int64 {
+	//fetching current time
+	currentTime := time.Now().Local().Unix()
+
 	return currentTime
 }
 
@@ -280,4 +288,13 @@ func DecodeNonMedia(url string) (base64Image string, err error) {
 	base64Image = base64.StdEncoding.EncodeToString(ioutil)
 
 	return
+}
+
+func SafeEncoding(arrByte []byte) []byte {
+
+	arrByte = bytes.ReplaceAll(arrByte, []byte("\\u0026"), []byte("&"))
+	arrByte = bytes.ReplaceAll(arrByte, []byte("\\u003c"), []byte("<"))
+	arrByte = bytes.ReplaceAll(arrByte, []byte("\\u003e"), []byte(">"))
+
+	return arrByte
 }

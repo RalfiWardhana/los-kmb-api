@@ -399,6 +399,7 @@ type FilteringKMB struct {
 	IsWoWithCollateralBiro          interface{} `gorm:"column:is_wo_with_collateral_biro" json:"is_wo_with_collateral_biro"`
 	TotalInstallmentAmountBiro      interface{} `gorm:"column:total_installment_amount_biro" json:"total_installment_amount_biro"`
 	TotalBakiDebetNonCollateralBiro interface{} `gorm:"column:total_baki_debet_non_collateral_biro" json:"total_baki_debet_non_collateral_biro"`
+	ScoreBiro                       interface{} `gorm:"column:score_biro;type:varchar(20)" json:"score_biro"`
 	Cluster                         interface{} `gorm:"column:cluster;type:varchar(20)" json:"cluster"`
 	CreatedAt                       time.Time   `gorm:"column:created_at" json:"created_at"`
 }
@@ -443,4 +444,32 @@ type TrxDetailBiro struct {
 
 func (c *TrxDetailBiro) TableName() string {
 	return "trx_detail_biro"
+}
+
+type MasterMappingCluster struct {
+	BranchID       string    `gorm:"column:branch_id"`
+	CustomerStatus string    `gorm:"column:customer_status"`
+	BpkbNameType   int       `gorm:"column:bpkb_name_type"`
+	Cluster        string    `gorm:"column:cluster"`
+	CreatedAt      time.Time `gorm:"column:created_at"`
+}
+
+func (c *MasterMappingCluster) TableName() string {
+	return "m_mapping_cluster"
+}
+
+type LogOrchestrator struct {
+	ID           string    `gorm:"type:varchar(50);column:id;primary_key:true"`
+	ProspectID   string    `gorm:"type:varchar(20);column:ProspectID"`
+	Owner        string    `gorm:"type:varchar(10);column:owner"`
+	Header       string    `gorm:"type:text;column:header"`
+	Url          string    `gorm:"type:varchar(100);column:url"`
+	Method       string    `gorm:"type:varchar(10);column:method"`
+	RequestData  string    `gorm:"type:text;column:request_data"`
+	ResponseData string    `gorm:"type:text;column:response_data"`
+	CreatedAt    time.Time `gorm:"column:created_at"`
+}
+
+func (c *LogOrchestrator) TableName() string {
+	return "log_orchestrators"
 }

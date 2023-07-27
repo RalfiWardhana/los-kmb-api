@@ -38,6 +38,7 @@ type Filtering struct {
 	NextProcess       bool        `json:"next_process"`
 	PbkReportCustomer interface{} `json:"pbk_report_customer"`
 	PbkReportSpouse   interface{} `json:"pbk_report_spouse"`
+	TotalBakiDebet    interface{} `json:"total_baki_debet"`
 }
 
 type CustomerDomain struct {

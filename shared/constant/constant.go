@@ -1,6 +1,7 @@
 package constant
 
 var LOS_KMB_BASE_URL string
+var TOPIC_SUBMISSION string
 
 const (
 	FLAG_LOS                                                     = "LOS"
@@ -230,6 +231,7 @@ const (
 	ERROR_DATA_CONFLICT       = "data_conflict"
 
 	// Key
+	HeaderXRequestID                = "X-Request-ID"
 	CTX_KEY_REQUEST_TIME            = "RequestTime"
 	CTX_KEY_TAG_VERSION             = "TagVersion"
 	CTX_KEY_LOS_VERSION             = "LOSVersion"
@@ -243,6 +245,17 @@ const (
 	PLATFORM_LOG_LEVEL_WARNING  = "WARNING"
 	PLATFORM_LOG_LEVEL_ERROR    = "ERROR"
 	PLATFORM_LOG_LEVEL_CRITICAL = "CRITICAL"
+	LOG_EVENT                   = "LOG_EVENT"
+
+	MSG_PUBLISH_DATA_STREAM = "PUBLISH_DATA_STREAM"
+	MSG_CONSUME_DATA_STREAM = "CONSUME_DATA_STREAM"
+	MSG_MEDIA_API           = "PLATFORM_MEDIA_API"
+
+	//Platform Event
+	KEY_PREFIX_FILTERING               = "filtering"
+	KEY_PREFIX_UPDATE_STATUS_FILTERING = "update_status_filtering"
+
+	MAX_RETRY_PUBLISH = 3
 
 	// Format
 	FORMAT_DATE_TIME_MS = "2006/01/02 15:04:05.000"
@@ -393,6 +406,9 @@ const (
 	//LOG
 	LOG_FILTERING_LOG = "FILTERING_LOG"
 	LOG_JOURNEY_LOG   = "KMB_LOG"
+
+	// Flag Logging
+	USECASE_API = "USECASE_API"
 
 	//Reject Tenor
 	CODE_PASS_TENOR     = "010"

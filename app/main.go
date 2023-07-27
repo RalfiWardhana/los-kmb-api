@@ -11,6 +11,7 @@ import (
 	filteringDelivery "los-kmb-api/domain/filtering/delivery/http"
 	filteringRepository "los-kmb-api/domain/filtering/repository"
 	filteringUsecase "los-kmb-api/domain/filtering/usecase"
+	eventhandlers "los-kmb-api/domain/filtering_new/delivery/event"
 	newKmbFilteringDelivery "los-kmb-api/domain/filtering_new/delivery/http"
 	newKmbFilteringRepository "los-kmb-api/domain/filtering_new/repository"
 	newKmbFilteringUsecase "los-kmb-api/domain/filtering_new/usecase"
@@ -20,6 +21,7 @@ import (
 	"los-kmb-api/middlewares"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/json"
+	"los-kmb-api/shared/common/platformlog"
 	"los-kmb-api/shared/config"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/database"
@@ -30,8 +32,12 @@ import (
 	"os/signal"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 
+	"los-kmb-api/shared/common/platformevent"
+
+	"github.com/KB-FMF/platform-library/event"
 	"github.com/allegro/bigcache/v3"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -52,6 +58,8 @@ func main() {
 
 	e.Validator = common.NewValidator()
 
+	validator := common.NewValidator()
+
 	config.LoadEnv()
 
 	env := strings.ToLower(os.Getenv("APP_ENV"))
@@ -61,7 +69,35 @@ func main() {
 	e.Use(middleware.RequestID())
 	e.Debug = config.IsDevelopment
 
+	if config.IsDevelopment {
+		docs.SwaggerInfo.Title = "LOS-KMB-API"
+		docs.SwaggerInfo.Description = "This is a orchestrator api server."
+		docs.SwaggerInfo.Version = "3.0"
+		docs.SwaggerInfo.Host = os.Getenv("SWAGGER_HOST")
+		docs.SwaggerInfo.BasePath = "/"
+		docs.SwaggerInfo.Schemes = []string{"http", "https"}
+		e.GET("/swagger/*", echoSwagger.WrapHandler)
+	} else {
+		e.HideBanner = true
+	}
+
+	// Newrelic
+	app, err := config.InitNewrelic()
+	if err == nil {
+		e.Use(nrecho.Middleware(app))
+	}
+
+	// LOS_KMB_BASE_URL
 	constant.LOS_KMB_BASE_URL = os.Getenv("SWAGGER_HOST")
+	if !strings.Contains(constant.LOS_KMB_BASE_URL, "/los-kmb-api") && !strings.Contains(constant.LOS_KMB_BASE_URL, ":") {
+		constant.LOS_KMB_BASE_URL = constant.LOS_KMB_BASE_URL + ":" + os.Getenv("APP_PORT")
+	}
+	if !strings.Contains(constant.LOS_KMB_BASE_URL, "http") {
+		constant.LOS_KMB_BASE_URL = "http://" + constant.LOS_KMB_BASE_URL
+	}
+
+	//topic kafka
+	constant.TOPIC_SUBMISSION = os.Getenv("TOPIC_SUBMISSION")
 
 	minilosWG, err := database.OpenMinilosWG()
 	if err != nil {
@@ -129,6 +165,15 @@ func main() {
 	apiGroupv3 := e.Group("/api/v3/kmb")
 	httpClient := httpclient.NewHttpClient()
 
+	useLogPlatform, _ := strconv.ParseBool(os.Getenv("USE_LOG_PLATFORM"))
+	if useLogPlatform {
+		platformLog := platformlog.NewPlatformLog()
+		platformlog.Log = platformLog
+		platformLog.CreateLogger()
+	}
+
+	producer := platformevent.NewPlatformEvent()
+
 	// define kmb filtering domain
 	kmbFilteringRepo := filteringRepository.NewRepository(minilosKMB, kpLos, kpLosLogs)
 	kmbFilteringMultiCase, kmbFilteringCase := filteringUsecase.NewMultiUsecase(kmbFilteringRepo, httpClient)
@@ -152,22 +197,29 @@ func main() {
 
 	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, jsonResponse, accessToken)
 
-	if config.IsDevelopment {
-		docs.SwaggerInfo.Title = "LOS-KMB-API"
-		docs.SwaggerInfo.Description = "This is a orchestrator api server."
-		docs.SwaggerInfo.Version = "3.0"
-		docs.SwaggerInfo.Host = os.Getenv("SWAGGER_HOST")
-		docs.SwaggerInfo.BasePath = "/"
-		docs.SwaggerInfo.Schemes = []string{"http", "https"}
-		e.GET("/swagger/*", echoSwagger.WrapHandler)
-	} else {
-		e.HideBanner = true
+	auth := map[string]interface{}{
+		"secret_key":         os.Getenv("PLATFORM_SECRET_KEY"),
+		"source_application": constant.FLAG_LOS,
+	}
+	consumerRouter := platformevent.NewConsumerRouter(constant.TOPIC_SUBMISSION, os.Getenv("SALLY_SUBMISSION_FILTERING"), auth)
 
-		// Newrelic
-		app, err := config.InitNewrelic()
-		if err == nil {
-			e.Use(nrecho.Middleware(app))
+	consumerRouter.Use(func(next event.ConsumerProcessor) event.ConsumerProcessor {
+		return func(ctx context.Context, event event.Event) error {
+			startTime := utils.GenerateTimeInMilisecond()
+			reqID := utils.GenerateUUID()
+
+			ctx = context.WithValue(ctx, constant.CTX_KEY_REQUEST_TIME, startTime)
+			ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
+			ctx = context.WithValue(ctx, constant.CTX_KEY_IS_CONSUMER, true)
+
+			return next(ctx, event)
 		}
+	})
+
+	eventhandlers.NewServiceApplication(consumerRouter, newKmbFilteringRepo, newKmbFilteringCase, newKmbFilteringMultiCase, validator, producer, jsonResponse)
+
+	if err := consumerRouter.StartConsume(); err != nil {
+		panic(err)
 	}
 
 	// Setup Server
@@ -184,14 +236,18 @@ func main() {
 		}
 	}()
 
-	// Wait for interrupt signal to gracefully shutdown the server with a timeout of 5 seconds.
-	// Use a buffered channel to avoid missing signals as recommended for signal.Notify
+	// platform shutdown
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	<-quit
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	if err := e.Shutdown(ctx); err != nil {
-		e.Logger.Fatal(err)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM, syscall.SIGQUIT)
+	select {
+	case <-quit:
+		fmt.Println("========== Shutdown signal received ==========")
+
+		if err := consumerRouter.StopConsume(); err != nil {
+			panic(err)
+		}
+
+		fmt.Println("========== Shutdown Completed ==========")
+		os.Exit(0)
 	}
 }

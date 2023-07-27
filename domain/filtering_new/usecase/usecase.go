@@ -142,6 +142,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	}
 
 	data.ProspectID = req.ProspectID
+	data.CustomerSegment = mainCustomer.CustomerSegment
 
 	primePriority, _ := utils.ItemExists(mainCustomer.CustomerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
 
@@ -175,8 +176,13 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	filtering.TotalInstallmentAmountBiro = resPefindo.AngsuranAktifPbk
 	filtering.TotalBakiDebetNonCollateralBiro = resPefindo.TotalBakiDebetNonAgunan
+	if resPefindo.Score != "" {
+		filtering.ScoreBiro = resPefindo.Score
+	}
 
 	err = u.usecase.SaveFilteringLogs(filtering, trxDetailBiro)
+
+	// u.platformEvent.PublishEvent()
 
 	return
 }
@@ -504,6 +510,26 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 				}
 			}
 
+			// Cluster E, F
+			var mappingCluster entity.MasterMappingCluster
+			mappingCluster.BranchID = reqs.Data.BranchID
+			mappingCluster.CustomerStatus = constant.STATUS_KONSUMEN_NEW
+			bpkbString := "Nama Beda"
+
+			if bpkbName == constant.NAMA_SAMA {
+				bpkbString = "Nama Sama"
+				mappingCluster.BpkbNameType = 1
+			}
+			if strings.Contains(constant.STATUS_KONSUMEN_RO_AO, customerStatus) {
+				mappingCluster.CustomerStatus = "AO/RO"
+			}
+
+			mappingCluster, err = u.repository.MasterMappingCluster(mappingCluster)
+			if data.NextProcess == true && pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET && strings.Contains("Cluster E Cluster F", mappingCluster.Cluster) {
+				data.NextProcess = false
+				data.Reason = bpkbString + "& Baki Debet > 3 - 20 Juta, Cluster Reject"
+			}
+
 			if checkPefindo.Konsumen != (response.PefindoResultKonsumen{}) {
 				trxDetailBiroC := entity.TrxDetailBiro{
 					ProspectID:             reqs.Data.ProspectID,
@@ -540,6 +566,8 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 				trxDetailBiro = append(trxDetailBiro, trxDetailBiroC)
 				data.PbkReportSpouse = &checkPefindo.Pasangan.DetailReport
 			}
+
+			data.TotalBakiDebet = pefindoResult.TotalBakiDebetNonAgunan
 
 		} else if checkPefindo.Code == "201" || pefindoResult.Score == constant.PEFINDO_UNSCORE {
 

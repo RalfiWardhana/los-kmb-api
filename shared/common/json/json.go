@@ -1,6 +1,7 @@
 package json
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	models "los-kmb-api/models/response"
@@ -8,6 +9,8 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"net/http"
+	"os"
+	"strconv"
 	"strings"
 
 	"github.com/iancoleman/strcase"
@@ -327,4 +330,122 @@ func formatMessage(err validator.FieldError) string {
 		message = fmt.Sprintf("accepted:value=%s", common.Relation)
 	}
 	return message
+}
+
+func (c *response) EventSuccess(ctx context.Context, accessToken, logFile, message string, req, data interface{}) (apiResponse models.ApiResponse) {
+
+	//create response
+	apiResponse = models.ApiResponse{
+		Message:    message,
+		Errors:     nil,
+		Data:       data,
+		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Value(constant.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx, accessToken, common.CentralizeLogParameter{
+		Link:       os.Getenv("DUMMY_URL_LOGS"),
+		Method:     http.MethodPost,
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_CONSUME_DATA_STREAM,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_INFO,
+		Request:    req,
+		Response:   apiResponse,
+	})
+
+	return apiResponse
+}
+
+func (c *response) EventServiceError(ctx context.Context, accessToken, logFile, message string, req interface{}, err error) (apiResponse models.ApiResponse) {
+	var (
+		errors     string
+		statusCode int
+	)
+
+	handleError := strings.Split(err.Error(), " - ")
+
+	if len(handleError) > 1 {
+		message = fmt.Sprintf("%s - %s", message, handleError[1])
+	} else {
+		message = fmt.Sprintf("%s - %s", message, err.Error())
+	}
+	errors = handleError[0]
+
+	switch handleError[0] {
+	case constant.ERROR_UPSTREAM:
+		statusCode = http.StatusBadGateway
+	case constant.ERROR_UPSTREAM_TIMEOUT:
+		statusCode = http.StatusGatewayTimeout
+	case constant.ERROR_SERVICE_UNAVAILABLE:
+		statusCode = http.StatusServiceUnavailable
+	case constant.ERROR_BAD_REQUEST:
+		statusCode = http.StatusBadRequest
+	case constant.ERROR_DATA_CONFLICT:
+		statusCode = http.StatusConflict
+	default:
+		statusCode = http.StatusServiceUnavailable
+		errors = constant.ERROR_SERVICE_UNAVAILABLE
+	}
+
+	apiResponse = models.ApiResponse{
+		Message:    message,
+		Errors:     strconv.Itoa(statusCode) + " " + errors,
+		Data:       nil,
+		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Value(constant.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx, accessToken, common.CentralizeLogParameter{
+		Link:       os.Getenv("DUMMY_URL_LOGS"),
+		Method:     http.MethodPost,
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_CONSUME_DATA_STREAM,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_ERROR,
+		Request:    req,
+		Response:   apiResponse,
+	})
+
+	return apiResponse
+}
+
+func (c *response) EventBadRequestErrorValidation(ctx context.Context, accessToken, logFile, message string, req interface{}, err error) (apiResponse models.ApiResponse) {
+	var errors = make([]models.ErrorValidation, len(err.(validator.ValidationErrors)))
+
+	for k, v := range err.(validator.ValidationErrors) {
+		field := strcase.ToSnake(v.Field())
+
+		errors[k] = models.ErrorValidation{
+			Field:   field,
+			Message: formatMessage(v),
+		}
+
+	}
+	apiResponse = models.ApiResponse{
+		Message:    message,
+		Errors:     errors,
+		Data:       nil,
+		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Value(constant.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx, accessToken, common.CentralizeLogParameter{
+		Link:       os.Getenv("DUMMY_URL_LOGS"),
+		Method:     http.MethodPost,
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_CONSUME_DATA_STREAM,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_ERROR,
+		Request:    req,
+		Response:   apiResponse,
+	})
+
+	return apiResponse
 }
