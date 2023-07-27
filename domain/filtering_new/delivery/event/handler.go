@@ -52,7 +52,15 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 		resultFiltering response.Filtering
 		resp            interface{}
 	)
+
+	// Save Log Orchestrator
+	defer func() {
+		headers := map[string]string{constant.HeaderXRequestID: ctx.Value(constant.HeaderXRequestID).(string)}
+		go h.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/filtering", constant.METHOD_POST, req.ProspectID, ctx.Value(constant.HeaderXRequestID).(string))
+	}()
+
 	err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(body, &req)
+
 	if err != nil {
 		log.Println(err.Error())
 		log.Println("success consume data stream")
@@ -62,12 +70,6 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
 		return nil
 	}
-
-	// Save Log Orchestrator
-	defer func() {
-		headers := map[string]string{constant.HeaderXRequestID: ctx.Value(constant.HeaderXRequestID).(string)}
-		go h.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/filtering", constant.METHOD_POST, req.ProspectID, ctx.Value(constant.HeaderXRequestID).(string))
-	}()
 
 	// Write Success Log
 	requestLog := utils.StructToMap(req)
