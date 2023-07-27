@@ -752,7 +752,7 @@ func (u usecase) SaveFilteringLogs(transaction entity.FilteringKMB, trxDetailBir
 			return
 		}
 
-		err = errors.New("upstream_service_error - Save Filtering Error")
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Save Filtering Error ProspectID Already Exist")
 	}
 
 	return

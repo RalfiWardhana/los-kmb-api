@@ -298,3 +298,20 @@ func SafeEncoding(arrByte []byte) []byte {
 
 	return arrByte
 }
+
+func SafeJsonReplacer(myString string) string {
+	r := strings.NewReplacer(
+		"\\n", "",
+		"\\", "",
+		"  ", "",
+		"\r", "",
+		"\t", "",
+		"\"{", "{",
+		"}\"", "}",
+		"\\u0026", "&",
+		"\\u003c", "<",
+		"\\u003e", ">",
+	)
+	myString = r.Replace(myString)
+	return myString
+}

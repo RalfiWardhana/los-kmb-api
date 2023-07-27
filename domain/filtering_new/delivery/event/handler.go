@@ -45,7 +45,11 @@ func NewServiceApplication(app *platformevent.ConsumerRouter, repository interfa
 func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) {
 	middlewares.GetPlatformAuth()
 
-	body := event.GetBody()
+	getBody := string(event.GetBody())
+	getBody = utils.SafeJsonReplacer(getBody)
+
+	body := []byte(getBody)
+
 	var (
 		married         bool
 		req             request.Filtering
