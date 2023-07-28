@@ -1,11 +1,13 @@
 package http
 
 import (
+	"errors"
 	"los-kmb-api/domain/filtering_new/interfaces"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 
 	"github.com/labstack/echo/v4"
 )
@@ -25,6 +27,28 @@ func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase
 		Json:         json,
 	}
 	kmbroute.POST("/filtering", handler.Filtering, middlewares.AccessMiddleware())
+	kmbroute.POST("/encryption", handler.Encryption, middlewares.AccessMiddleware())
+}
+
+func (c *handlerKmbFiltering) Encryption(ctx echo.Context) (err error) {
+	type RequestEncryption struct {
+		MyString []string `json:"my_string"`
+	}
+	var req RequestEncryption
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - Encryption", err)
+	}
+	data := make(map[string]string)
+	for _, v := range req.MyString {
+		encrypted, errR := utils.PlatformEncryptText(v)
+		if errR != nil {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decryption Error")
+			return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - Encryption", err)
+		}
+		data[v] = encrypted
+	}
+
+	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - Encryption", req, data)
 }
 
 // KmbFiltering Tools godoc

@@ -53,6 +53,7 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 	var (
 		married         bool
 		req             request.Filtering
+		reqEncrypted    request.Filtering
 		resultFiltering response.Filtering
 		resp            interface{}
 	)
@@ -60,9 +61,10 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 	// Save Log Orchestrator
 	defer func() {
 		headers := map[string]string{constant.HeaderXRequestID: ctx.Value(constant.HeaderXRequestID).(string)}
-		go h.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/filtering", constant.METHOD_POST, req.ProspectID, ctx.Value(constant.HeaderXRequestID).(string))
+		go h.repository.SaveLogOrchestrator(headers, reqEncrypted, resp, "/api/v3/kmb/filtering", constant.METHOD_POST, req.ProspectID, ctx.Value(constant.HeaderXRequestID).(string))
 	}()
 
+	err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(body, &reqEncrypted)
 	err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(body, &req)
 
 	if err != nil {
@@ -99,17 +101,71 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 	ctx = context.WithValue(ctx, constant.CTX_KEY_INCOMING_REQUEST_URL, fmt.Sprintf("%s/api/v3/kmb/filtering", constant.LOS_KMB_BASE_URL))
 	ctx = context.WithValue(ctx, constant.CTX_KEY_INCOMING_REQUEST_METHOD, constant.METHOD_POST)
 
-	err = h.validator.Validate(req)
+	// decrypt request
+	req.IDNumber, err = utils.PlatformDecryptText(req.IDNumber)
 	if err != nil {
-		log.Println(err.Error())
-		log.Println("success consume data stream")
-		log.Println("error validation")
-		resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, err)
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
+		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, err)
+		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+		return nil
+	}
+	req.LegalName, err = utils.PlatformDecryptText(req.LegalName)
+	if err != nil {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
+		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, err)
+		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+		return nil
+	}
+	req.MotherName, err = utils.PlatformDecryptText(req.MotherName)
+	if err != nil {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
+		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, err)
 		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
 		return nil
 	}
 
-	if req.Spouse != nil {
+	if req.Spouse == nil {
+		err = h.validator.Validate(req)
+		if err != nil {
+			log.Println(err.Error())
+			log.Println("success consume data stream")
+			log.Println("error validation")
+			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, err)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+			return nil
+		}
+	} else {
+		req.Spouse.IDNumber, err = utils.PlatformDecryptText(req.Spouse.IDNumber)
+		if err != nil {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
+			resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, err)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+			return nil
+		}
+		req.Spouse.LegalName, err = utils.PlatformDecryptText(req.Spouse.LegalName)
+		if err != nil {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
+			resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, err)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+			return nil
+		}
+		req.Spouse.MotherName, err = utils.PlatformDecryptText(req.Spouse.MotherName)
+		if err != nil {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
+			resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, err)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+			return nil
+		}
+
+		err = h.validator.Validate(req)
+		if err != nil {
+			log.Println(err.Error())
+			log.Println("success consume data stream")
+			log.Println("error validation")
+			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, err)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+			return nil
+		}
 
 		var genderSpouse request.GenderCompare
 
@@ -130,7 +186,7 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 
 	check, errCheck := h.usecase.FilteringProspectID(req.ProspectID)
 	if errCheck != nil {
-		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, err)
+		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, errCheck)
 		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
 		return nil
 	}

@@ -6,7 +6,10 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"strings"
+
+	"github.com/KB-FMF/platform-library/maskingdata"
 )
 
 func pkcs7Unpad(data []byte) ([]byte, error) {
@@ -57,4 +60,14 @@ func DecryptCredential(encryptedText string) (string, error) {
 
 	decryptedText, err := decrypt(keys, decodeIv, src)
 	return string(decryptedText), err
+}
+
+func PlatformDecryptText(encryptedText string) (string, error) {
+	cipher := maskingdata.NewCipher(os.Getenv("PLATFORM_LIBRARY_KEY"))
+	return cipher.DecryptText(encryptedText)
+}
+
+func PlatformEncryptText(myString string) (string, error) {
+	cipher := maskingdata.NewCipher(os.Getenv("PLATFORM_LIBRARY_KEY"))
+	return cipher.EncryptText(myString)
 }
