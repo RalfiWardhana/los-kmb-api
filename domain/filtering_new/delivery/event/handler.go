@@ -61,7 +61,7 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 	// Save Log Orchestrator
 	defer func() {
 		headers := map[string]string{constant.HeaderXRequestID: ctx.Value(constant.HeaderXRequestID).(string)}
-		go h.repository.SaveLogOrchestrator(headers, reqEncrypted, resp, "/api/v3/kmb/consumer/filtering", constant.METHOD_POST, req.ProspectID, ctx.Value(constant.HeaderXRequestID).(string))
+		go h.repository.SaveLogOrchestrator(headers, reqEncrypted, resp, "/api/v3/kmb/consume/filtering", constant.METHOD_POST, req.ProspectID, ctx.Value(constant.HeaderXRequestID).(string))
 	}()
 
 	err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(body, &reqEncrypted)
@@ -98,7 +98,7 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 
 	log.Println("consumed")
 
-	ctx = context.WithValue(ctx, constant.CTX_KEY_INCOMING_REQUEST_URL, fmt.Sprintf("%s/api/v3/kmb/consumer/filtering", constant.LOS_KMB_BASE_URL))
+	ctx = context.WithValue(ctx, constant.CTX_KEY_INCOMING_REQUEST_URL, fmt.Sprintf("%s/api/v3/kmb/consume/filtering", constant.LOS_KMB_BASE_URL))
 	ctx = context.WithValue(ctx, constant.CTX_KEY_INCOMING_REQUEST_METHOD, constant.METHOD_POST)
 
 	// decrypt request

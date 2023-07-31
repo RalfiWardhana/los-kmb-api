@@ -31,7 +31,7 @@ func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase
 		producer:     producer,
 	}
 	kmbroute.POST("/filtering", handler.Filtering, middlewares.AccessMiddleware())
-	kmbroute.POST("/producer/filtering", handler.ProduceFiltering, middlewares.AccessMiddleware())
+	kmbroute.POST("/produce/filtering", handler.ProduceFiltering, middlewares.AccessMiddleware())
 }
 
 // KmbFiltering Tools godoc
