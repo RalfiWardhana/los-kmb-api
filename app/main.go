@@ -18,6 +18,7 @@ import (
 	kmbDelivery "los-kmb-api/domain/kmb/delivery/http"
 	kmbRepository "los-kmb-api/domain/kmb/repository"
 	kmbUsecase "los-kmb-api/domain/kmb/usecase"
+	toolsDelivery "los-kmb-api/domain/tools/delivery/http"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/json"
@@ -187,15 +188,16 @@ func main() {
 	// define new kmb filtering domain
 	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs, newKMB)
 	newKmbFilteringMultiCase, newKmbFilteringCase := newKmbFilteringUsecase.NewMultiUsecase(newKmbFilteringRepo, httpClient)
-	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken)
+	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken, producer)
 
 	// define new kmb journey
 	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, confins, staging, minilosWG, minilosKMB, newKMB)
 	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
 	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
-
 	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, jsonResponse, accessToken)
+
+	toolsDelivery.ToolsHandler(apiGroupv3, jsonResponse, accessToken)
 
 	auth := map[string]interface{}{
 		"secret_key":         os.Getenv("PLATFORM_SECRET_KEY"),
@@ -216,7 +218,7 @@ func main() {
 		}
 	})
 
-	eventhandlers.NewServiceApplication(consumerRouter, newKmbFilteringRepo, newKmbFilteringCase, newKmbFilteringMultiCase, validator, producer, jsonResponse)
+	eventhandlers.NewServiceFiltering(consumerRouter, newKmbFilteringRepo, newKmbFilteringCase, newKmbFilteringMultiCase, validator, producer, jsonResponse)
 
 	if err := consumerRouter.StartConsume(); err != nil {
 		panic(err)

@@ -6,6 +6,7 @@ import (
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
 	"los-kmb-api/shared/common"
+	"los-kmb-api/shared/common/platformevent"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 
@@ -17,38 +18,20 @@ type handlerKmbFiltering struct {
 	usecase      interfaces.Usecase
 	repository   interfaces.Repository
 	Json         common.JSON
+	producer     platformevent.PlatformEvent
 }
 
-func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware) {
+func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware,
+	producer platformevent.PlatformEvent) {
 	handler := handlerKmbFiltering{
 		multiusecase: multiUsecase,
 		usecase:      usecase,
 		repository:   repository,
 		Json:         json,
+		producer:     producer,
 	}
 	kmbroute.POST("/filtering", handler.Filtering, middlewares.AccessMiddleware())
-	kmbroute.POST("/encryption", handler.Encryption, middlewares.AccessMiddleware())
-}
-
-func (c *handlerKmbFiltering) Encryption(ctx echo.Context) (err error) {
-	type RequestEncryption struct {
-		MyString []string `json:"my_string"`
-	}
-	var req RequestEncryption
-	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - Encryption", err)
-	}
-	data := make(map[string]string)
-	for _, v := range req.MyString {
-		encrypted, errR := utils.PlatformEncryptText(v)
-		if errR != nil {
-			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decryption Error")
-			return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - Encryption", err)
-		}
-		data[v] = encrypted
-	}
-
-	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - Encryption", req, data)
+	kmbroute.POST("/producer/filtering", handler.ProduceFiltering, middlewares.AccessMiddleware())
 }
 
 // KmbFiltering Tools godoc
@@ -68,14 +51,50 @@ func (c *handlerKmbFiltering) Filtering(ctx echo.Context) (err error) {
 	)
 
 	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", err)
+		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", err)
 	}
 
-	if err := ctx.Validate(&req); err != nil {
-		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, err)
+	// decrypt request
+	req.IDNumber, err = utils.PlatformDecryptText(req.IDNumber)
+	if err != nil {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
+		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+	}
+	req.LegalName, err = utils.PlatformDecryptText(req.LegalName)
+	if err != nil {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
+		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+	}
+	req.MotherName, err = utils.PlatformDecryptText(req.MotherName)
+	if err != nil {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
+		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 	}
 
-	if req.Spouse != nil {
+	if req.Spouse == nil {
+		if err := ctx.Validate(&req); err != nil {
+			return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+		}
+	} else {
+		req.Spouse.IDNumber, err = utils.PlatformDecryptText(req.Spouse.IDNumber)
+		if err != nil {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
+			return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+		}
+		req.Spouse.LegalName, err = utils.PlatformDecryptText(req.Spouse.LegalName)
+		if err != nil {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
+			return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+		}
+		req.Spouse.MotherName, err = utils.PlatformDecryptText(req.Spouse.MotherName)
+		if err != nil {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
+			return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+		}
+
+		if err := ctx.Validate(&req); err != nil {
+			return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+		}
 
 		var genderSpouse request.GenderCompare
 
@@ -86,7 +105,7 @@ func (c *handlerKmbFiltering) Filtering(ctx echo.Context) (err error) {
 		}
 
 		if err := ctx.Validate(&genderSpouse); err != nil {
-			return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, err)
+			return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 		}
 
 		married = true
@@ -95,18 +114,33 @@ func (c *handlerKmbFiltering) Filtering(ctx echo.Context) (err error) {
 	check, err := c.usecase.FilteringProspectID(req.ProspectID)
 
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, err)
+		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 	}
 
 	if err := ctx.Validate(&check); err != nil {
-		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, err)
+		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 	}
 
 	data, err := c.multiusecase.Filtering(ctx.Request().Context(), req, married, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, err)
+		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 	}
 
-	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB FILTERING", req, data)
+	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, data)
+}
+
+func (c *handlerKmbFiltering) ProduceFiltering(ctx echo.Context) (err error) {
+
+	var (
+		req request.Filtering
+	)
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", err)
+	}
+
+	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_FILTERING, req.ProspectID, utils.StructToMap(req), 0)
+
+	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING - Please wait, your request is being processed", req, nil)
 }

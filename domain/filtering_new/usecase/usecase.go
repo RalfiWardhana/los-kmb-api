@@ -268,7 +268,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 				})
 			}
 
-			resp, err = u.httpclient.EngineAPI(ctx, constant.FILTERING_LOG, os.Getenv("PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, reqs.Data.ProspectID, accessToken)
+			resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, reqs.Data.ProspectID, accessToken)
 
 			if err != nil || resp.StatusCode() != 200 && resp.StatusCode() != 400 {
 				err = fmt.Errorf("failed get data pefindo")
@@ -641,7 +641,7 @@ func (u usecase) DupcheckIntegrator(ctx context.Context, prospectID, idNumber, l
 		"surgate_mother_name": surgateName,
 	})
 
-	custDupcheck, err := u.httpclient.EngineAPI(ctx, constant.FILTERING_LOG, os.Getenv("DUPCHECK_URL"), req, map[string]string{}, constant.METHOD_POST, false, 0, timeout, prospectID, accessToken)
+	custDupcheck, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("DUPCHECK_URL"), req, map[string]string{}, constant.METHOD_POST, false, 0, timeout, prospectID, accessToken)
 
 	if err != nil {
 		err = errors.New("upstream_service_timeout - Call Dupcheck Timeout")
