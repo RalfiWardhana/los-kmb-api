@@ -401,6 +401,7 @@ type FilteringKMB struct {
 	TotalBakiDebetNonCollateralBiro interface{} `gorm:"column:total_baki_debet_non_collateral_biro" json:"total_baki_debet_non_collateral_biro"`
 	ScoreBiro                       interface{} `gorm:"column:score_biro;type:varchar(20)" json:"score_biro"`
 	Cluster                         interface{} `gorm:"column:cluster;type:varchar(20)" json:"cluster"`
+	Reason                          interface{} `gorm:"column:reason;type:varchar(250)" json:"reason"`
 	CreatedAt                       time.Time   `gorm:"column:created_at" json:"created_at"`
 }
 

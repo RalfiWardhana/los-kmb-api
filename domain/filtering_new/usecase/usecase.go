@@ -51,7 +51,7 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 	}
 }
 
-func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, married bool, accessToken string) (data response.Filtering, err error) {
+func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, married bool, accessToken string) (respFiltering response.Filtering, err error) {
 
 	var (
 		customer      []request.SpouseDupcheck
@@ -69,7 +69,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		requestID = ""
 	}
 
-	filtering := entity.FilteringKMB{ProspectID: req.ProspectID, RequestID: requestID, BranchID: req.BranchID, BpkbName: req.BPKBName}
+	entityFiltering := entity.FilteringKMB{ProspectID: req.ProspectID, RequestID: requestID, BranchID: req.BranchID, BpkbName: req.BPKBName}
 
 	customer = append(customer, request.SpouseDupcheck{IDNumber: req.IDNumber, LegalName: req.LegalName, BirthDate: req.BirthDate, MotherName: req.MotherName})
 
@@ -93,12 +93,13 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 			isBlacklist = true
 
-			data = response.Filtering{ProspectID: req.ProspectID, Code: blackList.Code, Decision: blackList.Result, Reason: blackList.Reason, IsBlacklist: isBlacklist}
+			respFiltering = response.Filtering{ProspectID: req.ProspectID, Code: blackList.Code, Decision: blackList.Result, Reason: blackList.Reason, IsBlacklist: isBlacklist}
 
-			filtering.Decision = blackList.Result
-			filtering.IsBlacklist = 1
+			entityFiltering.Decision = blackList.Result
+			entityFiltering.Reason = blackList.Reason
+			entityFiltering.IsBlacklist = 1
 
-			err = u.usecase.SaveFilteringLogs(filtering, trxDetailBiro)
+			err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro)
 
 			return
 		}
@@ -136,33 +137,33 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	}
 
 	// hit ke pefindo
-	data, resPefindo, trxDetailBiro, err = u.usecase.FilteringPefindo(ctx, reqs, mainCustomer.CustomerStatus, accessToken)
+	respFiltering, resPefindo, trxDetailBiro, err = u.usecase.FilteringPefindo(ctx, reqs, mainCustomer.CustomerStatus, accessToken)
 	if err != nil {
 		return
 	}
 
-	data.ProspectID = req.ProspectID
-	data.CustomerSegment = mainCustomer.CustomerSegment
+	respFiltering.ProspectID = req.ProspectID
+	respFiltering.CustomerSegment = mainCustomer.CustomerSegment
 
 	primePriority, _ := utils.ItemExists(mainCustomer.CustomerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
 
 	if primePriority && (mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_AO || mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO) {
-		data.Code = blackList.Code
-		data.Decision = blackList.Result
-		data.Reason = blackList.Reason
+		respFiltering.Code = blackList.Code
+		respFiltering.Decision = blackList.Result
+		respFiltering.Reason = blackList.Reason
 	}
 
 	// save transaction
-	filtering.Decision = data.Decision
-	filtering.CustomerStatus = mainCustomer.CustomerStatus
-	filtering.CustomerSegment = mainCustomer.CustomerSegment
+	entityFiltering.Decision = respFiltering.Decision
+	entityFiltering.CustomerStatus = mainCustomer.CustomerStatus
+	entityFiltering.CustomerSegment = mainCustomer.CustomerSegment
 
-	if data.NextProcess {
-		filtering.NextProcess = 1
+	if respFiltering.NextProcess {
+		entityFiltering.NextProcess = 1
 	}
 
-	filtering.MaxOverdueBiro = resPefindo.MaxOverdue
-	filtering.MaxOverdueLast12monthsBiro = resPefindo.MaxOverdueLast12Months
+	entityFiltering.MaxOverdueBiro = resPefindo.MaxOverdue
+	entityFiltering.MaxOverdueLast12monthsBiro = resPefindo.MaxOverdueLast12Months
 
 	var isWoContractBiro, isWoWithCollateralBiro int
 	if resPefindo.WoContract {
@@ -171,18 +172,18 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	if resPefindo.WoAdaAgunan {
 		isWoWithCollateralBiro = 1
 	}
-	filtering.IsWoContractBiro = isWoContractBiro
-	filtering.IsWoWithCollateralBiro = isWoWithCollateralBiro
+	entityFiltering.IsWoContractBiro = isWoContractBiro
+	entityFiltering.IsWoWithCollateralBiro = isWoWithCollateralBiro
 
-	filtering.TotalInstallmentAmountBiro = resPefindo.AngsuranAktifPbk
-	filtering.TotalBakiDebetNonCollateralBiro = resPefindo.TotalBakiDebetNonAgunan
+	entityFiltering.TotalInstallmentAmountBiro = resPefindo.AngsuranAktifPbk
+	entityFiltering.TotalBakiDebetNonCollateralBiro = resPefindo.TotalBakiDebetNonAgunan
 	if resPefindo.Score != "" {
-		filtering.ScoreBiro = resPefindo.Score
+		entityFiltering.ScoreBiro = resPefindo.Score
 	}
+	entityFiltering.Cluster = respFiltering.Cluster
+	entityFiltering.Reason = respFiltering.Reason
 
-	err = u.usecase.SaveFilteringLogs(filtering, trxDetailBiro)
-
-	// u.platformEvent.PublishEvent()
+	err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro)
 
 	return
 }
@@ -525,6 +526,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 			}
 
 			mappingCluster, err = u.repository.MasterMappingCluster(mappingCluster)
+			data.Cluster = mappingCluster.Cluster
 			if data.NextProcess == true && pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET && strings.Contains("Cluster E Cluster F", mappingCluster.Cluster) {
 				data.NextProcess = false
 				data.Reason = bpkbString + "& Baki Debet > 3 - 20 Juta, Cluster Reject"
@@ -664,10 +666,10 @@ func (u usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerB
 
 	if spDupcheck != (response.SpDupCekCustomerByID{}) {
 
-		data.StatusKonsumen = constant.STATUS_KONSUMEN_AO
-
-		if (spDupcheck.TotalInstallment <= 0 && spDupcheck.RRDDate != nil) || (spDupcheck.TotalInstallment > 0 && spDupcheck.RRDDate != nil && spDupcheck.NumberOfPaidInstallment == nil) {
-			data.StatusKonsumen = constant.STATUS_KONSUMEN_RO
+		if spDupcheck.CustomerStatus == "" {
+			data.StatusKonsumen = constant.STATUS_KONSUMEN_NEW
+		} else {
+			data.StatusKonsumen = spDupcheck.CustomerStatus
 		}
 
 		if spDupcheck.IsSimiliar == 1 && index == 0 {
@@ -741,9 +743,9 @@ func (u usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerB
 	return
 }
 
-func (u usecase) SaveFilteringLogs(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro) (err error) {
+func (u usecase) SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro) (err error) {
 
-	err = u.repository.SaveDupcheckResult(transaction, trxDetailBiro)
+	err = u.repository.SaveFiltering(transaction, trxDetailBiro)
 
 	if err != nil {
 

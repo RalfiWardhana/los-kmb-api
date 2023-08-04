@@ -39,6 +39,7 @@ type Filtering struct {
 	PbkReportCustomer interface{} `json:"pbk_report_customer"`
 	PbkReportSpouse   interface{} `json:"pbk_report_spouse"`
 	TotalBakiDebet    interface{} `json:"total_baki_debet"`
+	Cluster           interface{} `json:"-"`
 }
 
 type CustomerDomain struct {

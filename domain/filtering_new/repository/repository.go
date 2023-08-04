@@ -52,7 +52,7 @@ func (r repoHandler) DummyDataPbk(noktp string) (data entity.DummyPBK, err error
 	return
 }
 
-func (r repoHandler) SaveDupcheckResult(data entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro) (err error) {
+func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro) (err error) {
 
 	var x sql.TxOptions
 
