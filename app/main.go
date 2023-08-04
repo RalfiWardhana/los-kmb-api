@@ -203,7 +203,7 @@ func main() {
 		"secret_key":         os.Getenv("PLATFORM_SECRET_KEY"),
 		"source_application": constant.FLAG_LOS,
 	}
-	consumerRouter := platformevent.NewConsumerRouter(constant.TOPIC_SUBMISSION, os.Getenv("SALLY_SUBMISSION_FILTERING"), auth)
+	consumerRouter := platformevent.NewConsumerRouter(constant.TOPIC_SUBMISSION, os.Getenv("LOS_SUBMISSION_FILTERING"), auth)
 
 	consumerRouter.Use(func(next event.ConsumerProcessor) event.ConsumerProcessor {
 		return func(ctx context.Context, event event.Event) error {
