@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"gopkg.in/go-playground/validator.v9"
 )
@@ -80,11 +81,16 @@ func (v *Validator) Validate(i interface{}) error {
 	return v.validator.Struct(i)
 }
 
-func dateFormatValidation(fl validator.FieldLevel) bool {
+func dateFormatValidation(fl validator.FieldLevel) (validator bool) {
 
 	re := regexp.MustCompile(`\d{4}-\d{2}-\d{2}`)
+	layout := "2006-01-02"
+	_, err := time.Parse(layout, fl.Field().String())
 
-	return re.MatchString(fl.Field().String())
+	if re.MatchString(fl.Field().String()) && err == nil {
+		validator = true
+	}
+	return validator
 }
 
 func allowedCharsInName(fl validator.FieldLevel) bool {
