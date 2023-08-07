@@ -34,14 +34,12 @@ type (
 	}
 )
 
-func NewMultiUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient) (interfaces.MultiUsecase, interfaces.Usecase) {
-	usecase := NewUsecase(repository, httpclient)
-
+func NewMultiUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient, usecase interfaces.Usecase) interfaces.MultiUsecase {
 	return &multiUsecase{
 		usecase:    usecase,
 		repository: repository,
 		httpclient: httpclient,
-	}, usecase
+	}
 }
 
 func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient) interfaces.Usecase {
@@ -54,20 +52,18 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, married bool, accessToken string) (respFiltering response.Filtering, err error) {
 
 	var (
-		customer      []request.SpouseDupcheck
-		dataCustomer  []response.SpDupCekCustomerByID
-		blackList     response.UsecaseApi
-		sp            response.SpDupCekCustomerByID
-		isBlacklist   bool
-		resPefindo    response.PefindoResult
-		reqs          request.FilteringRequest
-		trxDetailBiro []entity.TrxDetailBiro
+		customer             []request.SpouseDupcheck
+		dataCustomer         []response.SpDupCekCustomerByID
+		blackList            response.UsecaseApi
+		sp                   response.SpDupCekCustomerByID
+		isBlacklist          bool
+		resPefindo           response.PefindoResult
+		reqPefindo           request.Pefindo
+		trxDetailBiro        []entity.TrxDetailBiro
+		respFilteringPefindo response.Filtering
 	)
 
-	requestID, ok := ctx.Value(echo.HeaderXRequestID).(string)
-	if !ok {
-		requestID = ""
-	}
+	requestID := ctx.Value(echo.HeaderXRequestID).(string)
 
 	entityFiltering := entity.FilteringKMB{ProspectID: req.ProspectID, RequestID: requestID, BranchID: req.BranchID, BpkbName: req.BPKBName}
 
@@ -105,29 +101,30 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		}
 	}
 
-	reqs = request.FilteringRequest{
-		Data: request.Data{
-			ProspectID:        req.ProspectID,
-			BranchID:          req.BranchID,
-			IDNumber:          req.IDNumber,
-			LegalName:         req.LegalName,
-			BirthDate:         req.BirthDate,
-			SurgateMotherName: req.MotherName,
-			Gender:            req.Gender,
-			BPKBName:          req.BPKBName,
-		},
+	reqPefindo = request.Pefindo{
+		ClientKey:         os.Getenv("CLIENTKEY_CORE_PBK"),
+		IDMember:          constant.USER_PBK_KMB_FILTEERING,
+		User:              constant.USER_PBK_KMB_FILTEERING,
+		ProspectID:        req.ProspectID,
+		BranchID:          req.BranchID,
+		IDNumber:          req.IDNumber,
+		LegalName:         req.LegalName,
+		BirthDate:         req.BirthDate,
+		SurgateMotherName: req.MotherName,
+		Gender:            req.Gender,
+		BPKBName:          req.BPKBName,
 	}
 
 	if req.Spouse != nil {
-		reqs.Data.MaritalStatus = constant.MARRIED
-		dataSpouse := request.Spouse{
+		reqPefindo.MaritalStatus = constant.MARRIED
+		dataSpouse := request.SpousePefindo{
 			IDNumber:          req.Spouse.IDNumber,
 			LegalName:         req.Spouse.LegalName,
 			BirthDate:         req.Spouse.BirthDate,
 			SurgateMotherName: req.Spouse.MotherName,
 			Gender:            req.Spouse.Gender,
 		}
-		reqs.Data.Spouse = &dataSpouse
+		reqPefindo.Spouse = &dataSpouse
 	}
 
 	mainCustomer := dataCustomer[0]
@@ -137,10 +134,12 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	}
 
 	// hit ke pefindo
-	respFiltering, resPefindo, trxDetailBiro, err = u.usecase.FilteringPefindo(ctx, reqs, mainCustomer.CustomerStatus, accessToken)
+	respFilteringPefindo, resPefindo, trxDetailBiro, err = u.usecase.FilteringPefindo(ctx, reqPefindo, mainCustomer.CustomerStatus, accessToken)
 	if err != nil {
 		return
 	}
+
+	respFiltering = respFilteringPefindo
 
 	respFiltering.ProspectID = req.ProspectID
 	respFiltering.CustomerSegment = mainCustomer.CustomerSegment
@@ -150,7 +149,8 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	if primePriority && (mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_AO || mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO) {
 		respFiltering.Code = blackList.Code
 		respFiltering.Decision = blackList.Result
-		respFiltering.Reason = blackList.Reason
+		respFiltering.Reason = mainCustomer.CustomerStatus + " " + mainCustomer.CustomerSegment
+		respFiltering.NextProcess = true
 	}
 
 	// save transaction
@@ -162,24 +162,26 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		entityFiltering.NextProcess = 1
 	}
 
-	entityFiltering.MaxOverdueBiro = resPefindo.MaxOverdue
-	entityFiltering.MaxOverdueLast12monthsBiro = resPefindo.MaxOverdueLast12Months
-
-	var isWoContractBiro, isWoWithCollateralBiro int
-	if resPefindo.WoContract {
-		isWoContractBiro = 1
-	}
-	if resPefindo.WoAdaAgunan {
-		isWoWithCollateralBiro = 1
-	}
-	entityFiltering.IsWoContractBiro = isWoContractBiro
-	entityFiltering.IsWoWithCollateralBiro = isWoWithCollateralBiro
-
-	entityFiltering.TotalInstallmentAmountBiro = resPefindo.AngsuranAktifPbk
-	entityFiltering.TotalBakiDebetNonCollateralBiro = resPefindo.TotalBakiDebetNonAgunan
+	// ada data pefindo
 	if resPefindo.Score != "" {
+		entityFiltering.MaxOverdueBiro = resPefindo.MaxOverdue
+		entityFiltering.MaxOverdueLast12monthsBiro = resPefindo.MaxOverdueLast12Months
 		entityFiltering.ScoreBiro = resPefindo.Score
+
+		var isWoContractBiro, isWoWithCollateralBiro int
+		if resPefindo.WoContract {
+			isWoContractBiro = 1
+		}
+		if resPefindo.WoAdaAgunan {
+			isWoWithCollateralBiro = 1
+		}
+		entityFiltering.IsWoContractBiro = isWoContractBiro
+		entityFiltering.IsWoWithCollateralBiro = isWoWithCollateralBiro
+
+		entityFiltering.TotalInstallmentAmountBiro = resPefindo.AngsuranAktifPbk
+		entityFiltering.TotalBakiDebetNonCollateralBiro = resPefindo.TotalBakiDebetNonAgunan
 	}
+
 	entityFiltering.Cluster = respFiltering.Cluster
 	entityFiltering.Reason = respFiltering.Reason
 
@@ -188,28 +190,20 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	return
 }
 
-func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringRequest, customerStatus, accessToken string) (data response.Filtering, responsePefindo response.PefindoResult, trxDetailBiro []entity.TrxDetailBiro, err error) {
+func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, customerStatus, accessToken string) (data response.Filtering, responsePefindo response.PefindoResult, trxDetailBiro []entity.TrxDetailBiro, err error) {
 
 	timeOut, _ := strconv.Atoi(os.Getenv("DUPCHECK_API_TIMEOUT"))
 
 	var (
-		bpkbName string
+		bpkbName bool
 	)
 
-	namaSama := utils.AizuArrayString(os.Getenv("NAMA_SAMA"))
-	namaBeda := utils.AizuArrayString(os.Getenv("NAMA_BEDA"))
-
-	bpkbNamaSama, _ := utils.ItemExists(reqs.Data.BPKBName, namaSama)
-	bpkbNamaBeda, _ := utils.ItemExists(reqs.Data.BPKBName, namaBeda)
-
-	if bpkbNamaSama {
-		bpkbName = constant.NAMA_SAMA
-	} else if bpkbNamaBeda {
-		bpkbName = constant.NAMA_BEDA
-	}
+	bpkbName = strings.Contains(os.Getenv("NAMA_SAMA"), reqs.BPKBName)
 
 	active, _ := strconv.ParseBool(os.Getenv("ACTIVE_PBK"))
 	dummy, _ := strconv.ParseBool(os.Getenv("DUMMY_PBK"))
+
+	data.ProspectID = reqs.ProspectID
 
 	if active {
 		var (
@@ -219,7 +213,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 
 		if dummy {
 
-			getData, errDummy := u.repository.DummyDataPbk(reqs.Data.IDNumber)
+			getData, errDummy := u.repository.DummyDataPbk(reqs.IDNumber)
 
 			if errDummy != nil || getData == (entity.DummyPBK{}) {
 				checkPefindo.Code = "201"
@@ -235,41 +229,9 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 
 			var resp *resty.Response
 
-			param, _ := json.Marshal(map[string]string{
-				"ClientKey":         os.Getenv("CLIENTKEY_CORE_PBK"),
-				"IDMember":          constant.USER_PBK_KMB_FILTEERING,
-				"user":              constant.USER_PBK_KMB_FILTEERING,
-				"IDNumber":          reqs.Data.IDNumber,
-				"ProspectID":        reqs.Data.ProspectID,
-				"LegalName":         reqs.Data.LegalName,
-				"BirthDate":         reqs.Data.BirthDate,
-				"SurgateMotherName": reqs.Data.SurgateMotherName,
-				"Gender":            reqs.Data.Gender,
-				"MaritalStatus":     reqs.Data.MaritalStatus,
-			})
+			param, _ := json.Marshal(reqs)
 
-			if reqs.Data.MaritalStatus == constant.MARRIED {
-
-				param, _ = json.Marshal(map[string]string{
-					"ClientKey":                os.Getenv("CLIENTKEY_CORE_PBK"),
-					"IDMember":                 constant.USER_PBK_KMB_FILTEERING,
-					"user":                     constant.USER_PBK_KMB_FILTEERING,
-					"IDNumber":                 reqs.Data.IDNumber,
-					"ProspectID":               reqs.Data.ProspectID,
-					"LegalName":                reqs.Data.LegalName,
-					"BirthDate":                reqs.Data.BirthDate,
-					"SurgateMotherName":        reqs.Data.SurgateMotherName,
-					"Gender":                   reqs.Data.Gender,
-					"MaritalStatus":            reqs.Data.MaritalStatus,
-					"Spouse_IDNumber":          reqs.Data.Spouse.IDNumber,
-					"Spouse_LegalName":         reqs.Data.Spouse.LegalName,
-					"Spouse_BirthDate":         reqs.Data.Spouse.BirthDate,
-					"Spouse_SurgateMotherName": reqs.Data.Spouse.SurgateMotherName,
-					"Spouse_Gender":            reqs.Data.Spouse.Gender,
-				})
-			}
-
-			resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, reqs.Data.ProspectID, accessToken)
+			resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, reqs.ProspectID, accessToken)
 
 			if err != nil || resp.StatusCode() != 200 && resp.StatusCode() != 400 {
 				err = fmt.Errorf("failed get data pefindo")
@@ -295,69 +257,69 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 		}
 
 		if checkPefindo.Code == "200" && pefindoResult.Score != constant.PEFINDO_UNSCORE {
-			if bpkbName == constant.NAMA_BEDA {
+			if !bpkbName {
 				if pefindoResult.MaxOverdueLast12Months != nil {
 					if checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12Months) <= constant.PBK_OVD_LAST_12 {
 						if pefindoResult.MaxOverdue == nil {
 							data.Code = constant.NAMA_BEDA_CURRENT_OVD_NULL_CODE
 							data.CustomerStatus = customerStatus
 							data.Decision = constant.DECISION_PASS
-							data.Reason = fmt.Sprintf("NAMA BEDA & PBK OVD 12 Bulan Terakhir <= %d", constant.PBK_OVD_LAST_12)
+							data.Reason = fmt.Sprintf("Nama Beda & PBK OVD 12 Bulan Terakhir <= %d", constant.PBK_OVD_LAST_12)
 						} else if checkNullMaxOverdue(pefindoResult.MaxOverdue) <= constant.PBK_OVD_CURRENT {
 							data.Code = constant.NAMA_BEDA_CURRENT_OVD_UNDER_LIMIT_CODE
 							data.CustomerStatus = customerStatus
 							data.Decision = constant.DECISION_PASS
-							data.Reason = fmt.Sprintf("NAMA BEDA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+							data.Reason = fmt.Sprintf("Nama Beda & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
 						} else if checkNullMaxOverdue(pefindoResult.MaxOverdue) > constant.PBK_OVD_CURRENT {
 							data.Code = constant.NAMA_BEDA_CURRENT_OVD_OVER_LIMIT_CODE
 							data.CustomerStatus = customerStatus
 							data.Decision = constant.DECISION_REJECT
-							data.Reason = fmt.Sprintf("NAMA BEDA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+							data.Reason = fmt.Sprintf("Nama Beda & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
 						}
 					} else {
 						data.Code = constant.NAMA_BEDA_12_OVD_OVER_LIMIT_CODE
 						data.CustomerStatus = customerStatus
 						data.Decision = constant.DECISION_REJECT
-						data.Reason = fmt.Sprintf("NAMA BEDA & OVD 12 Bulan Terakhir > %d", constant.PBK_OVD_LAST_12)
+						data.Reason = fmt.Sprintf("Nama Beda & PBK OVD 12 Bulan Terakhir > %d", constant.PBK_OVD_LAST_12)
 					}
 				} else {
 					data.Code = constant.NAMA_BEDA_12_OVD_NULL_CODE
 					data.CustomerStatus = customerStatus
 					data.Decision = constant.DECISION_PASS
-					data.Reason = "NAMA BEDA & OVD 12 Bulan Terakhir Null"
+					data.Reason = "Nama Beda & PBK OVD 12 Bulan Terakhir Null"
 				}
-			} else if bpkbName == constant.NAMA_SAMA {
+			} else if bpkbName {
 				if pefindoResult.MaxOverdueLast12Months != nil {
 					if checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12Months) <= constant.PBK_OVD_LAST_12 {
 						if pefindoResult.MaxOverdue == nil {
 							data.Code = constant.NAMA_SAMA_CURRENT_OVD_NULL_CODE
 							data.CustomerStatus = customerStatus
 							data.Decision = constant.DECISION_PASS
-							data.Reason = fmt.Sprintf("NAMA SAMA & PBK OVD 12 Bulan Terakhir <= %d", constant.PBK_OVD_LAST_12)
+							data.Reason = fmt.Sprintf("Nama Sama & PBK OVD 12 Bulan Terakhir <= %d", constant.PBK_OVD_LAST_12)
 						} else if checkNullMaxOverdue(pefindoResult.MaxOverdue) <= constant.PBK_OVD_CURRENT {
 							data.Code = constant.NAMA_SAMA_CURRENT_OVD_UNDER_LIMIT_CODE
 							data.CustomerStatus = customerStatus
 							data.Decision = constant.DECISION_PASS
-							data.Reason = fmt.Sprintf("NAMA SAMA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+							data.Reason = fmt.Sprintf("Nama Sama & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
 						} else if checkNullMaxOverdue(pefindoResult.MaxOverdue) > constant.PBK_OVD_CURRENT {
 							data.Code = constant.NAMA_SAMA_CURRENT_OVD_OVER_LIMIT_CODE
 							data.CustomerStatus = customerStatus
 							data.Decision = constant.DECISION_REJECT
 							data.NextProcess = false
-							data.Reason = fmt.Sprintf("NAMA SAMA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+							data.Reason = fmt.Sprintf("Nama Sama & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
 						}
 					} else {
 						data.Code = constant.NAMA_SAMA_12_OVD_OVER_LIMIT_CODE
 						data.CustomerStatus = customerStatus
 						data.Decision = constant.DECISION_REJECT
 						data.NextProcess = false
-						data.Reason = fmt.Sprintf("NAMA SAMA & OVD 12 Bulan Terakhir > %d", constant.PBK_OVD_LAST_12)
+						data.Reason = fmt.Sprintf("Nama Sama & PBK OVD 12 Bulan Terakhir > %d", constant.PBK_OVD_LAST_12)
 					}
 				} else {
 					data.Code = constant.NAMA_SAMA_12_OVD_NULL_CODE
 					data.CustomerStatus = customerStatus
 					data.Decision = constant.DECISION_PASS
-					data.Reason = "NAMA SAMA & OVD 12 Bulan Terakhir Null"
+					data.Reason = "Nama Sama & PBK OVD 12 Bulan Terakhir Null"
 				}
 			}
 
@@ -367,7 +329,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 				data.Code = constant.WO_AGUNAN_REJECT_CODE
 
 				// BPKB Nama Sama
-				if bpkbName == constant.NAMA_SAMA {
+				if bpkbName {
 					if pefindoResult.WoContract { //Wo Contract Yes
 
 						if pefindoResult.WoAdaAgunan { //Wo Agunan Yes
@@ -439,7 +401,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 				}
 
 				// BPKB Nama Beda
-				if bpkbName == constant.NAMA_BEDA {
+				if !bpkbName {
 					if pefindoResult.WoContract { //Wo Contract Yes
 
 						if pefindoResult.WoAdaAgunan { //Wo Agunan Yes
@@ -511,13 +473,13 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 				}
 			}
 
-			// Cluster E, F
+			// Check Cluster
 			var mappingCluster entity.MasterMappingCluster
-			mappingCluster.BranchID = reqs.Data.BranchID
+			mappingCluster.BranchID = reqs.BranchID
 			mappingCluster.CustomerStatus = constant.STATUS_KONSUMEN_NEW
 			bpkbString := "Nama Beda"
 
-			if bpkbName == constant.NAMA_SAMA {
+			if bpkbName {
 				bpkbString = "Nama Sama"
 				mappingCluster.BpkbNameType = 1
 			}
@@ -527,14 +489,23 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 
 			mappingCluster, err = u.repository.MasterMappingCluster(mappingCluster)
 			data.Cluster = mappingCluster.Cluster
-			if data.NextProcess == true && pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET && strings.Contains("Cluster E Cluster F", mappingCluster.Cluster) {
-				data.NextProcess = false
-				data.Reason = bpkbString + "& Baki Debet > 3 - 20 Juta, Cluster Reject"
+
+			// Reason Baki Debet, Reject Cluster E, F
+			if data.Decision == constant.DECISION_REJECT && data.NextProcess == true {
+				if pefindoResult.TotalBakiDebetNonAgunan <= 3000000 {
+					data.Reason = bpkbString + " & Baki Debet <= 3 Juta"
+				}
+				if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+					data.Reason = bpkbString + " & Baki Debet > 3 - 20 Juta"
+				}
+				if strings.Contains("Cluster E Cluster F", mappingCluster.Cluster) {
+					data.NextProcess = false
+				}
 			}
 
 			if checkPefindo.Konsumen != (response.PefindoResultKonsumen{}) {
 				trxDetailBiroC := entity.TrxDetailBiro{
-					ProspectID:             reqs.Data.ProspectID,
+					ProspectID:             reqs.ProspectID,
 					Subject:                "CUSTOMER",
 					Source:                 "PBK",
 					BiroID:                 checkPefindo.Konsumen.PefindoID,
@@ -552,7 +523,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 			}
 			if checkPefindo.Pasangan != (response.PefindoResultPasangan{}) {
 				trxDetailBiroC := entity.TrxDetailBiro{
-					ProspectID:             reqs.Data.ProspectID,
+					ProspectID:             reqs.ProspectID,
 					Subject:                "SPOUSE",
 					Source:                 "PBK",
 					BiroID:                 checkPefindo.Pasangan.PefindoID,
