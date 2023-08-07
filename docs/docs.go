@@ -226,6 +226,75 @@ var doc = `{
                 }
             }
         },
+        "/api/v3/kmb/encrypt-decrypt": {
+            "post": {
+                "description": "Encrypt Decrypt",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tools"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.RequestEncryption"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v3/kmb/filtering": {
             "post": {
                 "description": "KmbFiltering",
@@ -258,11 +327,65 @@ var doc = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/response.DupcheckResult"
+                                            "$ref": "#/definitions/response.Filtering"
                                         }
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/produce/filtering": {
+            "post": {
+                "description": "Produce Filtering via REST API",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tools"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.Filtering"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
@@ -360,6 +483,29 @@ var doc = `{
         }
     },
     "definitions": {
+        "http.RequestEncryption": {
+            "type": "object",
+            "properties": {
+                "decrypt": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "6gs+t7lBQTYM5SPuqJTNonWLjvmmmc9FaWIj"
+                    ]
+                },
+                "encrypt": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "hello world"
+                    ]
+                }
+            }
+        },
         "request.BodyRequestElaborate": {
             "type": "object",
             "required": [
@@ -671,22 +817,22 @@ var doc = `{
                 },
                 "id_number": {
                     "type": "string",
-                    "example": "1234XXXXXXXX0001"
+                    "example": "ENCRYPTED NIK"
                 },
                 "legal_name": {
                     "type": "string",
-                    "example": "LEGAL NAME"
+                    "example": "ENCRYPTED LEGAL NAME"
                 },
                 "prospect_id": {
                     "type": "string",
-                    "example": "TEST-DEV"
+                    "example": "SAL042600001"
                 },
                 "spouse": {
                     "$ref": "#/definitions/request.FilteringSpouse"
                 },
                 "surgate_mother_name": {
                     "type": "string",
-                    "example": "SURGATE MOTHER NAME"
+                    "example": "ENCRYPTED SURGATE MOTHER NAME"
                 }
             }
         },
@@ -725,15 +871,15 @@ var doc = `{
                 },
                 "spouse_id_number": {
                     "type": "string",
-                    "example": "1234XXXXXXXX0001"
+                    "example": "ENCRYPTED NIK"
                 },
                 "spouse_legal_name": {
                     "type": "string",
-                    "example": "LEGAL NAME"
+                    "example": "ENCRYPTED LEGAL NAME"
                 },
                 "spouse_surgate_mother_name": {
                     "type": "string",
-                    "example": "SURGATE MOTHER NAME"
+                    "example": "ENCRYPTED SURGATE MOTHER NAME"
                 }
             }
         },
@@ -839,6 +985,15 @@ var doc = `{
         "response.ElaborateResult": {
             "type": "object",
             "properties": {
+                "age_vehicle": {
+                    "type": "string"
+                },
+                "bpkb_name_type": {
+                    "type": "integer"
+                },
+                "cluster": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "integer"
                 },
@@ -848,8 +1003,17 @@ var doc = `{
                 "ltv": {
                     "type": "integer"
                 },
+                "ltv_origin": {
+                    "type": "number"
+                },
                 "reason": {
                     "type": "string"
+                },
+                "result_pefindo": {
+                    "type": "string"
+                },
+                "total_balki_debet": {
+                    "type": "number"
                 }
             }
         },
@@ -861,6 +1025,44 @@ var doc = `{
                 },
                 "message": {
                     "type": "string"
+                }
+            }
+        },
+        "response.Filtering": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "object"
+                },
+                "customer_segment": {
+                    "type": "object"
+                },
+                "customer_status": {
+                    "type": "object"
+                },
+                "decision": {
+                    "type": "string"
+                },
+                "is_blacklist": {
+                    "type": "boolean"
+                },
+                "next_process": {
+                    "type": "boolean"
+                },
+                "pbk_report_customer": {
+                    "type": "object"
+                },
+                "pbk_report_spouse": {
+                    "type": "object"
+                },
+                "prospect_id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "total_baki_debet": {
+                    "type": "object"
                 }
             }
         },

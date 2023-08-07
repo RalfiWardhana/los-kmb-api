@@ -39,7 +39,7 @@ func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase
 // @Tags Tools
 // @Produce json
 // @Param body body request.Filtering true "Body payload"
-// @Success 200 {object} response.ApiResponse{data=response.DupcheckResult}
+// @Success 200 {object} response.ApiResponse{data=response.Filtering}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
 // @Router /api/v3/kmb/filtering [post]
@@ -130,6 +130,15 @@ func (c *handlerKmbFiltering) Filtering(ctx echo.Context) (err error) {
 	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, data)
 }
 
+// Produce Filtering Tools godoc
+// @Description Produce Filtering via REST API
+// @Tags Tools
+// @Produce json
+// @Param body body request.Filtering true "Body payload"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/produce/filtering [post]
 func (c *handlerKmbFiltering) ProduceFiltering(ctx echo.Context) (err error) {
 
 	var (

@@ -1,5 +1,20 @@
 basePath: /api/v2/pbk
 definitions:
+  http.RequestEncryption:
+    properties:
+      decrypt:
+        example:
+        - 6gs+t7lBQTYM5SPuqJTNonWLjvmmmc9FaWIj
+        items:
+          type: string
+        type: array
+      encrypt:
+        example:
+        - hello world
+        items:
+          type: string
+        type: array
+    type: object
   request.BodyRequestElaborate:
     properties:
       client_key:
@@ -217,18 +232,18 @@ definitions:
         example: M
         type: string
       id_number:
-        example: 1234XXXXXXXX0001
+        example: ENCRYPTED NIK
         type: string
       legal_name:
-        example: LEGAL NAME
+        example: ENCRYPTED LEGAL NAME
         type: string
       prospect_id:
-        example: TEST-DEV
+        example: SAL042600001
         type: string
       spouse:
         $ref: '#/definitions/request.FilteringSpouse'
       surgate_mother_name:
-        example: SURGATE MOTHER NAME
+        example: ENCRYPTED SURGATE MOTHER NAME
         type: string
     required:
     - birth_date
@@ -259,13 +274,13 @@ definitions:
         example: F
         type: string
       spouse_id_number:
-        example: 1234XXXXXXXX0001
+        example: ENCRYPTED NIK
         type: string
       spouse_legal_name:
-        example: LEGAL NAME
+        example: ENCRYPTED LEGAL NAME
         type: string
       spouse_surgate_mother_name:
-        example: SURGATE MOTHER NAME
+        example: ENCRYPTED SURGATE MOTHER NAME
         type: string
     required:
     - spouse_birth_date
@@ -343,14 +358,26 @@ definitions:
     type: object
   response.ElaborateResult:
     properties:
+      age_vehicle:
+        type: string
+      bpkb_name_type:
+        type: integer
+      cluster:
+        type: string
       code:
         type: integer
       decision:
         type: string
       ltv:
         type: integer
+      ltv_origin:
+        type: number
       reason:
         type: string
+      result_pefindo:
+        type: string
+      total_balki_debet:
+        type: number
     type: object
   response.ErrorValidation:
     properties:
@@ -358,6 +385,31 @@ definitions:
         type: string
       message:
         type: string
+    type: object
+  response.Filtering:
+    properties:
+      code:
+        type: object
+      customer_segment:
+        type: object
+      customer_status:
+        type: object
+      decision:
+        type: string
+      is_blacklist:
+        type: boolean
+      next_process:
+        type: boolean
+      pbk_report_customer:
+        type: object
+      pbk_report_spouse:
+        type: object
+      prospect_id:
+        type: string
+      reason:
+        type: string
+      total_baki_debet:
+        type: object
     type: object
   response.UsecaseApi:
     properties:
@@ -492,6 +544,45 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Tools
+  /api/v3/kmb/encrypt-decrypt:
+    post:
+      description: Encrypt Decrypt
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.RequestEncryption'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Tools
   /api/v3/kmb/filtering:
     post:
       description: KmbFiltering
@@ -512,8 +603,40 @@ paths:
             - $ref: '#/definitions/response.ApiResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/response.DupcheckResult'
+                  $ref: '#/definitions/response.Filtering'
               type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Tools
+  /api/v3/kmb/produce/filtering:
+    post:
+      description: Produce Filtering via REST API
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.Filtering'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
