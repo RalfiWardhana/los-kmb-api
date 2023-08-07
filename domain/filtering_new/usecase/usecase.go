@@ -244,6 +244,23 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 			}
 		}
 
+		// Check Cluster
+		var mappingCluster entity.MasterMappingCluster
+		mappingCluster.BranchID = reqs.BranchID
+		mappingCluster.CustomerStatus = constant.STATUS_KONSUMEN_NEW
+		bpkbString := "Nama Beda"
+
+		if bpkbName {
+			bpkbString = "Nama Sama"
+			mappingCluster.BpkbNameType = 1
+		}
+		if strings.Contains(constant.STATUS_KONSUMEN_RO_AO, customerStatus) {
+			mappingCluster.CustomerStatus = "AO/RO"
+		}
+
+		mappingCluster, err = u.repository.MasterMappingCluster(mappingCluster)
+		data.Cluster = mappingCluster.Cluster
+
 		// handling response pefindo
 		if checkPefindo.Code == "200" || checkPefindo.Code == "201" {
 			if reflect.TypeOf(checkPefindo.Result).String() != "string" {
@@ -472,23 +489,6 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 					}
 				}
 			}
-
-			// Check Cluster
-			var mappingCluster entity.MasterMappingCluster
-			mappingCluster.BranchID = reqs.BranchID
-			mappingCluster.CustomerStatus = constant.STATUS_KONSUMEN_NEW
-			bpkbString := "Nama Beda"
-
-			if bpkbName {
-				bpkbString = "Nama Sama"
-				mappingCluster.BpkbNameType = 1
-			}
-			if strings.Contains(constant.STATUS_KONSUMEN_RO_AO, customerStatus) {
-				mappingCluster.CustomerStatus = "AO/RO"
-			}
-
-			mappingCluster, err = u.repository.MasterMappingCluster(mappingCluster)
-			data.Cluster = mappingCluster.Cluster
 
 			// Reason Baki Debet, Reject Cluster E, F
 			if data.Decision == constant.DECISION_REJECT && data.NextProcess == true {
