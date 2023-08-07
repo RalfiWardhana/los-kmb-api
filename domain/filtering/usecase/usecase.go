@@ -598,7 +598,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 
 	if active {
 		var (
-			checkPefindo    response.ResposePefindo
+			checkPefindo    response.ResponsePefindo
 			pefindoResult   response.PefindoResult
 			responsePefindo interface{}
 		)

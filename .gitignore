@@ -21,8 +21,7 @@ conf
 # Log
 logs/*.log
 
-# Automation testing
-.github/workflows/go.yml
-
-# folder buat nyimpen backup query perubahan db
-#database
+# unit test results
+unit_test
+unit_test*
+*.out
