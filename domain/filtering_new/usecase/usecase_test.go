@@ -772,10 +772,10 @@ func TestDupcheckIntegrator(t *testing.T) {
 			httpmock.ActivateNonDefault(rst.GetClient())
 			defer httpmock.DeactivateAndReset()
 
-			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("DUPCHECK_URL"), httpmock.NewStringResponder(tc.rDupcheckCode, tc.rDupcheckBody))
-			resp, _ := rst.R().Post(os.Getenv("DUPCHECK_URL"))
+			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("NEW_KMB_DUPCHECK_URL"), httpmock.NewStringResponder(tc.rDupcheckCode, tc.rDupcheckBody))
+			resp, _ := rst.R().Post(os.Getenv("NEW_KMB_DUPCHECK_URL"))
 
-			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("DUPCHECK_URL"), mock.Anything, map[string]string{}, constant.METHOD_POST, false, 0, timeout, ProspectID, accessToken).Return(resp, tc.errHttp).Once()
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("NEW_KMB_DUPCHECK_URL"), mock.Anything, map[string]string{}, constant.METHOD_POST, false, 0, timeout, ProspectID, accessToken).Return(resp, tc.errHttp).Once()
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
 			result, err := usecase.DupcheckIntegrator(ctx, ProspectID, IDNumber, LegalName, BirthDate, MotherName, accessToken)
