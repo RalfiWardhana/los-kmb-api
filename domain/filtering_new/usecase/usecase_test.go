@@ -702,16 +702,84 @@ func TestFilteringPefindo(t *testing.T) {
 			httpmock.ActivateNonDefault(rst.GetClient())
 			defer httpmock.DeactivateAndReset()
 
-			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("PBK_URL"), httpmock.NewStringResponder(tc.rPefindoCode, tc.rPefindoBody))
-			resp, _ := rst.R().Post(os.Getenv("PBK_URL"))
+			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("NEW_KMB_PBK_URL"), httpmock.NewStringResponder(tc.rPefindoCode, tc.rPefindoBody))
+			resp, _ := rst.R().Post(os.Getenv("NEW_KMB_PBK_URL"))
 
 			param, _ := json.Marshal(tc.reqPefindo)
-			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, tc.reqPefindo.ProspectID, accessToken).Return(resp, tc.errPefindo).Once()
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("NEW_KMB_PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, tc.reqPefindo.ProspectID, accessToken).Return(resp, tc.errPefindo).Once()
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
 			rFilteringPefindo, rPefindo, _, err := usecase.FilteringPefindo(ctx, tc.reqPefindo, tc.customerStatus, accessToken)
 			require.Equal(t, tc.respFilteringPefindo, rFilteringPefindo)
 			require.Equal(t, tc.resPefindo, rPefindo)
+			require.Equal(t, tc.errFinal, err)
+		})
+	}
+}
+
+func TestDupcheckIntegrator(t *testing.T) {
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	accessToken := "token"
+	ctx := context.Background()
+	reqID := utils.GenerateUUID()
+	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
+
+	ProspectID := "SAL02400020230727001"
+	IDNumber := "3275066006789999"
+	LegalName := "EMI LegalName"
+	BirthDate := "1971-04-15"
+	MotherName := "HAROEMI MotherName"
+
+	testcases := []struct {
+		name          string
+		rDupcheckCode int
+		rDupcheckBody string
+		errHttp       error
+		resDupcheck   response.SpDupCekCustomerByID
+		errFinal      error
+	}{
+		{
+			name:     "test error",
+			errHttp:  errors.New("upstream_service_timeout - Call Dupcheck Timeout"),
+			errFinal: errors.New("upstream_service_timeout - Call Dupcheck Timeout"),
+		},
+		{
+			name:          "test error > 200",
+			rDupcheckCode: 400,
+			errFinal:      errors.New("upstream_service_error - Call Dupcheck Error"),
+		},
+		{
+			name:          "test success",
+			rDupcheckCode: 200,
+			rDupcheckBody: `{ "messages": "LOS DUPCHECK", "errors": null, 
+			"data": { "customer_id": null, "id_number": "", "full_name": "", "birth_date": "", "surgate_mother_name": "", "birth_place": "", "gender": "", 
+			"emergency_contact_address": "", "legal_address": "", "legal_kelurahan": "", "legal_kecamatan": "", "legal_city": "", "lagal_zipcode": "", 
+			"residence_address": "", "residence_kelurahan": "", "residence_kecamatan": "", "residence_city": "", "residence_zipcode": "", "company_address": "", 
+			"company_kelurahan": "", "company_kecamatan": "", "company_city": "", "company_zipcode": "", "personal_npwp": "", "education": "", "marital_status": "", 
+			"num_of_dependence": 0, "home_status": "", "profession_id": "", "job_type_id": "", "job_pos": null, "monthly_fixed_income": 0, "spouse_income": null, 
+			"monthly_variable_income": 0, "total_installment": 0, "total_installment_nap": 0, "bad_type": null, "max_overduedays": 0, "max_overduedays_roao": null, 
+			"num_of_asset_inventoried": 0, "overduedays_aging": null, "max_overduedays_for_active_agreement": null, "max_overduedays_for_prev_eom": null, 
+			"sisa_jumlah_angsuran": null, "rrd_date": null, "number_of_agreement": 0, "work_since_year": null, "outstanding_principal": 0, "os_installmentdue": 0, 
+			"is_restructure": 0, "is_similiar": 0, "customer_status": "", "customer_segment": "" }, "server_time": "2023-08-07T08:28:13+07:00", "request_id": "" }`,
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			rst := resty.New()
+			httpmock.ActivateNonDefault(rst.GetClient())
+			defer httpmock.DeactivateAndReset()
+
+			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("NEW_KMB_DUPCHECK_URL"), httpmock.NewStringResponder(tc.rDupcheckCode, tc.rDupcheckBody))
+			resp, _ := rst.R().Post(os.Getenv("NEW_KMB_DUPCHECK_URL"))
+
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("NEW_KMB_DUPCHECK_URL"), mock.Anything, map[string]string{}, constant.METHOD_POST, false, 0, timeout, ProspectID, accessToken).Return(resp, tc.errHttp).Once()
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			result, err := usecase.DupcheckIntegrator(ctx, ProspectID, IDNumber, LegalName, BirthDate, MotherName, accessToken)
+			require.Equal(t, tc.resDupcheck, result)
 			require.Equal(t, tc.errFinal, err)
 		})
 	}
