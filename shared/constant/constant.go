@@ -168,6 +168,7 @@ const (
 	REASON_BADTYPE_W                                             = "Konsumen Warning"
 	REASON_BERSIH                                                = "Konsumen Bersih"
 	CODE_NON_BLACKLIST                                           = "7000,7064,7065,7066,706,7094,7095,7096,708,7014,7015,7016,7053,7054,7055,699,7050"
+	CODE_NON_BLACKLIST_ALL                                       = "609"
 	CORE_API_003                                                 = "CORE-API-003"
 	CORE_API_004                                                 = "CORE-API-004"
 	CORE_API_099                                                 = "CORE-API-999"
