@@ -143,6 +143,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	respFiltering.ProspectID = req.ProspectID
 	respFiltering.CustomerSegment = mainCustomer.CustomerSegment
+	entityFiltering.Cluster = respFiltering.Cluster
 
 	primePriority, _ := utils.ItemExists(mainCustomer.CustomerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
 
@@ -151,6 +152,8 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		respFiltering.Decision = blackList.Result
 		respFiltering.Reason = mainCustomer.CustomerStatus + " " + mainCustomer.CustomerSegment
 		respFiltering.NextProcess = true
+
+		entityFiltering.Cluster = constant.CLUSTER_PRIME_PRIORITY
 	}
 
 	// save transaction
@@ -182,7 +185,6 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		entityFiltering.TotalBakiDebetNonCollateralBiro = resPefindo.TotalBakiDebetNonAgunan
 	}
 
-	entityFiltering.Cluster = respFiltering.Cluster
 	entityFiltering.Reason = respFiltering.Reason
 
 	err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro)

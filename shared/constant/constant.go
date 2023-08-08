@@ -280,6 +280,7 @@ const (
 	CLUSTER_E                       = "Cluster E"
 	CLUSTER_F                       = "Cluster F"
 	BRANCH_ID_PRIME_PRIORITY        = "000"
+	CLUSTER_PRIME_PRIORITY          = "PRIME PRIORITY"
 
 	//HTTP MSG
 	MSG_CORE_API          = "CORE_API"
