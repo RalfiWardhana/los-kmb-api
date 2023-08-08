@@ -361,7 +361,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 									data.NextProcess = false
 									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
 								}
-							} else if customerStatus == constant.STATUS_KONSUMEN_RO_AO {
+							} else if customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = true
 									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_SESUAI
@@ -383,7 +383,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 									data.NextProcess = false
 									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
 								}
-							} else if customerStatus == constant.STATUS_KONSUMEN_RO_AO {
+							} else if customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = true
 									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_SESUAI
@@ -403,7 +403,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 								data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
 							}
 
-						} else if customerStatus == constant.STATUS_KONSUMEN_RO_AO {
+						} else if customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO {
 							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 								data.NextProcess = true
 								data.Reason = constant.NAMA_SAMA_BAKI_DEBET_SESUAI
@@ -433,7 +433,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 									data.NextProcess = false
 									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
 								}
-							} else if customerStatus == constant.STATUS_KONSUMEN_RO_AO {
+							} else if customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = true
 									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
@@ -455,7 +455,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 									data.NextProcess = false
 									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
 								}
-							} else if customerStatus == constant.STATUS_KONSUMEN_RO_AO {
+							} else if customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = true
 									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
@@ -475,7 +475,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 								data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
 							}
 
-						} else if customerStatus == constant.STATUS_KONSUMEN_RO_AO {
+						} else if customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO {
 							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 								data.NextProcess = true
 								data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
@@ -645,13 +645,7 @@ func (u usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerB
 			data.StatusKonsumen = spDupcheck.CustomerStatus
 		}
 
-		if spDupcheck.IsSimiliar == 1 && index == 0 {
-			data.Result = constant.DECISION_REJECT
-			data.Code = constant.CODE_KONSUMEN_SIMILIAR
-			data.Reason = constant.REASON_KONSUMEN_SIMILIAR
-			customerType = constant.MESSAGE_BLACKLIST
-
-		} else if spDupcheck.BadType == constant.BADTYPE_B {
+		if spDupcheck.BadType == constant.BADTYPE_B {
 			data.Result = constant.DECISION_REJECT
 			customerType = constant.MESSAGE_BLACKLIST
 			if index == 0 {
@@ -703,15 +697,13 @@ func (u usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerB
 			}
 			return
 
-		} else if spDupcheck.BadType == constant.BADTYPE_W {
-			customerType = constant.MESSAGE_WARNING
 		}
 
 	} else {
 		data.StatusKonsumen = constant.STATUS_KONSUMEN_NEW
 	}
 
-	data = response.UsecaseApi{StatusKonsumen: data.StatusKonsumen, Code: constant.CODE_NON_BLACKLIST, Reason: constant.REASON_NON_BLACKLIST, Result: constant.DECISION_PASS}
+	data = response.UsecaseApi{StatusKonsumen: data.StatusKonsumen, Code: constant.CODE_NON_BLACKLIST_ALL, Reason: constant.REASON_NON_BLACKLIST, Result: constant.DECISION_PASS}
 
 	return
 }
