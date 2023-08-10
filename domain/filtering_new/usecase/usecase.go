@@ -500,7 +500,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 				if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 					data.Reason = bpkbString + " & Baki Debet > 3 - 20 Juta"
 				}
-				if strings.Contains("Cluster E Cluster F", mappingCluster.Cluster) {
+				if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET && strings.Contains("Cluster E Cluster F", mappingCluster.Cluster) {
 					data.NextProcess = false
 				}
 			}
