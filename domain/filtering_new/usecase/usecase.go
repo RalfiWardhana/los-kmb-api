@@ -117,14 +117,11 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	if req.Spouse != nil {
 		reqPefindo.MaritalStatus = constant.MARRIED
-		dataSpouse := request.SpousePefindo{
-			IDNumber:          req.Spouse.IDNumber,
-			LegalName:         req.Spouse.LegalName,
-			BirthDate:         req.Spouse.BirthDate,
-			SurgateMotherName: req.Spouse.MotherName,
-			Gender:            req.Spouse.Gender,
-		}
-		reqPefindo.Spouse = &dataSpouse
+		reqPefindo.SpouseIDNumber = req.Spouse.IDNumber
+		reqPefindo.SpouseLegalName = req.Spouse.LegalName
+		reqPefindo.SpouseBirthDate = req.Spouse.BirthDate
+		reqPefindo.SpouseSurgateMotherName = req.Spouse.MotherName
+		reqPefindo.SpouseGender = req.Spouse.Gender
 	}
 
 	mainCustomer := dataCustomer[0]
