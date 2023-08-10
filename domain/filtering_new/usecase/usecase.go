@@ -117,14 +117,11 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	if req.Spouse != nil {
 		reqPefindo.MaritalStatus = constant.MARRIED
-		dataSpouse := request.SpousePefindo{
-			IDNumber:          req.Spouse.IDNumber,
-			LegalName:         req.Spouse.LegalName,
-			BirthDate:         req.Spouse.BirthDate,
-			SurgateMotherName: req.Spouse.MotherName,
-			Gender:            req.Spouse.Gender,
-		}
-		reqPefindo.Spouse = &dataSpouse
+		reqPefindo.SpouseIDNumber = req.Spouse.IDNumber
+		reqPefindo.SpouseLegalName = req.Spouse.LegalName
+		reqPefindo.SpouseBirthDate = req.Spouse.BirthDate
+		reqPefindo.SpouseSurgateMotherName = req.Spouse.MotherName
+		reqPefindo.SpouseGender = req.Spouse.Gender
 	}
 
 	mainCustomer := dataCustomer[0]
@@ -500,7 +497,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 				if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 					data.Reason = bpkbString + " & Baki Debet > 3 - 20 Juta"
 				}
-				if strings.Contains("Cluster E Cluster F", mappingCluster.Cluster) {
+				if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET && strings.Contains("Cluster E Cluster F", mappingCluster.Cluster) {
 					data.NextProcess = false
 				}
 			}

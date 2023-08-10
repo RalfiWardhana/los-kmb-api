@@ -48,28 +48,24 @@ type Spouse struct {
 }
 
 type Pefindo struct {
-	ClientKey         string         `json:"ClientKey" `
-	IDMember          string         `json:"IDMember" `
-	User              string         `json:"user" `
-	ProspectID        string         `json:"ProspectID" validate:"required,max=20"`
-	BranchID          string         `json:"BranchID" validate:"required"`
-	BPKBName          string         `json:"BPKBName" validate:"required,bpkbname"`
-	IDNumber          string         `json:"IDNumber" validate:"required,number,len=16"`
-	LegalName         string         `json:"LegalName" validate:"required,allowcharsname"`
-	BirthDate         string         `json:"BirthDate" validate:"required,dateformat"`
-	SurgateMotherName string         `json:"SurgateMotherName" validate:"required,allowcharsname"`
-	Gender            string         `json:"Gender" validate:"required,gender"`
-	MaritalStatus     string         `json:"MaritalStatus" validate:"required,marital"`
-	Spouse            *SpousePefindo `json:"Spouse" validate:"omitempty"`
-}
-
-type SpousePefindo struct {
-	IDNumber          string `json:"Spouse_IDNumber"  validate:"required,number,len=16"`
-	LegalName         string `json:"Spouse_LegalName"  validate:"required,allowcharsname"`
-	BirthPlace        string `json:"Spouse_BirthPlace"  validate:"required,allowcharsname"`
-	BirthDate         string `json:"Spouse_BirthDate"  validate:"required,dateformat"`
-	SurgateMotherName string `json:"Spouse_SurgateMotherName"  validate:"required,allowcharsname"`
-	Gender            string `json:"Spouse_Gender"  validate:"required,gender"`
+	ClientKey               string `json:"ClientKey" `
+	IDMember                string `json:"IDMember" `
+	User                    string `json:"user" `
+	ProspectID              string `json:"ProspectID" validate:"required,max=20"`
+	BranchID                string `json:"BranchID" validate:"required"`
+	BPKBName                string `json:"BPKBName" validate:"required,bpkbname"`
+	IDNumber                string `json:"IDNumber" validate:"required,number,len=16"`
+	LegalName               string `json:"LegalName" validate:"required,allowcharsname"`
+	BirthDate               string `json:"BirthDate" validate:"required,dateformat"`
+	SurgateMotherName       string `json:"SurgateMotherName" validate:"required,allowcharsname"`
+	Gender                  string `json:"Gender" validate:"required,gender"`
+	MaritalStatus           string `json:"MaritalStatus" validate:"required,marital"`
+	SpouseIDNumber          string `json:"Spouse_IDNumber"  validate:"required,number,len=16"`
+	SpouseLegalName         string `json:"Spouse_LegalName"  validate:"required,allowcharsname"`
+	SpouseBirthPlace        string `json:"Spouse_BirthPlace"  validate:"required,allowcharsname"`
+	SpouseBirthDate         string `json:"Spouse_BirthDate"  validate:"required,dateformat"`
+	SpouseSurgateMotherName string `json:"Spouse_SurgateMotherName"  validate:"required,allowcharsname"`
+	SpouseGender            string `json:"Spouse_Gender"  validate:"required,gender"`
 }
 
 type GenderCompare struct {
