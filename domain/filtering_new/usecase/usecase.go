@@ -611,6 +611,7 @@ func (u usecase) DupcheckIntegrator(ctx context.Context, prospectID, idNumber, l
 		"legal_name":          legalName,
 		"birth_date":          birthDate,
 		"surgate_mother_name": surgateName,
+		"lob_id":              2,
 	})
 
 	custDupcheck, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("NEW_KMB_DUPCHECK_URL"), req, map[string]string{}, constant.METHOD_POST, false, 0, timeout, prospectID, accessToken)
