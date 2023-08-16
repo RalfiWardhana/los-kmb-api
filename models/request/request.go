@@ -555,21 +555,21 @@ type AsyncLos struct {
 
 type Filtering struct {
 	ProspectID string           `json:"prospect_id" validate:"required,max=20" example:"SAL042600001"`
-	BranchID   string           `json:"branch_id" validate:"required" example:"426"`
-	IDNumber   string           `json:"id_number" validate:"required,len=16,number" example:"ENCRYPTED NIK"`
+	BranchID   string           `json:"branch_id" validate:"required,max=5,number" example:"426"`
+	IDNumber   string           `json:"id_number" validate:"required,len=16,number,id_number" example:"ENCRYPTED NIK"`
 	LegalName  string           `json:"legal_name" validate:"required,allowcharsname" example:"ENCRYPTED LEGAL NAME"`
 	BirthDate  string           `json:"birth_date" validate:"required,dateformat" example:"YYYY-MM-DD"`
-	Gender     string           `json:"gender" validate:"required" example:"M"`
+	Gender     string           `json:"gender" validate:"required,gender" example:"M"`
 	MotherName string           `json:"surgate_mother_name" validate:"required,allowcharsname" example:"ENCRYPTED SURGATE MOTHER NAME"`
 	BPKBName   string           `json:"bpkb_name" validate:"required,bpkbname" example:"K"`
 	Spouse     *FilteringSpouse `json:"spouse" validate:"omitempty"`
 }
 
 type FilteringSpouse struct {
-	IDNumber   string `json:"spouse_id_number" validate:"required,len=16"  example:"ENCRYPTED NIK"`
+	IDNumber   string `json:"spouse_id_number" validate:"required,len=16,number,id_number"  example:"ENCRYPTED NIK"`
 	LegalName  string `json:"spouse_legal_name" validate:"required,allowcharsname" example:"ENCRYPTED LEGAL NAME"`
 	BirthDate  string `json:"spouse_birth_date" validate:"required,dateformat" example:"YYYY-MM-DD"`
-	Gender     string `json:"spouse_gender" validate:"required" example:"F"`
+	Gender     string `json:"spouse_gender" validate:"required,gender" example:"F"`
 	MotherName string `json:"spouse_surgate_mother_name" validate:"required,allowcharsname" example:"ENCRYPTED SURGATE MOTHER NAME"`
 }
 
