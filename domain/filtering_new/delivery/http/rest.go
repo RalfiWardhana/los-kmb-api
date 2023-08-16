@@ -19,16 +19,18 @@ type handlerKmbFiltering struct {
 	repository   interfaces.Repository
 	Json         common.JSON
 	producer     platformevent.PlatformEvent
+	customUtils  utils.UtilsInterface
 }
 
 func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware,
-	producer platformevent.PlatformEvent) {
+	producer platformevent.PlatformEvent, customUtils utils.UtilsInterface) {
 	handler := handlerKmbFiltering{
 		multiusecase: multiUsecase,
 		usecase:      usecase,
 		repository:   repository,
 		Json:         json,
 		producer:     producer,
+		customUtils:  customUtils,
 	}
 	kmbroute.POST("/filtering", handler.Filtering, middlewares.AccessMiddleware())
 	kmbroute.POST("/produce/filtering", handler.ProduceFiltering, middlewares.AccessMiddleware())
@@ -55,17 +57,17 @@ func (c *handlerKmbFiltering) Filtering(ctx echo.Context) (err error) {
 	}
 
 	// decrypt request
-	req.IDNumber, err = utils.PlatformDecryptText(req.IDNumber)
+	req.IDNumber, err = c.customUtils.PlatformDecryptText(req.IDNumber)
 	if err != nil {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
 		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 	}
-	req.LegalName, err = utils.PlatformDecryptText(req.LegalName)
+	req.LegalName, err = c.customUtils.PlatformDecryptText(req.LegalName)
 	if err != nil {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
 		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 	}
-	req.MotherName, err = utils.PlatformDecryptText(req.MotherName)
+	req.MotherName, err = c.customUtils.PlatformDecryptText(req.MotherName)
 	if err != nil {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
 		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
@@ -76,17 +78,17 @@ func (c *handlerKmbFiltering) Filtering(ctx echo.Context) (err error) {
 			return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 		}
 	} else {
-		req.Spouse.IDNumber, err = utils.PlatformDecryptText(req.Spouse.IDNumber)
+		req.Spouse.IDNumber, err = c.customUtils.PlatformDecryptText(req.Spouse.IDNumber)
 		if err != nil {
 			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
 			return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 		}
-		req.Spouse.LegalName, err = utils.PlatformDecryptText(req.Spouse.LegalName)
+		req.Spouse.LegalName, err = c.customUtils.PlatformDecryptText(req.Spouse.LegalName)
 		if err != nil {
 			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
 			return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 		}
-		req.Spouse.MotherName, err = utils.PlatformDecryptText(req.Spouse.MotherName)
+		req.Spouse.MotherName, err = c.customUtils.PlatformDecryptText(req.Spouse.MotherName)
 		if err != nil {
 			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
 			return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
