@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"los-kmb-api/domain/filtering_new/interfaces"
 	"los-kmb-api/models/entity"
-	"los-kmb-api/shared/config"
 	"los-kmb-api/shared/utils"
 	"os"
 	"strconv"
@@ -37,7 +36,7 @@ func NewRepository(kpLos, kpLosLogs, newKmb *gorm.DB) interfaces.Repository {
 func (r repoHandler) DummyDataPbk(noktp string) (data entity.DummyPBK, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -45,7 +44,7 @@ func (r repoHandler) DummyDataPbk(noktp string) (data entity.DummyPBK, err error
 	db := r.KpLosLogs.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = db.Raw("SELECT * FROM dbo.dummy_pefindo_kmb WHERE IDNumber = ?", noktp).Scan(&data).Error; err != nil {
+	if err = db.Raw("SELECT * FROM dbo.dummy_pefindo_kmb WITH (nolock) WHERE IDNumber = ?", noktp).Scan(&data).Error; err != nil {
 		return
 	}
 
@@ -83,7 +82,7 @@ func (r repoHandler) GetFilteringByID(prospectID string) (row int, err error) {
 
 	var data []entity.FilteringKMB
 
-	if err = r.NewKmb.Raw(fmt.Sprintf("SELECT prospect_id FROM trx_filtering WITH (nolock) WHERE prospect_id = '%s'", prospectID)).Scan(&data).Error; err != nil {
+	if err = r.NewKmb.Raw(fmt.Sprintf("SELECT prospect_id FROM dbo.trx_filtering WITH (nolock) WHERE prospect_id = '%s'", prospectID)).Scan(&data).Error; err != nil {
 		return
 	}
 
@@ -95,7 +94,7 @@ func (r repoHandler) GetFilteringByID(prospectID string) (row int, err error) {
 func (r repoHandler) MasterMappingCluster(req entity.MasterMappingCluster) (data entity.MasterMappingCluster, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -103,7 +102,7 @@ func (r repoHandler) MasterMappingCluster(req entity.MasterMappingCluster) (data
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = db.Raw("SELECT * FROM dbo.m_mapping_cluster WHERE branch_id = ? AND customer_status = ? AND bpkb_name_type = ?", req.BranchID, req.CustomerStatus, req.BpkbNameType).Scan(&data).Error; err != nil {
+	if err = db.Raw("SELECT * FROM dbo.m_mapping_cluster WITH (nolock) WHERE branch_id = ? AND customer_status = ? AND bpkb_name_type = ?", req.BranchID, req.CustomerStatus, req.BpkbNameType).Scan(&data).Error; err != nil {
 		return
 	}
 

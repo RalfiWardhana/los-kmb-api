@@ -3,9 +3,11 @@ module los-kmb-api
 go 1.16
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.0 // indirect
 	github.com/KB-FMF/platform-library v1.0.13
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
 	github.com/allegro/bigcache/v3 v3.1.0
+	github.com/confluentinc/confluent-kafka-go v1.8.2 // indirect
 	github.com/go-resty/resty/v2 v2.7.0
 	github.com/google/uuid v1.1.2
 	github.com/iancoleman/strcase v0.2.0
