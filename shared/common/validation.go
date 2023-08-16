@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+	"los-kmb-api/models/entity"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
@@ -52,6 +53,7 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("profession", professionValidation)
 	v.validator.RegisterValidation("bpkbname", checkBpkbname)
 	v.validator.RegisterValidation("number", numberValidation)
+	v.validator.RegisterValidation("id_number", idNumberValidation)
 	v.validator.RegisterValidation("customer_status", checkCustomerStatus)
 	v.validator.RegisterValidation("customer_category", checkCustomerCategory)
 	v.validator.RegisterValidation("result_pefindo", checkResultPefindo)
@@ -128,10 +130,8 @@ func checkBpkbname(fl validator.FieldLevel) (validator bool) {
 
 func genderValidation(fl validator.FieldLevel) (validator bool) {
 
-	gender, err := utils.ValidatorFromCache("group_gender")
-
-	if err != nil {
-		return
+	gender := entity.AppConfig{
+		Value: "M,F",
 	}
 
 	arrGender := strings.Split(gender.Value, ",")
@@ -187,6 +187,19 @@ func numberValidation(fl validator.FieldLevel) bool {
 	re := regexp.MustCompile(`^[0-9]*$`)
 
 	return re.MatchString(fl.Field().String())
+}
+
+func idNumberValidation(fl validator.FieldLevel) bool {
+
+	var validator bool
+	s := fl.Field().String()
+	if s[0:1] == "0" {
+		validator = false
+	} else {
+		validator = true
+	}
+
+	return validator
 }
 
 func contains(arr []string, str string) bool {

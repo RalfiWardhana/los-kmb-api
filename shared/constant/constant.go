@@ -15,6 +15,7 @@ const (
 	TAG_ALLOW_CHARS_NAME                                         = "allowcharsname"
 	TAG_MIN                                                      = "min"
 	TAG_NUMBER                                                   = "number"
+	TAG_ID_NUMBER                                                = "id_number"
 	TAG_GENDER                                                   = "gender"
 	TAG_SPOUSE_GENDER                                            = "spouse_gender"
 	TAG_STATUS_KONSUMEN                                          = "status_konsumen"

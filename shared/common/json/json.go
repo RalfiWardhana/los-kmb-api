@@ -285,6 +285,8 @@ func formatMessage(err validator.FieldError) string {
 		message = fmt.Sprintf("accepted:min=%s", param)
 	case constant.TAG_NUMBER:
 		message = "accepted:value=0-9"
+	case constant.TAG_ID_NUMBER:
+		message = "accepted:value=non zero for first number"
 	case constant.TAG_GENDER:
 		message = fmt.Sprintf("accepted:value=%s", common.Gender)
 	case constant.TAG_SPOUSE_GENDER:
