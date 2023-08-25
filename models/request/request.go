@@ -555,7 +555,7 @@ type AsyncLos struct {
 
 type Filtering struct {
 	ProspectID string           `json:"prospect_id" validate:"required,max=20" example:"SAL042600001"`
-	BranchID   string           `json:"branch_id" validate:"required,max=5,number" example:"426"`
+	BranchID   string           `json:"branch_id" validate:"required,len=3,number" example:"426"`
 	IDNumber   string           `json:"id_number" validate:"required,len=16,number,id_number" example:"ENCRYPTED NIK"`
 	LegalName  string           `json:"legal_name" validate:"required,allowcharsname,max=200" example:"ENCRYPTED LEGAL NAME"`
 	BirthDate  string           `json:"birth_date" validate:"required,dateformat" example:"YYYY-MM-DD"`
