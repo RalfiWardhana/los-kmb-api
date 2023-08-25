@@ -573,6 +573,14 @@ type FilteringSpouse struct {
 	MotherName string `json:"spouse_surgate_mother_name" validate:"required,allowcharsname,max=200" example:"ENCRYPTED SURGATE MOTHER NAME"`
 }
 
+type ElaborateLTV struct {
+	ProspectID        string  `json:"prospect_id" validate:"required,max=20"`
+	Tenor             int     `json:"tenor" validate:"required,number"`
+	ManufacturingYear string  `json:"manufacturing_year" validate:"required,len=4,number"`
+	OTR               float64 `json:"otr" validate:"required"`
+	NTF               float64 `json:"ntf" validate:"required"`
+}
+
 type SallyFilteringCallback struct {
 	ProspectID      string      `json:"prospect_id"`
 	Decision        string      `json:"decision"`
