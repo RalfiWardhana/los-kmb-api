@@ -7,9 +7,5 @@ import (
 )
 
 type Usecase interface {
-	ResultElaborate(ctx context.Context, reqs request.BodyRequestElaborate) (data response.ElaborateResult, err error)
-}
-
-type MultiUsecase interface {
-	Elaborate(ctx context.Context, reqs request.BodyRequestElaborate, accessToken string) (data response.ElaborateResult, err error)
+	Elaborate(ctx context.Context, reqs request.ElaborateLTV, accessToken string) (data response.ElaborateLTV, err error)
 }

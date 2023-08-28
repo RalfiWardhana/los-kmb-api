@@ -574,11 +574,9 @@ type FilteringSpouse struct {
 }
 
 type ElaborateLTV struct {
-	ProspectID        string  `json:"prospect_id" validate:"required,max=20"`
-	Tenor             int     `json:"tenor" validate:"required,number"`
-	ManufacturingYear string  `json:"manufacturing_year" validate:"required,len=4,number"`
-	OTR               float64 `json:"otr" validate:"required"`
-	NTF               float64 `json:"ntf" validate:"required"`
+	ProspectID        string `json:"prospect_id" validate:"required,max=20"`
+	Tenor             int    `json:"tenor" validate:"required"`
+	ManufacturingYear string `json:"manufacturing_year" validate:"required,len=4,number"`
 }
 
 type SallyFilteringCallback struct {
