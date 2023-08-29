@@ -279,6 +279,7 @@ const (
 	REASON_PASS_ELABORATE           = "PASS - Elaborated Scheme"
 	REASON_REJECT_ELABORATE         = "REJECT - Elaborated Scheme"
 	REASON_REJECT_NTF_ELABORATE     = "REJECT - NTF Tidak Sesuai Threshold"
+	CLUSTER_C                       = "Cluster C"
 	CLUSTER_E                       = "Cluster E"
 	CLUSTER_F                       = "Cluster F"
 	BRANCH_ID_PRIME_PRIORITY        = "000"
