@@ -219,7 +219,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 				checkPefindo.Result = constant.RESPONSE_PEFINDO_DUMMY_NOT_FOUND
 			} else {
 				if err = json.Unmarshal([]byte(getData.Response), &checkPefindo); err != nil {
-					err = fmt.Errorf("error unmarshal data pefindo dummy")
+					err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data pefindo dummy")
 					return
 				}
 			}
@@ -233,12 +233,12 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 			resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("NEW_KMB_PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, reqs.ProspectID, accessToken)
 
 			if err != nil || resp.StatusCode() != 200 && resp.StatusCode() != 400 {
-				err = fmt.Errorf("failed get data pefindo")
+				err = errors.New(constant.ERROR_UPSTREAM + " - failed get data pefindo")
 				return
 			}
 
 			if err = json.Unmarshal(resp.Body(), &checkPefindo); err != nil {
-				err = fmt.Errorf("error unmarshal data pefindo")
+				err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data pefindo")
 				return
 			}
 		}
@@ -258,7 +258,16 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 		}
 
 		mappingCluster, err = u.repository.MasterMappingCluster(mappingCluster)
-		data.Cluster = mappingCluster.Cluster
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Mapping cluster error")
+			return
+		}
+
+		if mappingCluster.Cluster == "" {
+			data.Cluster = constant.CLUSTER_C
+		} else {
+			data.Cluster = mappingCluster.Cluster
+		}
 
 		// handling response pefindo
 		if checkPefindo.Code == "200" || checkPefindo.Code == "201" {
@@ -266,7 +275,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 				setPefindo, _ := json.Marshal(checkPefindo.Result)
 
 				if errs := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(setPefindo, &pefindoResult); errs != nil {
-					err = fmt.Errorf("error unmarshal data pefindo")
+					err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data pefindo")
 					return
 				}
 			}
@@ -617,12 +626,12 @@ func (u usecase) DupcheckIntegrator(ctx context.Context, prospectID, idNumber, l
 	custDupcheck, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("NEW_KMB_DUPCHECK_URL"), req, map[string]string{}, constant.METHOD_POST, false, 0, timeout, prospectID, accessToken)
 
 	if err != nil {
-		err = errors.New("upstream_service_timeout - Call Dupcheck Timeout")
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Dupcheck Timeout")
 		return
 	}
 
 	if custDupcheck.StatusCode() != 200 {
-		err = errors.New("upstream_service_error - Call Dupcheck Error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call Dupcheck Error")
 		return
 	}
 
@@ -713,7 +722,7 @@ func (u usecase) SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []
 	if err != nil {
 
 		if strings.Contains(err.Error(), "deadline") {
-			err = errors.New("upstream_service_timeout - Save Filtering Timeout")
+			err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Save Filtering Timeout")
 			return
 		}
 
@@ -728,7 +737,7 @@ func (u usecase) FilteringProspectID(prospectID string) (data request.OrderIDChe
 	row, err := u.repository.GetFilteringByID(prospectID)
 
 	if err != nil {
-		err = errors.New("upstream_service_error - Get Filtering Order ID")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Filtering Order ID")
 	}
 
 	data.ProspectID = prospectID + " - true"

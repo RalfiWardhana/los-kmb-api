@@ -103,6 +103,9 @@ func (r repoHandler) MasterMappingCluster(req entity.MasterMappingCluster) (data
 	defer db.Commit()
 
 	if err = db.Raw("SELECT * FROM dbo.m_mapping_cluster WITH (nolock) WHERE branch_id = ? AND customer_status = ? AND bpkb_name_type = ?", req.BranchID, req.CustomerStatus, req.BpkbNameType).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
 		return
 	}
 
