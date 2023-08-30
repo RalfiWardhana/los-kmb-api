@@ -61,7 +61,7 @@ func CentralizeLog(ctx context.Context, accessToken string, logParam CentralizeL
 	} else {
 		method, isOkGetMethod = ctx.Value(constant.CTX_KEY_INCOMING_REQUEST_METHOD).(string)
 		if !isOkGetMethod {
-			link = constant.METHOD_GET
+			method = constant.METHOD_GET
 		}
 	}
 

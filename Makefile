@@ -3,7 +3,7 @@ test:
 	@go tool cover -func="unit_test/coverage.out"
 coverage:
 	@go tool cover -html="unit_test/coverage.out"
-app:
+run:
 	@go run app/main.go
 mock:
 	@mockery --all --dir=domain/filtering_new/interfaces --output domain/filtering_new/interfaces/mocks --case underscore
