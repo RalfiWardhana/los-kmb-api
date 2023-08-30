@@ -85,7 +85,7 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 		Method:     http.MethodPost,
 		Action:     "CONSUME_EVENT",
 		Type:       "EVENT_PLATFORM_LIBRARY",
-		LogFile:    constant.LOG_EVENT,
+		LogFile:    constant.NEW_KMB_LOG,
 		MsgLogFile: constant.MSG_CONSUME_DATA_STREAM,
 		LevelLog:   constant.PLATFORM_LOG_LEVEL_INFO,
 		Request:    requestLog,
