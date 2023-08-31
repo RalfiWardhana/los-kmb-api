@@ -160,7 +160,7 @@ func main() {
 	e.Use(accessToken.SetupHeadersAndContext())
 
 	config.CreateCustomLogFile(constant.LOG_FILTERING_LOG)
-	config.CreateCustomLogFile(constant.LOG_JOURNEY_LOG)
+	config.CreateCustomLogFile(constant.NEW_KMB_LOG)
 
 	utils.NewCache(cache, kpLos, config.IsDevelopment)
 

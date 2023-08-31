@@ -38,7 +38,7 @@ func (u usecase) GetBase64Media(ctx context.Context, url string, customerID int,
 
 	if myMedia {
 
-		image1, err = u.httpclient.MediaClient(ctx, constant.LOG_JOURNEY_LOG, url+"?type=base64", constant.METHOD_GET, nil, header, timeOut, customerID, accessToken)
+		image1, err = u.httpclient.MediaClient(ctx, constant.NEW_KMB_LOG, url+"?type=base64", constant.METHOD_GET, nil, header, timeOut, customerID, accessToken)
 
 		if image1.StatusCode() != 200 || err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Platform Media Request Error")

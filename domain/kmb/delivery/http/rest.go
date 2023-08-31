@@ -129,11 +129,11 @@ func (c *handlerKMB) MetricsLos(ctx echo.Context) (err error) {
 	)
 
 	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.LOG_JOURNEY_LOG, "LOS - KMB JOURNEY", err)
+		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB JOURNEY", err)
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.LOG_JOURNEY_LOG, "LOS - KMB JOURNEY", req, err)
+		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB JOURNEY", req, err)
 	}
 
 	accessToken := middlewares.UserInfoData.AccessToken
@@ -141,8 +141,8 @@ func (c *handlerKMB) MetricsLos(ctx echo.Context) (err error) {
 	data, err := c.metrics.MetricsLos(ctx.Request().Context(), req, accessToken)
 
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.LOG_JOURNEY_LOG, "LOS - KMB JOURNEY", req, err)
+		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB JOURNEY", req, err)
 	}
 
-	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.LOG_JOURNEY_LOG, "LOS - KMB JOURNEY", req, data)
+	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB JOURNEY", req, data)
 }

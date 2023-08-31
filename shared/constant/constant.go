@@ -412,7 +412,6 @@ const (
 
 	//LOG
 	LOG_FILTERING_LOG = "FILTERING_LOG"
-	LOG_JOURNEY_LOG   = "KMB_LOG"
 
 	// Flag Logging
 	USECASE_API = "USECASE_API"

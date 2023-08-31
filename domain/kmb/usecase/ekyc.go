@@ -46,7 +46,7 @@ func (u usecase) Asliri(ctx context.Context, req request.Metrics, cb_found bool,
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
-	resp, err = u.httpclient.EngineAPI(ctx, constant.LOG_JOURNEY_LOG, os.Getenv("ASLIRI_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeout, req.Transaction.ProspectID, accessToken)
+	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("ASLIRI_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeout, req.Transaction.ProspectID, accessToken)
 
 	if err != nil {
 		err = errors.New("upstream_service_timeout - Call Asliri")
@@ -143,7 +143,7 @@ func (u usecase) Ktp(ctx context.Context, req request.Metrics, cb_found bool, ac
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
-	resp, err = u.httpclient.EngineAPI(ctx, constant.LOG_JOURNEY_LOG, os.Getenv("KTP_VALIDATOR_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeout, req.Transaction.ProspectID, accessToken)
+	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("KTP_VALIDATOR_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeout, req.Transaction.ProspectID, accessToken)
 
 	if err != nil {
 		err = errors.New("upstream_service_timeout - Call KTP Validator")
