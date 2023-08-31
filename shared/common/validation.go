@@ -199,6 +199,8 @@ func idNumberValidation(fl validator.FieldLevel) (validator bool) {
 		validator = false
 	} else if !regexp.MustCompile(`^[0-9]*$`).MatchString(idnumber) {
 		validator = false
+	} else if len(idnumber) != 16 {
+		validator = false
 	} else if idnumber[0:1] == "0" {
 		validator = false
 	} else {
