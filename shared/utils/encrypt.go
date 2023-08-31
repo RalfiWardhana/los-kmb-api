@@ -67,19 +67,12 @@ type UtilsInterface interface {
 	PlatformDecryptText(myString string) (string, error)
 }
 
-type Utils struct{}
-
-func NewUtils() UtilsInterface {
-	ut := &Utils{}
-	return ut
-}
-
-func (u *Utils) PlatformEncryptText(myString string) (string, error) {
+func PlatformEncryptText(myString string) (string, error) {
 	cipher := maskingdata.NewCipher(os.Getenv("PLATFORM_LIBRARY_KEY"))
 	return cipher.EncryptText(myString)
 }
 
-func (u *Utils) PlatformDecryptText(encryptedText string) (string, error) {
+func PlatformDecryptText(encryptedText string) (string, error) {
 	cipher := maskingdata.NewCipher(os.Getenv("PLATFORM_LIBRARY_KEY"))
 	return cipher.DecryptText(encryptedText)
 }

@@ -10,7 +10,6 @@ import (
 	mocksJson "los-kmb-api/shared/common/json/mocks"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
-	mocksUtils "los-kmb-api/shared/utils/mocks"
 	"os"
 	"testing"
 	"time"
@@ -55,25 +54,16 @@ func (m *MockEvent) GetHeaders() []kafka.Header {
 }
 
 func TestFiltering(t *testing.T) {
+	os.Setenv("PLATFORM_LIBRARY_KEY", "PLATFORMS-APIToEncryptDecryptAPI")
 	os.Setenv("NAMA_SAMA", "K,P")
 	os.Setenv("NAMA_BEDA", "O,KK")
 
 	testcases := []struct {
-		name              string
-		reqbody           string
-		checkPpid         string
-		errBind           error
-		errCIDnumber      error
-		errCLegalName     error
-		errCMotherName    error
-		errSIDnumber      error
-		errSLegalName     error
-		errSMotherName    error
-		errValidateCS     error
-		errValidateGender error
-		errValidatePpid   error
-		errCheckPpid      error
-		errFiltering      error
+		name         string
+		reqbody      string
+		checkPpid    string
+		errCheckPpid error
+		errFiltering error
 	}{
 		{
 			name: "test err bind",
@@ -131,7 +121,7 @@ func TestFiltering(t *testing.T) {
 			reqbody: `{
 				"prospect_id": "EFM0TST0020230809013",
 				"branch_id": "426",
-				"id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
+				"id_number": "123",
 				"legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
 				"birth_date": "1971-04-15",
 				"gender": "M",
@@ -139,8 +129,7 @@ func TestFiltering(t *testing.T) {
 				"bpkb_name": "K",
 				"spouse": null
 			}`,
-			errCIDnumber: errors.New("error"),
-			checkPpid:    "EFM0TST0020230809013 - true",
+			checkPpid: "EFM0TST0020230809013 - true",
 		},
 		{
 			name: "test err errCLegalName",
@@ -148,15 +137,14 @@ func TestFiltering(t *testing.T) {
 				"prospect_id": "EFM0TST0020230809013",
 				"branch_id": "426",
 				"id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
-				"legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
+				"legal_name": "MGwNDewJ8H=",
 				"birth_date": "1971-04-15",
 				"gender": "M",
 				"surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g==",
 				"bpkb_name": "K",
 				"spouse": null
 			}`,
-			errCLegalName: errors.New("error"),
-			checkPpid:     "EFM0TST0020230809013 - true",
+			checkPpid: "EFM0TST0020230809013 - true",
 		},
 		{
 			name: "test err errCMotherName",
@@ -167,12 +155,11 @@ func TestFiltering(t *testing.T) {
 				"legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
 				"birth_date": "1971-04-15",
 				"gender": "M",
-				"surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g==",
+				"surgate_mother_name": " ",
 				"bpkb_name": "K",
 				"spouse": null
 			}`,
-			errCMotherName: errors.New("error"),
-			checkPpid:      "EFM0TST0020230809013 - true",
+			checkPpid: "EFM0TST0020230809013 - true",
 		},
 		{
 			name: "test err errSIDnumber",
@@ -186,15 +173,14 @@ func TestFiltering(t *testing.T) {
 				"surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g==",
 				"bpkb_name": "K",
 				"spouse": {
-					"spouse_id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
+					"spouse_id_number": "Tcrz5",
 					"spouse_legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
 					"spouse_birth_date": "1971-04-15",
 					"spouse_gender": "F",
 					"spouse_surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g=="
 				}
 			}`,
-			errSIDnumber: errors.New("error"),
-			checkPpid:    "EFM0TST0020230809013 - true",
+			checkPpid: "EFM0TST0020230809013 - true",
 		},
 		{
 			name: "test err errSLegalName",
@@ -209,17 +195,15 @@ func TestFiltering(t *testing.T) {
 				"bpkb_name": "K",
 				"spouse": {
 					"spouse_id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
-					"spouse_legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
 					"spouse_birth_date": "1971-04-15",
 					"spouse_gender": "F",
 					"spouse_surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g=="
 				}
 			}`,
-			errSLegalName: errors.New("error"),
-			checkPpid:     "EFM0TST0020230809013 - true",
+			checkPpid: "EFM0TST0020230809013 - true",
 		},
 		{
-			name: "test err errSMotherName",
+			name: "test err errValidateGender",
 			reqbody: `{
 				"prospect_id": "EFM0TST0020230809013",
 				"branch_id": "426",
@@ -233,12 +217,11 @@ func TestFiltering(t *testing.T) {
 					"spouse_id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
 					"spouse_legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
 					"spouse_birth_date": "1971-04-15",
-					"spouse_gender": "F",
+					"spouse_gender": "M",
 					"spouse_surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g=="
 				}
 			}`,
-			errSMotherName: errors.New("error"),
-			checkPpid:      "EFM0TST0020230809013 - true",
+			checkPpid: "EFM0TST0020230809013 - true",
 		},
 		{
 			name: "test err errValidatePpid",
@@ -259,8 +242,7 @@ func TestFiltering(t *testing.T) {
 					"spouse_surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g=="
 				}
 			}`,
-			errValidatePpid: errors.New("error"),
-			checkPpid:       "EFM0TST0020230809013 - false",
+			checkPpid: "EFM0TST0020230809013 - false",
 		},
 		{
 			name: "test err errCheckPpid",
@@ -316,7 +298,6 @@ func TestFiltering(t *testing.T) {
 			mockUsecase := new(mocks.Usecase)
 			mockRepository := new(mocks.Repository)
 			mockJson := new(mocksJson.JSON)
-			mockUtils := new(mocksUtils.UtilsInterface)
 			mockEvent := new(MockEvent)
 
 			handler := &handlers{
@@ -325,7 +306,6 @@ func TestFiltering(t *testing.T) {
 				repository:   mockRepository,
 				validator:    validator,
 				Json:         mockJson,
-				customUtils:  mockUtils,
 			}
 			ctx := context.Background()
 			startTime := utils.GenerateTimeInMilisecond()
@@ -335,31 +315,8 @@ func TestFiltering(t *testing.T) {
 			ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
 			ctx = context.WithValue(ctx, constant.CTX_KEY_IS_CONSUMER, true)
 
-			reqbody := `{
-				"prospect_id": "EFM0TST0020230809013",
-				"branch_id": "426",
-				"id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
-				"legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
-				"birth_date": "1971-04-15",
-				"gender": "M",
-				"surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g==",
-				"bpkb_name": "K",
-				"spouse": {
-					"spouse_id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
-					"spouse_legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
-					"spouse_birth_date": "1971-04-15",
-					"spouse_gender": "F",
-					"spouse_surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g=="
-				}
-			}`
-			mockEvent.On("GetBody").Return([]byte(reqbody))
+			mockEvent.On("GetBody").Return([]byte(tc.reqbody))
 			mockEvent.On("GetKey").Return([]byte("filtering_12131421414_EFM0TST0020230809013"))
-			mockUtils.On("PlatformDecryptText", mock.Anything).Return("3101111202890001", tc.errCIDnumber).Once()
-			mockUtils.On("PlatformDecryptText", mock.Anything).Return("Legal name", tc.errCLegalName).Once()
-			mockUtils.On("PlatformDecryptText", mock.Anything).Return("Mother name", tc.errCMotherName).Once()
-			mockUtils.On("PlatformDecryptText", mock.Anything).Return("3101111202890002", tc.errSIDnumber).Once()
-			mockUtils.On("PlatformDecryptText", mock.Anything).Return("Spouse Legal name", tc.errSLegalName).Once()
-			mockUtils.On("PlatformDecryptText", mock.Anything).Return("Spouse Mother name", tc.errSMotherName).Once()
 			mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			mockUsecase.On("FilteringProspectID", "EFM0TST0020230809013").Return(request.OrderIDCheck{ProspectID: tc.checkPpid}, tc.errCheckPpid).Once()
 			mockMultiUsecase.On("Filtering", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.Filtering{}, tc.errFiltering).Once()

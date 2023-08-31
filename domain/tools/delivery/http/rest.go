@@ -11,8 +11,7 @@ import (
 )
 
 type handlerTools struct {
-	Json        common.JSON
-	customUtils utils.UtilsInterface
+	Json common.JSON
 }
 
 type RequestEncryption struct {
@@ -20,10 +19,9 @@ type RequestEncryption struct {
 	Decrypt []string `json:"decrypt" example:"6gs+t7lBQTYM5SPuqJTNonWLjvmmmc9FaWIj"`
 }
 
-func ToolsHandler(kmbroute *echo.Group, json common.JSON, middlewares *middlewares.AccessMiddleware, customUtils utils.UtilsInterface) {
+func ToolsHandler(kmbroute *echo.Group, json common.JSON, middlewares *middlewares.AccessMiddleware) {
 	handler := handlerTools{
-		Json:        json,
-		customUtils: customUtils,
+		Json: json,
 	}
 	kmbroute.POST("/encrypt-decrypt", handler.EncryptDecrypt, middlewares.AccessMiddleware())
 }
@@ -44,7 +42,7 @@ func (c *handlerTools) EncryptDecrypt(ctx echo.Context) (err error) {
 	}
 	data := make(map[string]string)
 	for _, v := range req.Encrypt {
-		encrypted, errR := c.customUtils.PlatformEncryptText(v)
+		encrypted, errR := utils.PlatformEncryptText(v)
 		if errR != nil {
 			err = errors.New(constant.ERROR_BAD_REQUEST + " - Encryption Error")
 			return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Encrypt-Decrypt", err)
@@ -52,7 +50,7 @@ func (c *handlerTools) EncryptDecrypt(ctx echo.Context) (err error) {
 		data[v] = encrypted
 	}
 	for _, v := range req.Decrypt {
-		decrypted, errR := c.customUtils.PlatformDecryptText(v)
+		decrypted, errR := utils.PlatformDecryptText(v)
 		if errR != nil {
 			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decryption Error")
 			return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Encrypt-Decrypt", err)

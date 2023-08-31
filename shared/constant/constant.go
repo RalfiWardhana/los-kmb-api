@@ -16,6 +16,8 @@ const (
 	TAG_MIN                                                      = "min"
 	TAG_NUMBER                                                   = "number"
 	TAG_ID_NUMBER                                                = "id_number"
+	TAG_BRANCH_ID                                                = "branch_id"
+	TAG_ALLOW_NAME                                               = "allow_name"
 	TAG_GENDER                                                   = "gender"
 	TAG_SPOUSE_GENDER                                            = "spouse_gender"
 	TAG_STATUS_KONSUMEN                                          = "status_konsumen"
