@@ -27,10 +27,9 @@ type handlers struct {
 	validator    *common.Validator
 	producer     platformevent.PlatformEvent
 	Json         common.JSON
-	customUtils  utils.UtilsInterface
 }
 
-func NewServiceFiltering(app *platformevent.ConsumerRouter, repository interfaces.Repository, usecase interfaces.Usecase, multiUsecase interfaces.MultiUsecase, validator *common.Validator, producer platformevent.PlatformEvent, json common.JSON, customUtils utils.UtilsInterface) {
+func NewServiceFiltering(app *platformevent.ConsumerRouter, repository interfaces.Repository, usecase interfaces.Usecase, multiUsecase interfaces.MultiUsecase, validator *common.Validator, producer platformevent.PlatformEvent, json common.JSON) {
 	handler := handlers{
 		multiusecase: multiUsecase,
 		usecase:      usecase,
@@ -38,7 +37,6 @@ func NewServiceFiltering(app *platformevent.ConsumerRouter, repository interface
 		validator:    validator,
 		producer:     producer,
 		Json:         json,
-		customUtils:  customUtils,
 	}
 	app.Handle(constant.KEY_PREFIX_FILTERING, handler.Filtering)
 }
@@ -97,65 +95,22 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 	ctx = context.WithValue(ctx, constant.CTX_KEY_INCOMING_REQUEST_URL, fmt.Sprintf("%s/api/v3/kmb/consume/filtering", constant.LOS_KMB_BASE_URL))
 	ctx = context.WithValue(ctx, constant.CTX_KEY_INCOMING_REQUEST_METHOD, constant.METHOD_POST)
 
+	err = h.validator.Validate(req)
+	if err != nil {
+		resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+		return nil
+	}
+
 	// decrypt request
-	req.IDNumber, err = h.customUtils.PlatformDecryptText(req.IDNumber)
-	if err != nil {
-		err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
-		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
-		return nil
-	}
-	req.LegalName, err = h.customUtils.PlatformDecryptText(req.LegalName)
-	if err != nil {
-		err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
-		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
-		return nil
-	}
-	req.MotherName, err = h.customUtils.PlatformDecryptText(req.MotherName)
-	if err != nil {
-		err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
-		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
-		return nil
-	}
+	req.IDNumber, _ = utils.PlatformDecryptText(req.IDNumber)
+	req.LegalName, _ = utils.PlatformDecryptText(req.LegalName)
+	req.MotherName, _ = utils.PlatformDecryptText(req.MotherName)
 
-	if req.Spouse == nil {
-		err = h.validator.Validate(req)
-		if err != nil {
-			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
-			return nil
-		}
-	} else {
-		req.Spouse.IDNumber, err = h.customUtils.PlatformDecryptText(req.Spouse.IDNumber)
-		if err != nil {
-			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
-			resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
-			return nil
-		}
-		req.Spouse.LegalName, err = h.customUtils.PlatformDecryptText(req.Spouse.LegalName)
-		if err != nil {
-			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
-			resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
-			return nil
-		}
-		req.Spouse.MotherName, err = h.customUtils.PlatformDecryptText(req.Spouse.MotherName)
-		if err != nil {
-			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
-			resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
-			return nil
-		}
-
-		err = h.validator.Validate(req)
-		if err != nil {
-			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
-			return nil
-		}
+	if req.Spouse != nil {
+		req.Spouse.IDNumber, _ = utils.PlatformDecryptText(req.Spouse.IDNumber)
+		req.Spouse.LegalName, _ = utils.PlatformDecryptText(req.Spouse.LegalName)
+		req.Spouse.MotherName, _ = utils.PlatformDecryptText(req.Spouse.MotherName)
 
 		var genderSpouse request.GenderCompare
 

@@ -177,7 +177,6 @@ func main() {
 	}
 
 	producer := platformevent.NewPlatformEvent()
-	newUtils := utils.NewUtils()
 
 	// define kmb filtering domain
 	kmbFilteringRepo := filteringRepository.NewRepository(minilosKMB, kpLos, kpLosLogs)
@@ -193,7 +192,7 @@ func main() {
 	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs, newKMB)
 	newKmbFilteringCase := newKmbFilteringUsecase.NewUsecase(newKmbFilteringRepo, httpClient)
 	newKmbFilteringMultiCase := newKmbFilteringUsecase.NewMultiUsecase(newKmbFilteringRepo, httpClient, newKmbFilteringCase)
-	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken, producer, newUtils)
+	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken, producer)
 
 	// define new kmb elaborate domain
 	newElaborateLTVRepo := elaborateLTVRepository.NewRepository(kpLosLogs, newKMB)
@@ -207,7 +206,7 @@ func main() {
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
 	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, jsonResponse, accessToken)
 
-	toolsDelivery.ToolsHandler(apiGroupv3, jsonResponse, accessToken, newUtils)
+	toolsDelivery.ToolsHandler(apiGroupv3, jsonResponse, accessToken)
 
 	auth := map[string]interface{}{
 		"secret_key":         os.Getenv("PLATFORM_SECRET_KEY"),
@@ -228,7 +227,7 @@ func main() {
 		}
 	})
 
-	eventhandlers.NewServiceFiltering(consumerRouter, newKmbFilteringRepo, newKmbFilteringCase, newKmbFilteringMultiCase, validator, producer, jsonResponse, newUtils)
+	eventhandlers.NewServiceFiltering(consumerRouter, newKmbFilteringRepo, newKmbFilteringCase, newKmbFilteringMultiCase, validator, producer, jsonResponse)
 
 	if err := consumerRouter.StartConsume(); err != nil {
 		panic(err)

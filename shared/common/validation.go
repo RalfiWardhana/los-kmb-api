@@ -54,6 +54,8 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("bpkbname", checkBpkbname)
 	v.validator.RegisterValidation("number", numberValidation)
 	v.validator.RegisterValidation("id_number", idNumberValidation)
+	v.validator.RegisterValidation("branch_id", branchIDValidation)
+	v.validator.RegisterValidation("allow_name", allowedName)
 	v.validator.RegisterValidation("customer_status", checkCustomerStatus)
 	v.validator.RegisterValidation("customer_category", checkCustomerCategory)
 	v.validator.RegisterValidation("result_pefindo", checkResultPefindo)
@@ -189,11 +191,48 @@ func numberValidation(fl validator.FieldLevel) bool {
 	return re.MatchString(fl.Field().String())
 }
 
-func idNumberValidation(fl validator.FieldLevel) bool {
+func idNumberValidation(fl validator.FieldLevel) (validator bool) {
 
-	var validator bool
 	s := fl.Field().String()
-	if s[0:1] == "0" {
+	idnumber, err := utils.PlatformDecryptText(s)
+	if err != nil {
+		validator = false
+	} else if !regexp.MustCompile(`^[0-9]*$`).MatchString(idnumber) {
+		validator = false
+	} else if len(idnumber) != 16 {
+		validator = false
+	} else if idnumber[0:1] == "0" {
+		validator = false
+	} else {
+		validator = true
+	}
+
+	return validator
+}
+
+func branchIDValidation(fl validator.FieldLevel) (validator bool) {
+
+	branchID := fl.Field().String()
+	if !regexp.MustCompile(`^[0-9]*$`).MatchString(branchID) {
+		validator = false
+	} else if len(branchID) != 3 {
+		validator = false
+	} else {
+		validator = true
+	}
+
+	return validator
+}
+
+func allowedName(fl validator.FieldLevel) (validator bool) {
+
+	s := fl.Field().String()
+	name, err := utils.PlatformDecryptText(s)
+	if err != nil {
+		validator = false
+	} else if len(name) > 200 {
+		validator = false
+	} else if !regexp.MustCompile("^[a-zA-Z.,'` ]*$").MatchString(name) {
 		validator = false
 	} else {
 		validator = true
