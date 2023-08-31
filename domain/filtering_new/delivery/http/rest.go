@@ -1,7 +1,6 @@
 package http
 
 import (
-	"errors"
 	"los-kmb-api/domain/filtering_new/interfaces"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
@@ -19,18 +18,16 @@ type handlerKmbFiltering struct {
 	repository   interfaces.Repository
 	Json         common.JSON
 	producer     platformevent.PlatformEvent
-	customUtils  utils.UtilsInterface
 }
 
 func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware,
-	producer platformevent.PlatformEvent, customUtils utils.UtilsInterface) {
+	producer platformevent.PlatformEvent) {
 	handler := handlerKmbFiltering{
 		multiusecase: multiUsecase,
 		usecase:      usecase,
 		repository:   repository,
 		Json:         json,
 		producer:     producer,
-		customUtils:  customUtils,
 	}
 	kmbroute.POST("/filtering", handler.Filtering, middlewares.AccessMiddleware())
 	kmbroute.POST("/produce/filtering", handler.ProduceFiltering, middlewares.AccessMiddleware())
@@ -56,47 +53,19 @@ func (c *handlerKmbFiltering) Filtering(ctx echo.Context) (err error) {
 		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", err)
 	}
 
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+	}
+
 	// decrypt request
-	req.IDNumber, err = c.customUtils.PlatformDecryptText(req.IDNumber)
-	if err != nil {
-		err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
-		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-	}
-	req.LegalName, err = c.customUtils.PlatformDecryptText(req.LegalName)
-	if err != nil {
-		err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
-		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-	}
-	req.MotherName, err = c.customUtils.PlatformDecryptText(req.MotherName)
-	if err != nil {
-		err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
-		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-	}
+	req.IDNumber, _ = utils.PlatformDecryptText(req.IDNumber)
+	req.LegalName, _ = utils.PlatformDecryptText(req.LegalName)
+	req.MotherName, _ = utils.PlatformDecryptText(req.MotherName)
 
-	if req.Spouse == nil {
-		if err := ctx.Validate(&req); err != nil {
-			return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-		}
-	} else {
-		req.Spouse.IDNumber, err = c.customUtils.PlatformDecryptText(req.Spouse.IDNumber)
-		if err != nil {
-			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
-			return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-		}
-		req.Spouse.LegalName, err = c.customUtils.PlatformDecryptText(req.Spouse.LegalName)
-		if err != nil {
-			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
-			return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-		}
-		req.Spouse.MotherName, err = c.customUtils.PlatformDecryptText(req.Spouse.MotherName)
-		if err != nil {
-			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decrypt Error")
-			return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-		}
-
-		if err := ctx.Validate(&req); err != nil {
-			return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-		}
+	if req.Spouse != nil {
+		req.Spouse.IDNumber, _ = utils.PlatformDecryptText(req.Spouse.IDNumber)
+		req.Spouse.LegalName, _ = utils.PlatformDecryptText(req.Spouse.LegalName)
+		req.Spouse.MotherName, _ = utils.PlatformDecryptText(req.Spouse.MotherName)
 
 		var genderSpouse request.GenderCompare
 

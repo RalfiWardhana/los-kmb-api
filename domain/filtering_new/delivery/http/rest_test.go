@@ -5,10 +5,11 @@ import (
 	"los-kmb-api/domain/filtering_new/interfaces/mocks"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
+	"los-kmb-api/shared/common"
 	mocksJson "los-kmb-api/shared/common/json/mocks"
-	mocksUtils "los-kmb-api/shared/utils/mocks"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -26,22 +27,16 @@ func (m *MockEchoContext) Validate(obj interface{}) error {
 }
 
 func TestFiltering(t *testing.T) {
+	os.Setenv("PLATFORM_LIBRARY_KEY", "PLATFORMS-APIToEncryptDecryptAPI")
+	os.Setenv("NAMA_SAMA", "K,P")
+	os.Setenv("NAMA_BEDA", "O,KK")
+
 	testcases := []struct {
-		name              string
-		reqbody           string
-		checkPpid         string
-		errBind           error
-		errCIDnumber      error
-		errCLegalName     error
-		errCMotherName    error
-		errSIDnumber      error
-		errSLegalName     error
-		errSMotherName    error
-		errValidateCS     error
-		errValidateGender error
-		errValidatePpid   error
-		errCheckPpid      error
-		errFiltering      error
+		name         string
+		reqbody      string
+		checkPpid    string
+		errCheckPpid error
+		errFiltering error
 	}{
 		{
 			name: "test err bind",
@@ -99,7 +94,7 @@ func TestFiltering(t *testing.T) {
 			reqbody: `{
 				"prospect_id": "EFM0TST0020230809013",
 				"branch_id": "426",
-				"id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
+				"id_number": "Tcrz599clw8",
 				"legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
 				"birth_date": "1971-04-15",
 				"gender": "M",
@@ -107,8 +102,7 @@ func TestFiltering(t *testing.T) {
 				"bpkb_name": "K",
 				"spouse": null
 			}`,
-			errCIDnumber: errors.New("error"),
-			checkPpid:    "EFM0TST0020230809013 - true",
+			checkPpid: "EFM0TST0020230809013 - true",
 		},
 		{
 			name: "test err errCLegalName",
@@ -116,15 +110,14 @@ func TestFiltering(t *testing.T) {
 				"prospect_id": "EFM0TST0020230809013",
 				"branch_id": "426",
 				"id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
-				"legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
+				"legal_name": "",
 				"birth_date": "1971-04-15",
 				"gender": "M",
 				"surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g==",
 				"bpkb_name": "K",
 				"spouse": null
 			}`,
-			errCLegalName: errors.New("error"),
-			checkPpid:     "EFM0TST0020230809013 - true",
+			checkPpid: "EFM0TST0020230809013 - true",
 		},
 		{
 			name: "test err errCMotherName",
@@ -135,12 +128,11 @@ func TestFiltering(t *testing.T) {
 				"legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
 				"birth_date": "1971-04-15",
 				"gender": "M",
-				"surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g==",
+				"surgate_mother_name": "1=",
 				"bpkb_name": "K",
 				"spouse": null
 			}`,
-			errCMotherName: errors.New("error"),
-			checkPpid:      "EFM0TST0020230809013 - true",
+			checkPpid: "EFM0TST0020230809013 - true",
 		},
 		{
 			name: "test err errSIDnumber",
@@ -154,15 +146,13 @@ func TestFiltering(t *testing.T) {
 				"surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g==",
 				"bpkb_name": "K",
 				"spouse": {
-					"spouse_id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
 					"spouse_legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
 					"spouse_birth_date": "1971-04-15",
 					"spouse_gender": "F",
 					"spouse_surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g=="
 				}
 			}`,
-			errSIDnumber: errors.New("error"),
-			checkPpid:    "EFM0TST0020230809013 - true",
+			checkPpid: "EFM0TST0020230809013 - true",
 		},
 		{
 			name: "test err errSLegalName",
@@ -177,14 +167,13 @@ func TestFiltering(t *testing.T) {
 				"bpkb_name": "K",
 				"spouse": {
 					"spouse_id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
-					"spouse_legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
+					"spouse_legal_name": "M",
 					"spouse_birth_date": "1971-04-15",
 					"spouse_gender": "F",
 					"spouse_surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g=="
 				}
 			}`,
-			errSLegalName: errors.New("error"),
-			checkPpid:     "EFM0TST0020230809013 - true",
+			checkPpid: "EFM0TST0020230809013 - true",
 		},
 		{
 			name: "test err errSMotherName",
@@ -202,11 +191,9 @@ func TestFiltering(t *testing.T) {
 					"spouse_legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
 					"spouse_birth_date": "1971-04-15",
 					"spouse_gender": "F",
-					"spouse_surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g=="
 				}
 			}`,
-			errSMotherName: errors.New("error"),
-			checkPpid:      "EFM0TST0020230809013 - true",
+			checkPpid: "EFM0TST0020230809013 - true",
 		},
 		{
 			name: "test err errValidateCS",
@@ -221,8 +208,7 @@ func TestFiltering(t *testing.T) {
 				"bpkb_name": "K",
 				"spouse": null
 			}`,
-			errValidateCS: errors.New("error"),
-			checkPpid:     "EFM0TST0020230809013 - true",
+			checkPpid: "EFM0TST0020230809013 - true",
 		},
 		{
 			name: "test err errValidateCS",
@@ -243,8 +229,7 @@ func TestFiltering(t *testing.T) {
 					"spouse_surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g=="
 				}
 			}`,
-			errValidateCS: errors.New("error"),
-			checkPpid:     "EFM0TST0020230809013 - true",
+			checkPpid: "EFM0TST0020230809013 - true",
 		},
 		{
 			name: "test err errValidateGender",
@@ -265,8 +250,7 @@ func TestFiltering(t *testing.T) {
 					"spouse_surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g=="
 				}
 			}`,
-			errValidateGender: errors.New("error"),
-			checkPpid:         "EFM0TST0020230809013 - true",
+			checkPpid: "EFM0TST0020230809013 - true",
 		},
 		{
 			name: "test err errValidatePpid",
@@ -287,8 +271,7 @@ func TestFiltering(t *testing.T) {
 					"spouse_surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g=="
 				}
 			}`,
-			errValidatePpid: errors.New("error"),
-			checkPpid:       "EFM0TST0020230809013 - false",
+			checkPpid: "EFM0TST0020230809013 - false",
 		},
 		{
 			name: "test err errCheckPpid",
@@ -342,13 +325,7 @@ func TestFiltering(t *testing.T) {
 
 			// Create a new Echo instance
 			e := echo.New()
-			ctx := &MockEchoContext{}
-
-			// Setup expectations for the Validate method
-			ctx.On("Validate", mock.Anything).Return(tc.errValidateCS).Once()
-			ctx.On("Validate", mock.Anything).Return(tc.errValidateGender).Once()
-			ctx.On("Validate", mock.Anything).Return(tc.errValidatePpid).Once()
-			e.Validator = ctx
+			e.Validator = common.NewValidator()
 
 			req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/produce/filtering", strings.NewReader(tc.reqbody))
 			req.Header.Set("Content-Type", "application/json")
@@ -359,14 +336,6 @@ func TestFiltering(t *testing.T) {
 			mockUsecase := new(mocks.Usecase)
 			mockRepository := new(mocks.Repository)
 			mockJson := new(mocksJson.JSON)
-			mockUtils := new(mocksUtils.UtilsInterface)
-
-			mockUtils.On("PlatformDecryptText", mock.Anything).Return("3101111202890001", tc.errCIDnumber).Once()
-			mockUtils.On("PlatformDecryptText", mock.Anything).Return("Legal name", tc.errCLegalName).Once()
-			mockUtils.On("PlatformDecryptText", mock.Anything).Return("Mother name", tc.errCMotherName).Once()
-			mockUtils.On("PlatformDecryptText", mock.Anything).Return("3101111202890002", tc.errSIDnumber).Once()
-			mockUtils.On("PlatformDecryptText", mock.Anything).Return("Spouse Legal name", tc.errSLegalName).Once()
-			mockUtils.On("PlatformDecryptText", mock.Anything).Return("Spouse Mother name", tc.errSMotherName).Once()
 			mockUsecase.On("FilteringProspectID", "EFM0TST0020230809013").Return(request.OrderIDCheck{ProspectID: tc.checkPpid}, tc.errCheckPpid).Once()
 			mockMultiUsecase.On("Filtering", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.Filtering{}, tc.errFiltering).Once()
 			mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -380,7 +349,6 @@ func TestFiltering(t *testing.T) {
 				usecase:      mockUsecase,
 				repository:   mockRepository,
 				Json:         mockJson,
-				customUtils:  mockUtils,
 			}
 
 			// Call the handler
