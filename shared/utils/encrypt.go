@@ -62,11 +62,6 @@ func DecryptCredential(encryptedText string) (string, error) {
 	return string(decryptedText), err
 }
 
-type UtilsInterface interface {
-	PlatformEncryptText(myString string) (string, error)
-	PlatformDecryptText(myString string) (string, error)
-}
-
 func PlatformEncryptText(myString string) (string, error) {
 	cipher := maskingdata.NewCipher(os.Getenv("PLATFORM_LIBRARY_KEY"))
 	return cipher.EncryptText(myString)
