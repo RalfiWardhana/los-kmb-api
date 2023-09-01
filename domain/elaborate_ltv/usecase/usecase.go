@@ -34,11 +34,12 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, accessToken string) (data response.ElaborateLTV, err error) {
 
 	var (
-		filteringKMB      entity.FilteringKMB
-		ageS              string
-		bakiDebet         float64
-		bpkbNameType      int
-		manufacturingYear time.Time
+		filteringKMB        entity.FilteringKMB
+		ageS                string
+		bakiDebet           float64
+		bpkbNameType        int
+		manufacturingYear   time.Time
+		mappingElaborateLTV []entity.MappingElaborateLTV
 	)
 
 	filteringKMB, err = u.repository.GetFilteringResult(reqs.ProspectID)
@@ -48,6 +49,11 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		} else {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Get Filtering Error")
 		}
+		return
+	}
+
+	if filteringKMB.NextProcess != 1 {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Tidak bisa lanjut proses")
 		return
 	}
 
@@ -75,13 +81,11 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		ageS = ">12"
 	}
 
-	if resultPefindo == constant.DECISION_REJECT {
-		if filteringKMB.TotalBakiDebetNonCollateralBiro != nil {
-			bakiDebet, err = utils.GetFloat(filteringKMB.TotalBakiDebetNonCollateralBiro)
-			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " baki debet " + err.Error())
-				return
-			}
+	if filteringKMB.TotalBakiDebetNonCollateralBiro != nil {
+		bakiDebet, err = utils.GetFloat(filteringKMB.TotalBakiDebetNonCollateralBiro)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " baki debet " + err.Error())
+			return
 		}
 	}
 
@@ -92,7 +96,11 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		ManufacturingYear: reqs.ManufacturingYear,
 	}
 
-	mappingElaborateLTV, err := u.repository.GetMappingElaborateLTV(resultPefindo, filteringKMB.Cluster.(string))
+	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, filteringKMB.Cluster.(string))
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
+		return
+	}
 	for _, m := range mappingElaborateLTV {
 		if reqs.Tenor >= 36 {
 			//no hit

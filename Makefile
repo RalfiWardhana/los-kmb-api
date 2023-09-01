@@ -7,6 +7,7 @@ run:
 	@go run app/main.go
 mock:
 	@mockery --all --dir=domain/filtering_new/interfaces --output domain/filtering_new/interfaces/mocks --case underscore
+	@mockery --all --dir=domain/elaborate_ltv/interfaces --output domain/elaborate_ltv/interfaces/mocks --case underscore
 	@mockery --name JSON --dir=shared/common --output shared/common/json/mocks --case underscore
 	@mockery --name PlatformLogInterface --dir=shared/common/platformlog --output shared/common/platformlog/mocks --case underscore
 	@mockery --name UtilsInterface --dir=shared/utils --output shared/utils/mocks --case underscore

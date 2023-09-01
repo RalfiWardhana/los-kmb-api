@@ -63,7 +63,7 @@ func (c *handlerKmbElaborate) Elaborate(ctx echo.Context) (err error) {
 	data, err := c.usecase.Elaborate(ctx.Request().Context(), req, accessToken)
 
 	if err != nil {
-		ctxJson, resp = c.Json.ServiceUnavailableV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", req)
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", req, err)
 		return ctxJson
 	}
 
