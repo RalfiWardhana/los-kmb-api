@@ -49,12 +49,12 @@ func (c *handlerKmbElaborate) Elaborate(ctx echo.Context) (err error) {
 	}()
 
 	if err := ctx.Bind(&req); err != nil {
-		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB ELABORATE", err)
+		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", err)
 		return ctxJson
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB ELABORATE", req, err)
+		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", req, err)
 		return ctxJson
 	}
 
@@ -63,10 +63,10 @@ func (c *handlerKmbElaborate) Elaborate(ctx echo.Context) (err error) {
 	data, err := c.usecase.Elaborate(ctx.Request().Context(), req, accessToken)
 
 	if err != nil {
-		ctxJson, resp = c.Json.ServiceUnavailableV3(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB ELABORATE", req)
+		ctxJson, resp = c.Json.ServiceUnavailableV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", req)
 		return ctxJson
 	}
 
-	ctxJson, resp = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB ELABORATE", req, data)
+	ctxJson, resp = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", req, data)
 	return ctxJson
 }
