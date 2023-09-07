@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 	"los-kmb-api/docs"
+	cmsDelivery "los-kmb-api/domain/cms/delivery/http"
+	cmsRepository "los-kmb-api/domain/cms/repository"
+	cmsUsecase "los-kmb-api/domain/cms/usecase"
 	elaborateDelivery "los-kmb-api/domain/elaborate/delivery/http"
 	elaborateRepository "los-kmb-api/domain/elaborate/repository"
 	elaborateUsecase "los-kmb-api/domain/elaborate/usecase"
@@ -198,6 +201,11 @@ func main() {
 	newElaborateLTVRepo := elaborateLTVRepository.NewRepository(kpLosLogs, newKMB)
 	newElaborateLTVUsecase := elaborateLTVUsecase.NewUsecase(newElaborateLTVRepo, httpClient)
 	elaborateLTVDelivery.ElaborateHandler(apiGroupv3, newElaborateLTVUsecase, newElaborateLTVRepo, jsonResponse, accessToken)
+
+	// define new kmb cms
+	cmsRepositories := cmsRepository.NewRepository(confins, newKMB)
+	cmsUsecases := cmsUsecase.NewUsecase(cmsRepositories, httpClient, cache)
+	cmsDelivery.CMSHandler(apiGroupv3, cmsUsecases, cmsRepositories, jsonResponse, accessToken)
 
 	// define new kmb journey
 	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, confins, staging, minilosWG, minilosKMB, newKMB)

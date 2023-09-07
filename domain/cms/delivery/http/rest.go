@@ -3,7 +3,11 @@ package http
 import (
 	"los-kmb-api/domain/cms/interfaces"
 	"los-kmb-api/middlewares"
+	"los-kmb-api/models/request"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/common"
+	"los-kmb-api/shared/constant"
+	"strconv"
 
 	"github.com/labstack/echo/v4"
 )
@@ -35,5 +39,31 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 // @Router /api/v2/kmb/cms/prescreening/inquiry [post]
 func (c *handlerCMS) PrescreeningInquiry(ctx echo.Context) (err error) {
 
-	return
+	var accessToken = middlewares.UserInfoData.AccessToken
+
+	req := request.ReqInquiryPrescreening{
+		Search: ctx.QueryParam("search"),
+	}
+
+	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	pagination := request.RequestPagination{
+		Page:  page,
+		Limit: 10,
+	}
+
+	data, rowTotal, err := c.usecase.GetInquiryPrescreening(ctx.Request().Context(), req, pagination)
+
+	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry", req, response.InquiryRow{Inquiry: data})
+	}
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry", req, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry", req, response.InquiryRow{
+		Inquiry:        data,
+		RecordFiltered: len(data),
+		RecordTotal:    rowTotal,
+	})
 }

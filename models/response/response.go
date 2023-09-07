@@ -603,3 +603,9 @@ type BiroAkkk struct {
 	PefindoAgunan                    interface{} `json:"pefindo_agunan"`
 	PefindoSpouseAgunan              interface{} `json:"pefindo_spouse_agunan"`
 }
+
+type InquiryRow struct {
+	Inquiry        interface{} `json:"inquiry"`
+	RecordFiltered int         `json:"recordsFiltered"`
+	RecordTotal    int         `json:"recordsTotal"`
+}
