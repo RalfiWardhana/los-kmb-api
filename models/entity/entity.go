@@ -504,3 +504,9 @@ type TrxElaborateLTV struct {
 func (c *TrxElaborateLTV) TableName() string {
 	return "trx_elaborate_ltv"
 }
+
+type SpIndustryTypeMaster struct {
+	IndustryTypeID string `gorm:"column:IndustryTypeID"`
+	Description    string `gorm:"column:Description"`
+	IsActive       bool   `gorm:"column:IsActive"`
+}
