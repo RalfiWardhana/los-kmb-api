@@ -29,5 +29,8 @@ func (r repoHandler) GetSpIndustryTypeMaster() (data []entity.SpIndustryTypeMast
 
 	if len(data) == 0 {
 		err = fmt.Errorf(constant.RECORD_NOT_FOUND)
+		return
 	}
+
+	return
 }

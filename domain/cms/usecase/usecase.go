@@ -20,5 +20,4 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 }
 
 func (u usecase) GetInquiryPrescreening() {
-
 }
