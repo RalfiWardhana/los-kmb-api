@@ -639,7 +639,7 @@ type InquiryData struct {
 	Personal   DataPersonal        `json:"personal"`
 	Spouse     DataSpouse          `json:"spouse"`
 	Employment DataEmployment      `json:"employment"`
-	Pembiayaan DataPembiayaan      `json:"pembiayan"`
+	ItemApk    DataItemApk         `json:"item_apk"`
 	Surveyor   DataSurveyor        `json:"surveyor"`
 	Emcon      DataEmcon           `json:"emcon"`
 	Address    DataAddress         `json:"address"`
@@ -694,7 +694,7 @@ type DataEmployment struct {
 	IndustryTypeID        string  `gorm:"column:IndustryTypeID" json:"industry"`
 }
 
-type DataPembiayaan struct {
+type DataItemApk struct {
 	ProductOfferingID     string  `gorm:"column:ProductOfferingID" json:"product_offering_id"`
 	AssetDescription      string  `gorm:"column:asset_description" json:"asset_description"`
 	AssetType             string  `gorm:"column:AssetType" json:"asset_type"`

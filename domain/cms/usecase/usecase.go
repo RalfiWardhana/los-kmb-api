@@ -128,7 +128,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				JobTypeID:             inq.JobTypeID,
 				IndustryTypeID:        string(industry_type),
 			},
-			Pembiayaan: entity.DataPembiayaan{
+			ItemApk: entity.DataItemApk{
 				ProductOfferingID:     inq.ProductOfferingID,
 				AssetDescription:      inq.AssetDescription,
 				AssetType:             inq.AssetType,
