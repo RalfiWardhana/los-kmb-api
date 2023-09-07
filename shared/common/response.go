@@ -17,4 +17,10 @@ type JSON interface {
 	EventSuccess(ctx context.Context, accessToken, logFile, message string, req, data interface{}) (apiResponse models.ApiResponse)
 	EventServiceError(ctx context.Context, accessToken, logFile, message string, req interface{}, err error) (apiResponse models.ApiResponse)
 	EventBadRequestErrorValidation(ctx context.Context, accessToken, logFile, message string, req interface{}, err error) (apiResponse models.ApiResponse)
+
+	SuccessV3(ctx echo.Context, accessToken, logFile, message string, req, data interface{}) (ctxJson error, apiResponse models.ApiResponse)
+	ServiceUnavailableV3(ctx echo.Context, accessToken, logFile, message string, req interface{}) (ctxJson error, apiResponse models.ApiResponse)
+	InternalServerErrorCustomV3(ctx echo.Context, accessToken, logFile, message string, err error) (ctxJson error, apiResponse models.ApiResponse)
+	BadRequestErrorValidationV3(ctx echo.Context, accessToken, logFile, message string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponse)
+	ServerSideErrorV3(ctx echo.Context, accessToken, logFile, message string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponse)
 }

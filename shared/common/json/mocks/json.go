@@ -44,6 +44,27 @@ func (_m *JSON) BadRequestErrorValidationV2(ctx echo.Context, accessToken string
 	return r0
 }
 
+// BadRequestErrorValidationV3 provides a mock function with given fields: ctx, accessToken, logFile, message, req, err
+func (_m *JSON) BadRequestErrorValidationV3(ctx echo.Context, accessToken string, logFile string, message string, req interface{}, err error) (error, response.ApiResponse) {
+	ret := _m.Called(ctx, accessToken, logFile, message, req, err)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(echo.Context, string, string, string, interface{}, error) error); ok {
+		r0 = rf(ctx, accessToken, logFile, message, req, err)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	var r1 response.ApiResponse
+	if rf, ok := ret.Get(1).(func(echo.Context, string, string, string, interface{}, error) response.ApiResponse); ok {
+		r1 = rf(ctx, accessToken, logFile, message, req, err)
+	} else {
+		r1 = ret.Get(1).(response.ApiResponse)
+	}
+
+	return r0, r1
+}
+
 // EventBadRequestErrorValidation provides a mock function with given fields: ctx, accessToken, logFile, message, req, err
 func (_m *JSON) EventBadRequestErrorValidation(ctx context.Context, accessToken string, logFile string, message string, req interface{}, err error) response.ApiResponse {
 	ret := _m.Called(ctx, accessToken, logFile, message, req, err)
@@ -100,6 +121,27 @@ func (_m *JSON) InternalServerErrorCustomV2(ctx echo.Context, accessToken string
 	return r0
 }
 
+// InternalServerErrorCustomV3 provides a mock function with given fields: ctx, accessToken, logFile, message, err
+func (_m *JSON) InternalServerErrorCustomV3(ctx echo.Context, accessToken string, logFile string, message string, err error) (error, response.ApiResponse) {
+	ret := _m.Called(ctx, accessToken, logFile, message, err)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(echo.Context, string, string, string, error) error); ok {
+		r0 = rf(ctx, accessToken, logFile, message, err)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	var r1 response.ApiResponse
+	if rf, ok := ret.Get(1).(func(echo.Context, string, string, string, error) response.ApiResponse); ok {
+		r1 = rf(ctx, accessToken, logFile, message, err)
+	} else {
+		r1 = ret.Get(1).(response.ApiResponse)
+	}
+
+	return r0, r1
+}
+
 // ServerSideErrorV2 provides a mock function with given fields: ctx, accessToken, logFile, message, req, err
 func (_m *JSON) ServerSideErrorV2(ctx echo.Context, accessToken string, logFile string, message string, req interface{}, err error) error {
 	ret := _m.Called(ctx, accessToken, logFile, message, req, err)
@@ -112,6 +154,27 @@ func (_m *JSON) ServerSideErrorV2(ctx echo.Context, accessToken string, logFile 
 	}
 
 	return r0
+}
+
+// ServerSideErrorV3 provides a mock function with given fields: ctx, accessToken, logFile, message, req, err
+func (_m *JSON) ServerSideErrorV3(ctx echo.Context, accessToken string, logFile string, message string, req interface{}, err error) (error, response.ApiResponse) {
+	ret := _m.Called(ctx, accessToken, logFile, message, req, err)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(echo.Context, string, string, string, interface{}, error) error); ok {
+		r0 = rf(ctx, accessToken, logFile, message, req, err)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	var r1 response.ApiResponse
+	if rf, ok := ret.Get(1).(func(echo.Context, string, string, string, interface{}, error) response.ApiResponse); ok {
+		r1 = rf(ctx, accessToken, logFile, message, req, err)
+	} else {
+		r1 = ret.Get(1).(response.ApiResponse)
+	}
+
+	return r0, r1
 }
 
 // ServiceUnavailableV2 provides a mock function with given fields: ctx, accessToken, logFile, message, req
@@ -128,6 +191,27 @@ func (_m *JSON) ServiceUnavailableV2(ctx echo.Context, accessToken string, logFi
 	return r0
 }
 
+// ServiceUnavailableV3 provides a mock function with given fields: ctx, accessToken, logFile, message, req
+func (_m *JSON) ServiceUnavailableV3(ctx echo.Context, accessToken string, logFile string, message string, req interface{}) (error, response.ApiResponse) {
+	ret := _m.Called(ctx, accessToken, logFile, message, req)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(echo.Context, string, string, string, interface{}) error); ok {
+		r0 = rf(ctx, accessToken, logFile, message, req)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	var r1 response.ApiResponse
+	if rf, ok := ret.Get(1).(func(echo.Context, string, string, string, interface{}) response.ApiResponse); ok {
+		r1 = rf(ctx, accessToken, logFile, message, req)
+	} else {
+		r1 = ret.Get(1).(response.ApiResponse)
+	}
+
+	return r0, r1
+}
+
 // SuccessV2 provides a mock function with given fields: ctx, accessToken, logFile, message, req, data
 func (_m *JSON) SuccessV2(ctx echo.Context, accessToken string, logFile string, message string, req interface{}, data interface{}) error {
 	ret := _m.Called(ctx, accessToken, logFile, message, req, data)
@@ -140,4 +224,25 @@ func (_m *JSON) SuccessV2(ctx echo.Context, accessToken string, logFile string, 
 	}
 
 	return r0
+}
+
+// SuccessV3 provides a mock function with given fields: ctx, accessToken, logFile, message, req, data
+func (_m *JSON) SuccessV3(ctx echo.Context, accessToken string, logFile string, message string, req interface{}, data interface{}) (error, response.ApiResponse) {
+	ret := _m.Called(ctx, accessToken, logFile, message, req, data)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(echo.Context, string, string, string, interface{}, interface{}) error); ok {
+		r0 = rf(ctx, accessToken, logFile, message, req, data)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	var r1 response.ApiResponse
+	if rf, ok := ret.Get(1).(func(echo.Context, string, string, string, interface{}, interface{}) response.ApiResponse); ok {
+		r1 = rf(ctx, accessToken, logFile, message, req, data)
+	} else {
+		r1 = ret.Get(1).(response.ApiResponse)
+	}
+
+	return r0, r1
 }

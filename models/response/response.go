@@ -125,6 +125,13 @@ type DataDupcheck struct {
 	InstallmentAmount_ChassisNo      string  `json:"installment_amount_chassis_no"`
 }
 
+type ElaborateLTV struct {
+	LTV         int    `json:"ltv"`
+	AdjustTenor bool   `json:"adjut_tenor"`
+	MaxTenor    int    `json:"max_tenor"`
+	Reason      string `json:"reason"`
+}
+
 type KreditMuResponse struct {
 	Code      string       `json:"code"`
 	Message   string       `json:"message"`

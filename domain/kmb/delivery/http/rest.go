@@ -47,17 +47,17 @@ func (c *handlerKMB) Dupcheck(ctx echo.Context) (err error) {
 	)
 
 	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", err)
+		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", err)
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", req, err)
+		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", req, err)
 	}
 
 	if req.Spouse != nil {
 
 		if err := ctx.Validate(req.Spouse); err != nil {
-			return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", req, err)
+			return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", req, err)
 
 		}
 
@@ -71,7 +71,7 @@ func (c *handlerKMB) Dupcheck(ctx echo.Context) (err error) {
 		}
 
 		if err := ctx.Validate(&genderSpouse); err != nil {
-			return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", req, err)
+			return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", req, err)
 		}
 
 		married = true
@@ -82,10 +82,10 @@ func (c *handlerKMB) Dupcheck(ctx echo.Context) (err error) {
 	_, _, data, err := c.multiUsecase.Dupcheck(ctx.Request().Context(), req, married, accessToken)
 
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", req, err)
+		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", req, err)
 	}
 
-	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", req, data)
+	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", req, data)
 }
 
 // KmbDupcheck Tools godoc
@@ -104,11 +104,11 @@ func (c *handlerKMB) RejectTenor36(ctx echo.Context) (err error) {
 	)
 
 	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", err)
+		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", err)
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", req, err)
+		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", req, err)
 	}
 
 	accessToken := middlewares.UserInfoData.AccessToken
@@ -116,10 +116,10 @@ func (c *handlerKMB) RejectTenor36(ctx echo.Context) (err error) {
 	data, err := c.usecase.RejectTenor36(ctx.Request().Context(), req.ProspectID, req.IDNumber, accessToken)
 
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", req, err)
+		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", req, err)
 	}
 
-	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.FILTERING_LOG, "LOS - KMB DUPCHECK", req, data)
+	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", req, data)
 }
 
 func (c *handlerKMB) MetricsLos(ctx echo.Context) (err error) {
@@ -129,11 +129,11 @@ func (c *handlerKMB) MetricsLos(ctx echo.Context) (err error) {
 	)
 
 	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.LOG_JOURNEY_LOG, "LOS - KMB JOURNEY", err)
+		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB JOURNEY", err)
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.LOG_JOURNEY_LOG, "LOS - KMB JOURNEY", req, err)
+		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB JOURNEY", req, err)
 	}
 
 	accessToken := middlewares.UserInfoData.AccessToken
@@ -141,8 +141,8 @@ func (c *handlerKMB) MetricsLos(ctx echo.Context) (err error) {
 	data, err := c.metrics.MetricsLos(ctx.Request().Context(), req, accessToken)
 
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.LOG_JOURNEY_LOG, "LOS - KMB JOURNEY", req, err)
+		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB JOURNEY", req, err)
 	}
 
-	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.LOG_JOURNEY_LOG, "LOS - KMB JOURNEY", req, data)
+	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB JOURNEY", req, data)
 }

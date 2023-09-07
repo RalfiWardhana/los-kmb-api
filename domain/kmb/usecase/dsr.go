@@ -160,7 +160,7 @@ func (u usecase) DsrCheck(ctx context.Context, prospectID, engineNo string, cust
 
 		} else if installmentConfins > 0 {
 
-			chassis, err = u.httpclient.EngineAPI(ctx, constant.FILTERING_LOG, os.Getenv("KMOB_CHASSIS_URL"), body, map[string]string{}, constant.METHOD_POST, true, 2, timeOut, prospectID, accessToken)
+			chassis, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("KMOB_CHASSIS_URL"), body, map[string]string{}, constant.METHOD_POST, true, 2, timeOut, prospectID, accessToken)
 
 			if err != nil {
 				err = errors.New("upstream_service_timeout - Call Dupcheck Chassis Number")

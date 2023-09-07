@@ -8,6 +8,9 @@ import (
 	elaborateDelivery "los-kmb-api/domain/elaborate/delivery/http"
 	elaborateRepository "los-kmb-api/domain/elaborate/repository"
 	elaborateUsecase "los-kmb-api/domain/elaborate/usecase"
+	elaborateLTVDelivery "los-kmb-api/domain/elaborate_ltv/delivery/http"
+	elaborateLTVRepository "los-kmb-api/domain/elaborate_ltv/repository"
+	elaborateLTVUsecase "los-kmb-api/domain/elaborate_ltv/usecase"
 	filteringDelivery "los-kmb-api/domain/filtering/delivery/http"
 	filteringRepository "los-kmb-api/domain/filtering/repository"
 	filteringUsecase "los-kmb-api/domain/filtering/usecase"
@@ -157,7 +160,7 @@ func main() {
 	e.Use(accessToken.SetupHeadersAndContext())
 
 	config.CreateCustomLogFile(constant.LOG_FILTERING_LOG)
-	config.CreateCustomLogFile(constant.LOG_JOURNEY_LOG)
+	config.CreateCustomLogFile(constant.NEW_KMB_LOG)
 
 	utils.NewCache(cache, kpLos, config.IsDevelopment)
 
@@ -190,6 +193,11 @@ func main() {
 	newKmbFilteringCase := newKmbFilteringUsecase.NewUsecase(newKmbFilteringRepo, httpClient)
 	newKmbFilteringMultiCase := newKmbFilteringUsecase.NewMultiUsecase(newKmbFilteringRepo, httpClient, newKmbFilteringCase)
 	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken, producer)
+
+	// define new kmb elaborate domain
+	newElaborateLTVRepo := elaborateLTVRepository.NewRepository(kpLosLogs, newKMB)
+	newElaborateLTVUsecase := elaborateLTVUsecase.NewUsecase(newElaborateLTVRepo, httpClient)
+	elaborateLTVDelivery.ElaborateHandler(apiGroupv3, newElaborateLTVUsecase, newElaborateLTVRepo, jsonResponse, accessToken)
 
 	// define new kmb journey
 	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, confins, staging, minilosWG, minilosKMB, newKMB)

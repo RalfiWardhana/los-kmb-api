@@ -474,3 +474,33 @@ type LogOrchestrator struct {
 func (c *LogOrchestrator) TableName() string {
 	return "log_orchestrators"
 }
+
+type MappingElaborateLTV struct {
+	ID                  int    `gorm:"column:id"`
+	ResultPefindo       string `gorm:"type:varchar(10);column:result_pefindo"`
+	Cluster             string `gorm:"type:varchar(20);column:cluster"`
+	TotalBakiDebetStart int    `gorm:"column:total_baki_debet_start"`
+	TotalBakiDebetEnd   int    `gorm:"column:total_baki_debet_end"`
+	TenorStart          int    `gorm:"column:tenor_start"`
+	TenorEnd            int    `gorm:"column:tenor_end"`
+	BPKBNameType        int    `gorm:"column:bpkb_name_type"`
+	AgeVehicle          string `gorm:"type:varchar(5);column:age_vehicle"`
+	LTV                 int    `gorm:"column:ltv"`
+}
+
+func (c *MappingElaborateLTV) TableName() string {
+	return "m_mapping_elaborate_ltv"
+}
+
+type TrxElaborateLTV struct {
+	ProspectID            string      `gorm:"column:prospect_id"`
+	RequestID             interface{} `gorm:"column:request_id;type:varchar(100)" json:"request_id"`
+	Tenor                 int         `gorm:"column:tenor"`
+	ManufacturingYear     string      `gorm:"column:manufacturing_year"`
+	MappingElaborateLTVID int         `gorm:"column:m_mapping_elaborate_ltv_id"`
+	CreatedAt             time.Time   `gorm:"column:created_at"`
+}
+
+func (c *TrxElaborateLTV) TableName() string {
+	return "trx_elaborate_ltv"
+}

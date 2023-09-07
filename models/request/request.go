@@ -573,6 +573,12 @@ type FilteringSpouse struct {
 	MotherName string `json:"spouse_surgate_mother_name" validate:"required,allow_name" example:"ENCRYPTED SURGATE MOTHER NAME"`
 }
 
+type ElaborateLTV struct {
+	ProspectID        string `json:"prospect_id" validate:"required,max=20"`
+	Tenor             int    `json:"tenor" validate:"required"`
+	ManufacturingYear string `json:"manufacturing_year" validate:"required,len=4,number"`
+}
+
 type SallyFilteringCallback struct {
 	ProspectID      string      `json:"prospect_id"`
 	Decision        string      `json:"decision"`

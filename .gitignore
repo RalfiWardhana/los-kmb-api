@@ -25,3 +25,6 @@ logs/*.log
 unit_test
 unit_test*
 *.out
+
+# conf
+sql

@@ -455,3 +455,160 @@ func (c *response) EventBadRequestErrorValidation(ctx context.Context, accessTok
 
 	return apiResponse
 }
+
+func (c *response) SuccessV3(ctx echo.Context, accessToken, logFile, message string, req, data interface{}) (ctxJson error, apiResponse models.ApiResponse) {
+
+	//create response
+	apiResponse = models.ApiResponse{
+		Message:    message,
+		Errors:     nil,
+		Data:       data,
+		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Get(echo.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx.Request().Context(), accessToken, common.CentralizeLogParameter{
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_INCOMING_REQUEST,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_INFO,
+		Request:    req,
+		Response:   apiResponse,
+	})
+
+	return ctx.JSON(http.StatusOK, apiResponse), apiResponse
+}
+
+func (c *response) ServiceUnavailableV3(ctx echo.Context, accessToken, logFile, message string, req interface{}) (ctxJson error, apiResponse models.ApiResponse) {
+
+	apiResponse = models.ApiResponse{
+		Message:    message,
+		Errors:     "service_unavailable",
+		Data:       nil,
+		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Get(echo.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx.Request().Context(), accessToken, common.CentralizeLogParameter{
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_INCOMING_REQUEST,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_ERROR,
+		Request:    req,
+		Response:   apiResponse,
+	})
+
+	return ctx.JSON(http.StatusServiceUnavailable, apiResponse), apiResponse
+}
+
+func (c *response) InternalServerErrorCustomV3(ctx echo.Context, accessToken, logFile, message string, err error) (ctxJson error, apiResponse models.ApiResponse) {
+	apiError := handleInternalError(err)
+
+	apiResponse = models.ApiResponse{
+		Message:    message + " - " + apiError,
+		Errors:     constant.INTERNAL_SERVER_ERROR,
+		Data:       nil,
+		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Get(echo.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx.Request().Context(), accessToken, common.CentralizeLogParameter{
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_INCOMING_REQUEST,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_ERROR,
+		Response:   apiResponse,
+	})
+	return ctx.JSON(http.StatusInternalServerError, apiResponse), apiResponse
+}
+
+func (c *response) BadRequestErrorValidationV3(ctx echo.Context, accessToken, logFile, message string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponse) {
+	var errors = make([]models.ErrorValidation, len(err.(validator.ValidationErrors)))
+
+	for k, v := range err.(validator.ValidationErrors) {
+		field := strcase.ToSnake(v.Field())
+
+		errors[k] = models.ErrorValidation{
+			Field:   field,
+			Message: formatMessage(v),
+		}
+
+	}
+	apiResponse = models.ApiResponse{
+		Message:    message,
+		Errors:     errors,
+		Data:       nil,
+		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Get(echo.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx.Request().Context(), accessToken, common.CentralizeLogParameter{
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_INCOMING_REQUEST,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_ERROR,
+		Request:    req,
+		Response:   apiResponse,
+	})
+
+	return ctx.JSON(http.StatusBadRequest, apiResponse), apiResponse
+}
+
+func (c *response) ServerSideErrorV3(ctx echo.Context, accessToken, logFile, message string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponse) {
+	var errors string
+	var statusCode int
+
+	handleError := strings.Split(err.Error(), " - ")
+
+	if len(handleError) > 1 {
+		message = fmt.Sprintf("%s - %s", message, handleError[1])
+	} else {
+		message = fmt.Sprintf("%s - %s", message, err.Error())
+	}
+	errors = handleError[0]
+
+	switch handleError[0] {
+	case constant.ERROR_UPSTREAM:
+		statusCode = http.StatusBadGateway
+	case constant.ERROR_UPSTREAM_TIMEOUT:
+		statusCode = http.StatusGatewayTimeout
+	case constant.ERROR_SERVICE_UNAVAILABLE:
+		statusCode = http.StatusServiceUnavailable
+	case constant.ERROR_BAD_REQUEST:
+		statusCode = http.StatusBadRequest
+	case constant.ERROR_DATA_CONFLICT:
+		statusCode = http.StatusConflict
+	default:
+		statusCode = http.StatusServiceUnavailable
+		errors = constant.ERROR_SERVICE_UNAVAILABLE
+	}
+
+	apiResponse = models.ApiResponse{
+		Message:    message,
+		Errors:     errors,
+		Data:       nil,
+		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Get(echo.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx.Request().Context(), accessToken, common.CentralizeLogParameter{
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_INCOMING_REQUEST,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_ERROR,
+		Request:    req,
+		Response:   apiResponse,
+	})
+
+	return ctx.JSON(statusCode, apiResponse), apiResponse
+}
