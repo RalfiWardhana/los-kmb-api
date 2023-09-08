@@ -2,12 +2,16 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"los-kmb-api/domain/cms/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
 	"strings"
+	"time"
 
 	"github.com/allegro/bigcache/v3"
 )
@@ -230,6 +234,116 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 
 		data = append(data, row)
 
+	}
+
+	return
+}
+
+func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPrescreening) (data response.ReviewPrescreening, err error) {
+
+	var (
+		trxStatus   entity.TrxStatus
+		currentTime = time.Now()
+		reason      = string(req.Reason)
+	)
+
+	status, err := u.repository.GetStatusPrescreening(req.ProspectID)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get status prescreening error")
+		return
+	}
+
+	// Bisa melakukan review jika status UNPR dan source_decision PRESCREENING
+	if status.Activity == constant.ACTIVITY_UNPROCESS && status.SourceDecision == constant.PRESCREENING {
+
+		decisionMapping := map[string]struct {
+			Code           int
+			StatusProcess  string
+			Activity       string
+			Decision       string
+			DecisionDetail string
+			DecisionStatus string
+			ActivityStatus string
+			NextStep       interface{}
+			SourceDecision interface{}
+		}{
+			constant.DECISION_REJECT: {
+				Code:           constant.CODE_REJECT_PRESCREENING,
+				StatusProcess:  constant.STATUS_FINAL,
+				Activity:       constant.ACTIVITY_STOP,
+				Decision:       constant.DB_DECISION_REJECT,
+				DecisionStatus: constant.DB_DECISION_REJECT,
+				DecisionDetail: constant.DB_DECISION_REJECT,
+				ActivityStatus: constant.ACTIVITY_STOP,
+				SourceDecision: constant.PRESCREENING,
+			},
+			constant.DECISION_APPROVE: {
+				Code:           constant.CODE_PASS_PRESCREENING,
+				StatusProcess:  constant.STATUS_ONPROCESS,
+				Activity:       constant.ACTIVITY_PROCESS,
+				Decision:       constant.DB_DECISION_APR,
+				DecisionStatus: constant.DB_DECISION_CREDIT_PROCESS,
+				DecisionDetail: constant.DB_DECISION_PASS,
+				ActivityStatus: constant.ACTIVITY_UNPROCESS,
+				SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+				NextStep:       constant.SOURCE_DECISION_DUPCHECK,
+			},
+		}
+
+		decisionInfo, ok := decisionMapping[req.Decision]
+		if !ok {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Decision tidak valid")
+			return
+		}
+
+		data.ProspectID = req.ProspectID
+		data.Code = decisionInfo.Code
+		data.Decision = decisionInfo.Decision
+		data.Reason = reason
+
+		info, _ := json.Marshal(data)
+
+		trxPrescreening := entity.TrxPrescreening{
+			ProspectID: req.ProspectID,
+			Decision:   decisionInfo.Decision,
+			Reason:     reason,
+			CreatedAt:  currentTime,
+			CreatedBy:  req.DecisionBy,
+		}
+
+		trxDetail := entity.TrxDetail{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  decisionInfo.StatusProcess,
+			Activity:       decisionInfo.Activity,
+			Decision:       decisionInfo.DecisionDetail,
+			RuleCode:       decisionInfo.Code,
+			SourceDecision: constant.PRESCREENING,
+			NextStep:       decisionInfo.NextStep,
+			Info:           string(info),
+			CreatedAt:      currentTime,
+			CreatedBy:      req.DecisionBy,
+		}
+
+		if req.Decision == constant.DECISION_REJECT {
+			trxStatus.RuleCode = decisionInfo.Code
+			trxStatus.Reason = reason
+		}
+
+		trxStatus.ProspectID = req.ProspectID
+		trxStatus.StatusProcess = decisionInfo.StatusProcess
+		trxStatus.Activity = decisionInfo.ActivityStatus
+		trxStatus.Decision = decisionInfo.DecisionStatus
+		trxStatus.SourceDecision = decisionInfo.SourceDecision
+		trxStatus.CreatedAt = currentTime
+
+		err = u.repository.SavePrescreening(trxPrescreening, trxDetail, trxStatus)
+		if err != nil {
+			return
+		}
+	} else {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dalam prescreening")
+		return
 	}
 
 	return
