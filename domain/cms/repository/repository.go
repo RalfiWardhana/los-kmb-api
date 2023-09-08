@@ -107,6 +107,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
 		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
 		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		INNER JOIN (
 			SELECT
 			ProspectID,
@@ -260,6 +261,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	SELECT
 	tm.ProspectID,
 	cb.BranchName,
+	tia.info AS CMORecommend,
 	tst.activity,
 	tst.source_decision,
 	tps.decision,
@@ -376,6 +378,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
 	INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
 	INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+	INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 	INNER JOIN (
 	  SELECT
 		ProspectID,

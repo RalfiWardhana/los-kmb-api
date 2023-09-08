@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"errors"
 	"los-kmb-api/domain/cms/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
@@ -32,9 +31,11 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInquiryPrescreening, pagination interface{}) (data []entity.InquiryData, rowTotal int, err error) {
 
 	var (
-		industry []entity.SpIndustryTypeMaster
-		photos   []entity.TrxCustomerPhoto
-		action   bool
+		industry           []entity.SpIndustryTypeMaster
+		photos             []entity.TrxCustomerPhoto
+		action             bool
+		cmo_recommendation = "Not Recommended"
+		decision           string
 	)
 
 	if u.cache != nil {
@@ -45,11 +46,6 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 			industry, err = u.repository.GetSpIndustryTypeMaster()
 
 			if err != nil {
-				if err.Error() == constant.RECORD_NOT_FOUND {
-					err = errors.New(constant.ERROR_BAD_REQUEST + " - Industry Type Master Kosong")
-				} else {
-					err = errors.New(constant.ERROR_UPSTREAM + " - Get Industry Type Error")
-				}
 				return
 			}
 
@@ -67,12 +63,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 	result, rowTotal, err := u.repository.GetInquiryPrescreening(req, pagination)
 
 	if err != nil {
-		if err.Error() == constant.RECORD_NOT_FOUND {
-			err = errors.New(constant.ERROR_BAD_REQUEST + " - Pre Screening Inquiry Kosong")
-		} else {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Get Pre Screening Inquiry Error")
-		}
-		return
+		return []entity.InquiryData{}, 0, err
 	}
 
 	for _, inq := range result {
@@ -83,11 +74,6 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
 
 		if err != nil {
-			if err.Error() == constant.RECORD_NOT_FOUND {
-				err = errors.New(constant.ERROR_BAD_REQUEST + " - Customer Photo kosong")
-			} else {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Get Customer Photo Error")
-			}
 			return
 		}
 
@@ -105,13 +91,24 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 			action = true
 		}
 
+		if inq.CmoRecommendation == 1 {
+			cmo_recommendation = "Recommended"
+		}
+
+		if inq.Decision == constant.DB_DECISION_APR {
+			decision = "Sesuai"
+		} else if inq.Decision == constant.DB_DECISION_REJECT {
+			decision = "Tidak Sesuai"
+		}
+
 		row := entity.InquiryData{
 			Prescreening: entity.DataPrescreening{
-				ShowAction: action,
-				Decision:   inq.Decision,
-				Reason:     inq.Reason,
-				DecisionBy: inq.DecisionBy,
-				DecisionAt: inq.DecisionAt,
+				CmoRecommendation: cmo_recommendation,
+				ShowAction:        action,
+				Decision:          decision,
+				Reason:            inq.Reason,
+				DecisionBy:        inq.DecisionBy,
+				DecisionAt:        inq.DecisionAt,
 			},
 			General: entity.DataGeneral{
 				ProspectID:     inq.ProspectID,
