@@ -557,6 +557,7 @@ type InquiryPrescreening struct {
 	ExtCompanyPhone   string  `gorm:"column:ExtCompanyPhone"`
 	SourceOtherIncome float64 `gorm:"column:SourceOtherIncome"`
 
+	Supplier           string  `gorm:"column:dealer"`
 	ProductOfferingID  string  `gorm:"column:ProductOfferingID"`
 	AssetType          string  `gorm:"column:AssetType"`
 	AssetDescription   string  `gorm:"column:asset_description"`
@@ -668,6 +669,7 @@ type DataGeneral struct {
 	ProspectID     string `gorm:"column:ProspectID" json:"prospect_id"`
 	BranchName     string `gorm:"column:BranchName" json:"branch_name"`
 	IncomingSource string `gorm:"column:incoming_source" json:"incoming_source"`
+	Target         string `gorm:"column:target" json:"target"`
 	CreatedAt      string `gorm:"column:incoming_source" json:"created_at"`
 }
 
@@ -713,6 +715,7 @@ type DataEmployment struct {
 }
 
 type DataItemApk struct {
+	Supplier              string  `gorm:"column:dealer" json:"supplier"`
 	ProductOfferingID     string  `gorm:"column:ProductOfferingID" json:"product_offering_id"`
 	AssetDescription      string  `gorm:"column:asset_description" json:"asset_description"`
 	AssetType             string  `gorm:"column:AssetType" json:"asset_type"`

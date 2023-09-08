@@ -114,6 +114,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				ProspectID:     inq.ProspectID,
 				BranchName:     inq.BranchName,
 				IncomingSource: inq.IncomingSource,
+				Target:         inq.Target,
 				CreatedAt:      inq.CreatedAt,
 			},
 			Personal: entity.DataPersonal{
@@ -155,6 +156,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				IndustryTypeID:        string(industry_type),
 			},
 			ItemApk: entity.DataItemApk{
+				Supplier:              inq.Supplier,
 				ProductOfferingID:     inq.ProductOfferingID,
 				AssetDescription:      inq.AssetDescription,
 				AssetType:             inq.AssetType,
