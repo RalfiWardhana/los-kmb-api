@@ -25,7 +25,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 		Json:       json,
 	}
 
-	cmsroute.POST("/cms/prescreening/inquiry", handler.PrescreeningInquiry, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/prescreening/inquiry", handler.PrescreeningInquiry, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
