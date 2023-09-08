@@ -504,3 +504,289 @@ type TrxElaborateLTV struct {
 func (c *TrxElaborateLTV) TableName() string {
 	return "trx_elaborate_ltv"
 }
+
+type TrxCustomerPhoto struct {
+	PhotoID   string    `gorm:"column:photo_id"`
+	PhotoURL  string    `gorm:"column:url"`
+	Width     string    `gorm:"column:width"`
+	Height    string    `gorm:"column:height"`
+	Position  string    `gorm:"column:position"`
+	CreatedAt time.Time `gorm:"column:created_at"`
+}
+
+func (c *TrxCustomerPhoto) TableName() string {
+	return "trx_customer_photo"
+}
+
+type SpIndustryTypeMaster struct {
+	IndustryTypeID string `gorm:"column:IndustryTypeID"`
+	Description    string `gorm:"column:Description"`
+	IsActive       bool   `gorm:"column:IsActive"`
+}
+
+type InquiryPrescreening struct {
+	Activity       string `gorm:"column:activity"`
+	SourceDecision string `gorm:"column:source_decision"`
+	Decision       string `gorm:"column:decision"`
+	Reason         string `gorm:"column:reason"`
+	DecisionBy     string `gorm:"column:DecisionBy"`
+	DecisionAt     string `gorm:"column:DecisionAt"`
+
+	ProspectID     string `gorm:"column:ProspectID"`
+	BranchName     string `gorm:"column:BranchName"`
+	IncomingSource string `gorm:"column:incoming_source"`
+	Target         string `gorm:"column:Target"`
+	CreatedAt      string `gorm:"column:created_at"`
+
+	CustomerStatus    string  `gorm:"column:customer_status"`
+	IDNumber          string  `gorm:"column:IDNumber"`
+	LegalName         string  `gorm:"column:LegalName"`
+	BirthPlace        string  `gorm:"column:BirthPlace"`
+	BirthDate         string  `gorm:"column:BirthDate"`
+	SurgateMotherName string  `gorm:"column:SurgateMotherName"`
+	Gender            string  `gorm:"column:Gender"`
+	MobilePhone       string  `gorm:"column:MobilePhone"`
+	Email             string  `gorm:"column:Email"`
+	Education         string  `gorm:"column:Education"`
+	MaritalStatus     string  `gorm:"column:MaritalStatus"`
+	NumOfDependence   int     `gorm:"column:NumOfDependence"`
+	HomeStatus        string  `gorm:"column:HomeStatus"`
+	StaySinceMonth    string  `gorm:"column:StaySinceMonth"`
+	StaySinceYear     string  `gorm:"column:StaySinceYear"`
+	ExtCompanyPhone   string  `gorm:"column:ExtCompanyPhone"`
+	SourceOtherIncome float64 `gorm:"column:SourceOtherIncome"`
+
+	ProductOfferingID  string  `gorm:"column:ProductOfferingID"`
+	AssetType          string  `gorm:"column:AssetType"`
+	AssetDescription   string  `gorm:"column:asset_description"`
+	ManufacturingYear  string  `gorm:"column:manufacture_year"`
+	Color              string  `gorm:"column:color"`
+	ChassisNumber      string  `gorm:"column:chassis_number"`
+	EngineNumber       string  `gorm:"column:engine_number"`
+	InterestRate       float64 `gorm:"column:interest_rate"`
+	InsuranceRate      float64 `gorm:"column:insurance_rate"`
+	InstallmentPeriod  int     `gorm:"column:InstallmentPeriod"`
+	OTR                float64 `gorm:"column:OTR"`
+	DPAmount           float64 `gorm:"column:DPAmount"`
+	FinanceAmount      float64 `gorm:"column:FinanceAmount"`
+	InterestAmount     float64 `gorm:"column:interest_amount"`
+	InsuranceAmount    float64 `gorm:"column:insurance_amount"`
+	AdminFee           float64 `gorm:"column:AdminFee"`
+	ProvisionFee       float64 `gorm:"column:provision_fee"`
+	NTF                float64 `gorm:"column:NTF"`
+	Total              float64 `gorm:"column:Total"`
+	MonthlyInstallment float64 `gorm:"column:MonthlyInstallment"`
+	FirstPayment       float64 `gorm:"column:first_payment"`
+	FirstInstallment   string  `gorm:"column:FirstInstallment"`
+	FirstPaymentDate   string  `gorm:"column:first_payment_date"`
+
+	ProfessionID          string  `gorm:"column:ProfessionID"`
+	JobTypeID             string  `gorm:"column:JobType"`
+	CompanyName           string  `gorm:"column:CompanyName"`
+	IndustryTypeID        string  `gorm:"column:IndustryTypeID"`
+	EmploymentSinceYear   string  `gorm:"column:EmploymentSinceYear"`
+	EmploymentSinceMonth  string  `gorm:"column:EmploymentSinceMonth"`
+	MonthlyFixedIncome    float64 `gorm:"column:MonthlyFixedIncome"`
+	MonthlyVariableIncome float64 `gorm:"column:MonthlyVariableIncome"`
+	SpouseIncome          float64 `gorm:"column:SpouseIncome"`
+
+	SpouseIDNumber     string `gorm:"column:SpouseIDNumber"`
+	SpouseLegalName    string `gorm:"column:SpouseLegalName"`
+	SpouseCompanyName  string `gorm:"column:SpouseCompanyName"`
+	SpouseCompanyPhone string `gorm:"column:SpouseCompanyPhone"`
+	SpouseMobilePhone  string `gorm:"column:SpouseMobilePhone"`
+	SpouseProfession   string `gorm:"column:SpouseProfession"`
+
+	Destination  string `gorm:"column:destination"`
+	RegDate      string `gorm:"column:RegDate"`
+	AssignDate   string `gorm:"column:AssignDate"`
+	SurveyorName string `gorm:"column:surveyor_name"`
+	ResultDate   string `gorm:"column:ResultDate"`
+	Status       string `gorm:"column:status"`
+
+	EmconName        string `gorm:"column:EmconName"`
+	Relationship     string `gorm:"column:Relationship"`
+	EmconMobilePhone string `gorm:"column:EmconMobilePhone"`
+
+	PhotoID  string `gorm:"column:PhotoID"`
+	PhotoURL string `gorm:"column:PhotoURL"`
+
+	LegalAddress       string `gorm:"column:LegalAddress"`
+	LegalRTRW          string `gorm:"column:LegalRTRW"`
+	LegalKelurahan     string `gorm:"column:LegalKelurahan"`
+	LegalKecamatan     string `gorm:"column:LegalKecamatan"`
+	LegalZipCode       string `gorm:"column:LegalZipcode"`
+	LegalCity          string `gorm:"column:LegalCity"`
+	ResidenceAddress   string `gorm:"column:ResidenceAddress"`
+	ResidenceRTRW      string `gorm:"column:ResidenceRTRW"`
+	ResidenceKelurahan string `gorm:"column:ResidenceKelurahan"`
+	ResidenceKecamatan string `gorm:"column:ResidenceKecamatan"`
+	ResidenceZipCode   string `gorm:"column:ResidenceZipcode"`
+	ResidenceCity      string `gorm:"column:ResidenceCity"`
+	CompanyAddress     string `gorm:"column:CompanyAddress"`
+	CompanyRTRW        string `gorm:"column:CompanyRTRW"`
+	CompanyKelurahan   string `gorm:"column:CompanyKelurahan"`
+	CompanyKecamatan   string `gorm:"column:CompanyKecamatan"`
+	CompanyZipCode     string `gorm:"column:CompanyZipcode"`
+	CompanyCity        string `gorm:"column:CompanyCity"`
+	CompanyAreaPhone   string `gorm:"column:CompanyAreaPhone"`
+	CompanyPhone       string `gorm:"column:CompanyPhone"`
+	EmergencyAddress   string `gorm:"column:EmergencyAddress"`
+	EmergencyRTRW      string `gorm:"column:EmergencyRTRW"`
+	EmergencyKelurahan string `gorm:"column:EmergencyKelurahan"`
+	EmergencyKecamatan string `gorm:"column:EmergencyKecamatan"`
+	EmergencyZipcode   string `gorm:"column:EmergencyZipcode"`
+	EmergencyCity      string `gorm:"column:EmergencyCity"`
+	EmergencyAreaPhone string `gorm:"column:EmergencyAreaPhone"`
+	EmergencyPhone     string `gorm:"column:EmergencyPhone"`
+}
+
+type InquiryData struct {
+	Prescreening DataPrescreening    `json:"prescreening"`
+	General      DataGeneral         `json:"general"`
+	Personal     DataPersonal        `json:"personal"`
+	Spouse       DataSpouse          `json:"spouse"`
+	Employment   DataEmployment      `json:"employment"`
+	ItemApk      DataItemApk         `json:"item_apk"`
+	Surveyor     DataSurveyor        `json:"surveyor"`
+	Emcon        DataEmcon           `json:"emcon"`
+	Address      DataAddress         `json:"address"`
+	Photo        []DataCustomerPhoto `json:"photo"`
+}
+
+type DataPrescreening struct {
+	ShowAction bool   `json:"show_action"`
+	Decision   string `gorm:"column:decision" json:"decision"`
+	Reason     string `gorm:"column:reason" json:"reason"`
+	DecisionBy string `gorm:"column:DecisionBy" json:"decision_by"`
+	DecisionAt string `gorm:"column:DecisionAt" json:"decision_at"`
+}
+
+type DataGeneral struct {
+	ProspectID     string `gorm:"column:ProspectID" json:"prospect_id"`
+	BranchName     string `gorm:"column:BranchName" json:"branch_name"`
+	IncomingSource string `gorm:"column:incoming_source" json:"incoming_source"`
+	CreatedAt      string `gorm:"column:incoming_source" json:"created_at"`
+}
+
+type DataPersonal struct {
+	IDNumber          string  `gorm:"column:IDNumber" json:"id_number"`
+	LegalName         string  `gorm:"column:LegalName" json:"legal_name"`
+	CustomerStatus    string  `gorm:"column:customer_status" json:"customer_status"`
+	BirthPlace        string  `gorm:"column:BirthPlace" json:"birth_place"`
+	BirthDate         string  `gorm:"column:BirthDate" json:"birth_date"`
+	SurgateMotherName string  `gorm:"column:SurgateMotherName" json:"surgate_mother_name"`
+	Gender            string  `gorm:"column:Gender" json:"gender"`
+	MobilePhone       string  `gorm:"column:MobilePhone" json:"mobile_phone"`
+	Email             string  `gorm:"column:Email" json:"email"`
+	NumOfDependence   int     `gorm:"column:NumOfDependence" json:"num_of_dependence"`
+	StaySinceYear     string  `gorm:"column:StaySinceYear" json:"stay_since_year"`
+	StaySinceMonth    string  `gorm:"column:StaySinceMonth" json:"stay_since_month"`
+	ExtCompanyPhone   string  `gorm:"column:ExtCompanyPhone" json:"ext_company_phone"`
+	SourceOtherIncome float64 `gorm:"column:SourceOtherIncome" json:"spouse_other_income"`
+	Education         string  `gorm:"column:Education" json:"education"`
+	MaritalStatus     string  `gorm:"column:MaritalStatus" json:"marital_status"`
+	HomeStatus        string  `gorm:"column:HomeStatus" json:"home_status"`
+}
+
+type DataSpouse struct {
+	SpouseIDNumber     string `gorm:"column:SpouseIDNumber" json:"spouse_id_number"`
+	SpouseLegalName    string `gorm:"column:SpouseLegalName" json:"spouse_legal_name"`
+	SpouseCompanyName  string `gorm:"column:SpouseCompanyName" json:"spouse_company_name"`
+	SpouseCompanyPhone string `gorm:"column:SpouseCompanyPhone" json:"spouse_company_phone"`
+	SpouseMobilePhone  string `gorm:"column:SpouseMobilePhone" json:"spouse_mobile_phone"`
+	SpouseProfession   string `gorm:"column:SpouseProfession" json:"spouse_profession"`
+}
+
+type DataEmployment struct {
+	EmploymentSinceMonth  string  `gorm:"column:EmploymentSinceMonth" json:"employment_since_month"`
+	EmploymentSinceYear   string  `gorm:"column:EmploymentSinceYear" json:"employment_since_year"`
+	CompanyName           string  `gorm:"column:CompanyName" json:"company_name"`
+	MonthlyFixedIncome    float64 `gorm:"column:MonthlyFixedIncome" json:"monthly_fixed_income"`
+	MonthlyVariableIncome float64 `gorm:"column:MonthlyVariableIncome" json:"monthly_variable_income"`
+	SpouseIncome          float64 `gorm:"column:SpouseIncome" json:"spouse_income"`
+	ProfessionID          string  `gorm:"column:ProfessionID" json:"profession_id"`
+	JobTypeID             string  `gorm:"column:JobType" json:"job_type_id"`
+	IndustryTypeID        string  `gorm:"column:IndustryTypeID" json:"industry"`
+}
+
+type DataItemApk struct {
+	ProductOfferingID     string  `gorm:"column:ProductOfferingID" json:"product_offering_id"`
+	AssetDescription      string  `gorm:"column:asset_description" json:"asset_description"`
+	AssetType             string  `gorm:"column:AssetType" json:"asset_type"`
+	ManufacturingYear     string  `gorm:"column:manufacture_year" json:"manufacturing_year"`
+	Color                 string  `gorm:"column:color" json:"color"`
+	ChassisNumber         string  `gorm:"column:chassis_number" json:"chassis_number"`
+	EngineNumber          string  `gorm:"column:engine_number" json:"engine_number"`
+	InterestRate          float64 `gorm:"column:interest_rate" json:"interest_rate"`
+	InsuranceRate         float64 `gorm:"column:insurance_rate" json:"insurance_rate"`
+	Tenor                 int     `gorm:"column:InstallmentPeriod" json:"installment_period"`
+	OTR                   float64 `gorm:"column:OTR" json:"otr"`
+	DPAmount              float64 `gorm:"column:DPAmount" json:"dp_amount"`
+	AF                    float64 `gorm:"column:FinanceAmount" json:"finance_amount"`
+	InterestAmount        float64 `gorm:"column:interest_amount" json:"interest_amount"`
+	InsuranceAmount       float64 `gorm:"column:insurance_amount" json:"insurance_amount"`
+	AdminFee              float64 `gorm:"column:AdminFee" json:"admin_fee"`
+	ProvisionFee          float64 `gorm:"column:provision_fee" json:"provision_fee"`
+	NTF                   float64 `gorm:"column:NTF" json:"ntf"`
+	NTFPlusInterestAmount float64 `gorm:"column:Total" json:"total"`
+	InstallmentAmount     float64 `gorm:"column:MonthlyInstallment" json:"monthly_installment"`
+	FirstPayment          float64 `gorm:"column:first_payment" json:"first_payment"`
+	FirstInstallment      string  `gorm:"column:FirstInstallment" json:"first_installment"`
+	FirstPaymentDate      string  `gorm:"column:first_payment_date" json:"first_payment_date"`
+}
+
+type DataSurveyor struct {
+	Destination  string `gorm:"column:destination" json:"destination"`
+	RegDate      string `gorm:"column:RegDate" json:"request_date"`
+	AssignDate   string `gorm:"column:AssignDate" json:"assign_date"`
+	SurveyorName string `gorm:"column:surveyor_name" json:"surveyor_name"`
+	ResultDate   string `gorm:"column:ResultDate" json:"result_date"`
+	Status       string `gorm:"column:status" json:"status"`
+}
+
+type DataEmcon struct {
+	EmconName        string `gorm:"column:EmconName" json:"emcon_name"`
+	Relationship     string `gorm:"column:Relationship" json:"relationship"`
+	EmconMobilePhone string `gorm:"column:EmconMobilePhone" json:"emcon_mobile_phone"`
+}
+
+type DataAddress struct {
+	LegalAddress       string `gorm:"column:LegalAddress" json:"legal_address"`
+	LegalRTRW          string `gorm:"column:LegalRTRW" json:"legal_rtrw"`
+	LegalKelurahan     string `gorm:"column:LegalKelurahan" json:"legal_kelurahan"`
+	LegalKecamatan     string `gorm:"column:LegalKecamatan" json:"legal_kecamatan"`
+	LegalZipCode       string `gorm:"column:LegalZipcode" json:"legal_zipcode"`
+	LegalCity          string `gorm:"column:LegalCity" json:"legal_city"`
+	ResidenceAddress   string `gorm:"column:ResidenceAddress" json:"residence_address"`
+	ResidenceRTRW      string `gorm:"column:ResidenceRTRW" json:"residence_rtrw"`
+	ResidenceKelurahan string `gorm:"column:ResidenceKelurahan" json:"residence_kelurahan"`
+	ResidenceKecamatan string `gorm:"column:ResidenceKecamatan" json:"residence_kecamatan"`
+	ResidenceZipCode   string `gorm:"column:ResidenceZipcode" json:"residence_zipcode"`
+	ResidenceCity      string `gorm:"column:ResidenceCity" json:"residence_city"`
+	CompanyAddress     string `gorm:"column:CompanyAddress" json:"company_address"`
+	CompanyRTRW        string `gorm:"column:CompanyRTRW" json:"company_rtrw"`
+	CompanyKelurahan   string `gorm:"column:CompanyKelurahan" json:"company_kelurahan"`
+	CompanyKecamatan   string `gorm:"column:CompanyKecamatan" json:"company_kecamatan"`
+	CompanyZipCode     string `gorm:"column:CompanyZipcode" json:"company_zipcode"`
+	CompanyCity        string `gorm:"column:CompanyCity" json:"company_city"`
+	CompanyAreaPhone   string `gorm:"column:CompanyAreaPhone" json:"company_area_phone"`
+	CompanyPhone       string `gorm:"column:CompanyPhone" json:"company_phone"`
+	EmergencyAddress   string `gorm:"column:EmergencyAddress" json:"emegency_address"`
+	EmergencyRTRW      string `gorm:"column:EmergencyRTRW" json:"emegency_rtrw"`
+	EmergencyKelurahan string `gorm:"column:EmergencyKelurahan" json:"emegency_kelurahan"`
+	EmergencyKecamatan string `gorm:"column:EmergencyKecamatan" json:"emegency_kecamatan"`
+	EmergencyZipcode   string `gorm:"column:EmergencyZipcode" json:"emegency_zipcode"`
+	EmergencyCity      string `gorm:"column:EmergencyCity" json:"emegency_city"`
+	EmergencyAreaPhone string `gorm:"column:EmergencyAreaPhone" json:"emegency_area_phone"`
+	EmergencyPhone     string `gorm:"column:EmergencyPhone" json:"emegency_phone"`
+}
+
+type DataCustomerPhoto struct {
+	PhotoID  string `gorm:"column:PhotoID" json:"photo_id"`
+	PhotoURL string `gorm:"column:PhotoURL" json:"photo_url"`
+}
+
+type TotalRow struct {
+	Total int `gorm:"column:totalRow" json:"total"`
+}

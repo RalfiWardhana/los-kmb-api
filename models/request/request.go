@@ -719,3 +719,12 @@ type UpdateReason struct {
 	Reason             string
 	MaxOverdueDaysROAO int
 }
+
+type RequestPagination struct {
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
+}
+
+type ReqInquiryPrescreening struct {
+	Search string `json:"search"`
+}
