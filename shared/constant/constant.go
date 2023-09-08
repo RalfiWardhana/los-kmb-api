@@ -47,6 +47,7 @@ const (
 	STATUS_ONPROCESS                                             = "ONP"
 	DECISION_CREDIT_PROCESS                                      = "CREDIT_PROCESS"
 	DB_DECISION_PASS                                             = "PAS"
+	DB_DECISION_APR                                              = "APR"
 	DB_DECISION_REJECT                                           = "REJ"
 	DB_DECISION_CREDIT_PROCESS                                   = "CPR"
 	JSON_DECISION_PASS                                           = "PASS"
