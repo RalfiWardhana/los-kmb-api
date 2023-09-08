@@ -106,6 +106,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
 		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
 		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 		INNER JOIN (
 			SELECT
 			ProspectID,
@@ -173,6 +174,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 		INNER JOIN trx_surveyor ts WITH (nolock) ON tm.ProspectID = ts.ProspectID
 		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN (
 			SELECT
 			[key],
@@ -258,6 +260,12 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	SELECT
 	tm.ProspectID,
 	cb.BranchName,
+	tst.activity,
+	tst.source_decision,
+	tps.decision,
+	tps.reason,
+	tps.created_by AS DecisionBy,
+	tps.created_at AS DecisionAt,
 	CASE
 	  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
 	  ELSE 'NE'
@@ -367,6 +375,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
 	INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
 	INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+	INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 	INNER JOIN (
 	  SELECT
 		ProspectID,
@@ -434,6 +443,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	INNER JOIN trx_surveyor ts WITH (nolock) ON tm.ProspectID = ts.ProspectID
 	INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 	LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+	LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 	LEFT JOIN (
 	  SELECT
 		[key],

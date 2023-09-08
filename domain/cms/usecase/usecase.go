@@ -2,9 +2,11 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"los-kmb-api/domain/cms/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
+	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
 	"strings"
 
@@ -32,6 +34,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 	var (
 		industry []entity.SpIndustryTypeMaster
 		photos   []entity.TrxCustomerPhoto
+		action   bool
 	)
 
 	if u.cache != nil {
@@ -42,6 +45,11 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 			industry, err = u.repository.GetSpIndustryTypeMaster()
 
 			if err != nil {
+				if err.Error() == constant.RECORD_NOT_FOUND {
+					err = errors.New(constant.ERROR_BAD_REQUEST + " - Industry Type Master Kosong")
+				} else {
+					err = errors.New(constant.ERROR_UPSTREAM + " - Get Industry Type Error")
+				}
 				return
 			}
 
@@ -59,6 +67,11 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 	result, rowTotal, err := u.repository.GetInquiryPrescreening(req, pagination)
 
 	if err != nil {
+		if err.Error() == constant.RECORD_NOT_FOUND {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Pre Screening Inquiry Kosong")
+		} else {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get Pre Screening Inquiry Error")
+		}
 		return
 	}
 
@@ -70,6 +83,11 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
 
 		if err != nil {
+			if err.Error() == constant.RECORD_NOT_FOUND {
+				err = errors.New(constant.ERROR_BAD_REQUEST + " - Customer Photo kosong")
+			} else {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get Customer Photo Error")
+			}
 			return
 		}
 
@@ -83,7 +101,18 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 			photoData = append(photoData, photoEntry)
 		}
 
+		if inq.Activity == constant.ACTIVITY_UNPROCESS && inq.SourceDecision == constant.PRESCREENING {
+			action = true
+		}
+
 		row := entity.InquiryData{
+			Prescreening: entity.DataPrescreening{
+				ShowAction: action,
+				Decision:   inq.Decision,
+				Reason:     inq.Reason,
+				DecisionBy: inq.DecisionBy,
+				DecisionAt: inq.DecisionAt,
+			},
 			General: entity.DataGeneral{
 				ProspectID:     inq.ProspectID,
 				BranchName:     inq.BranchName,

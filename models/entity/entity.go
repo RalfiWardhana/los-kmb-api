@@ -525,6 +525,13 @@ type SpIndustryTypeMaster struct {
 }
 
 type InquiryPrescreening struct {
+	Activity       string `gorm:"column:activity"`
+	SourceDecision string `gorm:"column:source_decision"`
+	Decision       string `gorm:"column:decision"`
+	Reason         string `gorm:"column:reason"`
+	DecisionBy     string `gorm:"column:DecisionBy"`
+	DecisionAt     string `gorm:"column:DecisionAt"`
+
 	ProspectID     string `gorm:"column:ProspectID"`
 	BranchName     string `gorm:"column:BranchName"`
 	IncomingSource string `gorm:"column:incoming_source"`
@@ -635,15 +642,24 @@ type InquiryPrescreening struct {
 }
 
 type InquiryData struct {
-	General    DataGeneral         `json:"general"`
-	Personal   DataPersonal        `json:"personal"`
-	Spouse     DataSpouse          `json:"spouse"`
-	Employment DataEmployment      `json:"employment"`
-	ItemApk    DataItemApk         `json:"item_apk"`
-	Surveyor   DataSurveyor        `json:"surveyor"`
-	Emcon      DataEmcon           `json:"emcon"`
-	Address    DataAddress         `json:"address"`
-	Photo      []DataCustomerPhoto `json:"photo"`
+	Prescreening DataPrescreening    `json:"prescreening"`
+	General      DataGeneral         `json:"general"`
+	Personal     DataPersonal        `json:"personal"`
+	Spouse       DataSpouse          `json:"spouse"`
+	Employment   DataEmployment      `json:"employment"`
+	ItemApk      DataItemApk         `json:"item_apk"`
+	Surveyor     DataSurveyor        `json:"surveyor"`
+	Emcon        DataEmcon           `json:"emcon"`
+	Address      DataAddress         `json:"address"`
+	Photo        []DataCustomerPhoto `json:"photo"`
+}
+
+type DataPrescreening struct {
+	ShowAction bool   `json:"show_action"`
+	Decision   string `gorm:"column:decision" json:"decision"`
+	Reason     string `gorm:"column:reason" json:"reason"`
+	DecisionBy string `gorm:"column:DecisionBy" json:"decision_by"`
+	DecisionAt string `gorm:"column:DecisionAt" json:"decision_at"`
 }
 
 type DataGeneral struct {
