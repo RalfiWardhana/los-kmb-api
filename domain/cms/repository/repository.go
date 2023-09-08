@@ -237,6 +237,15 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 			FROM
 			app_config ap WITH (nolock)
 			WHERE
+			group_name = 'JobPosition'
+		) jb ON tce.JobPosition = jb.[key]
+		LEFT JOIN (
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
 			group_name = 'MonthName'
 		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
 		LEFT JOIN (
@@ -329,6 +338,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	first_payment_date,
 	pr.value AS ProfessionID,
 	jt.value AS JobType,
+	jb.value AS JobPosition,
 	mn2.value AS EmploymentSinceMonth,
 	tce.EmploymentSinceYear,
 	tce.CompanyName,
@@ -502,6 +512,15 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	  WHERE
 		group_name = 'JobType'
 	) jt ON tce.JobType = jt.[key]
+	LEFT JOIN (
+	  SELECT
+		[key],
+		value
+	  FROM
+		app_config ap WITH (nolock)
+	  WHERE
+		group_name = 'JobPosition'
+	) jb ON tce.JobPosition = jb.[key]
 	LEFT JOIN (
 	  SELECT
 		[key],

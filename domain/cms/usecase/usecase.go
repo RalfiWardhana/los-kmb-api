@@ -153,6 +153,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				SpouseIncome:          inq.SpouseIncome,
 				ProfessionID:          inq.ProfessionID,
 				JobTypeID:             inq.JobTypeID,
+				JobPosition:           inq.JobPosition,
 				IndustryTypeID:        string(industry_type),
 			},
 			ItemApk: entity.DataItemApk{
