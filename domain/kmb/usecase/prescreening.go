@@ -182,7 +182,7 @@ func (u usecase) Prescreening(ctx context.Context, req request.Metrics, filterin
 			StatusProcess:  constant.STATUS_ONPROCESS,
 			Activity:       constant.ACTIVITY_PROCESS,
 			Decision:       constant.DB_DECISION_PASS,
-			SourceDecision: constant.SOURCE_DECISION_PRESCREENING,
+			SourceDecision: constant.PRESCREENING,
 			NextStep:       constant.SOURCE_DECISION_DUPCHECK,
 			CreatedBy:      constant.SYSTEM_CREATED,
 		}
@@ -192,7 +192,7 @@ func (u usecase) Prescreening(ctx context.Context, req request.Metrics, filterin
 			StatusProcess:  constant.STATUS_ONPROCESS,
 			Activity:       constant.ACTIVITY_UNPROCESS,
 			Decision:       constant.DB_DECISION_CREDIT_PROCESS,
-			SourceDecision: constant.SOURCE_DECISION_PRESCREENING,
+			SourceDecision: constant.PRESCREENING,
 			NextStep:       constant.SOURCE_DECISION_DUPCHECK,
 			CreatedBy:      constant.SYSTEM_CREATED,
 		}
