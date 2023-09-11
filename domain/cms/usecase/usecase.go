@@ -35,7 +35,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 		photos             []entity.TrxCustomerPhoto
 		surveyor           []entity.TrxSurveyor
 		action             bool
-		cmo_recommendation = "Not Recommended"
+		cmo_recommendation string
 		decision           string
 	)
 
@@ -122,14 +122,17 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 			surveyorData = []entity.DataSurveyor{}
 		}
 
+		action = false
 		if inq.Activity == constant.ACTIVITY_UNPROCESS && inq.SourceDecision == constant.PRESCREENING {
 			action = true
 		}
-
 		if inq.CmoRecommendation == 1 {
 			cmo_recommendation = "Recommended"
+		} else {
+			cmo_recommendation = "Not Recommended"
 		}
 
+		decision = ""
 		if inq.Decision == constant.DB_DECISION_APR {
 			decision = "Sesuai"
 		} else if inq.Decision == constant.DB_DECISION_REJECT {
