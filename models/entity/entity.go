@@ -506,16 +506,34 @@ func (c *TrxElaborateLTV) TableName() string {
 }
 
 type TrxCustomerPhoto struct {
-	PhotoID   string    `gorm:"column:photo_id"`
-	PhotoURL  string    `gorm:"column:url"`
-	Width     string    `gorm:"column:width"`
-	Height    string    `gorm:"column:height"`
-	Position  string    `gorm:"column:position"`
-	CreatedAt time.Time `gorm:"column:created_at"`
+	ProspectID string    `gorm:"column:ProspectID"`
+	PhotoID    string    `gorm:"column:photo_id"`
+	PhotoURL   string    `gorm:"column:url"`
+	Width      string    `gorm:"column:width"`
+	Height     string    `gorm:"column:height"`
+	Position   string    `gorm:"column:position"`
+	CreatedAt  time.Time `gorm:"column:created_at"`
 }
 
 func (c *TrxCustomerPhoto) TableName() string {
 	return "trx_customer_photo"
+}
+
+type TrxSurveyor struct {
+	ProspectID   string    `gorm:"column:ProspectID"`
+	Destination  string    `gorm:"column:destination"`
+	RequestDate  string    `gorm:"column:request_date"`
+	RequestInfo  string    `gorm:"column:request_info"`
+	AssignDate   string    `gorm:"column:assign_date"`
+	SurveyorName string    `gorm:"column:surveyor_name"`
+	SurveyorNote string    `gorm:"column:surveyor_note"`
+	ResultDate   string    `gorm:"column:result_date"`
+	Status       string    `gorm:"column:status"`
+	CreatedAt    time.Time `gorm:"column:created_at"`
+}
+
+func (c *TrxSurveyor) TableName() string {
+	return "trx_surveyor"
 }
 
 type SpIndustryTypeMaster struct {
@@ -536,7 +554,6 @@ type InquiryPrescreening struct {
 	ProspectID     string `gorm:"column:ProspectID"`
 	BranchName     string `gorm:"column:BranchName"`
 	IncomingSource string `gorm:"column:incoming_source"`
-	Target         string `gorm:"column:Target"`
 	CreatedAt      string `gorm:"column:created_at"`
 
 	CustomerStatus    string `gorm:"column:customer_status"`
@@ -600,19 +617,9 @@ type InquiryPrescreening struct {
 	SpouseMobilePhone  string `gorm:"column:SpouseMobilePhone"`
 	SpouseProfession   string `gorm:"column:SpouseProfession"`
 
-	Destination  string `gorm:"column:destination"`
-	RegDate      string `gorm:"column:RegDate"`
-	AssignDate   string `gorm:"column:AssignDate"`
-	SurveyorName string `gorm:"column:surveyor_name"`
-	ResultDate   string `gorm:"column:ResultDate"`
-	Status       string `gorm:"column:status"`
-
 	EmconName        string `gorm:"column:EmconName"`
 	Relationship     string `gorm:"column:Relationship"`
 	EmconMobilePhone string `gorm:"column:EmconMobilePhone"`
-
-	PhotoID  string `gorm:"column:PhotoID"`
-	PhotoURL string `gorm:"column:PhotoURL"`
 
 	LegalAddress       string `gorm:"column:LegalAddress"`
 	LegalRTRW          string `gorm:"column:LegalRTRW"`
@@ -651,7 +658,7 @@ type InquiryData struct {
 	Spouse       DataSpouse          `json:"spouse"`
 	Employment   DataEmployment      `json:"employment"`
 	ItemApk      DataItemApk         `json:"item_apk"`
-	Surveyor     DataSurveyor        `json:"surveyor"`
+	Surveyor     []DataSurveyor      `json:"surveyor"`
 	Emcon        DataEmcon           `json:"emcon"`
 	Address      DataAddress         `json:"address"`
 	Photo        []DataCustomerPhoto `json:"photo"`
@@ -670,7 +677,6 @@ type DataGeneral struct {
 	ProspectID     string `gorm:"column:ProspectID" json:"prospect_id"`
 	BranchName     string `gorm:"column:BranchName" json:"branch_name"`
 	IncomingSource string `gorm:"column:incoming_source" json:"incoming_source"`
-	Target         string `gorm:"column:target" json:"target"`
 	CreatedAt      string `gorm:"column:incoming_source" json:"created_at"`
 }
 
@@ -748,6 +754,7 @@ type DataSurveyor struct {
 	RegDate      string `gorm:"column:RegDate" json:"request_date"`
 	AssignDate   string `gorm:"column:AssignDate" json:"assign_date"`
 	SurveyorName string `gorm:"column:surveyor_name" json:"surveyor_name"`
+	SurveyorNote string `gorm:"column:surveyor_note" json:"surveyor_note"`
 	ResultDate   string `gorm:"column:ResultDate" json:"result_date"`
 	Status       string `gorm:"column:status" json:"status"`
 }

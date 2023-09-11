@@ -37,6 +37,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 	var (
 		industry           []entity.SpIndustryTypeMaster
 		photos             []entity.TrxCustomerPhoto
+		surveyor           []entity.TrxSurveyor
 		action             bool
 		cmo_recommendation = "Not Recommended"
 		decision           string
@@ -83,12 +84,46 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 
 		var photoData []entity.DataCustomerPhoto
 
-		for _, photo := range photos {
-			photoEntry := entity.DataCustomerPhoto{
-				PhotoID:  photo.PhotoID,
-				PhotoURL: photo.PhotoURL,
+		if len(photos) > 0 {
+			for _, photo := range photos {
+				photoEntry := entity.DataCustomerPhoto{
+					PhotoID:  photo.PhotoID,
+					PhotoURL: photo.PhotoURL,
+				}
+				photoData = append(photoData, photoEntry)
 			}
-			photoData = append(photoData, photoEntry)
+		}
+
+		if len(photoData) < 1 {
+			photoData = []entity.DataCustomerPhoto{}
+		}
+
+		// get trx_surveyor
+		surveyor, err = u.repository.GetSurveyorData(inq.ProspectID)
+
+		if err != nil {
+			return
+		}
+
+		var surveyorData []entity.DataSurveyor
+
+		if len(surveyor) > 0 {
+			for _, survey := range surveyor {
+				surveyorEntry := entity.DataSurveyor{
+					Destination:  survey.Destination,
+					RegDate:      survey.RequestDate,
+					AssignDate:   survey.AssignDate,
+					SurveyorName: survey.SurveyorName,
+					SurveyorNote: survey.SurveyorNote,
+					ResultDate:   survey.ResultDate,
+					Status:       survey.Status,
+				}
+				surveyorData = append(surveyorData, surveyorEntry)
+			}
+		}
+
+		if len(surveyorData) < 1 {
+			surveyorData = []entity.DataSurveyor{}
 		}
 
 		if inq.Activity == constant.ACTIVITY_UNPROCESS && inq.SourceDecision == constant.PRESCREENING {
@@ -118,7 +153,6 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				ProspectID:     inq.ProspectID,
 				BranchName:     inq.BranchName,
 				IncomingSource: inq.IncomingSource,
-				Target:         inq.Target,
 				CreatedAt:      inq.CreatedAt,
 			},
 			Personal: entity.DataPersonal{
@@ -186,14 +220,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				FirstInstallment:      inq.FirstInstallment,
 				FirstPaymentDate:      inq.FirstPaymentDate,
 			},
-			Surveyor: entity.DataSurveyor{
-				Destination:  inq.Destination,
-				RegDate:      inq.RegDate,
-				AssignDate:   inq.AssignDate,
-				SurveyorName: inq.SurveyorName,
-				ResultDate:   inq.ResultDate,
-				Status:       inq.Status,
-			},
+			Surveyor: surveyorData,
 			Emcon: entity.DataEmcon{
 				EmconName:        inq.EmconName,
 				Relationship:     inq.Relationship,
