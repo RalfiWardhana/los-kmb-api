@@ -50,6 +50,7 @@ const (
 	DB_DECISION_APR                                              = "APR"
 	DB_DECISION_REJECT                                           = "REJ"
 	DB_DECISION_CREDIT_PROCESS                                   = "CPR"
+	DB_DECISION_CREDIT_ANALYST                                   = "CRA"
 	JSON_DECISION_PASS                                           = "PASS"
 	JSON_DECISION_REJECT                                         = "REJECTED"
 	JSON_DECISION_CREDIT_PROCESS                                 = "CREDIT_PROCESS"
@@ -165,6 +166,7 @@ const (
 	REASON_PASANGAN_BARU                                         = "Pasangan Baru"
 	DECISION_REJECT                                              = "REJECT"
 	DECISION_PASS                                                = "PASS"
+	DECISION_APPROVE                                             = "APPROVE"
 	STATUS_KONSUMEN_RO_AO                                        = "RO/AO"
 	STATUS_KONSUMEN_NEW                                          = "NEW"
 	REASON_BADTYPE_B                                             = "Konsumen Blacklist - BadType B"
@@ -462,4 +464,8 @@ const (
 
 	// BIRO
 	SOURCE_DECISION_BIRO = "BIR"
+
+	// PRE SCREENING
+	CODE_PASS_PRESCREENING   = 9701
+	CODE_REJECT_PRESCREENING = 9702
 )

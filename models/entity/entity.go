@@ -797,3 +797,31 @@ type DataCustomerPhoto struct {
 type TotalRow struct {
 	Total int `gorm:"column:totalRow" json:"total"`
 }
+
+type TrxStatus struct {
+	ProspectID     string      `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	StatusProcess  string      `gorm:"type:varchar(3);column:status_process"`
+	Activity       string      `gorm:"type:varchar(4);column:activity"`
+	Decision       string      `gorm:"type:varchar(3);column:decision"`
+	RuleCode       interface{} `gorm:"type:varchar(4);column:rule_code"`
+	SourceDecision interface{} `gorm:"type:varchar(3);column:source_decision"`
+	NextStep       interface{} `gorm:"type:varchar(3);column:next_step"`
+	CreatedAt      time.Time   `gorm:"column:created_at"`
+	Reason         interface{} `gorm:"type:varchar(255);column:reason"`
+}
+
+func (c *TrxStatus) TableName() string {
+	return "trx_status"
+}
+
+type TrxPrescreening struct {
+	ProspectID string      `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	Decision   string      `gorm:"type:varchar(3);column:decision"`
+	Reason     interface{} `gorm:"type:varchar(255);column:reason"`
+	CreatedAt  time.Time   `gorm:"column:created_at"`
+	CreatedBy  string      `gorm:"column:created_by"`
+}
+
+func (c *TrxPrescreening) TableName() string {
+	return "trx_prescreening"
+}

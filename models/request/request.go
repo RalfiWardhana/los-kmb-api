@@ -728,3 +728,10 @@ type RequestPagination struct {
 type ReqInquiryPrescreening struct {
 	Search string `json:"search"`
 }
+
+type ReqReviewPrescreening struct {
+	ProspectID string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
+	Decision   string `json:"decision" validate:"required" example:"APR,REJ"`
+	Reason     string `json:"reason"`
+	DecisionBy string `json:"decision_by" validate:"required"`
+}

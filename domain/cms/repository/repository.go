@@ -547,3 +547,63 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	}
 	return
 }
+
+func (r repoHandler) GetStatusPrescreening(prospectID string) (status entity.TrxStatus, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.NewKmb.Raw("SELECT activity, source_decision FROM trx_status WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&status).Error; err != nil {
+
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detail entity.TrxDetail, status entity.TrxStatus) (err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	// update trx_status
+	result := db.Model(&status).Where("ProspectID = ?", status.ProspectID).Updates(status)
+
+	if err = result.Error; err != nil {
+		return
+	}
+
+	if result.RowsAffected == 0 {
+		// record not found...
+		if err = db.Create(&status).Error; err != nil {
+			return
+		}
+	}
+
+	// insert trx_details
+	if err = db.Create(&detail).Error; err != nil {
+		return
+	}
+
+	// insert trx_prescreening
+	if err = db.Create(&prescreening).Error; err != nil {
+		return
+	}
+
+	return
+}

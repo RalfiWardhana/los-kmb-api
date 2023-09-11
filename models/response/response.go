@@ -609,3 +609,10 @@ type InquiryRow struct {
 	RecordFiltered int         `json:"recordsFiltered"`
 	RecordTotal    int         `json:"recordsTotal"`
 }
+
+type ReviewPrescreening struct {
+	ProspectID string      `json:"prospect_id"`
+	Code       interface{} `json:"code"`
+	Decision   string      `json:"decision"`
+	Reason     string      `json:"reason"`
+}
