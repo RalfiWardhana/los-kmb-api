@@ -44,6 +44,61 @@ func (r repoHandler) GetSpIndustryTypeMaster() (data []entity.SpIndustryTypeMast
 	return
 }
 
+func (r repoHandler) GetReasonPrescreening(reasonID string, pagination interface{}) (reason []entity.ReasonMessage, rowTotal int, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+
+	var (
+		filter         string
+		filterPaginate string
+	)
+
+	if reasonID != "" {
+		filter = " WHERE ReasonID != '" + reasonID + "'"
+	}
+
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.NewKmb.Raw(fmt.Sprintf(`
+		SELECT
+		COUNT(tt.ReasonID) AS totalRow
+		FROM
+		(SELECT ReasonID FROM reason_message WITH (nolock)) AS tt %s`, filter)).Scan(&row).Error; err != nil {
+			return
+		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT tt.* FROM (SELECT Code, ReasonID, ReasonMessage FROM reason_message WITH (nolock)) AS tt %s ORDER BY tt.ReasonID asc %s`, filter, filterPaginate)).Scan(&reason).Error; err != nil {
+		return
+	}
+
+	if len(reason) == 0 {
+		return reason, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
+	return
+}
+
 func (r repoHandler) GetCustomerPhoto(prospectID string) (photo []entity.TrxCustomerPhoto, err error) {
 	var x sql.TxOptions
 

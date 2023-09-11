@@ -651,6 +651,16 @@ type InquiryPrescreening struct {
 	EmergencyPhone     string `gorm:"column:EmergencyPhone"`
 }
 
+type ReasonMessage struct {
+	ReasonID      string `gorm:"column:ReasonID" json:"reason_id"`
+	Code          string `gorm:"column:Code" json:"code"`
+	ReasonMessage string `gorm:"column:ReasonMessage" json:"reason_message"`
+}
+
+func (c *ReasonMessage) TableName() string {
+	return "reason_message"
+}
+
 type InquiryData struct {
 	Prescreening DataPrescreening    `json:"prescreening"`
 	General      DataGeneral         `json:"general"`

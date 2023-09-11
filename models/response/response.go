@@ -610,6 +610,12 @@ type InquiryRow struct {
 	RecordTotal    int         `json:"recordsTotal"`
 }
 
+type ReasonMessageRow struct {
+	Reason         interface{} `json:"reason"`
+	RecordFiltered int         `json:"recordsFiltered"`
+	RecordTotal    int         `json:"recordsTotal"`
+}
+
 type ReviewPrescreening struct {
 	ProspectID string      `json:"prospect_id"`
 	Code       interface{} `json:"code"`
