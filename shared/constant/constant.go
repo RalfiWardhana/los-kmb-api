@@ -2,6 +2,7 @@ package constant
 
 var LOS_KMB_BASE_URL string
 var TOPIC_SUBMISSION string
+var TOPIC_SUBMISSION_LOS string
 
 const (
 	FLAG_LOS                                                     = "LOS"
@@ -46,6 +47,7 @@ const (
 	STATUS_ONPROCESS                                             = "ONP"
 	DECISION_CREDIT_PROCESS                                      = "CREDIT_PROCESS"
 	DB_DECISION_PASS                                             = "PAS"
+	DB_DECISION_APR                                              = "APR"
 	DB_DECISION_REJECT                                           = "REJ"
 	DB_DECISION_CREDIT_PROCESS                                   = "CPR"
 	JSON_DECISION_PASS                                           = "PASS"
@@ -66,6 +68,8 @@ const (
 	MAX_OVER_DUE_DAYS                                            = 90
 	NUM_OF_ASSET_INVENTORIED                                     = 0
 	BADTYPE_W                                                    = "W"
+	PROFESSION_ID_WRST                                           = "WRST"
+	PROFESSION_ID_PRO                                            = "PRO"
 	IS_SIMILIAR                                                  = 1
 	IS_RESTRUCTURE                                               = 1
 	CODE_E                                                       = 701
@@ -75,6 +79,7 @@ const (
 	RESPONSE_PEFINDO_DUMMY_NOT_FOUND                             = "Pefindo Dummy Data Not Found"
 	ERRORS_E                                                     = "Failed Process Blacklist Confins"
 	REASON_E                                                     = "Failed Process Blacklist Confins"
+	SYSTEM_CREATED                                               = "SYSTEM"
 	NAMA_SAMA                                                    = "nama_sama"
 	NAMA_BEDA                                                    = "nama_beda"
 	PBK_OVD_LAST_12                                              = 60
@@ -258,6 +263,8 @@ const (
 	//Platform Event
 	KEY_PREFIX_FILTERING               = "filtering"
 	KEY_PREFIX_UPDATE_STATUS_FILTERING = "update_status_filtering"
+	KEY_PREFIX_SUBMIT_TO_LOS           = "submit_los_kmb"
+	KEY_PREFIX_CALLBACK                = "callback_los_kmb"
 
 	MAX_RETRY_PUBLISH = 3
 
@@ -295,6 +302,12 @@ const (
 	TOKEN_INVALID         = "token tidak valid."
 	RESTY_MAX_RETRY_ERROR = "Max retry attempt exceeded"
 	ERROR_NOT_FOUND       = "data_not_found"
+
+	//PRE SCREENING
+	LIMIT_PRESCREENING = 20000000
+
+	//PRESCREENING
+	SOURCE_DECISION_PRESCREENING = "PSI"
 
 	//DUPCHECK
 	SOURCE_DECISION_DUPCHECK                = "DCK"

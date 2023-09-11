@@ -356,12 +356,12 @@ type Transaction struct {
 
 type CustomerPersonal struct {
 	IDType                     string   `json:"id_type" validate:"ktp" example:"KTP"`
-	IDNumber                   string   `json:"id_number" validate:"len=16,number" example:"3172024508XXX002"`
-	FullName                   string   `json:"full_name" validate:"min=2,allowcharsname" example:"JONATHAN"`
-	LegalName                  string   `json:"legal_name" validate:"min=2,allowcharsname" example:"JONATHAN"`
+	IDNumber                   string   `json:"id_number" validate:"required,id_number" example:"ENCRYPTED"`
+	FullName                   string   `json:"full_name" validate:"required,allow_name" example:"ENCRYPTED"`
+	LegalName                  string   `json:"legal_name" validate:"required,allow_name" example:"ENCRYPTED"`
 	BirthPlace                 string   `json:"birth_place" validate:"min=3" example:"JAKARTA"`
 	BirthDate                  string   `json:"birth_date" validate:"dateformat" example:"1991-01-12"`
-	SurgateMotherName          string   `json:"surgate_mother_name" validate:"min=2,allowcharsname" example:"JONATHAN MOTHER NAME"`
+	SurgateMotherName          string   `json:"surgate_mother_name" validate:"required,allow_name" example:"ENCRYPTED"`
 	Gender                     string   `json:"gender" validate:"gender" example:"M"`
 	MobilePhone                string   `json:"mobile_phone" validate:"min=9,max=14" example:"085689XXX01"`
 	Email                      string   `json:"email" validate:"email,max=100" example:"jonathaxx@gmail.com"`
@@ -441,13 +441,13 @@ type CustomerEmcon struct {
 }
 
 type CustomerSpouse struct {
-	IDNumber             string  `json:"id_number" validate:"len=16,number" example:"177105550374XX01"`
-	FullName             string  `json:"full_name" validate:"min=2,allowcharsname" example:"SUSI BUNGA"`
-	LegalName            string  `json:"legal_name" validate:"min=2,allowcharsname" example:"SUSI BUNGA"`
+	IDNumber             string  `json:"id_number" validate:"required,id_number" example:"177105550374XX01"`
+	FullName             string  `json:"full_name" validate:"required,allow_name" example:"SUSI BUNGA"`
+	LegalName            string  `json:"legal_name" validate:"required,allow_name" example:"SUSI BUNGA"`
 	BirthDate            string  `json:"birth_date"  validate:"dateformat" example:"1991-01-29"`
 	BirthPlace           string  `json:"birth_place" validate:"required" example:"JAKARTA"`
 	Gender               string  `json:"gender" validate:"gender" example:"F"`
-	SurgateMotherName    string  `json:"surgate_mother_name" validate:"min=2,allowcharsname" example:"TUTI"`
+	SurgateMotherName    string  `json:"surgate_mother_name" validate:"required,allow_name" example:"TUTI"`
 	CompanyPhone         *string `json:"company_phone" example:"865542"`
 	CompanyName          *string `json:"company_name" example:"PT.BUMI KARYA"`
 	MobilePhone          string  `json:"mobile_phone" validate:"min=9,max=14" example:"08772012XXX0"`
@@ -462,43 +462,44 @@ type CustomerSpouse struct {
 }
 
 type Apk struct {
-	OtherFee                    float64     `json:"other_fee" example:"0"`
-	Tenor                       int         `json:"tenor" validate:"required" example:"36"`
-	ProductOfferingID           string      `json:"product_offering_id" validate:"required" example:"NLMKKAPSEP"`
-	ProductOfferingDesc         string      `json:"product_offering_desc"`
-	ProductID                   string      `json:"product_id" validate:"required" example:"1SNLMK"`
-	OTR                         float64     `json:"otr" validate:"required" example:"105000000"`
-	DPAmount                    float64     `json:"down_payment_amount" validate:"required" example:"22000000"`
-	NTF                         float64     `json:"ntf" validate:"required" example:"150528000"`
-	AF                          float64     `json:"af" validate:"required" example:"84000000"`
-	AoID                        string      `json:"aoid" validate:"required" example:"81088"`
-	AdminFee                    *float64    `json:"admin_fee" validate:"required" example:"1500000"`
-	InstallmentAmount           float64     `json:"installment_amount" validate:"required" example:"4181333"`
-	PercentDP                   *float64    `json:"down_payment_rate" validate:"required" example:"20.95"`
-	PremiumAmountToCustomer     *float64    `json:"premium_amount_to_customer" example:"2184000"`
-	FidusiaFee                  *float64    `json:"fidusia_fee" example:"0"`
-	InterestRate                *float64    `json:"interest_rate" validate:"required" example:"2.2"`
-	InsuranceRate               float64     `json:"insurance_rate" validate:"required" example:"3"`
-	InterestAmount              *float64    `json:"interest_amount" validate:"required" example:"66528000"`
-	InsuranceAmount             float64     `json:"insurance_amount" validate:"required" example:"3150000"`
-	FirstPayment                float64     `json:"first_payment" validate:"required" example:"30831334"`
-	FirstInstallment            string      `json:"first_installment" validate:"required" example:"AR"`
-	FirstPaymentDate            string      `json:"first_payment_date" validate:"required,dateformat" example:"2021-08-16"`
-	PaymentMethod               string      `json:"payment_method" validate:"required" example:"CA"`
-	SurveyFee                   *float64    `json:"survey_fee" validate:"required" example:"0"`
-	IsFidusiaCovered            string      `json:"is_fidusia_covered" validate:"required" example:"Y"`
-	ProvisionFee                *float64    `json:"provision_fee" validate:"required" example:"2475000"`
-	InsAssetPaidBy              string      `json:"ins_asset_paid_by" validate:"required" example:"CU"`
-	InsAssetPeriod              string      `json:"ins_asset_period" validate:"required" example:"FT"`
-	Discount                    *float64    `json:"discount" validate:"required" example:"0"`
-	EffectiveRate               float64     `json:"effective_rate" validate:"required" example:"26.4"`
-	SalesmanID                  string      `json:"salesman_id" validate:"required" example:"81088"`
-	SupplierBankAccountID       string      `json:"supplier_bank_account_id" validate:"required" example:"1"`
-	LifeInsuranceCoyBranchID    string      `json:"life_insurance_coy_branch_id" example:"426"`
-	LifeInsuranceAmountCoverage float64     `json:"life_insurance_amount_coverage" example:"105000000"`
-	CommisionSubsidy            float64     `json:"commision_subsidi" example:"0"`
-	FinancePurpose              string      `json:"finance_purpose" validate:"required"`
-	Dealer                      interface{} `json:"dealer"`
+	OtherFee                    float64  `json:"other_fee" example:"0"`
+	Tenor                       int      `json:"tenor" validate:"required" example:"36"`
+	ProductOfferingID           string   `json:"product_offering_id" validate:"required" example:"NLMKKAPSEP"`
+	ProductOfferingDesc         string   `json:"product_offering_desc"`
+	ProductID                   string   `json:"product_id" validate:"required" example:"1SNLMK"`
+	OTR                         float64  `json:"otr" validate:"required" example:"105000000"`
+	DPAmount                    float64  `json:"down_payment_amount" validate:"required" example:"22000000"`
+	NTF                         float64  `json:"ntf" validate:"required" example:"150528000"`
+	AF                          float64  `json:"af" validate:"required" example:"84000000"`
+	AoID                        string   `json:"aoid" validate:"required" example:"81088"`
+	AdminFee                    *float64 `json:"admin_fee" validate:"required" example:"1500000"`
+	InstallmentAmount           float64  `json:"installment_amount" validate:"required" example:"4181333"`
+	PercentDP                   *float64 `json:"down_payment_rate" validate:"required" example:"20.95"`
+	PremiumAmountToCustomer     float64  `json:"premium_amount_to_customer" example:"2184000"`
+	FidusiaFee                  *float64 `json:"fidusia_fee" example:"0"`
+	InterestRate                *float64 `json:"interest_rate" validate:"required" example:"2.2"`
+	InsuranceRate               float64  `json:"insurance_rate" validate:"required" example:"3"`
+	InterestAmount              *float64 `json:"interest_amount" validate:"required" example:"66528000"`
+	InsuranceAmount             float64  `json:"insurance_amount" validate:"required" example:"3150000"`
+	FirstPayment                float64  `json:"first_payment" validate:"required" example:"30831334"`
+	FirstInstallment            string   `json:"first_installment" validate:"required" example:"AR"`
+	FirstPaymentDate            string   `json:"first_payment_date" validate:"required,dateformat" example:"2021-08-16"`
+	PaymentMethod               string   `json:"payment_method" validate:"required" example:"CA"`
+	SurveyFee                   *float64 `json:"survey_fee" validate:"required" example:"0"`
+	IsFidusiaCovered            string   `json:"is_fidusia_covered" validate:"required" example:"Y"`
+	ProvisionFee                *float64 `json:"provision_fee" validate:"required" example:"2475000"`
+	InsAssetPaidBy              string   `json:"ins_asset_paid_by" validate:"required" example:"CU"`
+	InsAssetPeriod              string   `json:"ins_asset_period" validate:"required" example:"FT"`
+	Discount                    *float64 `json:"discount" validate:"required" example:"0"`
+	EffectiveRate               float64  `json:"effective_rate" validate:"required" example:"26.4"`
+	SalesmanID                  string   `json:"salesman_id" validate:"required" example:"81088"`
+	SupplierBankAccountID       string   `json:"supplier_bank_account_id" validate:"required" example:"1"`
+	LifeInsuranceCoyBranchID    string   `json:"life_insurance_coy_branch_id" example:"426"`
+	LifeInsuranceAmountCoverage float64  `json:"life_insurance_amount_coverage" example:"105000000"`
+	CommisionSubsidy            float64  `json:"commision_subsidi" example:"0"`
+	FinancePurpose              string   `json:"finance_purpose" validate:"required"`
+	Dealer                      string   `json:"dealer"`
+	LoanAmount                  float64  `json:"loan_amount" example:"105000000"`
 }
 
 type Item struct {
@@ -527,6 +528,7 @@ type Item struct {
 	CoverageType                 string  `json:"coverage_type" validate:"required" example:"TLO"`
 	OwnerKTP                     string  `json:"owner_ktp" validate:"len=16,number" example:"3172024508XXX002"`
 	Brand                        string  `json:"brand" validate:"required" example:"TOYOTA"`
+	PremiumAmountToCustomer      float64 `json:"premium_amount_to_customer" example:"2184000"`
 }
 
 type Agent struct {
@@ -540,17 +542,7 @@ type Metadata struct {
 	CustomerIp   string `json:"customer_ip" example:"202.147.198.222"`
 	CustomerLat  string `json:"customer_lat" example:"-6.409235"`
 	CustomerLong string `json:"customer_long" example:"106.974231"`
-	CallbackUrl  string `json:"callback_url" validate:"required" example:"https://dev-sally-kmob-api.kreditplus.com/api/los/v1/los/status"`
-}
-
-type AsyncLos struct {
-	Pefindo                          IntegratorPefindo `json:"pefindo"`
-	Dsr                              float64           `json:"dsr"`
-	StatusKonsumen                   string            `json:"status_konsumen"`
-	OSInstallmentDue                 float64           `json:"os_installment_due"`
-	NumberOfPaidInstallment          interface{}       `json:"number_of_paid_installment"`
-	MaxOverdueDaysROAO               interface{}       `json:"max_overduedays_roao"`
-	MaxOverdueDaysforActiveAgreement interface{}       `json:"max_overduedays_for_active_agreement"`
+	CallbackUrl  string `json:"callback_url" example:"https://dev-sally-kmob-api.kreditplus.com/api/los/v1/los/status"`
 }
 
 type Filtering struct {

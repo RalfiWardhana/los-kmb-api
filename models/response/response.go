@@ -1,6 +1,8 @@
 package response
 
-import "time"
+import (
+	"time"
+)
 
 type ApiResponse struct {
 	Message    string      `json:"messages"`
@@ -364,9 +366,45 @@ type InstallmentOther struct {
 	InstallmentAmountWgOnl   float64 `json:"installment_wg_onl"`
 }
 
+type NTFOther struct {
+	NTFAmountWgOff   float64 `json:"NTF_wg_off"`
+	NTFAmountKmbOff  float64 `json:"NTF_kmb_off"`
+	NTFAmountKmobOff float64 `json:"NTF_kmob_off"`
+	NTFAmountWgOnl   float64 `json:"NTF_wg_onl"`
+}
+
 type DsrDetails struct {
 	Customer interface{} `json:"customer"`
 	Spouse   interface{} `json:"spouse"`
+}
+
+type NTFDetails struct {
+	Customer interface{} `json:"customer"`
+	Spouse   interface{} `json:"spouse"`
+}
+
+type OutstandingConfins struct {
+	CustomerID       string  `json:"customer_id"`
+	TotalOutstanding float64 `json:"total_outstanding"`
+}
+type TrxFMF struct {
+	NTFAkumulasi           float64
+	NTFOtherAmount         float64
+	NTFOtherAmountSpouse   float64
+	NTFOtherAmountDetail   string
+	NTFConfinsAmount       float64
+	NTFConfins             float64
+	NTFTopup               float64
+	InstallmentOther       float64
+	InstallmentOtherSpouse float64
+	InstallmentOtherDetail string
+}
+
+type Metrics struct {
+	ProspectID     string      `json:"prospect_id"`
+	Code           interface{} `json:"code"`
+	Decision       string      `json:"decision"`
+	DecisionReason string      `json:"decision_reason"`
 }
 
 type SpDupcekChasisNo struct {

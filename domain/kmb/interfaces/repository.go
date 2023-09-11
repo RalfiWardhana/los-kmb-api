@@ -1,8 +1,16 @@
 package interfaces
 
-import "los-kmb-api/models/entity"
+import (
+	"los-kmb-api/models/entity"
+	"los-kmb-api/models/request"
+	"los-kmb-api/models/response"
+)
 
 type Repository interface {
+	ScanTrxMaster(prospectID string) (countMaster int, err error)
+	GetFilteringResult(prospectID string) (filtering entity.FilteringKMB, err error)
+	SaveTransaction(data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (newErr error)
+	SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error)
 	GetDupcheckConfig() (config entity.AppConfig, err error)
 	GetNewDupcheck(ProspectID string) (data entity.NewDupcheck, err error)
 	SaveNewDupcheck(newDupcheck entity.NewDupcheck) (err error)
