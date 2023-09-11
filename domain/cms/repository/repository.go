@@ -66,6 +66,28 @@ func (r repoHandler) GetCustomerPhoto(prospectID string) (photo []entity.TrxCust
 	return
 }
 
+func (r repoHandler) GetSurveyorData(prospectID string) (surveyor []entity.TrxSurveyor, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.NewKmb.Raw("SELECT destination, request_date, assign_date, surveyor_name, result_date, status, surveyor_note FROM trx_surveyor WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&surveyor).Error; err != nil {
+
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, pagination interface{}) (data []entity.InquiryPrescreening, rowTotal int, err error) {
 
 	var (
@@ -172,7 +194,6 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 			WHERE
 			"Type" = 'EMERGENCY'
 		) cae ON tm.ProspectID = cae.ProspectID
-		INNER JOIN trx_surveyor ts WITH (nolock) ON tm.ProspectID = ts.ProspectID
 		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
@@ -361,13 +382,6 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	tcs.MobilePhone AS SpouseMobilePhone,
 	tcs.IDNumber AS SpouseIDNumber,
 	pr2.value AS SpouseProfession,
-	'Customer' AS Target,
-	ts.destination,
-	ts.request_date AS RegDate,
-	ts.assign_date AS AssignDate,
-	ts.surveyor_name,
-	ts.result_date AS ResultDate,
-	ts.status,
 	em.Name AS EmconName,
 	em.Relationship,
 	em.MobilePhone AS EmconMobilePhone,
@@ -454,7 +468,6 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	  WHERE
 		"Type" = 'EMERGENCY'
 	) cae ON tm.ProspectID = cae.ProspectID
-	INNER JOIN trx_surveyor ts WITH (nolock) ON tm.ProspectID = ts.ProspectID
 	INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 	LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 	LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
