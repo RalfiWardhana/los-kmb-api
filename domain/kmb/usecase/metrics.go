@@ -81,7 +81,6 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			Activity:       constant.ACTIVITY_UNPROCESS,
 			Decision:       constant.DB_DECISION_CREDIT_PROCESS,
 			SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
-			NextStep:       constant.SOURCE_DECISION_BIRO,
 			CreatedBy:      constant.SYSTEM_CREATED,
 		}
 

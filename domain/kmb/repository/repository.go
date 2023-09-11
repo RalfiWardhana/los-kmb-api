@@ -561,23 +561,26 @@ func (r repoHandler) SaveTransaction(data request.Metrics, trxPrescreening entit
 			}
 		}
 
-		for i := 0; i < len(details); i++ {
-			detail := entity.TrxDetail{
-				ProspectID:     details[i].ProspectID,
-				StatusProcess:  details[i].StatusProcess,
-				Activity:       details[i].Activity,
-				Decision:       details[i].Decision,
-				RuleCode:       details[i].RuleCode,
-				SourceDecision: details[i].SourceDecision,
-				NextStep:       details[i].NextStep,
-				Info:           details[i].Info,
-				CreatedBy:      constant.SYSTEM_CREATED,
-			}
+		// skip prescreening unpr
+		if len(details) > 1 {
+			for i := 0; i < len(details); i++ {
+				detail := entity.TrxDetail{
+					ProspectID:     details[i].ProspectID,
+					StatusProcess:  details[i].StatusProcess,
+					Activity:       details[i].Activity,
+					Decision:       details[i].Decision,
+					RuleCode:       details[i].RuleCode,
+					SourceDecision: details[i].SourceDecision,
+					NextStep:       details[i].NextStep,
+					Info:           details[i].Info,
+					CreatedBy:      constant.SYSTEM_CREATED,
+				}
 
-			logInfo = detail
+				logInfo = detail
 
-			if err := tx.Create(&detail).Error; err != nil {
-				return err
+				if err := tx.Create(&detail).Error; err != nil {
+					return err
+				}
 			}
 		}
 
