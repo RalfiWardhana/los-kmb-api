@@ -99,7 +99,7 @@ func (r repoHandler) GetReasonPrescreening(reasonID string, pagination interface
 	return
 }
 
-func (r repoHandler) GetCustomerPhoto(prospectID string) (photo []entity.TrxCustomerPhoto, err error) {
+func (r repoHandler) GetCustomerPhoto(prospectID string) (photo []entity.CustomerPhoto, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))

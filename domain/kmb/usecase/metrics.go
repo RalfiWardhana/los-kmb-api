@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
@@ -22,27 +23,76 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		decisionMetrics response.UsecaseApi
 		additionalTrx   response.Additional
 		filtering       entity.FilteringKMB
+		trxPrescreening entity.TrxPrescreening
+		trxFMF          response.TrxFMF
 	)
 
-	// // Scan Order ID must have data in filtering before request to Metrics
-	// rowMaster, rowFtr, err := u.repository.ScanPreTrxJourney(reqMetrics.Transaction.ProspectID)
+	// cek filtering
+	filtering, err = u.repository.GetFilteringResult(reqMetrics.Transaction.ProspectID)
 
-	// // Order ID not found at filtering kmob
-	// if rowFtr == 0 {
-	// 	err = errors.New(constant.ERROR_BAD_REQUEST + " - Filtering Data Not Found")
-	// 	return
-	// }
+	if err != nil {
+		if err.Error() == constant.RECORD_NOT_FOUND {
+			err = errors.New(fmt.Sprintf("%s - Belum melakukan filtering atau hasil filtering sudah lebih dari %s hari", constant.ERROR_BAD_REQUEST, os.Getenv("BIRO_VALID_DAYS")))
+		} else {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get Filtering Error")
+		}
+		return
+	}
 
-	// // Order ID already have final decision
-	// if rowMaster > 0 {
-	// 	err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID Already Exist")
-	// 	return
-	// }
+	if filtering.NextProcess != 1 {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Tidak bisa lanjut proses")
+		return
+	}
 
-	// if err != nil {
-	// 	err = errors.New(constant.ERROR_UPSTREAM + " - PreTrxJourney Error")
-	// 	return
-	// }
+	// cek trx_master
+	var trxMaster int
+	trxMaster, err = u.repository.ScanTrxMaster(reqMetrics.Transaction.ProspectID)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Transaction Error")
+		return
+	}
+
+	// Order ID already have final decision
+	if trxMaster > 0 {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID Already Exist")
+		return
+	}
+
+	//cek prescreening
+	var trxPrescreeningDetail entity.TrxDetail
+	trxPrescreening, trxFMF, trxPrescreeningDetail, err = u.usecase.Prescreening(ctx, reqMetrics, filtering, accessToken)
+	if err != nil {
+		return
+	}
+
+	details = append(details, trxPrescreeningDetail)
+
+	if trxPrescreening.Decision != constant.DB_DECISION_APR {
+		resultMetrics, err = u.usecase.SaveTransaction(reqMetrics, trxPrescreening, trxFMF, details, trxPrescreening.Reason)
+		if err != nil {
+			return
+		}
+
+		return
+	} else {
+		trxDetail := entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_UNPROCESS,
+			Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+			SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+			NextStep:       constant.SOURCE_DECISION_BIRO,
+			CreatedBy:      constant.SYSTEM_CREATED,
+		}
+
+		details = append(details, trxDetail)
+		resultMetrics, err = u.usecase.SaveTransaction(reqMetrics, trxPrescreening, trxFMF, details, trxPrescreening.Reason)
+		if err != nil {
+			return
+		}
+
+		return
+	}
 
 	var selfieImage, ktpImage, legalZipCode, companyZipCode string
 
@@ -173,5 +223,29 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 	resultMetrics = details
 
+	return
+}
+
+func (u usecase) SaveTransaction(data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (resp response.Metrics, err error) {
+
+	var decision string
+
+	err = u.repository.SaveTransaction(data, trxPrescreening, trxFMF, details, reason)
+
+	detail := details[len(details)-1]
+
+	switch detail.Decision {
+
+	case constant.DB_DECISION_PASS:
+		decision = constant.JSON_DECISION_PASS
+
+	case constant.DB_DECISION_REJECT:
+		decision = constant.JSON_DECISION_REJECT
+
+	case constant.DB_DECISION_CREDIT_PROCESS:
+		decision = constant.JSON_DECISION_CREDIT_PROCESS
+	}
+
+	resp = response.Metrics{ProspectID: detail.ProspectID, Code: detail.RuleCode, Decision: decision, DecisionReason: reason}
 	return
 }

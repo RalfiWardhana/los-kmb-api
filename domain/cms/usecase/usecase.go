@@ -47,7 +47,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 
 	var (
 		industry           []entity.SpIndustryTypeMaster
-		photos             []entity.TrxCustomerPhoto
+		photos             []entity.CustomerPhoto
 		surveyor           []entity.TrxSurveyor
 		action             bool
 		cmo_recommendation string
@@ -93,20 +93,20 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 			return
 		}
 
-		var photoData []entity.DataCustomerPhoto
+		var photoData []entity.CustomerPhoto
 
 		if len(photos) > 0 {
 			for _, photo := range photos {
-				photoEntry := entity.DataCustomerPhoto{
-					PhotoID:  photo.PhotoID,
-					PhotoURL: photo.PhotoURL,
+				photoEntry := entity.CustomerPhoto{
+					PhotoID: photo.PhotoID,
+					Url:     photo.Url,
 				}
 				photoData = append(photoData, photoEntry)
 			}
 		}
 
 		if len(photoData) < 1 {
-			photoData = []entity.DataCustomerPhoto{}
+			photoData = []entity.CustomerPhoto{}
 		}
 
 		// get trx_surveyor
@@ -116,13 +116,13 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 			return
 		}
 
-		var surveyorData []entity.DataSurveyor
+		var surveyorData []entity.TrxSurveyor
 
 		if len(surveyor) > 0 {
 			for _, survey := range surveyor {
-				surveyorEntry := entity.DataSurveyor{
+				surveyorEntry := entity.TrxSurveyor{
 					Destination:  survey.Destination,
-					RegDate:      survey.RequestDate,
+					RequestDate:  survey.RequestDate,
 					AssignDate:   survey.AssignDate,
 					SurveyorName: survey.SurveyorName,
 					SurveyorNote: survey.SurveyorNote,
@@ -134,7 +134,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 		}
 
 		if len(surveyorData) < 1 {
-			surveyorData = []entity.DataSurveyor{}
+			surveyorData = []entity.TrxSurveyor{}
 		}
 
 		action = false
@@ -169,7 +169,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				IncomingSource: inq.IncomingSource,
 				CreatedAt:      inq.CreatedAt,
 			},
-			Personal: entity.DataPersonal{
+			Personal: entity.CustomerPersonal{
 				IDNumber:          inq.IDNumber,
 				LegalName:         inq.LegalName,
 				CustomerStatus:    inq.CustomerStatus,
@@ -188,15 +188,15 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				MaritalStatus:     inq.MaritalStatus,
 				HomeStatus:        inq.HomeStatus,
 			},
-			Spouse: entity.DataSpouse{
-				SpouseIDNumber:     inq.SpouseIDNumber,
-				SpouseLegalName:    inq.SpouseLegalName,
-				SpouseCompanyName:  inq.SpouseCompanyName,
-				SpouseCompanyPhone: inq.SpouseCompanyPhone,
-				SpouseMobilePhone:  inq.SpouseMobilePhone,
-				SpouseProfession:   inq.SpouseProfession,
+			Spouse: entity.CustomerSpouse{
+				IDNumber:     inq.SpouseIDNumber,
+				LegalName:    inq.SpouseLegalName,
+				CompanyName:  inq.SpouseCompanyName,
+				CompanyPhone: inq.SpouseCompanyPhone,
+				MobilePhone:  inq.SpouseMobilePhone,
+				ProfessionID: inq.SpouseProfession,
 			},
-			Employment: entity.DataEmployment{
+			Employment: entity.CustomerEmployment{
 				EmploymentSinceMonth:  inq.EmploymentSinceMonth,
 				EmploymentSinceYear:   inq.EmploymentSinceYear,
 				CompanyName:           inq.CompanyName,
@@ -204,9 +204,9 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				MonthlyVariableIncome: inq.MonthlyVariableIncome,
 				SpouseIncome:          inq.SpouseIncome,
 				ProfessionID:          inq.ProfessionID,
-				JobTypeID:             inq.JobTypeID,
+				JobType:               inq.JobTypeID,
 				JobPosition:           inq.JobPosition,
-				IndustryTypeID:        string(industry_type),
+				IndustryTypeID:        strings.TrimSpace(string(industry_type)),
 			},
 			ItemApk: entity.DataItemApk{
 				Supplier:              inq.Supplier,
@@ -235,10 +235,10 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				FirstPaymentDate:      inq.FirstPaymentDate,
 			},
 			Surveyor: surveyorData,
-			Emcon: entity.DataEmcon{
-				EmconName:        inq.EmconName,
-				Relationship:     inq.Relationship,
-				EmconMobilePhone: inq.EmconMobilePhone,
+			Emcon: entity.CustomerEmcon{
+				Name:         inq.EmconName,
+				Relationship: inq.Relationship,
+				MobilePhone:  inq.EmconMobilePhone,
 			},
 			Address: entity.DataAddress{
 				LegalAddress:       inq.LegalAddress,
@@ -307,7 +307,7 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 			DecisionStatus string
 			ActivityStatus string
 			NextStep       interface{}
-			SourceDecision interface{}
+			SourceDecision string
 		}{
 			constant.DECISION_REJECT: {
 				Code:           constant.CODE_REJECT_PRESCREENING,
