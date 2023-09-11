@@ -711,3 +711,23 @@ type UpdateReason struct {
 	Reason             string
 	MaxOverdueDaysROAO int
 }
+
+type RequestPagination struct {
+	Page  int `json:"page"`
+	Limit int `json:"limit"`
+}
+
+type ReqInquiryPrescreening struct {
+	Search string `json:"search"`
+}
+
+type ReqReasonPrescreening struct {
+	ReasonID string `json:"reason_id"`
+}
+
+type ReqReviewPrescreening struct {
+	ProspectID string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
+	Decision   string `json:"decision" validate:"required" example:"APR,REJ"`
+	Reason     string `json:"reason"`
+	DecisionBy string `json:"decision_by" validate:"required"`
+}
