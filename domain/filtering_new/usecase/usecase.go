@@ -157,6 +157,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	entityFiltering.Decision = respFiltering.Decision
 	entityFiltering.CustomerStatus = mainCustomer.CustomerStatus
 	entityFiltering.CustomerSegment = mainCustomer.CustomerSegment
+	entityFiltering.CustomerID = mainCustomer.CustomerID
 
 	if respFiltering.NextProcess {
 		entityFiltering.NextProcess = 1

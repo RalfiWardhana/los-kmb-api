@@ -5,7 +5,9 @@ import (
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
 	"los-kmb-api/shared/common"
+	"los-kmb-api/shared/common/platformevent"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 
 	"github.com/labstack/echo/v4"
 )
@@ -16,18 +18,36 @@ type handlerKMB struct {
 	usecase      interfaces.Usecase
 	repository   interfaces.Repository
 	Json         common.JSON
+	producer     platformevent.PlatformEvent
 }
 
-func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware) {
+func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEvent) {
 	handler := handlerKMB{
 		metrics:    metrics,
 		usecase:    usecase,
 		repository: repository,
 		Json:       json,
+		producer:   producer,
 	}
 	kmbroute.POST("/dupcheck", handler.Dupcheck, middlewares.AccessMiddleware())
 	kmbroute.POST("/reject-tenor", handler.RejectTenor36, middlewares.AccessMiddleware())
 	kmbroute.POST("/journey", handler.MetricsLos, middlewares.AccessMiddleware())
+	kmbroute.POST("/produce/journey", handler.ProduceJourney, middlewares.AccessMiddleware())
+}
+
+func (c *handlerKMB) ProduceJourney(ctx echo.Context) (err error) {
+
+	var (
+		req request.Metrics
+	)
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", err)
+	}
+
+	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_SUBMIT_TO_LOS, req.Transaction.ProspectID, utils.StructToMap(req), 0)
+
+	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB - Please wait, your request is being processed", req, nil)
 }
 
 // KmbDupcheck Tools godoc

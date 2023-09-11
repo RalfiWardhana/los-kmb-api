@@ -21,6 +21,7 @@ import (
 	newKmbFilteringDelivery "los-kmb-api/domain/filtering_new/delivery/http"
 	newKmbFilteringRepository "los-kmb-api/domain/filtering_new/repository"
 	newKmbFilteringUsecase "los-kmb-api/domain/filtering_new/usecase"
+	eventHandler "los-kmb-api/domain/kmb/delivery/event"
 	kmbDelivery "los-kmb-api/domain/kmb/delivery/http"
 	kmbRepository "los-kmb-api/domain/kmb/repository"
 	kmbUsecase "los-kmb-api/domain/kmb/usecase"
@@ -105,6 +106,7 @@ func main() {
 
 	//topic kafka
 	constant.TOPIC_SUBMISSION = os.Getenv("TOPIC_SUBMISSION")
+	constant.TOPIC_SUBMISSION_LOS = os.Getenv("TOPIC_SUBMISSION_LOS")
 
 	minilosWG, err := database.OpenMinilosWG()
 	if err != nil {
@@ -212,7 +214,7 @@ func main() {
 	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
 	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
-	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, jsonResponse, accessToken)
+	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, jsonResponse, accessToken, producer)
 
 	toolsDelivery.ToolsHandler(apiGroupv3, jsonResponse, accessToken)
 
@@ -238,6 +240,27 @@ func main() {
 	eventhandlers.NewServiceFiltering(consumerRouter, newKmbFilteringRepo, newKmbFilteringCase, newKmbFilteringMultiCase, validator, producer, jsonResponse)
 
 	if err := consumerRouter.StartConsume(); err != nil {
+		panic(err)
+	}
+
+	consumerJourneyRouter := platformevent.NewConsumerRouter(constant.TOPIC_SUBMISSION_LOS, os.Getenv("LOS_SUBMISSION_KMB"), auth)
+
+	consumerJourneyRouter.Use(func(next event.ConsumerProcessor) event.ConsumerProcessor {
+		return func(ctx context.Context, event event.Event) error {
+			startTime := utils.GenerateTimeInMilisecond()
+			reqID := utils.GenerateUUID()
+
+			ctx = context.WithValue(ctx, constant.CTX_KEY_REQUEST_TIME, startTime)
+			ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
+			ctx = context.WithValue(ctx, constant.CTX_KEY_IS_CONSUMER, true)
+
+			return next(ctx, event)
+		}
+	})
+
+	eventHandler.NewServiceKMB(consumerJourneyRouter, kmbRepositories, kmbUsecases, kmbMetrics, validator, producer, jsonResponse)
+
+	if err := consumerJourneyRouter.StartConsume(); err != nil {
 		panic(err)
 	}
 
