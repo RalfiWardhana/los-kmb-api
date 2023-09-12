@@ -367,10 +367,25 @@ type InstallmentOther struct {
 }
 
 type NTFOther struct {
-	NTFAmountWgOff   float64 `json:"NTF_wg_off"`
-	NTFAmountKmbOff  float64 `json:"NTF_kmb_off"`
-	NTFAmountKmobOff float64 `json:"NTF_kmob_off"`
-	NTFAmountWgOnl   float64 `json:"NTF_wg_onl"`
+	NTFAmountWgOff   float64 `json:"wg_offline"`
+	NTFAmountKmbOff  float64 `json:"kmb"`
+	NTFAmountKmobOff float64 `json:"kmob"`
+	NTFAmountWgOnl   float64 `json:"new_wg"`
+	NTFAmountUC      float64 `json:"uc"`
+	NTFAmountNewKmb  float64 `json:"new_kmb"`
+	TotalOutstanding float64 `json:"outstanding"`
+}
+
+type IntegratorAgreementChassisNumber struct {
+	GoLiveDate           string  `json:"go_live_date"`
+	IDNumber             string  `json:"id_number"`
+	IsActive             bool    `json:"is_active"`
+	IsRegistered         bool    `json:"is_registered"`
+	LCInstallment        float64 `json:"lc_installment"`
+	LegalName            string  `json:"legal_name"`
+	OutstandingInterest  float64 `json:"outstanding_interest"`
+	OutstandingPrincipal float64 `json:"outstanding_principal"`
+	Status               string  `json:"status"`
 }
 
 type DsrDetails struct {
@@ -388,16 +403,13 @@ type OutstandingConfins struct {
 	TotalOutstanding float64 `json:"total_outstanding"`
 }
 type TrxFMF struct {
-	NTFAkumulasi           float64
-	NTFOtherAmount         float64
-	NTFOtherAmountSpouse   float64
-	NTFOtherAmountDetail   string
-	NTFConfinsAmount       float64
-	NTFConfins             float64
-	NTFTopup               float64
-	InstallmentOther       float64
-	InstallmentOtherSpouse float64
-	InstallmentOtherDetail string
+	NTFAkumulasi         float64
+	NTFOtherAmount       float64
+	NTFOtherAmountSpouse float64
+	NTFOtherAmountDetail string
+	NTFConfinsAmount     float64
+	NTFConfins           float64
+	NTFTopup             float64
 }
 
 type Metrics struct {

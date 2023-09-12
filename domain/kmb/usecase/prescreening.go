@@ -4,11 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
-	"los-kmb-api/shared/query"
 	"los-kmb-api/shared/utils"
 	"os"
 
@@ -19,20 +19,20 @@ import (
 func (u usecase) Prescreening(ctx context.Context, req request.Metrics, filtering entity.FilteringKMB, accessToken string) (trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, trxDetail entity.TrxDetail, err error) {
 
 	var (
-		dataKmob, dataWgOff, dataKmbOff, dataWgOnl entity.ScanInstallmentAmount
-		instOther                                  response.InstallmentOther
-		ntfOther                                   response.NTFOther
-		dsrDetails                                 response.DsrDetails
-		installmentOther                           float64
-		installmentOtherSpouse                     float64
-		ntfDetails                                 response.NTFDetails
-		ntfOtherAmount                             float64
-		ntfOtherAmountSpouse                       float64
-		ntfConfinsAmount                           response.OutstandingConfins
-		confins                                    response.OutstandingConfins
-		topup                                      response.OutstandingConfins
-		ntfAmount                                  float64
+		ntfOther             response.NTFOther
+		ntfDetails           response.NTFDetails
+		ntfOtherAmount       float64
+		ntfOtherAmountSpouse float64
+		ntfConfinsAmount     response.OutstandingConfins
+		confins              response.OutstandingConfins
+		topup                response.IntegratorAgreementChassisNumber
+		ntfAmount            float64
+		customerID           string
 	)
+
+	if filtering.CustomerID != nil {
+		customerID = filtering.CustomerID.(string)
+	}
 
 	// cek ntf gantung all lob
 	var customerData []request.CustomerData
@@ -41,6 +41,7 @@ func (u usecase) Prescreening(ctx context.Context, req request.Metrics, filterin
 		LegalName:  req.CustomerPersonal.LegalName,
 		BirthDate:  req.CustomerPersonal.BirthDate,
 		MotherName: req.CustomerPersonal.SurgateMotherName,
+		CustomerID: customerID,
 	})
 
 	if req.CustomerPersonal.MaritalStatus == constant.MARRIED && req.CustomerSpouse != nil {
@@ -53,118 +54,60 @@ func (u usecase) Prescreening(ctx context.Context, req request.Metrics, filterin
 		})
 	}
 
+	header := map[string]string{}
+
 	for i, customer := range customerData {
 
-		kmobOff := query.ScanInstallmentAmountKmobOFF(customer.IDNumber, customer.LegalName, customer.BirthDate, customer.MotherName)
+		jsonCustomer, _ := json.Marshal(customer)
+		var ntfLOS *resty.Response
 
-		dataKmob, err = u.repository.ScanKmobOff(kmobOff)
+		ntfLOS, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("NTF_PENDING_URL"), jsonCustomer, header, constant.METHOD_POST, true, 3, 60, req.Transaction.ProspectID, accessToken)
 
 		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Scan DB KMOB")
+			err = errors.New(constant.ERROR_UPSTREAM + "Call NTF Pending API Error")
 			return
 		}
 
-		instOther.InstallmentAmountKmobOff = dataKmob.InstallmentAmount
-		ntfOther.NTFAmountKmobOff = dataKmob.NTF
-
-		wgOnl := query.ScanInstallmentAmountWgONL(customer.IDNumber, customer.LegalName, customer.BirthDate, customer.MotherName)
-
-		dataWgOnl, err = u.repository.ScanWgOnl(wgOnl)
-
-		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Scan DB WG ONL")
+		if ntfLOS.StatusCode() != 200 {
+			err = errors.New(constant.ERROR_UPSTREAM + "Call NTF Pending API Error")
 			return
 		}
 
-		instOther.InstallmentAmountWgOnl = dataWgOnl.InstallmentAmount
-		ntfOther.NTFAmountWgOnl = dataWgOnl.NTF
-
-		wgOFF := query.ScanInstallmentAmountWgOff(customer.IDNumber, customer.LegalName, customer.BirthDate, customer.MotherName)
-
-		dataWgOff, err = u.repository.ScanWgOff(wgOFF)
-
-		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Scan DB WG Offline")
-			return
-		}
-
-		instOther.InstallmentAmountWgOff = dataWgOff.InstallmentAmount
-		ntfOther.NTFAmountWgOff = dataWgOff.NTF
-
-		kmbOFF := query.ScanInstallmentAmountKmbOff(customer.IDNumber, customer.LegalName, customer.BirthDate, customer.MotherName)
-
-		dataKmbOff, err = u.repository.ScanKmbOff(kmbOFF)
-
-		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Scan DB KMB Offline")
-			return
-		}
-
-		instOther.InstallmentAmountKmbOff = dataKmbOff.InstallmentAmount
-		ntfOther.NTFAmountKmbOff = dataKmbOff.NTF
+		json.Unmarshal([]byte(jsoniter.Get(ntfLOS.Body(), "data").ToString()), &ntfOther)
 
 		if i == 0 {
-			installmentOther = dataKmob.InstallmentAmount + dataKmbOff.InstallmentAmount + dataWgOff.InstallmentAmount + dataWgOnl.InstallmentAmount
-			dsrDetails.Customer = instOther
-
-			ntfOtherAmount = dataKmob.NTF + dataKmbOff.NTF + dataWgOff.NTF + dataWgOnl.NTF
+			// customer
+			ntfOtherAmount = ntfOther.NTFAmountKmbOff + ntfOther.NTFAmountWgOff + ntfOther.NTFAmountKmobOff + ntfOther.NTFAmountUC + ntfOther.NTFAmountWgOnl + ntfOther.NTFAmountNewKmb
 			ntfDetails.Customer = ntfOther
-		} else if i == 1 {
-			installmentOtherSpouse = dataKmob.InstallmentAmount + dataKmbOff.InstallmentAmount + dataWgOff.InstallmentAmount + dataWgOnl.InstallmentAmount
-			dsrDetails.Spouse = instOther
+			confins.TotalOutstanding = ntfOther.TotalOutstanding
 
-			ntfOtherAmountSpouse = dataKmob.NTF + dataKmbOff.NTF + dataWgOff.NTF + dataWgOnl.NTF
+		} else if i == 1 {
+			// spouse
+			ntfOtherAmountSpouse = ntfOther.NTFAmountKmbOff + ntfOther.NTFAmountWgOff + ntfOther.NTFAmountKmobOff + ntfOther.NTFAmountUC + ntfOther.NTFAmountWgOnl + ntfOther.NTFAmountNewKmb
 			ntfDetails.Spouse = ntfOther
 		}
 	}
 
-	if filtering.CustomerID != nil {
+	var ntfTopup *resty.Response
+	ntfTopup, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, fmt.Sprintf("%s/%s", os.Getenv("NTF_TOPUP_URL"), req.Item.NoChassis), nil, header, constant.METHOD_GET, true, 3, 60, req.Transaction.ProspectID, accessToken)
 
-		reqNTFConfins, _ := json.Marshal(map[string]interface{}{
-			"prospect_id": req.Transaction.ProspectID,
-			"customer_id": filtering.CustomerID,
-		})
-
-		header := map[string]string{
-			"Authorization": accessToken,
-		}
-
-		var ntfResp *resty.Response
-		ntfResp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("NTF_CONFINS_URL"), reqNTFConfins, header, constant.METHOD_POST, true, 3, 60, req.Transaction.ProspectID, accessToken)
-
-		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + "Call NTF Confins API")
-		}
-
-		if ntfResp.StatusCode() != 200 {
-			err = errors.New(constant.ERROR_UPSTREAM + "Call NTF Confins API")
-		}
-
-		json.Unmarshal([]byte(jsoniter.Get(ntfResp.Body(), "data").ToString()), &confins)
-
-		reqTopup, _ := json.Marshal(map[string]interface{}{
-			"customer_id": filtering.CustomerID,
-			"engine_no":   req.Item.NoEngine,
-		})
-
-		var ntfTopup *resty.Response
-		ntfResp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("NTF_TOPUP_URL"), reqTopup, header, constant.METHOD_POST, true, 3, 60, req.Transaction.ProspectID, accessToken)
-
-		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + "Call NTF TOPUP API")
-			return
-		}
-
-		if ntfResp.StatusCode() != 200 {
-			err = errors.New(constant.ERROR_UPSTREAM + "Call NTF TOPUP API")
-			return
-		}
-
-		json.Unmarshal([]byte(jsoniter.Get(ntfTopup.Body(), "data").ToString()), &topup)
-
-		ntfConfinsAmount.TotalOutstanding = confins.TotalOutstanding - topup.TotalOutstanding
-
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + "Call NTF Topup API Error")
+		return
 	}
+
+	if ntfTopup.StatusCode() != 200 {
+		err = errors.New(constant.ERROR_UPSTREAM + "Call NTF Topup API Error")
+		return
+	}
+
+	err = json.Unmarshal([]byte(jsoniter.Get(ntfTopup.Body(), "data").ToString()), &topup)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + "Call NTF Topup API Error")
+		return
+	}
+
+	ntfConfinsAmount.TotalOutstanding = confins.TotalOutstanding - topup.OutstandingPrincipal
 
 	ntfAmount = req.Apk.NTF + (ntfOtherAmount + ntfOtherAmountSpouse) + ntfConfinsAmount.TotalOutstanding
 
@@ -198,19 +141,15 @@ func (u usecase) Prescreening(ctx context.Context, req request.Metrics, filterin
 	}
 
 	sntfDetails, _ := json.Marshal(ntfDetails)
-	sdsrDetails, _ := json.Marshal(dsrDetails)
 
 	trxFMF = response.TrxFMF{
-		NTFAkumulasi:           ntfAmount,
-		NTFOtherAmount:         ntfOtherAmount,
-		NTFOtherAmountSpouse:   ntfOtherAmountSpouse,
-		NTFOtherAmountDetail:   string(utils.SafeEncoding(sntfDetails)),
-		NTFConfinsAmount:       ntfConfinsAmount.TotalOutstanding,
-		NTFConfins:             confins.TotalOutstanding,
-		NTFTopup:               topup.TotalOutstanding,
-		InstallmentOther:       installmentOther,
-		InstallmentOtherSpouse: installmentOtherSpouse,
-		InstallmentOtherDetail: string(utils.SafeEncoding(sdsrDetails)),
+		NTFAkumulasi:         ntfAmount,
+		NTFOtherAmount:       ntfOtherAmount,
+		NTFOtherAmountSpouse: ntfOtherAmountSpouse,
+		NTFOtherAmountDetail: string(utils.SafeEncoding(sntfDetails)),
+		NTFConfinsAmount:     ntfConfinsAmount.TotalOutstanding,
+		NTFConfins:           confins.TotalOutstanding,
+		NTFTopup:             topup.OutstandingPrincipal,
 	}
 
 	return trxPrescreening, trxFMF, trxDetail, err

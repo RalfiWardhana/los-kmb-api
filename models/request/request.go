@@ -146,7 +146,8 @@ type CustomerData struct {
 	IDNumber       string `json:"id_number"`
 	LegalName      string `json:"legal_name"`
 	BirthDate      string `json:"birth_date"`
-	MotherName     string `json:"mother_name"`
+	MotherName     string `json:"surgate_mother_name"`
+	CustomerID     string `json:"customer_id"`
 }
 
 type ReqCustomerDomain struct {

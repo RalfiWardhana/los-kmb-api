@@ -554,9 +554,6 @@ type TrxApk struct {
 	NTFConfinsAmount            float64   `gorm:"column:NTFConfinsAmount"`
 	NTFConfins                  float64   `gorm:"column:NTFConfins"`
 	NTFTopup                    float64   `gorm:"column:NTFTopup"`
-	InstallmentOther            float64   `gorm:"column:InstallmentOther"`
-	InstallmentOtherSpouse      float64   `gorm:"column:InstallmentOtherSpouse"`
-	InstallmentOtherDetail      string    `gorm:"column:InstallmentOtherDetail"`
 }
 
 func (c *TrxApk) TableName() string {

@@ -400,9 +400,6 @@ func (r repoHandler) SaveTransaction(data request.Metrics, trxPrescreening entit
 			NTFConfinsAmount:            trxFMF.NTFConfinsAmount,
 			NTFConfins:                  trxFMF.NTFConfins,
 			NTFTopup:                    trxFMF.NTFTopup,
-			InstallmentOther:            trxFMF.InstallmentOther,
-			InstallmentOtherSpouse:      trxFMF.InstallmentOtherSpouse,
-			InstallmentOtherDetail:      trxFMF.InstallmentOtherDetail,
 		}
 
 		logInfo = apk
