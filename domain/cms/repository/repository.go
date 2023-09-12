@@ -9,8 +9,8 @@ import (
 	"los-kmb-api/domain/cms/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
-	"los-kmb-api/shared/config"
 	"los-kmb-api/shared/constant"
+	"os"
 	"strconv"
 	"time"
 
@@ -47,7 +47,7 @@ func (r repoHandler) GetSpIndustryTypeMaster() (data []entity.SpIndustryTypeMast
 func (r repoHandler) GetReasonPrescreening(reasonID string, pagination interface{}) (reason []entity.ReasonMessage, rowTotal int, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	var (
 		filter         string
@@ -102,7 +102,7 @@ func (r repoHandler) GetReasonPrescreening(reasonID string, pagination interface
 func (r repoHandler) GetCustomerPhoto(prospectID string) (photo []entity.CustomerPhoto, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -124,7 +124,7 @@ func (r repoHandler) GetCustomerPhoto(prospectID string) (photo []entity.Custome
 func (r repoHandler) GetSurveyorData(prospectID string) (surveyor []entity.TrxSurveyor, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -619,7 +619,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 func (r repoHandler) GetStatusPrescreening(prospectID string) (status entity.TrxStatus, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -641,7 +641,7 @@ func (r repoHandler) GetStatusPrescreening(prospectID string) (status entity.Trx
 func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detail entity.TrxDetail, status entity.TrxStatus) (err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
