@@ -1023,7 +1023,7 @@ type DataGeneral struct {
 	ProspectID     string `gorm:"column:ProspectID" json:"prospect_id"`
 	BranchName     string `gorm:"column:BranchName" json:"branch_name"`
 	IncomingSource string `gorm:"column:incoming_source" json:"incoming_source"`
-	CreatedAt      string `gorm:"column:incoming_source" json:"created_at"`
+	CreatedAt      string `gorm:"column:created_at" json:"created_at"`
 }
 
 type DataItemApk struct {

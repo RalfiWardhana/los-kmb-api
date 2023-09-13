@@ -11,7 +11,6 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
 	"strings"
-	"time"
 
 	"github.com/allegro/bigcache/v3"
 )
@@ -283,9 +282,8 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPrescreening) (data response.ReviewPrescreening, err error) {
 
 	var (
-		trxStatus   entity.TrxStatus
-		currentTime = time.Now()
-		reason      = string(req.Reason)
+		trxStatus entity.TrxStatus
+		reason    = string(req.Reason)
 	)
 
 	status, err := u.repository.GetStatusPrescreening(req.ProspectID)
@@ -349,7 +347,6 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 			ProspectID: req.ProspectID,
 			Decision:   decisionInfo.Decision,
 			Reason:     reason,
-			CreatedAt:  currentTime,
 			CreatedBy:  req.DecisionBy,
 		}
 
@@ -362,7 +359,6 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 			SourceDecision: constant.PRESCREENING,
 			NextStep:       decisionInfo.NextStep,
 			Info:           string(info),
-			CreatedAt:      currentTime,
 			CreatedBy:      req.DecisionBy,
 		}
 
@@ -376,7 +372,6 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 		trxStatus.Activity = decisionInfo.ActivityStatus
 		trxStatus.Decision = decisionInfo.DecisionStatus
 		trxStatus.SourceDecision = decisionInfo.SourceDecision
-		trxStatus.CreatedAt = currentTime
 
 		err = u.repository.SavePrescreening(trxPrescreening, trxDetail, trxStatus)
 		if err != nil {

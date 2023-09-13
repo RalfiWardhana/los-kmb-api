@@ -18,6 +18,10 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
+var (
+	DtmRequest = time.Now()
+)
+
 type repoHandler struct {
 	NewKmb *gorm.DB
 	core   *gorm.DB
@@ -640,6 +644,10 @@ func (r repoHandler) GetStatusPrescreening(prospectID string) (status entity.Trx
 
 func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detail entity.TrxDetail, status entity.TrxStatus) (err error) {
 	var x sql.TxOptions
+
+	prescreening.CreatedAt = DtmRequest
+	detail.CreatedAt = DtmRequest
+	status.CreatedAt = DtmRequest
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
