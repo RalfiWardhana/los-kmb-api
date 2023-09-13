@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	cache "los-kmb-api/domain/cache/interfaces"
 	"los-kmb-api/domain/cms/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
@@ -11,19 +12,17 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
 	"strings"
-
-	"github.com/allegro/bigcache/v3"
 )
 
 type (
 	usecase struct {
 		repository interfaces.Repository
 		httpclient httpclient.HttpClient
-		cache      *bigcache.BigCache
+		cache      cache.Repository
 	}
 )
 
-func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient, cache *bigcache.BigCache) interfaces.Usecase {
+func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient, cache cache.Repository) interfaces.Usecase {
 	return &usecase{
 		repository: repository,
 		httpclient: httpclient,
@@ -53,25 +52,20 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 		decision           string
 	)
 
-	if u.cache != nil {
+	getValue, _ := u.cache.Get("GetSpIndustryTypeMaster")
 
-		getValue, _ := u.cache.Get("GetSpIndustryTypeMaster")
+	if getValue == nil {
+		industry, err = u.repository.GetSpIndustryTypeMaster()
 
-		if getValue == nil {
-			industry, err = u.repository.GetSpIndustryTypeMaster()
-
-			if err != nil {
-				return
-			}
-
-			u.cache.Set("GetSpIndustryTypeMaster", []byte("SuccessRetrieve"))
-
-			for _, description := range industry {
-				u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
-			}
+		if err != nil {
+			return
 		}
-	} else {
-		return
+
+		u.cache.Set("GetSpIndustryTypeMaster", []byte("SuccessRetrieve"))
+
+		for _, description := range industry {
+			u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
+		}
 	}
 
 	// get inquiry pre screening
