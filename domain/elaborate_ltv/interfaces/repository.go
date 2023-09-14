@@ -1,6 +1,8 @@
 package interfaces
 
-import "los-kmb-api/models/entity"
+import (
+	"los-kmb-api/models/entity"
+)
 
 type Repository interface {
 	SaveTrxElaborateLTV(data entity.TrxElaborateLTV) (err error)

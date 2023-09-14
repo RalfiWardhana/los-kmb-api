@@ -6,6 +6,7 @@ var TOPIC_SUBMISSION_LOS string
 
 const (
 	FLAG_LOS                                                     = "LOS"
+	KMB_RESOURCE_ID                                              = "los-kmb-api"
 	LOBID_KMB                                                    = 2
 	TAG_MAX                                                      = "max"
 	TAG_GT                                                       = "gt"
@@ -241,6 +242,10 @@ const (
 	ERROR_BAD_REQUEST         = "bad_request"
 	ERROR_SERVICE_UNAVAILABLE = "service_unavailable"
 	ERROR_DATA_CONFLICT       = "data_conflict"
+	ERROR_UNAUTHORIZED        = "unauthorized"
+	ERROR_INACTIVE_CREDENTIAL = "inactive_credential"
+
+	HEADER_AUTHORIZATION = "Authorization"
 
 	// Key
 	HeaderXRequestID                = "X-Request-ID"

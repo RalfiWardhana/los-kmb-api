@@ -586,6 +586,10 @@ func (c *response) ServerSideErrorV3(ctx echo.Context, accessToken, logFile, mes
 		statusCode = http.StatusBadRequest
 	case constant.ERROR_DATA_CONFLICT:
 		statusCode = http.StatusConflict
+	case constant.ERROR_UNAUTHORIZED:
+		statusCode = http.StatusUnauthorized
+	case constant.ERROR_INACTIVE_CREDENTIAL:
+		statusCode = http.StatusUnauthorized
 	default:
 		statusCode = http.StatusServiceUnavailable
 		errors = constant.ERROR_SERVICE_UNAVAILABLE
