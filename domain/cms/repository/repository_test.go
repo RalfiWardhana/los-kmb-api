@@ -2,10 +2,13 @@ package repository
 
 import (
 	"database/sql/driver"
+	"encoding/json"
 	"errors"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
+	"os"
 	"reflect"
 	"regexp"
 	"testing"
@@ -890,103 +893,74 @@ func TestGetInquiryPrescreening_RecordNotFound(t *testing.T) {
 	}
 }
 
-// func Test_repoHandler_SavePrescreening(t *testing.T) {
-// 	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+func Test_repoHandler_SavePrescreening(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
 
-// 	sqlDB, mock, _ := sqlmock.New()
-// 	defer sqlDB.Close()
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
 
-// 	gormDB, _ := gorm.Open("sqlite3", sqlDB)
-// 	gormDB.LogMode(true)
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
 
-// 	_ = gormDB
+	_ = gormDB
 
-// 	newDB := NewRepository(gormDB, gormDB)
-// 	prescreening := entity.TrxPrescreening{
-// 		ProspectID: "TST001",
-// 		Decision:   "PASS",
-// 		Reason:     "oke",
-// 		CreatedBy:  "system",
-// 	}
-// 	trxPrescreening := structToSlice(prescreening)
+	newDB := NewRepository(gormDB, gormDB)
+	data := response.ReviewPrescreening{
+		ProspectID: "TST001",
+		Code:       constant.CODE_REJECT_PRESCREENING,
+		Decision:   constant.DB_DECISION_REJECT,
+		Reason:     "reject reason",
+	}
 
-// 	trxDetail := entity.TrxDetail{
-// 		ProspectID: "TST001",
-// 	}
-// 	detail := structToSlice(trxDetail)
+	info, _ := json.Marshal(data)
 
-// 	trxStatus := entity.TrxStatus{
-// 		ProspectID: "TST001",
-// 	}
-// 	status := structToSlice(trxStatus)
+	trxPrescreening := entity.TrxPrescreening{
+		ProspectID: "TST001",
+		Decision:   constant.DB_DECISION_REJECT,
+		Reason:     "reject reason",
+		CreatedBy:  "SYSTEM",
+	}
 
-// 	mock.ExpectBegin()
-// 	mock.ExpectExec(`INSERT INTO "trx_prescreening" (.*)`).
-// 		WithArgs(trxPrescreening...).
-// 		WillReturnResult(sqlmock.NewResult(1, 1))
-// 	mock.ExpectExec(`INSERT INTO "trx_details" (.*)`).
-// 		WithArgs(detail...).
-// 		WillReturnResult(sqlmock.NewResult(1, 1))
-// 	mock.ExpectExec(`INSERT INTO "trx_status" (.*)`).
-// 		WithArgs(status...).
-// 		WillReturnResult(sqlmock.NewResult(1, 1))
-// 	mock.ExpectCommit()
+	trxDetail := entity.TrxDetail{
+		ProspectID:     "TST001",
+		RuleCode:       constant.CODE_REJECT_PRESCREENING,
+		StatusProcess:  constant.STATUS_FINAL,
+		Activity:       constant.ACTIVITY_STOP,
+		Decision:       constant.DB_DECISION_REJECT,
+		SourceDecision: constant.PRESCREENING,
+		Info:           string(info),
+		CreatedBy:      "SYSTEM",
+	}
+	detail := structToSlice(trxDetail)
 
-// 	err := newDB.SavePrescreening(prescreening, trxDetail, trxStatus)
-// 	if err != nil {
-// 		t.Errorf("error '%s' was not expected, but got: ", err)
-// 	}
-// }
+	trxStatus := entity.TrxStatus{
+		ProspectID:     "TST001",
+		StatusProcess:  constant.STATUS_FINAL,
+		Activity:       constant.ACTIVITY_STOP,
+		Decision:       constant.DB_DECISION_REJECT,
+		SourceDecision: constant.PRESCREENING,
+		RuleCode:       constant.CODE_REJECT_PRESCREENING,
+		Reason:         "reject reason",
+	}
 
-// func TestSavePrescreening(t *testing.T) {
-// 	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+	t.Run("success", func(t *testing.T) {
 
-// 	// Create a new mock database connection
-// 	db, mock, err := sqlmock.New()
-// 	if err != nil {
-// 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
-// 	}
-// 	defer db.Close()
+		mock.ExpectBegin()
+		query := `UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "source_decision" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`
+		queryRegex := regexp.QuoteMeta(query)
+		mock.ExpectExec(queryRegex).WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`INSERT INTO "trx_details" (.*)`).
+			WithArgs(detail...).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_prescreening" ("ProspectID","decision","reason","created_at","created_by") VALUES (?,?,?,?,?)`)).
+			WithArgs(trxPrescreening.ProspectID, trxPrescreening.Decision, trxPrescreening.Reason, sqlmock.AnyArg(), trxPrescreening.CreatedBy).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectCommit()
 
-// 	// Create a gorm.DB instance using the mock sql.DB
-// 	gormDB, err := gorm.Open("sqlite3", db)
-// 	if err != nil {
-// 		t.Fatalf("Failed to open GORM connection: %v", err)
-// 	}
-// 	gormDB.LogMode(true)
-
-// 	// Set up your repository with the gorm.DB instance
-// 	// newDB := NewRepository(gormDB, gormDB) // Pass the sql.DB instance to NewRepository
-
-// 	// Set up expectations for your queries
-// 	mock.ExpectBegin() // Expect a transaction begin
-// 	mock.ExpectExec(regexp.QuoteMeta(`UPDATE trx_status SET (.+) WHERE (.+)`)).
-// 		WithArgs(true, 1).
-// 		WillReturnResult(sqlmock.NewResult(1, 1))
-// 	mock.ExpectCommit()
-
-// 	mock.ExpectBegin()
-// 	mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO trx_details .*`)).WillReturnResult(sqlmock.NewResult(1, 1))
-// 	mock.ExpectCommit()
-
-// 	mock.ExpectBegin()
-// 	mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO trx_prescreening .*`)).WillReturnResult(sqlmock.NewResult(1, 1))
-// 	mock.ExpectCommit()
-
-// 	// Create sample data
-// 	// prescreening := entity.TrxPrescreening{}
-// 	// detail := entity.TrxDetail{}
-// 	// status := entity.TrxStatus{}
-
-// 	// // Call the function you want to test
-// 	// err = newDB.SavePrescreening(prescreening, detail, status)
-
-// 	// // Check for errors and expectations
-// 	// if err != nil {
-// 	// 	t.Errorf("SavePrescreening returned an unexpected error: %v", err)
-// 	// }
-
-// 	if err := mock.ExpectationsWereMet(); err != nil {
-// 		t.Errorf("Some expectations were not met: %v", err)
-// 	}
-// }
+		err := newDB.SavePrescreening(trxPrescreening, trxDetail, trxStatus)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+}

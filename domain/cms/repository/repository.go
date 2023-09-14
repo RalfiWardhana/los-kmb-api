@@ -649,7 +649,7 @@ func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detai
 	detail.CreatedAt = DtmRequest
 	status.CreatedAt = DtmRequest
 
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
