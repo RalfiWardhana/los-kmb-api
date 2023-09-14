@@ -3,6 +3,7 @@ package http
 import (
 	"los-kmb-api/domain/elaborate_ltv/interfaces"
 	"los-kmb-api/middlewares"
+	"los-kmb-api/models/auth"
 	"los-kmb-api/models/request"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/constant"
@@ -47,6 +48,16 @@ func (c *handlerKmbElaborate) Elaborate(ctx echo.Context) (err error) {
 		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
 		go c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/elaborate", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
 	}()
+
+	err = c.usecase.Authorization(auth.Auth{
+		ClientID:   ctx.Request().Header.Get("X-Client-ID"),
+		Credential: ctx.Request().Header.Get("Authorization"),
+	})
+
+	if err != nil {
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", req, err)
+		return ctxJson
+	}
 
 	if err := ctx.Bind(&req); err != nil {
 		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", err)

@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"los-kmb-api/domain/elaborate_ltv/interfaces"
+	"los-kmb-api/models/auth"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/shared/config"
 	"los-kmb-api/shared/constant"
@@ -30,6 +32,43 @@ func NewRepository(KpLosLogs, NewKmb *gorm.DB) interfaces.Repository {
 		KpLosLogs: KpLosLogs,
 		NewKmb:    NewKmb,
 	}
+}
+
+func (r repoHandler) GetAuthCredential(req auth.Auth) (data auth.Authorize, err error) {
+	cache := utils.GetCache()
+	var (
+		keyName  string
+		getValue []byte
+	)
+
+	keyName = fmt.Sprintf("%s_%s", req.ClientID, req.Credential)
+
+	// get cache
+	if cache != nil {
+		getValue, _ = cache.Get(keyName)
+		if getValue != nil {
+			json.Unmarshal(getValue, &data)
+			if data.ClientActive == 1 {
+				return
+			}
+		}
+	}
+
+	// get from db
+	if err = r.NewKmb.Raw(fmt.Sprintf("SELECT aac.is_active as client_active, ac.is_active as token_active, ac.access_token, ac.expiry as expired FROM app_auth_clients aac WITH (nolock) LEFT JOIN app_auth_credentials ac WITH (nolock) ON ac.client_id = aac.client_id WHERE aac.client_id = '%s' AND ac.resource_id ='%s' AND ac.access_token = '%s'", req.ClientID, constant.KMB_RESOURCE_ID, req.Credential)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.ERROR_NOT_FOUND)
+		}
+		return
+	}
+
+	// set cache
+	if data != (auth.Authorize{}) {
+		value, _ := json.Marshal(data)
+		cache.Set(keyName, value)
+	}
+
+	return
 }
 
 func (r repoHandler) SaveTrxElaborateLTV(data entity.TrxElaborateLTV) (err error) {
