@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"los-kmb-api/domain/elaborate_ltv/interfaces"
-	"los-kmb-api/models/auth"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
@@ -165,25 +164,6 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 	err = u.repository.SaveTrxElaborateLTV(trxElaborateLTV)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " Save elaborate ltv error")
-		return
-	}
-
-	return
-}
-
-func (u usecase) Authorization(header auth.Auth) (err error) {
-
-	var data auth.Authorize
-
-	data, err = u.repository.GetAuthCredential(header)
-
-	if err != nil {
-		err = errors.New(constant.ERROR_UNAUTHORIZED)
-		return
-	}
-
-	if data.ClientActive != 1 || data.TokenActive != 1 {
-		err = errors.New(constant.ERROR_INACTIVE_CREDENTIAL)
 		return
 	}
 

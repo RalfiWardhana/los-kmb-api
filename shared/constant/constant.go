@@ -237,6 +237,8 @@ const (
 	ERROR_UNAUTHORIZED        = "unauthorized"
 	ERROR_INACTIVE_CREDENTIAL = "inactive_credential"
 
+	HEADER_AUTHORIZATION = "Authorization"
+
 	// Key
 	HeaderXRequestID                = "X-Request-ID"
 	CTX_KEY_REQUEST_TIME            = "RequestTime"

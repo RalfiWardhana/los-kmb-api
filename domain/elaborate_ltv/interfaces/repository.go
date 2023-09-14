@@ -1,7 +1,6 @@
 package interfaces
 
 import (
-	"los-kmb-api/models/auth"
 	"los-kmb-api/models/entity"
 )
 
@@ -10,5 +9,4 @@ type Repository interface {
 	GetFilteringResult(prospectID string) (filtering entity.FilteringKMB, err error)
 	GetMappingElaborateLTV(resultPefindo, cluster string) (data []entity.MappingElaborateLTV, err error)
 	SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error)
-	GetAuthCredential(req auth.Auth) (data auth.Authorize, err error)
 }

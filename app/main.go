@@ -23,6 +23,8 @@ import (
 	kmbUsecase "los-kmb-api/domain/kmb/usecase"
 	toolsDelivery "los-kmb-api/domain/tools/delivery/http"
 	"los-kmb-api/middlewares"
+	"los-kmb-api/shared/authorization"
+	authRepository "los-kmb-api/shared/authorization/repository"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/json"
 	"los-kmb-api/shared/common/platformlog"
@@ -165,6 +167,8 @@ func main() {
 	utils.NewCache(cache, kpLos, config.IsDevelopment)
 
 	jsonResponse := json.NewResponse()
+	authRepo := authRepository.NewRepository(newKMB)
+	authorization := authorization.NewAuth(authRepo)
 	apiGroup := e.Group("/api/v2/kmb")
 	apiGroupv3 := e.Group("/api/v3/kmb")
 	httpClient := httpclient.NewHttpClient()
@@ -197,7 +201,7 @@ func main() {
 	// define new kmb elaborate domain
 	newElaborateLTVRepo := elaborateLTVRepository.NewRepository(kpLosLogs, newKMB)
 	newElaborateLTVUsecase := elaborateLTVUsecase.NewUsecase(newElaborateLTVRepo, httpClient)
-	elaborateLTVDelivery.ElaborateHandler(apiGroupv3, newElaborateLTVUsecase, newElaborateLTVRepo, jsonResponse, accessToken)
+	elaborateLTVDelivery.ElaborateHandler(apiGroupv3, newElaborateLTVUsecase, newElaborateLTVRepo, authorization, jsonResponse, accessToken)
 
 	// define new kmb journey
 	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, confins, staging, minilosWG, minilosKMB, newKMB)
