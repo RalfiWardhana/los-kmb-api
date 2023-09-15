@@ -49,12 +49,11 @@ func (c *handlerKmbElaborate) Elaborate(ctx echo.Context) (err error) {
 
 	// Save Log Orchestrator
 	defer func() {
-		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
-		go c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/elaborate", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
+		go c.repository.SaveLogOrchestrator(ctx.Request().Header, req, resp, "/api/v3/kmb/elaborate", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
 	}()
 
 	err = c.authorization.Authorization(dto.AuthModel{
-		ClientID:   ctx.Request().Header.Get(constant.HeaderXRequestID),
+		ClientID:   ctx.Request().Header.Get(constant.HEADER_CLIENT_ID),
 		Credential: ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION),
 	}, time.Now().Local())
 
