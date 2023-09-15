@@ -17,12 +17,9 @@ func NewRepository(cache *bigcache.BigCache) interfaces.Repository {
 }
 
 func (c *repoHandler) Get(key string) ([]byte, error) {
-	hashedKey, _ := c.cache.Get(key)
-
-	return hashedKey, nil
+	return c.cache.Get(key)
 }
 
 func (c *repoHandler) Set(key string, entry []byte) error {
-	setCache := c.cache.Set(key, entry)
-	return setCache
+	return c.cache.Set(key, entry)
 }
