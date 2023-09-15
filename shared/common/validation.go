@@ -414,18 +414,11 @@ func homeValidation(fl validator.FieldLevel) bool {
 
 func lobValidation(fl validator.FieldLevel) bool {
 
-	lob, err := utils.ValidatorFromCache("group_lob")
-
-	if err != nil {
-		return false
-
-	}
-
-	arrLob := strings.Split(lob.Value, ",")
+	arrLob := []string{"KMB"}
 
 	validator := contains(arrLob, fl.Field().String())
 
-	Lob = lob.Value
+	Lob = "KMB"
 
 	return validator
 }

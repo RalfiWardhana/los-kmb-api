@@ -299,20 +299,6 @@ func (r repoHandler) SaveTransaction(data request.Metrics, trxPrescreening entit
 			return err
 		}
 
-		metadata := entity.TrxMetadata{
-			ProspectID:   data.Transaction.ProspectID,
-			CustomerIp:   data.Metadata.CustomerIp,
-			CustomerLat:  data.Metadata.CustomerLat,
-			CustomerLong: data.Metadata.CustomerLong,
-			CallbackUrl:  data.Metadata.CallbackUrl,
-		}
-
-		logInfo = metadata
-
-		if err := tx.Create(&metadata).Error; err != nil {
-			return err
-		}
-
 		var (
 			discount float64
 			adminFee float64
