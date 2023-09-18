@@ -52,7 +52,11 @@ func (r repoHandler) ScanTrxMaster(prospectID string) (countMaster int, err erro
 		master []entity.TrxMaster
 	)
 
-	if err = r.newKmbDB.Raw(fmt.Sprintf("SELECT ProspectID FROM trx_master WITH (nolock) WHERE ProspectID = '%s'", prospectID)).Scan(&master).Error; err != nil {
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`
+		SELECT tm.ProspectID FROM trx_master tm WITH (nolock) 
+		LEFT JOIN trx_status ts ON tm.ProspectID = ts.ProspectID 
+		WHERE tm.ProspectID = '%s' AND ((ts.activity = '%s' AND ts.source_decision = '%s') OR (ts.activity != '%s' OR ts.source_decision != '%s'))`,
+		prospectID, constant.ACTIVITY_UNPROCESS, constant.PRESCREENING, constant.ACTIVITY_UNPROCESS, constant.SOURCE_DECISION_DUPCHECK)).Scan(&master).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
@@ -60,6 +64,24 @@ func (r repoHandler) ScanTrxMaster(prospectID string) (countMaster int, err erro
 	}
 
 	countMaster = len(master)
+
+	return
+}
+
+func (r repoHandler) ScanTrxPrescreening(prospectID string) (count int, err error) {
+
+	var (
+		trxPrescreening []entity.TrxPrescreening
+	)
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf("SELECT ProspectID FROM trx_prescreening WITH (nolock) WHERE ProspectID = '%s'", prospectID)).Scan(&trxPrescreening).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	count = len(trxPrescreening)
 
 	return
 }
@@ -87,7 +109,7 @@ func (r repoHandler) GetFilteringResult(prospectID string) (filtering entity.Fil
 	return
 }
 
-func (r repoHandler) SaveTransaction(data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (newErr error) {
+func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (newErr error) {
 
 	location, _ := time.LoadLocation("Asia/Jakarta")
 
@@ -107,446 +129,448 @@ func (r repoHandler) SaveTransaction(data request.Metrics, trxPrescreening entit
 
 	newErr = r.newKmbDB.Transaction(func(tx *gorm.DB) error {
 
-		var legalAddress, residenceAddress, companyAddress, emergencyAddress, mailingAddress, ownerAddress, locationAddress string
-		for _, v := range data.Address {
-			if v.Type == "LEGAL" {
-				legalAddress = v.Address
-			} else if v.Type == "RESIDENCE" {
-				residenceAddress = v.Address
-			} else if v.Type == "COMPANY" {
-				companyAddress = v.Address
-			} else if v.Type == "EMERGENCY" {
-				emergencyAddress = v.Address
-			} else if v.Type == "LOCATION" {
-				locationAddress = v.Address
-			} else if v.Type == "MAILING" {
-				mailingAddress = v.Address
-			} else {
-				ownerAddress = v.Address
+		if countTrx == 0 {
+			var legalAddress, residenceAddress, companyAddress, emergencyAddress, mailingAddress, ownerAddress, locationAddress string
+			for _, v := range data.Address {
+				if v.Type == "LEGAL" {
+					legalAddress = v.Address
+				} else if v.Type == "RESIDENCE" {
+					residenceAddress = v.Address
+				} else if v.Type == "COMPANY" {
+					companyAddress = v.Address
+				} else if v.Type == "EMERGENCY" {
+					emergencyAddress = v.Address
+				} else if v.Type == "LOCATION" {
+					locationAddress = v.Address
+				} else if v.Type == "MAILING" {
+					mailingAddress = v.Address
+				} else {
+					ownerAddress = v.Address
+				}
 			}
-		}
 
-		var encrypted entity.Encrypted
+			var encrypted entity.Encrypted
 
-		if err := tx.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS LegalName, SCP.dbo.ENC_B64('SEC','%s') AS SurgateMotherName, SCP.dbo.ENC_B64('SEC','%s') AS Email,
+			if err := tx.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS LegalName, SCP.dbo.ENC_B64('SEC','%s') AS SurgateMotherName, SCP.dbo.ENC_B64('SEC','%s') AS Email,
 			SCP.dbo.ENC_B64('SEC','%s') AS MobilePhone, SCP.dbo.ENC_B64('SEC','%s') AS BirthPlace, SCP.dbo.ENC_B64('SEC','%s') AS ResidenceAddress, SCP.dbo.ENC_B64('SEC','%s') AS LegalAddress,
 			SCP.dbo.ENC_B64('SEC','%s') AS IDNumber,SCP.dbo.ENC_B64('SEC','%s') AS FullName, SCP.dbo.ENC_B64('SEC','%s') AS CompanyAddress, SCP.dbo.ENC_B64('SEC','%s') AS EmergencyAddress,
 			SCP.dbo.ENC_B64('SEC','%s') AS LocationAddress, SCP.dbo.ENC_B64('SEC','%s') AS MailingAddress, SCP.dbo.ENC_B64('SEC','%s') AS OwnerAddress`,
-			data.CustomerPersonal.LegalName, data.CustomerPersonal.SurgateMotherName, data.CustomerPersonal.Email, data.CustomerPersonal.MobilePhone, data.CustomerPersonal.BirthPlace,
-			residenceAddress, legalAddress, data.CustomerPersonal.IDNumber, data.CustomerPersonal.FullName, companyAddress, emergencyAddress,
-			locationAddress, mailingAddress, ownerAddress)).Scan(&encrypted).Error; err != nil {
-			return err
-		}
-
-		master := entity.TrxMaster{
-			ProspectID:        data.Transaction.ProspectID,
-			BranchID:          data.Transaction.BranchID,
-			Channel:           data.Transaction.Channel,
-			Lob:               data.Transaction.Lob,
-			IncomingSource:    data.Transaction.IncomingSource,
-			ApplicationSource: data.Transaction.ApplicationSource,
-			OrderAt:           data.Transaction.OrderAt,
-		}
-
-		logInfo = master
-
-		if err := tx.Create(&master).Error; err != nil {
-			return err
-		}
-
-		if trxPrescreening.Decision != "" {
-			logInfo = trxPrescreening
-
-			if err := tx.Create(&trxPrescreening).Error; err != nil {
+				data.CustomerPersonal.LegalName, data.CustomerPersonal.SurgateMotherName, data.CustomerPersonal.Email, data.CustomerPersonal.MobilePhone, data.CustomerPersonal.BirthPlace,
+				residenceAddress, legalAddress, data.CustomerPersonal.IDNumber, data.CustomerPersonal.FullName, companyAddress, emergencyAddress,
+				locationAddress, mailingAddress, ownerAddress)).Scan(&encrypted).Error; err != nil {
 				return err
 			}
-		}
 
-		for idx, v := range data.Address {
-			if v.Type == "LEGAL" {
-				data.Address[idx].Address = encrypted.LegalAddress
-			} else if v.Type == "RESIDENCE" {
-				data.Address[idx].Address = encrypted.ResidenceAddress
-			} else if v.Type == "COMPANY" {
-				data.Address[idx].Address = encrypted.CompanyAddress
-			} else if v.Type == "EMERGENCY" {
-				data.Address[idx].Address = encrypted.EmergencyAddress
-			} else if v.Type == "MAILING" {
-				data.Address[idx].Address = encrypted.MailingAddress
-			} else if v.Type == "LOCATION" {
-				data.Address[idx].Address = encrypted.LocationAddress
-			} else {
-				data.Address[idx].Address = encrypted.OwnerAddress
-			}
-		}
-
-		for i := 0; i < len(data.Address); i++ {
-
-			address := entity.CustomerAddress{
-				ProspectID: data.Transaction.ProspectID,
-				Type:       data.Address[i].Type,
-				Address:    data.Address[i].Address,
-				Rt:         data.Address[i].Rt,
-				Rw:         data.Address[i].Rw,
-				Kelurahan:  data.Address[i].Kelurahan,
-				Kecamatan:  data.Address[i].Kecamatan,
-				City:       data.Address[i].City,
-				ZipCode:    data.Address[i].ZipCode,
-				AreaPhone:  data.Address[i].AreaPhone,
-				Phone:      data.Address[i].Phone,
+			master := entity.TrxMaster{
+				ProspectID:        data.Transaction.ProspectID,
+				BranchID:          data.Transaction.BranchID,
+				Channel:           data.Transaction.Channel,
+				Lob:               data.Transaction.Lob,
+				IncomingSource:    data.Transaction.IncomingSource,
+				ApplicationSource: data.Transaction.ApplicationSource,
+				OrderAt:           data.Transaction.OrderAt,
 			}
 
-			logInfo = address
+			logInfo = master
 
-			if err := tx.Create(&address).Error; err != nil {
+			if err := tx.Create(&master).Error; err != nil {
 				return err
 			}
-		}
 
-		var surveyResult string
+			if trxPrescreening.Decision != "" {
+				logInfo = trxPrescreening
 
-		for i := 0; i < len(data.CustomerPhoto); i++ {
-			if data.CustomerPhoto[i].ID == "RESULT_SURVEY" {
-				surveyResult = data.CustomerPhoto[i].Url
-				continue
+				if err := tx.Create(&trxPrescreening).Error; err != nil {
+					return err
+				}
 			}
 
-			photo := entity.CustomerPhoto{
-				ProspectID: data.Transaction.ProspectID,
-				PhotoID:    data.CustomerPhoto[i].ID,
-				Url:        data.CustomerPhoto[i].Url,
+			for idx, v := range data.Address {
+				if v.Type == "LEGAL" {
+					data.Address[idx].Address = encrypted.LegalAddress
+				} else if v.Type == "RESIDENCE" {
+					data.Address[idx].Address = encrypted.ResidenceAddress
+				} else if v.Type == "COMPANY" {
+					data.Address[idx].Address = encrypted.CompanyAddress
+				} else if v.Type == "EMERGENCY" {
+					data.Address[idx].Address = encrypted.EmergencyAddress
+				} else if v.Type == "MAILING" {
+					data.Address[idx].Address = encrypted.MailingAddress
+				} else if v.Type == "LOCATION" {
+					data.Address[idx].Address = encrypted.LocationAddress
+				} else {
+					data.Address[idx].Address = encrypted.OwnerAddress
+				}
 			}
 
-			logInfo = photo
+			for i := 0; i < len(data.Address); i++ {
 
-			if err := tx.Create(&photo).Error; err != nil {
+				address := entity.CustomerAddress{
+					ProspectID: data.Transaction.ProspectID,
+					Type:       data.Address[i].Type,
+					Address:    data.Address[i].Address,
+					Rt:         data.Address[i].Rt,
+					Rw:         data.Address[i].Rw,
+					Kelurahan:  data.Address[i].Kelurahan,
+					Kecamatan:  data.Address[i].Kecamatan,
+					City:       data.Address[i].City,
+					ZipCode:    data.Address[i].ZipCode,
+					AreaPhone:  data.Address[i].AreaPhone,
+					Phone:      data.Address[i].Phone,
+				}
+
+				logInfo = address
+
+				if err := tx.Create(&address).Error; err != nil {
+					return err
+				}
+			}
+
+			var surveyResult string
+
+			for i := 0; i < len(data.CustomerPhoto); i++ {
+				if data.CustomerPhoto[i].ID == "RESULT_SURVEY" {
+					surveyResult = data.CustomerPhoto[i].Url
+					continue
+				}
+
+				photo := entity.CustomerPhoto{
+					ProspectID: data.Transaction.ProspectID,
+					PhotoID:    data.CustomerPhoto[i].ID,
+					Url:        data.CustomerPhoto[i].Url,
+				}
+
+				logInfo = photo
+
+				if err := tx.Create(&photo).Error; err != nil {
+					return err
+				}
+			}
+
+			var living_cost_amount float64
+			if data.CustomerPersonal.LivingCostAmount != nil {
+				living_cost_amount = *data.CustomerPersonal.LivingCostAmount
+			}
+
+			personal := entity.CustomerPersonal{
+				ProspectID:                 data.Transaction.ProspectID,
+				IDType:                     data.CustomerPersonal.IDType,
+				IDNumber:                   encrypted.IDNumber,
+				FullName:                   encrypted.FullName,
+				LegalName:                  encrypted.LegalName,
+				BirthPlace:                 encrypted.BirthPlace,
+				Education:                  data.CustomerPersonal.Education,
+				BirthDate:                  formatBirthDate,
+				MaritalStatus:              data.CustomerPersonal.MaritalStatus,
+				SurgateMotherName:          encrypted.SurgateMotherName,
+				Religion:                   data.CustomerPersonal.Religion,
+				Gender:                     data.CustomerPersonal.Gender,
+				PersonalNPWP:               data.CustomerPersonal.NPWP,
+				MobilePhone:                encrypted.MobilePhone,
+				Email:                      encrypted.Email,
+				HomeStatus:                 data.CustomerPersonal.HomeStatus,
+				StaySinceYear:              data.CustomerPersonal.StaySinceYear,
+				StaySinceMonth:             data.CustomerPersonal.StaySinceMonth,
+				ExpiredDate:                formatIDExpired,
+				LivingCostAmount:           living_cost_amount,
+				ExtCompanyPhone:            data.CustomerEmployment.ExtCompanyPhone,
+				SourceOtherIncome:          data.CustomerEmployment.SourceOtherIncome,
+				EmergencyOfficeAreaPhone:   data.CustomerEmcon.AreaPhone,
+				EmergencyOfficePhone:       data.CustomerEmcon.Phone,
+				PersonalCustomerType:       data.CustomerPersonal.PersonalCustomerType,
+				Nationality:                data.CustomerPersonal.Nationality,
+				WNACountry:                 data.CustomerPersonal.WNACountry,
+				HomeLocation:               data.CustomerPersonal.HomeLocation,
+				CustomerGroup:              data.CustomerPersonal.CustomerGroup,
+				KKNo:                       data.CustomerPersonal.KKNo,
+				BankID:                     data.CustomerPersonal.BankID,
+				AccountNo:                  data.CustomerPersonal.AccountNo,
+				AccountName:                data.CustomerPersonal.AccountName,
+				Counterpart:                data.CustomerPersonal.Counterpart,
+				DebtBusinessScale:          data.CustomerPersonal.DebtBusinessScale,
+				DebtGroup:                  data.CustomerPersonal.DebtGroup,
+				IsAffiliateWithPP:          data.CustomerPersonal.IsAffiliateWithPP,
+				AgreetoAcceptOtherOffering: data.CustomerPersonal.AgreetoAcceptOtherOffering,
+				DataType:                   data.CustomerPersonal.DataType,
+				Status:                     data.CustomerPersonal.Status,
+				SurveyResult:               surveyResult,
+			}
+
+			logInfo = personal
+
+			if err := tx.Create(&personal).Error; err != nil {
 				return err
 			}
-		}
 
-		var living_cost_amount float64
-		if data.CustomerPersonal.LivingCostAmount != nil {
-			living_cost_amount = *data.CustomerPersonal.LivingCostAmount
-		}
-
-		personal := entity.CustomerPersonal{
-			ProspectID:                 data.Transaction.ProspectID,
-			IDType:                     data.CustomerPersonal.IDType,
-			IDNumber:                   encrypted.IDNumber,
-			FullName:                   encrypted.FullName,
-			LegalName:                  encrypted.LegalName,
-			BirthPlace:                 encrypted.BirthPlace,
-			Education:                  data.CustomerPersonal.Education,
-			BirthDate:                  formatBirthDate,
-			MaritalStatus:              data.CustomerPersonal.MaritalStatus,
-			SurgateMotherName:          encrypted.SurgateMotherName,
-			Religion:                   data.CustomerPersonal.Religion,
-			Gender:                     data.CustomerPersonal.Gender,
-			PersonalNPWP:               data.CustomerPersonal.NPWP,
-			MobilePhone:                encrypted.MobilePhone,
-			Email:                      encrypted.Email,
-			HomeStatus:                 data.CustomerPersonal.HomeStatus,
-			StaySinceYear:              data.CustomerPersonal.StaySinceYear,
-			StaySinceMonth:             data.CustomerPersonal.StaySinceMonth,
-			ExpiredDate:                formatIDExpired,
-			LivingCostAmount:           living_cost_amount,
-			ExtCompanyPhone:            data.CustomerEmployment.ExtCompanyPhone,
-			SourceOtherIncome:          data.CustomerEmployment.SourceOtherIncome,
-			EmergencyOfficeAreaPhone:   data.CustomerEmcon.AreaPhone,
-			EmergencyOfficePhone:       data.CustomerEmcon.Phone,
-			PersonalCustomerType:       data.CustomerPersonal.PersonalCustomerType,
-			Nationality:                data.CustomerPersonal.Nationality,
-			WNACountry:                 data.CustomerPersonal.WNACountry,
-			HomeLocation:               data.CustomerPersonal.HomeLocation,
-			CustomerGroup:              data.CustomerPersonal.CustomerGroup,
-			KKNo:                       data.CustomerPersonal.KKNo,
-			BankID:                     data.CustomerPersonal.BankID,
-			AccountNo:                  data.CustomerPersonal.AccountNo,
-			AccountName:                data.CustomerPersonal.AccountName,
-			Counterpart:                data.CustomerPersonal.Counterpart,
-			DebtBusinessScale:          data.CustomerPersonal.DebtBusinessScale,
-			DebtGroup:                  data.CustomerPersonal.DebtGroup,
-			IsAffiliateWithPP:          data.CustomerPersonal.IsAffiliateWithPP,
-			AgreetoAcceptOtherOffering: data.CustomerPersonal.AgreetoAcceptOtherOffering,
-			DataType:                   data.CustomerPersonal.DataType,
-			Status:                     data.CustomerPersonal.Status,
-			SurveyResult:               surveyResult,
-		}
-
-		logInfo = personal
-
-		if err := tx.Create(&personal).Error; err != nil {
-			return err
-		}
-
-		employment := entity.CustomerEmployment{
-			ProspectID:            data.Transaction.ProspectID,
-			ProfessionID:          data.CustomerEmployment.ProfessionID,
-			JobType:               data.CustomerEmployment.JobType,
-			JobPosition:           data.CustomerEmployment.JobPosition,
-			CompanyName:           data.CustomerEmployment.CompanyName,
-			IndustryTypeID:        data.CustomerEmployment.IndustryTypeID,
-			EmploymentSinceYear:   data.CustomerEmployment.EmploymentSinceYear,
-			EmploymentSinceMonth:  data.CustomerEmployment.EmploymentSinceMonth,
-			MonthlyFixedIncome:    data.CustomerEmployment.MonthlyFixedIncome,
-			MonthlyVariableIncome: *data.CustomerEmployment.MonthlyVariableIncome,
-			SpouseIncome:          *data.CustomerEmployment.SpouseIncome,
-		}
-
-		logInfo = employment
-
-		if err := tx.Create(&employment).Error; err != nil {
-			return err
-		}
-
-		var (
-			discount float64
-			adminFee float64
-		)
-		if data.Apk.Discount != nil {
-			discount = *data.Apk.Discount
-		}
-		if data.Apk.AdminFee != nil {
-			adminFee = *data.Apk.AdminFee
-		}
-
-		var (
-			percentDP      float64
-			fidusiaFee     float64
-			interestRate   float64
-			interestAmount float64
-			provisionFee   float64
-		)
-		if data.Apk.PercentDP != nil {
-			percentDP = *data.Apk.PercentDP
-		}
-		if data.Apk.FidusiaFee != nil {
-			fidusiaFee = *data.Apk.FidusiaFee
-		}
-		if data.Apk.InterestRate != nil {
-			interestRate = *data.Apk.InterestRate
-		}
-		if data.Apk.InterestAmount != nil {
-			interestAmount = *data.Apk.InterestAmount
-		}
-		if data.Apk.ProvisionFee != nil {
-			provisionFee = *data.Apk.ProvisionFee
-		}
-
-		var surveyFee float64 = 0
-		if data.Apk.SurveyFee != nil {
-			surveyFee = *data.Apk.SurveyFee
-		}
-
-		apk := entity.TrxApk{
-			ProspectID:                  data.Transaction.ProspectID,
-			Tenor:                       &data.Apk.Tenor,
-			ProductOfferingID:           data.Apk.ProductOfferingID,
-			ProductID:                   data.Apk.ProductID,
-			NTF:                         data.Apk.NTF,
-			AF:                          data.Apk.AF,
-			AoID:                        data.Apk.AoID,
-			DPAmount:                    data.Apk.DPAmount,
-			Discount:                    discount,
-			AdminFee:                    adminFee,
-			OTR:                         data.Apk.OTR,
-			InstallmentAmount:           data.Apk.InstallmentAmount,
-			FirstInstallment:            data.Apk.FirstInstallment,
-			OtherFee:                    data.Apk.OtherFee,
-			PercentDP:                   percentDP,
-			AssetInsuranceFee:           data.Apk.PremiumAmountToCustomer,
-			LifeInsuranceFee:            data.Item.PremiumAmountToCustomer,
-			FidusiaFee:                  fidusiaFee,
-			InterestRate:                interestRate,
-			InsuranceRate:               data.Apk.InsuranceRate,
-			FirstPayment:                data.Apk.FirstPayment,
-			InsuranceAmount:             data.Apk.InsuranceAmount,
-			InterestAmount:              interestAmount,
-			FirstPaymentDate:            firstPaymentDate,
-			PaymentMethod:               data.Apk.PaymentMethod,
-			SurveyFee:                   surveyFee,
-			IsFidusiaCovered:            data.Apk.IsFidusiaCovered,
-			ProvisionFee:                provisionFee,
-			InsAssetPaidBy:              data.Apk.InsAssetPaidBy,
-			InsAssetPeriod:              data.Apk.InsAssetPeriod,
-			EffectiveRate:               data.Apk.EffectiveRate,
-			SalesmanID:                  data.Apk.SalesmanID,
-			SupplierBankAccountID:       data.Apk.SupplierBankAccountID,
-			LifeInsuranceCoyBranchID:    data.Apk.LifeInsuranceCoyBranchID,
-			LifeInsuranceAmountCoverage: data.Apk.LifeInsuranceAmountCoverage,
-			CommisionSubsidi:            data.Apk.CommisionSubsidy,
-			ProductOfferingDesc:         data.Apk.ProductOfferingDesc,
-			Dealer:                      data.Apk.Dealer,
-			LoanAmount:                  data.Apk.LoanAmount,
-			FinancePurpose:              data.Apk.FinancePurpose,
-			NTFAkumulasi:                trxFMF.NTFAkumulasi,
-			NTFOtherAmount:              trxFMF.NTFOtherAmount,
-			NTFOtherAmountSpouse:        trxFMF.NTFOtherAmountSpouse,
-			NTFOtherAmountDetail:        trxFMF.NTFOtherAmountDetail,
-			NTFConfinsAmount:            trxFMF.NTFConfinsAmount,
-			NTFConfins:                  trxFMF.NTFConfins,
-			NTFTopup:                    trxFMF.NTFTopup,
-		}
-
-		logInfo = apk
-
-		if err := tx.Create(&apk).Error; err != nil {
-			return err
-		}
-
-		if data.CustomerSpouse != nil {
-			var personalNPWP string
-			if data.CustomerSpouse.NPWP != nil {
-				personalNPWP = *data.CustomerSpouse.NPWP
+			employment := entity.CustomerEmployment{
+				ProspectID:            data.Transaction.ProspectID,
+				ProfessionID:          data.CustomerEmployment.ProfessionID,
+				JobType:               data.CustomerEmployment.JobType,
+				JobPosition:           data.CustomerEmployment.JobPosition,
+				CompanyName:           data.CustomerEmployment.CompanyName,
+				IndustryTypeID:        data.CustomerEmployment.IndustryTypeID,
+				EmploymentSinceYear:   data.CustomerEmployment.EmploymentSinceYear,
+				EmploymentSinceMonth:  data.CustomerEmployment.EmploymentSinceMonth,
+				MonthlyFixedIncome:    data.CustomerEmployment.MonthlyFixedIncome,
+				MonthlyVariableIncome: *data.CustomerEmployment.MonthlyVariableIncome,
+				SpouseIncome:          *data.CustomerEmployment.SpouseIncome,
 			}
-			spouseBirthdate, _ := time.ParseInLocation("2006-01-02", data.CustomerSpouse.BirthDate, location)
 
-			customerSpouse := entity.CustomerSpouse{
+			logInfo = employment
+
+			if err := tx.Create(&employment).Error; err != nil {
+				return err
+			}
+
+			var (
+				discount float64
+				adminFee float64
+			)
+			if data.Apk.Discount != nil {
+				discount = *data.Apk.Discount
+			}
+			if data.Apk.AdminFee != nil {
+				adminFee = *data.Apk.AdminFee
+			}
+
+			var (
+				percentDP      float64
+				fidusiaFee     float64
+				interestRate   float64
+				interestAmount float64
+				provisionFee   float64
+			)
+			if data.Apk.PercentDP != nil {
+				percentDP = *data.Apk.PercentDP
+			}
+			if data.Apk.FidusiaFee != nil {
+				fidusiaFee = *data.Apk.FidusiaFee
+			}
+			if data.Apk.InterestRate != nil {
+				interestRate = *data.Apk.InterestRate
+			}
+			if data.Apk.InterestAmount != nil {
+				interestAmount = *data.Apk.InterestAmount
+			}
+			if data.Apk.ProvisionFee != nil {
+				provisionFee = *data.Apk.ProvisionFee
+			}
+
+			var surveyFee float64 = 0
+			if data.Apk.SurveyFee != nil {
+				surveyFee = *data.Apk.SurveyFee
+			}
+
+			apk := entity.TrxApk{
+				ProspectID:                  data.Transaction.ProspectID,
+				Tenor:                       &data.Apk.Tenor,
+				ProductOfferingID:           data.Apk.ProductOfferingID,
+				ProductID:                   data.Apk.ProductID,
+				NTF:                         data.Apk.NTF,
+				AF:                          data.Apk.AF,
+				AoID:                        data.Apk.AoID,
+				DPAmount:                    data.Apk.DPAmount,
+				Discount:                    discount,
+				AdminFee:                    adminFee,
+				OTR:                         data.Apk.OTR,
+				InstallmentAmount:           data.Apk.InstallmentAmount,
+				FirstInstallment:            data.Apk.FirstInstallment,
+				OtherFee:                    data.Apk.OtherFee,
+				PercentDP:                   percentDP,
+				AssetInsuranceFee:           data.Apk.PremiumAmountToCustomer,
+				LifeInsuranceFee:            data.Item.PremiumAmountToCustomer,
+				FidusiaFee:                  fidusiaFee,
+				InterestRate:                interestRate,
+				InsuranceRate:               data.Apk.InsuranceRate,
+				FirstPayment:                data.Apk.FirstPayment,
+				InsuranceAmount:             data.Apk.InsuranceAmount,
+				InterestAmount:              interestAmount,
+				FirstPaymentDate:            firstPaymentDate,
+				PaymentMethod:               data.Apk.PaymentMethod,
+				SurveyFee:                   surveyFee,
+				IsFidusiaCovered:            data.Apk.IsFidusiaCovered,
+				ProvisionFee:                provisionFee,
+				InsAssetPaidBy:              data.Apk.InsAssetPaidBy,
+				InsAssetPeriod:              data.Apk.InsAssetPeriod,
+				EffectiveRate:               data.Apk.EffectiveRate,
+				SalesmanID:                  data.Apk.SalesmanID,
+				SupplierBankAccountID:       data.Apk.SupplierBankAccountID,
+				LifeInsuranceCoyBranchID:    data.Apk.LifeInsuranceCoyBranchID,
+				LifeInsuranceAmountCoverage: data.Apk.LifeInsuranceAmountCoverage,
+				CommisionSubsidi:            data.Apk.CommisionSubsidy,
+				ProductOfferingDesc:         data.Apk.ProductOfferingDesc,
+				Dealer:                      data.Apk.Dealer,
+				LoanAmount:                  data.Apk.LoanAmount,
+				FinancePurpose:              data.Apk.FinancePurpose,
+				NTFAkumulasi:                trxFMF.NTFAkumulasi,
+				NTFOtherAmount:              trxFMF.NTFOtherAmount,
+				NTFOtherAmountSpouse:        trxFMF.NTFOtherAmountSpouse,
+				NTFOtherAmountDetail:        trxFMF.NTFOtherAmountDetail,
+				NTFConfinsAmount:            trxFMF.NTFConfinsAmount,
+				NTFConfins:                  trxFMF.NTFConfins,
+				NTFTopup:                    trxFMF.NTFTopup,
+			}
+
+			logInfo = apk
+
+			if err := tx.Create(&apk).Error; err != nil {
+				return err
+			}
+
+			if data.CustomerSpouse != nil {
+				var personalNPWP string
+				if data.CustomerSpouse.NPWP != nil {
+					personalNPWP = *data.CustomerSpouse.NPWP
+				}
+				spouseBirthdate, _ := time.ParseInLocation("2006-01-02", data.CustomerSpouse.BirthDate, location)
+
+				customerSpouse := entity.CustomerSpouse{
+					ProspectID:           data.Transaction.ProspectID,
+					IDNumber:             data.CustomerSpouse.IDNumber,
+					FullName:             data.CustomerSpouse.FullName,
+					LegalName:            data.CustomerSpouse.LegalName,
+					BirthDate:            spouseBirthdate,
+					BirthPlace:           data.CustomerSpouse.BirthPlace,
+					SurgateMotherName:    data.CustomerSpouse.SurgateMotherName,
+					Gender:               data.CustomerSpouse.Gender,
+					CompanyPhone:         data.CustomerSpouse.CompanyPhone,
+					CompanyName:          data.CustomerSpouse.CompanyName,
+					MobilePhone:          data.CustomerSpouse.MobilePhone,
+					ProfessionID:         data.CustomerSpouse.ProfessionID,
+					EmploymentSinceMonth: data.CustomerSpouse.EmploymentSinceMonth,
+					EmploymentSinceYear:  data.CustomerSpouse.EmploymentSinceYear,
+					JobType:              data.CustomerSpouse.JobType,
+					JobPosition:          data.CustomerSpouse.JobPosition,
+					Email:                data.CustomerSpouse.Email,
+					PersonalNPWP:         personalNPWP,
+					Education:            data.CustomerSpouse.Education,
+				}
+
+				logInfo = customerSpouse
+
+				if err := tx.Create(&customerSpouse).Error; err != nil {
+					return err
+				}
+
+			}
+
+			emcon := entity.CustomerEmcon{
 				ProspectID:           data.Transaction.ProspectID,
-				IDNumber:             data.CustomerSpouse.IDNumber,
-				FullName:             data.CustomerSpouse.FullName,
-				LegalName:            data.CustomerSpouse.LegalName,
-				BirthDate:            spouseBirthdate,
-				BirthPlace:           data.CustomerSpouse.BirthPlace,
-				SurgateMotherName:    data.CustomerSpouse.SurgateMotherName,
-				Gender:               data.CustomerSpouse.Gender,
-				CompanyPhone:         data.CustomerSpouse.CompanyPhone,
-				CompanyName:          data.CustomerSpouse.CompanyName,
-				MobilePhone:          data.CustomerSpouse.MobilePhone,
-				ProfessionID:         data.CustomerSpouse.ProfessionID,
-				EmploymentSinceMonth: data.CustomerSpouse.EmploymentSinceMonth,
-				EmploymentSinceYear:  data.CustomerSpouse.EmploymentSinceYear,
-				JobType:              data.CustomerSpouse.JobType,
-				JobPosition:          data.CustomerSpouse.JobPosition,
-				Email:                data.CustomerSpouse.Email,
-				PersonalNPWP:         personalNPWP,
-				Education:            data.CustomerSpouse.Education,
+				Name:                 data.CustomerEmcon.Name,
+				Relationship:         data.CustomerEmcon.Relationship,
+				MobilePhone:          data.CustomerEmcon.MobilePhone,
+				EmconVerified:        data.CustomerEmcon.ApplicationEmconSesuai,
+				VerifyBy:             data.CustomerEmcon.VerifyBy,
+				VerificationWith:     data.CustomerEmcon.VerificationWith,
+				KnownCustomerAddress: data.CustomerEmcon.KnownCustomerAddress,
+				KnownCustomerJob:     data.CustomerEmcon.KnownCustomerJob,
 			}
 
-			logInfo = customerSpouse
+			logInfo = emcon
 
-			if err := tx.Create(&customerSpouse).Error; err != nil {
+			if err := tx.Create(&emcon).Error; err != nil {
 				return err
 			}
 
-		}
-
-		emcon := entity.CustomerEmcon{
-			ProspectID:           data.Transaction.ProspectID,
-			Name:                 data.CustomerEmcon.Name,
-			Relationship:         data.CustomerEmcon.Relationship,
-			MobilePhone:          data.CustomerEmcon.MobilePhone,
-			EmconVerified:        data.CustomerEmcon.ApplicationEmconSesuai,
-			VerifyBy:             data.CustomerEmcon.VerifyBy,
-			VerificationWith:     data.CustomerEmcon.VerificationWith,
-			KnownCustomerAddress: data.CustomerEmcon.KnownCustomerAddress,
-			KnownCustomerJob:     data.CustomerEmcon.KnownCustomerJob,
-		}
-
-		logInfo = emcon
-
-		if err := tx.Create(&emcon).Error; err != nil {
-			return err
-		}
-
-		item := entity.TrxItem{
-			ProspectID:                   data.Transaction.ProspectID,
-			CategoryID:                   data.Item.CategoryID,
-			SupplierID:                   data.Item.SupplierID,
-			Qty:                          data.Item.Qty,
-			AssetCode:                    data.Item.AssetCode,
-			AssetDescription:             data.Item.AssetDescription,
-			ManufactureYear:              data.Item.ManufactureYear,
-			BPKBName:                     data.Item.BPKBName,
-			OwnerAsset:                   data.Item.OwnerAsset,
-			LicensePlate:                 data.Item.LicensePlate,
-			Color:                        data.Item.Color,
-			EngineNo:                     data.Item.NoEngine,
-			ChassisNo:                    data.Item.NoChassis,
-			Pos:                          data.Item.POS,
-			Cc:                           data.Item.CC,
-			Condition:                    data.Item.Condition,
-			Region:                       data.Item.Region,
-			TaxDate:                      formatTaxDate,
-			STNKExpiredDate:              formatSTNKExpired,
-			AssetInsuranceAmountCoverage: data.Item.AssetInsuranceAmountCoverage,
-			InsAssetInsuredBy:            data.Item.InsAssetInsuredBy,
-			InsuranceCoyBranchID:         data.Item.InsuranceCoyBranchID,
-			CoverageType:                 data.Item.CoverageType,
-			OwnerKTP:                     data.Item.OwnerKTP,
-			AssetUsage:                   data.Item.AssetUsage,
-			Brand:                        data.Item.Brand,
-		}
-
-		logInfo = item
-
-		if err := tx.Create(&item).Error; err != nil {
-			return err
-		}
-
-		agent := entity.TrxInfoAgent{
-			ProspectID: data.Transaction.ProspectID,
-			NIK:        data.Agent.CmoNik,
-			Name:       data.Agent.CmoName,
-			Info:       data.Agent.CmoRecom,
-			RecomDate:  data.Agent.RecomDate,
-		}
-
-		logInfo = agent
-
-		if err := tx.Create(&agent).Error; err != nil {
-			return err
-		}
-
-		for i := 0; i < len(data.Surveyor); i++ {
-
-			requestDate, _ := time.Parse("2006-01-02", data.Surveyor[i].RequestDate)
-			assignDate, _ := time.Parse("2006-01-02", data.Surveyor[i].AssignDate)
-			resultDate, _ := time.Parse("2006-01-02", data.Surveyor[i].ResultDate)
-
-			surveyor := entity.TrxSurveyor{
-				ProspectID:   data.Transaction.ProspectID,
-				Destination:  data.Surveyor[i].Destination,
-				RequestDate:  requestDate,
-				AssignDate:   assignDate,
-				SurveyorName: data.Surveyor[i].SurveyorName,
-				ResultDate:   resultDate,
-				Status:       data.Surveyor[i].Status,
+			item := entity.TrxItem{
+				ProspectID:                   data.Transaction.ProspectID,
+				CategoryID:                   data.Item.CategoryID,
+				SupplierID:                   data.Item.SupplierID,
+				Qty:                          data.Item.Qty,
+				AssetCode:                    data.Item.AssetCode,
+				AssetDescription:             data.Item.AssetDescription,
+				ManufactureYear:              data.Item.ManufactureYear,
+				BPKBName:                     data.Item.BPKBName,
+				OwnerAsset:                   data.Item.OwnerAsset,
+				LicensePlate:                 data.Item.LicensePlate,
+				Color:                        data.Item.Color,
+				EngineNo:                     data.Item.NoEngine,
+				ChassisNo:                    data.Item.NoChassis,
+				Pos:                          data.Item.POS,
+				Cc:                           data.Item.CC,
+				Condition:                    data.Item.Condition,
+				Region:                       data.Item.Region,
+				TaxDate:                      formatTaxDate,
+				STNKExpiredDate:              formatSTNKExpired,
+				AssetInsuranceAmountCoverage: data.Item.AssetInsuranceAmountCoverage,
+				InsAssetInsuredBy:            data.Item.InsAssetInsuredBy,
+				InsuranceCoyBranchID:         data.Item.InsuranceCoyBranchID,
+				CoverageType:                 data.Item.CoverageType,
+				OwnerKTP:                     data.Item.OwnerKTP,
+				AssetUsage:                   data.Item.AssetUsage,
+				Brand:                        data.Item.Brand,
 			}
 
-			logInfo = surveyor
+			logInfo = item
 
-			if err := tx.Create(&surveyor).Error; err != nil {
+			if err := tx.Create(&item).Error; err != nil {
 				return err
 			}
 
-		}
+			agent := entity.TrxInfoAgent{
+				ProspectID: data.Transaction.ProspectID,
+				NIK:        data.Agent.CmoNik,
+				Name:       data.Agent.CmoName,
+				Info:       data.Agent.CmoRecom,
+				RecomDate:  data.Agent.RecomDate,
+			}
 
-		if data.CustomerEmployment.ProfessionID == constant.PROFESSION_ID_WRST || data.CustomerEmployment.ProfessionID == constant.PROFESSION_ID_PRO {
-			if data.CustomerOmset != nil {
-				omset := *data.CustomerOmset
-				for i := 0; i < len(omset); i++ {
+			logInfo = agent
 
-					cusOmset := entity.CustomerOmset{
-						ProspectID:        data.Transaction.ProspectID,
-						SeqNo:             i + 1,
-						MonthlyOmsetYear:  omset[i].MonthlyOmsetYear,
-						MonthlyOmsetMonth: omset[i].MonthlyOmsetMonth,
-						MonthlyOmset:      omset[i].MonthlyOmset,
-					}
+			if err := tx.Create(&agent).Error; err != nil {
+				return err
+			}
 
-					logInfo = cusOmset
+			for i := 0; i < len(data.Surveyor); i++ {
 
-					if err := tx.Create(&cusOmset).Error; err != nil {
-						return err
+				requestDate, _ := time.Parse("2006-01-02", data.Surveyor[i].RequestDate)
+				assignDate, _ := time.Parse("2006-01-02", data.Surveyor[i].AssignDate)
+				resultDate, _ := time.Parse("2006-01-02", data.Surveyor[i].ResultDate)
+
+				surveyor := entity.TrxSurveyor{
+					ProspectID:   data.Transaction.ProspectID,
+					Destination:  data.Surveyor[i].Destination,
+					RequestDate:  requestDate,
+					AssignDate:   assignDate,
+					SurveyorName: data.Surveyor[i].SurveyorName,
+					ResultDate:   resultDate,
+					Status:       data.Surveyor[i].Status,
+				}
+
+				logInfo = surveyor
+
+				if err := tx.Create(&surveyor).Error; err != nil {
+					return err
+				}
+
+			}
+
+			if data.CustomerEmployment.ProfessionID == constant.PROFESSION_ID_WRST || data.CustomerEmployment.ProfessionID == constant.PROFESSION_ID_PRO {
+				if data.CustomerOmset != nil {
+					omset := *data.CustomerOmset
+					for i := 0; i < len(omset); i++ {
+
+						cusOmset := entity.CustomerOmset{
+							ProspectID:        data.Transaction.ProspectID,
+							SeqNo:             i + 1,
+							MonthlyOmsetYear:  omset[i].MonthlyOmsetYear,
+							MonthlyOmsetMonth: omset[i].MonthlyOmsetMonth,
+							MonthlyOmset:      omset[i].MonthlyOmset,
+						}
+
+						logInfo = cusOmset
+
+						if err := tx.Create(&cusOmset).Error; err != nil {
+							return err
+						}
 					}
 				}
 			}
 		}
 
-		// skip prescreening unpr
-		if len(details) > 1 {
-			for i := 0; i < len(details); i++ {
+		for i := 0; i < len(details); i++ {
+			// skip prescreening unpr
+			if details[i].SourceDecision != constant.PRESCREENING || details[i].Activity != constant.ACTIVITY_UNPROCESS {
 				detail := entity.TrxDetail{
 					ProspectID:     details[i].ProspectID,
 					StatusProcess:  details[i].StatusProcess,
@@ -582,8 +606,10 @@ func (r repoHandler) SaveTransaction(data request.Metrics, trxPrescreening entit
 
 		logInfo = status
 
-		if err := tx.Create(&status).Error; err != nil {
-			return err
+		if rowsAffected := tx.Model(&status).Where("ProspectID = ?", status.ProspectID).Updates(status).RowsAffected; rowsAffected == 0 {
+			if err := tx.Create(&status).Error; err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -610,11 +636,20 @@ func (r repoHandler) SaveLogOrchestrator(header, request, response interface{}, 
 		Header:       string(headerByte),
 		Url:          path,
 		Method:       method,
-		RequestData:  string(requestByte),
+		RequestData:  string(utils.SafeEncoding(requestByte)),
 		ResponseData: string(utils.SafeEncoding(responseByte)),
 	}).Error; err != nil {
 		return
 	}
+	return
+}
+
+func (r repoHandler) GetLogOrchestrator(prospectID string) (logOrchestrator entity.LogOrchestrator, err error) {
+
+	if err = r.logsDB.Raw(fmt.Sprintf("SELECT TOP 1 ProspectID, request_data from log_orchestrators with (nolock) where ProspectID = '%s' AND url = '/api/v3/kmb/consume/journey'", prospectID)).Scan(&logOrchestrator).Error; err != nil {
+		return
+	}
+
 	return
 }
 

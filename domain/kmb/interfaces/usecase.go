@@ -24,7 +24,7 @@ type Usecase interface {
 	FacePlus(ctx context.Context, imageKtp string, imageSelfie string, req request.FaceCompareRequest, accessToken string) (result response.FaceCompareResponse, err error)
 	RejectTenor36(ctx context.Context, prospectID, idNumber, accessToken string) (result response.UsecaseApi, err error)
 	Prescreening(ctx context.Context, reqs request.Metrics, filtering entity.FilteringKMB, accessToken string) (trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, trxDetail entity.TrxDetail, err error)
-	SaveTransaction(data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (resp response.Metrics, err error)
+	SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (resp response.Metrics, err error)
 }
 
 type MultiUsecase interface {

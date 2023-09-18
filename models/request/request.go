@@ -310,6 +310,10 @@ type DsrSpouse struct {
 	BirthDate  string `json:"birth_date"`
 }
 
+type AfterPrescreening struct {
+	ProspectID string `json:"prospect_id" validate:"required,max=20" example:"SAL042600001"`
+}
+
 type Metrics struct {
 	Transaction        Transaction        `json:"transaction" validate:"required"`
 	Apk                Apk                `json:"apk" validate:"required"`
@@ -345,7 +349,7 @@ type Surveyor struct {
 }
 
 type Transaction struct {
-	ProspectID        string `json:"prospect_id" validate:"required" example:"EFM01426202106100001"`
+	ProspectID        string `json:"prospect_id" validate:"required,max=20" example:"SAL042600001"`
 	BranchID          string `json:"branch_id" validate:"branch_id" example:"426"`
 	ApplicationSource string `json:"application_source" validate:"required" example:"H"`
 	Channel           string `json:"channel" validate:"channel" example:"OFF"`
