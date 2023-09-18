@@ -245,6 +245,7 @@ const (
 	ERROR_UNAUTHORIZED        = "unauthorized"
 	ERROR_INACTIVE_CREDENTIAL = "inactive_credential"
 
+	HEADER_CLIENT_ID     = "X-Client-ID"
 	HEADER_AUTHORIZATION = "Authorization"
 
 	// Key
