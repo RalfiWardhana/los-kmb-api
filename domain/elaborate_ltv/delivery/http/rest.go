@@ -63,7 +63,7 @@ func (c *handlerKmbElaborate) Elaborate(ctx echo.Context) (err error) {
 	}
 
 	if err := ctx.Bind(&req); err != nil {
-		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", err)
+		ctxJson, resp = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", req, err)
 		return ctxJson
 	}
 

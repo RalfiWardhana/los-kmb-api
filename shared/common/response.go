@@ -21,6 +21,7 @@ type JSON interface {
 	SuccessV3(ctx echo.Context, accessToken, logFile, message string, req, data interface{}) (ctxJson error, apiResponse models.ApiResponse)
 	ServiceUnavailableV3(ctx echo.Context, accessToken, logFile, message string, req interface{}) (ctxJson error, apiResponse models.ApiResponse)
 	InternalServerErrorCustomV3(ctx echo.Context, accessToken, logFile, message string, err error) (ctxJson error, apiResponse models.ApiResponse)
+	BadRequestErrorBindV3(ctx echo.Context, accessToken, logFile, message string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponse)
 	BadRequestErrorValidationV3(ctx echo.Context, accessToken, logFile, message string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponse)
 	ServerSideErrorV3(ctx echo.Context, accessToken, logFile, message string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponse)
 }
