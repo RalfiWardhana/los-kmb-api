@@ -9,8 +9,9 @@ import (
 	"los-kmb-api/domain/cms/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
-	"los-kmb-api/shared/config"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
+	"os"
 	"strconv"
 	"time"
 
@@ -18,15 +19,21 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
+var (
+	DtmRequest = time.Now()
+)
+
 type repoHandler struct {
-	NewKmb *gorm.DB
-	core   *gorm.DB
+	NewKmb    *gorm.DB
+	core      *gorm.DB
+	KpLosLogs *gorm.DB
 }
 
-func NewRepository(core *gorm.DB, NewKmb *gorm.DB) interfaces.Repository {
+func NewRepository(core, NewKmb, KpLosLogs *gorm.DB) interfaces.Repository {
 	return &repoHandler{
-		NewKmb: NewKmb,
-		core:   core,
+		core:      core,
+		NewKmb:    NewKmb,
+		KpLosLogs: KpLosLogs,
 	}
 }
 
@@ -47,7 +54,7 @@ func (r repoHandler) GetSpIndustryTypeMaster() (data []entity.SpIndustryTypeMast
 func (r repoHandler) GetReasonPrescreening(reasonID string, pagination interface{}) (reason []entity.ReasonMessage, rowTotal int, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	var (
 		filter         string
@@ -102,7 +109,7 @@ func (r repoHandler) GetReasonPrescreening(reasonID string, pagination interface
 func (r repoHandler) GetCustomerPhoto(prospectID string) (photo []entity.CustomerPhoto, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -124,7 +131,7 @@ func (r repoHandler) GetCustomerPhoto(prospectID string) (photo []entity.Custome
 func (r repoHandler) GetSurveyorData(prospectID string) (surveyor []entity.TrxSurveyor, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -352,6 +359,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	tps.decision,
 	tps.reason,
 	tps.created_by AS DecisionBy,
+	tps.decision_by AS DecisionName,
 	tps.created_at AS DecisionAt,
 	CASE
 	  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
@@ -619,7 +627,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 func (r repoHandler) GetStatusPrescreening(prospectID string) (status entity.TrxStatus, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -641,7 +649,11 @@ func (r repoHandler) GetStatusPrescreening(prospectID string) (status entity.Trx
 func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detail entity.TrxDetail, status entity.TrxStatus) (err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	prescreening.CreatedAt = DtmRequest
+	detail.CreatedAt = DtmRequest
+	status.CreatedAt = DtmRequest
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -673,5 +685,26 @@ func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detai
 		return
 	}
 
+	return
+}
+
+func (r repoHandler) SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error) {
+
+	headerByte, _ := json.Marshal(header)
+	requestByte, _ := json.Marshal(request)
+	responseByte, _ := json.Marshal(response)
+
+	if err = r.KpLosLogs.Model(&entity.LogOrchestrator{}).Create(&entity.LogOrchestrator{
+		ID:           requestID,
+		ProspectID:   prospectID,
+		Owner:        "LOS-KMB",
+		Header:       string(headerByte),
+		Url:          path,
+		Method:       method,
+		RequestData:  string(requestByte),
+		ResponseData: string(utils.SafeEncoding(responseByte)),
+	}).Error; err != nil {
+		return
+	}
 	return
 }

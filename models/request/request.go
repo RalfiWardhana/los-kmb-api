@@ -726,8 +726,9 @@ type ReqReasonPrescreening struct {
 }
 
 type ReqReviewPrescreening struct {
-	ProspectID string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
-	Decision   string `json:"decision" validate:"required" example:"APR,REJ"`
-	Reason     string `json:"reason"`
-	DecisionBy string `json:"decision_by" validate:"required"`
+	ProspectID     string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
+	Decision       string `json:"decision" validate:"required" example:"APR,REJ"`
+	Reason         string `json:"reason"`
+	DecisionBy     string `json:"decision_by" validate:"required"`
+	DecisionByName string `json:"decision_by_name" validate:"required"`
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	cache "los-kmb-api/domain/cache/interfaces"
 	"los-kmb-api/domain/cms/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
@@ -11,20 +12,17 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
 	"strings"
-	"time"
-
-	"github.com/allegro/bigcache/v3"
 )
 
 type (
 	usecase struct {
 		repository interfaces.Repository
 		httpclient httpclient.HttpClient
-		cache      *bigcache.BigCache
+		cache      cache.Repository
 	}
 )
 
-func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient, cache *bigcache.BigCache) interfaces.Usecase {
+func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient, cache cache.Repository) interfaces.Usecase {
 	return &usecase{
 		repository: repository,
 		httpclient: httpclient,
@@ -54,25 +52,20 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 		decision           string
 	)
 
-	if u.cache != nil {
+	getValue, _ := u.cache.Get("GetSpIndustryTypeMaster")
 
-		getValue, _ := u.cache.Get("GetSpIndustryTypeMaster")
+	if getValue == nil {
+		industry, err = u.repository.GetSpIndustryTypeMaster()
 
-		if getValue == nil {
-			industry, err = u.repository.GetSpIndustryTypeMaster()
-
-			if err != nil {
-				return
-			}
-
-			u.cache.Set("GetSpIndustryTypeMaster", []byte("SuccessRetrieve"))
-
-			for _, description := range industry {
-				u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
-			}
+		if err != nil {
+			return
 		}
-	} else {
-		return
+
+		u.cache.Set("GetSpIndustryTypeMaster", []byte("SuccessRetrieve"))
+
+		for _, description := range industry {
+			u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
+		}
 	}
 
 	// get inquiry pre screening
@@ -161,6 +154,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				Decision:          decision,
 				Reason:            inq.Reason,
 				DecisionBy:        inq.DecisionBy,
+				DecisionName:      inq.DecisionName,
 				DecisionAt:        inq.DecisionAt,
 			},
 			General: entity.DataGeneral{
@@ -283,9 +277,8 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPrescreening) (data response.ReviewPrescreening, err error) {
 
 	var (
-		trxStatus   entity.TrxStatus
-		currentTime = time.Now()
-		reason      = string(req.Reason)
+		trxStatus entity.TrxStatus
+		reason    = string(req.Reason)
 	)
 
 	status, err := u.repository.GetStatusPrescreening(req.ProspectID)
@@ -346,11 +339,11 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 		info, _ := json.Marshal(data)
 
 		trxPrescreening := entity.TrxPrescreening{
-			ProspectID: req.ProspectID,
-			Decision:   decisionInfo.Decision,
-			Reason:     reason,
-			CreatedAt:  currentTime,
-			CreatedBy:  req.DecisionBy,
+			ProspectID:   req.ProspectID,
+			Decision:     decisionInfo.Decision,
+			Reason:       reason,
+			CreatedBy:    req.DecisionBy,
+			DecisionByBy: req.DecisionByName,
 		}
 
 		trxDetail := entity.TrxDetail{
@@ -362,7 +355,6 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 			SourceDecision: constant.PRESCREENING,
 			NextStep:       decisionInfo.NextStep,
 			Info:           string(info),
-			CreatedAt:      currentTime,
 			CreatedBy:      req.DecisionBy,
 		}
 
@@ -376,7 +368,6 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 		trxStatus.Activity = decisionInfo.ActivityStatus
 		trxStatus.Decision = decisionInfo.DecisionStatus
 		trxStatus.SourceDecision = decisionInfo.SourceDecision
-		trxStatus.CreatedAt = currentTime
 
 		err = u.repository.SavePrescreening(trxPrescreening, trxDetail, trxStatus)
 		if err != nil {

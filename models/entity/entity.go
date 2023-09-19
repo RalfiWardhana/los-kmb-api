@@ -794,11 +794,12 @@ func (c *LogOrchestrator) TableName() string {
 }
 
 type TrxPrescreening struct {
-	ProspectID string    `gorm:"column:ProspectID"`
-	Decision   string    `gorm:"column:decision"`
-	Reason     string    `gorm:"column:reason"`
-	CreatedAt  time.Time `gorm:"column:created_at"`
-	CreatedBy  string    `gorm:"column:created_by"`
+	ProspectID   string    `gorm:"column:ProspectID"`
+	Decision     string    `gorm:"column:decision"`
+	Reason       string    `gorm:"column:reason"`
+	CreatedAt    time.Time `gorm:"column:created_at"`
+	CreatedBy    string    `gorm:"column:created_by"`
+	DecisionByBy string    `gorm:"column:decision_by"`
 }
 
 func (c *TrxPrescreening) TableName() string {
@@ -885,6 +886,7 @@ type InquiryPrescreening struct {
 	Decision          string `gorm:"column:decision"`
 	Reason            string `gorm:"column:reason"`
 	DecisionBy        string `gorm:"column:DecisionBy"`
+	DecisionName      string `gorm:"column:DecisionName"`
 	DecisionAt        string `gorm:"column:DecisionAt"`
 
 	ProspectID     string `gorm:"column:ProspectID"`
@@ -1016,6 +1018,7 @@ type DataPrescreening struct {
 	Decision          string `gorm:"column:decision" json:"decision"`
 	Reason            string `gorm:"column:reason" json:"reason"`
 	DecisionBy        string `gorm:"column:DecisionBy" json:"decision_by"`
+	DecisionName      string `gorm:"column:DecisionName" json:"decision_by_name"`
 	DecisionAt        string `gorm:"column:DecisionAt" json:"decision_at"`
 }
 
@@ -1023,7 +1026,7 @@ type DataGeneral struct {
 	ProspectID     string `gorm:"column:ProspectID" json:"prospect_id"`
 	BranchName     string `gorm:"column:BranchName" json:"branch_name"`
 	IncomingSource string `gorm:"column:incoming_source" json:"incoming_source"`
-	CreatedAt      string `gorm:"column:incoming_source" json:"created_at"`
+	CreatedAt      string `gorm:"column:created_at" json:"created_at"`
 }
 
 type DataItemApk struct {
