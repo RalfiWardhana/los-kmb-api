@@ -69,7 +69,7 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 	if err != nil {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Unmarshal body error")
 		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-		// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
+		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 		return nil
 	}
 
@@ -98,7 +98,7 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 	err = h.validator.Validate(req)
 	if err != nil {
 		resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-		// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
+		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 		return nil
 	}
 
@@ -122,7 +122,7 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 
 		if err := h.validator.Validate(&genderSpouse); err != nil {
 			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-			// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 			return nil
 		}
 	}
@@ -138,7 +138,7 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 		validateOmset.CustomerOmset = newOmset
 		if err := h.validator.Validate(&validateOmset); err != nil {
 			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-			// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 			return nil
 		}
 
@@ -153,7 +153,7 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 
 		if err := h.validator.Validate(&spouseVal); err != nil {
 			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-			// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 			return nil
 		}
 	} else {
@@ -165,22 +165,10 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 
 		if err := h.validator.Validate(&spouseVal); err != nil {
 			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-			// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 			return nil
 		}
 	}
-
-	// check, errCheck := h.usecase.FilteringProspectID(req.ProspectID)
-	// if errCheck != nil {
-	// 	resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, errCheck)
-	// 	h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
-	// 	return nil
-	// }
-	// if err := h.validator.Validate(&check); err != nil {
-	// 	resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-	// 	h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
-	// 	return nil
-	// }
 
 	resp, err = h.metrics.MetricsLos(ctx, req, middlewares.UserInfoData.AccessToken)
 	if err != nil {
@@ -189,7 +177,7 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 		resp = h.Json.EventSuccess(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, resp)
 	}
 
-	// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
+	h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 
 	return nil
 }
@@ -220,7 +208,7 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 	if err != nil {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Unmarshal body error")
 		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-		// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, reqAfterPrescreening.ProspectID, utils.StructToMap(resp), 0)
+		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 		return nil
 	}
 
@@ -228,7 +216,7 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 	if err != nil {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - The data does not exist")
 		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-		// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, reqAfterPrescreening.ProspectID, utils.StructToMap(resp), 0)
+		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 		return nil
 	}
 
@@ -238,7 +226,7 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 	if err != nil {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Unmarshal body error")
 		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-		// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, reqAfterPrescreening.ProspectID, utils.StructToMap(resp), 0)
+		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 		return nil
 	}
 
@@ -267,7 +255,7 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 	err = h.validator.Validate(req)
 	if err != nil {
 		resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-		// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, reqAfterPrescreening.ProspectID, utils.StructToMap(resp), 0)
+		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 		return nil
 	}
 
@@ -291,7 +279,7 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 
 		if err := h.validator.Validate(&genderSpouse); err != nil {
 			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-			// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 			return nil
 		}
 	}
@@ -307,7 +295,7 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 		validateOmset.CustomerOmset = newOmset
 		if err := h.validator.Validate(&validateOmset); err != nil {
 			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-			// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 			return nil
 		}
 
@@ -322,7 +310,7 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 
 		if err := h.validator.Validate(&spouseVal); err != nil {
 			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-			// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 			return nil
 		}
 	} else {
@@ -334,22 +322,10 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 
 		if err := h.validator.Validate(&spouseVal); err != nil {
 			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-			// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 			return nil
 		}
 	}
-
-	// check, errCheck := h.usecase.FilteringProspectID(req.ProspectID)
-	// if errCheck != nil {
-	// 	resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, errCheck)
-	// 	h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
-	// 	return nil
-	// }
-	// if err := h.validator.Validate(&check); err != nil {
-	// 	resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-	// 	h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
-	// 	return nil
-	// }
 
 	resp, err = h.metrics.MetricsLos(ctx, req, middlewares.UserInfoData.AccessToken)
 	if err != nil {
@@ -358,7 +334,7 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 		resp = h.Json.EventSuccess(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, resp)
 	}
 
-	// h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, reqAfterPrescreening.ProspectID, utils.StructToMap(resp), 0)
+	h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
 
 	return nil
 }
