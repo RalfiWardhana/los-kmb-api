@@ -206,7 +206,7 @@ func handleUnmarshalError(err error) []models.ErrorValidation {
 		if ute, ok := he.Internal.(*json.UnmarshalTypeError); ok {
 			valError := models.ErrorValidation{
 				Field:   ute.Field,
-				Message: ute.Error(),
+				Message: fmt.Sprintf("accepted:type=%s", ute.Type.String()),
 			}
 			apiErrors = append(apiErrors, valError)
 		}
@@ -526,6 +526,29 @@ func (c *response) InternalServerErrorCustomV3(ctx echo.Context, accessToken, lo
 		Response:   apiResponse,
 	})
 	return ctx.JSON(http.StatusInternalServerError, apiResponse), apiResponse
+}
+
+func (c *response) BadRequestErrorBindV3(ctx echo.Context, accessToken, logFile, message string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponse) {
+	errors := handleUnmarshalError(err)
+
+	apiResponse = models.ApiResponse{
+		Message:    message,
+		Errors:     errors,
+		Data:       nil,
+		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Get(echo.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx.Request().Context(), accessToken, common.CentralizeLogParameter{
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_INCOMING_REQUEST,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_ERROR,
+		Response:   apiResponse,
+	})
+	return ctx.JSON(http.StatusBadRequest, apiResponse), apiResponse
 }
 
 func (c *response) BadRequestErrorValidationV3(ctx echo.Context, accessToken, logFile, message string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponse) {
