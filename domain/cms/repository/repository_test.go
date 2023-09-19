@@ -8,6 +8,7 @@ import (
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 	"os"
 	"reflect"
 	"regexp"
@@ -49,7 +50,7 @@ func TestGetCustomerPhoto(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -86,7 +87,7 @@ func TestGetCustomerPhoto_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -119,7 +120,7 @@ func TestGetSurveyorData(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -167,7 +168,7 @@ func TestGetSurveyorData_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -200,7 +201,7 @@ func TestGetStatusPrescreening(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -240,7 +241,7 @@ func TestGetStatusPrescreening_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -273,7 +274,7 @@ func TestGetReasonPrescreening(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB)
 
 	// Expected input and output
 
@@ -321,7 +322,7 @@ func TestGetReasonPrescreening_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	reasonID := "99"
@@ -354,7 +355,7 @@ func TestGetSpIndustryTypeMaster(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB)
 
 	// Expected input and output
 
@@ -398,7 +399,7 @@ func TestGetSpIndustryTypeMaster_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB)
 
 	// Mock SQL query to simulate record not found
 	mock.ExpectQuery(regexp.QuoteMeta(`exec[spIndustryTypeMaster] '01/01/2007'`)).
@@ -428,7 +429,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqInquiryPrescreening{
@@ -638,7 +639,7 @@ func TestGetInquiryPrescreening_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqInquiryPrescreening{}
@@ -904,7 +905,7 @@ func Test_repoHandler_SavePrescreening(t *testing.T) {
 
 	_ = gormDB
 
-	newDB := NewRepository(gormDB, gormDB)
+	newDB := NewRepository(gormDB, gormDB, gormDB)
 	data := response.ReviewPrescreening{
 		ProspectID: "TST001",
 		Code:       constant.CODE_REJECT_PRESCREENING,
@@ -963,4 +964,40 @@ func Test_repoHandler_SavePrescreening(t *testing.T) {
 			t.Errorf("error '%s' was not expected, but got: ", err)
 		}
 	})
+}
+
+func TestSaveLogOrchestrator(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	newDB := NewRepository(gormDB, gormDB, gormDB)
+
+	header := "{'header':'header-id'}"
+	request := "{'request':'request-id'}"
+	response := "{'response':'response-id'}"
+	headerByte, _ := json.Marshal(header)
+	requestByte, _ := json.Marshal(request)
+	responseByte, _ := json.Marshal(response)
+	path := "path"
+	method := "method"
+	prospectID := "prospectID"
+	requestID := "requestID"
+
+	mock.ExpectBegin()
+	mock.ExpectExec(`INSERT INTO "log_orchestrators" (.*)`).
+		WithArgs(requestID, prospectID, sqlmock.AnyArg(), string(headerByte), sqlmock.AnyArg(), method, string(requestByte), string(utils.SafeEncoding(responseByte)), sqlmock.AnyArg()).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectCommit()
+	err := newDB.SaveLogOrchestrator(header, request, response, path, method, prospectID, requestID)
+	if err != nil {
+		t.Errorf("error '%s' was not expected, but got: ", err)
+	}
+
 }

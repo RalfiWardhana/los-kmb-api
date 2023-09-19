@@ -10,6 +10,7 @@ import (
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 	"os"
 	"strconv"
 	"time"
@@ -23,14 +24,16 @@ var (
 )
 
 type repoHandler struct {
-	NewKmb *gorm.DB
-	core   *gorm.DB
+	NewKmb    *gorm.DB
+	core      *gorm.DB
+	KpLosLogs *gorm.DB
 }
 
-func NewRepository(core *gorm.DB, NewKmb *gorm.DB) interfaces.Repository {
+func NewRepository(core, NewKmb, KpLosLogs *gorm.DB) interfaces.Repository {
 	return &repoHandler{
-		NewKmb: NewKmb,
-		core:   core,
+		core:      core,
+		NewKmb:    NewKmb,
+		KpLosLogs: KpLosLogs,
 	}
 }
 
@@ -681,5 +684,26 @@ func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detai
 		return
 	}
 
+	return
+}
+
+func (r repoHandler) SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error) {
+
+	headerByte, _ := json.Marshal(header)
+	requestByte, _ := json.Marshal(request)
+	responseByte, _ := json.Marshal(response)
+
+	if err = r.KpLosLogs.Model(&entity.LogOrchestrator{}).Create(&entity.LogOrchestrator{
+		ID:           requestID,
+		ProspectID:   prospectID,
+		Owner:        "LOS-KMB",
+		Header:       string(headerByte),
+		Url:          path,
+		Method:       method,
+		RequestData:  string(requestByte),
+		ResponseData: string(utils.SafeEncoding(responseByte)),
+	}).Error; err != nil {
+		return
+	}
 	return
 }

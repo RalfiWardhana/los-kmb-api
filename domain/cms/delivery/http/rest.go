@@ -6,7 +6,9 @@ import (
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/common"
+	"los-kmb-api/shared/common/platformevent"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -16,13 +18,15 @@ type handlerCMS struct {
 	usecase    interfaces.Usecase
 	repository interfaces.Repository
 	Json       common.JSON
+	producer   platformevent.PlatformEventInterface
 }
 
-func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware) {
+func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, producer platformevent.PlatformEventInterface, middlewares *middlewares.AccessMiddleware) {
 	handler := handlerCMS{
 		usecase:    usecase,
 		repository: repository,
 		Json:       json,
+		producer:   producer,
 	}
 
 	cmsroute.GET("/cms/prescreening/list-reason", handler.ListReason, middlewares.AccessMiddleware())
@@ -82,25 +86,47 @@ func (c *handlerCMS) PrescreeningInquiry(ctx echo.Context) (err error) {
 func (c *handlerCMS) ReviewPrescreening(ctx echo.Context) (err error) {
 
 	var (
+		resp        interface{}
 		accessToken = middlewares.UserInfoData.AccessToken
 		req         request.ReqReviewPrescreening
+		ctxJson     error
 	)
 
+	// Save Log Orchestrator
+	defer func() {
+		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
+		go c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/prescreening/review", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
+	}()
+
 	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", err)
+		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", err)
+		return ctxJson
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, err)
+		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, err)
+		return ctxJson
 	}
 
 	data, err := c.usecase.ReviewPrescreening(ctx.Request().Context(), req)
 
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry", req, err)
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, err)
+		return ctxJson
 	}
 
-	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, data)
+	if err != nil {
+		resp = c.Json.EventServiceError(ctx.Request().Context(), accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, err)
+	} else {
+		resp = c.Json.EventSuccess(ctx.Request().Context(), accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, data)
+	}
+
+	if data.Decision == constant.DECISION_REJECT {
+		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+	}
+
+	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, data)
+	return ctxJson
 }
 
 // CMS NEW KMB Tools godoc

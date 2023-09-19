@@ -13,4 +13,5 @@ type Repository interface {
 	GetInquiryPrescreening(req request.ReqInquiryPrescreening, pagination interface{}) (data []entity.InquiryPrescreening, rowTotal int, err error)
 	GetStatusPrescreening(prospectID string) (status entity.TrxStatus, err error)
 	SavePrescreening(prescreening entity.TrxPrescreening, detail entity.TrxDetail, status entity.TrxStatus) (err error)
+	SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error)
 }

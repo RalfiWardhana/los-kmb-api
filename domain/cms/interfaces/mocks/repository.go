@@ -178,3 +178,17 @@ func (_m *Repository) SavePrescreening(prescreening entity.TrxPrescreening, deta
 
 	return r0
 }
+
+// SaveLogOrchestrator provides a mock function with given fields: header, request, response, path, method, prospectID, requestID
+func (_m *Repository) SaveLogOrchestrator(header interface{}, request interface{}, response interface{}, path string, method string, prospectID string, requestID string) error {
+	ret := _m.Called(header, request, response, path, method, prospectID, requestID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(interface{}, interface{}, interface{}, string, string, string, string) error); ok {
+		r0 = rf(header, request, response, path, method, prospectID, requestID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
