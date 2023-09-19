@@ -359,6 +359,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	tps.decision,
 	tps.reason,
 	tps.created_by AS DecisionBy,
+	tps.decision_by AS DecisionName,
 	tps.created_at AS DecisionAt,
 	CASE
 	  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'

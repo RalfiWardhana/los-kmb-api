@@ -154,6 +154,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				Decision:          decision,
 				Reason:            inq.Reason,
 				DecisionBy:        inq.DecisionBy,
+				DecisionName:      inq.DecisionName,
 				DecisionAt:        inq.DecisionAt,
 			},
 			General: entity.DataGeneral{
@@ -338,10 +339,11 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 		info, _ := json.Marshal(data)
 
 		trxPrescreening := entity.TrxPrescreening{
-			ProspectID: req.ProspectID,
-			Decision:   decisionInfo.Decision,
-			Reason:     reason,
-			CreatedBy:  req.DecisionBy,
+			ProspectID:   req.ProspectID,
+			Decision:     decisionInfo.Decision,
+			Reason:       reason,
+			CreatedBy:    req.DecisionBy,
+			DecisionByBy: req.DecisionByName,
 		}
 
 		trxDetail := entity.TrxDetail{
