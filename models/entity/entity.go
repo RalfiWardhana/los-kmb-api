@@ -414,7 +414,7 @@ type CustomerPersonal struct {
 	BirthDate                  time.Time   `gorm:"column:BirthDate" json:"birth_date"`
 	SurgateMotherName          string      `gorm:"type:varchar(100);column:SurgateMotherName" json:"surgate_mother_name"`
 	Gender                     string      `gorm:"type:varchar(10);column:Gender" json:"gender"`
-	PersonalNPWP               *string     `gorm:"type:varchar(255);column:PersonalNPWP" json:"-"`
+	PersonalNPWP               *string     `gorm:"type:varchar(25);column:PersonalNPWP" json:"-"`
 	MobilePhone                string      `gorm:"type:varchar(14);column:MobilePhone" json:"mobile_phone"`
 	Email                      string      `gorm:"type:varchar(100);column:Email" json:"email"`
 	HomeStatus                 string      `gorm:"type:varchar(20);column:HomeStatus" json:"home_status"`
@@ -456,19 +456,6 @@ type CustomerPersonal struct {
 
 func (c *CustomerPersonal) TableName() string {
 	return "trx_customer_personal"
-}
-
-type TrxMetadata struct {
-	ProspectID   string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
-	CustomerIp   string    `gorm:"type:varchar(15);column:customer_ip"`
-	CustomerLat  string    `gorm:"type:varchar(10);column:customer_lat"`
-	CustomerLong string    `gorm:"type:varchar(10);column:customer_long"`
-	CallbackUrl  string    `gorm:"type:varchar(250);column:callback_url"`
-	CreatedAt    time.Time `gorm:"column:created_at"`
-}
-
-func (c *TrxMetadata) TableName() string {
-	return "trx_metadata"
 }
 
 type CustomerPhoto struct {
@@ -554,9 +541,6 @@ type TrxApk struct {
 	NTFConfinsAmount            float64   `gorm:"column:NTFConfinsAmount"`
 	NTFConfins                  float64   `gorm:"column:NTFConfins"`
 	NTFTopup                    float64   `gorm:"column:NTFTopup"`
-	InstallmentOther            float64   `gorm:"column:InstallmentOther"`
-	InstallmentOtherSpouse      float64   `gorm:"column:InstallmentOtherSpouse"`
-	InstallmentOtherDetail      string    `gorm:"column:InstallmentOtherDetail"`
 }
 
 func (c *TrxApk) TableName() string {
@@ -674,7 +658,7 @@ type CustomerSpouse struct {
 	JobType              string      `gorm:"type:varchar(10);column:JobType" json:"-"`
 	JobPosition          interface{} `gorm:"type:varchar(10);column:JobPosition" json:"-"`
 	Email                string      `gorm:"type:varchar(100);column:Email" json:"-"`
-	PersonalNPWP         string      `gorm:"type:varchar(50);column:PersonalNPWP" json:"-"`
+	PersonalNPWP         string      `gorm:"type:varchar(25);column:PersonalNPWP" json:"-"`
 	Education            string      `gorm:"type:varchar(20);column:Education" json:"-"`
 	CreatedAt            time.Time   `gorm:"column:created_at" json:"-"`
 }

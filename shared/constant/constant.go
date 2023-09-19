@@ -273,6 +273,7 @@ const (
 	KEY_PREFIX_FILTERING               = "filtering"
 	KEY_PREFIX_UPDATE_STATUS_FILTERING = "update_status_filtering"
 	KEY_PREFIX_SUBMIT_TO_LOS           = "submit_los_kmb"
+	KEY_PREFIX_AFTER_PRESCREENING      = "after_prescreening_los_kmb"
 	KEY_PREFIX_CALLBACK                = "callback_los_kmb"
 
 	MAX_RETRY_PUBLISH = 3
@@ -314,9 +315,6 @@ const (
 
 	//PRE SCREENING
 	LIMIT_PRESCREENING = 20000000
-
-	//PRESCREENING
-	SOURCE_DECISION_PRESCREENING = "PSI"
 
 	//DUPCHECK
 	SOURCE_DECISION_DUPCHECK                = "DCK"

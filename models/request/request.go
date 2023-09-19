@@ -146,7 +146,8 @@ type CustomerData struct {
 	IDNumber       string `json:"id_number"`
 	LegalName      string `json:"legal_name"`
 	BirthDate      string `json:"birth_date"`
-	MotherName     string `json:"mother_name"`
+	MotherName     string `json:"surgate_mother_name"`
+	CustomerID     string `json:"customer_id"`
 }
 
 type ReqCustomerDomain struct {
@@ -309,6 +310,10 @@ type DsrSpouse struct {
 	BirthDate  string `json:"birth_date"`
 }
 
+type AfterPrescreening struct {
+	ProspectID string `json:"prospect_id" validate:"required,max=20" example:"SAL042600001"`
+}
+
 type Metrics struct {
 	Transaction        Transaction        `json:"transaction" validate:"required"`
 	Apk                Apk                `json:"apk" validate:"required"`
@@ -321,7 +326,6 @@ type Metrics struct {
 	CustomerOmset      *[]CustomerOmset   `json:"customer_omset"`
 	Item               Item               `json:"item" validate:"required"`
 	Agent              Agent              `json:"agent" validate:"required"`
-	Metadata           Metadata           `json:"metadata" validate:"required"`
 	Surveyor           []Surveyor         `json:"surveyor" validate:"required"`
 }
 
@@ -345,11 +349,11 @@ type Surveyor struct {
 }
 
 type Transaction struct {
-	ProspectID        string `json:"prospect_id" validate:"required" example:"EFM01426202106100001"`
-	BranchID          string `json:"branch_id" validate:"min=2" example:"426"`
+	ProspectID        string `json:"prospect_id" validate:"required,max=20" example:"SAL042600001"`
+	BranchID          string `json:"branch_id" validate:"branch_id" example:"426"`
 	ApplicationSource string `json:"application_source" validate:"required" example:"H"`
 	Channel           string `json:"channel" validate:"channel" example:"OFF"`
-	Lob               string `json:"lob" validate:"lob" example:"KMOB"`
+	Lob               string `json:"lob" validate:"lob" example:"KMB"`
 	OrderAt           string `json:"order_at" validate:"required" example:"2021-07-15T11:44:05+07:00"`
 	IncomingSource    string `json:"incoming_source" validate:"incoming" example:"SLY"`
 }
@@ -368,7 +372,7 @@ type CustomerPersonal struct {
 	StaySinceYear              string   `json:"stay_since_year" validate:"len=4" example:"2018"`
 	StaySinceMonth             string   `json:"stay_since_month" validate:"len=2" example:"03"`
 	HomeStatus                 string   `json:"home_status" validate:"home" example:"KL"`
-	NPWP                       *string  `json:"npwp" example:"994646808XXX895"`
+	NPWP                       *string  `json:"npwp" validate:"max=25" example:"994646808XXX895"`
 	Education                  string   `json:"education" validate:"education"  example:"S1"`
 	MaritalStatus              string   `json:"marital_status" validate:"marital"  example:"M"`
 	NumOfDependence            *int     `json:"num_of_dependence" validate:"required"  example:"1"`
@@ -456,14 +460,14 @@ type CustomerSpouse struct {
 	EmploymentSinceMonth *string `json:"employment_since_month" example:"02"`
 	JobType              string  `json:"job_type" example:"001"`
 	JobPosition          *string `json:"job_position" example:"S"`
-	NPWP                 *string `json:"npwp" example:"994646808XXX895"`
+	NPWP                 *string `json:"npwp" validate:"max=25" example:"994646808XXX895"`
 	Education            string  `json:"education" example:"S1"`
 	Email                string  `json:"email" example:"sulasxx@gmail.com"`
 }
 
 type Apk struct {
 	OtherFee                    float64  `json:"other_fee" example:"0"`
-	Tenor                       int      `json:"tenor" validate:"required" example:"36"`
+	Tenor                       int      `json:"tenor" validate:"required,max=60" example:"36"`
 	ProductOfferingID           string   `json:"product_offering_id" validate:"required" example:"NLMKKAPSEP"`
 	ProductOfferingDesc         string   `json:"product_offering_desc"`
 	ProductID                   string   `json:"product_id" validate:"required" example:"1SNLMK"`
@@ -475,7 +479,7 @@ type Apk struct {
 	AdminFee                    *float64 `json:"admin_fee" validate:"required" example:"1500000"`
 	InstallmentAmount           float64  `json:"installment_amount" validate:"required" example:"4181333"`
 	PercentDP                   *float64 `json:"down_payment_rate" validate:"required" example:"20.95"`
-	PremiumAmountToCustomer     float64  `json:"premium_amount_to_customer" example:"2184000"`
+	PremiumAmountToCustomer     float64  `json:"premium_amount_to_customer" validate:"required" example:"2184000"`
 	FidusiaFee                  *float64 `json:"fidusia_fee" example:"0"`
 	InterestRate                *float64 `json:"interest_rate" validate:"required" example:"2.2"`
 	InsuranceRate               float64  `json:"insurance_rate" validate:"required" example:"3"`
@@ -528,7 +532,7 @@ type Item struct {
 	CoverageType                 string  `json:"coverage_type" validate:"required" example:"TLO"`
 	OwnerKTP                     string  `json:"owner_ktp" validate:"len=16,number" example:"3172024508XXX002"`
 	Brand                        string  `json:"brand" validate:"required" example:"TOYOTA"`
-	PremiumAmountToCustomer      float64 `json:"premium_amount_to_customer" example:"2184000"`
+	PremiumAmountToCustomer      float64 `json:"premium_amount_to_customer" validate:"required" example:"2184000"`
 }
 
 type Agent struct {
@@ -536,13 +540,6 @@ type Agent struct {
 	CmoName   string `json:"cmo_name" validate:"required" example:"SETO MULYA"`
 	CmoNik    string `json:"cmo_nik" validate:"required" example:"93510"`
 	RecomDate string `json:"recom_date" validate:"required" example:"2021-07-15"`
-}
-
-type Metadata struct {
-	CustomerIp   string `json:"customer_ip" example:"202.147.198.222"`
-	CustomerLat  string `json:"customer_lat" example:"-6.409235"`
-	CustomerLong string `json:"customer_long" example:"106.974231"`
-	CallbackUrl  string `json:"callback_url" example:"https://dev-sally-kmob-api.kreditplus.com/api/los/v1/los/status"`
 }
 
 type Filtering struct {

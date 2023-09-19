@@ -12,6 +12,8 @@ import (
 	"os"
 )
 
+// func ini digunakan ketika Submit to LOS
+// dan ketika Approve prescreening di menu prescreening oleh CA
 func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, accessToken string) (resultMetrics interface{}, err error) {
 
 	var (
@@ -27,23 +29,6 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		trxFMF          response.TrxFMF
 	)
 
-	// cek filtering
-	filtering, err = u.repository.GetFilteringResult(reqMetrics.Transaction.ProspectID)
-
-	if err != nil {
-		if err.Error() == constant.RECORD_NOT_FOUND {
-			err = errors.New(fmt.Sprintf("%s - Belum melakukan filtering atau hasil filtering sudah lebih dari %s hari", constant.ERROR_BAD_REQUEST, os.Getenv("BIRO_VALID_DAYS")))
-		} else {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Get Filtering Error")
-		}
-		return
-	}
-
-	if filtering.NextProcess != 1 {
-		err = errors.New(constant.ERROR_BAD_REQUEST + " - Tidak bisa lanjut proses")
-		return
-	}
-
 	// cek trx_master
 	var trxMaster int
 	trxMaster, err = u.repository.ScanTrxMaster(reqMetrics.Transaction.ProspectID)
@@ -52,47 +37,90 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		return
 	}
 
-	// Order ID already have final decision
+	// ProspectID Already Exist
 	if trxMaster > 0 {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID Already Exist")
 		return
 	}
 
-	//cek prescreening
-	var trxPrescreeningDetail entity.TrxDetail
-	trxPrescreening, trxFMF, trxPrescreeningDetail, err = u.usecase.Prescreening(ctx, reqMetrics, filtering, accessToken)
+	// cek prescreening
+	var countTrx int
+	countTrx, err = u.repository.ScanTrxPrescreening(reqMetrics.Transaction.ProspectID)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Prescreening Error")
+		return
+	}
+
+	// cek filtering
+	if countTrx == 0 {
+		filtering, err = u.repository.GetFilteringResult(reqMetrics.Transaction.ProspectID)
+
+		if err != nil {
+			if err.Error() == constant.RECORD_NOT_FOUND {
+				err = errors.New(fmt.Sprintf("%s - Belum melakukan filtering atau hasil filtering sudah lebih dari %s hari", constant.ERROR_BAD_REQUEST, os.Getenv("BIRO_VALID_DAYS")))
+			} else {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get Filtering Error")
+			}
+			return
+		}
+
+		if filtering.NextProcess != 1 {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Tidak bisa lanjut proses")
+			return
+		}
+	}
+
+	// belum prescreening
+	if countTrx == 0 {
+		var trxPrescreeningDetail entity.TrxDetail
+		trxPrescreening, trxFMF, trxPrescreeningDetail, err = u.usecase.Prescreening(ctx, reqMetrics, filtering, accessToken)
+		if err != nil {
+			return
+		}
+
+		details = append(details, trxPrescreeningDetail)
+
+		// prescreening ke CA
+		if trxPrescreening.Decision != constant.DB_DECISION_APR {
+			resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, trxPrescreening.Reason)
+			if err != nil {
+				return
+			}
+
+			return
+		}
+	}
+
+	// sudah prescreening
+	trxDetail := entity.TrxDetail{
+		ProspectID:     reqMetrics.Transaction.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_PROCESS,
+		Decision:       constant.DB_DECISION_PASS,
+		SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+		NextStep:       constant.SOURCE_DECISION_BIRO,
+		CreatedBy:      constant.SYSTEM_CREATED,
+	}
+
+	details = append(details, trxDetail)
+
+	trxDetail = entity.TrxDetail{
+		ProspectID:     reqMetrics.Transaction.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_UNPROCESS,
+		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+		SourceDecision: constant.SOURCE_DECISION_BIRO,
+		CreatedBy:      constant.SYSTEM_CREATED,
+	}
+
+	details = append(details, trxDetail)
+	resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, trxPrescreening.Reason)
 	if err != nil {
 		return
 	}
 
-	details = append(details, trxPrescreeningDetail)
-
-	if trxPrescreening.Decision != constant.DB_DECISION_APR {
-		resultMetrics, err = u.usecase.SaveTransaction(reqMetrics, trxPrescreening, trxFMF, details, trxPrescreening.Reason)
-		if err != nil {
-			return
-		}
-
-		return
-	} else {
-		trxDetail := entity.TrxDetail{
-			ProspectID:     reqMetrics.Transaction.ProspectID,
-			StatusProcess:  constant.STATUS_ONPROCESS,
-			Activity:       constant.ACTIVITY_UNPROCESS,
-			Decision:       constant.DB_DECISION_CREDIT_PROCESS,
-			SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
-			NextStep:       constant.SOURCE_DECISION_BIRO,
-			CreatedBy:      constant.SYSTEM_CREATED,
-		}
-
-		details = append(details, trxDetail)
-		resultMetrics, err = u.usecase.SaveTransaction(reqMetrics, trxPrescreening, trxFMF, details, trxPrescreening.Reason)
-		if err != nil {
-			return
-		}
-
-		return
-	}
+	log.Println("running journey")
+	return
 
 	var selfieImage, ktpImage, legalZipCode, companyZipCode string
 
@@ -226,11 +254,11 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	return
 }
 
-func (u usecase) SaveTransaction(data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (resp response.Metrics, err error) {
+func (u usecase) SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (resp response.Metrics, err error) {
 
 	var decision string
 
-	err = u.repository.SaveTransaction(data, trxPrescreening, trxFMF, details, reason)
+	err = u.repository.SaveTransaction(countTrx, data, trxPrescreening, trxFMF, details, reason)
 
 	detail := details[len(details)-1]
 
