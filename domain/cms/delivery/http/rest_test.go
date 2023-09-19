@@ -1,13 +1,20 @@
 package http
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"los-kmb-api/domain/cms/interfaces/mocks"
+	"los-kmb-api/middlewares"
 	"los-kmb-api/models/entity"
+	"los-kmb-api/models/request"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/common"
 	mocksJson "los-kmb-api/shared/common/json/mocks"
-
+	"los-kmb-api/shared/common/platformevent"
+	platformEventMockery "los-kmb-api/shared/common/platformevent/mocks"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -159,161 +166,180 @@ func TestPrescreeningInquiry(t *testing.T) {
 
 }
 
-// func TestReviewPrescreening(t *testing.T) {
-// 	mockUsecase := new(mocks.Usecase)
-// 	mockRepository := new(mocks.Repository)
-// 	mockJson := new(mocksJson.JSON)
+func TestReviewPrescreening(t *testing.T) {
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	mockJson := new(mocksJson.JSON)
 
-// 	// Create an instance of the handler
-// 	handler := &handlerCMS{
-// 		usecase:    mockUsecase,
-// 		repository: mockRepository,
-// 		Json:       mockJson,
-// 	}
-// 	body := request.ReqReviewPrescreening{
-// 		ProspectID: "EFM03406412522151348",
-// 		Decision:   "APPROVE",
-// 		Reason:     "sesuai",
-// 		DecisionBy: "SYSTEM",
-// 	}
+	// Create an instance of the handler
+	handler := &handlerCMS{
+		usecase:    mockUsecase,
+		repository: mockRepository,
+		Json:       mockJson,
+	}
+	body := request.ReqReviewPrescreening{
+		ProspectID: "EFM03406412522151348",
+		Decision:   "APPROVE",
+		Reason:     "sesuai",
+		DecisionBy: "SYSTEM",
+	}
 
-// 	t.Run("success review", func(t *testing.T) {
-// 		e := echo.New()
-// 		e.Validator = common.NewValidator()
-// 		var errData error
+	t.Run("success review", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+		var errData error
 
-// 		data, _ := json.Marshal(body)
+		data, _ := json.Marshal(body)
 
-// 		reqID := utils.GenerateUUID()
+		reqID := utils.GenerateUUID()
 
-// 		// Create a request and recorder for testing
-// 		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/prescreening/review", strings.NewReader(string(data)))
-// 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-// 		req.Header.Set(echo.HeaderXRequestID, reqID)
-// 		rec := httptest.NewRecorder()
-// 		c := e.NewContext(req, rec)
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/prescreening/review", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderXRequestID, reqID)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
 
-// 		mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything).Return(response.ReviewPrescreening{}, errData).Once()
+		c.Set(constant.HeaderXRequestID, reqID)
 
-// 		mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-// 		// mockJson.On("ServerSideErrorV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything).Return(response.ReviewPrescreening{}, errData).Once()
 
-// 		mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+		mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
-// 		mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+		mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
-// 		mockJson.On("EventSuccess", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{})
+		mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
-// 		// Call the handler
-// 		err := handler.ReviewPrescreening(c)
-// 		if err != nil {
-// 			t.Errorf("error '%s' was not expected, but got: ", err)
-// 		}
-// 	})
+		mockJson.On("EventSuccess", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{})
 
-// 	t.Run("error bind", func(t *testing.T) {
-// 		e := echo.New()
+		// Call the handler
+		err := handler.ReviewPrescreening(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
 
-// 		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/prescreening/review", strings.NewReader("error"))
-// 		rec := httptest.NewRecorder()
+	t.Run("error bind", func(t *testing.T) {
+		e := echo.New()
 
-// 		ctx := e.NewContext(req, rec)
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/prescreening/review", strings.NewReader("error"))
+		rec := httptest.NewRecorder()
 
-// 		err := handler.ReviewPrescreening(ctx)
-// 		assert.Nil(t, err)
-// 	})
+		ctx := e.NewContext(req, rec)
+		reqID := utils.GenerateUUID()
+		ctx.Set(constant.HeaderXRequestID, reqID)
 
-// 	t.Run("error bad request", func(t *testing.T) {
-// 		body.ProspectID = "EFM0340641252215134812345"
-// 		data, _ := json.Marshal(body)
+		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-// 		e := echo.New()
+		mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
-// 		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/prescreening/review", bytes.NewBuffer(data))
-// 		rec := httptest.NewRecorder()
+		err := handler.ReviewPrescreening(ctx)
+		assert.Nil(t, err)
+	})
 
-// 		ctx := e.NewContext(req, rec)
-// 		ctx.Request().Header.Add("content-type", "application/json")
-// 		mockResponse := response.ReviewPrescreening{}
-// 		statusCode := http.StatusBadRequest
-// 		mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
+	t.Run("error bad request", func(t *testing.T) {
+		body.ProspectID = "EFM0340641252215134812345"
+		data, _ := json.Marshal(body)
 
-// 		err := handler.ReviewPrescreening(ctx)
-// 		assert.Nil(t, err)
-// 	})
-// }
+		e := echo.New()
 
-// func TestCMSHandler(t *testing.T) {
-// 	// Create a new Echo instance
-// 	e := echo.New()
-// 	e.Validator = common.NewValidator()
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/prescreening/review", bytes.NewBuffer(data))
+		rec := httptest.NewRecorder()
 
-// 	body := request.ReqReviewPrescreening{
-// 		ProspectID: "EFM03406412522151348",
-// 		Decision:   "APPROVE",
-// 		Reason:     "sesuai",
-// 		DecisionBy: "SYSTEM",
-// 	}
+		ctx := e.NewContext(req, rec)
+		reqID := utils.GenerateUUID()
+		ctx.Set(constant.HeaderXRequestID, reqID)
+		ctx.Request().Header.Add("content-type", "application/json")
 
-// 	// Create a request and recorder for testing
-// 	data, _ := json.Marshal(body)
-// 	// Create a request and recorder for testing
-// 	req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/prescreening/review", strings.NewReader(string(data)))
-// 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-// 	rec := httptest.NewRecorder()
-// 	c := e.NewContext(req, rec)
+		mockResponse := response.ReviewPrescreening{}
+		statusCode := http.StatusBadRequest
 
-// 	// Create a test HTTP server
-// 	srv := httptest.NewServer(e)
+		mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
-// 	// Define the mock middleware
-// 	mockMiddleware := middlewares.NewAccessMiddleware()
+		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-// 	mockUsecase := new(mocks.Usecase)
-// 	mockRepository := new(mocks.Repository)
-// 	mockJson := new(mocksJson.JSON)
-// 	mockPlatformEvent := platformEventMockery.NewPlatformEventInterface(t)
-// 	var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
+		mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
 
-// 	mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		err := handler.ReviewPrescreening(ctx)
+		assert.Nil(t, err)
 
-// 	mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ReviewPrescreening{}, 0, errors.New(constant.RECORD_NOT_FOUND)).Once()
+	})
+}
 
-// 	mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+func TestCMSHandler(t *testing.T) {
+	// Create a new Echo instance
+	e := echo.New()
+	e.Validator = common.NewValidator()
 
-// 	mockJson.On("ServerSideErrorV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	body := request.ReqReviewPrescreening{
+		ProspectID: "EFM03406412522151348",
+		Decision:   "APPROVE",
+		Reason:     "sesuai",
+		DecisionBy: "SYSTEM",
+	}
 
-// 	mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	// Create a request and recorder for testing
+	data, _ := json.Marshal(body)
+	// Create a request and recorder for testing
+	req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/prescreening/review", strings.NewReader(string(data)))
+	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	rec := httptest.NewRecorder()
+	c := e.NewContext(req, rec)
 
-// 	mockJson.On("EventServiceError", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{})
+	reqID := utils.GenerateUUID()
+	c.Set(constant.HeaderXRequestID, reqID)
 
-// 	mockJson.On("EventSuccess", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{})
+	// Create a test HTTP server
+	srv := httptest.NewServer(e)
 
-// 	// mockPlatformEvent.On("PublishEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).
-// 	// 	Return(nil).Once()
+	// Define the mock middleware
+	mockMiddleware := middlewares.NewAccessMiddleware()
 
-// 	mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	mockJson := new(mocksJson.JSON)
+	mockPlatformEvent := platformEventMockery.NewPlatformEventInterface(t)
+	var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
 
-// 	// Initialize the handler with mocks or stubs
-// 	handler := &handlerCMS{
-// 		usecase:    mockUsecase,
-// 		repository: mockRepository,
-// 		Json:       mockJson,
-// 	}
+	mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-// 	// Create a new Echo group and register the routes with the mock middleware
-// 	cmsRoute := e.Group("/cms")
-// 	CMSHandler(cmsRoute, mockUsecase, mockRepository, mockJson, platformEvent, mockMiddleware)
+	mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ReviewPrescreening{}, errors.New(constant.RECORD_NOT_FOUND)).Once()
 
-// 	// Test the ListReason route
-// 	// Add more assertions here to verify the response body and middleware behavior if needed
+	mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
-// 	err := handler.ReviewPrescreening(c)
-// 	if err != nil {
-// 		t.Errorf("error '%s' was not expected, but got: ", err)
-// 	}
+	mockJson.On("ServerSideErrorV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
-// 	// Cleanup resources if needed
-// 	srv.Close()
-// }
+	mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+	mockJson.On("EventServiceError", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{})
+
+	mockJson.On("EventSuccess", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{})
+
+	// mockPlatformEvent.On("PublishEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Once()
+
+	mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+	// Initialize the handler with mocks or stubs
+	handler := &handlerCMS{
+		usecase:    mockUsecase,
+		repository: mockRepository,
+		Json:       mockJson,
+	}
+
+	// Create a new Echo group and register the routes with the mock middleware
+	cmsRoute := e.Group("/cms")
+	CMSHandler(cmsRoute, mockUsecase, mockRepository, mockJson, platformEvent, mockMiddleware)
+
+	// Test the ListReason route
+	// Add more assertions here to verify the response body and middleware behavior if needed
+
+	err := handler.ReviewPrescreening(c)
+	if err != nil {
+		t.Errorf("error '%s' was not expected, but got: ", err)
+	}
+
+	// Cleanup resources if needed
+	srv.Close()
+}
