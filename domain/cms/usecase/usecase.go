@@ -339,11 +339,11 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 		info, _ := json.Marshal(data)
 
 		trxPrescreening := entity.TrxPrescreening{
-			ProspectID:   req.ProspectID,
-			Decision:     decisionInfo.Decision,
-			Reason:       reason,
-			CreatedBy:    req.DecisionBy,
-			DecisionByBy: req.DecisionByName,
+			ProspectID: req.ProspectID,
+			Decision:   decisionInfo.Decision,
+			Reason:     reason,
+			CreatedBy:  req.DecisionBy,
+			DecisionBy: req.DecisionByName,
 		}
 
 		trxDetail := entity.TrxDetail{
