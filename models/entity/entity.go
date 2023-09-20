@@ -794,12 +794,12 @@ func (c *LogOrchestrator) TableName() string {
 }
 
 type TrxPrescreening struct {
-	ProspectID   string    `gorm:"column:ProspectID"`
-	Decision     string    `gorm:"column:decision"`
-	Reason       string    `gorm:"column:reason"`
-	CreatedAt    time.Time `gorm:"column:created_at"`
-	CreatedBy    string    `gorm:"column:created_by"`
-	DecisionByBy string    `gorm:"column:decision_by"`
+	ProspectID string    `gorm:"column:ProspectID"`
+	Decision   string    `gorm:"column:decision"`
+	Reason     string    `gorm:"column:reason"`
+	CreatedAt  time.Time `gorm:"column:created_at"`
+	CreatedBy  string    `gorm:"column:created_by"`
+	DecisionBy string    `gorm:"column:decision_by"`
 }
 
 func (c *TrxPrescreening) TableName() string {
