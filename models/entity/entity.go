@@ -783,6 +783,7 @@ type TrxPrescreening struct {
 	Reason     string    `gorm:"column:reason"`
 	CreatedAt  time.Time `gorm:"column:created_at"`
 	CreatedBy  string    `gorm:"column:created_by"`
+	DecisionBy string    `gorm:"column:decision_by"`
 }
 
 func (c *TrxPrescreening) TableName() string {

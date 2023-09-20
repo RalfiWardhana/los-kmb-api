@@ -78,6 +78,52 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			return
 		}
 
+		// STEP 1 CMO not recommend
+		if reqMetrics.Agent.CmoRecom == constant.CMO_NOT_RECOMMEDED {
+			details = append(details, entity.TrxDetail{
+				ProspectID:     reqMetrics.Transaction.ProspectID,
+				StatusProcess:  constant.STATUS_ONPROCESS,
+				Activity:       constant.ACTIVITY_PROCESS,
+				Decision:       constant.DB_DECISION_REJECT,
+				RuleCode:       constant.CODE_CMO_NOT_RECOMMEDED,
+				SourceDecision: constant.CMO_AGENT,
+				NextStep:       constant.PRESCREENING,
+			})
+
+			details = append(details, entity.TrxDetail{
+				ProspectID:     reqMetrics.Transaction.ProspectID,
+				StatusProcess:  constant.STATUS_FINAL,
+				Activity:       constant.ACTIVITY_STOP,
+				Decision:       constant.DB_DECISION_REJECT,
+				SourceDecision: constant.PRESCREENING,
+				CreatedBy:      constant.SYSTEM_CREATED,
+			})
+
+			trxPrescreening = entity.TrxPrescreening{
+				ProspectID: reqMetrics.Transaction.ProspectID,
+				Decision:   constant.DB_DECISION_REJECT,
+				Reason:     constant.CMO_NOT_RECOMMEDED,
+				CreatedBy:  constant.SYSTEM_CREATED,
+				DecisionBy: constant.SYSTEM_CREATED,
+			}
+
+			resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, trxPrescreening.Reason)
+			if err != nil {
+				return
+			}
+			return
+		}
+
+		details = append(details, entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
+			Decision:       constant.DB_DECISION_PASS,
+			RuleCode:       constant.CODE_CMO_RECOMMENDED,
+			SourceDecision: constant.CMO_AGENT,
+			NextStep:       constant.PRESCREENING,
+		})
+
 		details = append(details, trxPrescreeningDetail)
 
 		// prescreening ke CA
