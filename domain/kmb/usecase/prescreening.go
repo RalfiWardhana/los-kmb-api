@@ -64,12 +64,12 @@ func (u usecase) Prescreening(ctx context.Context, req request.Metrics, filterin
 		ntfLOS, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("NTF_PENDING_URL"), jsonCustomer, header, constant.METHOD_POST, true, 3, 60, req.Transaction.ProspectID, accessToken)
 
 		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + "Call NTF Pending API Error")
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call NTF Pending API Error")
 			return
 		}
 
 		if ntfLOS.StatusCode() != 200 {
-			err = errors.New(constant.ERROR_UPSTREAM + "Call NTF Pending API Error")
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call NTF Pending API Error")
 			return
 		}
 
@@ -92,18 +92,18 @@ func (u usecase) Prescreening(ctx context.Context, req request.Metrics, filterin
 	ntfTopup, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, fmt.Sprintf("%s/%s", os.Getenv("NTF_TOPUP_URL"), req.Item.NoChassis), nil, header, constant.METHOD_GET, true, 3, 60, req.Transaction.ProspectID, accessToken)
 
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + "Call NTF Topup API Error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call NTF Topup API Error")
 		return
 	}
 
 	if ntfTopup.StatusCode() != 200 {
-		err = errors.New(constant.ERROR_UPSTREAM + "Call NTF Topup API Error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call NTF Topup API Error")
 		return
 	}
 
 	err = json.Unmarshal([]byte(jsoniter.Get(ntfTopup.Body(), "data").ToString()), &topup)
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + "Call NTF Topup API Error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call NTF Topup API Error")
 		return
 	}
 

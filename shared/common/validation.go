@@ -230,7 +230,7 @@ func allowedName(fl validator.FieldLevel) (validator bool) {
 	name, err := utils.PlatformDecryptText(s)
 	if err != nil {
 		validator = false
-	} else if len(name) > 200 {
+	} else if len(name) > 100 {
 		validator = false
 	} else if !regexp.MustCompile("^[a-zA-Z.,'` ]*$").MatchString(name) {
 		validator = false

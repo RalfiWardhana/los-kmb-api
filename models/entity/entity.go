@@ -452,6 +452,7 @@ type CustomerPersonal struct {
 	CustomerID                 string      `gorm:"type:varchar(20);column:CustomerID" json:"-"`
 	CustomerStatus             string      `gorm:"type:varchar(10);column:CustomerStatus" json:"customer_status"`
 	SurveyResult               interface{} `gorm:"type:varchar(255);column:SurveyResult" json:"-"`
+	RentFinishDate             *string     `gorm:"column:RentFinishDate" json:"-"`
 }
 
 func (c *CustomerPersonal) TableName() string {
@@ -541,6 +542,7 @@ type TrxApk struct {
 	NTFConfinsAmount            float64   `gorm:"column:NTFConfinsAmount"`
 	NTFConfins                  float64   `gorm:"column:NTFConfins"`
 	NTFTopup                    float64   `gorm:"column:NTFTopup"`
+	WayOfPayment                string    `gorm:"type:varchar(20);column:WayOfPayment"`
 }
 
 func (c *TrxApk) TableName() string {

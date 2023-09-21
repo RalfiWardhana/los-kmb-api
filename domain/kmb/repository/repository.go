@@ -294,6 +294,7 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				DataType:                   data.CustomerPersonal.DataType,
 				Status:                     data.CustomerPersonal.Status,
 				SurveyResult:               surveyResult,
+				RentFinishDate:             data.CustomerPersonal.RentFinishDate,
 			}
 
 			logInfo = personal
@@ -409,6 +410,7 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				NTFConfinsAmount:            trxFMF.NTFConfinsAmount,
 				NTFConfins:                  trxFMF.NTFConfins,
 				NTFTopup:                    trxFMF.NTFTopup,
+				WayOfPayment:                data.Apk.WayOfPayment,
 			}
 
 			logInfo = apk

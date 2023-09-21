@@ -396,6 +396,7 @@ type CustomerPersonal struct {
 	AgreetoAcceptOtherOffering int      `json:"agree_to_accept_other_offering" validate:"required" example:"1"`
 	DataType                   string   `json:"data_type" validate:"required" example:"G"`
 	Status                     string   `json:"status" validate:"required" example:"F"`
+	RentFinishDate             *string  `json:"rent_finish_date" validate:"omitempty,dateformat"  example:"2021-07-29"`
 }
 
 type CustomerEmployment struct {
@@ -488,7 +489,7 @@ type Apk struct {
 	FirstPayment                float64  `json:"first_payment" validate:"required" example:"30831334"`
 	FirstInstallment            string   `json:"first_installment" validate:"required" example:"AR"`
 	FirstPaymentDate            string   `json:"first_payment_date" validate:"required,dateformat" example:"2021-08-16"`
-	PaymentMethod               string   `json:"payment_method" validate:"required" example:"CA"`
+	PaymentMethod               string   `json:"payment_method" validate:"required" example:"CR"`
 	SurveyFee                   *float64 `json:"survey_fee" validate:"required" example:"0"`
 	IsFidusiaCovered            string   `json:"is_fidusia_covered" validate:"required" example:"Y"`
 	ProvisionFee                *float64 `json:"provision_fee" validate:"required" example:"2475000"`
@@ -504,6 +505,7 @@ type Apk struct {
 	FinancePurpose              string   `json:"finance_purpose" validate:"required"`
 	Dealer                      string   `json:"dealer"`
 	LoanAmount                  float64  `json:"loan_amount" example:"105000000"`
+	WayOfPayment                string   `json:"way_of_payment" validate:"required" example:"Payment Point"`
 }
 
 type Item struct {
