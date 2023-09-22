@@ -50,13 +50,13 @@ func TestListReason(t *testing.T) {
 
 		mockUsecase.On("GetReasonPrescreening", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]entity.ReasonMessage{}, 0, nil).Once()
 
-		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
-		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 		// Call the handler
 		err := handler.ListReason(c)
@@ -204,11 +204,11 @@ func TestReviewPrescreening(t *testing.T) {
 
 		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything).Return(response.ReviewPrescreening{}, errData).Once()
-
 		mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
 		mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything).Return(response.ReviewPrescreening{}, errData).Once()
 
 		mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
@@ -269,26 +269,15 @@ func TestReviewPrescreening(t *testing.T) {
 }
 
 func TestCMSHandler(t *testing.T) {
-	// Create a new Echo instance
 	e := echo.New()
 	e.Validator = common.NewValidator()
 
-	body := request.ReqReviewPrescreening{
-		ProspectID: "EFM03406412522151348",
-		Decision:   "APPROVE",
-		Reason:     "sesuai",
-		DecisionBy: "SYSTEM",
-	}
-
 	// Create a request and recorder for testing
-	data, _ := json.Marshal(body)
-	// Create a request and recorder for testing
-	req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/prescreening/review", strings.NewReader(string(data)))
+	req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/prescreening/list-reason", strings.NewReader("error"))
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
-	c := e.NewContext(req, rec)
-
 	reqID := utils.GenerateUUID()
+	c := e.NewContext(req, rec)
 	c.Set(constant.HeaderXRequestID, reqID)
 
 	// Create a test HTTP server
@@ -302,25 +291,6 @@ func TestCMSHandler(t *testing.T) {
 	mockJson := new(mocksJson.JSON)
 	mockPlatformEvent := platformEventMockery.NewPlatformEventInterface(t)
 	var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
-
-	mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-	mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ReviewPrescreening{}, errors.New(constant.RECORD_NOT_FOUND)).Once()
-
-	mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
-
-	mockJson.On("ServerSideErrorV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
-
-	mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
-
-	mockJson.On("EventServiceError", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{})
-
-	mockJson.On("EventSuccess", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{})
-
-	// mockPlatformEvent.On("PublishEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Once()
-
-	mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
-
 	// Initialize the handler with mocks or stubs
 	handler := &handlerCMS{
 		usecase:    mockUsecase,
@@ -332,10 +302,13 @@ func TestCMSHandler(t *testing.T) {
 	cmsRoute := e.Group("/cms")
 	CMSHandler(cmsRoute, mockUsecase, mockRepository, mockJson, platformEvent, mockMiddleware)
 
-	// Test the ListReason route
-	// Add more assertions here to verify the response body and middleware behavior if needed
+	mockResponse := entity.ReasonMessage{}
+	statusCode := http.StatusOK
+	mockUsecase.On("GetInquiryPrescreening", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
 
-	err := handler.ReviewPrescreening(c)
+	mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+	err := handler.ListReason(c)
 	if err != nil {
 		t.Errorf("error '%s' was not expected, but got: ", err)
 	}

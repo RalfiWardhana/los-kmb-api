@@ -454,6 +454,8 @@ func Test_usecase_GetInquiryPrescreening(t *testing.T) {
 		mocksCache := &mocksCache.Repository{}
 		usecase := NewUsecase(mockRepository, mockHttpClient, mocksCache)
 
+		mockRepository.On("GetInquiryPrescreening", mock.Anything, mock.Anything).Return([]entity.InquiryPrescreening{}, 1, errors.New(constant.RECORD_NOT_FOUND)).Once()
+
 		// Create a test request and pagination data.
 		req := request.ReqInquiryPrescreening{}
 		pagination := interface{}(nil)

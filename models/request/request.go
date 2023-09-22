@@ -718,7 +718,8 @@ type RequestPagination struct {
 }
 
 type ReqInquiryPrescreening struct {
-	Search string `json:"search"`
+	Search   string `json:"search"`
+	BranchID string `json:"branch_id"`
 }
 
 type ReqReasonPrescreening struct {
@@ -727,7 +728,7 @@ type ReqReasonPrescreening struct {
 
 type ReqReviewPrescreening struct {
 	ProspectID     string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
-	Decision       string `json:"decision" validate:"required" example:"APR,REJ"`
+	Decision       string `json:"decision" validate:"required" example:"APPROVE,REJECT"`
 	Reason         string `json:"reason"`
 	DecisionBy     string `json:"decision_by" validate:"required"`
 	DecisionByName string `json:"decision_by_name" validate:"required"`
