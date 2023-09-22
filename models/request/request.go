@@ -513,7 +513,7 @@ type Item struct {
 	STNKExpiredDate              string  `json:"stnk_expired_date" validate:"required" example:"2025-03-20"`
 	CategoryID                   string  `json:"category_id" validate:"required" example:"SEDAN"`
 	AssetDescription             string  `json:"asset_description" validate:"required" example:"SUZUKI.KMOBIL.GRAND VITARA.JLX 2,0 AT"`
-	BPKBName                     string  `json:"bpkb_name" validate:"len=1" example:"B"`
+	BPKBName                     string  `json:"bpkb_name" validate:"required,bpkbname" example:"K"`
 	OwnerAsset                   string  `json:"owner_asset" validate:"required" example:"JONATHAN"`
 	LicensePlate                 string  `json:"license_plate" validate:"required" example:"3006TBJ"`
 	Color                        string  `json:"color" validate:"required" example:"HITAM"`
@@ -521,7 +521,7 @@ type Item struct {
 	InsAssetInsuredBy            string  `json:"ins_asset_insured_by" validate:"required" example:"CO"`
 	InsuranceCoyBranchID         string  `json:"insurance_coy_branch_id" validate:"required" example:"426"`
 	CoverageType                 string  `json:"coverage_type" validate:"required" example:"TLO"`
-	OwnerKTP                     string  `json:"owner_ktp" validate:"len=16,number" example:"3172024508XXX002"`
+	OwnerKTP                     string  `json:"owner_ktp" validate:"required,id_number" example:"3172024508XXX002"`
 	Brand                        string  `json:"brand" validate:"required" example:"TOYOTA"`
 	PremiumAmountToCustomer      float64 `json:"premium_amount_to_customer" validate:"required" example:"2184000"`
 }
