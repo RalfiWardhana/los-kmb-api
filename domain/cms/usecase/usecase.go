@@ -208,7 +208,6 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				ChassisNumber:         inq.ChassisNumber,
 				EngineNumber:          inq.EngineNumber,
 				InterestRate:          inq.InterestRate,
-				InsuranceRate:         inq.InsuranceRate,
 				Tenor:                 inq.InstallmentPeriod,
 				OTR:                   inq.OTR,
 				DPAmount:              inq.DPAmount,
@@ -220,9 +219,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				InstallmentAmount:     inq.MonthlyInstallment,
 				AdminFee:              inq.AdminFee,
 				ProvisionFee:          inq.ProvisionFee,
-				FirstPayment:          inq.FirstPayment,
 				FirstInstallment:      inq.FirstInstallment,
-				FirstPaymentDate:      inq.FirstPaymentDate,
 			},
 			Surveyor: surveyorData,
 			Emcon: entity.CustomerEmcon{

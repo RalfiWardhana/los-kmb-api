@@ -921,7 +921,6 @@ type InquiryPrescreening struct {
 	ChassisNumber      string  `gorm:"column:chassis_number"`
 	EngineNumber       string  `gorm:"column:engine_number"`
 	InterestRate       float64 `gorm:"column:interest_rate"`
-	InsuranceRate      float64 `gorm:"column:insurance_rate"`
 	InstallmentPeriod  int     `gorm:"column:InstallmentPeriod"`
 	OTR                float64 `gorm:"column:OTR"`
 	DPAmount           float64 `gorm:"column:DPAmount"`
@@ -933,9 +932,7 @@ type InquiryPrescreening struct {
 	NTF                float64 `gorm:"column:NTF"`
 	Total              float64 `gorm:"column:Total"`
 	MonthlyInstallment float64 `gorm:"column:MonthlyInstallment"`
-	FirstPayment       float64 `gorm:"column:first_payment"`
 	FirstInstallment   string  `gorm:"column:FirstInstallment"`
-	FirstPaymentDate   string  `gorm:"column:first_payment_date"`
 
 	ProfessionID          string  `gorm:"column:ProfessionID"`
 	JobTypeID             string  `gorm:"column:JobType"`
