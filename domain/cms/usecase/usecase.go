@@ -44,29 +44,13 @@ func (u usecase) GetReasonPrescreening(ctx context.Context, req request.ReqReaso
 func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInquiryPrescreening, pagination interface{}) (data []entity.InquiryData, rowTotal int, err error) {
 
 	var (
-		industry           []entity.SpIndustryTypeMaster
-		photos             []entity.CustomerPhoto
-		surveyor           []entity.TrxSurveyor
-		action             bool
-		cmo_recommendation string
-		decision           string
+		industry          []entity.SpIndustryTypeMaster
+		photos            []entity.CustomerPhoto
+		surveyor          []entity.TrxSurveyor
+		action            bool
+		cmoRecommendation string
+		decision          string
 	)
-
-	getValue, _ := u.cache.Get("GetSpIndustryTypeMaster")
-
-	if getValue == nil {
-		industry, err = u.repository.GetSpIndustryTypeMaster()
-
-		if err != nil {
-			return
-		}
-
-		u.cache.Set("GetSpIndustryTypeMaster", []byte("SuccessRetrieve"))
-
-		for _, description := range industry {
-			u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
-		}
-	}
 
 	// get inquiry pre screening
 	result, rowTotal, err := u.repository.GetInquiryPrescreening(req, pagination)
@@ -77,7 +61,19 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 
 	for _, inq := range result {
 
-		industry_type, _ := u.cache.Get(inq.IndustryTypeID)
+		industryType, _ := u.cache.Get(inq.IndustryTypeID)
+
+		if industryType == nil {
+			industry, err = u.repository.GetSpIndustryTypeMaster()
+
+			if err != nil {
+				return
+			}
+
+			for _, description := range industry {
+				u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
+			}
+		}
 
 		// get trx_customer_photo
 		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
@@ -135,9 +131,9 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 			action = true
 		}
 		if inq.CmoRecommendation == 1 {
-			cmo_recommendation = "Recommended"
+			cmoRecommendation = "Recommended"
 		} else {
-			cmo_recommendation = "Not Recommended"
+			cmoRecommendation = "Not Recommended"
 		}
 
 		decision = ""
@@ -149,7 +145,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 
 		row := entity.InquiryData{
 			Prescreening: entity.DataPrescreening{
-				CmoRecommendation: cmo_recommendation,
+				CmoRecommendation: cmoRecommendation,
 				ShowAction:        action,
 				Decision:          decision,
 				Reason:            inq.Reason,
@@ -200,7 +196,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				ProfessionID:          inq.ProfessionID,
 				JobType:               inq.JobTypeID,
 				JobPosition:           inq.JobPosition,
-				IndustryTypeID:        strings.TrimSpace(string(industry_type)),
+				IndustryTypeID:        strings.TrimSpace(string(industryType)),
 			},
 			ItemApk: entity.DataItemApk{
 				Supplier:              inq.Supplier,
@@ -212,7 +208,6 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				ChassisNumber:         inq.ChassisNumber,
 				EngineNumber:          inq.EngineNumber,
 				InterestRate:          inq.InterestRate,
-				InsuranceRate:         inq.InsuranceRate,
 				Tenor:                 inq.InstallmentPeriod,
 				OTR:                   inq.OTR,
 				DPAmount:              inq.DPAmount,
@@ -224,9 +219,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				InstallmentAmount:     inq.MonthlyInstallment,
 				AdminFee:              inq.AdminFee,
 				ProvisionFee:          inq.ProvisionFee,
-				FirstPayment:          inq.FirstPayment,
 				FirstInstallment:      inq.FirstInstallment,
-				FirstPaymentDate:      inq.FirstPaymentDate,
 			},
 			Surveyor: surveyorData,
 			Emcon: entity.CustomerEmcon{

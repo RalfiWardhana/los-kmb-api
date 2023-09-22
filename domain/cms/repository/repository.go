@@ -13,6 +13,7 @@ import (
 	"los-kmb-api/shared/utils"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -154,11 +155,35 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 
 	var (
 		filter         string
+		filterBranch   string
 		filterPaginate string
 	)
 
-	if req.Search != "" {
-		filter = " WHERE (tt.ProspectID LIKE '%" + req.Search + "%' OR tt.IDNumber LIKE '%" + req.Search + "%' OR tt.LegalName LIKE '%" + req.Search + "%')"
+	if req.BranchID != "" {
+		arrBranch := strings.Split(req.BranchID, ",")
+		if len(arrBranch) == 1 {
+			// spesific branch non HO
+			if arrBranch[0] != "999" {
+				filterBranch = fmt.Sprintf("WHERE tt.BranchID IN ('%s')", req.BranchID)
+			}
+		} else {
+			// multi branch
+			var branch string
+			for i, val := range arrBranch {
+				branch = fmt.Sprintf("%s'%s'", branch, val)
+				if i < len(arrBranch)-1 {
+					branch = fmt.Sprintf("%s,", branch)
+				}
+			}
+
+			filterBranch = fmt.Sprintf("WHERE tt.BranchID IN (%s)", branch)
+		}
+	}
+
+	if req.Search != "" && filterBranch != "" {
+		filter = filterBranch + " AND (tt.ProspectID LIKE '%" + req.Search + "%' OR tt.IDNumber LIKE '%" + req.Search + "%' OR tt.LegalName LIKE '%" + req.Search + "%')"
+	} else if req.Search != "" {
+		filter = "WHERE (tt.ProspectID LIKE '%" + req.Search + "%' OR tt.IDNumber LIKE '%" + req.Search + "%' OR tt.LegalName LIKE '%" + req.Search + "%')"
 	}
 
 	if pagination != nil {
@@ -179,6 +204,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 		FROM
 		(
 			SELECT
+			cb.BranchID,
 			tm.ProspectID,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
@@ -353,6 +379,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	SELECT
 	tm.ProspectID,
 	cb.BranchName,
+	cb.BranchID,
 	tia.info AS CMORecommend,
 	tst.activity,
 	tst.source_decision,
@@ -405,7 +432,6 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	chassis_number,
 	engine_number,
 	interest_rate,
-	insurance_rate,
 	Tenor AS InstallmentPeriod,
 	OTR,
 	DPAmount,
@@ -417,9 +443,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	NTF,
 	(NTF + interest_amount) AS Total,
 	InstallmentAmount AS MonthlyInstallment,
-	first_payment,
 	FirstInstallment,
-	first_payment_date,
 	pr.value AS ProfessionID,
 	jt.value AS JobType,
 	jb.value AS JobPosition,

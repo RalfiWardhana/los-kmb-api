@@ -48,7 +48,8 @@ func (c *handlerCMS) PrescreeningInquiry(ctx echo.Context) (err error) {
 	var accessToken = middlewares.UserInfoData.AccessToken
 
 	req := request.ReqInquiryPrescreening{
-		Search: ctx.QueryParam("search"),
+		Search:   ctx.QueryParam("search"),
+		BranchID: ctx.QueryParam("branch_id"),
 	}
 
 	page, _ := strconv.Atoi(ctx.QueryParam("page"))
@@ -113,12 +114,6 @@ func (c *handlerCMS) ReviewPrescreening(ctx echo.Context) (err error) {
 	if err != nil {
 		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, err)
 		return ctxJson
-	}
-
-	if err != nil {
-		resp = c.Json.EventServiceError(ctx.Request().Context(), accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, err)
-	} else {
-		resp = c.Json.EventSuccess(ctx.Request().Context(), accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, data)
 	}
 
 	if data.Decision == constant.DECISION_REJECT {

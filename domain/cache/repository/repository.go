@@ -17,7 +17,8 @@ func NewRepository(cache *bigcache.BigCache) interfaces.Repository {
 }
 
 func (c *repoHandler) Get(key string) ([]byte, error) {
-	return c.cache.Get(key)
+	data, err := c.cache.Get(key)
+	return data, err
 }
 
 func (c *repoHandler) Set(key string, entry []byte) error {
