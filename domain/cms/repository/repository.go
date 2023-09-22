@@ -180,6 +180,8 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 		}
 	}
 
+	filter = filterBranch
+
 	if req.Search != "" && filterBranch != "" {
 		filter = filterBranch + " AND (tt.ProspectID LIKE '%" + req.Search + "%' OR tt.IDNumber LIKE '%" + req.Search + "%' OR tt.LegalName LIKE '%" + req.Search + "%')"
 	} else if req.Search != "" {
