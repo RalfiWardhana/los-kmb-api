@@ -1036,7 +1036,6 @@ type DataItemApk struct {
 	ChassisNumber         string  `gorm:"column:chassis_number" json:"chassis_number"`
 	EngineNumber          string  `gorm:"column:engine_number" json:"engine_number"`
 	InterestRate          float64 `gorm:"column:interest_rate" json:"interest_rate"`
-	InsuranceRate         float64 `gorm:"column:insurance_rate" json:"insurance_rate"`
 	Tenor                 int     `gorm:"column:InstallmentPeriod" json:"installment_period"`
 	OTR                   float64 `gorm:"column:OTR" json:"otr"`
 	DPAmount              float64 `gorm:"column:DPAmount" json:"dp_amount"`
@@ -1048,9 +1047,7 @@ type DataItemApk struct {
 	NTF                   float64 `gorm:"column:NTF" json:"ntf"`
 	NTFPlusInterestAmount float64 `gorm:"column:Total" json:"total"`
 	InstallmentAmount     float64 `gorm:"column:MonthlyInstallment" json:"monthly_installment"`
-	FirstPayment          float64 `gorm:"column:first_payment" json:"first_payment"`
 	FirstInstallment      string  `gorm:"column:FirstInstallment" json:"first_installment"`
-	FirstPaymentDate      string  `gorm:"column:first_payment_date" json:"first_payment_date"`
 }
 
 type DataAddress struct {
