@@ -446,24 +446,17 @@ type CustomerEmcon struct {
 }
 
 type CustomerSpouse struct {
-	IDNumber             string  `json:"id_number" validate:"required,id_number" example:"177105550374XX01"`
-	FullName             string  `json:"full_name" validate:"required,allow_name" example:"SUSI BUNGA"`
-	LegalName            string  `json:"legal_name" validate:"required,allow_name" example:"SUSI BUNGA"`
-	BirthDate            string  `json:"birth_date"  validate:"dateformat" example:"1991-01-29"`
-	BirthPlace           string  `json:"birth_place" validate:"required" example:"JAKARTA"`
-	Gender               string  `json:"gender" validate:"gender" example:"F"`
-	SurgateMotherName    string  `json:"surgate_mother_name" validate:"required,allow_name" example:"TUTI"`
-	CompanyPhone         *string `json:"company_phone" example:"865542"`
-	CompanyName          *string `json:"company_name" example:"PT.BUMI KARYA"`
-	MobilePhone          string  `json:"mobile_phone" validate:"min=9,max=14" example:"08772012XXX0"`
-	ProfessionID         *string `json:"profession_id" example:"KRYSW"`
-	EmploymentSinceYear  *string `json:"employment_since_year" example:"2020"`
-	EmploymentSinceMonth *string `json:"employment_since_month" example:"02"`
-	JobType              string  `json:"job_type" example:"001"`
-	JobPosition          *string `json:"job_position" example:"S"`
-	NPWP                 *string `json:"npwp" validate:"max=25" example:"994646808XXX895"`
-	Education            string  `json:"education" example:"S1"`
-	Email                string  `json:"email" example:"sulasxx@gmail.com"`
+	IDNumber          string  `json:"id_number" validate:"required,id_number" example:"177105550374XX01"`
+	FullName          string  `json:"full_name" validate:"required,allow_name" example:"SUSI BUNGA"`
+	LegalName         string  `json:"legal_name" validate:"required,allow_name" example:"SUSI BUNGA"`
+	BirthDate         string  `json:"birth_date"  validate:"dateformat" example:"1991-01-29"`
+	BirthPlace        string  `json:"birth_place" validate:"required" example:"JAKARTA"`
+	Gender            string  `json:"gender" validate:"gender" example:"F"`
+	SurgateMotherName string  `json:"surgate_mother_name" validate:"required,allow_name" example:"TUTI"`
+	CompanyPhone      *string `json:"company_phone" example:"865542"`
+	CompanyName       *string `json:"company_name" example:"PT.BUMI KARYA"`
+	MobilePhone       string  `json:"mobile_phone" validate:"min=9,max=14" example:"08772012XXX0"`
+	ProfessionID      *string `json:"profession_id" example:"KRYSW"`
 }
 
 type Apk struct {
@@ -483,19 +476,15 @@ type Apk struct {
 	PremiumAmountToCustomer     float64  `json:"premium_amount_to_customer" validate:"required" example:"2184000"`
 	FidusiaFee                  *float64 `json:"fidusia_fee" example:"0"`
 	InterestRate                *float64 `json:"interest_rate" validate:"required" example:"2.2"`
-	InsuranceRate               float64  `json:"insurance_rate" validate:"required" example:"3"`
 	InterestAmount              *float64 `json:"interest_amount" validate:"required" example:"66528000"`
 	InsuranceAmount             float64  `json:"insurance_amount" validate:"required" example:"3150000"`
-	FirstPayment                float64  `json:"first_payment" validate:"required" example:"30831334"`
 	FirstInstallment            string   `json:"first_installment" validate:"required" example:"AR"`
-	FirstPaymentDate            string   `json:"first_payment_date" validate:"required,dateformat" example:"2021-08-16"`
 	PaymentMethod               string   `json:"payment_method" validate:"required" example:"CR"`
 	SurveyFee                   *float64 `json:"survey_fee" validate:"required" example:"0"`
 	IsFidusiaCovered            string   `json:"is_fidusia_covered" validate:"required" example:"Y"`
 	ProvisionFee                *float64 `json:"provision_fee" validate:"required" example:"2475000"`
 	InsAssetPaidBy              string   `json:"ins_asset_paid_by" validate:"required" example:"CU"`
 	InsAssetPeriod              string   `json:"ins_asset_period" validate:"required" example:"FT"`
-	Discount                    *float64 `json:"discount" validate:"required" example:"0"`
 	EffectiveRate               float64  `json:"effective_rate" validate:"required" example:"26.4"`
 	SalesmanID                  string   `json:"salesman_id" validate:"required" example:"81088"`
 	SupplierBankAccountID       string   `json:"supplier_bank_account_id" validate:"required" example:"1"`
