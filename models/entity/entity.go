@@ -501,7 +501,6 @@ type TrxApk struct {
 	AF                          float64   `gorm:"column:AF"`
 	OTR                         float64   `gorm:"column:OTR"`
 	DPAmount                    float64   `gorm:"column:DPAmount"`
-	Discount                    float64   `gorm:"column:Discount"`
 	InsuranceFee                float64   `gorm:"column:InsuranceFee"`
 	InstallmentAmount           float64   `gorm:"column:InstallmentAmount"`
 	FirstInstallment            string    `gorm:"column:FirstInstallment"`
@@ -514,11 +513,8 @@ type TrxApk struct {
 	LifeInsuranceFee            float64   `gorm:"column:LifeInsuranceFee"`
 	FidusiaFee                  float64   `gorm:"column:fidusia_fee"`
 	InterestRate                float64   `gorm:"column:interest_rate"`
-	InsuranceRate               float64   `gorm:"column:insurance_rate"`
-	FirstPayment                float64   `gorm:"column:first_payment"`
 	InsuranceAmount             float64   `gorm:"column:insurance_amount"`
 	InterestAmount              float64   `gorm:"column:interest_amount"`
-	FirstPaymentDate            time.Time `gorm:"column:first_payment_date"`
 	PaymentMethod               string    `gorm:"type:varchar(10);column:payment_method"`
 	SurveyFee                   float64   `gorm:"column:survey_fee"`
 	IsFidusiaCovered            string    `gorm:"type:varchar(1);column:is_fidusia_covered"`
@@ -643,26 +639,19 @@ func (c *TrxInfoAgent) TableName() string {
 }
 
 type CustomerSpouse struct {
-	ProspectID           string      `gorm:"type:varchar(20);column:ProspectID;primary_key:true" json:"-"`
-	IDNumber             string      `gorm:"type:varchar(40);column:IDNumber" json:"spouse_id_number"`
-	FullName             string      `gorm:"type:varchar(200);column:FullName" json:"-"`
-	LegalName            string      `gorm:"type:varchar(200);column:LegalName" json:"spouse_legal_name"`
-	BirthPlace           string      `gorm:"type:varchar(30);column:BirthPlace" json:"-"`
-	BirthDate            time.Time   `gorm:"column:BirthDate" json:"-"`
-	SurgateMotherName    string      `gorm:"type:varchar(100);column:SurgateMotherName" json:"-"`
-	Gender               string      `gorm:"type:varchar(1);column:Gender" json:"-"`
-	CompanyPhone         interface{} `gorm:"type:varchar(20);column:CompanyPhone" json:"spouse_company_phone"`
-	CompanyName          interface{} `gorm:"type:varchar(20);column:CompanyName" json:"spouse_company_name"`
-	MobilePhone          string      `gorm:"type:varchar(20);column:MobilePhone" json:"spouse_mobile_phone"`
-	EmploymentSinceYear  interface{} `gorm:"type:varchar(4);column:EmploymentSinceYear" json:"-"`
-	EmploymentSinceMonth interface{} `gorm:"type:varchar(2);column:EmploymentSinceMonth" json:"-"`
-	ProfessionID         interface{} `gorm:"type:varchar(10);column:ProfessionID" json:"spouse_profession"`
-	JobType              string      `gorm:"type:varchar(10);column:JobType" json:"-"`
-	JobPosition          interface{} `gorm:"type:varchar(10);column:JobPosition" json:"-"`
-	Email                string      `gorm:"type:varchar(100);column:Email" json:"-"`
-	PersonalNPWP         string      `gorm:"type:varchar(25);column:PersonalNPWP" json:"-"`
-	Education            string      `gorm:"type:varchar(20);column:Education" json:"-"`
-	CreatedAt            time.Time   `gorm:"column:created_at" json:"-"`
+	ProspectID        string      `gorm:"type:varchar(20);column:ProspectID;primary_key:true" json:"-"`
+	IDNumber          string      `gorm:"type:varchar(40);column:IDNumber" json:"spouse_id_number"`
+	FullName          string      `gorm:"type:varchar(200);column:FullName" json:"-"`
+	LegalName         string      `gorm:"type:varchar(200);column:LegalName" json:"spouse_legal_name"`
+	BirthPlace        string      `gorm:"type:varchar(30);column:BirthPlace" json:"-"`
+	BirthDate         time.Time   `gorm:"column:BirthDate" json:"-"`
+	SurgateMotherName string      `gorm:"type:varchar(100);column:SurgateMotherName" json:"-"`
+	Gender            string      `gorm:"type:varchar(1);column:Gender" json:"-"`
+	CompanyPhone      interface{} `gorm:"type:varchar(20);column:CompanyPhone" json:"spouse_company_phone"`
+	CompanyName       interface{} `gorm:"type:varchar(20);column:CompanyName" json:"spouse_company_name"`
+	MobilePhone       string      `gorm:"type:varchar(20);column:MobilePhone" json:"spouse_mobile_phone"`
+	ProfessionID      interface{} `gorm:"type:varchar(10);column:ProfessionID" json:"spouse_profession"`
+	CreatedAt         time.Time   `gorm:"column:created_at" json:"-"`
 }
 
 func (c *CustomerSpouse) TableName() string {

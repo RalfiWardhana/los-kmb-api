@@ -114,7 +114,6 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 	location, _ := time.LoadLocation("Asia/Jakarta")
 
 	formatBirthDate, _ := time.ParseInLocation("2006-01-02", data.CustomerPersonal.BirthDate, location)
-	firstPaymentDate, _ := time.Parse("2006-01-02", data.Apk.FirstPaymentDate)
 
 	var formatIDExpired interface{}
 
@@ -324,12 +323,8 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 			}
 
 			var (
-				discount float64
 				adminFee float64
 			)
-			if data.Apk.Discount != nil {
-				discount = *data.Apk.Discount
-			}
 			if data.Apk.AdminFee != nil {
 				adminFee = *data.Apk.AdminFee
 			}
@@ -371,7 +366,6 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				AF:                          data.Apk.AF,
 				AoID:                        data.Apk.AoID,
 				DPAmount:                    data.Apk.DPAmount,
-				Discount:                    discount,
 				AdminFee:                    adminFee,
 				OTR:                         data.Apk.OTR,
 				InstallmentAmount:           data.Apk.InstallmentAmount,
@@ -382,11 +376,8 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				LifeInsuranceFee:            data.Item.PremiumAmountToCustomer,
 				FidusiaFee:                  fidusiaFee,
 				InterestRate:                interestRate,
-				InsuranceRate:               data.Apk.InsuranceRate,
-				FirstPayment:                data.Apk.FirstPayment,
 				InsuranceAmount:             data.Apk.InsuranceAmount,
 				InterestAmount:              interestAmount,
-				FirstPaymentDate:            firstPaymentDate,
 				PaymentMethod:               data.Apk.PaymentMethod,
 				SurveyFee:                   surveyFee,
 				IsFidusiaCovered:            data.Apk.IsFidusiaCovered,
@@ -420,32 +411,21 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 			}
 
 			if data.CustomerSpouse != nil {
-				var personalNPWP string
-				if data.CustomerSpouse.NPWP != nil {
-					personalNPWP = *data.CustomerSpouse.NPWP
-				}
 				spouseBirthdate, _ := time.ParseInLocation("2006-01-02", data.CustomerSpouse.BirthDate, location)
 
 				customerSpouse := entity.CustomerSpouse{
-					ProspectID:           data.Transaction.ProspectID,
-					IDNumber:             data.CustomerSpouse.IDNumber,
-					FullName:             data.CustomerSpouse.FullName,
-					LegalName:            data.CustomerSpouse.LegalName,
-					BirthDate:            spouseBirthdate,
-					BirthPlace:           data.CustomerSpouse.BirthPlace,
-					SurgateMotherName:    data.CustomerSpouse.SurgateMotherName,
-					Gender:               data.CustomerSpouse.Gender,
-					CompanyPhone:         data.CustomerSpouse.CompanyPhone,
-					CompanyName:          data.CustomerSpouse.CompanyName,
-					MobilePhone:          data.CustomerSpouse.MobilePhone,
-					ProfessionID:         data.CustomerSpouse.ProfessionID,
-					EmploymentSinceMonth: data.CustomerSpouse.EmploymentSinceMonth,
-					EmploymentSinceYear:  data.CustomerSpouse.EmploymentSinceYear,
-					JobType:              data.CustomerSpouse.JobType,
-					JobPosition:          data.CustomerSpouse.JobPosition,
-					Email:                data.CustomerSpouse.Email,
-					PersonalNPWP:         personalNPWP,
-					Education:            data.CustomerSpouse.Education,
+					ProspectID:        data.Transaction.ProspectID,
+					IDNumber:          data.CustomerSpouse.IDNumber,
+					FullName:          data.CustomerSpouse.FullName,
+					LegalName:         data.CustomerSpouse.LegalName,
+					BirthDate:         spouseBirthdate,
+					BirthPlace:        data.CustomerSpouse.BirthPlace,
+					SurgateMotherName: data.CustomerSpouse.SurgateMotherName,
+					Gender:            data.CustomerSpouse.Gender,
+					CompanyPhone:      data.CustomerSpouse.CompanyPhone,
+					CompanyName:       data.CustomerSpouse.CompanyName,
+					MobilePhone:       data.CustomerSpouse.MobilePhone,
+					ProfessionID:      data.CustomerSpouse.ProfessionID,
 				}
 
 				logInfo = customerSpouse
