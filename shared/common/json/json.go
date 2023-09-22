@@ -290,7 +290,7 @@ func formatMessage(err validator.FieldError) string {
 	case constant.TAG_BRANCH_ID:
 		message = "accepted:length=3, number only"
 	case constant.TAG_ALLOW_NAME:
-		message = "accepted:valid encryption, max=200, value=A-Z,a-z.'` "
+		message = "accepted:valid encryption, max=100, value=A-Z,a-z.'` "
 	case constant.TAG_GENDER:
 		message = fmt.Sprintf("accepted:value=%s", common.Gender)
 	case constant.TAG_SPOUSE_GENDER:
