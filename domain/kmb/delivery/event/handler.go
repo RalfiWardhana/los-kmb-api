@@ -105,11 +105,13 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 	// decrypt request
 	req.CustomerPersonal.IDNumber, _ = utils.PlatformDecryptText(req.CustomerPersonal.IDNumber)
 	req.CustomerPersonal.LegalName, _ = utils.PlatformDecryptText(req.CustomerPersonal.LegalName)
+	req.CustomerPersonal.FullName, _ = utils.PlatformDecryptText(req.CustomerPersonal.FullName)
 	req.CustomerPersonal.SurgateMotherName, _ = utils.PlatformDecryptText(req.CustomerPersonal.SurgateMotherName)
 
 	if req.CustomerSpouse != nil {
 		req.CustomerSpouse.IDNumber, _ = utils.PlatformDecryptText(req.CustomerSpouse.IDNumber)
 		req.CustomerSpouse.LegalName, _ = utils.PlatformDecryptText(req.CustomerSpouse.LegalName)
+		req.CustomerSpouse.FullName, _ = utils.PlatformDecryptText(req.CustomerSpouse.FullName)
 		req.CustomerSpouse.SurgateMotherName, _ = utils.PlatformDecryptText(req.CustomerSpouse.SurgateMotherName)
 
 		var genderSpouse request.GenderCompare
@@ -262,11 +264,13 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 	// decrypt request
 	req.CustomerPersonal.IDNumber, _ = utils.PlatformDecryptText(req.CustomerPersonal.IDNumber)
 	req.CustomerPersonal.LegalName, _ = utils.PlatformDecryptText(req.CustomerPersonal.LegalName)
+	req.CustomerPersonal.FullName, _ = utils.PlatformDecryptText(req.CustomerPersonal.FullName)
 	req.CustomerPersonal.SurgateMotherName, _ = utils.PlatformDecryptText(req.CustomerPersonal.SurgateMotherName)
 
 	if req.CustomerSpouse != nil {
 		req.CustomerSpouse.IDNumber, _ = utils.PlatformDecryptText(req.CustomerSpouse.IDNumber)
 		req.CustomerSpouse.LegalName, _ = utils.PlatformDecryptText(req.CustomerSpouse.LegalName)
+		req.CustomerSpouse.FullName, _ = utils.PlatformDecryptText(req.CustomerSpouse.FullName)
 		req.CustomerSpouse.SurgateMotherName, _ = utils.PlatformDecryptText(req.CustomerSpouse.SurgateMotherName)
 
 		var genderSpouse request.GenderCompare
