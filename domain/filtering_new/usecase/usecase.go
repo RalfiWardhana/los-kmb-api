@@ -233,7 +233,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 
 			resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("NEW_KMB_PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, reqs.ProspectID, accessToken)
 
-			if err != nil || resp.StatusCode() != 200 && resp.StatusCode() != 400 {
+			if err != nil {
 				err = errors.New(constant.ERROR_UPSTREAM + " - failed get data pefindo")
 				return
 			}
@@ -566,9 +566,10 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 			}
 
 		} else if checkPefindo.Code == "202" {
-			data.Code = constant.SERVICE_PBK_UNAVAILABLE_CODE
+			data.Code = constant.PBK_NO_HIT
 			data.CustomerStatus = customerStatus
-			data.Reason = "Service PBK tidak tersedia"
+			data.Decision = constant.DECISION_PASS
+			data.Reason = "No Hit PBK"
 		}
 
 		responsePefindo = pefindoResult
@@ -576,7 +577,8 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 	} else {
 		data.Code = constant.PBK_NO_HIT
 		data.CustomerStatus = customerStatus
-		data.Reason = "Akses ke PBK ditutup"
+		data.Decision = constant.DECISION_PASS
+		data.Reason = "No Hit PBK"
 
 	}
 
