@@ -367,10 +367,7 @@ type AsliriConfig struct {
 type TrxMaster struct {
 	ProspectID        string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
 	BranchID          string    `gorm:"type:varchar(5);column:BranchID"`
-	TransactionType   *string   `gorm:"type:varchar(30);column:transaction_type"`
 	ApplicationSource string    `gorm:"type:varchar(3);column:application_source"`
-	MerchantID        *string   `gorm:"type:varchar(20);column:merchant_id"`
-	MerchantName      *string   `gorm:"type:varchar(100);column:merchant_name"`
 	Channel           string    `gorm:"type:varchar(5);column:channel"`
 	Lob               string    `gorm:"type:varchar(5);column:lob"`
 	OrderAt           string    `gorm:"type:varchar(30);column:order_at"`
