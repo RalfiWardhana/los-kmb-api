@@ -521,7 +521,7 @@ type Item struct {
 	InsAssetInsuredBy            string  `json:"ins_asset_insured_by" validate:"required,max=10" example:"CO"`
 	InsuranceCoyBranchID         string  `json:"insurance_coy_branch_id" validate:"required,max=10" example:"426"`
 	CoverageType                 string  `json:"coverage_type" validate:"required,max=10" example:"TLO"`
-	OwnerKTP                     string  `json:"owner_ktp" validate:"required,length=16,number" example:"3172024508XXX002"`
+	OwnerKTP                     string  `json:"owner_ktp" validate:"required,len=16,number" example:"3172024508XXX002"`
 	Brand                        string  `json:"brand" validate:"required,max=255" example:"TOYOTA"`
 	PremiumAmountToCustomer      float64 `json:"premium_amount_to_customer" validate:"required,max=999999999" example:"2184000"`
 }
