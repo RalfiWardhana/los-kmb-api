@@ -102,7 +102,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			trxPrescreening = entity.TrxPrescreening{
 				ProspectID: reqMetrics.Transaction.ProspectID,
 				Decision:   constant.DB_DECISION_REJECT,
-				Reason:     constant.CMO_NOT_RECOMMEDED,
+				Reason:     constant.REASON_CMO_NOT_RECOMMENDED,
 				CreatedBy:  constant.SYSTEM_CREATED,
 				DecisionBy: constant.SYSTEM_CREATED,
 			}
