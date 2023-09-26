@@ -116,7 +116,7 @@ func (r repoHandler) GetReasonPrescreening(req request.ReqReasonPrescreening, pa
 	return
 }
 
-func (r repoHandler) GetCustomerPhoto(prospectID string) (photo []entity.CustomerPhoto, err error) {
+func (r repoHandler) GetCustomerPhoto(prospectID string) (photo []entity.DataPhoto, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
@@ -127,7 +127,7 @@ func (r repoHandler) GetCustomerPhoto(prospectID string) (photo []entity.Custome
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.NewKmb.Raw("SELECT photo_id, url FROM trx_customer_photo WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&photo).Error; err != nil {
+	if err = r.NewKmb.Raw("SELECT tcp.photo_id, CASE WHEN lpi.Name IS NULL THEN 'LAINNYA' ELSE lpi.Name END AS label, tcp.url FROM trx_customer_photo tcp WITH (nolock) LEFT JOIN m_label_photo_inquiry lpi ON lpi.LabelPhotoID = tcp.photo_id WHERE ProspectID = ?", prospectID).Scan(&photo).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
