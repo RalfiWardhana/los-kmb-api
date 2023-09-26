@@ -605,6 +605,28 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 	return
 }
 
+func (r repoHandler) SaveTrxJourney(prospectID string, request interface{}) (err error) {
+
+	requestByte, _ := json.Marshal(request)
+
+	if err = r.newKmbDB.Model(&entity.TrxJourney{}).Create(&entity.TrxJourney{
+		ProspectID: prospectID,
+		Request:    string(utils.SafeEncoding(requestByte)),
+	}).Error; err != nil {
+		return
+	}
+	return
+}
+
+func (r repoHandler) GetTrxJourney(prospectID string) (trxJourney entity.TrxJourney, err error) {
+
+	if err = r.logsDB.Raw(fmt.Sprintf("SELECT ProspectID, request from trx_journey with (nolock) where ProspectID = '%s'", prospectID)).Scan(&trxJourney).Error; err != nil {
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error) {
 
 	headerByte, _ := json.Marshal(header)
@@ -628,7 +650,7 @@ func (r repoHandler) SaveLogOrchestrator(header, request, response interface{}, 
 
 func (r repoHandler) GetLogOrchestrator(prospectID string) (logOrchestrator entity.LogOrchestrator, err error) {
 
-	if err = r.logsDB.Raw(fmt.Sprintf("SELECT TOP 1 ProspectID, request_data from log_orchestrators with (nolock) where ProspectID = '%s' AND url = '/api/v3/kmb/consume/journey'", prospectID)).Scan(&logOrchestrator).Error; err != nil {
+	if err = r.logsDB.Raw(fmt.Sprintf("SELECT TOP 1 ProspectID, request_data from log_orchestrators with (nolock) where ProspectID = '%s' AND url = '/api/v3/kmb/consume/journey' ORDER BY created_at DESC", prospectID)).Scan(&logOrchestrator).Error; err != nil {
 		return
 	}
 

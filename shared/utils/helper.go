@@ -301,16 +301,16 @@ func SafeEncoding(arrByte []byte) []byte {
 
 func SafeJsonReplacer(myString string) string {
 	r := strings.NewReplacer(
+		"\\u0026", "&",
+		"\\u003c", "<",
+		"\\u003e", ">",
 		"\\n", "",
-		"\\", "",
 		"  ", "",
 		"\r", "",
 		"\t", "",
 		"\"{", "{",
 		"}\"", "}",
-		"\\u0026", "&",
-		"\\u003c", "<",
-		"\\u003e", ">",
+		"\\", "",
 	)
 	myString = r.Replace(myString)
 	return myString

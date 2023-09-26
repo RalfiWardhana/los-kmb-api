@@ -765,6 +765,16 @@ func (c *LogOrchestrator) TableName() string {
 	return "log_orchestrators"
 }
 
+type TrxJourney struct {
+	ProspectID string    `gorm:"type:varchar(20);column:ProspectID"`
+	Request    string    `gorm:"type:varchar(8000);column:request"`
+	CreatedAt  time.Time `gorm:"column:created_at"`
+}
+
+func (c *TrxJourney) TableName() string {
+	return "trx_journey"
+}
+
 type TrxPrescreening struct {
 	ProspectID string    `gorm:"column:ProspectID"`
 	Decision   string    `gorm:"column:decision"`

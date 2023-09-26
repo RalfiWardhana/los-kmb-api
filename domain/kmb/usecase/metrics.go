@@ -153,9 +153,33 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	trxDetail = entity.TrxDetail{
 		ProspectID:     reqMetrics.Transaction.ProspectID,
 		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_PROCESS,
+		Decision:       constant.DB_DECISION_PASS,
+		SourceDecision: constant.SOURCE_DECISION_BIRO,
+		NextStep:       constant.SOURCE_DECISION_EKYC,
+		CreatedBy:      constant.SYSTEM_CREATED,
+	}
+
+	details = append(details, trxDetail)
+
+	trxDetail = entity.TrxDetail{
+		ProspectID:     reqMetrics.Transaction.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_PROCESS,
+		Decision:       constant.DB_DECISION_PASS,
+		SourceDecision: constant.SOURCE_DECISION_EKYC,
+		NextStep:       constant.SOURCE_DECISION_CA,
+		CreatedBy:      constant.SYSTEM_CREATED,
+	}
+
+	details = append(details, trxDetail)
+
+	trxDetail = entity.TrxDetail{
+		ProspectID:     reqMetrics.Transaction.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
 		Activity:       constant.ACTIVITY_UNPROCESS,
 		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
-		SourceDecision: constant.SOURCE_DECISION_BIRO,
+		SourceDecision: constant.SOURCE_DECISION_CA,
 		CreatedBy:      constant.SYSTEM_CREATED,
 	}
 
