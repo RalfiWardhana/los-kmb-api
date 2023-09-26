@@ -993,7 +993,7 @@ type ReasonMessage struct {
 }
 
 func (c *ReasonMessage) TableName() string {
-	return "reason_message"
+	return "m_reason_message"
 }
 
 type InquiryData struct {

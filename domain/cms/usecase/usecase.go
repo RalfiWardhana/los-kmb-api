@@ -32,7 +32,7 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 
 func (u usecase) GetReasonPrescreening(ctx context.Context, req request.ReqReasonPrescreening, pagination interface{}) (data []entity.ReasonMessage, rowTotal int, err error) {
 
-	data, rowTotal, err = u.repository.GetReasonPrescreening(req.ReasonID, pagination)
+	data, rowTotal, err = u.repository.GetReasonPrescreening(req, pagination)
 
 	if err != nil {
 		return
