@@ -52,7 +52,7 @@ func (r repoHandler) GetSpIndustryTypeMaster() (data []entity.SpIndustryTypeMast
 	return
 }
 
-func (r repoHandler) GetReasonPrescreening(reasonID string, pagination interface{}) (reason []entity.ReasonMessage, rowTotal int, err error) {
+func (r repoHandler) GetReasonPrescreening(req request.ReqReasonPrescreening, pagination interface{}) (reason []entity.ReasonMessage, rowTotal int, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
@@ -62,8 +62,17 @@ func (r repoHandler) GetReasonPrescreening(reasonID string, pagination interface
 		filterPaginate string
 	)
 
-	if reasonID != "" {
-		filter = " WHERE ReasonID != '" + reasonID + "'"
+	if req.ReasonID != "" {
+		arrReason := strings.Split(req.ReasonID, ",")
+		var reason string
+		for i, val := range arrReason {
+			reason = fmt.Sprintf("%s'%s'", reason, val)
+			if i < len(arrReason)-1 {
+				reason = fmt.Sprintf("%s,", reason)
+			}
+		}
+
+		filter = fmt.Sprintf("WHERE ReasonID NOT IN (%s)", reason)
 	}
 
 	if pagination != nil {
@@ -82,7 +91,7 @@ func (r repoHandler) GetReasonPrescreening(reasonID string, pagination interface
 		SELECT
 		COUNT(tt.ReasonID) AS totalRow
 		FROM
-		(SELECT ReasonID FROM reason_message WITH (nolock)) AS tt %s`, filter)).Scan(&row).Error; err != nil {
+		(SELECT ReasonID FROM m_reason_message WITH (nolock)) AS tt %s`, filter)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -97,7 +106,7 @@ func (r repoHandler) GetReasonPrescreening(reasonID string, pagination interface
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT tt.* FROM (SELECT Code, ReasonID, ReasonMessage FROM reason_message WITH (nolock)) AS tt %s ORDER BY tt.ReasonID asc %s`, filter, filterPaginate)).Scan(&reason).Error; err != nil {
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT tt.* FROM (SELECT Code, ReasonID, ReasonMessage FROM m_reason_message WITH (nolock)) AS tt %s ORDER BY tt.ReasonID asc %s`, filter, filterPaginate)).Scan(&reason).Error; err != nil {
 		return
 	}
 
@@ -396,6 +405,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	END AS incoming_source,
 	tf.customer_status,
 	tm.created_at,
+	tm.order_at,
 	scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 	scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
 	scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,

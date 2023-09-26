@@ -875,6 +875,7 @@ type InquiryPrescreening struct {
 	BranchName     string `gorm:"column:BranchName"`
 	IncomingSource string `gorm:"column:incoming_source"`
 	CreatedAt      string `gorm:"column:created_at"`
+	OrderAt        string `gorm:"column:order_at"`
 
 	CustomerStatus    string    `gorm:"column:customer_status"`
 	IDNumber          string    `gorm:"column:IDNumber"`
@@ -975,7 +976,7 @@ type ReasonMessage struct {
 }
 
 func (c *ReasonMessage) TableName() string {
-	return "reason_message"
+	return "m_reason_message"
 }
 
 type InquiryData struct {
@@ -1006,6 +1007,7 @@ type DataGeneral struct {
 	BranchName     string `gorm:"column:BranchName" json:"branch_name"`
 	IncomingSource string `gorm:"column:incoming_source" json:"incoming_source"`
 	CreatedAt      string `gorm:"column:created_at" json:"created_at"`
+	OrderAt        string `gorm:"column:order_at" json:"order_at"`
 }
 
 type DataItemApk struct {
