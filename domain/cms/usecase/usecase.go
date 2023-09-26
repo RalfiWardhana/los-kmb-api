@@ -158,6 +158,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				BranchName:     inq.BranchName,
 				IncomingSource: inq.IncomingSource,
 				CreatedAt:      inq.CreatedAt,
+				OrderAt:        inq.OrderAt,
 			},
 			Personal: entity.CustomerPersonal{
 				IDNumber:          inq.IDNumber,
