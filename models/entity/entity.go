@@ -909,6 +909,8 @@ type InquiryPrescreening struct {
 	DPAmount           float64 `gorm:"column:DPAmount"`
 	FinanceAmount      float64 `gorm:"column:FinanceAmount"`
 	InterestAmount     float64 `gorm:"column:interest_amount"`
+	LifeInsuranceFee   float64 `gorm:"column:LifeInsuranceFee"`
+	AssetInsuranceFee  float64 `gorm:"column:AssetInsuranceFee"`
 	InsuranceAmount    float64 `gorm:"column:insurance_amount"`
 	AdminFee           float64 `gorm:"column:AdminFee"`
 	ProvisionFee       float64 `gorm:"column:provision_fee"`
@@ -1025,6 +1027,8 @@ type DataItemApk struct {
 	DPAmount              float64 `gorm:"column:DPAmount" json:"dp_amount"`
 	AF                    float64 `gorm:"column:FinanceAmount" json:"finance_amount"`
 	InterestAmount        float64 `gorm:"column:interest_amount" json:"interest_amount"`
+	LifeInsuranceFee      float64 `gorm:"column:LifeInsuranceFee" json:"life_insurance_fee"`
+	AssetInsuranceFee     float64 `gorm:"column:AssetInsuranceFee" json:"asset_insurance_fee"`
 	InsuranceAmount       float64 `gorm:"column:insurance_amount" json:"insurance_amount"`
 	AdminFee              float64 `gorm:"column:AdminFee" json:"admin_fee"`
 	ProvisionFee          float64 `gorm:"column:provision_fee" json:"provision_fee"`
