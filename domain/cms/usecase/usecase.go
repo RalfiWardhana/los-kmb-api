@@ -215,6 +215,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				DPAmount:              inq.DPAmount,
 				AF:                    inq.FinanceAmount,
 				NTF:                   inq.NTF,
+				NTFAkumulasi:          inq.NTFAkumulasi,
 				NTFPlusInterestAmount: inq.Total,
 				InterestAmount:        inq.InterestAmount,
 				LifeInsuranceFee:      inq.LifeInsuranceFee,

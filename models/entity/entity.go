@@ -915,6 +915,7 @@ type InquiryPrescreening struct {
 	AdminFee           float64 `gorm:"column:AdminFee"`
 	ProvisionFee       float64 `gorm:"column:provision_fee"`
 	NTF                float64 `gorm:"column:NTF"`
+	NTFAkumulasi       float64 `gorm:"column:NTFAkumulasi"`
 	Total              float64 `gorm:"column:Total"`
 	MonthlyInstallment float64 `gorm:"column:MonthlyInstallment"`
 	FirstInstallment   string  `gorm:"column:FirstInstallment"`
@@ -1033,6 +1034,7 @@ type DataItemApk struct {
 	AdminFee              float64 `gorm:"column:AdminFee" json:"admin_fee"`
 	ProvisionFee          float64 `gorm:"column:provision_fee" json:"provision_fee"`
 	NTF                   float64 `gorm:"column:NTF" json:"ntf"`
+	NTFAkumulasi          float64 `gorm:"column:NTFAkumulasi" json:"ntf_akumulasi"`
 	NTFPlusInterestAmount float64 `gorm:"column:Total" json:"total"`
 	InstallmentAmount     float64 `gorm:"column:MonthlyInstallment" json:"monthly_installment"`
 	FirstInstallment      string  `gorm:"column:FirstInstallment" json:"first_installment"`
