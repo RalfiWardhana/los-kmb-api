@@ -43,6 +43,7 @@ func NewServiceKMB(app *platformevent.ConsumerRouter, repository interfaces.Repo
 	app.Handle(constant.KEY_PREFIX_AFTER_PRESCREENING, handler.KMBAfterPrescreening)
 }
 
+// event submit to los
 func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 	middlewares.GetPlatformAuth()
 
@@ -176,6 +177,7 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 	if err != nil {
 		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
 	} else {
+		_ = h.repository.SaveTrxJourney(req.Transaction.ProspectID, reqEncrypted)
 		resp = h.Json.EventSuccess(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, resp)
 	}
 
@@ -184,6 +186,7 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 	return nil
 }
 
+// event after prescreening
 func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (err error) {
 	middlewares.GetPlatformAuth()
 
@@ -193,6 +196,7 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 	body := []byte(getBody)
 
 	var (
+		trxJourney           entity.TrxJourney
 		logOrhcerstrators    entity.LogOrchestrator
 		reqAfterPrescreening request.AfterPrescreening
 		req                  request.Metrics
@@ -214,16 +218,23 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 		return nil
 	}
 
-	logOrhcerstrators, err = h.repository.GetLogOrchestrator(reqAfterPrescreening.ProspectID)
+	trxJourney, err = h.repository.GetTrxJourney(reqAfterPrescreening.ProspectID)
 	if err != nil {
-		err = errors.New(constant.ERROR_BAD_REQUEST + " - The data does not exist")
-		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
-		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
-		return nil
-	}
+		logOrhcerstrators, err = h.repository.GetLogOrchestrator(reqAfterPrescreening.ProspectID)
+		if err != nil {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Request not exist")
+			resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.Transaction.ProspectID, utils.StructToMap(resp), 0)
+			return nil
+		}
 
-	err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(logOrhcerstrators.RequestData), &reqEncrypted)
-	err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(logOrhcerstrators.RequestData), &req)
+		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(logOrhcerstrators.RequestData), &reqEncrypted)
+		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(logOrhcerstrators.RequestData), &req)
+
+	} else {
+		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(trxJourney.Request), &reqEncrypted)
+		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(trxJourney.Request), &req)
+	}
 
 	if err != nil {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Unmarshal body error")

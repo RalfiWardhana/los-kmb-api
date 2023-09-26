@@ -13,6 +13,8 @@ type Repository interface {
 	SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (newErr error)
 	GetLogOrchestrator(prospectID string) (logOrchestrator entity.LogOrchestrator, err error)
 	SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error)
+	SaveTrxJourney(prospectID string, request interface{}) (err error)
+	GetTrxJourney(prospectID string) (trxJourney entity.TrxJourney, err error)
 	GetDupcheckConfig() (config entity.AppConfig, err error)
 	GetNewDupcheck(ProspectID string) (data entity.NewDupcheck, err error)
 	SaveNewDupcheck(newDupcheck entity.NewDupcheck) (err error)

@@ -394,6 +394,27 @@ func (_m *Repository) GetNewDupcheck(ProspectID string) (entity.NewDupcheck, err
 	return r0, r1
 }
 
+// GetTrxJourney provides a mock function with given fields: prospectID
+func (_m *Repository) GetTrxJourney(prospectID string) (entity.TrxJourney, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 entity.TrxJourney
+	if rf, ok := ret.Get(0).(func(string) entity.TrxJourney); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.TrxJourney)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // SaveDataApiLog provides a mock function with given fields: data
 func (_m *Repository) SaveDataApiLog(data entity.TrxApiLog) error {
 	ret := _m.Called(data)
@@ -457,6 +478,20 @@ func (_m *Repository) SaveTransaction(countTrx int, data request.Metrics, trxPre
 	var r0 error
 	if rf, ok := ret.Get(0).(func(int, request.Metrics, entity.TrxPrescreening, response.TrxFMF, []entity.TrxDetail, string) error); ok {
 		r0 = rf(countTrx, data, trxPrescreening, trxFMF, details, reason)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SaveTrxJourney provides a mock function with given fields: prospectID, _a1
+func (_m *Repository) SaveTrxJourney(prospectID string, _a1 interface{}) error {
+	ret := _m.Called(prospectID, _a1)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, interface{}) error); ok {
+		r0 = rf(prospectID, _a1)
 	} else {
 		r0 = ret.Error(0)
 	}
