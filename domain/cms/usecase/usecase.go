@@ -45,7 +45,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 
 	var (
 		industry          []entity.SpIndustryTypeMaster
-		photos            []entity.CustomerPhoto
+		photos            []entity.DataPhoto
 		surveyor          []entity.TrxSurveyor
 		action            bool
 		cmoRecommendation string
@@ -82,12 +82,13 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 			return
 		}
 
-		var photoData []entity.CustomerPhoto
+		var photoData []entity.DataPhoto
 
 		if len(photos) > 0 {
 			for _, photo := range photos {
-				photoEntry := entity.CustomerPhoto{
+				photoEntry := entity.DataPhoto{
 					PhotoID: photo.PhotoID,
+					Label:   photo.Label,
 					Url:     photo.Url,
 				}
 				photoData = append(photoData, photoEntry)
@@ -95,7 +96,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 		}
 
 		if len(photoData) < 1 {
-			photoData = []entity.CustomerPhoto{}
+			photoData = []entity.DataPhoto{}
 		}
 
 		// get trx_surveyor

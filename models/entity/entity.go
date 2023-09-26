@@ -991,7 +991,7 @@ type InquiryData struct {
 	Surveyor     []TrxSurveyor      `json:"surveyor"`
 	Emcon        CustomerEmcon      `json:"emcon"`
 	Address      DataAddress        `json:"address"`
-	Photo        []CustomerPhoto    `json:"photo"`
+	Photo        []DataPhoto        `json:"photo"`
 }
 
 type DataPrescreening struct {
@@ -1067,6 +1067,12 @@ type DataAddress struct {
 	EmergencyCity      string `gorm:"column:EmergencyCity" json:"emergency_city"`
 	EmergencyAreaPhone string `gorm:"column:EmergencyAreaPhone" json:"emergency_area_phone"`
 	EmergencyPhone     string `gorm:"column:EmergencyPhone" json:"emergency_phone"`
+}
+
+type DataPhoto struct {
+	PhotoID string `gorm:"column:photo_id" json:"photo_id"`
+	Label   string `gorm:"column:label" json:"photo_label"`
+	Url     string `gorm:"column:url" json:"photo_url"`
 }
 
 type TotalRow struct {
