@@ -16,15 +16,15 @@ type Repository struct {
 }
 
 // GetCustomerPhoto provides a mock function with given fields: prospectID
-func (_m *Repository) GetCustomerPhoto(prospectID string) ([]entity.CustomerPhoto, error) {
+func (_m *Repository) GetCustomerPhoto(prospectID string) ([]entity.DataPhoto, error) {
 	ret := _m.Called(prospectID)
 
-	var r0 []entity.CustomerPhoto
-	if rf, ok := ret.Get(0).(func(string) []entity.CustomerPhoto); ok {
+	var r0 []entity.DataPhoto
+	if rf, ok := ret.Get(0).(func(string) []entity.DataPhoto); ok {
 		r0 = rf(prospectID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.CustomerPhoto)
+			r0 = ret.Get(0).([]entity.DataPhoto)
 		}
 	}
 
@@ -68,13 +68,13 @@ func (_m *Repository) GetInquiryPrescreening(req request.ReqInquiryPrescreening,
 	return r0, r1, r2
 }
 
-// GetReasonPrescreening provides a mock function with given fields: reasonID, pagination
-func (_m *Repository) GetReasonPrescreening(reasonID string, pagination interface{}) ([]entity.ReasonMessage, int, error) {
-	ret := _m.Called(reasonID, pagination)
+// GetReasonPrescreening provides a mock function with given fields: req, pagination
+func (_m *Repository) GetReasonPrescreening(req request.ReqReasonPrescreening, pagination interface{}) ([]entity.ReasonMessage, int, error) {
+	ret := _m.Called(req, pagination)
 
 	var r0 []entity.ReasonMessage
-	if rf, ok := ret.Get(0).(func(string, interface{}) []entity.ReasonMessage); ok {
-		r0 = rf(reasonID, pagination)
+	if rf, ok := ret.Get(0).(func(request.ReqReasonPrescreening, interface{}) []entity.ReasonMessage); ok {
+		r0 = rf(req, pagination)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]entity.ReasonMessage)
@@ -82,15 +82,15 @@ func (_m *Repository) GetReasonPrescreening(reasonID string, pagination interfac
 	}
 
 	var r1 int
-	if rf, ok := ret.Get(1).(func(string, interface{}) int); ok {
-		r1 = rf(reasonID, pagination)
+	if rf, ok := ret.Get(1).(func(request.ReqReasonPrescreening, interface{}) int); ok {
+		r1 = rf(req, pagination)
 	} else {
 		r1 = ret.Get(1).(int)
 	}
 
 	var r2 error
-	if rf, ok := ret.Get(2).(func(string, interface{}) error); ok {
-		r2 = rf(reasonID, pagination)
+	if rf, ok := ret.Get(2).(func(request.ReqReasonPrescreening, interface{}) error); ok {
+		r2 = rf(req, pagination)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -165,13 +165,13 @@ func (_m *Repository) GetSurveyorData(prospectID string) ([]entity.TrxSurveyor, 
 	return r0, r1
 }
 
-// SavePrescreening provides a mock function with given fields: prescreening, detail, status
-func (_m *Repository) SavePrescreening(prescreening entity.TrxPrescreening, detail entity.TrxDetail, status entity.TrxStatus) error {
-	ret := _m.Called(prescreening, detail, status)
+// SaveLogOrchestrator provides a mock function with given fields: header, _a1, response, path, method, prospectID, requestID
+func (_m *Repository) SaveLogOrchestrator(header interface{}, _a1 interface{}, response interface{}, path string, method string, prospectID string, requestID string) error {
+	ret := _m.Called(header, _a1, response, path, method, prospectID, requestID)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(entity.TrxPrescreening, entity.TrxDetail, entity.TrxStatus) error); ok {
-		r0 = rf(prescreening, detail, status)
+	if rf, ok := ret.Get(0).(func(interface{}, interface{}, interface{}, string, string, string, string) error); ok {
+		r0 = rf(header, _a1, response, path, method, prospectID, requestID)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -179,13 +179,13 @@ func (_m *Repository) SavePrescreening(prescreening entity.TrxPrescreening, deta
 	return r0
 }
 
-// SaveLogOrchestrator provides a mock function with given fields: header, request, response, path, method, prospectID, requestID
-func (_m *Repository) SaveLogOrchestrator(header interface{}, request interface{}, response interface{}, path string, method string, prospectID string, requestID string) error {
-	ret := _m.Called(header, request, response, path, method, prospectID, requestID)
+// SavePrescreening provides a mock function with given fields: prescreening, detail, status
+func (_m *Repository) SavePrescreening(prescreening entity.TrxPrescreening, detail entity.TrxDetail, status entity.TrxStatus) error {
+	ret := _m.Called(prescreening, detail, status)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(interface{}, interface{}, interface{}, string, string, string, string) error); ok {
-		r0 = rf(header, request, response, path, method, prospectID, requestID)
+	if rf, ok := ret.Get(0).(func(entity.TrxPrescreening, entity.TrxDetail, entity.TrxStatus) error); ok {
+		r0 = rf(prescreening, detail, status)
 	} else {
 		r0 = ret.Error(0)
 	}

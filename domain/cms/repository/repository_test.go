@@ -54,12 +54,12 @@ func TestGetCustomerPhoto(t *testing.T) {
 
 	// Expected input and output
 	prospectID := "12345"
-	expectedPhoto := []entity.CustomerPhoto{{PhotoID: "1", Url: "http://example.com/photo1.jpg"}}
+	expectedPhoto := []entity.DataPhoto{{PhotoID: "1", Label: "KTP", Url: "http://example.com/photo1.jpg"}}
 
 	// Mock SQL query and result
-	mock.ExpectQuery(`SELECT photo_id, url FROM trx_customer_photo WITH \(nolock\) WHERE ProspectID = \?`).WithArgs(prospectID).
-		WillReturnRows(sqlmock.NewRows([]string{"photo_id", "url"}).
-			AddRow(1, "http://example.com/photo1.jpg"))
+	mock.ExpectQuery(`SELECT tcp.photo_id, CASE WHEN lpi.Name IS NULL THEN 'LAINNYA' ELSE lpi.Name END AS label, tcp.url FROM trx_customer_photo tcp WITH \(nolock\) LEFT JOIN m_label_photo_inquiry lpi ON lpi.LabelPhotoID = tcp.photo_id WHERE ProspectID = \?`).WithArgs(prospectID).
+		WillReturnRows(sqlmock.NewRows([]string{"photo_id", "label", "url"}).
+			AddRow(1, "KTP", "http://example.com/photo1.jpg"))
 
 	// Call the function
 	photo, err := repo.GetCustomerPhoto(prospectID)
@@ -93,7 +93,7 @@ func TestGetCustomerPhoto_RecordNotFound(t *testing.T) {
 	prospectID := "12345"
 
 	// Mock SQL query to simulate record not found
-	mock.ExpectQuery(`SELECT photo_id, url FROM trx_customer_photo WITH \(nolock\) WHERE ProspectID = \?`).WithArgs(prospectID).
+	mock.ExpectQuery(`SELECT tcp.photo_id, CASE WHEN lpi.Name IS NULL THEN 'LAINNYA' ELSE lpi.Name END AS label, tcp.url FROM trx_customer_photo tcp WITH \(nolock\) LEFT JOIN m_label_photo_inquiry lpi ON lpi.LabelPhotoID = tcp.photo_id WHERE ProspectID = \?`).WithArgs(prospectID).
 		WillReturnError(gorm.ErrRecordNotFound)
 
 	// Call the function
@@ -278,7 +278,9 @@ func TestGetReasonPrescreening(t *testing.T) {
 
 	// Expected input and output
 
-	reasonID := "99"
+	req := request.ReqReasonPrescreening{
+		ReasonID: "99,100,101,102",
+	}
 	expectedReason := []entity.ReasonMessage{
 		{
 			ReasonID:      "11",
@@ -288,16 +290,16 @@ func TestGetReasonPrescreening(t *testing.T) {
 	}
 
 	// Mock SQL query and result
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT COUNT(tt.ReasonID) AS totalRow FROM (SELECT ReasonID FROM reason_message WITH (nolock)) AS tt WHERE ReasonID != '99'`)).
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT COUNT(tt.ReasonID) AS totalRow FROM (SELECT ReasonID FROM m_reason_message WITH (nolock)) AS tt WHERE ReasonID NOT IN ('99','100','101','102')`)).
 		WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 			AddRow("27"))
 
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT tt.* FROM (SELECT Code, ReasonID, ReasonMessage FROM reason_message WITH (nolock)) AS tt WHERE ReasonID != '99' ORDER BY tt.ReasonID asc OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT tt.* FROM (SELECT Code, ReasonID, ReasonMessage FROM m_reason_message WITH (nolock)) AS tt WHERE ReasonID NOT IN ('99','100','101','102') ORDER BY tt.ReasonID asc OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 		WillReturnRows(sqlmock.NewRows([]string{"Code", "ReasonID", "ReasonMessage"}).
 			AddRow("12", "11", "Akte Jual Beli Tidak Sesuai"))
 
 	// Call the function
-	reason, _, err := repo.GetReasonPrescreening(reasonID, 1)
+	reason, _, err := repo.GetReasonPrescreening(req, 1)
 
 	// Verify the result
 	if err != nil {
@@ -325,14 +327,16 @@ func TestGetReasonPrescreening_RecordNotFound(t *testing.T) {
 	repo := NewRepository(gormDB, gormDB, gormDB)
 
 	// Expected input and output
-	reasonID := "99"
+	req := request.ReqReasonPrescreening{
+		ReasonID: "99,100,101,102",
+	}
 
 	// Mock SQL query to simulate record not found
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT tt.* FROM (SELECT Code, ReasonID, ReasonMessage FROM reason_message WITH (nolock)) AS tt WHERE ReasonID != '99' ORDER BY tt.ReasonID asc`)).
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT tt.* FROM (SELECT Code, ReasonID, ReasonMessage FROM m_reason_message WITH (nolock)) AS tt WHERE ReasonID NOT IN ('99','100','101','102') ORDER BY tt.ReasonID asc`)).
 		WillReturnError(gorm.ErrRecordNotFound)
 
 	// Call the function
-	_, _, err := repo.GetReasonPrescreening(reasonID, nil)
+	_, _, err := repo.GetReasonPrescreening(req, nil)
 
 	// Verify the error message
 	expectedErr := errors.New(constant.RECORD_NOT_FOUND)
@@ -437,7 +441,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 		BranchID: "426,903",
 	}
 
-	expectedInquiry := []entity.InquiryPrescreening{{CmoRecommendation: 0, Activity: "", SourceDecision: "", Decision: "", Reason: "", DecisionBy: "", DecisionAt: "", ProspectID: "", BranchName: "", IncomingSource: "", CreatedAt: "", CustomerStatus: "", IDNumber: "", LegalName: "", BirthPlace: "", BirthDate: time.Time{}, SurgateMotherName: "", Gender: "", MobilePhone: "", Email: "", Education: "", MaritalStatus: "", NumOfDependence: 0, HomeStatus: "", StaySinceMonth: "", StaySinceYear: "", ExtCompanyPhone: (*string)(nil), SourceOtherIncome: (*string)(nil), Supplier: "", ProductOfferingID: "", AssetType: "", AssetDescription: "", ManufacturingYear: "", Color: "", ChassisNumber: "", EngineNumber: "", InterestRate: 0, InstallmentPeriod: 0, OTR: 0, DPAmount: 0, FinanceAmount: 0, InterestAmount: 0, InsuranceAmount: 0, AdminFee: 0, ProvisionFee: 0, NTF: 0, Total: 0, MonthlyInstallment: 0, FirstInstallment: "", ProfessionID: "", JobTypeID: "", JobPosition: "", CompanyName: "", IndustryTypeID: "", EmploymentSinceYear: "", EmploymentSinceMonth: "", MonthlyFixedIncome: 0, MonthlyVariableIncome: 0, SpouseIncome: 0, SpouseIDNumber: "", SpouseLegalName: "", SpouseCompanyName: "", SpouseCompanyPhone: "", SpouseMobilePhone: "", SpouseProfession: "", EmconName: "", Relationship: "", EmconMobilePhone: "", LegalAddress: "", LegalRTRW: "", LegalKelurahan: "", LegalKecamatan: "", LegalZipCode: "", LegalCity: "", ResidenceAddress: "", ResidenceRTRW: "", ResidenceKelurahan: "", ResidenceKecamatan: "", ResidenceZipCode: "", ResidenceCity: "", CompanyAddress: "", CompanyRTRW: "", CompanyKelurahan: "", CompanyKecamatan: "", CompanyZipCode: "", CompanyCity: "", CompanyAreaPhone: "", CompanyPhone: "", EmergencyAddress: "", EmergencyRTRW: "", EmergencyKelurahan: "", EmergencyKecamatan: "", EmergencyZipcode: "", EmergencyCity: "", EmergencyAreaPhone: "", EmergencyPhone: ""}}
+	expectedInquiry := []entity.InquiryPrescreening{{CmoRecommendation: 0, Activity: "", SourceDecision: "", Decision: "", Reason: "", DecisionBy: "", DecisionAt: "", ProspectID: "", BranchName: "", IncomingSource: "", CreatedAt: "", OrderAt: "", CustomerStatus: "", IDNumber: "", LegalName: "", BirthPlace: "", BirthDate: time.Time{}, SurgateMotherName: "", Gender: "", MobilePhone: "", Email: "", Education: "", MaritalStatus: "", NumOfDependence: 0, HomeStatus: "", StaySinceMonth: "", StaySinceYear: "", ExtCompanyPhone: (*string)(nil), SourceOtherIncome: (*string)(nil), Supplier: "", ProductOfferingID: "", AssetType: "", AssetDescription: "", ManufacturingYear: "", Color: "", ChassisNumber: "", EngineNumber: "", InterestRate: 0, InstallmentPeriod: 0, OTR: 0, DPAmount: 0, FinanceAmount: 0, InterestAmount: 0, LifeInsuranceFee: 0, AssetInsuranceFee: 0, InsuranceAmount: 0, AdminFee: 0, ProvisionFee: 0, NTF: 0, NTFAkumulasi: 0, Total: 0, MonthlyInstallment: 0, FirstInstallment: "", ProfessionID: "", JobTypeID: "", JobPosition: "", CompanyName: "", IndustryTypeID: "", EmploymentSinceYear: "", EmploymentSinceMonth: "", MonthlyFixedIncome: 0, MonthlyVariableIncome: 0, SpouseIncome: 0, SpouseIDNumber: "", SpouseLegalName: "", SpouseCompanyName: "", SpouseCompanyPhone: "", SpouseMobilePhone: "", SpouseProfession: "", EmconName: "", Relationship: "", EmconMobilePhone: "", LegalAddress: "", LegalRTRW: "", LegalKelurahan: "", LegalKecamatan: "", LegalZipCode: "", LegalCity: "", ResidenceAddress: "", ResidenceRTRW: "", ResidenceKelurahan: "", ResidenceKecamatan: "", ResidenceZipCode: "", ResidenceCity: "", CompanyAddress: "", CompanyRTRW: "", CompanyKelurahan: "", CompanyKecamatan: "", CompanyZipCode: "", CompanyCity: "", CompanyAreaPhone: "", CompanyPhone: "", EmergencyAddress: "", EmergencyRTRW: "", EmergencyKelurahan: "", EmergencyKecamatan: "", EmergencyZipcode: "", EmergencyCity: "", EmergencyAreaPhone: "", EmergencyPhone: ""}}
 
 	// Mock SQL query and result
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT
@@ -630,6 +634,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 		END AS incoming_source,
 		tf.customer_status,
 		tm.created_at,
+		tm.order_at,
 		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
 		scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
@@ -661,6 +666,8 @@ func TestGetInquiryPrescreening(t *testing.T) {
 		tcp.StaySinceYear,
 		ta.ProductOfferingID,
 		ta.dealer,
+		ta.LifeInsuranceFee,
+		ta.AssetInsuranceFee,
 		'KMB MOTOR' AS AssetType,
 		ti.asset_description,
 		ti.manufacture_year,
@@ -677,6 +684,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 		AdminFee,
 		provision_fee,
 		NTF,
+		NTFAkumulasi,
 		(NTF + interest_amount) AS Total,
 		InstallmentAmount AS MonthlyInstallment,
 		FirstInstallment,
@@ -906,7 +914,7 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 	// Create a repository instance
 	repo := NewRepository(gormDB, gormDB, gormDB)
 
-	expectedInquiry := []entity.InquiryPrescreening{{CmoRecommendation: 0, Activity: "", SourceDecision: "", Decision: "", Reason: "", DecisionBy: "", DecisionAt: "", ProspectID: "", BranchName: "", IncomingSource: "", CreatedAt: "", CustomerStatus: "", IDNumber: "", LegalName: "", BirthPlace: "", BirthDate: time.Time{}, SurgateMotherName: "", Gender: "", MobilePhone: "", Email: "", Education: "", MaritalStatus: "", NumOfDependence: 0, HomeStatus: "", StaySinceMonth: "", StaySinceYear: "", ExtCompanyPhone: (*string)(nil), SourceOtherIncome: (*string)(nil), Supplier: "", ProductOfferingID: "", AssetType: "", AssetDescription: "", ManufacturingYear: "", Color: "", ChassisNumber: "", EngineNumber: "", InterestRate: 0, InstallmentPeriod: 0, OTR: 0, DPAmount: 0, FinanceAmount: 0, InterestAmount: 0, InsuranceAmount: 0, AdminFee: 0, ProvisionFee: 0, NTF: 0, Total: 0, MonthlyInstallment: 0, FirstInstallment: "", ProfessionID: "", JobTypeID: "", JobPosition: "", CompanyName: "", IndustryTypeID: "", EmploymentSinceYear: "", EmploymentSinceMonth: "", MonthlyFixedIncome: 0, MonthlyVariableIncome: 0, SpouseIncome: 0, SpouseIDNumber: "", SpouseLegalName: "", SpouseCompanyName: "", SpouseCompanyPhone: "", SpouseMobilePhone: "", SpouseProfession: "", EmconName: "", Relationship: "", EmconMobilePhone: "", LegalAddress: "", LegalRTRW: "", LegalKelurahan: "", LegalKecamatan: "", LegalZipCode: "", LegalCity: "", ResidenceAddress: "", ResidenceRTRW: "", ResidenceKelurahan: "", ResidenceKecamatan: "", ResidenceZipCode: "", ResidenceCity: "", CompanyAddress: "", CompanyRTRW: "", CompanyKelurahan: "", CompanyKecamatan: "", CompanyZipCode: "", CompanyCity: "", CompanyAreaPhone: "", CompanyPhone: "", EmergencyAddress: "", EmergencyRTRW: "", EmergencyKelurahan: "", EmergencyKecamatan: "", EmergencyZipcode: "", EmergencyCity: "", EmergencyAreaPhone: "", EmergencyPhone: ""}}
+	expectedInquiry := []entity.InquiryPrescreening{{CmoRecommendation: 0, Activity: "", SourceDecision: "", Decision: "", Reason: "", DecisionBy: "", DecisionAt: "", ProspectID: "", BranchName: "", IncomingSource: "", CreatedAt: "", OrderAt: "", CustomerStatus: "", IDNumber: "", LegalName: "", BirthPlace: "", BirthDate: time.Time{}, SurgateMotherName: "", Gender: "", MobilePhone: "", Email: "", Education: "", MaritalStatus: "", NumOfDependence: 0, HomeStatus: "", StaySinceMonth: "", StaySinceYear: "", ExtCompanyPhone: (*string)(nil), SourceOtherIncome: (*string)(nil), Supplier: "", ProductOfferingID: "", AssetType: "", AssetDescription: "", ManufacturingYear: "", Color: "", ChassisNumber: "", EngineNumber: "", InterestRate: 0, InstallmentPeriod: 0, OTR: 0, DPAmount: 0, FinanceAmount: 0, InterestAmount: 0, LifeInsuranceFee: 0, AssetInsuranceFee: 0, InsuranceAmount: 0, AdminFee: 0, ProvisionFee: 0, NTF: 0, NTFAkumulasi: 0, Total: 0, MonthlyInstallment: 0, FirstInstallment: "", ProfessionID: "", JobTypeID: "", JobPosition: "", CompanyName: "", IndustryTypeID: "", EmploymentSinceYear: "", EmploymentSinceMonth: "", MonthlyFixedIncome: 0, MonthlyVariableIncome: 0, SpouseIncome: 0, SpouseIDNumber: "", SpouseLegalName: "", SpouseCompanyName: "", SpouseCompanyPhone: "", SpouseMobilePhone: "", SpouseProfession: "", EmconName: "", Relationship: "", EmconMobilePhone: "", LegalAddress: "", LegalRTRW: "", LegalKelurahan: "", LegalKecamatan: "", LegalZipCode: "", LegalCity: "", ResidenceAddress: "", ResidenceRTRW: "", ResidenceKelurahan: "", ResidenceKecamatan: "", ResidenceZipCode: "", ResidenceCity: "", CompanyAddress: "", CompanyRTRW: "", CompanyKelurahan: "", CompanyKecamatan: "", CompanyZipCode: "", CompanyCity: "", CompanyAreaPhone: "", CompanyPhone: "", EmergencyAddress: "", EmergencyRTRW: "", EmergencyKelurahan: "", EmergencyKecamatan: "", EmergencyZipcode: "", EmergencyCity: "", EmergencyAreaPhone: "", EmergencyPhone: ""}}
 
 	// Mock SQL query and result
 
@@ -1106,6 +1114,7 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 			END AS incoming_source,
 			tf.customer_status,
 			tm.created_at,
+			tm.order_at,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
 			scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
@@ -1137,6 +1146,8 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 			tcp.StaySinceYear,
 			ta.ProductOfferingID,
 			ta.dealer,
+			ta.LifeInsuranceFee,
+			ta.AssetInsuranceFee,
 			'KMB MOTOR' AS AssetType,
 			ti.asset_description,
 			ti.manufacture_year,
@@ -1153,6 +1164,7 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 			AdminFee,
 			provision_fee,
 			NTF,
+			NTFAkumulasi,
 			(NTF + interest_amount) AS Total,
 			InstallmentAmount AS MonthlyInstallment,
 			FirstInstallment,
@@ -1566,6 +1578,7 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 			END AS incoming_source,
 			tf.customer_status,
 			tm.created_at,
+			tm.order_at,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
 			scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
@@ -1597,6 +1610,8 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 			tcp.StaySinceYear,
 			ta.ProductOfferingID,
 			ta.dealer,
+			ta.LifeInsuranceFee,
+			ta.AssetInsuranceFee,
 			'KMB MOTOR' AS AssetType,
 			ti.asset_description,
 			ti.manufacture_year,
@@ -1613,6 +1628,7 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 			AdminFee,
 			provision_fee,
 			NTF,
+			NTFAkumulasi,
 			(NTF + interest_amount) AS Total,
 			InstallmentAmount AS MonthlyInstallment,
 			FirstInstallment,
@@ -1867,6 +1883,7 @@ func TestGetInquiryPrescreening_RecordNotFound(t *testing.T) {
         END AS incoming_source,
         tf.customer_status,
         tm.created_at,
+        tm.order_at,
         scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
         scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
         scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
@@ -1898,6 +1915,8 @@ func TestGetInquiryPrescreening_RecordNotFound(t *testing.T) {
         tcp.StaySinceYear,
         ta.ProductOfferingID,
         ta.dealer,
+        ta.LifeInsuranceFee,
+        ta.AssetInsuranceFee,
         'KMB MOTOR' AS AssetType,
         ti.asset_description,
         ti.manufacture_year,
@@ -1914,6 +1933,7 @@ func TestGetInquiryPrescreening_RecordNotFound(t *testing.T) {
         AdminFee,
         provision_fee,
         NTF,
+        NTFAkumulasi,
         (NTF + interest_amount) AS Total,
         InstallmentAmount AS MonthlyInstallment,
         FirstInstallment,
