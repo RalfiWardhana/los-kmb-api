@@ -100,6 +100,20 @@ func (_m *JSON) EventBadRequestErrorValidation(ctx context.Context, accessToken 
 	return r0
 }
 
+// EventRequestErrorBindV3 provides a mock function with given fields: ctx, accessToken, logFile, message, req, err
+func (_m *JSON) EventRequestErrorBindV3(ctx context.Context, accessToken string, logFile string, message string, req interface{}, err error) response.ApiResponse {
+	ret := _m.Called(ctx, accessToken, logFile, message, req, err)
+
+	var r0 response.ApiResponse
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, interface{}, error) response.ApiResponse); ok {
+		r0 = rf(ctx, accessToken, logFile, message, req, err)
+	} else {
+		r0 = ret.Get(0).(response.ApiResponse)
+	}
+
+	return r0
+}
+
 // EventServiceError provides a mock function with given fields: ctx, accessToken, logFile, message, req, err
 func (_m *JSON) EventServiceError(ctx context.Context, accessToken string, logFile string, message string, req interface{}, err error) response.ApiResponse {
 	ret := _m.Called(ctx, accessToken, logFile, message, req, err)
