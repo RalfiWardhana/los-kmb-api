@@ -30,6 +30,27 @@ func (_m *JSON) BadGateway(ctx echo.Context, message string) error {
 	return r0
 }
 
+// BadRequestErrorBindV3 provides a mock function with given fields: ctx, accessToken, logFile, message, req, err
+func (_m *JSON) BadRequestErrorBindV3(ctx echo.Context, accessToken string, logFile string, message string, req interface{}, err error) (error, response.ApiResponse) {
+	ret := _m.Called(ctx, accessToken, logFile, message, req, err)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(echo.Context, string, string, string, interface{}, error) error); ok {
+		r0 = rf(ctx, accessToken, logFile, message, req, err)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	var r1 response.ApiResponse
+	if rf, ok := ret.Get(1).(func(echo.Context, string, string, string, interface{}, error) response.ApiResponse); ok {
+		r1 = rf(ctx, accessToken, logFile, message, req, err)
+	} else {
+		r1 = ret.Get(1).(response.ApiResponse)
+	}
+
+	return r0, r1
+}
+
 // BadRequestErrorValidationV2 provides a mock function with given fields: ctx, accessToken, logFile, message, req, err
 func (_m *JSON) BadRequestErrorValidationV2(ctx echo.Context, accessToken string, logFile string, message string, req interface{}, err error) error {
 	ret := _m.Called(ctx, accessToken, logFile, message, req, err)
