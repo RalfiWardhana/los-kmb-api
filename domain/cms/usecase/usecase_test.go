@@ -500,7 +500,7 @@ func Test_usecase_GetInquiryPrescreening(t *testing.T) {
 
 		errPhoto := errors.New(constant.RECORD_NOT_FOUND)
 
-		photos := []entity.CustomerPhoto{
+		photos := []entity.DataPhoto{
 			{
 				PhotoID: "KTP",
 				Url:     "jsdhfigshhjgh",
@@ -542,7 +542,7 @@ func Test_usecase_GetInquiryPrescreening(t *testing.T) {
 			},
 		}, 1, nil).Once()
 
-		photos := []entity.CustomerPhoto{
+		photos := []entity.DataPhoto{
 			{
 				PhotoID: "KTP",
 				Url:     "jsdhfigshhjgh",
@@ -599,7 +599,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 		req      request.ReqInquiryPrescreening
 		data     []entity.InquiryData
 		inquiry  []entity.InquiryPrescreening
-		photos   []entity.CustomerPhoto
+		photos   []entity.DataPhoto
 		surveyor []entity.TrxSurveyor
 		errGet   error
 		errFinal error
@@ -608,7 +608,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 			name: "test success get reason",
 			req:  request.ReqInquiryPrescreening{},
 			// data: responseData,
-			photos:   []entity.CustomerPhoto{},
+			photos:   []entity.DataPhoto{},
 			surveyor: []entity.TrxSurveyor{},
 			inquiry: []entity.InquiryPrescreening{
 				{
@@ -624,7 +624,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 			name: "test success get reason",
 			req:  request.ReqInquiryPrescreening{},
 			// data: responseData,
-			photos: []entity.CustomerPhoto{
+			photos: []entity.DataPhoto{
 				{
 					PhotoID: "KTP",
 					Url:     "jsdhfigshhjgh",
