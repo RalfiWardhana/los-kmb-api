@@ -456,6 +456,32 @@ func (c *response) EventBadRequestErrorValidation(ctx context.Context, accessTok
 	return apiResponse
 }
 
+func (c *response) EventRequestErrorBindV3(ctx context.Context, accessToken, logFile, message string, req interface{}, err error) (apiResponse models.ApiResponse) {
+	errors := handleUnmarshalError(err)
+
+	apiResponse = models.ApiResponse{
+		Message:    message,
+		Errors:     errors,
+		Data:       nil,
+		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Value(constant.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx, accessToken, common.CentralizeLogParameter{
+		Link:       os.Getenv("DUMMY_URL_LOGS"),
+		Method:     http.MethodPost,
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_CONSUME_DATA_STREAM,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_ERROR,
+		Request:    req,
+		Response:   apiResponse,
+	})
+	return apiResponse
+}
+
 func (c *response) SuccessV3(ctx echo.Context, accessToken, logFile, message string, req, data interface{}) (ctxJson error, apiResponse models.ApiResponse) {
 
 	//create response
