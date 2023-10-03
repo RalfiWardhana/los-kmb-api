@@ -180,6 +180,7 @@ const (
 	NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI                            = "Nama Beda & Baki Debet > 20 Juta"
 	ADA_FASILITAS_WO_AGUNAN                                      = "Ada Fasilitas WO Agunan"
 	TIDAK_ADA_FASILITAS_WO_AGUNAN                                = "Tidak Ada Fasilitas WO Agunan"
+	REASON_FILTERING_PBK_DOWN                                    = "No Hit PBK"
 
 	// Error Message
 	INTERNAL_SERVER_ERROR = "internal_server_error"
