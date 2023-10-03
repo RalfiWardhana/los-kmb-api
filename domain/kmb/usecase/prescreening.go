@@ -118,6 +118,7 @@ func (u usecase) Prescreening(ctx context.Context, req request.Metrics, filterin
 			Decision:   constant.DB_DECISION_APR,
 			Reason:     "Dokumen Sesuai",
 			CreatedBy:  constant.SYSTEM_CREATED,
+			DecisionBy: constant.SYSTEM_CREATED,
 		}
 
 		trxDetail = entity.TrxDetail{
