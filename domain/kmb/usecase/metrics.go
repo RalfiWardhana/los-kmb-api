@@ -72,12 +72,6 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 	// belum prescreening
 	if countTrx == 0 {
-		var trxPrescreeningDetail entity.TrxDetail
-		trxPrescreening, trxFMF, trxPrescreeningDetail, err = u.usecase.Prescreening(ctx, reqMetrics, filtering, accessToken)
-		if err != nil {
-			return
-		}
-
 		// STEP 1 CMO not recommend
 		if reqMetrics.Agent.CmoRecom == constant.CMO_NOT_RECOMMEDED {
 			details = append(details, entity.TrxDetail{
@@ -109,8 +103,15 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 			resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, trxPrescreening.Reason)
 			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Save Transaction Error")
 				return
 			}
+			return
+		}
+
+		var trxPrescreeningDetail entity.TrxDetail
+		trxPrescreening, trxFMF, trxPrescreeningDetail, err = u.usecase.Prescreening(ctx, reqMetrics, filtering, accessToken)
+		if err != nil {
 			return
 		}
 
