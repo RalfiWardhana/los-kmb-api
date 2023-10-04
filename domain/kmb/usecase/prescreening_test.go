@@ -52,9 +52,10 @@ func TestPrescreening(t *testing.T) {
 		{
 			name: "test prescreening",
 			trxPrescreening: entity.TrxPrescreening{
-				Decision:  "APR",
-				Reason:    "Dokumen Sesuai",
-				CreatedBy: "SYSTEM",
+				Decision:   "APR",
+				Reason:     "Dokumen Sesuai",
+				CreatedBy:  "SYSTEM",
+				DecisionBy: "SYSTEM",
 			},
 			req: request.Metrics{
 				CustomerPersonal: request.CustomerPersonal{
