@@ -354,3 +354,45 @@ func GetFloat(unk interface{}) (float64, error) {
 		}
 	}
 }
+
+func GenerateBranchFilter(branchId string) string {
+	if branchId == "" {
+		return ""
+	}
+
+	arrBranch := strings.Split(branchId, ",")
+	var branch string
+
+	if len(arrBranch) == 1 && arrBranch[0] != "999" {
+		branch = fmt.Sprintf("'%s'", branchId)
+	} else {
+		for i, val := range arrBranch {
+			branch += fmt.Sprintf("'%s'", val)
+			if i < len(arrBranch)-1 {
+				branch += ","
+			}
+		}
+	}
+
+	return fmt.Sprintf("WHERE tt.BranchID IN (%s)", branch)
+}
+
+func GenerateFilter(search, filterBranch, rangeDays string) string {
+	var filter string
+
+	if search != "" {
+		if filterBranch != "" {
+			filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+		} else {
+			filter = fmt.Sprintf("WHERE (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+		}
+	} else {
+		if filterBranch != "" {
+			filter = filterBranch + fmt.Sprintf(" AND CAST(tt.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
+		} else {
+			filter = fmt.Sprintf("WHERE CAST(tt.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
+		}
+	}
+
+	return filter
+}

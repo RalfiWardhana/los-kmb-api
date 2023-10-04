@@ -168,34 +168,11 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 		filterPaginate string
 	)
 
-	if req.BranchID != "" {
-		arrBranch := strings.Split(req.BranchID, ",")
-		if len(arrBranch) == 1 {
-			// spesific branch non HO
-			if arrBranch[0] != "999" {
-				filterBranch = fmt.Sprintf("WHERE tt.BranchID IN ('%s')", req.BranchID)
-			}
-		} else {
-			// multi branch
-			var branch string
-			for i, val := range arrBranch {
-				branch = fmt.Sprintf("%s'%s'", branch, val)
-				if i < len(arrBranch)-1 {
-					branch = fmt.Sprintf("%s,", branch)
-				}
-			}
+	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
 
-			filterBranch = fmt.Sprintf("WHERE tt.BranchID IN (%s)", branch)
-		}
-	}
+	filterBranch = utils.GenerateBranchFilter(req.BranchID)
 
-	filter = filterBranch
-
-	if req.Search != "" && filterBranch != "" {
-		filter = filterBranch + " AND (tt.ProspectID LIKE '%" + req.Search + "%' OR tt.IDNumber LIKE '%" + req.Search + "%' OR tt.LegalName LIKE '%" + req.Search + "%')"
-	} else if req.Search != "" {
-		filter = "WHERE (tt.ProspectID LIKE '%" + req.Search + "%' OR tt.IDNumber LIKE '%" + req.Search + "%' OR tt.LegalName LIKE '%" + req.Search + "%')"
-	}
+	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
 
 	if pagination != nil {
 		page, _ := json.Marshal(pagination)
@@ -217,6 +194,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 			SELECT
 			cb.BranchID,
 			tm.ProspectID,
+			tm.created_at,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
 		FROM
