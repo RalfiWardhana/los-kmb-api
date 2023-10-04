@@ -451,6 +451,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 		SELECT
 		cb.BranchID,
 		tm.ProspectID,
+		tm.created_at,
 		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
 	FROM
@@ -931,6 +932,7 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 			SELECT
 			cb.BranchID,
 			tm.ProspectID,
+			tm.created_at,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
 		FROM
@@ -1395,6 +1397,7 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 			SELECT
 			cb.BranchID,
 			tm.ProspectID,
+			tm.created_at,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
 		FROM
@@ -2131,7 +2134,7 @@ func TestGetInquiryPrescreening_RecordNotFound(t *testing.T) {
                 app_config ap WITH (nolock)
           WHERE
                 group_name = 'ProfessionID'
-        ) pr2 ON tcs.ProfessionID = pr2.[key] ) AS tt  ORDER BY tt.created_at DESC`)).
+        ) pr2 ON tcs.ProfessionID = pr2.[key] ) AS tt WHERE CAST(tt.created_at AS date) >= DATEADD(day, , CAST(GETDATE() AS date)) ORDER BY tt.created_at DESC`)).
 		WillReturnError(gorm.ErrRecordNotFound)
 
 	// Call the function
