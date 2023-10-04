@@ -39,11 +39,13 @@ func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interf
 func (c *handlerKMB) ProduceJourney(ctx echo.Context) (err error) {
 
 	var (
-		req request.Metrics
+		req     request.Metrics
+		ctxJson error
 	)
 
 	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", err)
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+		return ctxJson
 	}
 
 	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_SUBMIT_TO_LOS, req.Transaction.ProspectID, utils.StructToMap(req), 0)
@@ -54,11 +56,13 @@ func (c *handlerKMB) ProduceJourney(ctx echo.Context) (err error) {
 func (c *handlerKMB) ProduceJourneyAfterPrescreening(ctx echo.Context) (err error) {
 
 	var (
-		req request.AfterPrescreening
+		req     request.AfterPrescreening
+		ctxJson error
 	)
 
 	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", err)
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+		return ctxJson
 	}
 
 	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_AFTER_PRESCREENING, req.ProspectID, utils.StructToMap(req), 0)
