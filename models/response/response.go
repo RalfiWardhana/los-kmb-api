@@ -359,13 +359,6 @@ type LatestPaidInstallmentData struct {
 	RRDDate              string  `json:"rrd_date"`
 }
 
-type InstallmentOther struct {
-	InstallmentAmountWgOff   float64 `json:"installment_wg_off"`
-	InstallmentAmountKmbOff  float64 `json:"installment_kmb_off"`
-	InstallmentAmountKmobOff float64 `json:"installment_kmob_off"`
-	InstallmentAmountWgOnl   float64 `json:"installment_wg_onl"`
-}
-
 type NTFOther struct {
 	NTFAmountWgOff   float64 `json:"wg_offline"`
 	NTFAmountKmbOff  float64 `json:"kmb"`
@@ -374,6 +367,15 @@ type NTFOther struct {
 	NTFAmountUC      float64 `json:"uc"`
 	NTFAmountNewKmb  float64 `json:"new_kmb"`
 	TotalOutstanding float64 `json:"outstanding"`
+}
+
+type InstallmentOther struct {
+	InstallmentAmountWgOff   float64 `json:"wg_offline"`
+	InstallmentAmountKmbOff  float64 `json:"kmb"`
+	InstallmentAmountKmobOff float64 `json:"kmob"`
+	InstallmentAmountWgOnl   float64 `json:"new_wg"`
+	InstallmentAmountUC      float64 `json:"uc"`
+	InstallmentAmountNewKmb  float64 `json:"new_kmb"`
 }
 
 type IntegratorAgreementChassisNumber struct {

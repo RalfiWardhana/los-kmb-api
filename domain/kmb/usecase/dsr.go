@@ -9,31 +9,26 @@ import (
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
-	"los-kmb-api/shared/query"
 	"os"
-	"strconv"
 
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/mitchellh/mapstructure"
 )
 
-func (u usecase) DsrCheck(ctx context.Context, prospectID, engineNo string, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, newDupcheck entity.NewDupcheck, accessToken string) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error) {
+func (u usecase) DsrCheck(ctx context.Context, prospectID, chassisNumber string, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, accessToken string) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error) {
 
 	var (
-		dsr                                        float64
-		dataKmob, dataWgOff, dataKmbOff, dataWgOnl entity.ScanInstallmentAmount
-		instOther                                  response.InstallmentOther
-		dsrDetails                                 response.DsrDetails
-		customerStatus                             string
+		dsr                  float64
+		instOther            response.InstallmentOther
+		dsrDetails           response.DsrDetails
+		reasonCustomerStatus string
 	)
-
-	timeOut, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
 	config, err := u.repository.GetDupcheckConfig()
 
 	if err != nil {
-		err = errors.New("upstream_service_error - Error Get Parameterize Config")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Dupcheck Config Error")
 		return
 	}
 
@@ -45,60 +40,38 @@ func (u usecase) DsrCheck(ctx context.Context, prospectID, engineNo string, cust
 
 	konsumen := customerData[0]
 
-	customerStatus = konsumen.StatusKonsumen
+	if konsumen.StatusKonsumen == constant.STATUS_KONSUMEN_RO || konsumen.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
+		reasonCustomerStatus = konsumen.StatusKonsumen + " " + konsumen.CustomerSegment
+	} else {
+		reasonCustomerStatus = konsumen.StatusKonsumen
+	}
+
+	header := map[string]string{}
 
 	for i, customer := range customerData {
 
-		encrypted, _ := u.repository.GetEncryptedValue(customer.IDNumber, customer.LegalName, customer.MotherName)
+		jsonCustomer, _ := json.Marshal(customer)
+		var installmentLOS *resty.Response
 
-		kmobWG := query.ScanInstallmentAmountKmobOFF(encrypted.IDNumber, encrypted.LegalName, customer.BirthDate, encrypted.SurgateMotherName)
-
-		dataKmob, err = u.repository.ScanKmobOff(kmobWG)
+		installmentLOS, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("INSTALLMENT_PENDING_URL"), jsonCustomer, header, constant.METHOD_POST, true, 3, 60, prospectID, accessToken)
 
 		if err != nil {
-			err = errors.New("upstream_service_error - Scan DB KMOB")
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call Installment Pending API Error")
 			return
 		}
 
-		instOther.InstallmentAmountKmobOff = dataKmob.InstallmentAmount
-
-		wgOnl := query.ScanInstallmentAmountWgONL(encrypted.IDNumber, encrypted.LegalName, customer.BirthDate, encrypted.SurgateMotherName)
-
-		dataWgOnl, err = u.repository.ScanWgOnl(wgOnl)
-
-		if err != nil {
-			err = errors.New("upstream_service_error - Scan DB WG ONL")
+		if installmentLOS.StatusCode() != 200 {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call Installment Pending API Error")
 			return
 		}
 
-		instOther.InstallmentAmountWgOnl = dataWgOnl.InstallmentAmount
+		json.Unmarshal([]byte(jsoniter.Get(installmentLOS.Body(), "data").ToString()), &instOther)
 
-		wgOFF := query.ScanInstallmentAmountWgOff(customer.IDNumber, encrypted.LegalName, customer.BirthDate, encrypted.SurgateMotherName)
-
-		dataWgOff, err = u.repository.ScanWgOff(wgOFF)
-
-		if err != nil {
-			err = errors.New("upstream_service_error - Scan DB WG Offline")
-			return
-		}
-
-		instOther.InstallmentAmountWgOff = dataWgOff.InstallmentAmount
-
-		kmbOFF := query.ScanInstallmentAmountKmbOff(customer.IDNumber, customer.LegalName, customer.BirthDate, customer.MotherName)
-
-		dataKmbOff, err = u.repository.ScanKmbOff(kmbOFF)
-
-		if err != nil {
-			err = errors.New("upstream_service_error - Scan DB KMB Offline")
-			return
-		}
-
-		instOther.InstallmentAmountKmbOff = dataKmbOff.InstallmentAmount
 		if i == 0 {
-			installmentOther = dataKmob.InstallmentAmount + dataKmbOff.InstallmentAmount + dataWgOff.InstallmentAmount + dataWgOnl.InstallmentAmount
+			installmentOther = instOther.InstallmentAmountKmbOff + instOther.InstallmentAmountKmobOff + instOther.InstallmentAmountNewKmb + instOther.InstallmentAmountUC + instOther.InstallmentAmountWgOff + instOther.InstallmentAmountWgOnl
 			dsrDetails.Customer = instOther
 		} else if i == 1 {
-			installmentOtherSpouse = dataKmob.InstallmentAmount + dataKmbOff.InstallmentAmount + dataWgOff.InstallmentAmount + dataWgOnl.InstallmentAmount
+			installmentOtherSpouse = instOther.InstallmentAmountKmbOff + instOther.InstallmentAmountKmobOff + instOther.InstallmentAmountNewKmb + instOther.InstallmentAmountUC + instOther.InstallmentAmountWgOff + instOther.InstallmentAmountWgOnl
 			dsrDetails.Spouse = instOther
 		}
 
@@ -114,21 +87,11 @@ func (u usecase) DsrCheck(ctx context.Context, prospectID, engineNo string, cust
 
 		data.Dsr = dsr
 
-		dsrBypass, _ := u.repository.GetDSRBypass()
-
-		if dsrBypass.Value == constant.FLAG_ON {
-			data.Result = constant.DECISION_PASS
-			data.Code = constant.CODE_DSRLTE35
-			data.Reason = fmt.Sprintf("%s %s %d", customerStatus, constant.REASON_DSRLTE, reasonMaxDsr)
-
-			return
-		}
-
 		if dsr > configValue.Data.MaxDsr {
 
 			data.Result = constant.DECISION_REJECT
 			data.Code = constant.CODE_DSRGT35
-			data.Reason = fmt.Sprintf("%s %s %d", customerStatus, constant.REASON_DSRGT35, reasonMaxDsr)
+			data.Reason = fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRGT35, reasonMaxDsr)
 
 			_ = mapstructure.Decode(data, &result)
 
@@ -139,47 +102,19 @@ func (u usecase) DsrCheck(ctx context.Context, prospectID, engineNo string, cust
 	} else {
 
 		var (
-			chassisResp response.SpDupcekChasisNo
+			chassisResp entity.SpDupcekChasisNo
 			installment float64
-			chassis     *resty.Response
 		)
 
-		body, _ := json.Marshal(map[string]interface{}{
-			"transaction_id": prospectID,
-			"engine_no":      engineNo,
-			"id_number":      konsumen.IDNumber,
-		})
+		if installmentConfins > 0 {
 
-		if newDupcheck.CustomerType == constant.RO_AO_PRIME || newDupcheck.CustomerType == constant.RO_AO_PRIORITY {
-			customerStatus = fmt.Sprintf("%s %s", konsumen.StatusKonsumen, newDupcheck.CustomerType)
-		}
-
-		if newDupcheck.CustomerType == constant.RO_AO_PRIME && installmentConfins > 0 {
-
-			installment = installmentConfins
-
-		} else if installmentConfins > 0 {
-
-			chassis, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("KMOB_CHASSIS_URL"), body, map[string]string{}, constant.METHOD_POST, true, 2, timeOut, prospectID, accessToken)
+			chassisResp, err = u.repository.GetInstallmentAmountChassisNumber(chassisNumber)
 
 			if err != nil {
-				err = errors.New("upstream_service_timeout - Call Dupcheck Chassis Number")
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get Dupcheck Chassis Number")
 				return
 			}
-
-			if chassis.StatusCode() != 200 {
-				err = errors.New("upstream_service_error - Call Dupcheck Chassis Number")
-				return
-			}
-
-			json.Unmarshal([]byte(jsoniter.Get(chassis.Body(), "data").ToString()), &chassisResp)
-
-			if chassisResp.InstallmentAmount == nil {
-				installment = installmentConfins
-			} else {
-				installmentTopup = chassisResp.InstallmentAmount.(float64)
-				installment = installmentConfins - installmentTopup
-			}
+			installment = installmentConfins - chassisResp.InstallmentAmount
 
 		}
 
@@ -187,33 +122,24 @@ func (u usecase) DsrCheck(ctx context.Context, prospectID, engineNo string, cust
 
 		data.Dsr = dsr
 
-		dsrBypass, _ := u.repository.GetDSRBypass()
+		if konsumen.StatusKonsumen != constant.STATUS_KONSUMEN_RO && konsumen.CustomerSegment != constant.RO_AO_PRIME {
+			if dsr > configValue.Data.MaxDsr {
 
-		if dsrBypass.Value == constant.FLAG_ON {
-			data.Result = constant.DECISION_PASS
-			data.Code = constant.CODE_DSRLTE35
-			data.Reason = fmt.Sprintf("%s %s %d", customerStatus, constant.REASON_DSRLTE, reasonMaxDsr)
+				data.Result = constant.DECISION_REJECT
+				data.Code = constant.CODE_DSRGT35
+				data.Reason = fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRGT35, reasonMaxDsr)
 
-			return
-		}
+				_ = mapstructure.Decode(data, &result)
 
-		if dsr > configValue.Data.MaxDsr && newDupcheck.CustomerType != constant.RO_AO_PRIME {
-
-			data.Result = constant.DECISION_REJECT
-			data.Code = constant.CODE_DSRGT35
-			data.Reason = fmt.Sprintf("%s %s %d", customerStatus, constant.REASON_DSRGT35, reasonMaxDsr)
-
-			_ = mapstructure.Decode(data, &result)
-
-			return
-
+				return
+			}
 		}
 
 	}
 
 	data.Result = constant.DECISION_PASS
 	data.Code = constant.CODE_DSRLTE35
-	data.Reason = fmt.Sprintf("%s %s %d", customerStatus, constant.REASON_DSRLTE35, reasonMaxDsr)
+	data.Reason = fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRLTE35, reasonMaxDsr)
 
 	_ = mapstructure.Decode(data, &result)
 

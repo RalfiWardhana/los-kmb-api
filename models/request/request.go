@@ -125,6 +125,7 @@ type DupcheckApi struct {
 	Gender                string             `json:"gender" validate:"required"`
 	InstallmentAmount     float64            `json:"installment_amount" validate:"required"`
 	MaritalStatus         string             `json:"marital_status"`
+	CustomerSegment       string             `json:"customer_segment"`
 }
 
 type SpouseDupcheck struct {
@@ -143,12 +144,13 @@ type DupcheckApiSpouse struct {
 }
 
 type CustomerData struct {
-	StatusKonsumen string `json:"status_konsumen"`
-	IDNumber       string `json:"id_number"`
-	LegalName      string `json:"legal_name"`
-	BirthDate      string `json:"birth_date"`
-	MotherName     string `json:"surgate_mother_name"`
-	CustomerID     string `json:"customer_id"`
+	StatusKonsumen  string `json:"status_konsumen"`
+	CustomerSegment string `json:"customer_segment"`
+	IDNumber        string `json:"id_number"`
+	LegalName       string `json:"legal_name"`
+	BirthDate       string `json:"birth_date"`
+	MotherName      string `json:"surgate_mother_name"`
+	CustomerID      string `json:"customer_id"`
 }
 
 type ReqCustomerDomain struct {

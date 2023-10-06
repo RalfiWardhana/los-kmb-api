@@ -13,7 +13,7 @@ type Usecase interface {
 	VehicleCheck(manufactureYear string, tenor int) (data response.UsecaseApi, err error)
 	CustomerKMB(spDupcheck response.SpDupCekCustomerByID) (statusKonsumen string, err error)
 	PMK(branchID string, statusKonsumen string, income float64, homeStatus, professionID, empYear, empMonth, stayYear, stayMonth, birthDate string, tenor int, maritalStatus string) (data response.UsecaseApi, err error)
-	DsrCheck(ctx context.Context, prospectID, engineNo string, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, newDupcheck entity.NewDupcheck, accessToken string) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error)
+	DsrCheck(ctx context.Context, prospectID, engineNo string, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, accessToken string) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error)
 	CustomerDomainGetData(ctx context.Context, req request.ReqCustomerDomain, prospectID, accessToken string) (customerDomainData response.DataCustomer, err error)
 	GetLatestPaidInstallment(ctx context.Context, req request.ReqLatestPaidInstallment, prospectID, accessToken string) (data response.LatestPaidInstallmentData, err error)
 	NokaBanned30D(reqs request.DupcheckApi) (data response.RejectionNoka, err error)

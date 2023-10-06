@@ -144,48 +144,48 @@ func (_m *Usecase) CustomerKMB(spDupcheck response.SpDupCekCustomerByID) (string
 	return r0, r1
 }
 
-// DsrCheck provides a mock function with given fields: ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, newDupcheck, accessToken
-func (_m *Usecase) DsrCheck(ctx context.Context, prospectID string, engineNo string, customerData []request.CustomerData, installmentAmount float64, installmentConfins float64, installmentConfinsSpouse float64, income float64, newDupcheck entity.NewDupcheck, accessToken string) (response.UsecaseApi, response.Dsr, float64, float64, float64, error) {
-	ret := _m.Called(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, newDupcheck, accessToken)
+// DsrCheck provides a mock function with given fields: ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken
+func (_m *Usecase) DsrCheck(ctx context.Context, prospectID string, engineNo string, customerData []request.CustomerData, installmentAmount float64, installmentConfins float64, installmentConfinsSpouse float64, income float64, accessToken string) (response.UsecaseApi, response.Dsr, float64, float64, float64, error) {
+	ret := _m.Called(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
 
 	var r0 response.UsecaseApi
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, entity.NewDupcheck, string) response.UsecaseApi); ok {
-		r0 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, newDupcheck, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, string) response.UsecaseApi); ok {
+		r0 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
 	} else {
 		r0 = ret.Get(0).(response.UsecaseApi)
 	}
 
 	var r1 response.Dsr
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, entity.NewDupcheck, string) response.Dsr); ok {
-		r1 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, newDupcheck, accessToken)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, string) response.Dsr); ok {
+		r1 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
 	} else {
 		r1 = ret.Get(1).(response.Dsr)
 	}
 
 	var r2 float64
-	if rf, ok := ret.Get(2).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, entity.NewDupcheck, string) float64); ok {
-		r2 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, newDupcheck, accessToken)
+	if rf, ok := ret.Get(2).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, string) float64); ok {
+		r2 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
 	} else {
 		r2 = ret.Get(2).(float64)
 	}
 
 	var r3 float64
-	if rf, ok := ret.Get(3).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, entity.NewDupcheck, string) float64); ok {
-		r3 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, newDupcheck, accessToken)
+	if rf, ok := ret.Get(3).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, string) float64); ok {
+		r3 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
 	} else {
 		r3 = ret.Get(3).(float64)
 	}
 
 	var r4 float64
-	if rf, ok := ret.Get(4).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, entity.NewDupcheck, string) float64); ok {
-		r4 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, newDupcheck, accessToken)
+	if rf, ok := ret.Get(4).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, string) float64); ok {
+		r4 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
 	} else {
 		r4 = ret.Get(4).(float64)
 	}
 
 	var r5 error
-	if rf, ok := ret.Get(5).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, entity.NewDupcheck, string) error); ok {
-		r5 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, newDupcheck, accessToken)
+	if rf, ok := ret.Get(5).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, string) error); ok {
+		r5 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
 	} else {
 		r5 = ret.Error(5)
 	}

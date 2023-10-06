@@ -27,7 +27,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		dataCustomer []response.SpDupCekCustomerByID
 		spMap        response.SpDupcheckMap
 		customerType string
-		newDupcheck  entity.NewDupcheck
 	)
 
 	prospectID := req.ProspectID
@@ -174,7 +173,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	config, err := u.repository.GetDupcheckConfig()
 
 	if err != nil {
-		err = errors.New("upstream_service_error - Error Get Parameterize Config")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Dupcheck Config Error")
 		return
 	}
 
@@ -217,20 +216,14 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
-	if pmk.Result == constant.DECISION_REJECT {
-		data = pmk
-		mapping.Reason = data.Reason
-
-		return
-	}
-
 	var customerData []request.CustomerData
 	customerData = append(customerData, request.CustomerData{
-		StatusKonsumen: customerKMB,
-		IDNumber:       req.IDNumber,
-		LegalName:      req.LegalName,
-		BirthDate:      req.BirthDate,
-		MotherName:     req.MotherName,
+		StatusKonsumen:  customerKMB,
+		CustomerSegment: req.CustomerSegment,
+		IDNumber:        req.IDNumber,
+		LegalName:       req.LegalName,
+		BirthDate:       req.BirthDate,
+		MotherName:      req.MotherName,
 	})
 
 	mapping.InstallmentAmountFMF = dataCustomer[0].TotalInstallment
@@ -238,52 +231,17 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	if married {
 		spouse := *req.Spouse
 		customerData = append(customerData, request.CustomerData{
-			StatusKonsumen: "",
-			IDNumber:       spouse.IDNumber,
-			LegalName:      spouse.LegalName,
-			BirthDate:      spouse.BirthDate,
-			MotherName:     spouse.MotherName,
+			IDNumber:   spouse.IDNumber,
+			LegalName:  spouse.LegalName,
+			BirthDate:  spouse.BirthDate,
+			MotherName: spouse.MotherName,
 		})
 
 		mapping.InstallmentAmountSpouseFMF = dataCustomer[1].TotalInstallment
 	}
 
-	if customerKMB == constant.STATUS_KONSUMEN_RO || customerKMB == constant.STATUS_KONSUMEN_AO {
-		newDupcheck, _ = u.repository.GetNewDupcheck(req.ProspectID)
-		if newDupcheck.CustomerType == "" {
-			newDupcheck.ProspectID = req.ProspectID
-			newDupcheck.CustomerStatus = customerKMB
-
-			// LobID 1 WG, 2 KMB, 3 KMOB, 4 UC
-			reqCustomerDomain := request.ReqCustomerDomain{
-				IDNumber:   req.IDNumber,
-				LegalName:  req.LegalName,
-				BirthDate:  req.BirthDate,
-				MotherName: req.MotherName,
-				LobID:      constant.LOBID_KMB,
-			}
-
-			var customerDomainData response.DataCustomer
-			customerDomainData, err = u.usecase.CustomerDomainGetData(ctx, reqCustomerDomain, req.ProspectID, accessToken)
-			if err != nil {
-				return
-			}
-
-			if len(customerDomainData.CustomerSegmentation) > 0 {
-				newDupcheck.CustomerType = customerDomainData.CustomerSegmentation[0].SegmentName
-			} else {
-				newDupcheck.CustomerType = constant.RO_AO_REGULAR
-			}
-
-			err = u.repository.SaveNewDupcheck(newDupcheck)
-			if err != nil {
-				return
-			}
-		}
-	}
-
 	// Check DSR
-	dsr, _, instOther, instOtherSpouse, instTopup, err := u.usecase.DsrCheck(ctx, req.ProspectID, req.EngineNo, customerData, req.InstallmentAmount, mapping.InstallmentAmountFMF, mapping.InstallmentAmountSpouseFMF, income, newDupcheck, accessToken)
+	dsr, _, instOther, instOtherSpouse, instTopup, err := u.usecase.DsrCheck(ctx, req.ProspectID, req.RangkaNo, customerData, req.InstallmentAmount, mapping.InstallmentAmountFMF, mapping.InstallmentAmountSpouseFMF, income, accessToken)
 	if err != nil {
 		return
 	}

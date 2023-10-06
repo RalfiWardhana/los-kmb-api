@@ -22,6 +22,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		reqDupcheck     request.DupcheckApi
 		dupcheckData    response.SpDupcheckMap
 		customerStatus  string
+		customerSegment string
 		decisionMetrics response.UsecaseApi
 		additionalTrx   response.Additional
 		filtering       entity.FilteringKMB
@@ -66,6 +67,13 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 		if filtering.NextProcess != 1 {
 			err = errors.New(constant.ERROR_BAD_REQUEST + " - Tidak bisa lanjut proses")
+			return
+		}
+	} else {
+		filtering, err = u.repository.GetFilteringForJourney(reqMetrics.Transaction.ProspectID)
+
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get Filtering Error")
 			return
 		}
 	}
@@ -219,6 +227,12 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		companyZipCode = legalZipCode
 	}
 
+	if filtering.CustomerSegment == nil {
+		customerSegment = constant.RO_AO_REGULAR
+	} else {
+		customerSegment = filtering.CustomerSegment.(string)
+	}
+
 	reqDupcheck = request.DupcheckApi{
 		ProspectID:            reqMetrics.Transaction.ProspectID,
 		BranchID:              reqMetrics.Transaction.BranchID,
@@ -252,6 +266,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		Gender:                reqMetrics.CustomerPersonal.Gender,
 		InstallmentAmount:     reqMetrics.Apk.InstallmentAmount,
 		MaritalStatus:         reqMetrics.CustomerPersonal.MaritalStatus,
+		CustomerSegment:       customerSegment,
 	}
 
 	if reqMetrics.CustomerSpouse != nil {

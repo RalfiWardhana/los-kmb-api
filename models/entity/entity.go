@@ -327,6 +327,10 @@ func (c *TrxApiLog) TableName() string {
 	return "trx_api_logs"
 }
 
+type SpDupcekChasisNo struct {
+	InstallmentAmount float64 `gorm:"column:InstallmentAmount" json:"installment_amount"`
+}
+
 type DummyAgreementChassisNumber struct {
 	IDNumber string `gorm:"type:varchar(50);column:id_number"`
 	Response string `gorm:"type:text;column:response"`
