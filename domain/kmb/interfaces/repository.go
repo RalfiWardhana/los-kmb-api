@@ -28,7 +28,8 @@ type Repository interface {
 	ScanWgOff(query string) (data entity.ScanInstallmentAmount, err error)
 	ScanWgOnl(query string) (data entity.ScanInstallmentAmount, err error)
 	GetDSRBypass() (config entity.AppConfig, err error)
-	GetKMOBOff() (config entity.AppConfig, err error)
+	GetKMBOff() (config entity.AppConfig, err error)
+	GetMinimalIncomePMK(branchID string, statusKonsumen string) (responseIncomePMK entity.MappingIncomePMK, err error)
 
 	GetLatestBannedRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error)
 	GetLatestRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error)

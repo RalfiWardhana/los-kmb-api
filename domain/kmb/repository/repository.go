@@ -659,7 +659,7 @@ func (r repoHandler) GetLogOrchestrator(prospectID string) (logOrchestrator enti
 
 func (r repoHandler) GetDupcheckConfig() (config entity.AppConfig, err error) {
 
-	if err = r.losDB.Raw("SELECT [key], [value] FROM app_config WHERE lob = 'KMOB-OFF' AND [key] = 'dupcheck_kmob_config' AND group_name = 'dupcheck'").Scan(&config).Error; err != nil {
+	if err = r.losDB.Raw("SELECT [key], [value] FROM app_config WHERE lob = 'KMB-OFF' AND [key] = 'dupcheck_kmb_config' AND group_name = 'dupcheck'").Scan(&config).Error; err != nil {
 		return
 	}
 
@@ -775,12 +775,23 @@ func (r repoHandler) ScanWgOnl(query string) (data entity.ScanInstallmentAmount,
 	return
 }
 
-func (r repoHandler) GetKMOBOff() (config entity.AppConfig, err error) {
+func (r repoHandler) GetKMBOff() (config entity.AppConfig, err error) {
 
-	if err = r.losDB.Raw("SELECT [key], [value] FROM app_config WHERE lob = 'KMOB-OFF' AND [key] = 'pmk_kmob_off' AND group_name = 'pmk_config'").Scan(&config).Error; err != nil {
+	if err = r.losDB.Raw("SELECT [key], [value] FROM app_config WHERE lob = 'KMB-OFF' AND [key] = 'pmk_kmb_off' AND group_name = 'pmk_config'").Scan(&config).Error; err != nil {
 		return
 	}
 
+	return
+}
+
+func (r repoHandler) GetMinimalIncomePMK(branchID string, statusKonsumen string) (responseIncomePMK entity.MappingIncomePMK, err error) {
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT * FROM mapping_income_pmk WHERE lob='los_kmb_off' AND branch_id='%s' AND status_konsumen='%s'`, branchID, statusKonsumen)).Scan(&responseIncomePMK).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			if err = r.losDB.Raw(fmt.Sprintf(`SELECT * FROM mapping_income_pmk WHERE lob='los_kmb_off' AND branch_id='%s' AND status_konsumen='%s'`, constant.DEFAULT_BRANCH_ID, statusKonsumen)).Scan(&responseIncomePMK).Error; err != nil {
+				return
+			}
+		}
+	}
 	return
 }
 

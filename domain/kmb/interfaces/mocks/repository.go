@@ -289,8 +289,8 @@ func (_m *Repository) GetHistoryRejectAttempt(idNumber string) ([]entity.Dupchec
 	return r0, r1
 }
 
-// GetKMOBOff provides a mock function with given fields:
-func (_m *Repository) GetKMOBOff() (entity.AppConfig, error) {
+// GetKMBOff provides a mock function with given fields:
+func (_m *Repository) GetKMBOff() (entity.AppConfig, error) {
 	ret := _m.Called()
 
 	var r0 entity.AppConfig
@@ -366,6 +366,27 @@ func (_m *Repository) GetLogOrchestrator(prospectID string) (entity.LogOrchestra
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMinimalIncomePMK provides a mock function with given fields: branchID, statusKonsumen
+func (_m *Repository) GetMinimalIncomePMK(branchID string, statusKonsumen string) (entity.MappingIncomePMK, error) {
+	ret := _m.Called(branchID, statusKonsumen)
+
+	var r0 entity.MappingIncomePMK
+	if rf, ok := ret.Get(0).(func(string, string) entity.MappingIncomePMK); ok {
+		r0 = rf(branchID, statusKonsumen)
+	} else {
+		r0 = ret.Get(0).(entity.MappingIncomePMK)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(branchID, statusKonsumen)
 	} else {
 		r1 = ret.Error(1)
 	}

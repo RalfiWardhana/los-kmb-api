@@ -139,59 +139,59 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	}
 
 	// sudah prescreening
-	trxDetail := entity.TrxDetail{
-		ProspectID:     reqMetrics.Transaction.ProspectID,
-		StatusProcess:  constant.STATUS_ONPROCESS,
-		Activity:       constant.ACTIVITY_PROCESS,
-		Decision:       constant.DB_DECISION_PASS,
-		SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
-		NextStep:       constant.SOURCE_DECISION_BIRO,
-		CreatedBy:      constant.SYSTEM_CREATED,
-	}
+	// trxDetail := entity.TrxDetail{
+	// 	ProspectID:     reqMetrics.Transaction.ProspectID,
+	// 	StatusProcess:  constant.STATUS_ONPROCESS,
+	// 	Activity:       constant.ACTIVITY_PROCESS,
+	// 	Decision:       constant.DB_DECISION_PASS,
+	// 	SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+	// 	NextStep:       constant.SOURCE_DECISION_BIRO,
+	// 	CreatedBy:      constant.SYSTEM_CREATED,
+	// }
 
-	details = append(details, trxDetail)
+	// details = append(details, trxDetail)
 
-	trxDetail = entity.TrxDetail{
-		ProspectID:     reqMetrics.Transaction.ProspectID,
-		StatusProcess:  constant.STATUS_ONPROCESS,
-		Activity:       constant.ACTIVITY_PROCESS,
-		Decision:       constant.DB_DECISION_PASS,
-		SourceDecision: constant.SOURCE_DECISION_BIRO,
-		NextStep:       constant.SOURCE_DECISION_EKYC,
-		CreatedBy:      constant.SYSTEM_CREATED,
-	}
+	// trxDetail = entity.TrxDetail{
+	// 	ProspectID:     reqMetrics.Transaction.ProspectID,
+	// 	StatusProcess:  constant.STATUS_ONPROCESS,
+	// 	Activity:       constant.ACTIVITY_PROCESS,
+	// 	Decision:       constant.DB_DECISION_PASS,
+	// 	SourceDecision: constant.SOURCE_DECISION_BIRO,
+	// 	NextStep:       constant.SOURCE_DECISION_EKYC,
+	// 	CreatedBy:      constant.SYSTEM_CREATED,
+	// }
 
-	details = append(details, trxDetail)
+	// details = append(details, trxDetail)
 
-	trxDetail = entity.TrxDetail{
-		ProspectID:     reqMetrics.Transaction.ProspectID,
-		StatusProcess:  constant.STATUS_ONPROCESS,
-		Activity:       constant.ACTIVITY_PROCESS,
-		Decision:       constant.DB_DECISION_PASS,
-		SourceDecision: constant.SOURCE_DECISION_EKYC,
-		NextStep:       constant.SOURCE_DECISION_CA,
-		CreatedBy:      constant.SYSTEM_CREATED,
-	}
+	// trxDetail = entity.TrxDetail{
+	// 	ProspectID:     reqMetrics.Transaction.ProspectID,
+	// 	StatusProcess:  constant.STATUS_ONPROCESS,
+	// 	Activity:       constant.ACTIVITY_PROCESS,
+	// 	Decision:       constant.DB_DECISION_PASS,
+	// 	SourceDecision: constant.SOURCE_DECISION_EKYC,
+	// 	NextStep:       constant.SOURCE_DECISION_CA,
+	// 	CreatedBy:      constant.SYSTEM_CREATED,
+	// }
 
-	details = append(details, trxDetail)
+	// details = append(details, trxDetail)
 
-	trxDetail = entity.TrxDetail{
-		ProspectID:     reqMetrics.Transaction.ProspectID,
-		StatusProcess:  constant.STATUS_ONPROCESS,
-		Activity:       constant.ACTIVITY_UNPROCESS,
-		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
-		SourceDecision: constant.SOURCE_DECISION_CA,
-		CreatedBy:      constant.SYSTEM_CREATED,
-	}
+	// trxDetail = entity.TrxDetail{
+	// 	ProspectID:     reqMetrics.Transaction.ProspectID,
+	// 	StatusProcess:  constant.STATUS_ONPROCESS,
+	// 	Activity:       constant.ACTIVITY_UNPROCESS,
+	// 	Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+	// 	SourceDecision: constant.SOURCE_DECISION_CA,
+	// 	CreatedBy:      constant.SYSTEM_CREATED,
+	// }
 
-	details = append(details, trxDetail)
-	resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, trxPrescreening.Reason)
-	if err != nil {
-		return
-	}
+	// details = append(details, trxDetail)
+	// resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, trxPrescreening.Reason)
+	// if err != nil {
+	// 	return
+	// }
 
-	log.Println("running journey")
-	return
+	// log.Println("running journey")
+	// return
 
 	var selfieImage, ktpImage, legalZipCode, companyZipCode string
 
@@ -221,6 +221,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 	reqDupcheck = request.DupcheckApi{
 		ProspectID:            reqMetrics.Transaction.ProspectID,
+		BranchID:              reqMetrics.Transaction.BranchID,
 		ImageKtp:              ktpImage,
 		ImageSelfie:           selfieImage,
 		MonthlyFixedIncome:    reqMetrics.CustomerEmployment.MonthlyFixedIncome,
@@ -271,6 +272,12 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	if err != nil {
 		return
 	}
+
+	// details = append(details, trxDetail)
+	// resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, trxPrescreening.Reason)
+	// if err != nil {
+	// 	return
+	// }
 
 	additionalTrx = response.Additional{
 		DupcheckData:   dupcheckData,

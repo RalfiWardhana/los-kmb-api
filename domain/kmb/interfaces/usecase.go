@@ -10,9 +10,9 @@ import (
 type Usecase interface {
 	DupcheckIntegrator(ctx context.Context, prospectID, idNumber, legalName, birthDate, surgateName string, accessToken string) (spDupcheck response.SpDupCekCustomerByID, err error)
 	BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerByID) (data response.UsecaseApi, customerType string)
-	VehicleCheck(manufactureYear string) (data response.UsecaseApi, err error)
+	VehicleCheck(manufactureYear string, tenor int) (data response.UsecaseApi, err error)
 	CustomerKMB(spDupcheck response.SpDupCekCustomerByID) (statusKonsumen string, err error)
-	PMK(income float64, homeStatus, jobPos, empYear, empMonth, stayYear, stayMonth, birthDate string, tenor int, maritalStatus string) (data response.UsecaseApi)
+	PMK(branchID string, statusKonsumen string, income float64, homeStatus, professionID, empYear, empMonth, stayYear, stayMonth, birthDate string, tenor int, maritalStatus string) (data response.UsecaseApi, err error)
 	DsrCheck(ctx context.Context, prospectID, engineNo string, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, newDupcheck entity.NewDupcheck, accessToken string) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error)
 	CustomerDomainGetData(ctx context.Context, req request.ReqCustomerDomain, prospectID, accessToken string) (customerDomainData response.DataCustomer, err error)
 	GetLatestPaidInstallment(ctx context.Context, req request.ReqLatestPaidInstallment, prospectID, accessToken string) (data response.LatestPaidInstallmentData, err error)
