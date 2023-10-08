@@ -324,6 +324,9 @@ const (
 	//PRE SCREENING
 	LIMIT_PRESCREENING = 20000000
 
+	//TENOR
+	SOURCE_DECISION_TENOR = "TNR"
+
 	//DUPCHECK
 	SOURCE_DECISION_DUPCHECK                = "DCK"
 	FLAG_ON                                 = "ON"

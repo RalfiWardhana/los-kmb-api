@@ -96,6 +96,27 @@ func (_m *Repository) GetConfig(groupName string, lob string, key string) entity
 	return r0
 }
 
+// GetCurrentTrxWithRejectDSR provides a mock function with given fields: idNumber
+func (_m *Repository) GetCurrentTrxWithRejectDSR(idNumber string) (entity.TrxStatus, error) {
+	ret := _m.Called(idNumber)
+
+	var r0 entity.TrxStatus
+	if rf, ok := ret.Get(0).(func(string) entity.TrxStatus); ok {
+		r0 = rf(idNumber)
+	} else {
+		r0 = ret.Get(0).(entity.TrxStatus)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(idNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetDSRBypass provides a mock function with given fields:
 func (_m *Repository) GetDSRBypass() (entity.AppConfig, error) {
 	ret := _m.Called()
@@ -110,29 +131,6 @@ func (_m *Repository) GetDSRBypass() (entity.AppConfig, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func() error); ok {
 		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetDataInquiry provides a mock function with given fields: idNumber
-func (_m *Repository) GetDataInquiry(idNumber string) ([]entity.DataInquiry, error) {
-	ret := _m.Called(idNumber)
-
-	var r0 []entity.DataInquiry
-	if rf, ok := ret.Get(0).(func(string) []entity.DataInquiry); ok {
-		r0 = rf(idNumber)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.DataInquiry)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(idNumber)
 	} else {
 		r1 = ret.Error(1)
 	}

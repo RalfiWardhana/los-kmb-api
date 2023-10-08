@@ -146,6 +146,7 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 
 	newErr = r.newKmbDB.Transaction(func(tx *gorm.DB) error {
 
+		//save data from payload
 		if countTrx == 0 {
 			var legalAddress, residenceAddress, companyAddress, emergencyAddress, mailingAddress, ownerAddress, locationAddress string
 			for _, v := range data.Address {
@@ -312,6 +313,14 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				Status:                     data.CustomerPersonal.Status,
 				SurveyResult:               surveyResult,
 				RentFinishDate:             data.CustomerPersonal.RentFinishDate,
+			}
+
+			if trxFMF.DupcheckData.CustomerID != nil {
+				personal.CustomerID = trxFMF.DupcheckData.CustomerID.(string)
+			}
+
+			if trxFMF.DupcheckData.StatusKonsumen != "" {
+				personal.CustomerStatus = trxFMF.DupcheckData.StatusKonsumen
 			}
 
 			logInfo = personal
@@ -566,7 +575,23 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 					}
 				}
 			}
+		} else {
+			//update data from metrics
+			var updateMap = make(map[string]interface{})
+			if trxFMF.DupcheckData.CustomerID != nil {
+				updateMap["CustomerID"] = trxFMF.DupcheckData.CustomerID.(string)
+			}
+			if trxFMF.DupcheckData.StatusKonsumen != "" {
+				updateMap["CustomerStatus"] = trxFMF.DupcheckData.StatusKonsumen
+			}
+			if updateMap != nil {
+				if err := tx.Model(&entity.CustomerPersonal{}).Where("ProspectID = ?", data.Transaction.ProspectID).Updates(updateMap).Error; err != nil {
+					return err
+				}
+			}
 		}
+
+		//save data form metrics
 
 		for i := 0; i < len(details); i++ {
 			// skip prescreening unpr
@@ -952,13 +977,14 @@ func (r *repoHandler) SaveVerificationFaceCompare(data entity.VerificationFaceCo
 	return nil
 }
 
-func (r repoHandler) GetDataInquiry(idNumber string) (data []entity.DataInquiry, err error) {
+func (r repoHandler) GetCurrentTrxWithRejectDSR(idNumber string) (data entity.TrxStatus, err error) {
 
 	currentDate := time.Now().Format(constant.FORMAT_DATE)
 
-	if err = r.kmbOffDB.Raw(fmt.Sprintf("SELECT di.ProspectID, di.IDNumber, di.LegalName, fi.final_approval, CAST(di.DtmUpd as DATE) AS DtmUpd, drp.reject_dsr FROM data_inquiry di LEFT JOIN final_inquiry fi ON di.ProspectID = fi.ProspectID LEFT JOIN dupcheck_rejection_pmk drp ON (di.ProspectID = drp.ProspectID AND drp.reject_dsr = 1) WHERE di.IDNumber = '%s' AND fi.final_approval IS NOT NULL AND CAST(di.DtmUpd as DATE) = '%s' ORDER BY di.tst DESC", idNumber, currentDate)).Scan(&data).Error; err != nil {
+	if err = r.kmbOffDB.Raw(fmt.Sprintf(`SELECT TOP 1 ts.* FROM trx_status ts LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+	WHERE ts.decision = 'REJ' AND ts.source_decision = 'DSR' AND tcp.IDNumber = '%s' AND CAST(ts.created_at as DATE) = '%s'`, idNumber, currentDate)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			err = errors.New(constant.ERROR_NOT_FOUND)
+			err = nil
 		}
 		return
 	}

@@ -354,20 +354,20 @@ func (_m *Usecase) Prescreening(ctx context.Context, reqs request.Metrics, filte
 	return r0, r1, r2, r3
 }
 
-// RejectTenor36 provides a mock function with given fields: ctx, prospectID, idNumber, accessToken
-func (_m *Usecase) RejectTenor36(ctx context.Context, prospectID string, idNumber string, accessToken string) (response.UsecaseApi, error) {
-	ret := _m.Called(ctx, prospectID, idNumber, accessToken)
+// RejectTenor36 provides a mock function with given fields: idNumber
+func (_m *Usecase) RejectTenor36(idNumber string) (response.UsecaseApi, error) {
+	ret := _m.Called(idNumber)
 
 	var r0 response.UsecaseApi
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) response.UsecaseApi); ok {
-		r0 = rf(ctx, prospectID, idNumber, accessToken)
+	if rf, ok := ret.Get(0).(func(string) response.UsecaseApi); ok {
+		r0 = rf(idNumber)
 	} else {
 		r0 = ret.Get(0).(response.UsecaseApi)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
-		r1 = rf(ctx, prospectID, idNumber, accessToken)
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(idNumber)
 	} else {
 		r1 = ret.Error(1)
 	}
