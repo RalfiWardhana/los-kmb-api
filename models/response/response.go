@@ -327,6 +327,7 @@ type UsecaseApi struct {
 	StatusKonsumen string  `json:"status_konsumen,omitempty"`
 	Dsr            float64 `json:"dsr,omitempty"`
 	Confidence     string  `json:"confidence,omitempty"`
+	SourceDecision string  `json:"source_decision,omitempty"`
 }
 
 type DupcheckConfig struct {
@@ -334,13 +335,14 @@ type DupcheckConfig struct {
 }
 
 type DataDupcheckConfig struct {
-	VehicleAge       int     `json:"vehicle_age"`
-	MinOvd           int     `json:"min_ovd"`
-	MaxOvd           int     `json:"max_ovd"`
-	MaxDsr           float64 `json:"max_dsr"`
-	AngsuranBerjalan int     `json:"angsuran_berjalan"`
-	AttemptPMKDSR    int     `json:"attempt_pmk_dsr"`
-	AttemptNIK       int     `json:"attempt_nik"`
+	VehicleAge           int     `json:"vehicle_age"`
+	MinOvd               int     `json:"min_ovd"`
+	MaxOvd               int     `json:"max_ovd"`
+	MaxDsr               float64 `json:"max_dsr"`
+	AngsuranBerjalan     int     `json:"angsuran_berjalan"`
+	AttemptPMKDSR        int     `json:"attempt_pmk_dsr"`
+	AttemptNIK           int     `json:"attempt_nik"`
+	AttemptChassisNumber int     `json:"attempt_chassis_number"`
 }
 
 type LatestPaidInstallment struct {
@@ -408,24 +410,25 @@ type OutstandingConfins struct {
 	TotalOutstanding float64 `json:"total_outstanding"`
 }
 type TrxFMF struct {
-	NTFAkumulasi         float64
-	NTFOtherAmount       float64
-	NTFOtherAmountSpouse float64
-	NTFOtherAmountDetail string
-	NTFConfinsAmount     float64
-	NTFConfins           float64
-	NTFTopup             float64
-	DupcheckData         SpDupcheckMap `json:"dupcheck_data"`
-	CustomerStatus       string        `json:"customer_status"`
-	ScsDecision          ScsDecision   `json:"scs_decision"`
-	CustomerType         interface{}   `json:"customer_type"`
-	SpouseType           interface{}   `json:"spouse_type"`
-	AsliriSimiliarity    interface{}   `json:"asliri_similiarity"`
-	AsliriReason         interface{}   `json:"asliri_reason"`
-	DSRFMF               interface{}   `json:"dsr_fmf"`
-	DSRPBK               interface{}   `json:"dsr_pbk"`
-	TotalDSR             interface{}   `json:"total_dsr"`
-	TrxBannedPMKDSR      entity.TrxBannedPMKDSR
+	NTFAkumulasi           float64
+	NTFOtherAmount         float64
+	NTFOtherAmountSpouse   float64
+	NTFOtherAmountDetail   string
+	NTFConfinsAmount       float64
+	NTFConfins             float64
+	NTFTopup               float64
+	DupcheckData           SpDupcheckMap `json:"dupcheck_data"`
+	CustomerStatus         string        `json:"customer_status"`
+	ScsDecision            ScsDecision   `json:"scs_decision"`
+	CustomerType           interface{}   `json:"customer_type"`
+	SpouseType             interface{}   `json:"spouse_type"`
+	AsliriSimiliarity      interface{}   `json:"asliri_similiarity"`
+	AsliriReason           interface{}   `json:"asliri_reason"`
+	DSRFMF                 interface{}   `json:"dsr_fmf"`
+	DSRPBK                 interface{}   `json:"dsr_pbk"`
+	TotalDSR               interface{}   `json:"total_dsr"`
+	TrxBannedPMKDSR        entity.TrxBannedPMKDSR
+	TrxBannedChassisNumber entity.TrxBannedChassisNumber
 }
 
 type Metrics struct {

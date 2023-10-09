@@ -18,7 +18,7 @@ type MultiUsecase struct {
 }
 
 // Dupcheck provides a mock function with given fields: ctx, reqs, married, accessToken
-func (_m *MultiUsecase) Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken string) (response.SpDupcheckMap, string, response.UsecaseApi, error) {
+func (_m *MultiUsecase) Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken string) (response.SpDupcheckMap, string, response.UsecaseApi, response.TrxFMF, error) {
 	ret := _m.Called(ctx, reqs, married, accessToken)
 
 	var r0 response.SpDupcheckMap
@@ -42,12 +42,19 @@ func (_m *MultiUsecase) Dupcheck(ctx context.Context, reqs request.DupcheckApi, 
 		r2 = ret.Get(2).(response.UsecaseApi)
 	}
 
-	var r3 error
-	if rf, ok := ret.Get(3).(func(context.Context, request.DupcheckApi, bool, string) error); ok {
+	var r3 response.TrxFMF
+	if rf, ok := ret.Get(3).(func(context.Context, request.DupcheckApi, bool, string) response.TrxFMF); ok {
 		r3 = rf(ctx, reqs, married, accessToken)
 	} else {
-		r3 = ret.Error(3)
+		r3 = ret.Get(3).(response.TrxFMF)
 	}
 
-	return r0, r1, r2, r3
+	var r4 error
+	if rf, ok := ret.Get(4).(func(context.Context, request.DupcheckApi, bool, string) error); ok {
+		r4 = rf(ctx, reqs, married, accessToken)
+	} else {
+		r4 = ret.Error(4)
+	}
+
+	return r0, r1, r2, r3, r4
 }

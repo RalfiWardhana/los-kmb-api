@@ -40,6 +40,48 @@ func (_m *Repository) GetAllReject(idNumber string) ([]entity.DupcheckRejectionP
 	return r0, r1
 }
 
+// GetBannedChassisNumber provides a mock function with given fields: chassisNumber
+func (_m *Repository) GetBannedChassisNumber(chassisNumber string) (entity.TrxBannedChassisNumber, error) {
+	ret := _m.Called(chassisNumber)
+
+	var r0 entity.TrxBannedChassisNumber
+	if rf, ok := ret.Get(0).(func(string) entity.TrxBannedChassisNumber); ok {
+		r0 = rf(chassisNumber)
+	} else {
+		r0 = ret.Get(0).(entity.TrxBannedChassisNumber)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(chassisNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetBannedPMKDSR provides a mock function with given fields: idNumber
+func (_m *Repository) GetBannedPMKDSR(idNumber string) (entity.TrxBannedPMKDSR, error) {
+	ret := _m.Called(idNumber)
+
+	var r0 entity.TrxBannedPMKDSR
+	if rf, ok := ret.Get(0).(func(string) entity.TrxBannedPMKDSR); ok {
+		r0 = rf(idNumber)
+	} else {
+		r0 = ret.Get(0).(entity.TrxBannedPMKDSR)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(idNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetBiroData provides a mock function with given fields: prospectID
 func (_m *Repository) GetBiroData(prospectID string) (entity.FilteringKMB, error) {
 	ret := _m.Called(prospectID)
@@ -110,6 +152,29 @@ func (_m *Repository) GetCurrentTrxWithReject(idNumber string) (entity.TrxReject
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(idNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetCurrentTrxWithRejectChassisNumber provides a mock function with given fields: chassisNumber
+func (_m *Repository) GetCurrentTrxWithRejectChassisNumber(chassisNumber string) ([]entity.RejectChassisNumber, error) {
+	ret := _m.Called(chassisNumber)
+
+	var r0 []entity.RejectChassisNumber
+	if rf, ok := ret.Get(0).(func(string) []entity.RejectChassisNumber); ok {
+		r0 = rf(chassisNumber)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.RejectChassisNumber)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(chassisNumber)
 	} else {
 		r1 = ret.Error(1)
 	}

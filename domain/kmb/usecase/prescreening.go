@@ -127,7 +127,7 @@ func (u usecase) Prescreening(ctx context.Context, req request.Metrics, filterin
 			Activity:       constant.ACTIVITY_PROCESS,
 			Decision:       constant.DB_DECISION_PASS,
 			SourceDecision: constant.PRESCREENING,
-			NextStep:       constant.SOURCE_DECISION_TENOR,
+			NextStep:       constant.SOURCE_DECISION_DUPCHECK,
 			CreatedBy:      constant.SYSTEM_CREATED,
 		}
 	} else {

@@ -27,7 +27,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		filtering       entity.FilteringKMB
 		trxPrescreening entity.TrxPrescreening
 		trxFMF          response.TrxFMF
-		trxBannedPMKDSR entity.TrxBannedPMKDSR
+		trxFMFDupcheck  response.TrxFMF
 	)
 
 	// cek trx_master
@@ -264,7 +264,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		married = true
 	}
 
-	dupcheckData, customerStatus, decisionMetrics, trxBannedPMKDSR, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken)
+	dupcheckData, customerStatus, decisionMetrics, trxFMFDupcheck, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken)
 	if err != nil {
 		return
 	}
@@ -272,7 +272,8 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	trxFMF.DupcheckData = dupcheckData
 	trxFMF.CustomerStatus = customerStatus
 	trxFMF.DSRFMF = dupcheckData.Dsr
-	trxFMF.TrxBannedPMKDSR = trxBannedPMKDSR
+	trxFMF.TrxBannedPMKDSR = trxFMFDupcheck.TrxBannedPMKDSR
+	trxFMF.TrxBannedChassisNumber = trxFMFDupcheck.TrxBannedChassisNumber
 
 	if decisionMetrics.Result == constant.DECISION_REJECT {
 		details = append(details, entity.TrxDetail{
@@ -281,7 +282,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			Activity:       constant.ACTIVITY_STOP,
 			Decision:       constant.DB_DECISION_REJECT,
 			RuleCode:       decisionMetrics.Code,
-			SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+			SourceDecision: decisionMetrics.SourceDecision,
 			Info:           decisionMetrics.Reason,
 		})
 

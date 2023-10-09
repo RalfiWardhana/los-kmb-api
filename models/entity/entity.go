@@ -270,6 +270,33 @@ func (c *MappingIncomePMK) TableName() string {
 	return "mapping_income_pmk"
 }
 
+type RejectChassisNumber struct {
+	ProspectID           string  `gorm:"type:varchar(20);column:ProspectID"`
+	IDNumber             string  `gorm:"type:varchar(100);column:IDNumber" json:"id_number"`
+	LegalName            string  `gorm:"type:varchar(100);column:LegalName" json:"legal_name"`
+	BirthPlace           string  `gorm:"type:varchar(100);column:BirthPlace" json:"birth_place"`
+	BirthDate            string  `gorm:"column:BirthDate" json:"birth_date"`
+	Gender               string  `gorm:"type:varchar(1);column:Gender"`
+	MaritalStatus        string  `gorm:"type:varchar(10);column:MaritalStatus" json:"marital_status"`
+	NumOfDependence      int     `gorm:"column:NumOfDependence" json:"num_of_dependence"`
+	StaySinceYear        string  `gorm:"type:varchar(10);column:StaySinceYear" json:"stay_since_year"`
+	StaySinceMonth       string  `gorm:"type:varchar(10);column:StaySinceMonth" json:"stay_since_month"`
+	HomeStatus           string  `gorm:"type:varchar(20);column:HomeStatus" json:"home_status"`
+	LegalZipCode         string  `gorm:"type:varchar(5);column:LegalZipCode"`
+	CompanyZipCode       string  `gorm:"type:varchar(5);column:CompanyZipCode"`
+	ProfessionID         string  `gorm:"type:varchar(10);column:ProfessionID" json:"profession_id"`
+	MonthlyFixedIncome   float64 `gorm:"column:MonthlyFixedIncome"`
+	EmploymentSinceYear  string  `gorm:"type:varchar(4);column:EmploymentSinceYear"`
+	EmploymentSinceMonth string  `gorm:"type:varchar(2);column:EmploymentSinceMonth"`
+	EngineNo             string  `gorm:"type:varchar(30);column:engine_number"`
+	ChassisNo            string  `gorm:"type:varchar(30);column:chassis_number"`
+	BPKBName             string  `gorm:"type:varchar(2);column:bpkb_name"`
+	ManufactureYear      string  `gorm:"type:varchar(4);column:manufacture_year"`
+	NTF                  float64 `gorm:"column:NTF"`
+	OTR                  float64 `gorm:"column:OTR"`
+	Tenor                int     `gorm:"column:Tenor"`
+}
+
 type DupcheckRejectionNokaNosin struct {
 	Id                   string    `gorm:"column:id"`
 	NoMesin              string    `gorm:"type:varchar(20);column:NoMesin"`
@@ -616,6 +643,16 @@ type TrxBannedPMKDSR struct {
 
 func (c *TrxBannedPMKDSR) TableName() string {
 	return "trx_banned_pmk_dsr"
+}
+
+type TrxBannedChassisNumber struct {
+	ProspectID string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	ChassisNo  string    `gorm:"type:varchar(30);column:chassis_number"`
+	CreatedAt  time.Time `gorm:"column:created_at"`
+}
+
+func (c *TrxBannedChassisNumber) TableName() string {
+	return "trx_banned_chassis_number"
 }
 
 type TrxReject struct {

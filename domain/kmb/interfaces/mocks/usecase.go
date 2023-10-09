@@ -39,6 +39,69 @@ func (_m *Usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustome
 	return r0, r1
 }
 
+// CheckAgreementChassisNumber provides a mock function with given fields: ctx, reqs, accessToken
+func (_m *Usecase) CheckAgreementChassisNumber(ctx context.Context, reqs request.DupcheckApi, accessToken string) (response.UsecaseApi, error) {
+	ret := _m.Called(ctx, reqs, accessToken)
+
+	var r0 response.UsecaseApi
+	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, string) response.UsecaseApi); ok {
+		r0 = rf(ctx, reqs, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.DupcheckApi, string) error); ok {
+		r1 = rf(ctx, reqs, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CheckBannedChassisNumber provides a mock function with given fields: req, configValue
+func (_m *Usecase) CheckBannedChassisNumber(req request.DupcheckApi, configValue response.DupcheckConfig) (response.UsecaseApi, error) {
+	ret := _m.Called(req, configValue)
+
+	var r0 response.UsecaseApi
+	if rf, ok := ret.Get(0).(func(request.DupcheckApi, response.DupcheckConfig) response.UsecaseApi); ok {
+		r0 = rf(req, configValue)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(request.DupcheckApi, response.DupcheckConfig) error); ok {
+		r1 = rf(req, configValue)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// CheckBannedPMKDSR provides a mock function with given fields: req, configValue
+func (_m *Usecase) CheckBannedPMKDSR(req request.DupcheckApi, configValue response.DupcheckConfig) (response.UsecaseApi, error) {
+	ret := _m.Called(req, configValue)
+
+	var r0 response.UsecaseApi
+	if rf, ok := ret.Get(0).(func(request.DupcheckApi, response.DupcheckConfig) response.UsecaseApi); ok {
+		r0 = rf(req, configValue)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(request.DupcheckApi, response.DupcheckConfig) error); ok {
+		r1 = rf(req, configValue)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CheckChassisNumber provides a mock function with given fields: ctx, reqs, nokaBanned, accessToken
 func (_m *Usecase) CheckChassisNumber(ctx context.Context, reqs request.DupcheckApi, nokaBanned response.RejectionNoka, accessToken string) (response.UsecaseApi, error) {
 	ret := _m.Called(ctx, reqs, nokaBanned, accessToken)
@@ -79,6 +142,62 @@ func (_m *Usecase) CheckNoka(ctx context.Context, reqs request.DupcheckApi, noka
 	}
 
 	return r0, r1
+}
+
+// CheckRejectChassisNumber provides a mock function with given fields: req, configValue
+func (_m *Usecase) CheckRejectChassisNumber(req request.DupcheckApi, configValue response.DupcheckConfig) (response.UsecaseApi, entity.TrxBannedChassisNumber, error) {
+	ret := _m.Called(req, configValue)
+
+	var r0 response.UsecaseApi
+	if rf, ok := ret.Get(0).(func(request.DupcheckApi, response.DupcheckConfig) response.UsecaseApi); ok {
+		r0 = rf(req, configValue)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	var r1 entity.TrxBannedChassisNumber
+	if rf, ok := ret.Get(1).(func(request.DupcheckApi, response.DupcheckConfig) entity.TrxBannedChassisNumber); ok {
+		r1 = rf(req, configValue)
+	} else {
+		r1 = ret.Get(1).(entity.TrxBannedChassisNumber)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(request.DupcheckApi, response.DupcheckConfig) error); ok {
+		r2 = rf(req, configValue)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// CheckRejection provides a mock function with given fields: req, configValue
+func (_m *Usecase) CheckRejection(req request.DupcheckApi, configValue response.DupcheckConfig) (response.UsecaseApi, entity.TrxBannedPMKDSR, error) {
+	ret := _m.Called(req, configValue)
+
+	var r0 response.UsecaseApi
+	if rf, ok := ret.Get(0).(func(request.DupcheckApi, response.DupcheckConfig) response.UsecaseApi); ok {
+		r0 = rf(req, configValue)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	var r1 entity.TrxBannedPMKDSR
+	if rf, ok := ret.Get(1).(func(request.DupcheckApi, response.DupcheckConfig) entity.TrxBannedPMKDSR); ok {
+		r1 = rf(req, configValue)
+	} else {
+		r1 = ret.Get(1).(entity.TrxBannedPMKDSR)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(request.DupcheckApi, response.DupcheckConfig) error); ok {
+		r2 = rf(req, configValue)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // CheckRejectionNoka provides a mock function with given fields: reqs
