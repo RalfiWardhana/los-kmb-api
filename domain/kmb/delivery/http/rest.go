@@ -118,7 +118,7 @@ func (c *handlerKMB) Dupcheck(ctx echo.Context) (err error) {
 
 	accessToken := middlewares.UserInfoData.AccessToken
 
-	_, _, data, err := c.multiUsecase.Dupcheck(ctx.Request().Context(), req, married, accessToken)
+	_, _, data, _, err := c.multiUsecase.Dupcheck(ctx.Request().Context(), req, married, accessToken)
 
 	if err != nil {
 		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", req, err)

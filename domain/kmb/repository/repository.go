@@ -977,12 +977,39 @@ func (r *repoHandler) SaveVerificationFaceCompare(data entity.VerificationFaceCo
 	return nil
 }
 
+func (r repoHandler) GetEncB64(myString string) (encryptedString entity.EncryptedString, err error) {
+
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS my_string`, myString)).Scan(&encryptedString).Error; err != nil {
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) GetCurrentTrxWithRejectDSR(idNumber string) (data entity.TrxStatus, err error) {
 
 	currentDate := time.Now().Format(constant.FORMAT_DATE)
 
 	if err = r.kmbOffDB.Raw(fmt.Sprintf(`SELECT TOP 1 ts.* FROM trx_status ts LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
 	WHERE ts.decision = 'REJ' AND ts.source_decision = 'DSR' AND tcp.IDNumber = '%s' AND CAST(ts.created_at as DATE) = '%s'`, idNumber, currentDate)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetCurrentTrxWithReject(idNumber string) (data entity.TrxReject, err error) {
+
+	currentDate := time.Now().Format(constant.FORMAT_DATE)
+
+	if err = r.kmbOffDB.Raw(fmt.Sprintf(`SELECT 
+	COUNT(CASE WHEN ts.source_decision = 'PMK' OR ts.source_decision = 'DSR' THEN 1 END) as reject_pmk_dsr,
+	COUNT(CASE WHEN ts.source_decision != 'PMK' AND ts.source_decision != 'DSR' AND ts.source_decision != 'NKA' THEN 1 END) as reject_nik 
+	FROM trx_status ts LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+	WHERE ts.decision = 'REJ' AND tcp.IDNumber = '%s' AND CAST(ts.created_at as DATE) = '%s'`, idNumber, currentDate)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}

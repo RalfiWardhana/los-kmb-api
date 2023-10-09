@@ -45,7 +45,9 @@ type Repository interface {
 	GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig)
 	SaveVerificationFaceCompare(data entity.VerificationFaceCompare) error
 
+	GetEncB64(myString string) (encryptedString entity.EncryptedString, err error)
 	GetCurrentTrxWithRejectDSR(idNumber string) (data entity.TrxStatus, err error)
+	GetCurrentTrxWithReject(idNumber string) (data entity.TrxReject, err error)
 	ScanPreTrxJourney(prospectID string) (countMaster, countFiltering int, err error)
 	GetBiroData(prospectID string) (data entity.FilteringKMB, err error)
 }

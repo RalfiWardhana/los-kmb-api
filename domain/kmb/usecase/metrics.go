@@ -27,6 +27,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		filtering       entity.FilteringKMB
 		trxPrescreening entity.TrxPrescreening
 		trxFMF          response.TrxFMF
+		trxBannedPMKDSR entity.TrxBannedPMKDSR
 	)
 
 	// cek trx_master
@@ -263,7 +264,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		married = true
 	}
 
-	dupcheckData, customerStatus, decisionMetrics, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken)
+	dupcheckData, customerStatus, decisionMetrics, trxBannedPMKDSR, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken)
 	if err != nil {
 		return
 	}
@@ -271,6 +272,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	trxFMF.DupcheckData = dupcheckData
 	trxFMF.CustomerStatus = customerStatus
 	trxFMF.DSRFMF = dupcheckData.Dsr
+	trxFMF.TrxBannedPMKDSR = trxBannedPMKDSR
 
 	if decisionMetrics.Result == constant.DECISION_REJECT {
 		details = append(details, entity.TrxDetail{

@@ -18,7 +18,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, err error) {
+func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxBannedPMKDSR entity.TrxBannedPMKDSR, err error) {
 
 	var (
 		customer     []request.SpouseDupcheck
@@ -29,12 +29,38 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		customerType string
 	)
 
+	//Get parameterize config
+	config, err := u.repository.GetDupcheckConfig()
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Dupcheck Config Error")
+		return
+	}
+
+	var configValue response.DupcheckConfig
+
+	json.Unmarshal([]byte(config.Value), &configValue)
+
 	prospectID := req.ProspectID
 	income := req.MonthlyFixedIncome + req.MonthlyVariableIncome + req.SpouseIncome
 	customer = append(customer, request.SpouseDupcheck{IDNumber: req.IDNumber, LegalName: req.LegalName, BirthDate: req.BirthDate, MotherName: req.MotherName})
 
 	if married {
 		customer = append(customer, request.SpouseDupcheck{IDNumber: req.Spouse.IDNumber, LegalName: req.Spouse.LegalName, BirthDate: req.Spouse.BirthDate, MotherName: req.Spouse.MotherName})
+	}
+
+	// Pernah Reject
+	trxReject, trxBannedPMKDSR, err := u.usecase.CheckRejection(req, configValue)
+	if err != nil {
+		return
+	}
+
+	if trxReject.Result == constant.DECISION_REJECT {
+		data.Code = trxReject.Code
+		data.Result = trxReject.Result
+		data.Reason = trxReject.Reason
+		mapping.Reason = data.Reason
+		return
 	}
 
 	// Exception Reject No. Rangka Banned 30 Days
@@ -169,18 +195,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 	mapping.CustomerID = mainCustomer.CustomerID
 
-	//Get parameterize config
-	config, err := u.repository.GetDupcheckConfig()
-
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Get Dupcheck Config Error")
-		return
-	}
-
-	var configValue response.DupcheckConfig
-
-	json.Unmarshal([]byte(config.Value), &configValue)
-
 	mapping.OSInstallmentDue = mainCustomer.OSInstallmentDue
 	mapping.NumberofAgreement = mainCustomer.NumberofAgreement
 	mapping.AgreementStatus = constant.AGREEMENT_AKTIF
@@ -256,6 +270,46 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 	return
 
+}
+
+func (u usecase) CheckRejection(req request.DupcheckApi, configValue response.DupcheckConfig) (data response.UsecaseApi, trxBannedPMKDSR entity.TrxBannedPMKDSR, err error) {
+
+	var encryptedIDNumber entity.EncryptedString
+	encryptedIDNumber, err = u.repository.GetEncB64(req.IDNumber)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - GetEncB64 ID Number Error")
+		return
+	}
+
+	var trxReject entity.TrxReject
+	trxReject, err = u.repository.GetCurrentTrxWithReject(encryptedIDNumber.MyString)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - GetCurrentTrxWithReject Error")
+		return
+	}
+
+	if trxReject.RejectPMKDSR > 0 {
+		if trxReject.RejectPMKDSR > configValue.Data.AttemptPMKDSR {
+			//banned 30 hari
+			trxBannedPMKDSR = entity.TrxBannedPMKDSR{
+				ProspectID: req.ProspectID,
+				IDNumber:   encryptedIDNumber.MyString,
+			}
+		}
+		data.Result = constant.DECISION_REJECT
+		data.Code = constant.CODE_PERNAH_REJECT_PMK_DSR
+		data.Reason = constant.REASON_PERNAH_REJECT_PMK_DSR
+		return
+	}
+
+	if trxReject.RejectNIK > 0 {
+		data.Result = constant.DECISION_REJECT
+		data.Code = constant.CODE_PERNAH_REJECT_NIK
+		data.Reason = constant.REASON_PERNAH_REJECT_NIK
+		return
+	}
+
+	return
 }
 
 func (u usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerByID) (data response.UsecaseApi, customerType string) {
