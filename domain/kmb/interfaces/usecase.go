@@ -22,13 +22,14 @@ type Usecase interface {
 	CheckChassisNumber(ctx context.Context, reqs request.DupcheckApi, nokaBanned response.RejectionNoka, accessToken string) (data response.UsecaseApi, err error)
 	GetBase64Media(ctx context.Context, url string, customerID int, accessToken string) (base64Image string, err error)
 	FacePlus(ctx context.Context, imageKtp string, imageSelfie string, req request.FaceCompareRequest, accessToken string) (result response.FaceCompareResponse, err error)
-	RejectTenor36(ctx context.Context, prospectID, idNumber, accessToken string) (result response.UsecaseApi, err error)
+	RejectTenor36(idNumber string) (result response.UsecaseApi, err error)
 	Prescreening(ctx context.Context, reqs request.Metrics, filtering entity.FilteringKMB, accessToken string) (trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, trxDetail entity.TrxDetail, err error)
 	SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (resp response.Metrics, err error)
+	CheckRejection(req request.DupcheckApi, configValue response.DupcheckConfig) (data response.UsecaseApi, trxBannedPMKDSR entity.TrxBannedPMKDSR, err error)
 }
 
 type MultiUsecase interface {
-	Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, err error)
+	Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxBannedPMKDSR entity.TrxBannedPMKDSR, err error)
 }
 
 type Metrics interface {

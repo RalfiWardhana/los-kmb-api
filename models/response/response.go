@@ -1,6 +1,7 @@
 package response
 
 import (
+	"los-kmb-api/models/entity"
 	"time"
 )
 
@@ -338,6 +339,8 @@ type DataDupcheckConfig struct {
 	MaxOvd           int     `json:"max_ovd"`
 	MaxDsr           float64 `json:"max_dsr"`
 	AngsuranBerjalan int     `json:"angsuran_berjalan"`
+	AttemptPMKDSR    int     `json:"attempt_pmk_dsr"`
+	AttemptNIK       int     `json:"attempt_nik"`
 }
 
 type LatestPaidInstallment struct {
@@ -412,6 +415,17 @@ type TrxFMF struct {
 	NTFConfinsAmount     float64
 	NTFConfins           float64
 	NTFTopup             float64
+	DupcheckData         SpDupcheckMap `json:"dupcheck_data"`
+	CustomerStatus       string        `json:"customer_status"`
+	ScsDecision          ScsDecision   `json:"scs_decision"`
+	CustomerType         interface{}   `json:"customer_type"`
+	SpouseType           interface{}   `json:"spouse_type"`
+	AsliriSimiliarity    interface{}   `json:"asliri_similiarity"`
+	AsliriReason         interface{}   `json:"asliri_reason"`
+	DSRFMF               interface{}   `json:"dsr_fmf"`
+	DSRPBK               interface{}   `json:"dsr_pbk"`
+	TotalDSR             interface{}   `json:"total_dsr"`
+	TrxBannedPMKDSR      entity.TrxBannedPMKDSR
 }
 
 type Metrics struct {
@@ -604,23 +618,6 @@ type FaceRecognitionIntegratorData struct {
 	Reason        string `json:"reason"`
 	Threshold     string `json:"threshold"`
 	RefID         string `json:"ref_id"`
-}
-
-type Additional struct {
-	DupcheckData            SpDupcheckMap `json:"dupcheck_data"`
-	CustomerStatus          string        `json:"customer_status"`
-	ScsDecision             ScsDecision   `json:"scs_decision"`
-	PDFCustomer             interface{}   `json:"pdf_customer"`
-	PDFSpouse               interface{}   `json:"pdf_spouse"`
-	Reprocess               bool          `json:"reprocess"`
-	CustomerType            interface{}   `json:"customer_type"`
-	SpouseType              interface{}   `json:"spouse_type"`
-	AsliriSimiliarity       interface{}   `json:"asliri_similiarity"`
-	AsliriReason            interface{}   `json:"asliri_reason"`
-	DSR                     interface{}   `json:"dsr"`
-	DataAkkk                BiroAkkk      `json:"biro_akkk"`
-	AngsuranAktifBiro       float64       `json:"angsuran_aktif_biro"`
-	AngsuranAktifSpouseBiro float64       `json:"angsuran_aktif_biro_spouse"`
 }
 
 type ScsDecision struct {

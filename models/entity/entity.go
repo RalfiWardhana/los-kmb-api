@@ -233,6 +233,9 @@ type Encrypted struct {
 	MailingAddress    string `gorm:"column:MailingAddress"`
 	IDNumber          string `gorm:"column:IDNumber"`
 }
+type EncryptedString struct {
+	MyString string `gorm:"column:my_string"`
+}
 
 type ConfigPMK struct {
 	Data DataPMK `json:"data"`
@@ -603,6 +606,21 @@ type TrxStatus struct {
 
 func (c *TrxStatus) TableName() string {
 	return "trx_status"
+}
+
+type TrxBannedPMKDSR struct {
+	ProspectID string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	IDNumber   string    `gorm:"type:varchar(40);column:IDNumber"`
+	CreatedAt  time.Time `gorm:"column:created_at"`
+}
+
+func (c *TrxBannedPMKDSR) TableName() string {
+	return "trx_banned_pmk_dsr"
+}
+
+type TrxReject struct {
+	RejectPMKDSR int `gorm:"column:reject_pmk_dsr"`
+	RejectNIK    int `gorm:"column:reject_nik"`
 }
 
 type TrxItem struct {
