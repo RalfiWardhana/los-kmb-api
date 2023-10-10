@@ -396,6 +396,7 @@ const (
 	REASON_REJECT_MAX_AGE           = "Umur Diatas Limit Ketentuan"
 	REASON_VEHICLE_SESUAI           = "Umur Kendaraan Sesuai Ketentuan"
 	REASON_VEHICLE_AGE_MAX          = "Usia Kendaraan >"
+	DEFAULT_BRANCH_ID               = "DEFAULT"
 
 	//NOKA NOSIN
 	ATTEMPT_REJECT                   = 2

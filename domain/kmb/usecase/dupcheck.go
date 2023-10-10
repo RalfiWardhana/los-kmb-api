@@ -21,14 +21,13 @@ import (
 func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, err error) {
 
 	var (
-		customer       []request.SpouseDupcheck
-		blackList      response.UsecaseApi
-		sp             response.SpDupCekCustomerByID
-		dataCustomer   []response.SpDupCekCustomerByID
-		spMap          response.SpDupcheckMap
-		customerType   string
-		newDupcheck    entity.NewDupcheck
-		faceCompareReq request.FaceCompareRequest
+		customer     []request.SpouseDupcheck
+		blackList    response.UsecaseApi
+		sp           response.SpDupCekCustomerByID
+		dataCustomer []response.SpDupCekCustomerByID
+		spMap        response.SpDupcheckMap
+		customerType string
+		newDupcheck  entity.NewDupcheck
 	)
 
 	prospectID := req.ProspectID
@@ -37,40 +36,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 	if married {
 		customer = append(customer, request.SpouseDupcheck{IDNumber: req.Spouse.IDNumber, LegalName: req.Spouse.LegalName, BirthDate: req.Spouse.BirthDate, MotherName: req.Spouse.MotherName})
-	}
-
-	// Face Compare with Faceplus
-	faceCompareReq.ProspectID = req.ProspectID
-	faceCompareReq.ImageKtp = req.ImageKtp
-	faceCompareReq.ImageSelfie = req.ImageSelfie
-	faceCompareReq.IDNumber = req.IDNumber
-	faceCompareReq.BirthDate = req.BirthDate
-	faceCompareReq.BirthPlace = req.BirthPlace
-	faceCompareReq.LegalName = req.LegalName
-	faceCompareReq.Lob = constant.LOB_KMB
-
-	imageKtp, err := u.usecase.GetBase64Media(ctx, req.ImageKtp, 0, accessToken)
-	if err != nil {
-		return
-	}
-
-	imageSelfie, err := u.usecase.GetBase64Media(ctx, req.ImageSelfie, 0, accessToken)
-	if err != nil {
-		return
-	}
-
-	faceCompare, err := u.usecase.FacePlus(ctx, imageKtp, imageSelfie, faceCompareReq, accessToken)
-
-	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
-		return
-	}
-
-	if faceCompare.Result == constant.DECISION_REJECT {
-		data.Code = constant.CODE_REJECT_FACE_COMPARE
-		data.Result = faceCompare.Result
-		data.Reason = faceCompare.Reason
-		mapping.Reason = data.Reason
-		return
 	}
 
 	// Exception Reject No. Rangka Banned 30 Days
@@ -137,7 +102,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	mapping.SpouseType = spMap.SpouseType
 
 	//Check vehicle age
-	ageVehicle, err := u.usecase.VehicleCheck(req.ManufactureYear)
+	ageVehicle, err := u.usecase.VehicleCheck(req.ManufactureYear, req.Tenor)
 
 	if err != nil {
 		return
@@ -241,7 +206,10 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	}
 
 	// Check PMK
-	pmk := u.usecase.PMK(req.MonthlyFixedIncome, req.HomeStatus, req.JobPosition, req.EmploymentSinceYear, req.EmploymentSinceMonth, req.StaySinceYear, req.StaySinceMonth, req.BirthDate, req.Tenor, req.MaritalStatus)
+	pmk, err := u.usecase.PMK(req.BranchID, customerKMB, req.MonthlyFixedIncome, req.HomeStatus, req.ProfessionID, req.EmploymentSinceYear, req.EmploymentSinceMonth, req.StaySinceYear, req.StaySinceMonth, req.BirthDate, req.Tenor, req.MaritalStatus)
+	if err != nil {
+		return
+	}
 
 	if pmk.Result == constant.DECISION_REJECT {
 		data = pmk
@@ -1038,12 +1006,12 @@ func (u usecase) CustomerKMB(spDupcheck response.SpDupCekCustomerByID) (statusKo
 
 }
 
-func (u usecase) VehicleCheck(manufactureYear string) (data response.UsecaseApi, err error) {
+func (u usecase) VehicleCheck(manufactureYear string, tenor int) (data response.UsecaseApi, err error) {
 
 	config, err := u.repository.GetDupcheckConfig()
 
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Error Get Parameterize Config")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error Get Config Dupcheck")
 		return
 	}
 
@@ -1055,6 +1023,8 @@ func (u usecase) VehicleCheck(manufactureYear string) (data response.UsecaseApi,
 	BPKBYear, _ := strconv.Atoi(manufactureYear)
 
 	ageVehicle := currentYear - BPKBYear
+
+	ageVehicle += int(tenor / 12)
 
 	if ageVehicle <= configValue.Data.VehicleAge {
 		data.Result = constant.DECISION_PASS

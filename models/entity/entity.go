@@ -254,6 +254,19 @@ type DataPMK struct {
 	ManufacturingYear int     `json:"manufacturing_year"`
 }
 
+type MappingIncomePMK struct {
+	ID             string    `gorm:"column:id"`
+	BranchID       string    `gorm:"column:branch_id"`
+	StatusKonsumen string    `gorm:"column:status_konsumen"`
+	Income         int       `gorm:"column:income"`
+	Lob            string    `gorm:"column:lob"`
+	CreatedAt      time.Time `gorm:"column:created_at"`
+}
+
+func (c *MappingIncomePMK) TableName() string {
+	return "mapping_income_pmk"
+}
+
 type DupcheckRejectionNokaNosin struct {
 	Id                   string    `gorm:"column:id"`
 	NoMesin              string    `gorm:"type:varchar(20);column:NoMesin"`

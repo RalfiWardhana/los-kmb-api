@@ -93,6 +93,7 @@ type DataElaborate struct {
 
 type DupcheckApi struct {
 	ProspectID            string             `json:"prospect_id" validate:"required"`
+	BranchID              string             `json:"branch_id" validate:"required"`
 	ImageSelfie           string             `json:"image_selfie" validate:"required"`
 	ImageKtp              string             `json:"ktp_url" validate:"required"`
 	MonthlyFixedIncome    float64            `json:"monthly_fixed_income" validate:"required"`

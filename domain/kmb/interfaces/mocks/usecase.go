@@ -298,18 +298,25 @@ func (_m *Usecase) NokaBanned30D(reqs request.DupcheckApi) (response.RejectionNo
 	return r0, r1
 }
 
-// PMK provides a mock function with given fields: income, homeStatus, jobPos, empYear, empMonth, stayYear, stayMonth, birthDate, tenor, maritalStatus
-func (_m *Usecase) PMK(income float64, homeStatus string, jobPos string, empYear string, empMonth string, stayYear string, stayMonth string, birthDate string, tenor int, maritalStatus string) response.UsecaseApi {
-	ret := _m.Called(income, homeStatus, jobPos, empYear, empMonth, stayYear, stayMonth, birthDate, tenor, maritalStatus)
+// PMK provides a mock function with given fields: branchID, statusKonsumen, income, homeStatus, professionID, empYear, empMonth, stayYear, stayMonth, birthDate, tenor, maritalStatus
+func (_m *Usecase) PMK(branchID string, statusKonsumen string, income float64, homeStatus string, professionID string, empYear string, empMonth string, stayYear string, stayMonth string, birthDate string, tenor int, maritalStatus string) (response.UsecaseApi, error) {
+	ret := _m.Called(branchID, statusKonsumen, income, homeStatus, professionID, empYear, empMonth, stayYear, stayMonth, birthDate, tenor, maritalStatus)
 
 	var r0 response.UsecaseApi
-	if rf, ok := ret.Get(0).(func(float64, string, string, string, string, string, string, string, int, string) response.UsecaseApi); ok {
-		r0 = rf(income, homeStatus, jobPos, empYear, empMonth, stayYear, stayMonth, birthDate, tenor, maritalStatus)
+	if rf, ok := ret.Get(0).(func(string, string, float64, string, string, string, string, string, string, string, int, string) response.UsecaseApi); ok {
+		r0 = rf(branchID, statusKonsumen, income, homeStatus, professionID, empYear, empMonth, stayYear, stayMonth, birthDate, tenor, maritalStatus)
 	} else {
 		r0 = ret.Get(0).(response.UsecaseApi)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string, float64, string, string, string, string, string, string, string, int, string) error); ok {
+		r1 = rf(branchID, statusKonsumen, income, homeStatus, professionID, empYear, empMonth, stayYear, stayMonth, birthDate, tenor, maritalStatus)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // Prescreening provides a mock function with given fields: ctx, reqs, filtering, accessToken
@@ -389,20 +396,20 @@ func (_m *Usecase) SaveTransaction(countTrx int, data request.Metrics, trxPrescr
 	return r0, r1
 }
 
-// VehicleCheck provides a mock function with given fields: manufactureYear
-func (_m *Usecase) VehicleCheck(manufactureYear string) (response.UsecaseApi, error) {
-	ret := _m.Called(manufactureYear)
+// VehicleCheck provides a mock function with given fields: manufactureYear, tenor
+func (_m *Usecase) VehicleCheck(manufactureYear string, tenor int) (response.UsecaseApi, error) {
+	ret := _m.Called(manufactureYear, tenor)
 
 	var r0 response.UsecaseApi
-	if rf, ok := ret.Get(0).(func(string) response.UsecaseApi); ok {
-		r0 = rf(manufactureYear)
+	if rf, ok := ret.Get(0).(func(string, int) response.UsecaseApi); ok {
+		r0 = rf(manufactureYear, tenor)
 	} else {
 		r0 = ret.Get(0).(response.UsecaseApi)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(manufactureYear)
+	if rf, ok := ret.Get(1).(func(string, int) error); ok {
+		r1 = rf(manufactureYear, tenor)
 	} else {
 		r1 = ret.Error(1)
 	}
