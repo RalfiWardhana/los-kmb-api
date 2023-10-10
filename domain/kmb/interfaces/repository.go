@@ -10,6 +10,7 @@ type Repository interface {
 	ScanTrxMaster(prospectID string) (countMaster int, err error)
 	ScanTrxPrescreening(prospectID string) (count int, err error)
 	GetFilteringResult(prospectID string) (filtering entity.FilteringKMB, err error)
+	GetFilteringForJourney(prospectID string) (filtering entity.FilteringKMB, err error)
 	SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (newErr error)
 	GetLogOrchestrator(prospectID string) (logOrchestrator entity.LogOrchestrator, err error)
 	SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error)
@@ -30,6 +31,7 @@ type Repository interface {
 	GetDSRBypass() (config entity.AppConfig, err error)
 	GetKMBOff() (config entity.AppConfig, err error)
 	GetMinimalIncomePMK(branchID string, statusKonsumen string) (responseIncomePMK entity.MappingIncomePMK, err error)
+	GetInstallmentAmountChassisNumber(chassisNumber string) (data entity.SpDupcekChasisNo, err error)
 
 	GetLatestBannedRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error)
 	GetLatestRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error)

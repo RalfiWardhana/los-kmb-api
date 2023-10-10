@@ -109,6 +109,24 @@ func (r repoHandler) GetFilteringResult(prospectID string) (filtering entity.Fil
 	return
 }
 
+func (r repoHandler) GetFilteringForJourney(prospectID string) (filtering entity.FilteringKMB, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.newKmbDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf("SELECT * FROM trx_filtering WITH (nolock) WHERE prospect_id = '%s'", prospectID)).Scan(&filtering).Error; err != nil {
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (newErr error) {
 
 	location, _ := time.LoadLocation("Asia/Jakarta")
@@ -878,6 +896,26 @@ func (r repoHandler) SaveDataApiLog(data entity.TrxApiLog) (err error) {
 	}
 
 	return
+}
+
+func (r repoHandler) GetInstallmentAmountChassisNumber(chassisNumber string) (data entity.SpDupcekChasisNo, err error) {
+
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.confinsDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = db.Raw("exec [%s] '%s'", os.Getenv("SP_DUPCHECK_CHASSIS_NUMBER"), chassisNumber).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+
 }
 
 func (r repoHandler) GetDummyAgreementChassisNumber(idNumber string) (data entity.DummyAgreementChassisNumber, err error) {
