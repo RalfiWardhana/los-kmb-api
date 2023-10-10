@@ -1066,7 +1066,7 @@ func (r repoHandler) GetCurrentTrxWithRejectDSR(idNumber string) (data entity.Tr
 
 	currentDate := time.Now().Format(constant.FORMAT_DATE)
 
-	if err = r.kmbOffDB.Raw(fmt.Sprintf(`SELECT TOP 1 ts.* FROM trx_status ts LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT TOP 1 ts.* FROM trx_status ts LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
 	WHERE ts.decision = 'REJ' AND ts.source_decision = 'DSR' AND tcp.IDNumber = '%s' AND CAST(ts.created_at as DATE) = '%s'`, idNumber, currentDate)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
@@ -1081,7 +1081,7 @@ func (r repoHandler) GetBannedPMKDSR(idNumber string) (data entity.TrxBannedPMKD
 
 	date := time.Now().AddDate(0, 0, -30).Format(constant.FORMAT_DATE)
 
-	if err = r.kmbOffDB.Raw(fmt.Sprintf(`SELECT * FROM trx_banned_pmk_dsr WHERE IDNumber = '%s' AND CAST(created_at as DATE) >= '%s'`, idNumber, date)).Scan(&data).Error; err != nil {
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT * FROM trx_banned_pmk_dsr WHERE IDNumber = '%s' AND CAST(created_at as DATE) >= '%s'`, idNumber, date)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
@@ -1095,7 +1095,7 @@ func (r repoHandler) GetCurrentTrxWithReject(idNumber string) (data entity.TrxRe
 
 	currentDate := time.Now().Format(constant.FORMAT_DATE)
 
-	if err = r.kmbOffDB.Raw(fmt.Sprintf(`SELECT 
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT 
 	COUNT(CASE WHEN ts.source_decision = 'PMK' OR ts.source_decision = 'DSR' OR ts.source_decision = 'PRJ' THEN 1 END) as reject_pmk_dsr,
 	COUNT(CASE WHEN ts.source_decision != 'PMK' AND ts.source_decision != 'DSR' AND ts.source_decision != 'PRJ' AND ts.source_decision != 'NKA' THEN 1 END) as reject_nik 
 	FROM trx_status ts LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
@@ -1113,7 +1113,7 @@ func (r repoHandler) GetBannedChassisNumber(chassisNumber string) (data entity.T
 
 	date := time.Now().AddDate(0, 0, -30).Format(constant.FORMAT_DATE)
 
-	if err = r.kmbOffDB.Raw(fmt.Sprintf(`SELECT * FROM trx_banned_chassis_number WHERE chassis_number = '%s' AND CAST(created_at as DATE) >= '%s'`, chassisNumber, date)).Scan(&data).Error; err != nil {
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT * FROM trx_banned_chassis_number WHERE chassis_number = '%s' AND CAST(created_at as DATE) >= '%s'`, chassisNumber, date)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
@@ -1127,7 +1127,7 @@ func (r repoHandler) GetCurrentTrxWithRejectChassisNumber(chassisNumber string) 
 
 	currentDate := time.Now().Format(constant.FORMAT_DATE)
 
-	if err = r.kmbOffDB.Raw(fmt.Sprintf(`SELECT  
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT  
 		tcp.ProspectID,
 		SCP.dbo.DEC_B64('SEC',tcp.IDNumber) AS IDNumber,
 		SCP.dbo.DEC_B64('SEC',tcp.LegalName) AS LegalName,
