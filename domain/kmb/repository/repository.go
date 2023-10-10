@@ -591,7 +591,83 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 			}
 		}
 
-		//save data form metrics
+		//save data metrics
+
+		// insert ban pmk dsr
+		if trxFMF.TrxBannedPMKDSR != (entity.TrxBannedPMKDSR{}) {
+
+			logInfo = trxFMF.TrxBannedPMKDSR
+
+			if err := tx.Create(&trxFMF.TrxBannedPMKDSR).Error; err != nil {
+				return err
+			}
+		}
+
+		// insert ban chassis number
+		if trxFMF.TrxBannedChassisNumber != (entity.TrxBannedChassisNumber{}) {
+
+			logInfo = trxFMF.TrxBannedChassisNumber
+
+			if err := tx.Create(&trxFMF.TrxBannedChassisNumber).Error; err != nil {
+				return err
+			}
+		}
+
+		var asliriReason interface{}
+
+		if trxFMF.AsliriReason == constant.REASON_EKYC_INVALID {
+			asliriReason = constant.REASON_TIDAK_SESUAI
+		} else if trxFMF.AsliriReason != nil {
+			asliriReason = constant.REASON_SESUAI
+		}
+
+		var roaoAkkk response.RoaoAkkk
+		if trxFMF.DupcheckData.StatusKonsumen != constant.STATUS_KONSUMEN_NEW {
+			roaoAkkk = response.RoaoAkkk{
+				MaxOverdueDaysROAO:               trxFMF.DupcheckData.MaxOverdueDaysROAO,
+				MaxOverdueDaysforActiveAgreement: trxFMF.DupcheckData.MaxOverdueDaysforActiveAgreement,
+				NumberofAgreement:                trxFMF.DupcheckData.NumberofAgreement,
+				AgreementStatus:                  trxFMF.DupcheckData.AgreementStatus,
+				NumberOfPaidInstallment:          trxFMF.DupcheckData.NumberOfPaidInstallment,
+				OSInstallmentDue:                 trxFMF.DupcheckData.OSInstallmentDue,
+				InstallmentAmountFMF:             trxFMF.DupcheckData.InstallmentAmountFMF,
+				InstallmentAmountSpouseFMF:       trxFMF.DupcheckData.InstallmentAmountSpouseFMF,
+				InstallmentAmountOther:           trxFMF.DupcheckData.InstallmentAmountOther,
+				InstallmentAmountOtherSpouse:     trxFMF.DupcheckData.InstallmentAmountOtherSpouse,
+				InstallmentTopup:                 trxFMF.DupcheckData.InstallmentTopup,
+			}
+		}
+
+		akkk := entity.TrxAkkk{
+			ProspectID:                   data.Transaction.ProspectID,
+			ScsDate:                      trxFMF.ScsDecision.ScsDate,
+			ScsScore:                     trxFMF.ScsDecision.ScsScore,
+			ScsStatus:                    trxFMF.ScsDecision.ScsStatus,
+			CustomerType:                 trxFMF.DupcheckData.CustomerType,
+			SpouseType:                   trxFMF.DupcheckData.SpouseType,
+			AgreementStatus:              roaoAkkk.AgreementStatus,
+			TotalAgreementAktif:          roaoAkkk.NumberofAgreement,
+			MaxOVDAgreementAktif:         roaoAkkk.MaxOverdueDaysROAO,
+			LastMaxOVDAgreement:          roaoAkkk.MaxOverdueDaysforActiveAgreement,
+			DSRFMF:                       trxFMF.DSRFMF,
+			DSRPBK:                       trxFMF.DSRPBK,
+			TotalDSR:                     trxFMF.TotalDSR,
+			AsliriSimiliarity:            trxFMF.AsliriSimiliarity,
+			AsliriReason:                 asliriReason,
+			NumberOfPaidInstallment:      roaoAkkk.NumberOfPaidInstallment,
+			OSInstallmentDue:             roaoAkkk.OSInstallmentDue,
+			InstallmentAmountFMF:         roaoAkkk.InstallmentAmountFMF,
+			InstallmentAmountSpouseFMF:   roaoAkkk.InstallmentAmountSpouseFMF,
+			InstallmentAmountOther:       roaoAkkk.InstallmentAmountOther,
+			InstallmentAmountOtherSpouse: roaoAkkk.InstallmentAmountOtherSpouse,
+			InstallmentTopup:             roaoAkkk.InstallmentTopup,
+		}
+
+		logInfo = akkk
+
+		if err := tx.Create(&akkk).Error; err != nil {
+			return err
+		}
 
 		for i := 0; i < len(details); i++ {
 			// skip prescreening unpr
@@ -1001,15 +1077,95 @@ func (r repoHandler) GetCurrentTrxWithRejectDSR(idNumber string) (data entity.Tr
 	return
 }
 
+func (r repoHandler) GetBannedPMKDSR(idNumber string) (data entity.TrxBannedPMKDSR, err error) {
+
+	date := time.Now().AddDate(0, 0, -30).Format(constant.FORMAT_DATE)
+
+	if err = r.kmbOffDB.Raw(fmt.Sprintf(`SELECT * FROM trx_banned_pmk_dsr WHERE IDNumber = '%s' AND CAST(created_at as DATE) >= '%s'`, idNumber, date)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) GetCurrentTrxWithReject(idNumber string) (data entity.TrxReject, err error) {
 
 	currentDate := time.Now().Format(constant.FORMAT_DATE)
 
 	if err = r.kmbOffDB.Raw(fmt.Sprintf(`SELECT 
-	COUNT(CASE WHEN ts.source_decision = 'PMK' OR ts.source_decision = 'DSR' THEN 1 END) as reject_pmk_dsr,
-	COUNT(CASE WHEN ts.source_decision != 'PMK' AND ts.source_decision != 'DSR' AND ts.source_decision != 'NKA' THEN 1 END) as reject_nik 
+	COUNT(CASE WHEN ts.source_decision = 'PMK' OR ts.source_decision = 'DSR' OR ts.source_decision = 'PRJ' THEN 1 END) as reject_pmk_dsr,
+	COUNT(CASE WHEN ts.source_decision != 'PMK' AND ts.source_decision != 'DSR' AND ts.source_decision != 'PRJ' AND ts.source_decision != 'NKA' THEN 1 END) as reject_nik 
 	FROM trx_status ts LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
 	WHERE ts.decision = 'REJ' AND tcp.IDNumber = '%s' AND CAST(ts.created_at as DATE) = '%s'`, idNumber, currentDate)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetBannedChassisNumber(chassisNumber string) (data entity.TrxBannedChassisNumber, err error) {
+
+	date := time.Now().AddDate(0, 0, -30).Format(constant.FORMAT_DATE)
+
+	if err = r.kmbOffDB.Raw(fmt.Sprintf(`SELECT * FROM trx_banned_chassis_number WHERE chassis_number = '%s' AND CAST(created_at as DATE) >= '%s'`, chassisNumber, date)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetCurrentTrxWithRejectChassisNumber(chassisNumber string) (data []entity.RejectChassisNumber, err error) {
+
+	currentDate := time.Now().Format(constant.FORMAT_DATE)
+
+	if err = r.kmbOffDB.Raw(fmt.Sprintf(`SELECT  
+		tcp.ProspectID,
+		SCP.dbo.DEC_B64('SEC',tcp.IDNumber) AS IDNumber,
+		SCP.dbo.DEC_B64('SEC',tcp.LegalName) AS LegalName,
+		SCP.dbo.DEC_B64('SEC',tcp.BirthPlace) AS BirthPlace,
+		tcp.BirthDate,
+		tcp.Gender,
+		tcp.MaritalStatus,
+		tcp.NumOfDependence,
+		tcp.StaySinceYear,
+		tcp.StaySinceMonth,
+		tcp.HomeStatus,
+		tca.LegalZipCode,
+		tca.CompanyZipCode,
+		tce.ProfessionID,
+		tce.MonthlyFixedIncome,
+		tce.EmploymentSinceYear,
+		tce.EmploymentSinceMonth,
+		ti.engine_number,
+		ti.chassis_number,
+		ti.bpkb_name,
+		ti.manufacture_year,
+		ta.NTF,
+		ta.OTR,
+		ta.Tenor
+		FROM trx_status ts 
+		LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+		LEFT JOIN (
+			SELECT ProspectID, 
+			MAX(Case [Type] When 'LEGAL' Then ZipCode End) LegalZipCode,
+			MAX(Case [Type] When 'COMPANY' Then ZipCode End) CompanyZipCode
+			FROM trx_customer_address
+			GROUP BY ProspectID 
+		) tca ON ts.ProspectID = tca.ProspectID 
+		LEFT JOIN trx_customer_employment tce ON ts.ProspectID = tce.ProspectID
+		LEFT JOIN trx_item ti ON ts.ProspectID = ti.ProspectID
+		LEFT JOIN trx_apk ta ON ts.ProspectID = ta.ProspectID
+		WHERE ts.decision = 'REJ' AND ts.source_decision = 'NKA' 
+		AND ti.chassis_number = '%s' AND CAST(ts.created_at as DATE) = '%s'`, chassisNumber, currentDate)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}

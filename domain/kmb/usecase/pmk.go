@@ -15,7 +15,7 @@ func (u usecase) PMK(branchID, customerKMB string, income float64, homeStatus, p
 
 	location, _ := time.LoadLocation("Asia/Jakarta")
 
-	data = response.UsecaseApi{Result: constant.DECISION_PASS, Code: constant.CODE_PMK_SESUAI, Reason: constant.REASON_PMK_SESUAI}
+	data = response.UsecaseApi{Result: constant.DECISION_PASS, Code: constant.CODE_PMK_SESUAI, Reason: constant.REASON_PMK_SESUAI, SourceDecision: constant.SOURCE_DECISION_PMK}
 
 	config, _ := u.repository.GetKMBOff()
 

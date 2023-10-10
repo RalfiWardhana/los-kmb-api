@@ -18,7 +18,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxBannedPMKDSR entity.TrxBannedPMKDSR, err error) {
+func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error) {
 
 	var (
 		customer     []request.SpouseDupcheck
@@ -41,56 +41,66 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 	json.Unmarshal([]byte(config.Value), &configValue)
 
-	prospectID := req.ProspectID
-	income := req.MonthlyFixedIncome + req.MonthlyVariableIncome + req.SpouseIncome
-	customer = append(customer, request.SpouseDupcheck{IDNumber: req.IDNumber, LegalName: req.LegalName, BirthDate: req.BirthDate, MotherName: req.MotherName})
-
-	if married {
-		customer = append(customer, request.SpouseDupcheck{IDNumber: req.Spouse.IDNumber, LegalName: req.Spouse.LegalName, BirthDate: req.Spouse.BirthDate, MotherName: req.Spouse.MotherName})
+	// Check Banned Chassis Number
+	bannedChassisNumber, err := u.usecase.CheckBannedChassisNumber(req, configValue)
+	if err != nil {
+		return
 	}
 
-	// Pernah Reject
+	if bannedChassisNumber.Result == constant.DECISION_REJECT {
+		data = bannedChassisNumber
+		mapping.Reason = data.Reason
+		return
+	}
+
+	// Pernah Reject Chassis Number
+	rejectChassisNumber, trxBannedChassisNumber, err := u.usecase.CheckRejectChassisNumber(req, configValue)
+	if err != nil {
+		return
+	}
+
+	if rejectChassisNumber.Result == constant.DECISION_REJECT {
+		data = rejectChassisNumber
+		mapping.Reason = data.Reason
+
+		trxFMF.TrxBannedChassisNumber = trxBannedChassisNumber
+		return
+	}
+
+	// Check Banned PMK atau DSR
+	bannedPMKDSR, err := u.usecase.CheckBannedPMKDSR(req, configValue)
+	if err != nil {
+		return
+	}
+
+	if bannedPMKDSR.Result == constant.DECISION_REJECT {
+		data = bannedPMKDSR
+		mapping.Reason = data.Reason
+		return
+	}
+
+	// Pernah Reject PMK atau DSR atau NIK
 	trxReject, trxBannedPMKDSR, err := u.usecase.CheckRejection(req, configValue)
 	if err != nil {
 		return
 	}
 
 	if trxReject.Result == constant.DECISION_REJECT {
-		data.Code = trxReject.Code
-		data.Result = trxReject.Result
-		data.Reason = trxReject.Reason
+		data = trxReject
 		mapping.Reason = data.Reason
+
+		trxFMF.TrxBannedPMKDSR = trxBannedPMKDSR
 		return
 	}
 
-	// Exception Reject No. Rangka Banned 30 Days
-	nokaBanned30D, err := u.usecase.NokaBanned30D(req)
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: trxReject.Code, SourceDecision: constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR, Info: trxReject.Reason, NextStep: constant.SOURCE_DECISION_BLACKLIST})
 
-	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
-		return
-	}
+	prospectID := req.ProspectID
+	income := req.MonthlyFixedIncome + req.MonthlyVariableIncome + req.SpouseIncome
+	customer = append(customer, request.SpouseDupcheck{IDNumber: req.IDNumber, LegalName: req.LegalName, BirthDate: req.BirthDate, MotherName: req.MotherName})
 
-	if nokaBanned30D.Result == constant.DECISION_REJECT {
-		data.Code = nokaBanned30D.Code
-		data.Result = nokaBanned30D.Result
-		data.Reason = nokaBanned30D.Reason
-		mapping.Reason = data.Reason
-		return
-	}
-
-	// Exception Reject History No. Rangka
-	checkRejectionNoka, err := u.usecase.CheckRejectionNoka(req)
-
-	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
-		return
-	}
-
-	if checkRejectionNoka.Result == constant.DECISION_REJECT {
-		data.Code = checkRejectionNoka.Code
-		data.Result = checkRejectionNoka.Result
-		data.Reason = checkRejectionNoka.Reason
-		mapping.Reason = data.Reason
-		return
+	if married {
+		customer = append(customer, request.SpouseDupcheck{IDNumber: req.Spouse.IDNumber, LegalName: req.Spouse.LegalName, BirthDate: req.Spouse.BirthDate, MotherName: req.Spouse.MotherName})
 	}
 
 	// Loop check Blacklist customer and spouse
@@ -122,6 +132,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		}
 	}
 
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: blackList.Code, SourceDecision: constant.SOURCE_DECISION_BLACKLIST, Info: blackList.Reason, NextStep: constant.SOURCE_DECISION_BLACKLIST})
+
 	//Set Data customerType and spouseType -- Blacklist. Warning, Or Clean --
 	mapping.CustomerType = spMap.CustomerType
 	mapping.SpouseType = spMap.SpouseType
@@ -139,22 +151,10 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
-	// Check Reject No. Rangka
-	checkNoka, err := u.usecase.CheckNoka(ctx, req, checkRejectionNoka, accessToken)
-
-	if err != nil {
-		return
-	}
-
-	if checkNoka.Result == constant.DECISION_REJECT {
-		data = checkNoka
-		mapping.Reason = data.Reason
-		return
-	}
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: ageVehicle.Code, SourceDecision: constant.SOURCE_DECISION_PMK, Info: ageVehicle.Reason, NextStep: constant.SOURCE_DECISION_NOKANOSIN})
 
 	// Check Chassis Number with Active Aggrement
-	checkChassisNumber, err := u.usecase.CheckChassisNumber(ctx, req, checkRejectionNoka, accessToken)
-
+	checkChassisNumber, err := u.usecase.CheckAgreementChassisNumber(ctx, req, accessToken)
 	if err != nil {
 		return
 	}
@@ -164,6 +164,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		mapping.Reason = data.Reason
 		return
 	}
+
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: checkChassisNumber.Code, SourceDecision: constant.SOURCE_DECISION_NOKANOSIN, Info: checkChassisNumber.Reason, NextStep: constant.SOURCE_DECISION_PMK})
 
 	//dataCustomer[0] is result main dupcheck customer
 	mainCustomer := dataCustomer[0]
@@ -230,6 +232,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: pmk.Code, SourceDecision: constant.SOURCE_DECISION_PMK, Info: pmk.Reason, NextStep: constant.SOURCE_DECISION_DSR})
+
 	var customerData []request.CustomerData
 	customerData = append(customerData, request.CustomerData{
 		StatusKonsumen:  customerKMB,
@@ -259,17 +263,46 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	if err != nil {
 		return
 	}
+	if pmk.Result == constant.DECISION_PASS {
+		trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: dsr.Code, SourceDecision: constant.SOURCE_DECISION_PMK, Info: dsr.Reason, NextStep: constant.SOURCE_DECISION_DUPCHECK})
+	}
 
+	data = dsr
 	mapping.InstallmentAmountOther = instOther
 	mapping.InstallmentAmountOtherSpouse = instOtherSpouse
 	mapping.InstallmentTopup = instTopup
 	mapping.Dsr = dsr.Dsr
-
-	data = dsr
 	mapping.Reason = data.Reason
 
 	return
 
+}
+
+func (u usecase) CheckBannedPMKDSR(req request.DupcheckApi, configValue response.DupcheckConfig) (data response.UsecaseApi, err error) {
+
+	var encryptedIDNumber entity.EncryptedString
+	encryptedIDNumber, err = u.repository.GetEncB64(req.IDNumber)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - GetEncB64 ID Number Error")
+		return
+	}
+
+	var trxReject entity.TrxBannedPMKDSR
+	trxReject, err = u.repository.GetBannedPMKDSR(encryptedIDNumber.MyString)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Banned PMK DSR Error")
+		return
+	}
+
+	if trxReject != (entity.TrxBannedPMKDSR{}) {
+		data.Result = constant.DECISION_REJECT
+		data.Code = constant.CODE_PERNAH_REJECT_PMK_DSR
+		data.Reason = constant.REASON_PERNAH_REJECT_PMK_DSR
+		data.SourceDecision = constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR
+		return
+	}
+
+	return
 }
 
 func (u usecase) CheckRejection(req request.DupcheckApi, configValue response.DupcheckConfig) (data response.UsecaseApi, trxBannedPMKDSR entity.TrxBannedPMKDSR, err error) {
@@ -284,7 +317,7 @@ func (u usecase) CheckRejection(req request.DupcheckApi, configValue response.Du
 	var trxReject entity.TrxReject
 	trxReject, err = u.repository.GetCurrentTrxWithReject(encryptedIDNumber.MyString)
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - GetCurrentTrxWithReject Error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Trx Reject Error")
 		return
 	}
 
@@ -299,6 +332,7 @@ func (u usecase) CheckRejection(req request.DupcheckApi, configValue response.Du
 		data.Result = constant.DECISION_REJECT
 		data.Code = constant.CODE_PERNAH_REJECT_PMK_DSR
 		data.Reason = constant.REASON_PERNAH_REJECT_PMK_DSR
+		data.SourceDecision = constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR
 		return
 	}
 
@@ -306,9 +340,166 @@ func (u usecase) CheckRejection(req request.DupcheckApi, configValue response.Du
 		data.Result = constant.DECISION_REJECT
 		data.Code = constant.CODE_PERNAH_REJECT_NIK
 		data.Reason = constant.REASON_PERNAH_REJECT_NIK
+		data.SourceDecision = constant.SOURCE_DECISION_NIK
 		return
 	}
 
+	data.Result = constant.DECISION_PASS
+	data.Code = constant.CODE_BELUM_PERNAH_REJECT
+	data.Reason = constant.REASON_BELUM_PERNAH_REJECT
+	data.SourceDecision = constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR
+
+	return
+}
+
+func (u usecase) CheckBannedChassisNumber(req request.DupcheckApi, configValue response.DupcheckConfig) (data response.UsecaseApi, err error) {
+
+	var trxReject entity.TrxBannedChassisNumber
+	trxReject, err = u.repository.GetBannedChassisNumber(req.RangkaNo)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Banned Chassis Number Error")
+		return
+	}
+
+	if trxReject != (entity.TrxBannedChassisNumber{}) {
+		data.Result = constant.DECISION_REJECT
+		data.Code = constant.CODE_REJECT_NOKA_NOSIN
+		data.Reason = constant.REASON_REJECT_NOKA_NOSIN
+		data.SourceDecision = constant.SOURCE_DECISION_NOKANOSIN
+	}
+
+	return
+}
+
+func (u usecase) CheckRejectChassisNumber(req request.DupcheckApi, configValue response.DupcheckConfig) (data response.UsecaseApi, trxBannedChassisNumber entity.TrxBannedChassisNumber, err error) {
+
+	var rejectChassisNumber []entity.RejectChassisNumber
+	rejectChassisNumber, err = u.repository.GetCurrentTrxWithRejectChassisNumber(req.RangkaNo)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Reject Chassis Number Error")
+		return
+	}
+
+	data.SourceDecision = constant.SOURCE_DECISION_NOKANOSIN
+
+	if len(rejectChassisNumber) > 0 {
+		trxReject := rejectChassisNumber[0]
+		if len(rejectChassisNumber) > configValue.Data.AttemptChassisNumber ||
+			(req.IDNumber != trxReject.IDNumber ||
+				req.LegalName != trxReject.LegalName ||
+				req.BirthDate != trxReject.BirthDate ||
+				req.BirthPlace != trxReject.BirthPlace ||
+				req.Gender != trxReject.Gender ||
+				req.MaritalStatus != trxReject.MaritalStatus ||
+				req.NumOfDependence != trxReject.NumOfDependence ||
+				req.StaySinceYear != trxReject.StaySinceYear ||
+				req.StaySinceMonth != trxReject.StaySinceMonth ||
+				req.HomeStatus != trxReject.HomeStatus ||
+				req.LegalZipCode != trxReject.LegalZipCode ||
+				req.CompanyZipCode != trxReject.CompanyZipCode ||
+				req.ProfessionID != trxReject.ProfessionID ||
+				req.MonthlyFixedIncome != trxReject.MonthlyFixedIncome ||
+				req.EmploymentSinceYear != trxReject.EmploymentSinceYear ||
+				req.EmploymentSinceMonth != trxReject.EmploymentSinceMonth ||
+				req.EngineNo != trxReject.EngineNo ||
+				req.RangkaNo != trxReject.ChassisNo ||
+				req.BPKBName != trxReject.BPKBName ||
+				req.ManufactureYear != trxReject.ManufactureYear ||
+				req.OTRPrice != trxReject.OTR ||
+				req.Tenor != trxReject.Tenor) {
+			//banned 30 hari
+			trxBannedChassisNumber = entity.TrxBannedChassisNumber{
+				ProspectID: req.ProspectID,
+				ChassisNo:  req.RangkaNo,
+			}
+		}
+
+		data.Result = constant.DECISION_REJECT
+		data.Code = constant.CODE_REJECT_NOKA_NOSIN
+		data.Reason = constant.REASON_REJECT_NOKA_NOSIN
+		return
+	}
+
+	return
+}
+
+func (u usecase) CheckAgreementChassisNumber(ctx context.Context, reqs request.DupcheckApi, accessToken string) (data response.UsecaseApi, err error) {
+
+	var (
+		responseAgreementChassisNumber response.AgreementChassisNumber
+	)
+
+	// Hit Integrator Get Chasis Number
+	dummyChassis, _ := strconv.ParseBool(os.Getenv("DUMMY_AGREEMENT_OF_CHASSIS_NUMBER"))
+
+	if dummyChassis {
+		dummyChassisAgreementNumber, err := u.repository.GetDummyAgreementChassisNumber(reqs.IDNumber)
+
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get Dummy Agreement Chassis Number Error")
+			return data, err
+		}
+
+		var resAgreementChassisNumber response.ResAgreementChassisNumber
+
+		json.Unmarshal([]byte(dummyChassisAgreementNumber.Response), &resAgreementChassisNumber)
+
+		responseAgreementChassisNumber = resAgreementChassisNumber.Data
+
+	} else {
+
+		var hitChassisNumber *resty.Response
+
+		hitChassisNumber, err = u.httpclient.EngineAPI(ctx, constant.DUPCHECK_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+reqs.RangkaNo, nil, map[string]string{}, constant.METHOD_GET, true, 6, 60, reqs.ProspectID, accessToken)
+
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Get Agreement of Chassis Number Timeout")
+			return
+		}
+
+		if hitChassisNumber.StatusCode() != 200 {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call Get Agreement of Chassis Number Error")
+			return
+		}
+
+		err = json.Unmarshal([]byte(jsoniter.Get(hitChassisNumber.Body(), "data").ToString()), &responseAgreementChassisNumber)
+
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal Get Agreement of Chassis Number Error")
+			return data, err
+		}
+	}
+
+	if responseAgreementChassisNumber.IsRegistered && responseAgreementChassisNumber.IsActive && len(responseAgreementChassisNumber.IDNumber) > 0 {
+		listNikKonsumenDanPasangan := make([]string, 0)
+
+		listNikKonsumenDanPasangan = append(listNikKonsumenDanPasangan, reqs.IDNumber)
+		if reqs.Spouse != nil && reqs.Spouse.IDNumber != "" {
+			listNikKonsumenDanPasangan = append(listNikKonsumenDanPasangan, reqs.Spouse.IDNumber)
+		}
+
+		if !utils.Contains(listNikKonsumenDanPasangan, responseAgreementChassisNumber.IDNumber) {
+			data.Code = constant.CODE_REJECT_CHASSIS_NUMBER
+			data.Result = constant.DECISION_REJECT
+			data.Reason = constant.REASON_REJECT_CHASSIS_NUMBER
+		} else {
+			if responseAgreementChassisNumber.IDNumber == reqs.IDNumber {
+				data.Code = constant.CODE_OK_CONSUMEN_MATCH
+				data.Result = constant.DECISION_PASS
+				data.Reason = constant.REASON_OK_CONSUMEN_MATCH
+			} else {
+				data.Code = constant.CODE_REJECTION_FRAUD_POTENTIAL
+				data.Result = constant.DECISION_REJECT
+				data.Reason = constant.REASON_REJECTION_FRAUD_POTENTIAL
+			}
+		}
+	} else {
+		data.Code = constant.CODE_AGREEMENT_NOT_FOUND
+		data.Result = constant.DECISION_PASS
+		data.Reason = constant.REASON_AGREEMENT_NOT_FOUND
+	}
+
+	data.SourceDecision = constant.SOURCE_DECISION_NOKANOSIN
 	return
 }
 
@@ -318,6 +509,7 @@ func (u usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerB
 	// index 1 = spouse
 
 	customerType = constant.MESSAGE_BERSIH
+	data.SourceDecision = constant.SOURCE_DECISION_BLACKLIST
 
 	if spDupcheck != (response.SpDupCekCustomerByID{}) {
 
@@ -1026,6 +1218,8 @@ func (u usecase) VehicleCheck(manufactureYear string, tenor int) (data response.
 		err = errors.New(constant.ERROR_UPSTREAM + " - Error Get Config Dupcheck")
 		return
 	}
+
+	data.SourceDecision = constant.SOURCE_DECISION_PMK
 
 	var configValue response.DupcheckConfig
 

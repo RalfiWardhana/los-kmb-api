@@ -47,7 +47,10 @@ type Repository interface {
 
 	GetEncB64(myString string) (encryptedString entity.EncryptedString, err error)
 	GetCurrentTrxWithRejectDSR(idNumber string) (data entity.TrxStatus, err error)
+	GetBannedPMKDSR(idNumber string) (data entity.TrxBannedPMKDSR, err error)
 	GetCurrentTrxWithReject(idNumber string) (data entity.TrxReject, err error)
+	GetBannedChassisNumber(chassisNumber string) (data entity.TrxBannedChassisNumber, err error)
+	GetCurrentTrxWithRejectChassisNumber(chassisNumber string) (data []entity.RejectChassisNumber, err error)
 	ScanPreTrxJourney(prospectID string) (countMaster, countFiltering int, err error)
 	GetBiroData(prospectID string) (data entity.FilteringKMB, err error)
 }

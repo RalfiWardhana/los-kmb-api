@@ -270,6 +270,33 @@ func (c *MappingIncomePMK) TableName() string {
 	return "mapping_income_pmk"
 }
 
+type RejectChassisNumber struct {
+	ProspectID           string  `gorm:"type:varchar(20);column:ProspectID"`
+	IDNumber             string  `gorm:"type:varchar(100);column:IDNumber" json:"id_number"`
+	LegalName            string  `gorm:"type:varchar(100);column:LegalName" json:"legal_name"`
+	BirthPlace           string  `gorm:"type:varchar(100);column:BirthPlace" json:"birth_place"`
+	BirthDate            string  `gorm:"column:BirthDate" json:"birth_date"`
+	Gender               string  `gorm:"type:varchar(1);column:Gender"`
+	MaritalStatus        string  `gorm:"type:varchar(10);column:MaritalStatus" json:"marital_status"`
+	NumOfDependence      int     `gorm:"column:NumOfDependence" json:"num_of_dependence"`
+	StaySinceYear        string  `gorm:"type:varchar(10);column:StaySinceYear" json:"stay_since_year"`
+	StaySinceMonth       string  `gorm:"type:varchar(10);column:StaySinceMonth" json:"stay_since_month"`
+	HomeStatus           string  `gorm:"type:varchar(20);column:HomeStatus" json:"home_status"`
+	LegalZipCode         string  `gorm:"type:varchar(5);column:LegalZipCode"`
+	CompanyZipCode       string  `gorm:"type:varchar(5);column:CompanyZipCode"`
+	ProfessionID         string  `gorm:"type:varchar(10);column:ProfessionID" json:"profession_id"`
+	MonthlyFixedIncome   float64 `gorm:"column:MonthlyFixedIncome"`
+	EmploymentSinceYear  string  `gorm:"type:varchar(4);column:EmploymentSinceYear"`
+	EmploymentSinceMonth string  `gorm:"type:varchar(2);column:EmploymentSinceMonth"`
+	EngineNo             string  `gorm:"type:varchar(30);column:engine_number"`
+	ChassisNo            string  `gorm:"type:varchar(30);column:chassis_number"`
+	BPKBName             string  `gorm:"type:varchar(2);column:bpkb_name"`
+	ManufactureYear      string  `gorm:"type:varchar(4);column:manufacture_year"`
+	NTF                  float64 `gorm:"column:NTF"`
+	OTR                  float64 `gorm:"column:OTR"`
+	Tenor                int     `gorm:"column:Tenor"`
+}
+
 type DupcheckRejectionNokaNosin struct {
 	Id                   string    `gorm:"column:id"`
 	NoMesin              string    `gorm:"type:varchar(20);column:NoMesin"`
@@ -618,6 +645,16 @@ func (c *TrxBannedPMKDSR) TableName() string {
 	return "trx_banned_pmk_dsr"
 }
 
+type TrxBannedChassisNumber struct {
+	ProspectID string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	ChassisNo  string    `gorm:"type:varchar(30);column:chassis_number"`
+	CreatedAt  time.Time `gorm:"column:created_at"`
+}
+
+func (c *TrxBannedChassisNumber) TableName() string {
+	return "trx_banned_chassis_number"
+}
+
 type TrxReject struct {
 	RejectPMKDSR int `gorm:"column:reject_pmk_dsr"`
 	RejectNIK    int `gorm:"column:reject_nik"`
@@ -824,40 +861,33 @@ func (c *TrxPrescreening) TableName() string {
 }
 
 type TrxAkkk struct {
-	ProspectID                       string      `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
-	SlikPlafond                      interface{} `gorm:"column:SlikPlafond"`
-	SpouseSlikPlafond                interface{} `gorm:"column:SpouseSlikPlafond"`
-	PefindoPlafond                   interface{} `gorm:"column:PefindoPlafond"`
-	SpousePefindoPlafond             interface{} `gorm:"column:SpousePefindoPlafond"`
-	SlikBakiDebet                    interface{} `gorm:"column:SlikBakiDebet"`
-	SpouseSlikBakiDebet              interface{} `gorm:"column:SpouseSlikBakiDebet"`
-	PefindoBakiDebet                 interface{} `gorm:"column:PefindoBakiDebet"`
-	SpousePefindoBakiDebet           interface{} `gorm:"column:SpousePefindoBakiDebet"`
-	SlikTotalFasilitasAktif          interface{} `gorm:"column:SlikTotalFasilitasAktif"`
-	SpouseSlikTotalFasilitasAktif    interface{} `gorm:"column:SpouseSlikTotalFasilitasAktif"`
-	WorstQualityStatus               interface{} `gorm:"type:varchar(50);column:WorstQualityStatus"`
-	WorstQualityStatusMonth          interface{} `gorm:"type:varchar(50);column:WorstQualityStatusMonth"`
-	LastQualityCredit                interface{} `gorm:"type:varchar(50);column:LastQualityCredit"`
-	LastQualityCreditMonth           interface{} `gorm:"type:varchar(50);column:LastQualityCreditMonth"`
-	SpouseWorstQualityStatus         interface{} `gorm:"type:varchar(50);column:SpouseWorstQualityStatus"`
-	SpouseWorstQualityStatusMonth    interface{} `gorm:"type:varchar(50);column:SpouseWorstQualityStatusMonth"`
-	SpouseLastQualityCredit          interface{} `gorm:"type:varchar(50);column:SpouseLastQualityCredit"`
-	SpouseLastQualityCreditMonth     interface{} `gorm:"type:varchar(50);column:SpouseLastQualityCreditMonth"`
-	PefindoTotalFasilitasAktif       interface{} `gorm:"column:PefindoTotalFasilitasAktif"`
-	SpousePefindoTotalFasilitasAktif interface{} `gorm:"column:SpousePefindoTotalFasilitasAktif"`
-	PefindoScore                     interface{} `gorm:"type:varchar(50);column:PefindoScore"`
-	SpousePefindoScore               interface{} `gorm:"type:varchar(50);column:SpousePefindoScore"`
-	LastMaxOVD                       interface{} `gorm:"column:LastMaxOVD"`
-	SpouseLastMaxOVD                 interface{} `gorm:"column:SpouseLastMaxOVD"`
-	AgreementStatus                  interface{} `gorm:"type:varchar(10);column:AgreementStatus"`
-	TotalAgreementAktif              interface{} `gorm:"column:TotalAgreementAktif"`
-	MaxOVDAgreementAktif             interface{} `gorm:"column:MaxOVDAgreementAktif"`
-	LastMaxOVDAgreement              interface{} `gorm:"column:LastMaxOVDAgreement"`
-	DSR                              interface{} `gorm:"column:DSR"`
-	AsliriSimiliarity                interface{} `gorm:"column:AsliriSimiliarity"`
-	AsliriReason                     interface{} `gorm:"type:varchar(30);column:AsliriReason"`
-	FinancePurpose                   string      `gorm:"type:varchar(30);column:FinancePurpose"`
-	CreatedAt                        time.Time   `gorm:"column:created_at"`
+	ProspectID                   string      `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	ScsDate                      interface{} `gorm:"column:ScsDate"`
+	ScsScore                     interface{} `gorm:"type:varchar(20);column:ScsScore"`
+	ScsStatus                    interface{} `gorm:"type:varchar(10);column:ScsStatus"`
+	CustomerType                 interface{} `gorm:"column:CustomerType"`
+	SpouseType                   interface{} `gorm:"column:SpouseType"`
+	AgreementStatus              interface{} `gorm:"type:varchar(10);column:AgreementStatus"`
+	TotalAgreementAktif          interface{} `gorm:"column:TotalAgreementAktif"`
+	MaxOVDAgreementAktif         interface{} `gorm:"column:MaxOVDAgreementAktif"`
+	LastMaxOVDAgreement          interface{} `gorm:"column:LastMaxOVDAgreement"`
+	DSRFMF                       interface{} `gorm:"column:DSRFMF"`
+	DSRPBK                       interface{} `gorm:"column:DSRPBK"`
+	TotalDSR                     interface{} `gorm:"column:TotalDSR"`
+	AsliriSimiliarity            interface{} `gorm:"column:AsliriSimiliarity"`
+	AsliriReason                 interface{} `gorm:"type:varchar(30);column:AsliriReason"`
+	NumberOfPaidInstallment      interface{} `gorm:"column:NumberOfPaidInstallment"`
+	OSInstallmentDue             interface{} `gorm:"column:OSInstallmentDue"`
+	InstallmentAmountFMF         interface{} `gorm:"column:InstallmentAmountFMF"`
+	InstallmentAmountSpouseFMF   interface{} `gorm:"column:InstallmentAmountSpouseFMF"`
+	InstallmentAmountOther       interface{} `gorm:"column:InstallmentAmountOther"`
+	InstallmentAmountOtherSpouse interface{} `gorm:"column:InstallmentAmountOtherSpouse"`
+	InstallmentTopup             interface{} `gorm:"column:InstallmentTopup"`
+	CreatedAt                    time.Time   `gorm:"column:created_at"`
+}
+
+func (c *TrxAkkk) TableName() string {
+	return "trx_akkk"
 }
 
 type MappingElaborateLTV struct {

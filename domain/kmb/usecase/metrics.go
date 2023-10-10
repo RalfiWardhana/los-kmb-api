@@ -17,17 +17,18 @@ import (
 func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, accessToken string) (resultMetrics interface{}, err error) {
 
 	var (
-		married         bool
-		details         []entity.TrxDetail
-		reqDupcheck     request.DupcheckApi
-		dupcheckData    response.SpDupcheckMap
-		customerStatus  string
-		customerSegment string
-		decisionMetrics response.UsecaseApi
-		filtering       entity.FilteringKMB
-		trxPrescreening entity.TrxPrescreening
-		trxFMF          response.TrxFMF
-		trxBannedPMKDSR entity.TrxBannedPMKDSR
+		married           bool
+		details           []entity.TrxDetail
+		reqDupcheck       request.DupcheckApi
+		dupcheckData      response.SpDupcheckMap
+		customerStatus    string
+		customerSegment   string
+		decisionMetrics   response.UsecaseApi
+		filtering         entity.FilteringKMB
+		trxPrescreening   entity.TrxPrescreening
+		trxFMF            response.TrxFMF
+		trxFMFDupcheck    response.TrxFMF
+		trxDetailDupcheck []entity.TrxDetail
 	)
 
 	// cek trx_master
@@ -264,7 +265,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		married = true
 	}
 
-	dupcheckData, customerStatus, decisionMetrics, trxBannedPMKDSR, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken)
+	dupcheckData, customerStatus, decisionMetrics, trxFMFDupcheck, trxDetailDupcheck, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken)
 	if err != nil {
 		return
 	}
@@ -272,27 +273,30 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	trxFMF.DupcheckData = dupcheckData
 	trxFMF.CustomerStatus = customerStatus
 	trxFMF.DSRFMF = dupcheckData.Dsr
-	trxFMF.TrxBannedPMKDSR = trxBannedPMKDSR
+	trxFMF.TrxBannedPMKDSR = trxFMFDupcheck.TrxBannedPMKDSR
+	trxFMF.TrxBannedChassisNumber = trxFMFDupcheck.TrxBannedChassisNumber
 
 	if decisionMetrics.Result == constant.DECISION_REJECT {
+		details = append(details, trxDetailDupcheck...)
 		details = append(details, entity.TrxDetail{
 			ProspectID:     reqMetrics.Transaction.ProspectID,
 			StatusProcess:  constant.STATUS_FINAL,
 			Activity:       constant.ACTIVITY_STOP,
 			Decision:       constant.DB_DECISION_REJECT,
 			RuleCode:       decisionMetrics.Code,
-			SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+			SourceDecision: decisionMetrics.SourceDecision,
 			Info:           decisionMetrics.Reason,
 		})
 
 		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, decisionMetrics.Reason)
-		// resultMetrics, err = u.usecase.SaveTransaction(details, reason, callback, req, additionalTrx)
 		if err != nil {
 			return
 		}
 
 		return
 	}
+
+	details = append(details, trxDetailDupcheck...)
 
 	details = append(details, entity.TrxDetail{
 		ProspectID:     reqMetrics.Transaction.ProspectID,
@@ -305,10 +309,8 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		NextStep:       constant.SOURCE_DECISION_BIRO,
 	})
 
-	//Get data filtering where DtmResponse < BIRO_VALID_DAYS
-	filtering, err = u.repository.GetBiroData(reqMetrics.Transaction.ProspectID)
+	resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, decisionMetrics.Reason)
 	if err != nil {
-		err = errors.New(constant.ERROR_BAD_REQUEST + " - Filtering > " + os.Getenv("BIRO_VALID_DAYS") + " Days")
 		return
 	}
 
