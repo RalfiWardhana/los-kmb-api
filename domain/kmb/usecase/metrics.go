@@ -171,6 +171,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			if err != nil {
 				return
 			}
+			return
 		}
 
 		details = append(details, entity.TrxDetail{
