@@ -23,3 +23,9 @@ func (m MockHttpClient) CustomerAPI(ctx context.Context, logFile, endpoint strin
 	args := m.Called(ctx, logFile, endpoint, param, method, accessToken, prospectID, keyTimeout)
 	return args.Get(0).(*resty.Response), args.Error(1)
 }
+
+// MediaClient implements HttpClient
+func (m MockHttpClient) MediaClient(ctx context.Context, logFile, url string, method string, param interface{}, header map[string]string, timeOut int, customerID int, accessToken string) (resp *resty.Response, err error) {
+	args := m.Called(ctx, logFile, url, method, param, header, timeOut, customerID)
+	return args.Get(0).(*resty.Response), args.Error(1)
+}

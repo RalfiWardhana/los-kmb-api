@@ -1,38 +1,95 @@
 package constant
 
 var LOS_KMB_BASE_URL string
+var TOPIC_SUBMISSION string
+var TOPIC_SUBMISSION_LOS string
 
 const (
-	FLAG_LOS                                                     = "LOS"
-	LOBID_KMB                                                    = 2
-	TAG_REQUIRED                                                 = "required"
-	TAG_DATE_FORMAT                                              = "dateformat"
-	TAG_LEN                                                      = "len"
-	TAG_ALLOW_CHARS_NAME                                         = "allowcharsname"
-	TAG_MIN                                                      = "min"
-	RECORD_NOT_FOUND                                             = "record not found"
-	NEW                                                          = "NEW"
-	METHOD_POST                                                  = "POST"
-	METHOD_PUT                                                   = "PUT"
-	METHOD_GET                                                   = "GET"
-	METHOD_DELETE                                                = "DELETE"
-	CONNECTION_ERROR                                             = "ERROR"
-	MESSAGE_KMB_FILTERING                                        = "KMB-FILTERING"
-	TIMEOUT                                                      = 30
-	TIME_FORMAT                                                  = "2006-01-02"
-	MARRIED                                                      = "M"
-	BADTYPE_B                                                    = "B"
-	MAX_OVER_DUE_DAYS                                            = 90
-	NUM_OF_ASSET_INVENTORIED                                     = 0
-	BADTYPE_W                                                    = "W"
-	IS_SIMILIAR                                                  = 1
-	IS_RESTRUCTURE                                               = 1
-	CODE_E                                                       = 701
-	MESSAGE_E                                                    = "ERROR"
-	PEFINDO_UNSCORE                                              = "UNSCORE"
-	RESPONSE_PEFINDO_DUMMY_NOT_FOUND                             = "Pefindo Dummy Data Not Found"
-	ERRORS_E                                                     = "Failed Process Blacklist Confins"
-	REASON_E                                                     = "Failed Process Blacklist Confins"
+	FLAG_LOS                         = "LOS"
+	KMB_RESOURCE_ID                  = "los-kmb-api"
+	LOBID_KMB                        = 2
+	TAG_MAX                          = "max"
+	TAG_GT                           = "gt"
+	TAG_REQUIRED                     = "required"
+	TAG_DATE_FORMAT                  = "dateformat"
+	TAG_LEN                          = "len"
+	TAG_URL                          = "url"
+	TAG_ALLOW_CHARS_NAME             = "allowcharsname"
+	TAG_MIN                          = "min"
+	TAG_NUMBER                       = "number"
+	TAG_ID_NUMBER                    = "id_number"
+	TAG_BRANCH_ID                    = "branch_id"
+	TAG_ALLOW_NAME                   = "allow_name"
+	TAG_GENDER                       = "gender"
+	TAG_SPOUSE_GENDER                = "spouse_gender"
+	TAG_STATUS_KONSUMEN              = "status_konsumen"
+	TAG_RECOM                        = "recom"
+	TAG_CHANNEL                      = "channel"
+	TAG_LOB                          = "lob"
+	TAG_INCOMING                     = "incoming"
+	TAG_HOME                         = "home"
+	TAG_KTP                          = "ktp"
+	TAG_ADDRESS                      = "address"
+	TAG_MARITAL                      = "marital"
+	TAG_EDUCATION                    = "education"
+	TAG_PROFESSION                   = "profession"
+	TAG_PHOTO                        = "photo"
+	TAG_RELATIONSHIP                 = "relationship"
+	TAG_FTR_PROSPECTID               = "prospectID"
+	TAG_TENOR                        = "tenor"
+	TAG_SPOUSE_NULL                  = "mustnull"
+	TAG_SPOUSE_NOT_NULL              = "notnull"
+	TAG_RELATION                     = "relation"
+	TAG_BPKB_NAME                    = "bpkbname"
+	ACTIVITY_UNPROCESS               = "UNPR"
+	PRESCREENING                     = "PSI"
+	ACTIVITY_STOP                    = "STOP"
+	ACTIVITY_PROCESS                 = "PRCD"
+	STATUS_FINAL                     = "FIN"
+	STATUS_ONPROCESS                 = "ONP"
+	DECISION_CREDIT_PROCESS          = "CREDIT_PROCESS"
+	DB_DECISION_PASS                 = "PAS"
+	DB_DECISION_APR                  = "APR"
+	DB_DECISION_REJECT               = "REJ"
+	DB_DECISION_CREDIT_PROCESS       = "CPR"
+	DB_DECISION_CREDIT_ANALYST       = "CRA"
+	JSON_DECISION_PASS               = "PASS"
+	JSON_DECISION_REJECT             = "REJECTED"
+	JSON_DECISION_CREDIT_PROCESS     = "CREDIT_PROCESS"
+	RECORD_NOT_FOUND                 = "record not found"
+	NEW                              = "NEW"
+	METHOD_POST                      = "POST"
+	METHOD_PUT                       = "PUT"
+	METHOD_GET                       = "GET"
+	METHOD_DELETE                    = "DELETE"
+	CONNECTION_ERROR                 = "ERROR"
+	MESSAGE_KMB_FILTERING            = "KMB-FILTERING"
+	TIMEOUT                          = 30
+	TIME_FORMAT                      = "2006-01-02"
+	MARRIED                          = "M"
+	BADTYPE_B                        = "B"
+	MAX_OVER_DUE_DAYS                = 90
+	NUM_OF_ASSET_INVENTORIED         = 0
+	BADTYPE_W                        = "W"
+	PROFESSION_ID_WRST               = "WRST"
+	PROFESSION_ID_PRO                = "PRO"
+	IS_SIMILIAR                      = 1
+	IS_RESTRUCTURE                   = 1
+	CODE_E                           = 701
+	MESSAGE_E                        = "ERROR"
+	MESSAGE_SUCCESS                  = "SUCCESS"
+	PEFINDO_UNSCORE                  = "UNSCORE"
+	RESPONSE_PEFINDO_DUMMY_NOT_FOUND = "Pefindo Dummy Data Not Found"
+	ERRORS_E                         = "Failed Process Blacklist Confins"
+	REASON_E                         = "Failed Process Blacklist Confins"
+	SYSTEM_CREATED                   = "SYSTEM"
+
+	REASON_CMO_NOT_RECOMMENDED = "CMO / CO Not Recommended"
+	CMO_NOT_RECOMMEDED         = "0"
+	CODE_CMO_RECOMMENDED       = "1410"
+	CODE_CMO_NOT_RECOMMEDED    = "1411"
+	CMO_AGENT                  = "CMO"
+
 	NAMA_SAMA                                                    = "nama_sama"
 	NAMA_BEDA                                                    = "nama_beda"
 	PBK_OVD_LAST_12                                              = 60
@@ -121,6 +178,7 @@ const (
 	REASON_PASANGAN_BARU                                         = "Pasangan Baru"
 	DECISION_REJECT                                              = "REJECT"
 	DECISION_PASS                                                = "PASS"
+	DECISION_APPROVE                                             = "APPROVE"
 	STATUS_KONSUMEN_RO_AO                                        = "RO/AO"
 	STATUS_KONSUMEN_NEW                                          = "NEW"
 	REASON_BADTYPE_B                                             = "Konsumen Blacklist - BadType B"
@@ -129,6 +187,7 @@ const (
 	REASON_BADTYPE_W                                             = "Konsumen Warning"
 	REASON_BERSIH                                                = "Konsumen Bersih"
 	CODE_NON_BLACKLIST                                           = "7000,7064,7065,7066,706,7094,7095,7096,708,7014,7015,7016,7053,7054,7055,699,7050"
+	CODE_NON_BLACKLIST_ALL                                       = "609"
 	CORE_API_003                                                 = "CORE-API-003"
 	CORE_API_004                                                 = "CORE-API-004"
 	CORE_API_099                                                 = "CORE-API-999"
@@ -183,11 +242,22 @@ const (
 	REASON_FILTERING_PBK_DOWN                                    = "No Hit PBK"
 
 	// Error Message
-	INTERNAL_SERVER_ERROR = "internal_server_error"
-	ERROR_CONNECTION      = "connection error"
-	ERROR_UNMARSHAL       = "unmarshal error"
+	INTERNAL_SERVER_ERROR     = "internal_server_error"
+	ERROR_CONNECTION          = "connection error"
+	ERROR_UNMARSHAL           = "unmarshal error"
+	ERROR_UPSTREAM            = "upstream_service_error"
+	ERROR_UPSTREAM_TIMEOUT    = "upstream_service_timeout"
+	ERROR_BAD_REQUEST         = "bad_request"
+	ERROR_SERVICE_UNAVAILABLE = "service_unavailable"
+	ERROR_DATA_CONFLICT       = "data_conflict"
+	ERROR_UNAUTHORIZED        = "unauthorized"
+	ERROR_INACTIVE_CREDENTIAL = "inactive_credential"
+
+	HEADER_CLIENT_ID     = "X-Client-ID"
+	HEADER_AUTHORIZATION = "Authorization"
 
 	// Key
+	HeaderXRequestID                = "X-Request-ID"
 	CTX_KEY_REQUEST_TIME            = "RequestTime"
 	CTX_KEY_TAG_VERSION             = "TagVersion"
 	CTX_KEY_LOS_VERSION             = "LOSVersion"
@@ -201,13 +271,31 @@ const (
 	PLATFORM_LOG_LEVEL_WARNING  = "WARNING"
 	PLATFORM_LOG_LEVEL_ERROR    = "ERROR"
 	PLATFORM_LOG_LEVEL_CRITICAL = "CRITICAL"
+	LOG_EVENT                   = "LOG_EVENT"
+
+	MSG_PUBLISH_DATA_STREAM = "PUBLISH_DATA_STREAM"
+	MSG_CONSUME_DATA_STREAM = "CONSUME_DATA_STREAM"
+	MSG_MEDIA_API           = "PLATFORM_MEDIA_API"
+
+	//Platform Event
+	KEY_PREFIX_FILTERING               = "filtering"
+	KEY_PREFIX_UPDATE_STATUS_FILTERING = "update_status_filtering"
+	KEY_PREFIX_SUBMIT_TO_LOS           = "submit_los_kmb"
+	KEY_PREFIX_AFTER_PRESCREENING      = "after_prescreening_los_kmb"
+	KEY_PREFIX_CALLBACK                = "callback_los_kmb"
+
+	MAX_RETRY_PUBLISH = 3
 
 	// Format
 	FORMAT_DATE_TIME_MS = "2006/01/02 15:04:05.000"
 	FORMAT_DATE         = "2006-01-02"
+	FORMAT_DATE_TIME    = "2006-01-02 15:04:05"
 
 	//LogFile
-	FILTERING_LOG = "FILTERING_LOG"
+	FILTERING_LOG        = "FILTERING_LOG"
+	DUPCHECK_LOG         = "DUPCHECK_LOG"
+	LOG_FACE_COMPARE_TRX = "LOG_FACE_COMPARE_TRX"
+	NEW_KMB_LOG          = "NEW_KMB_LOG"
 
 	// ELABORATE SCHEME
 	MESSAGE_KMB_ELABORATE           = "KMB-ELABORATE"
@@ -218,15 +306,196 @@ const (
 	REASON_PASS_ELABORATE           = "PASS - Elaborated Scheme"
 	REASON_REJECT_ELABORATE         = "REJECT - Elaborated Scheme"
 	REASON_REJECT_NTF_ELABORATE     = "REJECT - NTF Tidak Sesuai Threshold"
+	CLUSTER_C                       = "Cluster C"
 	CLUSTER_E                       = "Cluster E"
 	CLUSTER_F                       = "Cluster F"
 	BRANCH_ID_PRIME_PRIORITY        = "000"
+	CLUSTER_PRIME_PRIORITY          = "PRIME PRIORITY"
 
 	//HTTP MSG
 	MSG_CORE_API          = "CORE_API"
 	MSG_INT_API           = "INTEGRATOR_API"
+	MSG_PLATFORM_API      = "PLATFORM_API"
 	CORE_TOKEN_EXPIRED    = "CORE-AUTH-004"
 	TOKEN_INVALID         = "token tidak valid."
 	RESTY_MAX_RETRY_ERROR = "Max retry attempt exceeded"
 	ERROR_NOT_FOUND       = "data_not_found"
+
+	//PRE SCREENING
+	LIMIT_PRESCREENING = 20000000
+
+	//DUPCHECK
+	SOURCE_DECISION_DUPCHECK                = "DCK"
+	FLAG_ON                                 = "ON"
+	AGREEMENT_AKTIF                         = "AKTIF"
+	AGREEMENT_LUNAS                         = "LUNAS"
+	STATUS_KONSUMEN_AO                      = "AO"
+	STATUS_KONSUMEN_RO                      = "RO"
+	CODE_MAX_OVD_CONFINS                    = "651"
+	CODE_RO_OVDLTE30                        = "612"
+	CODE_RO_OVDGT30_LTE90                   = "613"
+	CODE_RO_OVDGT90                         = "614"
+	CODE_AO_LANCAR_ANGSGT6_OVDLTE30         = "625"
+	CODE_AO_LANCAR_ANGSGT6_OVDGT30_LTE90    = "626"
+	CODE_AO_LANCAR_ANGSGT6_OVDGT90          = "627"
+	CODE_AO_OVDGT90                         = "638"
+	CODE_AO_LANCAR_ANGSLTE6_OVDLTE30        = "628"
+	CODE_AO_LANCAR_ANGSLTE6_OVDGT30         = "629"
+	CODE_AO_MENUNGGAK_ANGSGT6_OVDLTE30      = "633"
+	CODE_AO_MENUNGGAK_ANGSGT6_OVDGT30_LTE90 = "634"
+	CODE_AO_MENUNGGAK_ANGSGT6_OVDGT90       = "635"
+	CODE_AO_MENUNGGAK_ANGSLTE6_OVDLTE30     = "636"
+	CODE_AO_MENUNGGAK_ANGSLTE6_OVDGT30      = "637"
+	CODE_KONSUMEN_UNIDENTIFIED              = "640"
+	CODE_KONSUMEN_NEW                       = "600"
+	REASON_REJECT_CONFINS_MAXOVD            = "- Confins Max Ovd >"
+	REASON_KONSUMEN_UNIDENTIFIED            = "Konsumen Unidentified"
+	REASON_KONSUMEN_NEW                     = "Konsumen NEW"
+
+	// BLACKLIST
+	MESSAGE_BLACKLIST                         = "Blacklist"
+	MESSAGE_WARNING                           = "Warning"
+	MESSAGE_BERSIH                            = "Bersih"
+	MESSAGE_SIMILIAR                          = "Similiar"
+	CODE_KONSUMEN_SIMILIAR                    = "680"
+	CODE_KONSUMEN_BLACKLIST                   = "607"
+	CODE_PASANGAN_BLACKLIST                   = "608"
+	REASON_KONSUMEN_SIMILIAR                  = "Konsumen SimiliarID = 1"
+	REASON_KONSUMEN_BLACKLIST                 = "Konsumen Blacklist"
+	REASON_PASANGAN_BLACKLIST                 = "Pasangan Blacklist"
+	REASON_KONSUMEN_BLACKLIST_OVD_90DAYS      = "Konsumen Blacklist - Max Ovd > 90 Days"
+	REASON_PASANGAN_BLACKLIST_OVD_90DAYS      = "Pasangan Blacklist - Max Ovd > 90 Days"
+	REASON_KONSUMEN_BLACKLIST_ASSET_INVENTORY = "Konsumen Blacklist - Asset Inventory > 0"
+	REASON_PASANGAN_BLACKLIST_ASSET_INVENTORY = "Pasangan Blacklist - Asset Inventory > 0"
+	REASON_KONSUMEN_BLACKLIST_RESTRUCTURE     = "Konsumen Blacklist - Konsumen Restructure"
+	REASON_PASANGAN_BLACKLIST_RESTRUCTURE     = "Pasangan Blacklist - Pasangan Restructure"
+	REASON_NON_BLACKLIST                      = "Non Blacklist"
+
+	//DSR
+	CODE_DSRLTE35   = "2701"
+	CODE_DSRGT35    = "2702"
+	REASON_DSRLTE   = "- DSR <="
+	REASON_DSRGT    = "- DSR >"
+	REASON_DSRLTE35 = "- Confins DSR <="
+	REASON_DSRGT35  = "- Confins DSR >"
+
+	//PMK
+	CODE_REJECT_WORK_EXPERIENCE     = "401"
+	CODE_REJECT_INCOME              = "402"
+	CODE_REJECT_MIN_AGE             = "403"
+	CODE_REJECT_MAX_AGE             = "404"
+	CODE_PMK_SESUAI                 = "406"
+	CODE_REJECT_HOME_SINCE          = "413"
+	CODE_VEHICLE_AGE_MAX            = "451"
+	CODE_VEHICLE_SESUAI             = "452"
+	REASON_PMK_SESUAI               = "Konsumen Bersih"
+	REASON_REJECT_INCOME            = "Penghasilan Dibawah Minimum Ketentuan"
+	REASON_REJECT_WORK_EXPERIENCE   = "Lama Usaha/Bekerja Tidak Sesuai PMK"
+	REASON_REJECT_HOME_SINCE        = "Lama Tinggal Tidak Sesuai PMK"
+	REASON_REJECT_MIN_AGE_THRESHOLD = "Minimal Umur < Threshold"
+	REASON_REJECT_MAX_AGE           = "Umur Diatas Limit Ketentuan"
+	REASON_VEHICLE_SESUAI           = "Umur Kendaraan Sesuai Ketentuan"
+	REASON_VEHICLE_AGE_MAX          = "Usia Kendaraan >"
+
+	//NOKA NOSIN
+	ATTEMPT_REJECT                   = 2
+	ATTEMPT_REJECT_PMK_DSR           = 2
+	ATTEMPT_BANNED_REJECTION_NOKA    = 3
+	DAY_RANGE_BANNED_REJECT_NOKA     = 30
+	DAY_RANGE_BLACKLIST_PMK          = 30
+	TYPE_API_LOGS_NOKA               = "API_CHECK_NOKA"
+	RESULT_NOTIF                     = "NOTIF"
+	RESULT_OK                        = "OK"
+	REASON_NOTIF                     = "Failed to check status agreement based on Chassis Number"
+	RESULT_REJECTION_OK              = "Rejection Check OK, Next Process"
+	REASON_REJECTION_OK              = "Skip Check Rejection NIK & DSR karena sudah reject NOKA"
+	CODE_REJECT_NIK_KTP              = "651"
+	CODE_REJECT_PMK_DSR              = "652"
+	CODE_REJECT_CHASSIS_NUMBER       = "653"
+	CODE_OK_CONSUMEN_MATCH           = "654"
+	CODE_REJECT_NOKA_NOSIN           = "655"
+	CODE_AGREEMENT_NOT_FOUND         = "656"
+	CODE_REJECTION_NOTIF             = "666"
+	CODE_REJECTION_FRAUD_POTENTIAL   = "667"
+	CODE_REJECTION_OK                = "660"
+	REASON_REJECT_PMK_DSR            = "Reject karena PMK atau DSR"
+	REASON_REJECT_NIK_KTP            = "Reject karena NIK KTP"
+	REASON_REJECT_NOKA_NOSIN         = "Reject NokaNosin"
+	REASON_REJECT_CHASSIS_NUMBER     = "Chassis number has been registered on active agreement"
+	REASON_OK_CONSUMEN_MATCH         = "Pass Rejection Check Chassis Number - Active Agreement Consumen Match"
+	REASON_REJECTION_FRAUD_POTENTIAL = "Fraud Potential, Chassis number has been registered on spouse's active agreement"
+	REASON_AGREEMENT_NOT_FOUND       = "Pass Rejection Check Chassis Number - Active Agreement Not Found"
+
+	//FACE COMPARE
+	RESULT_COMPARE                    = true
+	CODE_REJECT_FACE_COMPARE          = "661"
+	CANNOT_GET_IMAGE                  = "bypass get image error"
+	GROUP_FPP                         = "face_plus"
+	REASON_CONFIDENCE_BELOW_THRESHOLD = "Confidence Di Bawah Threshold"
+	REASON_CONFIDENCE_UPPER_THRESHOLD = "Confidence Di Atas Threshold"
+
+	//LOB
+	LOB_NEW_KMB = "NEW-KMB"
+	LOB_KMB     = "KMB"
+
+	//LOG
+	LOG_FILTERING_LOG = "FILTERING_LOG"
+
+	// Flag Logging
+	USECASE_API = "USECASE_API"
+
+	//Reject Tenor
+	CODE_PASS_TENOR     = "010"
+	CODE_REJECT_TENOR   = "013"
+	REASON_PASS_TENOR   = "Pass Tenor Pengajuan"
+	REASON_REJECT_TENOR = "Tenor > Threshold"
+
+	// EKYC
+	TAG_SELFIE_PHOTO                    = "SELFIE"
+	TAG_KTP_PHOTO                       = "KTP"
+	CODE_REJECT_ASLIRI_NOT_FOUND        = "1528"
+	CODE_REJECT_ASLIRI_NAME             = "1527"
+	CODE_REJECT_ASLIRI_SELFIE           = "1526"
+	CODE_PASS_ASLIRI                    = "1525"
+	REASON_ASLIRI_VALID                 = "Asliri Valid"
+	REASON_ASLIRI_INVALID               = "Asliri Invalid"
+	REASON_EKYC_VALID                   = "Ekyc Valid"
+	REASON_EKYC_INVALID                 = "Ekyc Invalid"
+	ASLIRI                              = "ARI"
+	KTP                                 = "KTP"
+	CODE_VERIFICATION_PASS_EKYC         = "1611"
+	CODE_VERIFICATION_REJECT_EKYC       = "1612"
+	CODE_VERIFICATION_REJECT_MENINGGAL  = "1613"
+	CODE_VERIFICATION_REJECT_DATA_GANDA = "1614"
+	CODE_VERIFICATION_REJECT_INACTIVE   = "1615"
+	CODE_VERIFICATION_REJECT_NOT_FOUND  = "1616"
+	CODE_FACERECOGNITION_PASS           = "1621"
+	CODE_FACERECOGNITION_REJECT_FOTO    = "1622"
+	CODE_FACERECOGNITION_REJECT_NIK     = "1623"
+	CUSTOMER_MENINGGAL                  = "Customer Meninggal Dunia"
+	DATA_GANDA                          = "Data Ganda"
+	DATA_INACTIVE                       = "Data Inactive"
+	DATA_NOT_FOUND                      = "Data Not Found"
+	EKYC_VALID                          = "Ekyc Valid"
+
+	// Address Type
+	ADDRESS_TYPE_LEGAL     = "LEGAL"
+	ADDRESS_TYPE_RESIDENCE = "RESIDENCE"
+	ADDRESS_TYPE_COMPANY   = "COMPANY"
+	ADDRESS_TYPE_EMERGENCY = "EMERGENCY"
+	ADDRESS_TYPE_LOCATION  = "LOCATION"
+	ADDRESS_TYPE_MAILING   = "MAILING"
+
+	// BIRO
+	SOURCE_DECISION_BIRO = "BIR"
+
+	// EKYC
+	SOURCE_DECISION_EKYC = "EKY"
+
+	// CREDIT ANALYST
+	SOURCE_DECISION_CA = "CRA"
+
+	// PRE SCREENING
+	CODE_PASS_PRESCREENING   = 9701
+	CODE_REJECT_PRESCREENING = 9702
 )

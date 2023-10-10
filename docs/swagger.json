@@ -5,13 +5,12 @@
             "name": "Kredit Plus",
             "url": "https://kreditplus.com",
             "email": "support@kreditplus.com"
-        },
-        "license": {}
+        }
     },
     "host": "localhost:9710",
     "basePath": "/api/v2/pbk",
     "paths": {
-        "/elaborate": {
+        "/api/v2/kmb/elaborate": {
             "post": {
                 "description": "KmbElaborate",
                 "produces": [
@@ -77,7 +76,7 @@
                 }
             }
         },
-        "/filtering": {
+        "/api/v2/kmb/filtering": {
             "post": {
                 "description": "KmbFiltering",
                 "produces": [
@@ -142,9 +141,353 @@
                     }
                 }
             }
+        },
+        "/api/v3/kmb/dupcheck": {
+            "post": {
+                "description": "KmbDupcheck",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tools"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.DupcheckApi"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.DupcheckResult"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/encrypt-decrypt": {
+            "post": {
+                "description": "Encrypt Decrypt",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tools"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.RequestEncryption"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/filtering": {
+            "post": {
+                "description": "KmbFiltering",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tools"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.Filtering"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.Filtering"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/produce/filtering": {
+            "post": {
+                "description": "Produce Filtering via REST API",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tools"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.Filtering"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/reject-tenor": {
+            "post": {
+                "description": "KmbDupcheck",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tools"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReqRejectTenor"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.UsecaseApi"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "http.RequestEncryption": {
+            "type": "object",
+            "properties": {
+                "decrypt": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "6gs+t7lBQTYM5SPuqJTNonWLjvmmmc9FaWIj"
+                    ]
+                },
+                "encrypt": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "hello world"
+                    ]
+                }
+            }
+        },
         "request.BodyRequestElaborate": {
             "type": "object",
             "required": [
@@ -156,7 +499,6 @@
                     "type": "string"
                 },
                 "data": {
-                    "type": "object",
                     "$ref": "#/definitions/request.DataElaborate"
                 }
             }
@@ -212,7 +554,6 @@
                     "type": "string"
                 },
                 "Spouse": {
-                    "type": "object",
                     "$ref": "#/definitions/request.Spouse"
                 },
                 "SurgateMotherName": {
@@ -265,7 +606,215 @@
                     "type": "integer"
                 },
                 "TotalBakiDebet": {
+                    "type": "object"
+                }
+            }
+        },
+        "request.DupcheckApi": {
+            "type": "object",
+            "required": [
+                "birth_date",
+                "birth_place",
+                "bpkb_name",
+                "company_zip_code",
+                "employment_since_month",
+                "employment_since_year",
+                "gender",
+                "home_status",
+                "id_number",
+                "image_selfie",
+                "installment_amount",
+                "job_position",
+                "ktp_url",
+                "legal_name",
+                "legal_zip_code",
+                "manufacture_year",
+                "monthly_fixed_income",
+                "no_engine",
+                "no_rangka",
+                "ntf",
+                "num_of_dependence",
+                "otr",
+                "profession_id",
+                "prospect_id",
+                "stay_since_month",
+                "stay_since_year",
+                "surgate_mother_name",
+                "tenor"
+            ],
+            "properties": {
+                "birth_date": {
+                    "type": "string"
+                },
+                "birth_place": {
+                    "type": "string"
+                },
+                "bpkb_name": {
+                    "type": "string"
+                },
+                "company_zip_code": {
+                    "type": "string"
+                },
+                "employment_since_month": {
+                    "type": "string"
+                },
+                "employment_since_year": {
+                    "type": "string"
+                },
+                "gender": {
+                    "type": "string"
+                },
+                "home_status": {
+                    "type": "string"
+                },
+                "id_number": {
+                    "type": "string"
+                },
+                "image_selfie": {
+                    "type": "string"
+                },
+                "installment_amount": {
                     "type": "number"
+                },
+                "job_position": {
+                    "type": "string"
+                },
+                "ktp_url": {
+                    "type": "string"
+                },
+                "legal_name": {
+                    "type": "string"
+                },
+                "legal_zip_code": {
+                    "type": "string"
+                },
+                "manufacture_year": {
+                    "type": "string"
+                },
+                "marital_status": {
+                    "type": "string"
+                },
+                "monthly_fixed_income": {
+                    "type": "number"
+                },
+                "monthly_variable_income": {
+                    "type": "number"
+                },
+                "no_engine": {
+                    "type": "string"
+                },
+                "no_rangka": {
+                    "type": "string"
+                },
+                "ntf": {
+                    "type": "number"
+                },
+                "num_of_dependence": {
+                    "type": "integer"
+                },
+                "otr": {
+                    "type": "number"
+                },
+                "profession_id": {
+                    "type": "string"
+                },
+                "prospect_id": {
+                    "type": "string"
+                },
+                "spouse": {
+                    "$ref": "#/definitions/request.DupcheckApiSpouse"
+                },
+                "spouse_income": {
+                    "type": "number"
+                },
+                "stay_since_month": {
+                    "type": "string"
+                },
+                "stay_since_year": {
+                    "type": "string"
+                },
+                "surgate_mother_name": {
+                    "type": "string"
+                },
+                "tenor": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.DupcheckApiSpouse": {
+            "type": "object",
+            "required": [
+                "spouse_birth_date",
+                "spouse_gender",
+                "spouse_id_number",
+                "spouse_legal_name",
+                "spouse_surgate_mother_name"
+            ],
+            "properties": {
+                "spouse_birth_date": {
+                    "type": "string"
+                },
+                "spouse_gender": {
+                    "type": "string"
+                },
+                "spouse_id_number": {
+                    "type": "string"
+                },
+                "spouse_legal_name": {
+                    "type": "string"
+                },
+                "spouse_surgate_mother_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.Filtering": {
+            "type": "object",
+            "required": [
+                "birth_date",
+                "bpkb_name",
+                "branch_id",
+                "gender",
+                "id_number",
+                "legal_name",
+                "prospect_id",
+                "surgate_mother_name"
+            ],
+            "properties": {
+                "birth_date": {
+                    "type": "string",
+                    "example": "YYYY-MM-DD"
+                },
+                "bpkb_name": {
+                    "type": "string",
+                    "example": "K"
+                },
+                "branch_id": {
+                    "type": "string",
+                    "example": "426"
+                },
+                "gender": {
+                    "type": "string",
+                    "example": "M"
+                },
+                "id_number": {
+                    "type": "string",
+                    "example": "ENCRYPTED NIK"
+                },
+                "legal_name": {
+                    "type": "string",
+                    "example": "ENCRYPTED LEGAL NAME"
+                },
+                "prospect_id": {
+                    "type": "string",
+                    "example": "SAL042600001"
+                },
+                "spouse": {
+                    "$ref": "#/definitions/request.FilteringSpouse"
+                },
+                "surgate_mother_name": {
+                    "type": "string",
+                    "example": "ENCRYPTED SURGATE MOTHER NAME"
                 }
             }
         },
@@ -280,8 +829,55 @@
                     "type": "string"
                 },
                 "data": {
-                    "type": "object",
                     "$ref": "#/definitions/request.Data"
+                }
+            }
+        },
+        "request.FilteringSpouse": {
+            "type": "object",
+            "required": [
+                "spouse_birth_date",
+                "spouse_gender",
+                "spouse_id_number",
+                "spouse_legal_name",
+                "spouse_surgate_mother_name"
+            ],
+            "properties": {
+                "spouse_birth_date": {
+                    "type": "string",
+                    "example": "YYYY-MM-DD"
+                },
+                "spouse_gender": {
+                    "type": "string",
+                    "example": "F"
+                },
+                "spouse_id_number": {
+                    "type": "string",
+                    "example": "ENCRYPTED NIK"
+                },
+                "spouse_legal_name": {
+                    "type": "string",
+                    "example": "ENCRYPTED LEGAL NAME"
+                },
+                "spouse_surgate_mother_name": {
+                    "type": "string",
+                    "example": "ENCRYPTED SURGATE MOTHER NAME"
+                }
+            }
+        },
+        "request.ReqRejectTenor": {
+            "type": "object",
+            "required": [
+                "id_number",
+                "prospect_id"
+            ],
+            "properties": {
+                "id_number": {
+                    "type": "string",
+                    "example": "1234XXXXXXXX0001"
+                },
+                "prospect_id": {
+                    "type": "string"
                 }
             }
         },
@@ -340,7 +936,7 @@
             "type": "object",
             "properties": {
                 "code": {
-                    "type": "string"
+                    "type": "object"
                 },
                 "decision": {
                     "type": "string"
@@ -371,6 +967,15 @@
         "response.ElaborateResult": {
             "type": "object",
             "properties": {
+                "age_vehicle": {
+                    "type": "string"
+                },
+                "bpkb_name_type": {
+                    "type": "integer"
+                },
+                "cluster": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "integer"
                 },
@@ -380,8 +985,17 @@
                 "ltv": {
                     "type": "integer"
                 },
+                "ltv_origin": {
+                    "type": "number"
+                },
                 "reason": {
                     "type": "string"
+                },
+                "result_pefindo": {
+                    "type": "string"
+                },
+                "total_balki_debet": {
+                    "type": "number"
                 }
             }
         },
@@ -392,6 +1006,67 @@
                     "type": "string"
                 },
                 "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.Filtering": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "object"
+                },
+                "customer_segment": {
+                    "type": "object"
+                },
+                "customer_status": {
+                    "type": "object"
+                },
+                "decision": {
+                    "type": "string"
+                },
+                "is_blacklist": {
+                    "type": "boolean"
+                },
+                "next_process": {
+                    "type": "boolean"
+                },
+                "pbk_report_customer": {
+                    "type": "object"
+                },
+                "pbk_report_spouse": {
+                    "type": "object"
+                },
+                "prospect_id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "total_baki_debet": {
+                    "type": "object"
+                }
+            }
+        },
+        "response.UsecaseApi": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "confidence": {
+                    "type": "string"
+                },
+                "dsr": {
+                    "type": "number"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "result": {
+                    "type": "string"
+                },
+                "status_konsumen": {
                     "type": "string"
                 }
             }
