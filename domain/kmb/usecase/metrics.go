@@ -295,24 +295,6 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		return
 	}
 
-	details = append(details, entity.TrxDetail{
-		ProspectID:     reqMetrics.Transaction.ProspectID,
-		StatusProcess:  constant.STATUS_ONPROCESS,
-		Activity:       constant.ACTIVITY_PROCESS,
-		Decision:       constant.DB_DECISION_PASS,
-		RuleCode:       decisionMetrics.Code,
-		SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
-		Info:           decisionMetrics.Reason,
-		NextStep:       constant.SOURCE_DECISION_BIRO,
-	})
-
-	//Get data filtering where DtmResponse < BIRO_VALID_DAYS
-	filtering, err = u.repository.GetBiroData(reqMetrics.Transaction.ProspectID)
-	if err != nil {
-		err = errors.New(constant.ERROR_BAD_REQUEST + " - Filtering > " + os.Getenv("BIRO_VALID_DAYS") + " Days")
-		return
-	}
-
 	log.Println(dupcheckData)
 	log.Println(customerStatus)
 	log.Println(decisionMetrics)
