@@ -431,6 +431,20 @@ type TrxFMF struct {
 	TrxBannedChassisNumber entity.TrxBannedChassisNumber
 }
 
+type RoaoAkkk struct {
+	MaxOverdueDaysROAO               interface{} `json:"max_overduedays_roao"`
+	MaxOverdueDaysforActiveAgreement interface{} `json:"max_overduedays_for_active_agreement"`
+	NumberofAgreement                interface{} `json:"number_of_agreement"`
+	AgreementStatus                  interface{} `json:"agreement_status"`
+	NumberOfPaidInstallment          interface{} `json:"NumberOfPaidInstallment"`
+	OSInstallmentDue                 interface{} `json:"os_installmentdue"`
+	InstallmentAmountFMF             interface{} `json:"installment_amount_fmf"`
+	InstallmentAmountSpouseFMF       interface{} `json:"installment_amount_spouse_fmf"`
+	InstallmentAmountOther           interface{} `json:"installment_amount_other"`
+	InstallmentAmountOtherSpouse     interface{} `json:"installment_amount_other_spouse"`
+	InstallmentTopup                 interface{} `json:"installment_topup"`
+}
+
 type Metrics struct {
 	ProspectID     string      `json:"prospect_id"`
 	Code           interface{} `json:"code"`

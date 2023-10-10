@@ -18,7 +18,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, err error) {
+func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error) {
 
 	var (
 		customer     []request.SpouseDupcheck
@@ -40,14 +40,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	var configValue response.DupcheckConfig
 
 	json.Unmarshal([]byte(config.Value), &configValue)
-
-	prospectID := req.ProspectID
-	income := req.MonthlyFixedIncome + req.MonthlyVariableIncome + req.SpouseIncome
-	customer = append(customer, request.SpouseDupcheck{IDNumber: req.IDNumber, LegalName: req.LegalName, BirthDate: req.BirthDate, MotherName: req.MotherName})
-
-	if married {
-		customer = append(customer, request.SpouseDupcheck{IDNumber: req.Spouse.IDNumber, LegalName: req.Spouse.LegalName, BirthDate: req.Spouse.BirthDate, MotherName: req.Spouse.MotherName})
-	}
 
 	// Check Banned Chassis Number
 	bannedChassisNumber, err := u.usecase.CheckBannedChassisNumber(req, configValue)
@@ -101,6 +93,16 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: trxReject.Code, SourceDecision: constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR, Info: trxReject.Reason, NextStep: constant.SOURCE_DECISION_BLACKLIST})
+
+	prospectID := req.ProspectID
+	income := req.MonthlyFixedIncome + req.MonthlyVariableIncome + req.SpouseIncome
+	customer = append(customer, request.SpouseDupcheck{IDNumber: req.IDNumber, LegalName: req.LegalName, BirthDate: req.BirthDate, MotherName: req.MotherName})
+
+	if married {
+		customer = append(customer, request.SpouseDupcheck{IDNumber: req.Spouse.IDNumber, LegalName: req.Spouse.LegalName, BirthDate: req.Spouse.BirthDate, MotherName: req.Spouse.MotherName})
+	}
+
 	// Loop check Blacklist customer and spouse
 	for i := 0; i < len(customer); i++ {
 
@@ -130,6 +132,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		}
 	}
 
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: blackList.Code, SourceDecision: constant.SOURCE_DECISION_BLACKLIST, Info: blackList.Reason, NextStep: constant.SOURCE_DECISION_BLACKLIST})
+
 	//Set Data customerType and spouseType -- Blacklist. Warning, Or Clean --
 	mapping.CustomerType = spMap.CustomerType
 	mapping.SpouseType = spMap.SpouseType
@@ -147,6 +151,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: ageVehicle.Code, SourceDecision: constant.SOURCE_DECISION_PMK, Info: ageVehicle.Reason, NextStep: constant.SOURCE_DECISION_NOKANOSIN})
+
 	// Check Chassis Number with Active Aggrement
 	checkChassisNumber, err := u.usecase.CheckAgreementChassisNumber(ctx, req, accessToken)
 	if err != nil {
@@ -158,6 +164,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		mapping.Reason = data.Reason
 		return
 	}
+
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: checkChassisNumber.Code, SourceDecision: constant.SOURCE_DECISION_NOKANOSIN, Info: checkChassisNumber.Reason, NextStep: constant.SOURCE_DECISION_PMK})
 
 	//dataCustomer[0] is result main dupcheck customer
 	mainCustomer := dataCustomer[0]
@@ -224,6 +232,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: pmk.Code, SourceDecision: constant.SOURCE_DECISION_PMK, Info: pmk.Reason, NextStep: constant.SOURCE_DECISION_DSR})
+
 	var customerData []request.CustomerData
 	customerData = append(customerData, request.CustomerData{
 		StatusKonsumen:  customerKMB,
@@ -252,6 +262,9 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	dsr, _, instOther, instOtherSpouse, instTopup, err := u.usecase.DsrCheck(ctx, req.ProspectID, req.RangkaNo, customerData, req.InstallmentAmount, mapping.InstallmentAmountFMF, mapping.InstallmentAmountSpouseFMF, income, accessToken)
 	if err != nil {
 		return
+	}
+	if pmk.Result == constant.DECISION_PASS {
+		trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: dsr.Code, SourceDecision: constant.SOURCE_DECISION_PMK, Info: dsr.Reason, NextStep: constant.SOURCE_DECISION_DUPCHECK})
 	}
 
 	data = dsr
@@ -331,6 +344,11 @@ func (u usecase) CheckRejection(req request.DupcheckApi, configValue response.Du
 		return
 	}
 
+	data.Result = constant.DECISION_PASS
+	data.Code = constant.CODE_BELUM_PERNAH_REJECT
+	data.Reason = constant.REASON_BELUM_PERNAH_REJECT
+	data.SourceDecision = constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR
+
 	return
 }
 
@@ -348,7 +366,6 @@ func (u usecase) CheckBannedChassisNumber(req request.DupcheckApi, configValue r
 		data.Code = constant.CODE_REJECT_NOKA_NOSIN
 		data.Reason = constant.REASON_REJECT_NOKA_NOSIN
 		data.SourceDecision = constant.SOURCE_DECISION_NOKANOSIN
-		return
 	}
 
 	return
@@ -492,6 +509,7 @@ func (u usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerB
 	// index 1 = spouse
 
 	customerType = constant.MESSAGE_BERSIH
+	data.SourceDecision = constant.SOURCE_DECISION_BLACKLIST
 
 	if spDupcheck != (response.SpDupCekCustomerByID{}) {
 
@@ -1200,6 +1218,8 @@ func (u usecase) VehicleCheck(manufactureYear string, tenor int) (data response.
 		err = errors.New(constant.ERROR_UPSTREAM + " - Error Get Config Dupcheck")
 		return
 	}
+
+	data.SourceDecision = constant.SOURCE_DECISION_PMK
 
 	var configValue response.DupcheckConfig
 

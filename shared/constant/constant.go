@@ -186,6 +186,8 @@ const (
 	REASON_NUM_OF_ASSET_INVENTORIED                              = "Konsumen Blacklist - NumOfAssetInventoried > 0"
 	REASON_BADTYPE_W                                             = "Konsumen Warning"
 	REASON_BERSIH                                                = "Konsumen Bersih"
+	REASON_SESUAI                                                = "Sesuai"
+	REASON_TIDAK_SESUAI                                          = "Tidak Sesuai"
 	CODE_NON_BLACKLIST                                           = "1300,7064,7065,7066,706,7094,7095,7096,708,7014,7015,7016,7053,7054,7055,699,7050"
 	CODE_NON_BLACKLIST_ALL                                       = "609"
 	CORE_API_003                                                 = "CORE-API-003"
@@ -360,10 +362,13 @@ const (
 	REASON_PERNAH_REJECT_PMK_DSR          = "Reject karena PMK atau DSR"
 	CODE_PERNAH_REJECT_NIK                = "302"
 	REASON_PERNAH_REJECT_NIK              = "Reject karena NIK KTP"
+	CODE_BELUM_PERNAH_REJECT              = "303"
+	REASON_BELUM_PERNAH_REJECT            = "Bersih"
 	SOURCE_DECISION_NIK                   = "NIK"
 	SOURCE_DECISION_PERNAH_REJECT_PMK_DSR = "PRJ"
 
 	// BLACKLIST
+	SOURCE_DECISION_BLACKLIST                 = "BKL"
 	MESSAGE_BLACKLIST                         = "Blacklist"
 	MESSAGE_WARNING                           = "Warning"
 	MESSAGE_BERSIH                            = "Bersih"
@@ -383,12 +388,13 @@ const (
 	REASON_NON_BLACKLIST                      = "Non Blacklist"
 
 	//DSR
-	CODE_DSRLTE35   = "2701"
-	CODE_DSRGT35    = "2702"
-	REASON_DSRLTE   = "- DSR <="
-	REASON_DSRGT    = "- DSR >"
-	REASON_DSRLTE35 = "- Confins DSR <="
-	REASON_DSRGT35  = "- Confins DSR >"
+	SOURCE_DECISION_DSR = "DSR"
+	CODE_DSRLTE35       = "2701"
+	CODE_DSRGT35        = "2702"
+	REASON_DSRLTE       = "- DSR <="
+	REASON_DSRGT        = "- DSR >"
+	REASON_DSRLTE35     = "- Confins DSR <="
+	REASON_DSRGT35      = "- Confins DSR >"
 
 	//PMK
 	SOURCE_DECISION_PMK             = "PMK"

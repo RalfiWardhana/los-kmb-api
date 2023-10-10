@@ -17,17 +17,18 @@ import (
 func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, accessToken string) (resultMetrics interface{}, err error) {
 
 	var (
-		married         bool
-		details         []entity.TrxDetail
-		reqDupcheck     request.DupcheckApi
-		dupcheckData    response.SpDupcheckMap
-		customerStatus  string
-		customerSegment string
-		decisionMetrics response.UsecaseApi
-		filtering       entity.FilteringKMB
-		trxPrescreening entity.TrxPrescreening
-		trxFMF          response.TrxFMF
-		trxFMFDupcheck  response.TrxFMF
+		married           bool
+		details           []entity.TrxDetail
+		reqDupcheck       request.DupcheckApi
+		dupcheckData      response.SpDupcheckMap
+		customerStatus    string
+		customerSegment   string
+		decisionMetrics   response.UsecaseApi
+		filtering         entity.FilteringKMB
+		trxPrescreening   entity.TrxPrescreening
+		trxFMF            response.TrxFMF
+		trxFMFDupcheck    response.TrxFMF
+		trxDetailDupcheck []entity.TrxDetail
 	)
 
 	// cek trx_master
@@ -264,7 +265,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		married = true
 	}
 
-	dupcheckData, customerStatus, decisionMetrics, trxFMFDupcheck, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken)
+	dupcheckData, customerStatus, decisionMetrics, trxFMFDupcheck, trxDetailDupcheck, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken)
 	if err != nil {
 		return
 	}
@@ -276,6 +277,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	trxFMF.TrxBannedChassisNumber = trxFMFDupcheck.TrxBannedChassisNumber
 
 	if decisionMetrics.Result == constant.DECISION_REJECT {
+		details = append(details, trxDetailDupcheck...)
 		details = append(details, entity.TrxDetail{
 			ProspectID:     reqMetrics.Transaction.ProspectID,
 			StatusProcess:  constant.STATUS_FINAL,
@@ -287,11 +289,28 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		})
 
 		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, decisionMetrics.Reason)
-		// resultMetrics, err = u.usecase.SaveTransaction(details, reason, callback, req, additionalTrx)
 		if err != nil {
 			return
 		}
 
+		return
+	}
+
+	details = append(details, trxDetailDupcheck...)
+
+	details = append(details, entity.TrxDetail{
+		ProspectID:     reqMetrics.Transaction.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_PROCESS,
+		Decision:       constant.DB_DECISION_PASS,
+		RuleCode:       decisionMetrics.Code,
+		SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+		Info:           decisionMetrics.Reason,
+		NextStep:       constant.SOURCE_DECISION_BIRO,
+	})
+
+	resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, decisionMetrics.Reason)
+	if err != nil {
 		return
 	}
 

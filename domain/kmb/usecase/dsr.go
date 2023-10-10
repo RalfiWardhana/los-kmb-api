@@ -32,6 +32,8 @@ func (u usecase) DsrCheck(ctx context.Context, prospectID, chassisNumber string,
 		return
 	}
 
+	data.SourceDecision = constant.SOURCE_DECISION_DSR
+
 	var configValue response.DupcheckConfig
 
 	json.Unmarshal([]byte(config.Value), &configValue)

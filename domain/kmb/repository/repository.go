@@ -613,6 +613,62 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 			}
 		}
 
+		var asliriReason interface{}
+
+		if trxFMF.AsliriReason == constant.REASON_EKYC_INVALID {
+			asliriReason = constant.REASON_TIDAK_SESUAI
+		} else if trxFMF.AsliriReason != nil {
+			asliriReason = constant.REASON_SESUAI
+		}
+
+		var roaoAkkk response.RoaoAkkk
+		if trxFMF.DupcheckData.StatusKonsumen != constant.STATUS_KONSUMEN_NEW {
+			roaoAkkk = response.RoaoAkkk{
+				MaxOverdueDaysROAO:               trxFMF.DupcheckData.MaxOverdueDaysROAO,
+				MaxOverdueDaysforActiveAgreement: trxFMF.DupcheckData.MaxOverdueDaysforActiveAgreement,
+				NumberofAgreement:                trxFMF.DupcheckData.NumberofAgreement,
+				AgreementStatus:                  trxFMF.DupcheckData.AgreementStatus,
+				NumberOfPaidInstallment:          trxFMF.DupcheckData.NumberOfPaidInstallment,
+				OSInstallmentDue:                 trxFMF.DupcheckData.OSInstallmentDue,
+				InstallmentAmountFMF:             trxFMF.DupcheckData.InstallmentAmountFMF,
+				InstallmentAmountSpouseFMF:       trxFMF.DupcheckData.InstallmentAmountSpouseFMF,
+				InstallmentAmountOther:           trxFMF.DupcheckData.InstallmentAmountOther,
+				InstallmentAmountOtherSpouse:     trxFMF.DupcheckData.InstallmentAmountOtherSpouse,
+				InstallmentTopup:                 trxFMF.DupcheckData.InstallmentTopup,
+			}
+		}
+
+		akkk := entity.TrxAkkk{
+			ProspectID:                   data.Transaction.ProspectID,
+			ScsDate:                      trxFMF.ScsDecision.ScsDate,
+			ScsScore:                     trxFMF.ScsDecision.ScsScore,
+			ScsStatus:                    trxFMF.ScsDecision.ScsStatus,
+			CustomerType:                 trxFMF.DupcheckData.CustomerType,
+			SpouseType:                   trxFMF.DupcheckData.SpouseType,
+			AgreementStatus:              roaoAkkk.AgreementStatus,
+			TotalAgreementAktif:          roaoAkkk.NumberofAgreement,
+			MaxOVDAgreementAktif:         roaoAkkk.MaxOverdueDaysROAO,
+			LastMaxOVDAgreement:          roaoAkkk.MaxOverdueDaysforActiveAgreement,
+			DSRFMF:                       trxFMF.DSRFMF,
+			DSRPBK:                       trxFMF.DSRPBK,
+			TotalDSR:                     trxFMF.TotalDSR,
+			AsliriSimiliarity:            trxFMF.AsliriSimiliarity,
+			AsliriReason:                 asliriReason,
+			NumberOfPaidInstallment:      roaoAkkk.NumberOfPaidInstallment,
+			OSInstallmentDue:             roaoAkkk.OSInstallmentDue,
+			InstallmentAmountFMF:         roaoAkkk.InstallmentAmountFMF,
+			InstallmentAmountSpouseFMF:   roaoAkkk.InstallmentAmountSpouseFMF,
+			InstallmentAmountOther:       roaoAkkk.InstallmentAmountOther,
+			InstallmentAmountOtherSpouse: roaoAkkk.InstallmentAmountOtherSpouse,
+			InstallmentTopup:             roaoAkkk.InstallmentTopup,
+		}
+
+		logInfo = akkk
+
+		if err := tx.Create(&akkk).Error; err != nil {
+			return err
+		}
+
 		for i := 0; i < len(details); i++ {
 			// skip prescreening unpr
 			if details[i].SourceDecision != constant.PRESCREENING || details[i].Activity != constant.ACTIVITY_UNPROCESS {
