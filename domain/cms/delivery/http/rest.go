@@ -117,7 +117,12 @@ func (c *handlerCMS) ReviewPrescreening(ctx echo.Context) (err error) {
 	}
 
 	if data.Decision == constant.DECISION_REJECT {
-		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(resp), 0)
+	} else if data.Decision == constant.DECISION_APPROVE {
+		reqAfterPrescreening := request.AfterPrescreening{
+			ProspectID: req.ProspectID,
+		}
+		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_AFTER_PRESCREENING, req.ProspectID, utils.StructToMap(reqAfterPrescreening), 0)
 	}
 
 	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, data)
