@@ -368,7 +368,7 @@ const (
 	SOURCE_DECISION_PERNAH_REJECT_PMK_DSR = "PRJ"
 
 	// BLACKLIST
-	SOURCE_DECISION_BLACKLIST                 = "BKL"
+	SOURCE_DECISION_BLACKLIST                 = "BLK"
 	MESSAGE_BLACKLIST                         = "Blacklist"
 	MESSAGE_WARNING                           = "Warning"
 	MESSAGE_BERSIH                            = "Bersih"
@@ -388,13 +388,18 @@ const (
 	REASON_NON_BLACKLIST                      = "Non Blacklist"
 
 	//DSR
-	SOURCE_DECISION_DSR = "DSR"
-	CODE_DSRLTE35       = "2701"
-	CODE_DSRGT35        = "2702"
-	REASON_DSRLTE       = "- DSR <="
-	REASON_DSRGT        = "- DSR >"
-	REASON_DSRLTE35     = "- Confins DSR <="
-	REASON_DSRGT35      = "- Confins DSR >"
+	SOURCE_DECISION_DSR    = "DSR"
+	CODE_DSRLTE35          = "2701"
+	CODE_DSRGT35           = "2702"
+	REASON_DSRLTE          = "- DSR <="
+	REASON_DSRGT           = "- DSR >"
+	REASON_DSRLTE35        = "- Confins DSR <="
+	REASON_DSRGT35         = "- Confins DSR >"
+	CODE_TOPUP_MENUNGGAK   = "2703"
+	REASON_TOPUP_MENUNGGAK = "- Top Up Menunggak"
+
+	DEALER_PSA     = "PSA"
+	DEALER_NON_PSA = "NON PSA"
 
 	//PMK
 	SOURCE_DECISION_PMK             = "PMK"

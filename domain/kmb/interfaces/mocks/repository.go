@@ -40,6 +40,27 @@ func (_m *Repository) GetAllReject(idNumber string) ([]entity.DupcheckRejectionP
 	return r0, r1
 }
 
+// GetAppConfig provides a mock function with given fields:
+func (_m *Repository) GetAppConfig() (entity.AppConfig, error) {
+	ret := _m.Called()
+
+	var r0 entity.AppConfig
+	if rf, ok := ret.Get(0).(func() entity.AppConfig); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(entity.AppConfig)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetBannedChassisNumber provides a mock function with given fields: chassisNumber
 func (_m *Repository) GetBannedChassisNumber(chassisNumber string) (entity.TrxBannedChassisNumber, error) {
 	ret := _m.Called(chassisNumber)
@@ -75,27 +96,6 @@ func (_m *Repository) GetBannedPMKDSR(idNumber string) (entity.TrxBannedPMKDSR, 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(idNumber)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetBiroData provides a mock function with given fields: prospectID
-func (_m *Repository) GetBiroData(prospectID string) (entity.FilteringKMB, error) {
-	ret := _m.Called(prospectID)
-
-	var r0 entity.FilteringKMB
-	if rf, ok := ret.Get(0).(func(string) entity.FilteringKMB); ok {
-		r0 = rf(prospectID)
-	} else {
-		r0 = ret.Get(0).(entity.FilteringKMB)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(prospectID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -191,90 +191,6 @@ func (_m *Repository) GetCurrentTrxWithRejectDSR(idNumber string) (entity.TrxSta
 		r0 = rf(idNumber)
 	} else {
 		r0 = ret.Get(0).(entity.TrxStatus)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(idNumber)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetDSRBypass provides a mock function with given fields:
-func (_m *Repository) GetDSRBypass() (entity.AppConfig, error) {
-	ret := _m.Called()
-
-	var r0 entity.AppConfig
-	if rf, ok := ret.Get(0).(func() entity.AppConfig); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(entity.AppConfig)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetDummyAgreementChassisNumber provides a mock function with given fields: idNumber
-func (_m *Repository) GetDummyAgreementChassisNumber(idNumber string) (entity.DummyAgreementChassisNumber, error) {
-	ret := _m.Called(idNumber)
-
-	var r0 entity.DummyAgreementChassisNumber
-	if rf, ok := ret.Get(0).(func(string) entity.DummyAgreementChassisNumber); ok {
-		r0 = rf(idNumber)
-	} else {
-		r0 = ret.Get(0).(entity.DummyAgreementChassisNumber)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(idNumber)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetDummyCustomerDomain provides a mock function with given fields: idNumber
-func (_m *Repository) GetDummyCustomerDomain(idNumber string) (entity.DummyCustomerDomain, error) {
-	ret := _m.Called(idNumber)
-
-	var r0 entity.DummyCustomerDomain
-	if rf, ok := ret.Get(0).(func(string) entity.DummyCustomerDomain); ok {
-		r0 = rf(idNumber)
-	} else {
-		r0 = ret.Get(0).(entity.DummyCustomerDomain)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(idNumber)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetDummyLatestPaidInstallment provides a mock function with given fields: idNumber
-func (_m *Repository) GetDummyLatestPaidInstallment(idNumber string) (entity.DummyLatestPaidInstallment, error) {
-	ret := _m.Called(idNumber)
-
-	var r0 entity.DummyLatestPaidInstallment
-	if rf, ok := ret.Get(0).(func(string) entity.DummyLatestPaidInstallment); ok {
-		r0 = rf(idNumber)
-	} else {
-		r0 = ret.Get(0).(entity.DummyLatestPaidInstallment)
 	}
 
 	var r1 error
@@ -415,48 +331,6 @@ func (_m *Repository) GetHistoryRejectAttempt(idNumber string) ([]entity.Dupchec
 	return r0, r1
 }
 
-// GetInstallmentAmountChassisNumber provides a mock function with given fields: chassisNumber
-func (_m *Repository) GetInstallmentAmountChassisNumber(chassisNumber string) (entity.SpDupcekChasisNo, error) {
-	ret := _m.Called(chassisNumber)
-
-	var r0 entity.SpDupcekChasisNo
-	if rf, ok := ret.Get(0).(func(string) entity.SpDupcekChasisNo); ok {
-		r0 = rf(chassisNumber)
-	} else {
-		r0 = ret.Get(0).(entity.SpDupcekChasisNo)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(chassisNumber)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetKMBOff provides a mock function with given fields:
-func (_m *Repository) GetKMBOff() (entity.AppConfig, error) {
-	ret := _m.Called()
-
-	var r0 entity.AppConfig
-	if rf, ok := ret.Get(0).(func() entity.AppConfig); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(entity.AppConfig)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetLatestBannedRejectionNoka provides a mock function with given fields: noRangka
 func (_m *Repository) GetLatestBannedRejectionNoka(noRangka string) (entity.DupcheckRejectionNokaNosin, error) {
 	ret := _m.Called(noRangka)
@@ -541,27 +415,6 @@ func (_m *Repository) GetMinimalIncomePMK(branchID string, statusKonsumen string
 	return r0, r1
 }
 
-// GetNewDupcheck provides a mock function with given fields: ProspectID
-func (_m *Repository) GetNewDupcheck(ProspectID string) (entity.NewDupcheck, error) {
-	ret := _m.Called(ProspectID)
-
-	var r0 entity.NewDupcheck
-	if rf, ok := ret.Get(0).(func(string) entity.NewDupcheck); ok {
-		r0 = rf(ProspectID)
-	} else {
-		r0 = ret.Get(0).(entity.NewDupcheck)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(ProspectID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetTrxJourney provides a mock function with given fields: prospectID
 func (_m *Repository) GetTrxJourney(prospectID string) (entity.TrxJourney, error) {
 	ret := _m.Called(prospectID)
@@ -618,20 +471,6 @@ func (_m *Repository) SaveLogOrchestrator(header interface{}, _a1 interface{}, _
 	var r0 error
 	if rf, ok := ret.Get(0).(func(interface{}, interface{}, interface{}, string, string, string, string) error); ok {
 		r0 = rf(header, _a1, _a2, path, method, prospectID, requestID)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// SaveNewDupcheck provides a mock function with given fields: newDupcheck
-func (_m *Repository) SaveNewDupcheck(newDupcheck entity.NewDupcheck) error {
-	ret := _m.Called(newDupcheck)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(entity.NewDupcheck) error); ok {
-		r0 = rf(newDupcheck)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -721,34 +560,6 @@ func (_m *Repository) ScanKmobOff(query string) (entity.ScanInstallmentAmount, e
 	}
 
 	return r0, r1
-}
-
-// ScanPreTrxJourney provides a mock function with given fields: prospectID
-func (_m *Repository) ScanPreTrxJourney(prospectID string) (int, int, error) {
-	ret := _m.Called(prospectID)
-
-	var r0 int
-	if rf, ok := ret.Get(0).(func(string) int); ok {
-		r0 = rf(prospectID)
-	} else {
-		r0 = ret.Get(0).(int)
-	}
-
-	var r1 int
-	if rf, ok := ret.Get(1).(func(string) int); ok {
-		r1 = rf(prospectID)
-	} else {
-		r1 = ret.Get(1).(int)
-	}
-
-	var r2 error
-	if rf, ok := ret.Get(2).(func(string) error); ok {
-		r2 = rf(prospectID)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
 }
 
 // ScanTrxMaster provides a mock function with given fields: prospectID

@@ -789,55 +789,10 @@ func (r repoHandler) GetDupcheckConfig() (config entity.AppConfig, err error) {
 	return
 }
 
-func (r repoHandler) GetNewDupcheck(prospectID string) (data entity.NewDupcheck, err error) {
-
-	if err = r.losDB.Raw(fmt.Sprintf("SELECT TOP 1 ProspectID, customer_status, customer_type FROM new_dupcheck WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC", prospectID)).Scan(&data).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			err = errors.New(constant.ERROR_NOT_FOUND)
-		}
-		return
-	}
-
-	return
-}
-
-func (r repoHandler) SaveNewDupcheck(newDupcheck entity.NewDupcheck) (err error) {
-
-	if err = r.losDB.Create(&newDupcheck).Error; err != nil {
-		return
-	}
-	return
-}
-
-func (r repoHandler) GetDummyCustomerDomain(idNumber string) (data entity.DummyCustomerDomain, err error) {
-
-	if err = r.logsDB.Raw(fmt.Sprintf("SELECT * FROM dummy_customer_domain WITH (nolock) WHERE id_number = '%s'", idNumber)).Scan(&data).Error; err != nil {
-		return
-	}
-	return
-}
-
-func (r repoHandler) GetDummyLatestPaidInstallment(idNumber string) (data entity.DummyLatestPaidInstallment, err error) {
-
-	if err = r.logsDB.Raw(fmt.Sprintf("SELECT * FROM dummy_latest_paid_installment WITH (nolock) WHERE id_number = '%s'", idNumber)).Scan(&data).Error; err != nil {
-		return
-	}
-	return
-}
-
 func (r repoHandler) GetEncryptedValue(idNumber string, legalName string, motherName string) (encrypted entity.Encrypted, err error) {
 
 	if err = r.losDB.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS LegalName, SCP.dbo.ENC_B64('SEC','%s') AS SurgateMotherName, SCP.dbo.ENC_B64('SEC','%s') AS IDNumber`,
 		legalName, motherName, idNumber)).Scan(&encrypted).Error; err != nil {
-		return
-	}
-
-	return
-}
-
-func (r repoHandler) GetDSRBypass() (config entity.AppConfig, err error) {
-
-	if err = r.losDB.Raw("SELECT [key], [value] FROM app_config WHERE lob = 'KMOB-OFF' AND [key] = 'dsr-bypass' AND group_name = 'dsr_setting'").Scan(&config).Error; err != nil {
 		return
 	}
 
@@ -894,7 +849,7 @@ func (r repoHandler) ScanWgOnl(query string) (data entity.ScanInstallmentAmount,
 	return
 }
 
-func (r repoHandler) GetKMBOff() (config entity.AppConfig, err error) {
+func (r repoHandler) GetAppConfig() (config entity.AppConfig, err error) {
 
 	if err = r.losDB.Raw("SELECT [key], [value] FROM app_config WHERE lob = 'KMB-OFF' AND [key] = 'pmk_kmb_off' AND group_name = 'pmk_config'").Scan(&config).Error; err != nil {
 		return
@@ -996,34 +951,6 @@ func (r repoHandler) SaveDataApiLog(data entity.TrxApiLog) (err error) {
 		return
 	}
 
-	return
-}
-
-func (r repoHandler) GetInstallmentAmountChassisNumber(chassisNumber string) (data entity.SpDupcekChasisNo, err error) {
-
-	var x sql.TxOptions
-
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_30S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.confinsDB.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	if err = db.Raw("exec [%s] '%s'", os.Getenv("SP_DUPCHECK_CHASSIS_NUMBER"), chassisNumber).Scan(&data).Error; err != nil {
-		return
-	}
-
-	return
-
-}
-
-func (r repoHandler) GetDummyAgreementChassisNumber(idNumber string) (data entity.DummyAgreementChassisNumber, err error) {
-
-	if err = r.logsDB.Raw(fmt.Sprintf("SELECT * FROM dummy_agreement_chassis_number WITH (nolock) WHERE id_number = '%s'", idNumber)).Scan(&data).Error; err != nil {
-		return
-	}
 	return
 }
 
@@ -1168,42 +1095,6 @@ func (r repoHandler) GetCurrentTrxWithRejectChassisNumber(chassisNumber string) 
 		AND ti.chassis_number = '%s' AND CAST(ts.created_at as DATE) = '%s'`, chassisNumber, currentDate)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
-		}
-		return
-	}
-
-	return
-}
-
-func (r repoHandler) ScanPreTrxJourney(prospectID string) (countMaster, countFiltering int, err error) {
-
-	var (
-		ftr    []entity.FilteringKMB
-		master []entity.TrxMaster
-	)
-
-	if err = r.losDB.Raw(fmt.Sprintf("SELECT ProspectID FROM filtering_kmob WITH (nolock) WHERE ProspectID = '%s'", prospectID)).Scan(&ftr).Error; err != nil {
-		return
-	}
-
-	countFiltering = len(ftr)
-
-	if err = r.losDB.Raw(fmt.Sprintf("SELECT ProspectID FROM trx_master WITH (nolock) WHERE ProspectID = '%s'", prospectID)).Scan(&master).Error; err != nil {
-		return
-	}
-
-	countMaster = len(master)
-
-	return
-}
-
-func (r repoHandler) GetBiroData(prospectID string) (data entity.FilteringKMB, err error) {
-
-	resultValid := os.Getenv("BIRO_VALID_DAYS")
-
-	if err = r.losDB.Raw(fmt.Sprintf("SELECT TOP 1 ProspectID, ResultBiro FROM filtering_kmob WITH (nolock) WHERE ProspectID = '%s' AND ResultBiro IS NOT NULL AND source_credit_biro IS NOT NULL AND DATEADD(day, -%s, CAST(GETDATE() AS date)) <= CAST(DtmResponse AS date) ORDER BY created_at DESC", prospectID, resultValid)).Scan(&data).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			err = errors.New(constant.ERROR_NOT_FOUND)
 		}
 		return
 	}

@@ -118,6 +118,7 @@ type DupcheckApi struct {
 	ManufactureYear       string             `json:"manufacture_year" validate:"required,len=4,number"`
 	BPKBName              string             `json:"bpkb_name" validate:"required,bpkbname"`
 	NumOfDependence       int                `json:"num_of_dependence" validate:"required"`
+	DPAmount              float64            `json:"down_payment_amount" validate:"required,max=999999999" example:"22000000"`
 	OTRPrice              float64            `json:"otr" validate:"required"`
 	NTF                   float64            `json:"ntf" validate:"required"`
 	LegalZipCode          string             `json:"legal_zip_code" validate:"required"`
@@ -126,6 +127,8 @@ type DupcheckApi struct {
 	InstallmentAmount     float64            `json:"installment_amount" validate:"required"`
 	MaritalStatus         string             `json:"marital_status"`
 	CustomerSegment       string             `json:"customer_segment"`
+	Dealer                string             `json:"dealer"`
+	AdminFee              *float64           `json:"admin_fee" validate:"required,max=999999999" example:"1500000"`
 }
 
 type SpouseDupcheck struct {

@@ -177,37 +177,6 @@ func (c *MappingElaborateScheme) TableName() string {
 	return "kmb_mapping_elaborate_scheme"
 }
 
-type NewDupcheck struct {
-	ProspectID     string    `gorm:"column:ProspectID"`
-	CustomerStatus string    `gorm:"column:customer_status"`
-	CustomerType   string    `gorm:"column:customer_type"`
-	CreatedAt      time.Time `gorm:"column:created_at"`
-}
-
-func (c *NewDupcheck) TableName() string {
-	return "new_dupcheck"
-}
-
-type DummyCustomerDomain struct {
-	IDNumber string `gorm:"type:varchar(50);column:id_number"`
-	Response string `gorm:"type:text;column:response"`
-	Note     string `gorm:"type:varchar(200);column:note"`
-}
-
-func (c *DummyCustomerDomain) TableName() string {
-	return "dummy_cusomer_domain"
-}
-
-type DummyLatestPaidInstallment struct {
-	IDNumber string `gorm:"type:varchar(50);column:id_number"`
-	Response string `gorm:"type:text;column:response"`
-	Note     string `gorm:"type:varchar(200);column:note"`
-}
-
-func (c *DummyLatestPaidInstallment) TableName() string {
-	return "dummy_latest_paid_installment"
-}
-
 type ScanInstallmentAmount struct {
 	IDNumber          string  `gorm:"column:IDNumber"`
 	LegalName         string  `gorm:"column:LegalName"`

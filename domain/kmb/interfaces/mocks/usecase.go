@@ -60,20 +60,20 @@ func (_m *Usecase) CheckAgreementChassisNumber(ctx context.Context, reqs request
 	return r0, r1
 }
 
-// CheckBannedChassisNumber provides a mock function with given fields: req, configValue
-func (_m *Usecase) CheckBannedChassisNumber(req request.DupcheckApi, configValue response.DupcheckConfig) (response.UsecaseApi, error) {
-	ret := _m.Called(req, configValue)
+// CheckBannedChassisNumber provides a mock function with given fields: chassisNumber
+func (_m *Usecase) CheckBannedChassisNumber(chassisNumber string) (response.UsecaseApi, error) {
+	ret := _m.Called(chassisNumber)
 
 	var r0 response.UsecaseApi
-	if rf, ok := ret.Get(0).(func(request.DupcheckApi, response.DupcheckConfig) response.UsecaseApi); ok {
-		r0 = rf(req, configValue)
+	if rf, ok := ret.Get(0).(func(string) response.UsecaseApi); ok {
+		r0 = rf(chassisNumber)
 	} else {
 		r0 = ret.Get(0).(response.UsecaseApi)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(request.DupcheckApi, response.DupcheckConfig) error); ok {
-		r1 = rf(req, configValue)
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(chassisNumber)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -81,62 +81,20 @@ func (_m *Usecase) CheckBannedChassisNumber(req request.DupcheckApi, configValue
 	return r0, r1
 }
 
-// CheckBannedPMKDSR provides a mock function with given fields: req, configValue
-func (_m *Usecase) CheckBannedPMKDSR(req request.DupcheckApi, configValue response.DupcheckConfig) (response.UsecaseApi, error) {
-	ret := _m.Called(req, configValue)
+// CheckBannedPMKDSR provides a mock function with given fields: idNumber
+func (_m *Usecase) CheckBannedPMKDSR(idNumber string) (response.UsecaseApi, error) {
+	ret := _m.Called(idNumber)
 
 	var r0 response.UsecaseApi
-	if rf, ok := ret.Get(0).(func(request.DupcheckApi, response.DupcheckConfig) response.UsecaseApi); ok {
-		r0 = rf(req, configValue)
+	if rf, ok := ret.Get(0).(func(string) response.UsecaseApi); ok {
+		r0 = rf(idNumber)
 	} else {
 		r0 = ret.Get(0).(response.UsecaseApi)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(request.DupcheckApi, response.DupcheckConfig) error); ok {
-		r1 = rf(req, configValue)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// CheckChassisNumber provides a mock function with given fields: ctx, reqs, nokaBanned, accessToken
-func (_m *Usecase) CheckChassisNumber(ctx context.Context, reqs request.DupcheckApi, nokaBanned response.RejectionNoka, accessToken string) (response.UsecaseApi, error) {
-	ret := _m.Called(ctx, reqs, nokaBanned, accessToken)
-
-	var r0 response.UsecaseApi
-	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, response.RejectionNoka, string) response.UsecaseApi); ok {
-		r0 = rf(ctx, reqs, nokaBanned, accessToken)
-	} else {
-		r0 = ret.Get(0).(response.UsecaseApi)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, request.DupcheckApi, response.RejectionNoka, string) error); ok {
-		r1 = rf(ctx, reqs, nokaBanned, accessToken)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// CheckNoka provides a mock function with given fields: ctx, reqs, nokaBanned30D, accessToken
-func (_m *Usecase) CheckNoka(ctx context.Context, reqs request.DupcheckApi, nokaBanned30D response.RejectionNoka, accessToken string) (response.UsecaseApi, error) {
-	ret := _m.Called(ctx, reqs, nokaBanned30D, accessToken)
-
-	var r0 response.UsecaseApi
-	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, response.RejectionNoka, string) response.UsecaseApi); ok {
-		r0 = rf(ctx, reqs, nokaBanned30D, accessToken)
-	} else {
-		r0 = ret.Get(0).(response.UsecaseApi)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, request.DupcheckApi, response.RejectionNoka, string) error); ok {
-		r1 = rf(ctx, reqs, nokaBanned30D, accessToken)
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(idNumber)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -172,74 +130,32 @@ func (_m *Usecase) CheckRejectChassisNumber(req request.DupcheckApi, configValue
 	return r0, r1, r2
 }
 
-// CheckRejection provides a mock function with given fields: req, configValue
-func (_m *Usecase) CheckRejection(req request.DupcheckApi, configValue response.DupcheckConfig) (response.UsecaseApi, entity.TrxBannedPMKDSR, error) {
-	ret := _m.Called(req, configValue)
+// CheckRejection provides a mock function with given fields: idNumber, prospectID, configValue
+func (_m *Usecase) CheckRejection(idNumber string, prospectID string, configValue response.DupcheckConfig) (response.UsecaseApi, entity.TrxBannedPMKDSR, error) {
+	ret := _m.Called(idNumber, prospectID, configValue)
 
 	var r0 response.UsecaseApi
-	if rf, ok := ret.Get(0).(func(request.DupcheckApi, response.DupcheckConfig) response.UsecaseApi); ok {
-		r0 = rf(req, configValue)
+	if rf, ok := ret.Get(0).(func(string, string, response.DupcheckConfig) response.UsecaseApi); ok {
+		r0 = rf(idNumber, prospectID, configValue)
 	} else {
 		r0 = ret.Get(0).(response.UsecaseApi)
 	}
 
 	var r1 entity.TrxBannedPMKDSR
-	if rf, ok := ret.Get(1).(func(request.DupcheckApi, response.DupcheckConfig) entity.TrxBannedPMKDSR); ok {
-		r1 = rf(req, configValue)
+	if rf, ok := ret.Get(1).(func(string, string, response.DupcheckConfig) entity.TrxBannedPMKDSR); ok {
+		r1 = rf(idNumber, prospectID, configValue)
 	} else {
 		r1 = ret.Get(1).(entity.TrxBannedPMKDSR)
 	}
 
 	var r2 error
-	if rf, ok := ret.Get(2).(func(request.DupcheckApi, response.DupcheckConfig) error); ok {
-		r2 = rf(req, configValue)
+	if rf, ok := ret.Get(2).(func(string, string, response.DupcheckConfig) error); ok {
+		r2 = rf(idNumber, prospectID, configValue)
 	} else {
 		r2 = ret.Error(2)
 	}
 
 	return r0, r1, r2
-}
-
-// CheckRejectionNoka provides a mock function with given fields: reqs
-func (_m *Usecase) CheckRejectionNoka(reqs request.DupcheckApi) (response.RejectionNoka, error) {
-	ret := _m.Called(reqs)
-
-	var r0 response.RejectionNoka
-	if rf, ok := ret.Get(0).(func(request.DupcheckApi) response.RejectionNoka); ok {
-		r0 = rf(reqs)
-	} else {
-		r0 = ret.Get(0).(response.RejectionNoka)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(request.DupcheckApi) error); ok {
-		r1 = rf(reqs)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// CustomerDomainGetData provides a mock function with given fields: ctx, req, prospectID, accessToken
-func (_m *Usecase) CustomerDomainGetData(ctx context.Context, req request.ReqCustomerDomain, prospectID string, accessToken string) (response.DataCustomer, error) {
-	ret := _m.Called(ctx, req, prospectID, accessToken)
-
-	var r0 response.DataCustomer
-	if rf, ok := ret.Get(0).(func(context.Context, request.ReqCustomerDomain, string, string) response.DataCustomer); ok {
-		r0 = rf(ctx, req, prospectID, accessToken)
-	} else {
-		r0 = ret.Get(0).(response.DataCustomer)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, request.ReqCustomerDomain, string, string) error); ok {
-		r1 = rf(ctx, req, prospectID, accessToken)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
 }
 
 // CustomerKMB provides a mock function with given fields: spDupcheck
@@ -263,48 +179,48 @@ func (_m *Usecase) CustomerKMB(spDupcheck response.SpDupCekCustomerByID) (string
 	return r0, r1
 }
 
-// DsrCheck provides a mock function with given fields: ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken
-func (_m *Usecase) DsrCheck(ctx context.Context, prospectID string, engineNo string, customerData []request.CustomerData, installmentAmount float64, installmentConfins float64, installmentConfinsSpouse float64, income float64, accessToken string) (response.UsecaseApi, response.Dsr, float64, float64, float64, error) {
-	ret := _m.Called(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
+// DsrCheck provides a mock function with given fields: ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken
+func (_m *Usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customerData []request.CustomerData, installmentAmount float64, installmentConfins float64, installmentConfinsSpouse float64, income float64, accessToken string) (response.UsecaseApi, response.Dsr, float64, float64, float64, error) {
+	ret := _m.Called(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
 
 	var r0 response.UsecaseApi
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, string) response.UsecaseApi); ok {
-		r0 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string) response.UsecaseApi); ok {
+		r0 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
 	} else {
 		r0 = ret.Get(0).(response.UsecaseApi)
 	}
 
 	var r1 response.Dsr
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, string) response.Dsr); ok {
-		r1 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
+	if rf, ok := ret.Get(1).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string) response.Dsr); ok {
+		r1 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
 	} else {
 		r1 = ret.Get(1).(response.Dsr)
 	}
 
 	var r2 float64
-	if rf, ok := ret.Get(2).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, string) float64); ok {
-		r2 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
+	if rf, ok := ret.Get(2).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string) float64); ok {
+		r2 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
 	} else {
 		r2 = ret.Get(2).(float64)
 	}
 
 	var r3 float64
-	if rf, ok := ret.Get(3).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, string) float64); ok {
-		r3 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
+	if rf, ok := ret.Get(3).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string) float64); ok {
+		r3 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
 	} else {
 		r3 = ret.Get(3).(float64)
 	}
 
 	var r4 float64
-	if rf, ok := ret.Get(4).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, string) float64); ok {
-		r4 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
+	if rf, ok := ret.Get(4).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string) float64); ok {
+		r4 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
 	} else {
 		r4 = ret.Get(4).(float64)
 	}
 
 	var r5 error
-	if rf, ok := ret.Get(5).(func(context.Context, string, string, []request.CustomerData, float64, float64, float64, float64, string) error); ok {
-		r5 = rf(ctx, prospectID, engineNo, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
+	if rf, ok := ret.Get(5).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string) error); ok {
+		r5 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
 	} else {
 		r5 = ret.Error(5)
 	}
@@ -333,27 +249,6 @@ func (_m *Usecase) DupcheckIntegrator(ctx context.Context, prospectID string, id
 	return r0, r1
 }
 
-// FacePlus provides a mock function with given fields: ctx, imageKtp, imageSelfie, req, accessToken
-func (_m *Usecase) FacePlus(ctx context.Context, imageKtp string, imageSelfie string, req request.FaceCompareRequest, accessToken string) (response.FaceCompareResponse, error) {
-	ret := _m.Called(ctx, imageKtp, imageSelfie, req, accessToken)
-
-	var r0 response.FaceCompareResponse
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, request.FaceCompareRequest, string) response.FaceCompareResponse); ok {
-		r0 = rf(ctx, imageKtp, imageSelfie, req, accessToken)
-	} else {
-		r0 = ret.Get(0).(response.FaceCompareResponse)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, request.FaceCompareRequest, string) error); ok {
-		r1 = rf(ctx, imageKtp, imageSelfie, req, accessToken)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetBase64Media provides a mock function with given fields: ctx, url, customerID, accessToken
 func (_m *Usecase) GetBase64Media(ctx context.Context, url string, customerID int, accessToken string) (string, error) {
 	ret := _m.Called(ctx, url, customerID, accessToken)
@@ -368,48 +263,6 @@ func (_m *Usecase) GetBase64Media(ctx context.Context, url string, customerID in
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, string, int, string) error); ok {
 		r1 = rf(ctx, url, customerID, accessToken)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetLatestPaidInstallment provides a mock function with given fields: ctx, req, prospectID, accessToken
-func (_m *Usecase) GetLatestPaidInstallment(ctx context.Context, req request.ReqLatestPaidInstallment, prospectID string, accessToken string) (response.LatestPaidInstallmentData, error) {
-	ret := _m.Called(ctx, req, prospectID, accessToken)
-
-	var r0 response.LatestPaidInstallmentData
-	if rf, ok := ret.Get(0).(func(context.Context, request.ReqLatestPaidInstallment, string, string) response.LatestPaidInstallmentData); ok {
-		r0 = rf(ctx, req, prospectID, accessToken)
-	} else {
-		r0 = ret.Get(0).(response.LatestPaidInstallmentData)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, request.ReqLatestPaidInstallment, string, string) error); ok {
-		r1 = rf(ctx, req, prospectID, accessToken)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// NokaBanned30D provides a mock function with given fields: reqs
-func (_m *Usecase) NokaBanned30D(reqs request.DupcheckApi) (response.RejectionNoka, error) {
-	ret := _m.Called(reqs)
-
-	var r0 response.RejectionNoka
-	if rf, ok := ret.Get(0).(func(request.DupcheckApi) response.RejectionNoka); ok {
-		r0 = rf(reqs)
-	} else {
-		r0 = ret.Get(0).(response.RejectionNoka)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(request.DupcheckApi) error); ok {
-		r1 = rf(reqs)
 	} else {
 		r1 = ret.Error(1)
 	}
