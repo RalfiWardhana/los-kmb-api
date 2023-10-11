@@ -15,6 +15,206 @@ definitions:
           type: string
         type: array
     type: object
+  request.Address:
+    properties:
+      address:
+        example: JL.PEGANGSAAN 1
+        type: string
+      area_phone:
+        example: "021"
+        type: string
+      city:
+        example: JAKARTA SELATAN
+        type: string
+      kecamatan:
+        example: MAMPANG PRAPATAN
+        type: string
+      kelurahan:
+        example: TEGAL PARANG
+        type: string
+      phone:
+        example: "84522"
+        type: string
+      rt:
+        example: "008"
+        type: string
+      rw:
+        example: "017"
+        type: string
+      type:
+        example: RESIDENCE
+        type: string
+      zip_code:
+        example: "12790"
+        type: string
+    required:
+    - address
+    - city
+    - kecamatan
+    - kelurahan
+    - phone
+    - zip_code
+    type: object
+  request.AfterPrescreening:
+    properties:
+      prospect_id:
+        example: SAL042600001
+        type: string
+    required:
+    - prospect_id
+    type: object
+  request.Agent:
+    properties:
+      cmo_name:
+        example: SETO MULYA
+        type: string
+      cmo_nik:
+        example: "93510"
+        type: string
+      cmo_recom:
+        example: "1"
+        type: string
+      recom_date:
+        example: "2021-07-15"
+        type: string
+    required:
+    - cmo_name
+    - cmo_nik
+    - recom_date
+    type: object
+  request.Apk:
+    properties:
+      admin_fee:
+        example: 1500000
+        type: number
+      af:
+        example: 84000000
+        type: number
+      aoid:
+        example: "81088"
+        type: string
+      commision_subsidi:
+        example: 0
+        type: number
+      dealer:
+        type: string
+      down_payment_amount:
+        example: 22000000
+        type: number
+      down_payment_rate:
+        example: 20.95
+        type: number
+      effective_rate:
+        example: 26.4
+        type: number
+      fidusia_fee:
+        example: 0
+        type: number
+      finance_purpose:
+        type: string
+      first_installment:
+        example: AR
+        type: string
+      ins_asset_paid_by:
+        example: CU
+        type: string
+      ins_asset_period:
+        example: FT
+        type: string
+      installment_amount:
+        example: 4181333
+        type: number
+      insurance_amount:
+        example: 3150000
+        type: number
+      interest_amount:
+        example: 66528000
+        type: number
+      interest_rate:
+        example: 2.2
+        type: number
+      is_fidusia_covered:
+        example: "Y"
+        type: string
+      life_insurance_amount_coverage:
+        example: 105000000
+        type: number
+      life_insurance_coy_branch_id:
+        example: "426"
+        type: string
+      loan_amount:
+        example: 105000000
+        type: number
+      ntf:
+        example: 150528000
+        type: number
+      other_fee:
+        example: 0
+        type: number
+      otr:
+        example: 105000000
+        type: number
+      payment_method:
+        example: CR
+        type: string
+      premium_amount_to_customer:
+        example: 2184000
+        type: number
+      product_id:
+        example: 1SNLMK
+        type: string
+      product_offering_desc:
+        type: string
+      product_offering_id:
+        example: NLMKKAPSEP
+        type: string
+      provision_fee:
+        example: 2475000
+        type: number
+      salesman_id:
+        example: "81088"
+        type: string
+      supplier_bank_account_id:
+        example: "1"
+        type: string
+      survey_fee:
+        example: 0
+        type: number
+      tenor:
+        example: 36
+        type: integer
+      way_of_payment:
+        example: Payment Point
+        type: string
+    required:
+    - admin_fee
+    - af
+    - aoid
+    - down_payment_amount
+    - down_payment_rate
+    - effective_rate
+    - finance_purpose
+    - first_installment
+    - ins_asset_paid_by
+    - ins_asset_period
+    - installment_amount
+    - insurance_amount
+    - interest_amount
+    - interest_rate
+    - is_fidusia_covered
+    - ntf
+    - otr
+    - payment_method
+    - premium_amount_to_customer
+    - product_id
+    - product_offering_id
+    - provision_fee
+    - salesman_id
+    - supplier_bank_account_id
+    - survey_fee
+    - tenor
+    - way_of_payment
+    type: object
   request.BodyRequestElaborate:
     properties:
       client_key:
@@ -24,6 +224,293 @@ definitions:
     required:
     - client_key
     - data
+    type: object
+  request.CustomerEmcon:
+    properties:
+      application_emcon_sesuai:
+        example: "1"
+        type: string
+      emergency_area_phone_office:
+        example: "021"
+        type: string
+      emergency_phone_office:
+        example: "567892"
+        type: string
+      known_customer_address:
+        example: "1"
+        type: string
+      known_customer_job:
+        example: "1"
+        type: string
+      mobile_phone:
+        example: 0856789XXX1
+        type: string
+      name:
+        example: MULYADI
+        type: string
+      relationship:
+        example: FM
+        type: string
+      verification_with:
+        example: JONO
+        type: string
+      verify_by:
+        example: PHONE
+        type: string
+    required:
+    - application_emcon_sesuai
+    - emergency_phone_office
+    - known_customer_address
+    - known_customer_job
+    - verification_with
+    - verify_by
+    type: object
+  request.CustomerEmployment:
+    properties:
+      company_name:
+        example: PT.KIMIA FARMA
+        type: string
+      company_phone_ext:
+        example: "442"
+        type: string
+      employment_since_month:
+        example: "02"
+        type: string
+      employment_since_year:
+        example: "2020"
+        type: string
+      industry_type_id:
+        example: "9990"
+        type: string
+      job_position:
+        example: S
+        type: string
+      job_type:
+        example: "008"
+        type: string
+      monthly_fixed_income:
+        example: 5000000
+        type: number
+      monthly_variable_income:
+        example: 3000000
+        type: number
+      profession_id:
+        example: WRST
+        type: string
+      source_other_income:
+        example: TOKO MAKMUR
+        type: string
+      spouse_income:
+        example: 6000000
+        type: number
+    required:
+    - company_name
+    - industry_type_id
+    - job_position
+    - job_type
+    - monthly_variable_income
+    - spouse_income
+    type: object
+  request.CustomerOmset:
+    properties:
+      monthly_omset:
+        example: 5000000
+        type: number
+      monthly_omset_month:
+        example: "01"
+        type: string
+      monthly_omset_year:
+        example: "2021"
+        type: string
+    type: object
+  request.CustomerPersonal:
+    properties:
+      account_name:
+        example: JONATHAN
+        type: string
+      account_no:
+        example: 567XX021
+        type: string
+      agree_to_accept_other_offering:
+        example: 1
+        type: integer
+      bank_id:
+        example: BCA
+        type: string
+      birth_date:
+        example: "1991-01-12"
+        type: string
+      birth_place:
+        example: JAKARTA
+        type: string
+      counterpart:
+        example: 169
+        type: integer
+      customer_group:
+        example: "2"
+        type: string
+      data_type:
+        example: G
+        type: string
+      debt_business_scale:
+        example: "01"
+        type: string
+      debt_group:
+        example: "303"
+        type: string
+      education:
+        example: S1
+        type: string
+      email:
+        example: jonathaxx@gmail.com
+        type: string
+      expired_date:
+        example: "2021-07-29"
+        type: string
+      full_name:
+        example: ENCRYPTED
+        type: string
+      gender:
+        example: M
+        type: string
+      home_location:
+        example: "N"
+        type: string
+      home_status:
+        example: KL
+        type: string
+      id_number:
+        example: ENCRYPTED
+        type: string
+      id_type:
+        example: KTP
+        type: string
+      id_type_isssue_date:
+        example: "2021-07-29"
+        type: string
+      is_affiliate_with_pp:
+        example: "N"
+        type: string
+      kk_no:
+        example: 97846094XXX34346
+        type: string
+      legal_name:
+        example: ENCRYPTED
+        type: string
+      living_cost_amount:
+        example: 0
+        type: number
+      marital_status:
+        example: M
+        type: string
+      mobile_phone:
+        example: 085689XXX01
+        type: string
+      nationality:
+        example: WNI
+        type: string
+      npwp:
+        example: 994646808XXX895
+        type: string
+      num_of_dependence:
+        example: 1
+        type: integer
+      personal_customer_type:
+        example: M
+        type: string
+      religion:
+        example: "1"
+        type: string
+      rent_finish_date:
+        example: "2021-07-29"
+        type: string
+      status:
+        example: F
+        type: string
+      stay_since_month:
+        example: "03"
+        type: string
+      stay_since_year:
+        example: "2018"
+        type: string
+      surgate_mother_name:
+        example: ENCRYPTED
+        type: string
+      wna_country:
+        example: '-'
+        type: string
+    required:
+    - agree_to_accept_other_offering
+    - counterpart
+    - customer_group
+    - data_type
+    - debt_business_scale
+    - debt_group
+    - full_name
+    - home_location
+    - id_number
+    - is_affiliate_with_pp
+    - kk_no
+    - legal_name
+    - living_cost_amount
+    - nationality
+    - num_of_dependence
+    - personal_customer_type
+    - religion
+    - status
+    - surgate_mother_name
+    - wna_country
+    type: object
+  request.CustomerPhoto:
+    properties:
+      id:
+        example: KTP
+        type: string
+      url:
+        example: https://dev-media.kreditplus.com/media/reference/20000/KPM-3677/ktp_EFM-3677.jpg
+        type: string
+    type: object
+  request.CustomerSpouse:
+    properties:
+      birth_date:
+        example: "1991-01-29"
+        type: string
+      birth_place:
+        example: JAKARTA
+        type: string
+      company_name:
+        example: PT.BUMI KARYA
+        type: string
+      company_phone:
+        example: "865542"
+        type: string
+      full_name:
+        example: SUSI BUNGA
+        type: string
+      gender:
+        example: F
+        type: string
+      id_number:
+        example: 177105550374XX01
+        type: string
+      legal_name:
+        example: SUSI BUNGA
+        type: string
+      mobile_phone:
+        example: 08772012XXX0
+        type: string
+      profession_id:
+        example: KRYSW
+        type: string
+      surgate_mother_name:
+        example: TUTI
+        type: string
+    required:
+    - birth_place
+    - full_name
+    - id_number
+    - legal_name
+    - surgate_mother_name
     type: object
   request.Data:
     properties:
@@ -102,120 +589,18 @@ definitions:
     - ResultPefindo
     - Tenor
     type: object
-  request.DupcheckApi:
+  request.ElaborateLTV:
     properties:
-      birth_date:
-        type: string
-      birth_place:
-        type: string
-      bpkb_name:
-        type: string
-      company_zip_code:
-        type: string
-      employment_since_month:
-        type: string
-      employment_since_year:
-        type: string
-      gender:
-        type: string
-      home_status:
-        type: string
-      id_number:
-        type: string
-      image_selfie:
-        type: string
-      installment_amount:
-        type: number
-      job_position:
-        type: string
-      ktp_url:
-        type: string
-      legal_name:
-        type: string
-      legal_zip_code:
-        type: string
-      manufacture_year:
-        type: string
-      marital_status:
-        type: string
-      monthly_fixed_income:
-        type: number
-      monthly_variable_income:
-        type: number
-      no_engine:
-        type: string
-      no_rangka:
-        type: string
-      ntf:
-        type: number
-      num_of_dependence:
-        type: integer
-      otr:
-        type: number
-      profession_id:
+      manufacturing_year:
         type: string
       prospect_id:
-        type: string
-      spouse:
-        $ref: '#/definitions/request.DupcheckApiSpouse'
-      spouse_income:
-        type: number
-      stay_since_month:
-        type: string
-      stay_since_year:
-        type: string
-      surgate_mother_name:
         type: string
       tenor:
         type: integer
     required:
-    - birth_date
-    - birth_place
-    - bpkb_name
-    - company_zip_code
-    - employment_since_month
-    - employment_since_year
-    - gender
-    - home_status
-    - id_number
-    - image_selfie
-    - installment_amount
-    - job_position
-    - ktp_url
-    - legal_name
-    - legal_zip_code
-    - manufacture_year
-    - monthly_fixed_income
-    - no_engine
-    - no_rangka
-    - ntf
-    - num_of_dependence
-    - otr
-    - profession_id
+    - manufacturing_year
     - prospect_id
-    - stay_since_month
-    - stay_since_year
-    - surgate_mother_name
     - tenor
-    type: object
-  request.DupcheckApiSpouse:
-    properties:
-      spouse_birth_date:
-        type: string
-      spouse_gender:
-        type: string
-      spouse_id_number:
-        type: string
-      spouse_legal_name:
-        type: string
-      spouse_surgate_mother_name:
-        type: string
-    required:
-    - spouse_birth_date
-    - spouse_gender
-    - spouse_id_number
-    - spouse_legal_name
-    - spouse_surgate_mother_name
     type: object
   request.Filtering:
     properties:
@@ -289,15 +674,175 @@ definitions:
     - spouse_legal_name
     - spouse_surgate_mother_name
     type: object
-  request.ReqRejectTenor:
+  request.Item:
     properties:
-      id_number:
-        example: 1234XXXXXXXX0001
+      asset_code:
+        example: SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT
         type: string
-      prospect_id:
+      asset_description:
+        example: SUZUKI.KMOBIL.GRAND VITARA.JLX 2,0 AT
+        type: string
+      asset_insurance_amount_coverage:
+        example: 105000000
+        type: number
+      asset_usage:
+        example: "N"
+        type: string
+      bpkb_name:
+        example: K
+        type: string
+      brand:
+        example: TOYOTA
+        type: string
+      category_id:
+        example: SEDAN
+        type: string
+      cc:
+        example: "1500"
+        type: string
+      chassis_number:
+        example: MHKV1AA2JBK107322
+        type: string
+      color:
+        example: HITAM
+        type: string
+      condition:
+        example: U
+        type: string
+      coverage_type:
+        example: TLO
+        type: string
+      engine_number:
+        example: 73218JAJK
+        type: string
+      ins_asset_insured_by:
+        example: CO
+        type: string
+      insurance_coy_branch_id:
+        example: "426"
+        type: string
+      license_plate:
+        example: 3006TBJ
+        type: string
+      manufacture_year:
+        example: "2020"
+        type: string
+      owner_asset:
+        example: JONATHAN
+        type: string
+      owner_ktp:
+        example: 3172024508XXX002
+        type: string
+      pos:
+        example: "426"
+        type: string
+      premium_amount_to_customer:
+        example: 2184000
+        type: number
+      qty:
+        example: 1
+        type: integer
+      region:
+        example: "0"
+        type: string
+      stnk_expired_date:
+        example: "2025-03-20"
+        type: string
+      supplier_id:
+        example: "42600342"
+        type: string
+      tax_date:
+        example: "2022-03-02"
         type: string
     required:
-    - id_number
+    - asset_code
+    - asset_description
+    - asset_insurance_amount_coverage
+    - asset_usage
+    - bpkb_name
+    - brand
+    - category_id
+    - cc
+    - chassis_number
+    - color
+    - condition
+    - coverage_type
+    - engine_number
+    - ins_asset_insured_by
+    - insurance_coy_branch_id
+    - license_plate
+    - owner_asset
+    - owner_ktp
+    - pos
+    - premium_amount_to_customer
+    - qty
+    - region
+    - stnk_expired_date
+    - supplier_id
+    - tax_date
+    type: object
+  request.Metrics:
+    properties:
+      address:
+        items:
+          $ref: '#/definitions/request.Address'
+        type: array
+      agent:
+        $ref: '#/definitions/request.Agent'
+      apk:
+        $ref: '#/definitions/request.Apk'
+      customer_emcon:
+        $ref: '#/definitions/request.CustomerEmcon'
+      customer_employment:
+        $ref: '#/definitions/request.CustomerEmployment'
+      customer_omset:
+        items:
+          $ref: '#/definitions/request.CustomerOmset'
+        type: array
+      customer_personal:
+        $ref: '#/definitions/request.CustomerPersonal'
+      customer_photo:
+        items:
+          $ref: '#/definitions/request.CustomerPhoto'
+        type: array
+      customer_spouse:
+        $ref: '#/definitions/request.CustomerSpouse'
+      item:
+        $ref: '#/definitions/request.Item'
+      surveyor:
+        items:
+          $ref: '#/definitions/request.Surveyor'
+        type: array
+      transaction:
+        $ref: '#/definitions/request.Transaction'
+    required:
+    - agent
+    - apk
+    - customer_emcon
+    - customer_employment
+    - customer_personal
+    - item
+    - surveyor
+    - transaction
+    type: object
+  request.ReqReviewPrescreening:
+    properties:
+      decision:
+        example: APPROVE,REJECT
+        type: string
+      decision_by:
+        type: string
+      decision_by_name:
+        type: string
+      prospect_id:
+        example: TEST-DEV
+        type: string
+      reason:
+        type: string
+    required:
+    - decision
+    - decision_by
+    - decision_by_name
     - prospect_id
     type: object
   request.Spouse:
@@ -321,6 +866,62 @@ definitions:
     - Spouse_IDNumber
     - Spouse_LegalName
     - Spouse_SurgateMotherName
+    type: object
+  request.Surveyor:
+    properties:
+      assign_date:
+        example: "2021-07-29"
+        type: string
+      destination:
+        example: HOME
+        type: string
+      request_date:
+        example: "2021-07-29"
+        type: string
+      result_date:
+        example: "2021-07-29"
+        type: string
+      surveyor_name:
+        example: TOTO SURYA
+        type: string
+      surveyor_status:
+        example: APPROVE
+        type: string
+    required:
+    - assign_date
+    - destination
+    - request_date
+    - result_date
+    - surveyor_name
+    - surveyor_status
+    type: object
+  request.Transaction:
+    properties:
+      application_source:
+        example: H
+        type: string
+      branch_id:
+        example: "426"
+        type: string
+      channel:
+        example: "OFF"
+        type: string
+      incoming_source:
+        example: SLY
+        type: string
+      lob:
+        example: KMB
+        type: string
+      order_at:
+        example: "2021-07-15T11:44:05+07:00"
+        type: string
+      prospect_id:
+        example: SAL042600001
+        type: string
+    required:
+    - application_source
+    - order_at
+    - prospect_id
     type: object
   response.ApiResponse:
     properties:
@@ -356,6 +957,17 @@ definitions:
       total_baki_debet:
         type: number
     type: object
+  response.ElaborateLTV:
+    properties:
+      adjut_tenor:
+        type: boolean
+      ltv:
+        type: integer
+      max_tenor:
+        type: integer
+      reason:
+        type: string
+    type: object
   response.ElaborateResult:
     properties:
       age_vehicle:
@@ -386,44 +998,33 @@ definitions:
       message:
         type: string
     type: object
-  response.Filtering:
+  response.InquiryRow:
+    properties:
+      inquiry:
+        type: object
+      recordsFiltered:
+        type: integer
+      recordsTotal:
+        type: integer
+    type: object
+  response.ReasonMessageRow:
+    properties:
+      reason:
+        type: object
+      recordsFiltered:
+        type: integer
+      recordsTotal:
+        type: integer
+    type: object
+  response.ReviewPrescreening:
     properties:
       code:
-        type: object
-      customer_segment:
-        type: object
-      customer_status:
         type: object
       decision:
         type: string
-      is_blacklist:
-        type: boolean
-      next_process:
-        type: boolean
-      pbk_report_customer:
-        type: object
-      pbk_report_spouse:
-        type: object
       prospect_id:
         type: string
       reason:
-        type: string
-      total_baki_debet:
-        type: object
-    type: object
-  response.UsecaseApi:
-    properties:
-      code:
-        type: string
-      confidence:
-        type: string
-      dsr:
-        type: number
-      reason:
-        type: string
-      result:
-        type: string
-      status_konsumen:
         type: string
     type: object
 host: localhost:9710
@@ -469,7 +1070,7 @@ paths:
           schema:
             $ref: '#/definitions/response.ApiResponse'
       tags:
-      - Tools
+      - Filtering
   /api/v2/kmb/filtering:
     post:
       description: KmbFiltering
@@ -506,17 +1107,23 @@ paths:
           schema:
             $ref: '#/definitions/response.ApiResponse'
       tags:
-      - Tools
-  /api/v3/kmb/dupcheck:
-    post:
-      description: KmbDupcheck
+      - Filtering
+  /api/v3/kmb/cms/prescreening/inquiry:
+    get:
+      description: Api Prescreening
       parameters:
-      - description: Body payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/request.DupcheckApi'
+      - description: search
+        in: query
+        name: search
+        type: string
+      - description: branch_id
+        in: query
+        name: branch_id
+        type: string
+      - description: page
+        in: query
+        name: page
+        type: string
       produces:
       - application/json
       responses:
@@ -527,7 +1134,7 @@ paths:
             - $ref: '#/definitions/response.ApiResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/response.DupcheckResult'
+                  $ref: '#/definitions/response.InquiryRow'
               type: object
         "400":
           description: Bad Request
@@ -543,7 +1150,120 @@ paths:
           schema:
             $ref: '#/definitions/response.ApiResponse'
       tags:
-      - Tools
+      - Prescreening
+  /api/v3/kmb/cms/prescreening/list-reason:
+    get:
+      description: Api Prescreening
+      parameters:
+      - description: reason_id
+        in: query
+        name: reason_id
+        type: string
+      - description: page
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ReasonMessageRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Prescreening
+  /api/v3/kmb/cms/prescreening/review:
+    post:
+      description: Api Prescreening
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqReviewPrescreening'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ReviewPrescreening'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Prescreening
+  /api/v3/kmb/elaborate:
+    post:
+      description: ElaborateLTV
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ElaborateLTV'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ElaborateLTV'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Filtering
   /api/v3/kmb/encrypt-decrypt:
     post:
       description: Encrypt Decrypt
@@ -567,43 +1287,6 @@ paths:
                   additionalProperties:
                     type: string
                   type: object
-              type: object
-        "400":
-          description: Bad Request
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.ApiResponse'
-            - properties:
-                error:
-                  $ref: '#/definitions/response.ErrorValidation'
-              type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.ApiResponse'
-      tags:
-      - Tools
-  /api/v3/kmb/filtering:
-    post:
-      description: KmbFiltering
-      parameters:
-      - description: Body payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/request.Filtering'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            allOf:
-            - $ref: '#/definitions/response.ApiResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/response.Filtering'
               type: object
         "400":
           description: Bad Request
@@ -651,29 +1334,24 @@ paths:
           schema:
             $ref: '#/definitions/response.ApiResponse'
       tags:
-      - Tools
-  /api/v3/kmb/reject-tenor:
+      - Filtering
+  /api/v3/kmb/produce/journey:
     post:
-      description: KmbDupcheck
+      description: Submit to LOS
       parameters:
       - description: Body payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/request.ReqRejectTenor'
+          $ref: '#/definitions/request.Metrics'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/response.ApiResponse'
-            - properties:
-                data:
-                  $ref: '#/definitions/response.UsecaseApi'
-              type: object
+            $ref: '#/definitions/response.ApiResponse'
         "400":
           description: Bad Request
           schema:
@@ -688,5 +1366,37 @@ paths:
           schema:
             $ref: '#/definitions/response.ApiResponse'
       tags:
-      - Tools
+      - Submit to LOS
+  /api/v3/kmb/produce/journey-after-prescreening:
+    post:
+      description: Journey After Prescreening
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.AfterPrescreening'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Submit to LOS
 swagger: "2.0"

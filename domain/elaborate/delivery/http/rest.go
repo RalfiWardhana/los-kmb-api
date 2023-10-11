@@ -29,7 +29,7 @@ func ElaborateHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase
 
 // KmbElaborate Tools godoc
 // @Description KmbElaborate
-// @Tags Tools
+// @Tags Filtering
 // @Produce json
 // @Param body body request.BodyRequestElaborate true "Body payload"
 // @Success 200 {object} response.ApiResponse{data=response.ElaborateResult}

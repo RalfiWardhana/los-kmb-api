@@ -29,12 +29,19 @@ func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interf
 		Json:       json,
 		producer:   producer,
 	}
-	kmbroute.POST("/dupcheck", handler.Dupcheck, middlewares.AccessMiddleware())
-	kmbroute.POST("/journey", handler.MetricsLos, middlewares.AccessMiddleware())
 	kmbroute.POST("/produce/journey", handler.ProduceJourney, middlewares.AccessMiddleware())
 	kmbroute.POST("/produce/journey-after-prescreening", handler.ProduceJourneyAfterPrescreening, middlewares.AccessMiddleware())
 }
 
+// Produce Journey
+// @Description Submit to LOS
+// @Tags Submit to LOS
+// @Produce json
+// @Param body body request.Metrics true "Body payload"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/produce/journey [post]
 func (c *handlerKMB) ProduceJourney(ctx echo.Context) (err error) {
 
 	var (
@@ -52,6 +59,15 @@ func (c *handlerKMB) ProduceJourney(ctx echo.Context) (err error) {
 	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB - Please wait, your request is being processed", req, nil)
 }
 
+// Produce Journey After Prescreening
+// @Description Journey After Prescreening
+// @Tags Submit to LOS
+// @Produce json
+// @Param body body request.AfterPrescreening true "Body payload"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/produce/journey-after-prescreening [post]
 func (c *handlerKMB) ProduceJourneyAfterPrescreening(ctx echo.Context) (err error) {
 
 	var (
@@ -67,87 +83,4 @@ func (c *handlerKMB) ProduceJourneyAfterPrescreening(ctx echo.Context) (err erro
 	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_AFTER_PRESCREENING, req.ProspectID, utils.StructToMap(req), 0)
 
 	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB - Please wait, your request is being processed", req, nil)
-}
-
-// KmbDupcheck Tools godoc
-// @Description KmbDupcheck
-// @Tags Tools
-// @Produce json
-// @Param body body request.DupcheckApi true "Body payload"
-// @Success 200 {object} response.ApiResponse{data=response.DupcheckResult}
-// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
-// @Failure 500 {object} response.ApiResponse{}
-// @Router /api/v3/kmb/dupcheck [post]
-func (c *handlerKMB) Dupcheck(ctx echo.Context) (err error) {
-
-	var (
-		req     request.DupcheckApi
-		married bool
-	)
-
-	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", err)
-	}
-
-	if err := ctx.Validate(&req); err != nil {
-		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", req, err)
-	}
-
-	if req.Spouse != nil {
-
-		if err := ctx.Validate(req.Spouse); err != nil {
-			return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", req, err)
-
-		}
-
-		var genderSpouse request.GenderCompare
-
-		if req.Gender != req.Spouse.Gender {
-			genderSpouse.Gender = true
-
-		} else {
-			genderSpouse.Gender = false
-		}
-
-		if err := ctx.Validate(&genderSpouse); err != nil {
-			return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", req, err)
-		}
-
-		married = true
-	}
-
-	accessToken := middlewares.UserInfoData.AccessToken
-
-	_, _, data, _, _, err := c.multiUsecase.Dupcheck(ctx.Request().Context(), req, married, accessToken)
-
-	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", req, err)
-	}
-
-	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB DUPCHECK", req, data)
-}
-
-func (c *handlerKMB) MetricsLos(ctx echo.Context) (err error) {
-
-	var (
-		req request.Metrics
-	)
-
-	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB JOURNEY", err)
-	}
-
-	if err := ctx.Validate(&req); err != nil {
-		return c.Json.BadRequestErrorValidationV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB JOURNEY", req, err)
-	}
-
-	accessToken := middlewares.UserInfoData.AccessToken
-
-	data, err := c.metrics.MetricsLos(ctx.Request().Context(), req, accessToken)
-
-	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB JOURNEY", req, err)
-	}
-
-	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB JOURNEY", req, data)
 }

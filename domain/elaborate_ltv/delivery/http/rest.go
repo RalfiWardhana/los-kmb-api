@@ -32,7 +32,7 @@ func ElaborateHandler(kmbroute *echo.Group, usecase interfaces.Usecase, reposito
 
 // ElaborateLTV Tools godoc
 // @Description ElaborateLTV
-// @Tags Tools
+// @Tags Filtering
 // @Produce json
 // @Param body body request.ElaborateLTV true "Body payload"
 // @Success 200 {object} response.ApiResponse{data=response.ElaborateLTV}
