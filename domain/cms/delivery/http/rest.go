@@ -118,7 +118,7 @@ func (c *handlerCMS) ReviewPrescreening(ctx echo.Context) (err error) {
 
 	if data.Decision == constant.DECISION_REJECT {
 		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(resp), 0)
-	} else if data.Decision == constant.DECISION_APPROVE {
+	} else if data.Decision == constant.DB_DECISION_APR {
 		reqAfterPrescreening := request.AfterPrescreening{
 			ProspectID: req.ProspectID,
 		}
