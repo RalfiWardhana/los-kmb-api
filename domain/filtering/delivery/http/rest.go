@@ -30,7 +30,7 @@ func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase
 
 // KmbFiltering Tools godoc
 // @Description KmbFiltering
-// @Tags Tools
+// @Tags Filtering
 // @Produce json
 // @Param body body request.FilteringRequest true "Body payload"
 // @Success 200 {object} response.ApiResponse{data=response.DupcheckResult}

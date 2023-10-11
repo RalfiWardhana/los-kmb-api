@@ -38,8 +38,10 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 // @Description Api Prescreening
 // @Tags Prescreening
 // @Produce json
-// @Param body body request. true "Body payload"
-// @Success 200 {object} response.ApiResponse{data=response.}
+// @Param search query string false "search"
+// @Param branch_id query string false "branch_id"
+// @Param page query string false "page"
+// @Success 200 {object} response.ApiResponse{data=response.InquiryRow}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
 // @Router /api/v3/kmb/cms/prescreening/inquiry [get]
@@ -79,8 +81,8 @@ func (c *handlerCMS) PrescreeningInquiry(ctx echo.Context) (err error) {
 // @Description Api Prescreening
 // @Tags Prescreening
 // @Produce json
-// @Param body body request. true "Body payload"
-// @Success 200 {object} response.ApiResponse{data=response.}
+// @Param body body request.ReqReviewPrescreening true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.ReviewPrescreening}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
 // @Router /api/v3/kmb/cms/prescreening/review [post]
@@ -133,8 +135,9 @@ func (c *handlerCMS) ReviewPrescreening(ctx echo.Context) (err error) {
 // @Description Api Prescreening
 // @Tags Prescreening
 // @Produce json
-// @Param body body request. true "Body payload"
-// @Success 200 {object} response.ApiResponse{data=response.}
+// @Param reason_id query string false "reason_id"
+// @Param page query string false "page"
+// @Success 200 {object} response.ApiResponse{data=response.ReasonMessageRow}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
 // @Router /api/v3/kmb/cms/prescreening/list-reason [get]
