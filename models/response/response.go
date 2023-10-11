@@ -254,6 +254,7 @@ type SpDupcheckMap struct {
 	Dsr                              float64     `json:"dsr"`
 	InstallmentTopup                 float64     `json:"installment_topup"`
 	StatusKonsumen                   string      `json:"status_konsumen"`
+	DetailsDSR                       interface{} `json:"details_dsr"`
 }
 
 type SpDupCekCustomerByID struct {
@@ -320,6 +321,19 @@ type Dsr struct {
 	Reason  string      `json:"reason"`
 }
 
+type DsrDetails struct {
+	Customer    interface{} `json:"customer"`
+	Spouse      interface{} `json:"spouse"`
+	DetailTopUP interface{} `json:"detail_topup"`
+}
+
+type DetailTopUP struct {
+	Pencairan              interface{} `json:"pencairan"`
+	AgreementChassisNumber interface{} `json:"agreement_chassis_number"`
+	TotalOutstanding       interface{} `json:"total_outstanding"`
+	MinimumPencairan       interface{} `json:"minimum_pencairan"`
+}
+
 type UsecaseApi struct {
 	Code           string  `json:"code"`
 	Result         string  `json:"result"`
@@ -335,14 +349,15 @@ type DupcheckConfig struct {
 }
 
 type DataDupcheckConfig struct {
-	VehicleAge           int     `json:"vehicle_age"`
-	MinOvd               int     `json:"min_ovd"`
-	MaxOvd               int     `json:"max_ovd"`
-	MaxDsr               float64 `json:"max_dsr"`
-	AngsuranBerjalan     int     `json:"angsuran_berjalan"`
-	AttemptPMKDSR        int     `json:"attempt_pmk_dsr"`
-	AttemptNIK           int     `json:"attempt_nik"`
-	AttemptChassisNumber int     `json:"attempt_chassis_number"`
+	VehicleAge              int     `json:"vehicle_age"`
+	MinOvd                  int     `json:"min_ovd"`
+	MaxOvd                  int     `json:"max_ovd"`
+	MaxDsr                  float64 `json:"max_dsr"`
+	AngsuranBerjalan        int     `json:"angsuran_berjalan"`
+	AttemptPMKDSR           int     `json:"attempt_pmk_dsr"`
+	AttemptNIK              int     `json:"attempt_nik"`
+	AttemptChassisNumber    int     `json:"attempt_chassis_number"`
+	MinimumPencairanROTopUp float64 `json:"minimum_pencairan_ro_top_up"`
 }
 
 type LatestPaidInstallment struct {
@@ -393,11 +408,6 @@ type IntegratorAgreementChassisNumber struct {
 	OutstandingInterest  float64 `json:"outstanding_interest"`
 	OutstandingPrincipal float64 `json:"outstanding_principal"`
 	Status               string  `json:"status"`
-}
-
-type DsrDetails struct {
-	Customer interface{} `json:"customer"`
-	Spouse   interface{} `json:"spouse"`
 }
 
 type NTFDetails struct {
@@ -501,12 +511,16 @@ type ResAgreementChassisNumber struct {
 }
 
 type AgreementChassisNumber struct {
-	IsRegistered bool   `json:"is_registered"`
-	IsActive     bool   `json:"is_active"`
-	LegalName    string `json:"legal_name"`
-	IDNumber     string `json:"id_number"`
-	Status       string `json:"status"`
-	GoLiveDate   string `json:"go_live_date"`
+	GoLiveDate           string  `json:"go_live_date"`
+	IDNumber             string  `json:"id_number"`
+	InstallmentAmount    float64 `json:"installment_amount"`
+	IsActive             bool    `json:"is_active"`
+	IsRegistered         bool    `json:"is_registered"`
+	LcInstallment        float64 `json:"lc_installment"`
+	LegalName            string  `json:"legal_name"`
+	OutstandingInterest  float64 `json:"outstanding_interest"`
+	OutstandingPrincipal float64 `json:"outstanding_principal"`
+	Status               string  `json:"status"`
 }
 
 type FaceCompareResponse struct {

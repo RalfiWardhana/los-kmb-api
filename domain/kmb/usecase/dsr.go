@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
@@ -16,7 +15,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-func (u usecase) DsrCheck(ctx context.Context, prospectID, chassisNumber string, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, accessToken string) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error) {
+func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, accessToken string) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error) {
 
 	var (
 		dsr                  float64
@@ -31,8 +30,6 @@ func (u usecase) DsrCheck(ctx context.Context, prospectID, chassisNumber string,
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get Dupcheck Config Error")
 		return
 	}
-
-	data.SourceDecision = constant.SOURCE_DECISION_DSR
 
 	var configValue response.DupcheckConfig
 
@@ -55,7 +52,7 @@ func (u usecase) DsrCheck(ctx context.Context, prospectID, chassisNumber string,
 		jsonCustomer, _ := json.Marshal(customer)
 		var installmentLOS *resty.Response
 
-		installmentLOS, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("INSTALLMENT_PENDING_URL"), jsonCustomer, header, constant.METHOD_POST, true, 3, 60, prospectID, accessToken)
+		installmentLOS, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("INSTALLMENT_PENDING_URL"), jsonCustomer, header, constant.METHOD_POST, true, 3, 60, req.ProspectID, accessToken)
 
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Call Installment Pending API Error")
@@ -71,10 +68,14 @@ func (u usecase) DsrCheck(ctx context.Context, prospectID, chassisNumber string,
 
 		if i == 0 {
 			installmentOther = instOther.InstallmentAmountKmbOff + instOther.InstallmentAmountKmobOff + instOther.InstallmentAmountNewKmb + instOther.InstallmentAmountUC + instOther.InstallmentAmountWgOff + instOther.InstallmentAmountWgOnl
-			dsrDetails.Customer = instOther
+			if instOther != (response.InstallmentOther{}) {
+				dsrDetails.Customer = instOther
+			}
 		} else if i == 1 {
 			installmentOtherSpouse = instOther.InstallmentAmountKmbOff + instOther.InstallmentAmountKmobOff + instOther.InstallmentAmountNewKmb + instOther.InstallmentAmountUC + instOther.InstallmentAmountWgOff + instOther.InstallmentAmountWgOnl
-			dsrDetails.Spouse = instOther
+			if instOther != (response.InstallmentOther{}) {
+				dsrDetails.Spouse = instOther
+			}
 		}
 
 	}
@@ -84,40 +85,91 @@ func (u usecase) DsrCheck(ctx context.Context, prospectID, chassisNumber string,
 	}
 
 	if konsumen.StatusKonsumen == constant.STATUS_KONSUMEN_NEW {
-
 		dsr = ((installmentAmount + (installmentOther + installmentOtherSpouse) + (installmentConfins + installmentConfinsSpouse)) / income) * 100
-
 		data.Dsr = dsr
 
 		if dsr > configValue.Data.MaxDsr {
-
 			data.Result = constant.DECISION_REJECT
 			data.Code = constant.CODE_DSRGT35
 			data.Reason = fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRGT35, reasonMaxDsr)
+			data.SourceDecision = constant.SOURCE_DECISION_DSR
 
 			_ = mapstructure.Decode(data, &result)
-
 			return
-
 		}
 
 	} else {
 
 		var (
-			chassisResp entity.SpDupcekChasisNo
 			installment float64
 		)
 
 		if installmentConfins > 0 {
 
-			chassisResp, err = u.repository.GetInstallmentAmountChassisNumber(chassisNumber)
+			var hitChassisNumber *resty.Response
+
+			hitChassisNumber, err = u.httpclient.EngineAPI(ctx, constant.DUPCHECK_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+req.RangkaNo, nil, map[string]string{}, constant.METHOD_GET, true, 6, 60, req.ProspectID, accessToken)
 
 			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Get Dupcheck Chassis Number")
+				err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - DsrCheck Call Get Agreement of Chassis Number Timeout")
 				return
 			}
-			installment = installmentConfins - chassisResp.InstallmentAmount
 
+			if hitChassisNumber.StatusCode() != 200 {
+				err = errors.New(constant.ERROR_UPSTREAM + " - DsrCheck Call Get Agreement of Chassis Number Error")
+				return
+			}
+
+			var responseAgreementChassisNumber response.AgreementChassisNumber
+			err = json.Unmarshal([]byte(jsoniter.Get(hitChassisNumber.Body(), "data").ToString()), &responseAgreementChassisNumber)
+
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - DsrCheck Unmarshal Get Agreement of Chassis Number Error")
+				return
+			}
+
+			if responseAgreementChassisNumber != (response.AgreementChassisNumber{}) {
+
+				installment = installmentConfins - responseAgreementChassisNumber.InstallmentAmount
+
+				var pencairan float64
+				pencairan = req.OTRPrice - req.DPAmount
+				if req.Dealer == constant.DEALER_PSA && req.AdminFee != nil {
+					pencairan -= *req.AdminFee
+				}
+
+				if pencairan <= 0 {
+					err = errors.New(constant.ERROR_UPSTREAM + " - Perhitungan OTR - DP harus lebih dari 0")
+					return
+				}
+
+				totalOutstanding := responseAgreementChassisNumber.OutstandingPrincipal + responseAgreementChassisNumber.OutstandingInterest + responseAgreementChassisNumber.LcInstallment
+				minimumPencairan := ((pencairan - totalOutstanding) / pencairan) * 100
+
+				dsrDetails.DetailTopUP = response.DetailTopUP{
+					Pencairan:              pencairan,
+					AgreementChassisNumber: responseAgreementChassisNumber,
+					MinimumPencairan:       minimumPencairan,
+					TotalOutstanding:       totalOutstanding,
+				}
+
+				result.Details = dsrDetails
+
+				if minimumPencairan < configValue.Data.MinimumPencairanROTopUp {
+
+					data.Result = constant.DECISION_REJECT
+					data.Code = constant.CODE_TOPUP_MENUNGGAK
+					data.Reason = fmt.Sprintf("%s %s", reasonCustomerStatus, constant.REASON_TOPUP_MENUNGGAK)
+
+					// set sebagai dupcheck
+					data.SourceDecision = constant.SOURCE_DECISION_DUPCHECK
+
+					_ = mapstructure.Decode(data, &result)
+
+					return
+				}
+
+			}
 		}
 
 		dsr = ((installmentAmount + (installment + installmentConfinsSpouse) + (installmentOther + installmentOtherSpouse)) / income) * 100
@@ -130,6 +182,7 @@ func (u usecase) DsrCheck(ctx context.Context, prospectID, chassisNumber string,
 				data.Result = constant.DECISION_REJECT
 				data.Code = constant.CODE_DSRGT35
 				data.Reason = fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRGT35, reasonMaxDsr)
+				data.SourceDecision = constant.SOURCE_DECISION_DSR
 
 				_ = mapstructure.Decode(data, &result)
 
@@ -142,6 +195,7 @@ func (u usecase) DsrCheck(ctx context.Context, prospectID, chassisNumber string,
 	data.Result = constant.DECISION_PASS
 	data.Code = constant.CODE_DSRLTE35
 	data.Reason = fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRLTE35, reasonMaxDsr)
+	data.SourceDecision = constant.SOURCE_DECISION_DSR
 
 	_ = mapstructure.Decode(data, &result)
 

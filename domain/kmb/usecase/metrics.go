@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
@@ -243,6 +242,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		ManufactureYear:       reqMetrics.Item.ManufactureYear,
 		BPKBName:              reqMetrics.Item.BPKBName,
 		NumOfDependence:       reqDupcheck.NumOfDependence,
+		DPAmount:              reqMetrics.Apk.DPAmount,
 		OTRPrice:              reqMetrics.Apk.OTR,
 		NTF:                   reqMetrics.Apk.NTF,
 		LegalZipCode:          legalZipCode,
@@ -251,6 +251,8 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		InstallmentAmount:     reqMetrics.Apk.InstallmentAmount,
 		MaritalStatus:         reqMetrics.CustomerPersonal.MaritalStatus,
 		CustomerSegment:       customerSegment,
+		Dealer:                reqMetrics.Apk.Dealer,
+		AdminFee:              reqMetrics.Apk.AdminFee,
 	}
 
 	if reqMetrics.CustomerSpouse != nil {
@@ -279,7 +281,8 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 	if decisionMetrics.Result == constant.DECISION_REJECT {
 		details = append(details, trxDetailDupcheck...)
-		details = append(details, entity.TrxDetail{
+
+		addDetail := entity.TrxDetail{
 			ProspectID:     reqMetrics.Transaction.ProspectID,
 			StatusProcess:  constant.STATUS_FINAL,
 			Activity:       constant.ACTIVITY_STOP,
@@ -287,7 +290,13 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			RuleCode:       decisionMetrics.Code,
 			SourceDecision: decisionMetrics.SourceDecision,
 			Info:           decisionMetrics.Reason,
-		})
+		}
+
+		if decisionMetrics.SourceDecision == constant.SOURCE_DECISION_DUPCHECK {
+			addDetail.Info = trxFMFDupcheck.DupcheckData.DetailsDSR
+		}
+
+		details = append(details, addDetail)
 
 		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, decisionMetrics.Reason)
 		if err != nil {
@@ -315,12 +324,10 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		return
 	}
 
-	log.Println(dupcheckData)
-	log.Println(customerStatus)
-	log.Println(decisionMetrics)
-	log.Println(filtering)
-
-	resultMetrics = details
+	// log.Println(dupcheckData)
+	// log.Println(customerStatus)
+	// log.Println(decisionMetrics)
+	// log.Println(filtering)
 
 	return
 }

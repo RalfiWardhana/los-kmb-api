@@ -4,6 +4,7 @@ package mocks
 
 import (
 	context "context"
+	entity "los-kmb-api/models/entity"
 
 	mock "github.com/stretchr/testify/mock"
 
@@ -18,7 +19,7 @@ type MultiUsecase struct {
 }
 
 // Dupcheck provides a mock function with given fields: ctx, reqs, married, accessToken
-func (_m *MultiUsecase) Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken string) (response.SpDupcheckMap, string, response.UsecaseApi, response.TrxFMF, error) {
+func (_m *MultiUsecase) Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken string) (response.SpDupcheckMap, string, response.UsecaseApi, response.TrxFMF, []entity.TrxDetail, error) {
 	ret := _m.Called(ctx, reqs, married, accessToken)
 
 	var r0 response.SpDupcheckMap
@@ -49,12 +50,21 @@ func (_m *MultiUsecase) Dupcheck(ctx context.Context, reqs request.DupcheckApi, 
 		r3 = ret.Get(3).(response.TrxFMF)
 	}
 
-	var r4 error
-	if rf, ok := ret.Get(4).(func(context.Context, request.DupcheckApi, bool, string) error); ok {
+	var r4 []entity.TrxDetail
+	if rf, ok := ret.Get(4).(func(context.Context, request.DupcheckApi, bool, string) []entity.TrxDetail); ok {
 		r4 = rf(ctx, reqs, married, accessToken)
 	} else {
-		r4 = ret.Error(4)
+		if ret.Get(4) != nil {
+			r4 = ret.Get(4).([]entity.TrxDetail)
+		}
 	}
 
-	return r0, r1, r2, r3, r4
+	var r5 error
+	if rf, ok := ret.Get(5).(func(context.Context, request.DupcheckApi, bool, string) error); ok {
+		r5 = rf(ctx, reqs, married, accessToken)
+	} else {
+		r5 = ret.Error(5)
+	}
+
+	return r0, r1, r2, r3, r4, r5
 }
