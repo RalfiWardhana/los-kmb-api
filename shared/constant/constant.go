@@ -360,9 +360,9 @@ const (
 
 	// PERNAH REJECT
 	CODE_PERNAH_REJECT_PMK_DSR            = "301"
-	REASON_PERNAH_REJECT_PMK_DSR          = "Reject karena PMK atau DSR"
+	REASON_PERNAH_REJECT_PMK_DSR          = "Pernah Reject karena PMK atau DSR"
 	CODE_PERNAH_REJECT_NIK                = "302"
-	REASON_PERNAH_REJECT_NIK              = "Reject karena NIK KTP"
+	REASON_PERNAH_REJECT_NIK              = "Pernah Reject karena NIK KTP"
 	CODE_BELUM_PERNAH_REJECT              = "303"
 	REASON_BELUM_PERNAH_REJECT            = "Bersih"
 	SOURCE_DECISION_NIK                   = "NIK"
