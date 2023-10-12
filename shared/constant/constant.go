@@ -398,6 +398,7 @@ const (
 	REASON_DSRGT35         = "- Confins DSR >"
 	CODE_TOPUP_MENUNGGAK   = "2703"
 	REASON_TOPUP_MENUNGGAK = "- Top Up Menunggak"
+	TOP_UP                 = "Top Up"
 
 	DEALER_PSA     = "PSA"
 	DEALER_NON_PSA = "NON PSA"
