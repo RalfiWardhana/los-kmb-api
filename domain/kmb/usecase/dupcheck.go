@@ -199,9 +199,13 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 	mapping.OSInstallmentDue = mainCustomer.OSInstallmentDue
 	mapping.NumberofAgreement = mainCustomer.NumberofAgreement
-	mapping.AgreementStatus = constant.AGREEMENT_AKTIF
-	if mapping.NumberofAgreement == 0 {
-		mapping.AgreementStatus = constant.AGREEMENT_LUNAS
+
+	if customerKMB == constant.STATUS_KONSUMEN_AO || customerKMB == constant.STATUS_KONSUMEN_RO {
+		if mapping.NumberofAgreement == 0 {
+			mapping.AgreementStatus = constant.AGREEMENT_LUNAS
+		} else {
+			mapping.AgreementStatus = constant.AGREEMENT_AKTIF
+		}
 	}
 
 	if customerKMB == constant.STATUS_KONSUMEN_AO || customerKMB == constant.STATUS_KONSUMEN_RO {
@@ -263,9 +267,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	if err != nil {
 		return
 	}
-	if pmk.Result == constant.DECISION_PASS {
-		trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: dsr.Code, SourceDecision: constant.SOURCE_DECISION_DSR, Info: mappingDSR.Details, NextStep: constant.SOURCE_DECISION_DUPCHECK})
-	}
 
 	data = dsr
 	mapping.InstallmentAmountOther = instOther
@@ -274,6 +275,11 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	mapping.Dsr = dsr.Dsr
 	mapping.Reason = data.Reason
 	mapping.DetailsDSR = mappingDSR.Details
+
+	if dsr.Result == constant.DECISION_PASS {
+		info, _ := json.Marshal(mapping)
+		trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: dsr.Code, SourceDecision: constant.SOURCE_DECISION_DSR, Info: string(utils.SafeEncoding(info)), NextStep: constant.SOURCE_DECISION_DUPCHECK})
+	}
 
 	return
 

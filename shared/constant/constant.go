@@ -84,11 +84,12 @@ const (
 	REASON_E                         = "Failed Process Blacklist Confins"
 	SYSTEM_CREATED                   = "SYSTEM"
 
-	REASON_CMO_NOT_RECOMMENDED = "CMO / CO Not Recommended"
-	CMO_NOT_RECOMMEDED         = "0"
-	CODE_CMO_RECOMMENDED       = "1410"
-	CODE_CMO_NOT_RECOMMEDED    = "1411"
 	CMO_AGENT                  = "CMO"
+	CODE_CMO_RECOMMENDED       = "1410"
+	REASON_CMO_RECOMMENDED     = "CMO / CO Recommended"
+	CMO_NOT_RECOMMEDED         = "0"
+	CODE_CMO_NOT_RECOMMEDED    = "1411"
+	REASON_CMO_NOT_RECOMMENDED = "CMO / CO Not Recommended"
 
 	NAMA_SAMA                                                    = "nama_sama"
 	NAMA_BEDA                                                    = "nama_beda"

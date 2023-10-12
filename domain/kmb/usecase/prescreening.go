@@ -128,6 +128,7 @@ func (u usecase) Prescreening(ctx context.Context, req request.Metrics, filterin
 			Decision:       constant.DB_DECISION_PASS,
 			SourceDecision: constant.PRESCREENING,
 			RuleCode:       constant.CODE_PASS_PRESCREENING,
+			Info:           trxPrescreening.Reason,
 			NextStep:       constant.SOURCE_DECISION_DUPCHECK,
 			CreatedBy:      constant.SYSTEM_CREATED,
 		}

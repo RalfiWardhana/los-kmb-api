@@ -130,7 +130,8 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 
 			if responseAgreementChassisNumber != (response.AgreementChassisNumber{}) {
 
-				installment = installmentConfins - responseAgreementChassisNumber.InstallmentAmount
+				installmentTopup = responseAgreementChassisNumber.InstallmentAmount
+				installment = installmentConfins - installmentTopup
 
 				var pencairan float64
 				pencairan = req.OTRPrice - req.DPAmount

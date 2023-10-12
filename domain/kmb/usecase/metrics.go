@@ -2,12 +2,14 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 	"os"
 )
 
@@ -88,6 +90,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 				Activity:       constant.ACTIVITY_PROCESS,
 				Decision:       constant.DB_DECISION_REJECT,
 				RuleCode:       constant.CODE_CMO_NOT_RECOMMEDED,
+				Info:           constant.REASON_CMO_NOT_RECOMMENDED,
 				SourceDecision: constant.CMO_AGENT,
 				NextStep:       constant.PRESCREENING,
 			})
@@ -98,6 +101,8 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 				Activity:       constant.ACTIVITY_STOP,
 				Decision:       constant.DB_DECISION_REJECT,
 				SourceDecision: constant.PRESCREENING,
+				RuleCode:       constant.CODE_CMO_NOT_RECOMMEDED,
+				Info:           constant.REASON_CMO_NOT_RECOMMENDED,
 				CreatedBy:      constant.SYSTEM_CREATED,
 			})
 
@@ -117,21 +122,24 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			return
 		}
 
-		var trxPrescreeningDetail entity.TrxDetail
-		trxPrescreening, trxFMF, trxPrescreeningDetail, err = u.usecase.Prescreening(ctx, reqMetrics, filtering, accessToken)
-		if err != nil {
-			return
-		}
-
+		// STEP 1 CMO recommend
 		details = append(details, entity.TrxDetail{
 			ProspectID:     reqMetrics.Transaction.ProspectID,
 			StatusProcess:  constant.STATUS_ONPROCESS,
 			Activity:       constant.ACTIVITY_PROCESS,
 			Decision:       constant.DB_DECISION_PASS,
 			RuleCode:       constant.CODE_CMO_RECOMMENDED,
+			Info:           constant.REASON_CMO_RECOMMENDED,
 			SourceDecision: constant.CMO_AGENT,
 			NextStep:       constant.PRESCREENING,
 		})
+
+		// STEP 2 prescreening
+		var trxPrescreeningDetail entity.TrxDetail
+		trxPrescreening, trxFMF, trxPrescreeningDetail, err = u.usecase.Prescreening(ctx, reqMetrics, filtering, accessToken)
+		if err != nil {
+			return
+		}
 
 		details = append(details, trxPrescreeningDetail)
 
@@ -146,7 +154,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		}
 	}
 
-	//tenor 36
+	//  STEP 3 tenor 36
 	if reqMetrics.Apk.Tenor >= 36 {
 		var trxTenor response.UsecaseApi
 		trxTenor, err = u.usecase.RejectTenor36(reqMetrics.CustomerPersonal.IDNumber)
@@ -292,8 +300,9 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			Info:           decisionMetrics.Reason,
 		}
 
-		if decisionMetrics.SourceDecision == constant.SOURCE_DECISION_DUPCHECK {
-			addDetail.Info = trxFMFDupcheck.DupcheckData.DetailsDSR
+		if decisionMetrics.SourceDecision == constant.SOURCE_DECISION_DSR || decisionMetrics.SourceDecision == constant.SOURCE_DECISION_DUPCHECK {
+			info, _ := json.Marshal(dupcheckData)
+			addDetail.Info = string(utils.SafeEncoding(info))
 		}
 
 		details = append(details, addDetail)
