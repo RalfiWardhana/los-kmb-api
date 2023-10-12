@@ -328,13 +328,11 @@ func (u usecase) CheckRejection(idNumber, prospectID string, configValue respons
 		return
 	}
 
-	if trxReject.RejectPMKDSR > 0 {
-		if trxReject.RejectPMKDSR > configValue.Data.AttemptPMKDSR {
-			//banned 30 hari
-			trxBannedPMKDSR = entity.TrxBannedPMKDSR{
-				ProspectID: prospectID,
-				IDNumber:   encryptedIDNumber.MyString,
-			}
+	if trxReject.RejectPMKDSR > configValue.Data.AttemptPMKDSR {
+		//banned 30 hari
+		trxBannedPMKDSR = entity.TrxBannedPMKDSR{
+			ProspectID: prospectID,
+			IDNumber:   encryptedIDNumber.MyString,
 		}
 		data.Result = constant.DECISION_REJECT
 		data.Code = constant.CODE_PERNAH_REJECT_PMK_DSR
@@ -343,7 +341,7 @@ func (u usecase) CheckRejection(idNumber, prospectID string, configValue respons
 		return
 	}
 
-	if trxReject.RejectNIK > 0 {
+	if trxReject.RejectNIK > configValue.Data.AttemptPMKDSR {
 		data.Result = constant.DECISION_REJECT
 		data.Code = constant.CODE_PERNAH_REJECT_NIK
 		data.Reason = constant.REASON_PERNAH_REJECT_NIK
