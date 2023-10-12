@@ -178,20 +178,35 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 		data.Dsr = dsr
 
 		if konsumen.StatusKonsumen == constant.STATUS_KONSUMEN_RO {
-			if konsumen.CustomerSegment != constant.RO_AO_PRIME {
-				if dsr > configValue.Data.MaxDsr {
-					data.Result = constant.DECISION_REJECT
-					data.Code = constant.CODE_DSRGT35
-					data.Reason = fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRGT35, reasonMaxDsr)
-					data.SourceDecision = constant.SOURCE_DECISION_DSR
+			if konsumen.CustomerSegment == constant.RO_AO_PRIME {
+				data.Result = constant.DECISION_PASS
+				data.Code = constant.CODE_DSRLTE35
+				data.SourceDecision = constant.SOURCE_DECISION_DSR
+				data.Reason = fmt.Sprintf("%s", reasonCustomerStatus)
 
-					_ = mapstructure.Decode(data, &result)
-					return
-				}
+				_ = mapstructure.Decode(data, &result)
+				return
+			} else if dsr > configValue.Data.MaxDsr {
+				data.Result = constant.DECISION_REJECT
+				data.Code = constant.CODE_DSRGT35
+				data.Reason = fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRGT35, reasonMaxDsr)
+				data.SourceDecision = constant.SOURCE_DECISION_DSR
+
+				_ = mapstructure.Decode(data, &result)
+				return
 			}
 		} else if konsumen.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
 			if konsumen.CustomerSegment == constant.RO_AO_PRIME && installmentTopup > 0 {
 				// go next
+				reasonCustomerStatus = reasonCustomerStatus + " " + constant.TOP_UP
+
+				data.Result = constant.DECISION_PASS
+				data.Code = constant.CODE_DSRLTE35
+				data.SourceDecision = constant.SOURCE_DECISION_DSR
+				data.Reason = fmt.Sprintf("%s", reasonCustomerStatus)
+
+				_ = mapstructure.Decode(data, &result)
+				return
 			} else if dsr > configValue.Data.MaxDsr {
 				data.Result = constant.DECISION_REJECT
 				data.Code = constant.CODE_DSRGT35
