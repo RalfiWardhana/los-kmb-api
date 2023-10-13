@@ -129,6 +129,7 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 			}
 
 			if responseAgreementChassisNumber != (response.AgreementChassisNumber{}) {
+				reasonCustomerStatus = reasonCustomerStatus + " " + constant.TOP_UP
 
 				installmentTopup = responseAgreementChassisNumber.InstallmentAmount
 				installment = installmentConfins - installmentTopup
@@ -198,8 +199,6 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 		} else if konsumen.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
 			if konsumen.CustomerSegment == constant.RO_AO_PRIME && installmentTopup > 0 {
 				// go next
-				reasonCustomerStatus = reasonCustomerStatus + " " + constant.TOP_UP
-
 				data.Result = constant.DECISION_PASS
 				data.Code = constant.CODE_DSRLTE35
 				data.SourceDecision = constant.SOURCE_DECISION_DSR
