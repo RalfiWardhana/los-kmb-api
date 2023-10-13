@@ -386,31 +386,35 @@ func (u usecase) CheckRejectChassisNumber(req request.DupcheckApi, configValue r
 	}
 
 	if len(rejectChassisNumber) > 0 {
-		trxReject := rejectChassisNumber[0]
-		if len(rejectChassisNumber) > configValue.Data.AttemptChassisNumber ||
-			(req.IDNumber != trxReject.IDNumber ||
-				req.LegalName != trxReject.LegalName ||
-				req.BirthDate != trxReject.BirthDate ||
-				req.BirthPlace != trxReject.BirthPlace ||
-				req.Gender != trxReject.Gender ||
-				req.MaritalStatus != trxReject.MaritalStatus ||
-				req.NumOfDependence != trxReject.NumOfDependence ||
-				req.StaySinceYear != trxReject.StaySinceYear ||
-				req.StaySinceMonth != trxReject.StaySinceMonth ||
-				req.HomeStatus != trxReject.HomeStatus ||
-				req.LegalZipCode != trxReject.LegalZipCode ||
-				req.CompanyZipCode != trxReject.CompanyZipCode ||
-				req.ProfessionID != trxReject.ProfessionID ||
-				req.MonthlyFixedIncome != trxReject.MonthlyFixedIncome ||
-				req.EmploymentSinceYear != trxReject.EmploymentSinceYear ||
-				req.EmploymentSinceMonth != trxReject.EmploymentSinceMonth ||
-				req.EngineNo != trxReject.EngineNo ||
-				req.RangkaNo != trxReject.ChassisNo ||
-				req.BPKBName != trxReject.BPKBName ||
-				req.ManufactureYear != trxReject.ManufactureYear ||
-				req.OTRPrice != trxReject.OTR ||
-				req.Tenor != trxReject.Tenor) {
+		trxReject := rejectChassisNumber[len(rejectChassisNumber)-1]
+		if len(rejectChassisNumber) > configValue.Data.AttemptChassisNumber {
 			//banned 30 hari
+			trxBannedChassisNumber = entity.TrxBannedChassisNumber{
+				ProspectID: req.ProspectID,
+				ChassisNo:  req.RangkaNo,
+			}
+		} else if len(rejectChassisNumber) > 2 && (req.IDNumber != trxReject.IDNumber ||
+			req.LegalName != trxReject.LegalName ||
+			req.BirthDate != trxReject.BirthDate ||
+			req.BirthPlace != trxReject.BirthPlace ||
+			req.Gender != trxReject.Gender ||
+			req.MaritalStatus != trxReject.MaritalStatus ||
+			req.NumOfDependence != trxReject.NumOfDependence ||
+			req.StaySinceYear != trxReject.StaySinceYear ||
+			req.StaySinceMonth != trxReject.StaySinceMonth ||
+			req.HomeStatus != trxReject.HomeStatus ||
+			req.LegalZipCode != trxReject.LegalZipCode ||
+			req.CompanyZipCode != trxReject.CompanyZipCode ||
+			req.ProfessionID != trxReject.ProfessionID ||
+			req.MonthlyFixedIncome != trxReject.MonthlyFixedIncome ||
+			req.EmploymentSinceYear != trxReject.EmploymentSinceYear ||
+			req.EmploymentSinceMonth != trxReject.EmploymentSinceMonth ||
+			req.EngineNo != trxReject.EngineNo ||
+			req.RangkaNo != trxReject.ChassisNo ||
+			req.BPKBName != trxReject.BPKBName ||
+			req.ManufactureYear != trxReject.ManufactureYear ||
+			req.OTRPrice != trxReject.OTR ||
+			req.Tenor != trxReject.Tenor) {
 			trxBannedChassisNumber = entity.TrxBannedChassisNumber{
 				ProspectID: req.ProspectID,
 				ChassisNo:  req.RangkaNo,
