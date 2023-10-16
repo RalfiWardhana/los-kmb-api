@@ -478,14 +478,23 @@ const (
 	REASON_REJECT_TENOR = "Tenor > Threshold"
 
 	// EKYC
-	TAG_SELFIE_PHOTO                    = "SELFIE"
-	TAG_KTP_PHOTO                       = "KTP"
+	SOURCE_DECISION_DUKCAPIL            = "DCP"
+	REASON_DUKCAPIL_RTO                 = "Dukcapil RTO"
+	REASON_DUKCAPIL_NOT_CHECK           = "Dukcapil Not Check"
+	CODE_ERROR_DUKCAPIL_VD              = "1610"
+	CODE_ERROR_DUKCAPIL_FR              = "1620"
+	DUKCAPIL_VERIFICATION_DATA          = "DVN"
+	DUKCAPIL_FACE_RECOGNITION           = "DFR"
+	SOURCE_DECISION_ASLIRI              = "ARI"
 	CODE_REJECT_ASLIRI_NOT_FOUND        = "1528"
 	CODE_REJECT_ASLIRI_NAME             = "1527"
 	CODE_REJECT_ASLIRI_SELFIE           = "1526"
 	CODE_PASS_ASLIRI                    = "1525"
 	REASON_ASLIRI_VALID                 = "Asliri Valid"
 	REASON_ASLIRI_INVALID               = "Asliri Invalid"
+	SOURCE_DECISION_KTP_VALIDATOR       = "KTP"
+	TAG_SELFIE_PHOTO                    = "SELFIE"
+	TAG_KTP_PHOTO                       = "KTP"
 	REASON_EKYC_VALID                   = "Ekyc Valid"
 	REASON_EKYC_INVALID                 = "Ekyc Invalid"
 	ASLIRI                              = "ARI"
@@ -516,12 +525,9 @@ const (
 	// BIRO
 	SOURCE_DECISION_BIRO = "BIR"
 
-	// EKYC
-	SOURCE_DECISION_EKYC = "EKY"
-
 	// CREDIT ANALYST
-	SOURCE_DECISION_CA = "CRA"
-
+	SOURCE_DECISION_CA    = "CRA"
+	CODE_CREDIT_COMMITTEE = "2743"
 	// PRE SCREENING
 	CODE_PASS_PRESCREENING   = 9701
 	CODE_REJECT_PRESCREENING = 9702
