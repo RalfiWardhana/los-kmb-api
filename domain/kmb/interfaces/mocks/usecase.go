@@ -179,48 +179,48 @@ func (_m *Usecase) CustomerKMB(spDupcheck response.SpDupCekCustomerByID) (string
 	return r0, r1
 }
 
-// DsrCheck provides a mock function with given fields: ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken
-func (_m *Usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customerData []request.CustomerData, installmentAmount float64, installmentConfins float64, installmentConfinsSpouse float64, income float64, accessToken string) (response.UsecaseApi, response.Dsr, float64, float64, float64, error) {
-	ret := _m.Called(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
+// DsrCheck provides a mock function with given fields: ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken, configValue
+func (_m *Usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customerData []request.CustomerData, installmentAmount float64, installmentConfins float64, installmentConfinsSpouse float64, income float64, accessToken string, configValue response.DupcheckConfig) (response.UsecaseApi, response.Dsr, float64, float64, float64, error) {
+	ret := _m.Called(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken, configValue)
 
 	var r0 response.UsecaseApi
-	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string) response.UsecaseApi); ok {
-		r0 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string, response.DupcheckConfig) response.UsecaseApi); ok {
+		r0 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken, configValue)
 	} else {
 		r0 = ret.Get(0).(response.UsecaseApi)
 	}
 
 	var r1 response.Dsr
-	if rf, ok := ret.Get(1).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string) response.Dsr); ok {
-		r1 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
+	if rf, ok := ret.Get(1).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string, response.DupcheckConfig) response.Dsr); ok {
+		r1 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken, configValue)
 	} else {
 		r1 = ret.Get(1).(response.Dsr)
 	}
 
 	var r2 float64
-	if rf, ok := ret.Get(2).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string) float64); ok {
-		r2 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
+	if rf, ok := ret.Get(2).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string, response.DupcheckConfig) float64); ok {
+		r2 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken, configValue)
 	} else {
 		r2 = ret.Get(2).(float64)
 	}
 
 	var r3 float64
-	if rf, ok := ret.Get(3).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string) float64); ok {
-		r3 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
+	if rf, ok := ret.Get(3).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string, response.DupcheckConfig) float64); ok {
+		r3 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken, configValue)
 	} else {
 		r3 = ret.Get(3).(float64)
 	}
 
 	var r4 float64
-	if rf, ok := ret.Get(4).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string) float64); ok {
-		r4 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
+	if rf, ok := ret.Get(4).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string, response.DupcheckConfig) float64); ok {
+		r4 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken, configValue)
 	} else {
 		r4 = ret.Get(4).(float64)
 	}
 
 	var r5 error
-	if rf, ok := ret.Get(5).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string) error); ok {
-		r5 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken)
+	if rf, ok := ret.Get(5).(func(context.Context, request.DupcheckApi, []request.CustomerData, float64, float64, float64, float64, string, response.DupcheckConfig) error); ok {
+		r5 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, accessToken, configValue)
 	} else {
 		r5 = ret.Error(5)
 	}
@@ -368,20 +368,20 @@ func (_m *Usecase) SaveTransaction(countTrx int, data request.Metrics, trxPrescr
 	return r0, r1
 }
 
-// VehicleCheck provides a mock function with given fields: manufactureYear, tenor
-func (_m *Usecase) VehicleCheck(manufactureYear string, tenor int) (response.UsecaseApi, error) {
-	ret := _m.Called(manufactureYear, tenor)
+// VehicleCheck provides a mock function with given fields: manufactureYear, tenor, configValue
+func (_m *Usecase) VehicleCheck(manufactureYear string, tenor int, configValue response.DupcheckConfig) (response.UsecaseApi, error) {
+	ret := _m.Called(manufactureYear, tenor, configValue)
 
 	var r0 response.UsecaseApi
-	if rf, ok := ret.Get(0).(func(string, int) response.UsecaseApi); ok {
-		r0 = rf(manufactureYear, tenor)
+	if rf, ok := ret.Get(0).(func(string, int, response.DupcheckConfig) response.UsecaseApi); ok {
+		r0 = rf(manufactureYear, tenor, configValue)
 	} else {
 		r0 = ret.Get(0).(response.UsecaseApi)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, int) error); ok {
-		r1 = rf(manufactureYear, tenor)
+	if rf, ok := ret.Get(1).(func(string, int, response.DupcheckConfig) error); ok {
+		r1 = rf(manufactureYear, tenor, configValue)
 	} else {
 		r1 = ret.Error(1)
 	}

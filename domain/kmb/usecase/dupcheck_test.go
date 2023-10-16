@@ -604,6 +604,7 @@ func TestBlacklistCheck(t *testing.T) {
 	}
 
 }
+
 func TestVehicleCheck(t *testing.T) {
 
 	config := entity.AppConfig{
@@ -622,11 +623,6 @@ func TestVehicleCheck(t *testing.T) {
 		label            string
 		tenor            int
 	}{
-		{
-			err:         fmt.Errorf(constant.ERROR_NOT_FOUND),
-			errExpected: errors.New(constant.ERROR_UPSTREAM + " - Error Get Config Dupcheck"),
-			label:       "TEST_ERROR_GET_PARAMETERIZE_CONFIG",
-		},
 		{
 			dupcheckConfig: config,
 			vehicle: response.UsecaseApi{
@@ -653,10 +649,12 @@ func TestVehicleCheck(t *testing.T) {
 		t.Run(test.label, func(t *testing.T) {
 			mockHttpClient := new(httpclient.MockHttpClient)
 			mockRepository := new(mocks.Repository)
-			mockRepository.On("GetDupcheckConfig").Return(test.dupcheckConfig, test.err)
+
+			var configValue response.DupcheckConfig
+			json.Unmarshal([]byte(test.dupcheckConfig.Value), &configValue)
 
 			service := NewUsecase(mockRepository, mockHttpClient)
-			result, err := service.VehicleCheck(test.year, test.tenor)
+			result, err := service.VehicleCheck(test.year, test.tenor, configValue)
 
 			require.Equal(t, test.errExpected, err)
 			require.Equal(t, test.vehicle.Result, result.Result)
@@ -903,7 +901,8 @@ func TestDsrCheck(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
-			mockRepository.On("GetDupcheckConfig").Return(tc.dupcheckConfig, tc.errGetTrx)
+			var configValue response.DupcheckConfig
+			json.Unmarshal([]byte(tc.dupcheckConfig.Value), &configValue)
 
 			rst := resty.New()
 			httpmock.ActivateNonDefault(rst.GetClient())
@@ -916,7 +915,7 @@ func TestDsrCheck(t *testing.T) {
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
-			data, _, _, _, _, err := usecase.DsrCheck(ctx, tc.req, tc.customerData, tc.installmentAmount, tc.installmentConfins, tc.installmentConfinsSpouse, tc.income, accessToken)
+			data, _, _, _, _, err := usecase.DsrCheck(ctx, tc.req, tc.customerData, tc.installmentAmount, tc.installmentConfins, tc.installmentConfinsSpouse, tc.income, accessToken, configValue)
 			require.Equal(t, tc.result, data)
 			// require.Equal(t, tc.result, dsr)
 			require.Equal(t, tc.errResult, err)
