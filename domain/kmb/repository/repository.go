@@ -781,19 +781,6 @@ func (r repoHandler) GetLogOrchestrator(prospectID string) (logOrchestrator enti
 	return
 }
 
-func (r repoHandler) GetDupcheckConfig() (config entity.AppConfig, err error) {
-
-	if err = r.losDB.Raw("SELECT [key], [value] FROM app_config WHERE lob = 'KMB-OFF' AND [key] = 'dupcheck_kmb_config' AND group_name = 'dupcheck'").Scan(&config).Error; err != nil {
-		return
-	}
-
-	if config == (entity.AppConfig{}) {
-		err = errors.New(constant.ERROR_NOT_FOUND)
-		return
-	}
-	return
-}
-
 func (r repoHandler) GetEncryptedValue(idNumber string, legalName string, motherName string) (encrypted entity.Encrypted, err error) {
 
 	if err = r.losDB.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS LegalName, SCP.dbo.ENC_B64('SEC','%s') AS SurgateMotherName, SCP.dbo.ENC_B64('SEC','%s') AS IDNumber`,
@@ -848,15 +835,6 @@ func (r repoHandler) ScanWgOnl(query string) (data entity.ScanInstallmentAmount,
 			err = nil
 		}
 
-		return
-	}
-
-	return
-}
-
-func (r repoHandler) GetAppConfig() (config entity.AppConfig, err error) {
-
-	if err = r.losDB.Raw("SELECT [key], [value] FROM app_config WHERE lob = 'KMB-OFF' AND [key] = 'pmk_kmb_off' AND group_name = 'pmk_config'").Scan(&config).Error; err != nil {
 		return
 	}
 
@@ -959,23 +937,12 @@ func (r repoHandler) SaveDataApiLog(data entity.TrxApiLog) (err error) {
 	return
 }
 
-func (r *repoHandler) GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig) {
-	if lob == "" || key == "" {
-		if err := r.losDB.
-			Raw(fmt.Sprintf("SELECT [value] FROM app_config WITH (nolock) WHERE group_name = '%s'", groupName)).
-			Scan(&appConfig).Error; err != nil {
-			return appConfig
-		}
-
-		return
-	}
-	if err := r.losDB.
-		Raw(fmt.Sprintf("SELECT [value] FROM app_config WITH (nolock) WHERE group_name = '%s' AND lob = '%s' AND [key]= '%s' AND is_active = 1", groupName, lob, key)).
-		Scan(&appConfig).Error; err != nil {
-		return appConfig
+func (r *repoHandler) GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig, err error) {
+	if err := r.losDB.Raw(fmt.Sprintf("SELECT [value] FROM app_config WITH (nolock) WHERE group_name = '%s' AND lob = '%s' AND [key]= '%s' AND is_active = 1", groupName, lob, key)).Scan(&appConfig).Error; err != nil {
+		return appConfig, err
 	}
 
-	return appConfig
+	return appConfig, err
 }
 
 func (r *repoHandler) SaveVerificationFaceCompare(data entity.VerificationFaceCompare) error {

@@ -16,14 +16,12 @@ type Repository interface {
 	SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error)
 	SaveTrxJourney(prospectID string, request interface{}) (err error)
 	GetTrxJourney(prospectID string) (trxJourney entity.TrxJourney, err error)
-	GetDupcheckConfig() (config entity.AppConfig, err error)
 	GetEncryptedValue(idNumber string, legalName string, motherName string) (encrypted entity.Encrypted, err error)
 
 	ScanKmbOff(query string) (data entity.ScanInstallmentAmount, err error)
 	ScanKmobOff(query string) (data entity.ScanInstallmentAmount, err error)
 	ScanWgOff(query string) (data entity.ScanInstallmentAmount, err error)
 	ScanWgOnl(query string) (data entity.ScanInstallmentAmount, err error)
-	GetAppConfig() (config entity.AppConfig, err error)
 	GetMinimalIncomePMK(branchID string, statusKonsumen string) (responseIncomePMK entity.MappingIncomePMK, err error)
 
 	GetLatestBannedRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error)
@@ -35,7 +33,7 @@ type Repository interface {
 	SaveDataNoka(data entity.DupcheckRejectionNokaNosin) (err error)
 	SaveDataApiLog(data entity.TrxApiLog) (err error)
 
-	GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig)
+	GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig, err error)
 	SaveVerificationFaceCompare(data entity.VerificationFaceCompare) error
 
 	GetEncB64(myString string) (encryptedString entity.EncryptedString, err error)

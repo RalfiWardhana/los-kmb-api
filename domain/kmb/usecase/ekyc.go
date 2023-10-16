@@ -84,7 +84,11 @@ func (u usecase) Asliri(ctx context.Context, req request.Metrics, cb_found bool,
 
 	var asliriConfig entity.AsliriConfig
 
-	config := u.repository.GetConfig("asliri", "KMB", "asliri_tier2_parameter")
+	config, err := u.repository.GetConfig("asliri", "KMB", "asliri_tier2_parameter")
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Asliri Config Error")
+		return
+	}
 
 	json.Unmarshal([]byte(config.Value), &asliriConfig)
 
