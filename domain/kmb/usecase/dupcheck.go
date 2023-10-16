@@ -387,13 +387,7 @@ func (u usecase) CheckRejectChassisNumber(req request.DupcheckApi, configValue r
 
 	if len(rejectChassisNumber) > 0 {
 		trxReject := rejectChassisNumber[len(rejectChassisNumber)-1]
-		if len(rejectChassisNumber) > configValue.Data.AttemptChassisNumber {
-			//banned 30 hari
-			trxBannedChassisNumber = entity.TrxBannedChassisNumber{
-				ProspectID: req.ProspectID,
-				ChassisNo:  req.RangkaNo,
-			}
-		} else if len(rejectChassisNumber) > 1 && (req.IDNumber != trxReject.IDNumber ||
+		if (len(rejectChassisNumber) >= configValue.Data.AttemptChassisNumber) || (len(rejectChassisNumber) == 2 && (req.IDNumber != trxReject.IDNumber ||
 			req.LegalName != trxReject.LegalName ||
 			req.BirthDate != trxReject.BirthDate ||
 			req.BirthPlace != trxReject.BirthPlace ||
@@ -414,7 +408,8 @@ func (u usecase) CheckRejectChassisNumber(req request.DupcheckApi, configValue r
 			req.BPKBName != trxReject.BPKBName ||
 			req.ManufactureYear != trxReject.ManufactureYear ||
 			req.OTRPrice != trxReject.OTR ||
-			req.Tenor != trxReject.Tenor) {
+			req.Tenor != trxReject.Tenor)) {
+			//banned 30 hari
 			trxBannedChassisNumber = entity.TrxBannedChassisNumber{
 				ProspectID: req.ProspectID,
 				ChassisNo:  req.RangkaNo,
