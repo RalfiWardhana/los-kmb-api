@@ -127,7 +127,7 @@ func TestCheckRejection(t *testing.T) {
 			name:              "CheckRejection REASON_PERNAH_REJECT_NIK",
 			idNumber:          "198091461892",
 			encryptedIDNumber: entity.EncryptedString{MyString: "e6FXjuesjmzPsQlG+JRkm28vK9NoqXY3NQg7qJn4nFI="},
-			trxReject:         entity.TrxReject{RejectNIK: 1},
+			trxReject:         entity.TrxReject{RejectNIK: 3},
 			result: response.UsecaseApi{
 				Code:           constant.CODE_PERNAH_REJECT_NIK,
 				Result:         constant.DECISION_REJECT,
@@ -244,7 +244,8 @@ func TestCheckRejectChassisNumber(t *testing.T) {
 		{
 			name: "CheckRejectChassisNumber reject",
 			req: request.DupcheckApi{
-				RangkaNo: "198091461892",
+				ProspectID: "TEST12346",
+				RangkaNo:   "198091461892",
 			},
 			result: response.UsecaseApi{
 				Code:           constant.CODE_REJECT_NOKA_NOSIN,
@@ -252,14 +253,42 @@ func TestCheckRejectChassisNumber(t *testing.T) {
 				Reason:         constant.REASON_REJECT_NOKA_NOSIN,
 				SourceDecision: constant.SOURCE_DECISION_NOKANOSIN,
 			},
-			RejectChassisNumber:    []entity.RejectChassisNumber{{ProspectID: "123456"}},
-			trxBannedChassisNumber: entity.TrxBannedChassisNumber{ChassisNo: "198091461892"},
+			RejectChassisNumber: []entity.RejectChassisNumber{{ProspectID: "123456"}},
+		},
+		{
+			name: "CheckRejectChassisNumber reject tanpa perubahan data",
+			req: request.DupcheckApi{
+				ProspectID: "TEST12346",
+				RangkaNo:   "198091461892",
+			},
+			result: response.UsecaseApi{
+				Code:           constant.CODE_REJECT_NOKA_NOSIN,
+				Result:         constant.DECISION_REJECT,
+				Reason:         constant.REASON_REJECT_NOKA_NOSIN,
+				SourceDecision: constant.SOURCE_DECISION_NOKANOSIN,
+			},
+			RejectChassisNumber: []entity.RejectChassisNumber{{ProspectID: "TEST1"}, {ProspectID: "TEST2", ChassisNo: "198091461892"}},
+		},
+		{
+			name: "CheckRejectChassisNumber banned",
+			req: request.DupcheckApi{
+				ProspectID: "TEST12346",
+				RangkaNo:   "198091461892",
+			},
+			result: response.UsecaseApi{
+				Code:           constant.CODE_REJECT_NOKA_NOSIN,
+				Result:         constant.DECISION_REJECT,
+				Reason:         constant.REASON_REJECT_NOKA_NOSIN,
+				SourceDecision: constant.SOURCE_DECISION_NOKANOSIN,
+			},
+			RejectChassisNumber:    []entity.RejectChassisNumber{{ProspectID: "TEST1"}, {ProspectID: "TEST2"}, {ProspectID: "TEST3"}},
+			trxBannedChassisNumber: entity.TrxBannedChassisNumber{ProspectID: "TEST12346", ChassisNo: "198091461892"},
 		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			configValue := response.DupcheckConfig{
-				Data: response.DataDupcheckConfig{AttemptPMKDSR: 2},
+				Data: response.DataDupcheckConfig{AttemptChassisNumber: 3},
 			}
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
