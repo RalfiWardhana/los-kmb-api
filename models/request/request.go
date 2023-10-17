@@ -355,7 +355,7 @@ type Surveyor struct {
 }
 
 type Transaction struct {
-	ProspectID        string `json:"prospect_id" validate:"required,max=20" example:"SAL042600001"`
+	ProspectID        string `json:"prospect_id" validate:"prospect_id" example:"SAL042600001"`
 	BranchID          string `json:"branch_id" validate:"branch_id" example:"426"`
 	ApplicationSource string `json:"application_source" validate:"required" example:"H"`
 	Channel           string `json:"channel" validate:"channel" example:"OFF"`
@@ -540,7 +540,7 @@ type Agent struct {
 }
 
 type Filtering struct {
-	ProspectID string           `json:"prospect_id" validate:"required,max=20" example:"SAL042600001"`
+	ProspectID string           `json:"prospect_id" validate:"prospect_id" example:"SAL042600001"`
 	BranchID   string           `json:"branch_id" validate:"required,branch_id" example:"426"`
 	IDNumber   string           `json:"id_number" validate:"required,id_number" example:"ENCRYPTED NIK"`
 	LegalName  string           `json:"legal_name" validate:"required,allow_name" example:"ENCRYPTED LEGAL NAME"`
@@ -560,7 +560,7 @@ type FilteringSpouse struct {
 }
 
 type ElaborateLTV struct {
-	ProspectID        string `json:"prospect_id" validate:"required,max=20"`
+	ProspectID        string `json:"prospect_id" validate:"prospect_id"`
 	Tenor             int    `json:"tenor" validate:"required,max=60"`
 	ManufacturingYear string `json:"manufacturing_year" validate:"required,len=4,number"`
 }

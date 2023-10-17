@@ -35,6 +35,7 @@ const (
 	TAG_PROFESSION                   = "profession"
 	TAG_PHOTO                        = "photo"
 	TAG_RELATIONSHIP                 = "relationship"
+	TAG_PROSPECTID                   = "prospect_id"
 	TAG_FTR_PROSPECTID               = "prospectID"
 	TAG_TENOR                        = "tenor"
 	TAG_SPOUSE_NULL                  = "mustnull"

@@ -44,6 +44,7 @@ type Validator struct {
 func (v *Validator) Validate(i interface{}) error {
 
 	v.sync.Lock()
+	v.validator.RegisterValidation("prospect_id", prospectIDValidation)
 	v.validator.RegisterValidation("key", checkClientKey)
 	v.validator.RegisterValidation("dateformat", dateFormatValidation)
 	v.validator.RegisterValidation("allowcharsname", allowedCharsInName)
@@ -83,6 +84,19 @@ func (v *Validator) Validate(i interface{}) error {
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
+}
+
+func prospectIDValidation(fl validator.FieldLevel) (validator bool) {
+
+	prospectID := fl.Field().String()
+	re := regexp.MustCompile(`^[A-Z]{2}[A-Z0-9-]*$`)
+	if len(prospectID) < 10 || len(prospectID) > 20 {
+		validator = false
+	} else if re.MatchString(prospectID) {
+		validator = true
+	}
+
+	return validator
 }
 
 func dateFormatValidation(fl validator.FieldLevel) (validator bool) {
