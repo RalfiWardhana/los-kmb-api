@@ -11,6 +11,7 @@ import (
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
+	"os"
 	"strings"
 )
 
@@ -374,6 +375,295 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 	} else {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dalam prescreening")
 		return
+	}
+
+	return
+}
+
+func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pagination interface{}) (data []entity.InquiryDataCa, rowTotal int, err error) {
+
+	var (
+		industry       []entity.SpIndustryTypeMaster
+		photos         []entity.DataPhoto
+		surveyor       []entity.TrxSurveyor
+		histories      []entity.TrxHistoryApprovalScheme
+		internalRecord []entity.TrxInternalRecord
+	)
+
+	// get inquiry pre screening
+	result, rowTotal, err := u.repository.GetInquiryCa(req, pagination)
+
+	if err != nil {
+		return []entity.InquiryDataCa{}, 0, err
+	}
+
+	for _, inq := range result {
+
+		industryType, _ := u.cache.Get(inq.IndustryTypeID)
+
+		if industryType == nil {
+			industry, err = u.repository.GetSpIndustryTypeMaster()
+
+			if err != nil {
+				return
+			}
+
+			for _, description := range industry {
+				u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
+			}
+		}
+
+		// get trx_customer_photo
+		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
+
+		if err != nil {
+			return
+		}
+
+		var photoData []entity.DataPhoto
+
+		if len(photos) > 0 {
+			for _, photo := range photos {
+				photoEntry := entity.DataPhoto{
+					PhotoID: photo.PhotoID,
+					Label:   photo.Label,
+					Url:     photo.Url,
+				}
+				photoData = append(photoData, photoEntry)
+			}
+		}
+
+		if len(photoData) < 1 {
+			photoData = []entity.DataPhoto{}
+		}
+
+		// get trx_surveyor
+		surveyor, err = u.repository.GetSurveyorData(inq.ProspectID)
+
+		if err != nil {
+			return
+		}
+
+		var surveyorData []entity.TrxSurveyor
+
+		if len(surveyor) > 0 {
+			for _, survey := range surveyor {
+				surveyorEntry := entity.TrxSurveyor{
+					Destination:  survey.Destination,
+					RequestDate:  survey.RequestDate,
+					AssignDate:   survey.AssignDate,
+					SurveyorName: survey.SurveyorName,
+					SurveyorNote: survey.SurveyorNote,
+					ResultDate:   survey.ResultDate,
+					Status:       survey.Status,
+				}
+				surveyorData = append(surveyorData, surveyorEntry)
+			}
+		}
+
+		if len(surveyorData) < 1 {
+			surveyorData = []entity.TrxSurveyor{}
+		}
+
+		// get trx_history_approval
+		histories, err = u.repository.GetHistoryApproval(inq.ProspectID)
+
+		if err != nil {
+			return
+		}
+
+		var (
+			historyData []entity.TrxHistoryApprovalScheme
+			escalation  string
+		)
+
+		if len(histories) > 0 {
+			for _, history := range histories {
+				escalation = "No"
+				if history.NeedEscalation.(int64) == 1 {
+					escalation = "Yes"
+				}
+				historyEntry := entity.TrxHistoryApprovalScheme{
+					DecisionBy:            history.DecisionBy,
+					Decision:              history.Decision,
+					CreatedAt:             history.CreatedAt,
+					NextFinalApprovalFlag: history.NextFinalApprovalFlag,
+					NeedEscalation:        escalation,
+					SourceDecision:        history.SourceDecision,
+					NextStep:              history.NextStep,
+				}
+				historyData = append(historyData, historyEntry)
+			}
+		}
+
+		if len(historyData) < 1 {
+			historyData = []entity.TrxHistoryApprovalScheme{}
+		}
+
+		// get trx_internal_record
+		internalRecord, err = u.repository.GetInternalRecord(inq.ProspectID)
+
+		if err != nil {
+			return
+		}
+
+		var (
+			internalData []entity.TrxInternalRecord
+		)
+
+		if len(internalRecord) > 0 {
+			for _, record := range internalRecord {
+				recordEntry := entity.TrxInternalRecord{
+					ApplicationID:        strings.Trim(record.ApplicationID, " "),
+					ProductType:          record.ProductType,
+					AgreementDate:        record.AgreementDate,
+					AssetCode:            strings.Trim(record.AssetCode, " "),
+					Tenor:                record.Tenor,
+					OutstandingPrincipal: record.OutstandingPrincipal,
+					InstallmentAmount:    record.InstallmentAmount,
+					ContractStatus:       strings.Trim(record.ContractStatus, " "),
+					CurrentCondition:     record.CurrentCondition,
+				}
+				internalData = append(internalData, recordEntry)
+			}
+		}
+
+		if len(internalData) < 1 {
+			internalData = []entity.TrxInternalRecord{}
+		}
+
+		row := entity.InquiryDataCa{
+			CA: entity.DataCa{
+				ShowAction:         inq.ShowAction,
+				ActionDate:         inq.ActionDate,
+				DocumentSurveyor:   os.Getenv("NEW_KMB_AKSI_MAYA") + inq.ProspectID,
+				ScsDate:            inq.ScsDate,
+				ScsScore:           inq.ScsScore,
+				ScsStatus:          inq.ScsStatus,
+				BiroCustomerResult: inq.BiroCustomerResult,
+				BiroSpouseResult:   inq.BiroSpouseResult,
+			},
+			InternalRecord: internalData,
+			Approval:       historyData,
+			Draft: entity.TrxDraftCaDecision{
+				Decision:   inq.DraftDecision,
+				SlikResult: inq.DraftSlikResult,
+				Note:       inq.DraftNote,
+			},
+			General: entity.DataGeneral{
+				ProspectID:     inq.ProspectID,
+				BranchName:     inq.BranchName,
+				IncomingSource: inq.IncomingSource,
+				CreatedAt:      inq.CreatedAt,
+				OrderAt:        inq.OrderAt,
+			},
+			Personal: entity.CustomerPersonal{
+				IDNumber:          inq.IDNumber,
+				LegalName:         inq.LegalName,
+				CustomerID:        inq.CustomerID,
+				CustomerStatus:    inq.CustomerStatus,
+				BirthPlace:        inq.BirthPlace,
+				BirthDate:         inq.BirthDate,
+				SurgateMotherName: inq.SurgateMotherName,
+				Gender:            inq.Gender,
+				MobilePhone:       inq.MobilePhone,
+				Email:             inq.Email,
+				NumOfDependence:   inq.NumOfDependence,
+				StaySinceYear:     inq.StaySinceYear,
+				StaySinceMonth:    inq.StaySinceMonth,
+				ExtCompanyPhone:   inq.ExtCompanyPhone,
+				SourceOtherIncome: inq.SourceOtherIncome,
+				Education:         inq.Education,
+				MaritalStatus:     inq.MaritalStatus,
+				HomeStatus:        inq.HomeStatus,
+			},
+			Spouse: entity.CustomerSpouse{
+				IDNumber:     inq.SpouseIDNumber,
+				LegalName:    inq.SpouseLegalName,
+				CompanyName:  inq.SpouseCompanyName,
+				CompanyPhone: inq.SpouseCompanyPhone,
+				MobilePhone:  inq.SpouseMobilePhone,
+				ProfessionID: inq.SpouseProfession,
+			},
+			Employment: entity.CustomerEmployment{
+				EmploymentSinceMonth:  inq.EmploymentSinceMonth,
+				EmploymentSinceYear:   inq.EmploymentSinceYear,
+				CompanyName:           inq.CompanyName,
+				MonthlyFixedIncome:    inq.MonthlyFixedIncome,
+				MonthlyVariableIncome: inq.MonthlyVariableIncome,
+				SpouseIncome:          inq.SpouseIncome,
+				ProfessionID:          inq.ProfessionID,
+				JobType:               inq.JobTypeID,
+				JobPosition:           inq.JobPosition,
+				IndustryTypeID:        strings.TrimSpace(string(industryType)),
+			},
+			ItemApk: entity.DataItemApk{
+				Supplier:              inq.Supplier,
+				ProductOfferingID:     inq.ProductOfferingID,
+				AssetDescription:      inq.AssetDescription,
+				AssetType:             inq.AssetType,
+				ManufacturingYear:     inq.ManufacturingYear,
+				Color:                 inq.Color,
+				ChassisNumber:         inq.ChassisNumber,
+				EngineNumber:          inq.EngineNumber,
+				InterestRate:          inq.InterestRate,
+				Tenor:                 inq.InstallmentPeriod,
+				OTR:                   inq.OTR,
+				DPAmount:              inq.DPAmount,
+				AF:                    inq.FinanceAmount,
+				NTF:                   inq.NTF,
+				NTFAkumulasi:          inq.NTFAkumulasi,
+				NTFPlusInterestAmount: inq.Total,
+				InterestAmount:        inq.InterestAmount,
+				LifeInsuranceFee:      inq.LifeInsuranceFee,
+				AssetInsuranceFee:     inq.AssetInsuranceFee,
+				InsuranceAmount:       inq.InsuranceAmount,
+				InstallmentAmount:     inq.MonthlyInstallment,
+				AdminFee:              inq.AdminFee,
+				ProvisionFee:          inq.ProvisionFee,
+				FirstInstallment:      inq.FirstInstallment,
+			},
+			Surveyor: surveyorData,
+			Emcon: entity.CustomerEmcon{
+				Name:         inq.EmconName,
+				Relationship: inq.Relationship,
+				MobilePhone:  inq.EmconMobilePhone,
+			},
+			Address: entity.DataAddress{
+				LegalAddress:       inq.LegalAddress,
+				LegalRTRW:          inq.LegalRTRW,
+				LegalKelurahan:     inq.LegalKelurahan,
+				LegalKecamatan:     inq.LegalKecamatan,
+				LegalZipCode:       inq.LegalZipCode,
+				LegalCity:          inq.LegalCity,
+				ResidenceAddress:   inq.ResidenceAddress,
+				ResidenceRTRW:      inq.ResidenceRTRW,
+				ResidenceKelurahan: inq.ResidenceKelurahan,
+				ResidenceKecamatan: inq.ResidenceKecamatan,
+				ResidenceZipCode:   inq.ResidenceZipCode,
+				ResidenceCity:      inq.ResidenceCity,
+				CompanyAddress:     inq.CompanyAddress,
+				CompanyRTRW:        inq.CompanyRTRW,
+				CompanyKelurahan:   inq.CompanyKelurahan,
+				CompanyKecamatan:   inq.CompanyKecamatan,
+				CompanyZipCode:     inq.CompanyZipCode,
+				CompanyCity:        inq.CompanyCity,
+				CompanyAreaPhone:   inq.CompanyAreaPhone,
+				CompanyPhone:       inq.CompanyPhone,
+				EmergencyAddress:   inq.EmergencyAddress,
+				EmergencyRTRW:      inq.EmergencyRTRW,
+				EmergencyKelurahan: inq.EmergencyKelurahan,
+				EmergencyKecamatan: inq.EmergencyKecamatan,
+				EmergencyZipcode:   inq.EmergencyZipcode,
+				EmergencyCity:      inq.EmergencyCity,
+				EmergencyAreaPhone: inq.EmergencyAreaPhone,
+				EmergencyPhone:     inq.EmergencyPhone,
+			},
+			Photo: photoData,
+		}
+
+		data = append(data, row)
+
 	}
 
 	return

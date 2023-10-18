@@ -38,6 +38,36 @@ func (_m *Repository) GetCustomerPhoto(prospectID string) ([]entity.DataPhoto, e
 	return r0, r1
 }
 
+// GetInquiryCa provides a mock function with given fields: req, pagination
+func (_m *Repository) GetInquiryCa(req request.ReqInquiryCa, pagination interface{}) ([]entity.InquiryCa, int, error) {
+	ret := _m.Called(req, pagination)
+
+	var r0 []entity.InquiryCa
+	if rf, ok := ret.Get(0).(func(request.ReqInquiryCa, interface{}) []entity.InquiryCa); ok {
+		r0 = rf(req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.InquiryCa)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(request.ReqInquiryCa, interface{}) int); ok {
+		r1 = rf(req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(request.ReqInquiryCa, interface{}) error); ok {
+		r2 = rf(req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // GetInquiryPrescreening provides a mock function with given fields: req, pagination
 func (_m *Repository) GetInquiryPrescreening(req request.ReqInquiryPrescreening, pagination interface{}) ([]entity.InquiryPrescreening, int, error) {
 	ret := _m.Called(req, pagination)
