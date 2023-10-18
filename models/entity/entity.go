@@ -859,6 +859,25 @@ func (c *TrxAkkk) TableName() string {
 	return "trx_akkk"
 }
 
+type TrxInternalRecord struct {
+	ProspectID           string    `gorm:"column:ProspectID"`
+	CustomerID           string    `gorm:"column:CustomerID"`
+	ApplicationID        string    `gorm:"column:ApplicationID"`
+	ProductType          string    `gorm:"column:ProductType"`
+	AgreementDate        string    `gorm:"column:AgreementDate"`
+	AssetCode            string    `gorm:"column:AssetCode"`
+	Tenor                int       `gorm:"column:Tenor"`
+	OutstandingPrincipal float64   `gorm:"column:OutstandingPrincipal"`
+	InstallmentAmount    float64   `gorm:"column:InstallmentAmount"`
+	ContractStatus       string    `gorm:"column:ContractStatus"`
+	CurrentCondition     string    `gorm:"column:CurrentCondition"`
+	CreatedAt            time.Time `gorm:"column:created_at"`
+}
+
+func (c *TrxInternalRecord) TableName() string {
+	return "trx_internal_record"
+}
+
 type MappingElaborateLTV struct {
 	ID                  int    `gorm:"column:id"`
 	ResultPefindo       string `gorm:"type:varchar(10);column:result_pefindo"`
