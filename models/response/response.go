@@ -525,15 +525,15 @@ type AgreementChassisNumber struct {
 }
 
 type AgreementCONFINS struct {
-	ApplicationID        string  `json:"application_id"`
-	ProductType          string  `json:"product_type"`
-	AgreementDate        string  `json:"agreement_date"`
-	AssetCode            string  `json:"asset_code"`
-	Tenor                int     `json:"period"`
-	OutstandingPrincipal float64 `json:"outstanding_principal"`
-	InstallmentAmount    float64 `json:"installment_amount"`
-	ContractStatus       string  `json:"contract_status"`
-	CurrentCondition     string  `json:"current_condition"`
+	ApplicationID        string    `json:"application_id"`
+	ProductType          string    `json:"product_type"`
+	AgreementDate        time.Time `json:"agreement_date"`
+	AssetCode            string    `json:"asset_code"`
+	Tenor                int       `json:"period"`
+	OutstandingPrincipal float64   `json:"outstanding_principal"`
+	InstallmentAmount    float64   `json:"installment_amount"`
+	ContractStatus       string    `json:"contract_status"`
+	CurrentCondition     string    `json:"current_condition"`
 }
 
 type FaceCompareResponse struct {
