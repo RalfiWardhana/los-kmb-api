@@ -728,3 +728,8 @@ type ReqReviewPrescreening struct {
 	DecisionBy     string `json:"decision_by" validate:"required"`
 	DecisionByName string `json:"decision_by_name" validate:"required"`
 }
+
+type ReqInquiryCa struct {
+	Search   string `json:"search"`
+	BranchID string `json:"branch_id"`
+}
