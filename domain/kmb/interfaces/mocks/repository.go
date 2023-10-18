@@ -40,27 +40,6 @@ func (_m *Repository) GetAllReject(idNumber string) ([]entity.DupcheckRejectionP
 	return r0, r1
 }
 
-// GetAppConfig provides a mock function with given fields:
-func (_m *Repository) GetAppConfig() (entity.AppConfig, error) {
-	ret := _m.Called()
-
-	var r0 entity.AppConfig
-	if rf, ok := ret.Get(0).(func() entity.AppConfig); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(entity.AppConfig)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // GetBannedChassisNumber provides a mock function with given fields: chassisNumber
 func (_m *Repository) GetBannedChassisNumber(chassisNumber string) (entity.TrxBannedChassisNumber, error) {
 	ret := _m.Called(chassisNumber)
@@ -125,7 +104,7 @@ func (_m *Repository) GetCheckingRejectAttempt(idNumber string, blackListDate st
 }
 
 // GetConfig provides a mock function with given fields: groupName, lob, key
-func (_m *Repository) GetConfig(groupName string, lob string, key string) entity.AppConfig {
+func (_m *Repository) GetConfig(groupName string, lob string, key string) (entity.AppConfig, error) {
 	ret := _m.Called(groupName, lob, key)
 
 	var r0 entity.AppConfig
@@ -135,7 +114,14 @@ func (_m *Repository) GetConfig(groupName string, lob string, key string) entity
 		r0 = ret.Get(0).(entity.AppConfig)
 	}
 
-	return r0
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string, string) error); ok {
+		r1 = rf(groupName, lob, key)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetCurrentTrxWithReject provides a mock function with given fields: idNumber
@@ -196,27 +182,6 @@ func (_m *Repository) GetCurrentTrxWithRejectDSR(idNumber string) (entity.TrxSta
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(idNumber)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetDupcheckConfig provides a mock function with given fields:
-func (_m *Repository) GetDupcheckConfig() (entity.AppConfig, error) {
-	ret := _m.Called()
-
-	var r0 entity.AppConfig
-	if rf, ok := ret.Get(0).(func() entity.AppConfig); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(entity.AppConfig)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
 	} else {
 		r1 = ret.Error(1)
 	}

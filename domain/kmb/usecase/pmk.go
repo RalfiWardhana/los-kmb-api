@@ -17,7 +17,11 @@ func (u usecase) PMK(branchID, customerKMB string, income float64, homeStatus, p
 
 	data = response.UsecaseApi{Result: constant.DECISION_PASS, Code: constant.CODE_PMK_SESUAI, Reason: constant.REASON_PMK_SESUAI, SourceDecision: constant.SOURCE_DECISION_PMK}
 
-	config, _ := u.repository.GetAppConfig()
+	config, err := u.repository.GetConfig("pmk_config", "KMB-OFF", "pmk_kmb_off")
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get PMK Config Error")
+		return
+	}
 
 	var configData entity.ConfigPMK
 

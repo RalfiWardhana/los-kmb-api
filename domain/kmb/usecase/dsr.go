@@ -15,7 +15,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, accessToken string) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error) {
+func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, accessToken string, configValue response.DupcheckConfig) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error) {
 
 	var (
 		dsr                  float64
@@ -23,17 +23,6 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 		dsrDetails           response.DsrDetails
 		reasonCustomerStatus string
 	)
-
-	config, err := u.repository.GetDupcheckConfig()
-
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Get Dupcheck Config Error")
-		return
-	}
-
-	var configValue response.DupcheckConfig
-
-	json.Unmarshal([]byte(config.Value), &configValue)
 
 	reasonMaxDsr := int(configValue.Data.MaxDsr)
 

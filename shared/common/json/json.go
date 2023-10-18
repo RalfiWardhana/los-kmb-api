@@ -283,6 +283,8 @@ func formatMessage(err validator.FieldError) string {
 		message = "accepted:value=A-Z,a-z.'` "
 	case constant.TAG_MIN:
 		message = fmt.Sprintf("accepted:min=%s", param)
+	case constant.TAG_PROSPECTID:
+		message = "accepted:value=A-Z, 0-9, min=10, max=20, First two characters must be alphabetic"
 	case constant.TAG_NUMBER:
 		message = "accepted:value=0-9"
 	case constant.TAG_ID_NUMBER:

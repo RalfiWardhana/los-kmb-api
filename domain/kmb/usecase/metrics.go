@@ -325,7 +325,27 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		RuleCode:       decisionMetrics.Code,
 		SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
 		Info:           decisionMetrics.Reason,
-		NextStep:       constant.SOURCE_DECISION_BIRO,
+		NextStep:       constant.SOURCE_DECISION_DUKCAPIL,
+	})
+
+	details = append(details, entity.TrxDetail{
+		ProspectID:     reqMetrics.Transaction.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_PROCESS,
+		Decision:       constant.DB_DECISION_PASS,
+		RuleCode:       constant.CODE_PASS_ASLIRI,
+		SourceDecision: constant.SOURCE_DECISION_DUKCAPIL,
+		Info:           constant.REASON_EKYC_VALID,
+		NextStep:       constant.SOURCE_DECISION_CA,
+	})
+
+	details = append(details, entity.TrxDetail{
+		ProspectID:     reqMetrics.Transaction.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_UNPROCESS,
+		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+		RuleCode:       constant.CODE_CREDIT_COMMITTEE,
+		SourceDecision: constant.SOURCE_DECISION_CA,
 	})
 
 	resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, decisionMetrics.Reason)

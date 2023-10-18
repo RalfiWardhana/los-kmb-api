@@ -127,7 +127,7 @@ func TestCheckRejection(t *testing.T) {
 			name:              "CheckRejection REASON_PERNAH_REJECT_NIK",
 			idNumber:          "198091461892",
 			encryptedIDNumber: entity.EncryptedString{MyString: "e6FXjuesjmzPsQlG+JRkm28vK9NoqXY3NQg7qJn4nFI="},
-			trxReject:         entity.TrxReject{RejectNIK: 1},
+			trxReject:         entity.TrxReject{RejectNIK: 3},
 			result: response.UsecaseApi{
 				Code:           constant.CODE_PERNAH_REJECT_NIK,
 				Result:         constant.DECISION_REJECT,
@@ -244,7 +244,8 @@ func TestCheckRejectChassisNumber(t *testing.T) {
 		{
 			name: "CheckRejectChassisNumber reject",
 			req: request.DupcheckApi{
-				RangkaNo: "198091461892",
+				ProspectID: "TEST12346",
+				RangkaNo:   "198091461892",
 			},
 			result: response.UsecaseApi{
 				Code:           constant.CODE_REJECT_NOKA_NOSIN,
@@ -252,14 +253,42 @@ func TestCheckRejectChassisNumber(t *testing.T) {
 				Reason:         constant.REASON_REJECT_NOKA_NOSIN,
 				SourceDecision: constant.SOURCE_DECISION_NOKANOSIN,
 			},
-			RejectChassisNumber:    []entity.RejectChassisNumber{{ProspectID: "123456"}},
-			trxBannedChassisNumber: entity.TrxBannedChassisNumber{ChassisNo: "198091461892"},
+			RejectChassisNumber: []entity.RejectChassisNumber{{ProspectID: "123456"}},
+		},
+		{
+			name: "CheckRejectChassisNumber reject tanpa perubahan data",
+			req: request.DupcheckApi{
+				ProspectID: "TEST12346",
+				RangkaNo:   "198091461892",
+			},
+			result: response.UsecaseApi{
+				Code:           constant.CODE_REJECT_NOKA_NOSIN,
+				Result:         constant.DECISION_REJECT,
+				Reason:         constant.REASON_REJECT_NOKA_NOSIN,
+				SourceDecision: constant.SOURCE_DECISION_NOKANOSIN,
+			},
+			RejectChassisNumber: []entity.RejectChassisNumber{{ProspectID: "TEST1"}, {ProspectID: "TEST2", ChassisNo: "198091461892"}},
+		},
+		{
+			name: "CheckRejectChassisNumber banned",
+			req: request.DupcheckApi{
+				ProspectID: "TEST12346",
+				RangkaNo:   "198091461892",
+			},
+			result: response.UsecaseApi{
+				Code:           constant.CODE_REJECT_NOKA_NOSIN,
+				Result:         constant.DECISION_REJECT,
+				Reason:         constant.REASON_REJECT_NOKA_NOSIN,
+				SourceDecision: constant.SOURCE_DECISION_NOKANOSIN,
+			},
+			RejectChassisNumber:    []entity.RejectChassisNumber{{ProspectID: "TEST1"}, {ProspectID: "TEST2"}, {ProspectID: "TEST3"}},
+			trxBannedChassisNumber: entity.TrxBannedChassisNumber{ProspectID: "TEST12346", ChassisNo: "198091461892"},
 		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
 			configValue := response.DupcheckConfig{
-				Data: response.DataDupcheckConfig{AttemptPMKDSR: 2},
+				Data: response.DataDupcheckConfig{AttemptChassisNumber: 3},
 			}
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
@@ -575,6 +604,7 @@ func TestBlacklistCheck(t *testing.T) {
 	}
 
 }
+
 func TestVehicleCheck(t *testing.T) {
 
 	config := entity.AppConfig{
@@ -593,11 +623,6 @@ func TestVehicleCheck(t *testing.T) {
 		label            string
 		tenor            int
 	}{
-		{
-			err:         fmt.Errorf(constant.ERROR_NOT_FOUND),
-			errExpected: errors.New(constant.ERROR_UPSTREAM + " - Error Get Config Dupcheck"),
-			label:       "TEST_ERROR_GET_PARAMETERIZE_CONFIG",
-		},
 		{
 			dupcheckConfig: config,
 			vehicle: response.UsecaseApi{
@@ -624,10 +649,12 @@ func TestVehicleCheck(t *testing.T) {
 		t.Run(test.label, func(t *testing.T) {
 			mockHttpClient := new(httpclient.MockHttpClient)
 			mockRepository := new(mocks.Repository)
-			mockRepository.On("GetDupcheckConfig").Return(test.dupcheckConfig, test.err)
+
+			var configValue response.DupcheckConfig
+			json.Unmarshal([]byte(test.dupcheckConfig.Value), &configValue)
 
 			service := NewUsecase(mockRepository, mockHttpClient)
-			result, err := service.VehicleCheck(test.year, test.tenor)
+			result, err := service.VehicleCheck(test.year, test.tenor, configValue)
 
 			require.Equal(t, test.errExpected, err)
 			require.Equal(t, test.vehicle.Result, result.Result)
@@ -874,7 +901,8 @@ func TestDsrCheck(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
-			mockRepository.On("GetDupcheckConfig").Return(tc.dupcheckConfig, tc.errGetTrx)
+			var configValue response.DupcheckConfig
+			json.Unmarshal([]byte(tc.dupcheckConfig.Value), &configValue)
 
 			rst := resty.New()
 			httpmock.ActivateNonDefault(rst.GetClient())
@@ -887,7 +915,7 @@ func TestDsrCheck(t *testing.T) {
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
-			data, _, _, _, _, err := usecase.DsrCheck(ctx, tc.req, tc.customerData, tc.installmentAmount, tc.installmentConfins, tc.installmentConfinsSpouse, tc.income, accessToken)
+			data, _, _, _, _, err := usecase.DsrCheck(ctx, tc.req, tc.customerData, tc.installmentAmount, tc.installmentConfins, tc.installmentConfinsSpouse, tc.income, accessToken, configValue)
 			require.Equal(t, tc.result, data)
 			// require.Equal(t, tc.result, dsr)
 			require.Equal(t, tc.errResult, err)

@@ -30,7 +30,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	)
 
 	//Get parameterize config
-	config, err := u.repository.GetDupcheckConfig()
+	config, err := u.repository.GetConfig("dupcheck", "KMB-OFF", "dupcheck_kmb_config")
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get Dupcheck Config Error")
@@ -139,7 +139,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	mapping.SpouseType = spMap.SpouseType
 
 	//Check vehicle age
-	ageVehicle, err := u.usecase.VehicleCheck(req.ManufactureYear, req.Tenor)
+	ageVehicle, err := u.usecase.VehicleCheck(req.ManufactureYear, req.Tenor, configValue)
 
 	if err != nil {
 		return
@@ -263,7 +263,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	}
 
 	// Check DSR
-	dsr, mappingDSR, instOther, instOtherSpouse, instTopup, err := u.usecase.DsrCheck(ctx, req, customerData, req.InstallmentAmount, mapping.InstallmentAmountFMF, mapping.InstallmentAmountSpouseFMF, income, accessToken)
+	dsr, mappingDSR, instOther, instOtherSpouse, instTopup, err := u.usecase.DsrCheck(ctx, req, customerData, req.InstallmentAmount, mapping.InstallmentAmountFMF, mapping.InstallmentAmountSpouseFMF, income, accessToken, configValue)
 	if err != nil {
 		return
 	}
@@ -387,13 +387,7 @@ func (u usecase) CheckRejectChassisNumber(req request.DupcheckApi, configValue r
 
 	if len(rejectChassisNumber) > 0 {
 		trxReject := rejectChassisNumber[len(rejectChassisNumber)-1]
-		if len(rejectChassisNumber) > configValue.Data.AttemptChassisNumber {
-			//banned 30 hari
-			trxBannedChassisNumber = entity.TrxBannedChassisNumber{
-				ProspectID: req.ProspectID,
-				ChassisNo:  req.RangkaNo,
-			}
-		} else if len(rejectChassisNumber) > 1 && (req.IDNumber != trxReject.IDNumber ||
+		if (len(rejectChassisNumber) >= configValue.Data.AttemptChassisNumber) || (len(rejectChassisNumber) == 2 && (req.IDNumber != trxReject.IDNumber ||
 			req.LegalName != trxReject.LegalName ||
 			req.BirthDate != trxReject.BirthDate ||
 			req.BirthPlace != trxReject.BirthPlace ||
@@ -414,7 +408,8 @@ func (u usecase) CheckRejectChassisNumber(req request.DupcheckApi, configValue r
 			req.BPKBName != trxReject.BPKBName ||
 			req.ManufactureYear != trxReject.ManufactureYear ||
 			req.OTRPrice != trxReject.OTR ||
-			req.Tenor != trxReject.Tenor) {
+			req.Tenor != trxReject.Tenor)) {
+			//banned 30 hari
 			trxBannedChassisNumber = entity.TrxBannedChassisNumber{
 				ProspectID: req.ProspectID,
 				ChassisNo:  req.RangkaNo,
@@ -629,20 +624,9 @@ func (u usecase) CustomerKMB(spDupcheck response.SpDupCekCustomerByID) (statusKo
 
 }
 
-func (u usecase) VehicleCheck(manufactureYear string, tenor int) (data response.UsecaseApi, err error) {
-
-	config, err := u.repository.GetDupcheckConfig()
-
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Error Get Config Dupcheck")
-		return
-	}
+func (u usecase) VehicleCheck(manufactureYear string, tenor int, configValue response.DupcheckConfig) (data response.UsecaseApi, err error) {
 
 	data.SourceDecision = constant.SOURCE_DECISION_PMK
-
-	var configValue response.DupcheckConfig
-
-	json.Unmarshal([]byte(config.Value), &configValue)
 
 	currentYear, _ := strconv.Atoi(time.Now().Format("2006-01-02")[0:4])
 	BPKBYear, _ := strconv.Atoi(manufactureYear)
