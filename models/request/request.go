@@ -147,6 +147,7 @@ type DupcheckApiSpouse struct {
 }
 
 type CustomerData struct {
+	TransactionID   string `json:"transaction_id" validate:"required"`
 	StatusKonsumen  string `json:"status_konsumen"`
 	CustomerSegment string `json:"customer_segment"`
 	IDNumber        string `json:"id_number"`

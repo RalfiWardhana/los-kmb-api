@@ -240,6 +240,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 	var customerData []request.CustomerData
 	customerData = append(customerData, request.CustomerData{
+		TransactionID:   req.ProspectID,
 		StatusKonsumen:  customerKMB,
 		CustomerSegment: req.CustomerSegment,
 		IDNumber:        req.IDNumber,
@@ -253,10 +254,11 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	if married {
 		spouse := *req.Spouse
 		customerData = append(customerData, request.CustomerData{
-			IDNumber:   spouse.IDNumber,
-			LegalName:  spouse.LegalName,
-			BirthDate:  spouse.BirthDate,
-			MotherName: spouse.MotherName,
+			TransactionID: req.ProspectID,
+			IDNumber:      spouse.IDNumber,
+			LegalName:     spouse.LegalName,
+			BirthDate:     spouse.BirthDate,
+			MotherName:    spouse.MotherName,
 		})
 
 		mapping.InstallmentAmountSpouseFMF = dataCustomer[1].TotalInstallment
