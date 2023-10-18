@@ -591,30 +591,56 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 			}
 		}
 
-		//save data metrics
-
-		// insert ban pmk dsr
-		if trxFMF.TrxBannedPMKDSR != (entity.TrxBannedPMKDSR{}) {
-
-			logInfo = trxFMF.TrxBannedPMKDSR
-
-			if err := tx.Create(&trxFMF.TrxBannedPMKDSR).Error; err != nil {
-				return err
-			}
-		}
-
-		// insert ban chassis number
-		if trxFMF.TrxBannedChassisNumber != (entity.TrxBannedChassisNumber{}) {
-
-			logInfo = trxFMF.TrxBannedChassisNumber
-
-			if err := tx.Create(&trxFMF.TrxBannedChassisNumber).Error; err != nil {
-				return err
-			}
-		}
-
 		// proses sudah melewati prescreening
 		if countTrx > 0 || len(details) > 2 {
+
+			// save data metrics
+			// insert ban pmk dsr
+			if trxFMF.TrxBannedPMKDSR != (entity.TrxBannedPMKDSR{}) {
+
+				logInfo = trxFMF.TrxBannedPMKDSR
+
+				if err := tx.Create(&trxFMF.TrxBannedPMKDSR).Error; err != nil {
+					return err
+				}
+			}
+
+			// insert ban chassis number
+			if trxFMF.TrxBannedChassisNumber != (entity.TrxBannedChassisNumber{}) {
+
+				logInfo = trxFMF.TrxBannedChassisNumber
+
+				if err := tx.Create(&trxFMF.TrxBannedChassisNumber).Error; err != nil {
+					return err
+				}
+			}
+
+			// internal record
+			if len(trxFMF.AgreementCONFINS) > 0 {
+				for _, agr := range trxFMF.AgreementCONFINS {
+					if agr.ApplicationID != "" {
+						internalRecord := entity.TrxInternalRecord{
+							ProspectID:           data.Transaction.ProspectID,
+							CustomerID:           trxFMF.DupcheckData.CustomerID.(string),
+							ApplicationID:        agr.ApplicationID,
+							ProductType:          agr.ProductType,
+							AgreementDate:        agr.AgreementDate,
+							AssetCode:            agr.AssetCode,
+							Tenor:                agr.Tenor,
+							OutstandingPrincipal: agr.OutstandingPrincipal,
+							InstallmentAmount:    agr.InstallmentAmount,
+							ContractStatus:       agr.ContractStatus,
+							CurrentCondition:     agr.CurrentCondition,
+						}
+
+						logInfo = internalRecord
+
+						if err := tx.Create(&internalRecord).Error; err != nil {
+							return err
+						}
+					}
+				}
+			}
 
 			var asliriReason interface{}
 
