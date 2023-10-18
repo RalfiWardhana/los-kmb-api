@@ -864,7 +864,7 @@ type TrxInternalRecord struct {
 	CustomerID           string    `gorm:"column:CustomerID"`
 	ApplicationID        string    `gorm:"column:ApplicationID"`
 	ProductType          string    `gorm:"column:ProductType"`
-	AgreementDate        string    `gorm:"column:AgreementDate"`
+	AgreementDate        time.Time `gorm:"column:AgreementDate"`
 	AssetCode            string    `gorm:"column:AssetCode"`
 	Tenor                int       `gorm:"column:Tenor"`
 	OutstandingPrincipal float64   `gorm:"column:OutstandingPrincipal"`

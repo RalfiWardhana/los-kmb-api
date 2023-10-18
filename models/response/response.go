@@ -439,6 +439,7 @@ type TrxFMF struct {
 	TotalDSR               interface{}   `json:"total_dsr"`
 	TrxBannedPMKDSR        entity.TrxBannedPMKDSR
 	TrxBannedChassisNumber entity.TrxBannedChassisNumber
+	AgreementCONFINS       []AgreementCONFINS
 }
 
 type RoaoAkkk struct {
@@ -521,6 +522,18 @@ type AgreementChassisNumber struct {
 	OutstandingInterest  float64 `json:"outstanding_interest"`
 	OutstandingPrincipal float64 `json:"outstanding_principal"`
 	Status               string  `json:"status"`
+}
+
+type AgreementCONFINS struct {
+	ApplicationID        string  `json:"application_id"`
+	ProductType          string  `json:"product_type"`
+	AgreementDate        string  `json:"agreement_date"`
+	AssetCode            string  `json:"asset_code"`
+	Tenor                int     `json:"period"`
+	OutstandingPrincipal float64 `json:"outstanding_principal"`
+	InstallmentAmount    float64 `json:"installment_amount"`
+	ContractStatus       string  `json:"contract_status"`
+	CurrentCondition     string  `json:"current_condition"`
 }
 
 type FaceCompareResponse struct {
