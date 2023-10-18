@@ -11,6 +11,9 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
+
+	"github.com/go-resty/resty/v2"
+	jsoniter "github.com/json-iterator/go"
 )
 
 // func ini digunakan ketika Submit to LOS
@@ -286,6 +289,22 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	trxFMF.DSRFMF = dupcheckData.Dsr
 	trxFMF.TrxBannedPMKDSR = trxFMFDupcheck.TrxBannedPMKDSR
 	trxFMF.TrxBannedChassisNumber = trxFMFDupcheck.TrxBannedChassisNumber
+
+	// internal record
+	if dupcheckData.CustomerID != nil {
+		var resInternalRecord *resty.Response
+		resInternalRecord, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("INTERNAL_RECORD_URL")+dupcheckData.CustomerID.(string), nil, map[string]string{}, constant.METHOD_GET, true, 3, 60, reqMetrics.Transaction.ProspectID, accessToken)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get Interal Record Error")
+			return
+		}
+
+		err = json.Unmarshal([]byte(jsoniter.Get(resInternalRecord.Body(), "data").ToString()), &trxFMF.AgreementCONFINS)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Unmarshal Interal Record Error")
+			return
+		}
+	}
 
 	if decisionMetrics.Result == constant.DECISION_REJECT {
 		details = append(details, trxDetailDupcheck...)
