@@ -37,20 +37,22 @@ func (u usecase) Prescreening(ctx context.Context, req request.Metrics, filterin
 	// cek ntf gantung all lob
 	var customerData []request.CustomerData
 	customerData = append(customerData, request.CustomerData{
-		IDNumber:   req.CustomerPersonal.IDNumber,
-		LegalName:  req.CustomerPersonal.LegalName,
-		BirthDate:  req.CustomerPersonal.BirthDate,
-		MotherName: req.CustomerPersonal.SurgateMotherName,
-		CustomerID: customerID,
+		TransactionID: req.Transaction.ProspectID,
+		IDNumber:      req.CustomerPersonal.IDNumber,
+		LegalName:     req.CustomerPersonal.LegalName,
+		BirthDate:     req.CustomerPersonal.BirthDate,
+		MotherName:    req.CustomerPersonal.SurgateMotherName,
+		CustomerID:    customerID,
 	})
 
 	if req.CustomerPersonal.MaritalStatus == constant.MARRIED && req.CustomerSpouse != nil {
 		spouse := *req.CustomerSpouse
 		customerData = append(customerData, request.CustomerData{
-			IDNumber:   spouse.IDNumber,
-			LegalName:  spouse.LegalName,
-			BirthDate:  spouse.BirthDate,
-			MotherName: spouse.SurgateMotherName,
+			TransactionID: req.Transaction.ProspectID,
+			IDNumber:      spouse.IDNumber,
+			LegalName:     spouse.LegalName,
+			BirthDate:     spouse.BirthDate,
+			MotherName:    spouse.SurgateMotherName,
 		})
 	}
 
