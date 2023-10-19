@@ -1218,3 +1218,33 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 	}
 	return
 }
+
+func (r repoHandler) SaveDraftData(draft entity.TrxDraftCaDecision) (err error) {
+	var x sql.TxOptions
+
+	draft.CreatedAt = DtmRequest
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	// update trx_status
+	result := db.Model(&draft).Where("ProspectID = ?", draft.ProspectID).Updates(draft)
+
+	if err = result.Error; err != nil {
+		return
+	}
+
+	if result.RowsAffected == 0 {
+		// record not found will be create draft
+		if err = db.Create(&draft).Error; err != nil {
+			return
+		}
+	}
+
+	return
+}

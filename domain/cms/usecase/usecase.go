@@ -668,3 +668,41 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 
 	return
 }
+
+func (u usecase) SaveAsDraft(ctx context.Context, req request.ReqSaveAsDraft) (data response.SaveAsDraft, err error) {
+
+	var (
+		trxDraft entity.TrxDraftCaDecision
+		decision string
+	)
+
+	switch req.Decision {
+	case constant.DECISION_REJECT:
+		decision = constant.DB_DECISION_REJECT
+	case constant.DECISION_APPROVE:
+		decision = constant.DB_DECISION_APR
+	}
+
+	trxDraft = entity.TrxDraftCaDecision{
+		ProspectID: req.ProspectID,
+		Decision:   decision,
+		SlikResult: req.SlikResult,
+		Note:       req.Note,
+		CreatedBy:  req.CreatedBy,
+		DecisionBy: req.DecisionBy,
+	}
+
+	data = response.SaveAsDraft{
+		ProspectID: req.ProspectID,
+		Decision:   req.Decision,
+		SlikResult: req.SlikResult,
+		Note:       req.Note,
+	}
+
+	err = u.repository.SaveDraftData(trxDraft)
+	if err != nil {
+		return
+	}
+
+	return
+}
