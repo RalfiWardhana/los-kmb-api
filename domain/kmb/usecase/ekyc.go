@@ -28,9 +28,14 @@ func (u multiUsecase) Ekyc(ctx context.Context, req request.Metrics, cbFound boo
 
 	if err != nil && err.Error() == fmt.Sprintf("%s - Dukcapil", constant.TYPE_CONTINGENCY) {
 
+		trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.Transaction.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: data.Code, SourceDecision: data.Source, Info: data.Reason, NextStep: constant.SOURCE_DECISION_ASLIRI})
+
 		data, err = u.usecase.Asliri(ctx, req, cbFound, accessToken)
 
 		if err != nil {
+
+			trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.Transaction.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: constant.CODE_CONTINGENCY, SourceDecision: constant.SOURCE_DECISION_ASLIRI, Info: constant.ASLIRI, NextStep: constant.SOURCE_DECISION_KTP_VALIDATOR})
+
 			data, err = u.usecase.Ktp(ctx, req, cbFound, accessToken)
 			return
 		}
@@ -188,6 +193,12 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, accessToken 
 
 	switch resultDukcapil.Decision {
 	case constant.TYPE_CONTINGENCY:
+		data.Result = resultDukcapil.Decision
+		data.Code = resultDukcapil.RuleCode
+		data.Reason = constant.TYPE_CONTINGENCY
+		data.Source = constant.SOURCE_DECISION_DUKCAPIL
+		info, _ := json.Marshal(infoDukcapil)
+		data.Info = string(info)
 		err = fmt.Errorf("%s - Dukcapil", constant.TYPE_CONTINGENCY)
 		return
 	case constant.DECISION_REJECT:
