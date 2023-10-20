@@ -33,6 +33,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		trxFMF            response.TrxFMF
 		trxFMFDupcheck    response.TrxFMF
 		trxDetailDupcheck []entity.TrxDetail
+		cbFound           bool
 	)
 
 	// cek trx_master
@@ -80,6 +81,12 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Get Filtering Error")
 			return
+		}
+	}
+
+	if filtering.ScoreBiro != nil {
+		if filtering.ScoreBiro.(string) != constant.DECISION_PBK_NO_HIT {
+			cbFound = true
 		}
 	}
 
@@ -347,14 +354,45 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		NextStep:       constant.SOURCE_DECISION_DUKCAPIL,
 	})
 
+	decisionEkyc, trxDetailEkyc, err := u.multiUsecase.Ekyc(ctx, reqMetrics, cbFound, accessToken)
+	if err != nil {
+		return
+	}
+
+	if len(trxDetailEkyc) > 0 {
+		details = append(details, trxDetailEkyc...)
+	}
+
+	if decisionEkyc.Result == constant.DECISION_REJECT {
+
+		addDetail := entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_FINAL,
+			Activity:       constant.ACTIVITY_STOP,
+			Decision:       constant.DB_DECISION_REJECT,
+			RuleCode:       decisionEkyc.Code,
+			SourceDecision: decisionEkyc.Source,
+			Info:           decisionEkyc.Info,
+		}
+
+		details = append(details, addDetail)
+
+		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, decisionEkyc.Reason)
+		if err != nil {
+			return
+		}
+
+		return
+	}
+
 	details = append(details, entity.TrxDetail{
 		ProspectID:     reqMetrics.Transaction.ProspectID,
 		StatusProcess:  constant.STATUS_ONPROCESS,
 		Activity:       constant.ACTIVITY_PROCESS,
 		Decision:       constant.DB_DECISION_PASS,
-		RuleCode:       constant.CODE_PASS_ASLIRI,
-		SourceDecision: constant.SOURCE_DECISION_DUKCAPIL,
-		Info:           constant.REASON_EKYC_VALID,
+		RuleCode:       decisionEkyc.Code,
+		SourceDecision: decisionEkyc.Source,
+		Info:           decisionEkyc.Info,
 		NextStep:       constant.SOURCE_DECISION_CA,
 	})
 
