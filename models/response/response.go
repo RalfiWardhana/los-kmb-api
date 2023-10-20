@@ -595,10 +595,12 @@ type Config struct {
 }
 
 type InfoEkyc struct {
-	Vd     interface{} `json:"vd"`
-	Fr     interface{} `json:"fr"`
-	Asliri interface{} `json:"asliri"`
-	Ktp    interface{} `json:"ktp"`
+	Vd      interface{} `json:"vd"`
+	VdError interface{} `json:"vd_error"`
+	Fr      interface{} `json:"fr"`
+	FrError interface{} `json:"fr_error"`
+	Asliri  interface{} `json:"asliri"`
+	Ktp     interface{} `json:"ktp"`
 }
 
 type Ekyc struct {
@@ -635,8 +637,8 @@ type VerifyDataIntegratorResponse struct {
 
 type VerifyDataDetailIntegratorResponse struct {
 	NoKk        string `json:"no_kk,omitempty"`
-	NamaLgkp    string `json:"nama_lgkp,omitempty"`
-	TmptLhr     string `json:"tmpt_lhr,omitempty"`
+	NamaLgkp    int    `json:"nama_lgkp,omitempty"`
+	TmptLhr     int    `json:"tmpt_lhr,omitempty"`
 	TglLhr      string `json:"tgl_lhr,omitempty"`
 	PropName    string `json:"prop_name,omitempty"`
 	KabName     string `json:"kab_name,omitempty"`
@@ -644,8 +646,8 @@ type VerifyDataDetailIntegratorResponse struct {
 	KelName     string `json:"kel_name,omitempty"`
 	NoRt        string `json:"no_rt,omitempty"`
 	NoRw        string `json:"no_rw,omitempty"`
-	Alamat      string `json:"alamat,omitempty"`
-	NamaLgkpIbu string `json:"nama_lgkp_ibu,omitempty"`
+	Alamat      int    `json:"alamat,omitempty"`
+	NamaLgkpIbu int    `json:"nama_lgkp_ibu,omitempty"`
 	StatusKawin string `json:"status_kawin,omitempty"`
 	JenisPkrjn  string `json:"jenis_pkrjn,omitempty"`
 	JenisKlmin  string `json:"jenis_klmin,omitempty"`

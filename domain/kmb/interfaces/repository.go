@@ -11,6 +11,7 @@ type Repository interface {
 	ScanTrxPrescreening(prospectID string) (count int, err error)
 	GetFilteringResult(prospectID string) (filtering entity.FilteringKMB, err error)
 	GetFilteringForJourney(prospectID string) (filtering entity.FilteringKMB, err error)
+	GetMappingDukcapil(statusVD, statusFR string) (resultDukcapil entity.MappingResultDukcapil, err error)
 	SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (newErr error)
 	GetLogOrchestrator(prospectID string) (logOrchestrator entity.LogOrchestrator, err error)
 	SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error)

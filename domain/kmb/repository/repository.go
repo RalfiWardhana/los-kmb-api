@@ -127,6 +127,14 @@ func (r repoHandler) GetFilteringForJourney(prospectID string) (filtering entity
 	return
 }
 
+func (r repoHandler) GetMappingDukcapil(statusVD, statusFR string) (resultDukcapil entity.MappingResultDukcapil, err error) {
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT * FROM kmb_dukcapil_mapping_result WHERE result_vd='%s' AND result_fr='%s'`, statusVD, statusFR)).Scan(&resultDukcapil).Error; err != nil {
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (newErr error) {
 
 	location, _ := time.LoadLocation("Asia/Jakarta")

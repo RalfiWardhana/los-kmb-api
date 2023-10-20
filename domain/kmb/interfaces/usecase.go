@@ -22,11 +22,15 @@ type Usecase interface {
 	PMK(branchID string, statusKonsumen string, income float64, homeStatus, professionID, empYear, empMonth, stayYear, stayMonth, birthDate string, tenor int, maritalStatus string) (data response.UsecaseApi, err error)
 	DsrCheck(ctx context.Context, req request.DupcheckApi, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, accessToken string, configValue response.DupcheckConfig) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error)
 	GetBase64Media(ctx context.Context, url string, customerID int, accessToken string) (base64Image string, err error)
+	Dukcapil(ctx context.Context, req request.Metrics, accessToken string) (data response.Ekyc, err error)
+	Asliri(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (data response.Ekyc, err error)
+	Ktp(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (data response.Ekyc, err error)
 	SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (resp response.Metrics, err error)
 }
 
 type MultiUsecase interface {
 	Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error)
+	Ekyc(ctx context.Context, req request.Metrics, cbFound bool, accessToken string) (data response.Ekyc, trxDetail []entity.TrxDetail, err error)
 }
 
 type Metrics interface {

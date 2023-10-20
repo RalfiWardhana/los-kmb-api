@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
@@ -16,6 +17,198 @@ import (
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
 )
+
+func (u multiUsecase) Ekyc(ctx context.Context, req request.Metrics, cbFound bool, accessToken string) (data response.Ekyc, trxDetail []entity.TrxDetail, err error) {
+
+	data, err = u.usecase.Dukcapil(ctx, req, accessToken)
+
+	if err != nil && err.Error() != fmt.Sprintf("%s - Dukcapil", constant.TYPE_CONTINGENCY) {
+		return
+	}
+
+	if err != nil && err.Error() == fmt.Sprintf("%s - Dukcapil", constant.TYPE_CONTINGENCY) {
+
+		data, err = u.usecase.Asliri(ctx, req, cbFound, accessToken)
+
+		if err != nil {
+			data, err = u.usecase.Ktp(ctx, req, cbFound, accessToken)
+			return
+		}
+
+	}
+
+	return
+
+}
+
+func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, accessToken string) (data response.Ekyc, err error) {
+
+	var (
+		selfie, codeVD, _, decisionVD, decisionFR   string
+		address, city, kelurahan, kecamatan, rt, rw string
+		infoDukcapil                                response.InfoEkyc
+		verify                                      response.VerifyDataIntegratorResponse
+		face                                        response.FaceRecognitionIntegratorData
+		thresholdDukcapil                           entity.ConfigThresholdDukcapil
+		timeout                                     int
+		statusVD, statusFR                          string
+	)
+
+	config, err := u.repository.GetConfig("dukcapil", "KMB-OFF", "threshold_dukcapil")
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Dukcapil Config Error")
+		return
+	}
+
+	json.Unmarshal([]byte(config.Value), &thresholdDukcapil)
+
+	for i := 0; i < len(req.Address); i++ {
+
+		if req.Address[i].Type == constant.ADDRESS_TYPE_LEGAL {
+			address = req.Address[i].Address
+			city = req.Address[i].City
+			kelurahan = req.Address[i].Kelurahan
+			kecamatan = req.Address[i].Kecamatan
+			rt = req.Address[i].Rt
+			rw = req.Address[i].Rw
+			break
+		}
+	}
+
+	for _, photo := range req.CustomerPhoto {
+
+		if photo.ID == constant.TAG_SELFIE_PHOTO {
+			selfie = photo.Url
+			break
+		}
+	}
+
+	timeout, err = strconv.Atoi(os.Getenv("DUKCAPIL_TIMEOUT"))
+	if err != nil {
+		timeout, _ = strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	}
+
+	// Verify Data
+	paramVd, _ := json.Marshal(map[string]interface{}{
+		"address":             address,
+		"birth_date":          req.CustomerPersonal.BirthDate,
+		"birth_place":         req.CustomerPersonal.BirthPlace,
+		"city":                city,
+		"gender":              req.CustomerPersonal.Gender,
+		"id_number":           req.CustomerPersonal.IDNumber,
+		"kabupaten":           city,
+		"kecamatan":           kecamatan,
+		"kelurahan":           kelurahan,
+		"legal_name":          req.CustomerPersonal.LegalName,
+		"profession_id":       req.CustomerEmployment.ProfessionID,
+		"province":            city,
+		"rt":                  rt,
+		"rw":                  rw,
+		"surgate_mother_name": req.CustomerPersonal.SurgateMotherName,
+		"threshold":           "0",
+		"transaction_id":      req.Transaction.ProspectID,
+	})
+
+	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("DUKCAPIL_VD_URL"), paramVd, map[string]string{}, constant.METHOD_POST, true, 2, timeout, req.Transaction.ProspectID, accessToken)
+
+	if err != nil || resp.StatusCode() == 504 || resp.StatusCode() == 502 {
+		statusVD = "RTO"
+
+		infoDukcapil.VdError = "Request Timed Out"
+	}
+
+	if err == nil && resp.StatusCode() != 200 && resp.StatusCode() != 504 && resp.StatusCode() != 502 {
+		statusVD = "NOT CHECK"
+
+		var responseIntegrator response.ApiResponse
+		json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &responseIntegrator)
+		infoDukcapil.VdError = responseIntegrator.Message
+	}
+
+	if err == nil && resp.StatusCode() == 200 {
+
+		json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &verify)
+		codeVD, _, decisionVD = checkEKYC(verify, thresholdDukcapil)
+
+		infoDukcapil.Vd = verify
+
+		if decisionVD == constant.DECISION_REJECT {
+			data.Result = decisionVD
+			data.Code = codeVD
+			data.Reason = constant.REASON_EKYC_INVALID
+			data.Source = constant.SOURCE_DECISION_DUKCAPIL
+
+			info, _ := json.Marshal(infoDukcapil)
+			data.Info = string(info)
+			return
+		}
+
+		statusVD = constant.DECISION_PASS
+
+	}
+
+	//Face Recog
+	paramFr, _ := json.Marshal(map[string]interface{}{
+		"id_number":      req.CustomerPersonal.IDNumber,
+		"selfie_image":   selfie,
+		"threshold":      fmt.Sprintf("%.1f", thresholdDukcapil.Data.FaceRecognition),
+		"transaction_id": req.Transaction.ProspectID,
+	})
+
+	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("DUKCAPIL_FR_URL"), paramFr, map[string]string{}, constant.METHOD_POST, true, 2, timeout, req.Transaction.ProspectID, accessToken)
+
+	if err != nil || resp.StatusCode() == 504 || resp.StatusCode() == 502 {
+		statusFR = "RTO"
+		infoDukcapil.FrError = "Request Timed Out"
+	}
+
+	if err == nil && resp.StatusCode() != 200 && resp.StatusCode() != 504 && resp.StatusCode() != 502 {
+		statusFR = "NOT CHECK"
+		var responseIntegrator response.ApiResponse
+		json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &responseIntegrator)
+		infoDukcapil.FrError = responseIntegrator.Message
+	}
+
+	if err == nil && resp.StatusCode() == 200 {
+
+		json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &face)
+		_, _, decisionFR = checkThreshold(face)
+
+		infoDukcapil.Fr = face
+
+		statusFR = decisionFR
+	}
+
+	resultDukcapil, err := u.repository.GetMappingDukcapil(statusVD, statusFR)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Dukcapil Error")
+		return
+	}
+
+	switch resultDukcapil.Decision {
+	case constant.TYPE_CONTINGENCY:
+		err = fmt.Errorf("%s - Dukcapil", constant.TYPE_CONTINGENCY)
+		return
+	case constant.DECISION_REJECT:
+		data.Result = resultDukcapil.Decision
+		data.Code = resultDukcapil.RuleCode
+		data.Reason = constant.REASON_EKYC_INVALID
+		data.Source = constant.SOURCE_DECISION_DUKCAPIL
+		info, _ := json.Marshal(infoDukcapil)
+		data.Info = string(info)
+		return
+	}
+
+	data.Result = constant.DECISION_PASS
+	data.Code = resultDukcapil.RuleCode
+	data.Reason = constant.REASON_EKYC_VALID
+	data.Source = constant.SOURCE_DECISION_DUKCAPIL
+	info, _ := json.Marshal(infoDukcapil)
+	data.Info = string(info)
+
+	return
+}
 
 func (u usecase) Asliri(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (data response.Ekyc, err error) {
 
@@ -33,7 +226,7 @@ func (u usecase) Asliri(ctx context.Context, req request.Metrics, cb_found bool,
 		}
 	}
 
-	param, _ := json.Marshal(map[string]interface{}{
+	paramARI, _ := json.Marshal(map[string]interface{}{
 		"transaction_id": req.Transaction.ProspectID,
 		"id_number":      req.CustomerPersonal.IDNumber,
 		"name":           req.CustomerPersonal.LegalName,
@@ -46,15 +239,15 @@ func (u usecase) Asliri(ctx context.Context, req request.Metrics, cb_found bool,
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
-	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("ASLIRI_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeout, req.Transaction.ProspectID, accessToken)
+	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("ASLIRI_URL"), paramARI, map[string]string{}, constant.METHOD_POST, false, 0, timeout, req.Transaction.ProspectID, accessToken)
 
 	if err != nil {
-		err = errors.New("upstream_service_timeout - Call Asliri")
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Asliri")
 		return
 	}
 
 	if resp.StatusCode() != 200 {
-		err = errors.New("upstream_service_error - Call Asliri")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call Asliri")
 		return
 	}
 
@@ -85,8 +278,9 @@ func (u usecase) Asliri(ctx context.Context, req request.Metrics, cb_found bool,
 	var asliriConfig entity.AsliriConfig
 
 	config, err := u.repository.GetConfig("asliri", "KMB", "asliri_tier2_parameter")
+
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Get Asliri Config Error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get ASLI RI Config Error")
 		return
 	}
 
@@ -132,10 +326,7 @@ func (u usecase) Asliri(ctx context.Context, req request.Metrics, cb_found bool,
 
 func (u usecase) Ktp(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (data response.Ekyc, err error) {
 
-	var (
-		resp *resty.Response
-	)
-	param, _ := json.Marshal(map[string]interface{}{
+	paramKtp, _ := json.Marshal(map[string]interface{}{
 		"data": map[string]interface{}{
 			"birth_date": req.CustomerPersonal.BirthDate,
 			"gender":     req.CustomerPersonal.Gender,
@@ -147,15 +338,15 @@ func (u usecase) Ktp(ctx context.Context, req request.Metrics, cb_found bool, ac
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
-	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("KTP_VALIDATOR_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeout, req.Transaction.ProspectID, accessToken)
+	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("KTP_VALIDATOR_URL"), paramKtp, map[string]string{}, constant.METHOD_POST, false, 0, timeout, req.Transaction.ProspectID, accessToken)
 
 	if err != nil {
-		err = errors.New("upstream_service_timeout - Call KTP Validator")
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call KTP Validator")
 		return
 	}
 
 	if resp.StatusCode() != 200 {
-		err = errors.New("upstream_service_error - Call KTP Validator")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call KTP Validator")
 		return
 	}
 
@@ -172,60 +363,62 @@ func (u usecase) Ktp(ctx context.Context, req request.Metrics, cb_found bool, ac
 	data.Result = ktp.Result
 	data.Code = ktp.Code
 	data.Reason = ktp.Reason
-	data.Source = constant.KTP
+	data.Source = constant.SOURCE_DECISION_KTP_VALIDATOR
 	data.Info = string(infoKtp)
 
 	return
 }
 
-func CheckEKYC(data response.VerifyDataIntegratorResponse) (code, reason, decision string) {
+func checkThreshold(data response.FaceRecognitionIntegratorData) (code, reason, decision string) {
+
+	switch data.RuleCode {
+	case "6020":
+		code = constant.CODE_FACERECOGNITION_REJECT_NIK
+		decision = constant.DECISION_REJECT
+	case "6019":
+		code = constant.CODE_FACERECOGNITION_REJECT_FOTO
+		decision = constant.DECISION_REJECT
+	case "6018":
+		code = constant.CODE_FACERECOGNITION_PASS
+		decision = constant.DECISION_PASS
+	}
+	reason = data.Reason
+	return
+}
+
+func checkEKYC(data response.VerifyDataIntegratorResponse, thresholdDukcapil entity.ConfigThresholdDukcapil) (code, reason, decision string) {
 
 	if data.IsValid {
-		if strings.Contains(data.Nik, "Tidak Sesuai") {
+		if strings.Contains(data.Nik, "Tidak Sesuai") || strings.Contains(data.TglLhr, "Tidak Sesuai") || strings.Contains(data.JenisKlmin, "Tidak Sesuai") {
 			return constant.CODE_VERIFICATION_REJECT_EKYC, "EKYC Tidak Sesuai", constant.DECISION_REJECT
 		}
-		if strings.Contains(data.TglLhr, "Tidak Sesuai") {
+
+		if float64(data.NamaLgkp) < thresholdDukcapil.Data.VerifyData.NamaLengkap {
 			return constant.CODE_VERIFICATION_REJECT_EKYC, "EKYC Tidak Sesuai", constant.DECISION_REJECT
 		}
-		if strings.Contains(data.NamaLgkp, "Tidak Sesuai") {
-			return constant.CODE_VERIFICATION_REJECT_EKYC, "EKYC Tidak Sesuai", constant.DECISION_REJECT
-		}
-		if strings.Contains(data.NamaLgkpIbu, "Tidak Sesuai") {
+
+		if float64(data.Alamat) < thresholdDukcapil.Data.VerifyData.Alamat {
 			return constant.CODE_VERIFICATION_REJECT_EKYC, "EKYC Tidak Sesuai", constant.DECISION_REJECT
 		}
 
 		return constant.CODE_VERIFICATION_PASS_EKYC, "EKYC Sesuai", constant.DECISION_PASS
 
-	} else {
-
-		switch *data.Reason {
-		case constant.CUSTOMER_MENINGGAL:
-			return constant.CODE_VERIFICATION_REJECT_MENINGGAL, *data.Reason, constant.DECISION_REJECT
-
-		case constant.DATA_GANDA:
-			return constant.CODE_VERIFICATION_REJECT_DATA_GANDA, *data.Reason, constant.DECISION_REJECT
-
-		case constant.DATA_INACTIVE:
-			return constant.CODE_VERIFICATION_REJECT_INACTIVE, *data.Reason, constant.DECISION_REJECT
-
-		case constant.DATA_NOT_FOUND:
-			return constant.CODE_VERIFICATION_REJECT_NOT_FOUND, *data.Reason, constant.DECISION_REJECT
-		}
-
 	}
-
-	return
-}
-
-func CheckThreshold(data response.FaceRecognitionIntegratorData) (code, reason, decision string) {
-
-	switch data.RuleCode {
-	case "6020":
-		return constant.CODE_FACERECOGNITION_REJECT_NIK, data.Reason, constant.DECISION_REJECT
-	case "6019":
-		return constant.CODE_FACERECOGNITION_REJECT_FOTO, data.Reason, constant.DECISION_REJECT
-	case "6018":
-		return constant.CODE_FACERECOGNITION_PASS, data.Reason, constant.DECISION_PASS
+	switch *data.Reason {
+	case constant.CUSTOMER_MENINGGAL:
+		code = constant.CODE_VERIFICATION_REJECT_MENINGGAL
+		decision = constant.DECISION_REJECT
+	case constant.DATA_GANDA:
+		code = constant.CODE_VERIFICATION_REJECT_DATA_GANDA
+		decision = constant.DECISION_REJECT
+	case constant.DATA_INACTIVE:
+		code = constant.CODE_VERIFICATION_REJECT_INACTIVE
+		decision = constant.DECISION_REJECT
+	case constant.DATA_NOT_FOUND:
+		code = constant.CODE_VERIFICATION_REJECT_NOT_FOUND
+		decision = constant.DECISION_REJECT
 	}
+	reason = *data.Reason
+
 	return
 }

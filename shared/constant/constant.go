@@ -515,6 +515,8 @@ const (
 	DATA_NOT_FOUND                      = "Data Not Found"
 	EKYC_VALID                          = "Ekyc Valid"
 
+	TYPE_CONTINGENCY = "CONTINGENCY"
+
 	// Address Type
 	ADDRESS_TYPE_LEGAL     = "LEGAL"
 	ADDRESS_TYPE_RESIDENCE = "RESIDENCE"

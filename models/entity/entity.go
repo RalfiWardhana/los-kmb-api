@@ -380,6 +380,30 @@ type AsliriConfig struct {
 	} `json:"data"`
 }
 
+type ConfigThresholdDukcapil struct {
+	Data struct {
+		VerifyData struct {
+			NamaLengkap float64 `json:"nama_lengkap"`
+			Alamat      float64 `json:"alamat"`
+		} `json:"verify_data"`
+		FaceRecognition float64 `json:"face_recognition"`
+	} `json:"data"`
+}
+
+type MappingResultDukcapil struct {
+	ID        string    `gorm:"column:id"`
+	ResultVD  string    `gorm:"column:result_vd"`
+	ResultFR  string    `gorm:"column:result_fr"`
+	Decision  string    `gorm:"column:decision"`
+	RuleCode  string    `gorm:"column:rule_code"`
+	CreatedAt time.Time `gorm:"column:created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at"`
+}
+
+func (c *MappingResultDukcapil) TableName() string {
+	return "kmb_dukcapil_mapping_result"
+}
+
 type TrxMaster struct {
 	ProspectID        string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
 	BranchID          string    `gorm:"type:varchar(5);column:BranchID"`
