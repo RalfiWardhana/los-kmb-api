@@ -359,6 +359,27 @@ func (_m *Repository) GetLogOrchestrator(prospectID string) (entity.LogOrchestra
 	return r0, r1
 }
 
+// GetMappingDukcapil provides a mock function with given fields: statusVD, statusFR
+func (_m *Repository) GetMappingDukcapil(statusVD string, statusFR string) (entity.MappingResultDukcapil, error) {
+	ret := _m.Called(statusVD, statusFR)
+
+	var r0 entity.MappingResultDukcapil
+	if rf, ok := ret.Get(0).(func(string, string) entity.MappingResultDukcapil); ok {
+		r0 = rf(statusVD, statusFR)
+	} else {
+		r0 = ret.Get(0).(entity.MappingResultDukcapil)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(statusVD, statusFR)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetMinimalIncomePMK provides a mock function with given fields: branchID, statusKonsumen
 func (_m *Repository) GetMinimalIncomePMK(branchID string, statusKonsumen string) (entity.MappingIncomePMK, error) {
 	ret := _m.Called(branchID, statusKonsumen)

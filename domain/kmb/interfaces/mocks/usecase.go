@@ -18,6 +18,27 @@ type Usecase struct {
 	mock.Mock
 }
 
+// Asliri provides a mock function with given fields: ctx, req, cb_found, accessToken
+func (_m *Usecase) Asliri(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (response.Ekyc, error) {
+	ret := _m.Called(ctx, req, cb_found, accessToken)
+
+	var r0 response.Ekyc
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, bool, string) response.Ekyc); ok {
+		r0 = rf(ctx, req, cb_found, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.Ekyc)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, bool, string) error); ok {
+		r1 = rf(ctx, req, cb_found, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // BlacklistCheck provides a mock function with given fields: index, spDupcheck
 func (_m *Usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerByID) (response.UsecaseApi, string) {
 	ret := _m.Called(index, spDupcheck)
@@ -228,6 +249,27 @@ func (_m *Usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, custom
 	return r0, r1, r2, r3, r4, r5
 }
 
+// Dukcapil provides a mock function with given fields: ctx, req, accessToken
+func (_m *Usecase) Dukcapil(ctx context.Context, req request.Metrics, accessToken string) (response.Ekyc, error) {
+	ret := _m.Called(ctx, req, accessToken)
+
+	var r0 response.Ekyc
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, string) response.Ekyc); ok {
+		r0 = rf(ctx, req, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.Ekyc)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, string) error); ok {
+		r1 = rf(ctx, req, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DupcheckIntegrator provides a mock function with given fields: ctx, prospectID, idNumber, legalName, birthDate, surgateName, accessToken
 func (_m *Usecase) DupcheckIntegrator(ctx context.Context, prospectID string, idNumber string, legalName string, birthDate string, surgateName string, accessToken string) (response.SpDupCekCustomerByID, error) {
 	ret := _m.Called(ctx, prospectID, idNumber, legalName, birthDate, surgateName, accessToken)
@@ -263,6 +305,27 @@ func (_m *Usecase) GetBase64Media(ctx context.Context, url string, customerID in
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, string, int, string) error); ok {
 		r1 = rf(ctx, url, customerID, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Ktp provides a mock function with given fields: ctx, req, cb_found, accessToken
+func (_m *Usecase) Ktp(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (response.Ekyc, error) {
+	ret := _m.Called(ctx, req, cb_found, accessToken)
+
+	var r0 response.Ekyc
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, bool, string) response.Ekyc); ok {
+		r0 = rf(ctx, req, cb_found, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.Ekyc)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, bool, string) error); ok {
+		r1 = rf(ctx, req, cb_found, accessToken)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -49,6 +49,7 @@ const (
 	STATUS_FINAL                     = "FIN"
 	STATUS_ONPROCESS                 = "ONP"
 	DECISION_CREDIT_PROCESS          = "CREDIT_PROCESS"
+	DB_DECISION_CONTINGENCY          = "CTG"
 	DB_DECISION_PASS                 = "PAS"
 	DB_DECISION_APR                  = "APR"
 	DB_DECISION_REJECT               = "REJ"
