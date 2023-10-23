@@ -25,6 +25,7 @@ type Usecase interface {
 	Dukcapil(ctx context.Context, req request.Metrics, accessToken string) (data response.Ekyc, err error)
 	Asliri(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (data response.Ekyc, err error)
 	Ktp(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (data response.Ekyc, err error)
+	Pefindo(cbFound bool, bpkbName string, filtering entity.FilteringKMB, spDupcheck response.SpDupcheckMap) (data response.UsecaseApi, err error)
 	SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (resp response.Metrics, err error)
 }
 
