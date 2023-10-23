@@ -1313,3 +1313,32 @@ type DataCa struct {
 	BiroCustomerResult string `gorm:"column:BiroCustomerResult" json:"biro_customer_result"`
 	BiroSpouseResult   string `gorm:"column:BiroSpouseResult" json:"biro_spouse_result"`
 }
+
+type TrxCaDecision struct {
+	ProspectID    string    `gorm:"type:varchar(20);column:ProspectID" json:"-"`
+	Decision      string    `gorm:"type:varchar(3);column:decision" json:"decision"`
+	SlikResult    string    `gorm:"type:varchar(30);column:slik_result" json:"slik_result"`
+	Note          string    `gorm:"type:varchar(525);column:note" json:"note"`
+	CreatedAt     time.Time `gorm:"column:created_at" json:"-"`
+	CreatedBy     string    `gorm:"type:varchar(100);column:created_by" json:"-"`
+	DecisionBy    string    `gorm:"type:varchar(250);column:decision_by" json:"-"`
+	FinalApproval string    `gorm:"type:varchar(3);column:final_approval" json:"final_approval"`
+}
+
+func (c *TrxCaDecision) TableName() string {
+	return "trx_ca_decision"
+}
+
+type MappingLimitApprovalScheme struct {
+	ID               string    `gorm:"type:varchar(60);column:id"`
+	Alias            string    `gorm:"type:varchar(3);column:alias"`
+	Name             string    `gorm:"type:varchar(100);column:name"`
+	CoverageNtfStart float64   `gorm:"column:coverage_ntf_start"`
+	CoverageNtfEnd   float64   `gorm:"column:coverage_ntf_end"`
+	Type             int       `gorm:"column:type"`
+	CreatedAt        time.Time `gorm:"column:created_at"`
+}
+
+func (c *MappingLimitApprovalScheme) TableName() string {
+	return "m_limit_approval_scheme"
+}

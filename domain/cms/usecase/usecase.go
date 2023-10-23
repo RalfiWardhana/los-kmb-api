@@ -669,7 +669,7 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 	return
 }
 
-func (u usecase) SaveAsDraft(ctx context.Context, req request.ReqSaveAsDraft) (data response.SaveAsDraft, err error) {
+func (u usecase) SaveAsDraft(ctx context.Context, req request.ReqSaveAsDraft) (data response.CAResponse, err error) {
 
 	var (
 		trxDraft entity.TrxDraftCaDecision
@@ -692,7 +692,7 @@ func (u usecase) SaveAsDraft(ctx context.Context, req request.ReqSaveAsDraft) (d
 		DecisionBy: req.DecisionBy,
 	}
 
-	data = response.SaveAsDraft{
+	data = response.CAResponse{
 		ProspectID: req.ProspectID,
 		Decision:   req.Decision,
 		SlikResult: req.SlikResult,
@@ -702,6 +702,94 @@ func (u usecase) SaveAsDraft(ctx context.Context, req request.ReqSaveAsDraft) (d
 	err = u.repository.SaveDraftData(trxDraft)
 	if err != nil {
 		return
+	}
+
+	return
+}
+
+func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecision) (data response.CAResponse, err error) {
+
+	var (
+		trxCaDecision entity.TrxCaDecision
+		trxDetail     entity.TrxDetail
+		trxStatus     entity.TrxStatus
+		decision      string
+	)
+
+	switch req.Decision {
+	case constant.DECISION_REJECT:
+		decision = constant.DB_DECISION_REJECT
+	case constant.DECISION_APPROVE:
+		decision = constant.DB_DECISION_APR
+	}
+
+	// get limit approval for final_approval
+	limit, err := u.repository.GetLimitApproval(req.NTFAkumulasi)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get limit approval error")
+		return
+	}
+
+	trxCaDecision = entity.TrxCaDecision{
+		ProspectID:    req.ProspectID,
+		Decision:      decision,
+		SlikResult:    req.SlikResult,
+		Note:          req.Note,
+		CreatedBy:     req.CreatedBy,
+		DecisionBy:    req.DecisionBy,
+		FinalApproval: limit.Alias,
+	}
+
+	err = u.repository.SaveCADecionData(trxCaDecision)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Save CA Decision error")
+		return
+	}
+
+	trxStatus = entity.TrxStatus{
+		ProspectID:     req.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_UNPROCESS,
+		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+		RuleCode:       constant.CODE_CREDIT_COMMITTEE,
+		SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
+	}
+
+	err = u.repository.UpdateTrxStatus(trxStatus)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Update Trx Status error")
+		return
+	}
+
+	trxDetail = entity.TrxDetail{
+		ProspectID:     req.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_UNPROCESS,
+		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+		RuleCode:       constant.CODE_CREDIT_COMMITTEE,
+		SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
+		NextStep:       constant.DB_DECISION_BRANCH_MANAGER,
+		Info:           req.SlikResult,
+		CreatedBy:      req.CreatedBy,
+	}
+
+	err = u.repository.SaveTrxDetail(trxDetail)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Update Trx Details error")
+		return
+	}
+
+	err = u.repository.DeleteDraft(req.ProspectID)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Delete Draft Data error")
+		return
+	}
+
+	data = response.CAResponse{
+		ProspectID: req.ProspectID,
+		Decision:   req.Decision,
+		SlikResult: req.SlikResult,
+		Note:       req.Note,
 	}
 
 	return

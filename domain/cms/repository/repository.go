@@ -1248,3 +1248,120 @@ func (r repoHandler) SaveDraftData(draft entity.TrxDraftCaDecision) (err error) 
 
 	return
 }
+
+func (r repoHandler) GetLimitApproval(ntf float64) (limit entity.MappingLimitApprovalScheme, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.NewKmb.Raw("SELECT [alias] FROM m_limit_approval_scheme WITH (nolock) WHERE ? between coverage_ntf_start AND coverage_ntf_end", ntf).Scan(&limit).Error; err != nil {
+
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) SaveCADecionData(trxCaDecision entity.TrxCaDecision) (err error) {
+	var x sql.TxOptions
+
+	trxCaDecision.CreatedAt = DtmRequest
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	// insert trx_ca_decision
+	if err = db.Create(&trxCaDecision).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) UpdateTrxStatus(trxStatus entity.TrxStatus) (err error) {
+	var x sql.TxOptions
+
+	trxStatus.CreatedAt = DtmRequest
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	// update trx_status
+	result := db.Model(&trxStatus).Where("ProspectID = ?", trxStatus.ProspectID).Updates(trxStatus)
+
+	if err = result.Error; err != nil {
+		return
+	}
+
+	if result.RowsAffected == 0 {
+		// record not found...
+		if err = db.Create(&trxStatus).Error; err != nil {
+			return
+		}
+	}
+
+	return
+}
+
+func (r repoHandler) SaveTrxDetail(trxDetail entity.TrxDetail) (err error) {
+	var x sql.TxOptions
+
+	trxDetail.CreatedAt = DtmRequest
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	// insert trx_ca_decision
+	if err = db.Create(&trxDetail).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) DeleteDraft(prospectID string) (err error) {
+	var x sql.TxOptions
+
+	var txrDraft entity.TrxDraftCaDecision
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	// insert trx_ca_decision
+	result := db.Where("ProspectID = ?", prospectID).Delete(&txrDraft)
+
+	if err = result.Error; err != nil {
+		return
+	}
+
+	return
+}

@@ -18,4 +18,9 @@ type Repository interface {
 	GetHistoryApproval(prospectID string) (history []entity.TrxHistoryApprovalScheme, err error)
 	GetInternalRecord(prospectID string) (record []entity.TrxInternalRecord, err error)
 	SaveDraftData(draft entity.TrxDraftCaDecision) (err error)
+	GetLimitApproval(ntf float64) (limit entity.MappingLimitApprovalScheme, err error)
+	SaveCADecionData(trxCaDecision entity.TrxCaDecision) (err error)
+	UpdateTrxStatus(trxStatus entity.TrxStatus) (err error)
+	SaveTrxDetail(trxDetail entity.TrxDetail) (err error)
+	DeleteDraft(prospectID string) (err error)
 }
