@@ -85,7 +85,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	}
 
 	if filtering.ScoreBiro != nil {
-		if filtering.ScoreBiro.(string) != constant.DECISION_PBK_NO_HIT {
+		if filtering.ScoreBiro.(string) != "" && filtering.ScoreBiro.(string) != constant.DECISION_PBK_NO_HIT && filtering.ScoreBiro.(string) != constant.PEFINDO_UNSCORE {
 			cbFound = true
 		}
 	}

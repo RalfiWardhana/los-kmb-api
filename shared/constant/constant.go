@@ -528,7 +528,21 @@ const (
 	ADDRESS_TYPE_MAILING   = "MAILING"
 
 	// BIRO
-	SOURCE_DECISION_BIRO = "BIR"
+	SOURCE_DECISION_BIRO                    = "BIR"
+	CODE_PEFINDO_NOTFOUND                   = "897"
+	REASON_PEFINDO_NOTFOUND                 = "PBK Tidak Ditemukan"
+	CODE_PEFINDO_OVD12LTE60_CURRENT_LTE30   = "938"
+	REASON_PEFINDO_OVD12LTE60_CURRENT_LTE30 = "PBK - Current OVD <= %v"
+	CODE_PEFINDO_CURRENT_GT30               = "941"
+	REASON_PEFINDO_CURRENT_GT30             = "PBK - Current OVD > %v"
+	CODE_PEFINDO_OVD12GT60                  = "962"
+	REASON_PEFINDO_OVD12GT60                = "PBK - Last 12 Month OVD > %v"
+	CODE_PEFINDO_BPKB_BEDA                  = "9416"
+	REASON_BPKB_BEDA                        = "Nama Beda"
+	REASON_BPKB_SAMA                        = "Nama Sama"
+	CODE_BPKB_SAMA_BAKI_DEBET_GT20J         = "9410"
+	CODE_BPKB_SAMA_BAKI_DEBET_LTE20J        = "9408"
+	CODE_PEFINDO_PRIME_PRIORITY             = "9422"
 
 	// CREDIT ANALYST
 	SOURCE_DECISION_CA    = "CRA"

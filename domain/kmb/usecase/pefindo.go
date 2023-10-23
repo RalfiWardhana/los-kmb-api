@@ -1,0 +1,167 @@
+package usecase
+
+import (
+	"errors"
+	"fmt"
+	"los-kmb-api/models/entity"
+	"los-kmb-api/models/response"
+	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
+	"os"
+	"strings"
+)
+
+func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.FilteringKMB, spDupcheck response.SpDupcheckMap) (data response.UsecaseApi, err error) {
+
+	if filtering.CustomerSegment == constant.RO_AO_PRIME || filtering.CustomerSegment == constant.RO_AO_PRIORITY {
+
+		if filtering.CustomerStatus == constant.STATUS_KONSUMEN_AO && spDupcheck.InstallmentTopup == 0 && spDupcheck.NumberOfPaidInstallment >= 6 {
+			data = response.UsecaseApi{
+				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
+				Reason:         fmt.Sprintf("%s %s >= 6 bulan - PBK Pass", filtering.CustomerStatus, filtering.CustomerSegment),
+				Result:         constant.DECISION_PASS,
+				SourceDecision: constant.SOURCE_DECISION_BIRO,
+			}
+			return
+		}
+
+		if filtering.CustomerStatus == constant.STATUS_KONSUMEN_RO || (spDupcheck.InstallmentTopup > 0 && spDupcheck.MaxOverdueDaysforActiveAgreement <= 30) {
+			data = response.UsecaseApi{
+				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
+				Reason:         fmt.Sprintf("%s %s - PBK Pass", filtering.CustomerStatus, filtering.CustomerSegment),
+				Result:         constant.DECISION_PASS,
+				SourceDecision: constant.SOURCE_DECISION_BIRO,
+			}
+			return
+		}
+	}
+
+	if cbFound {
+		var (
+			maxOverdueDays          float64
+			maxOverdueLast12Months  float64
+			isWoContractBiro        float64
+			isWoWithCollateralBiro  float64
+			totalBakiDebetNonAgunan float64
+		)
+
+		if filtering.MaxOverdueBiro != nil {
+			maxOverdueDays, err = utils.GetFloat(filtering.MaxOverdueBiro)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat MaxOverdueBiro Pefindo Error")
+				return
+			}
+		}
+
+		if filtering.MaxOverdueLast12monthsBiro != nil {
+			maxOverdueLast12Months, err = utils.GetFloat(filtering.MaxOverdueLast12monthsBiro)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat MaxOverdueLast12monthsBiro Pefindo Error")
+				return
+			}
+		}
+
+		if maxOverdueLast12Months > constant.PBK_OVD_LAST_12 {
+			data = response.UsecaseApi{
+				Code:           constant.CODE_PEFINDO_OVD12GT60,
+				Reason:         fmt.Sprintf(constant.REASON_PEFINDO_OVD12GT60, constant.PBK_OVD_LAST_12),
+				Result:         constant.DECISION_REJECT,
+				SourceDecision: constant.SOURCE_DECISION_BIRO,
+			}
+		} else if maxOverdueDays > constant.PBK_OVD_CURRENT {
+			data = response.UsecaseApi{
+				Code:           constant.CODE_PEFINDO_CURRENT_GT30,
+				Reason:         fmt.Sprintf(constant.REASON_PEFINDO_CURRENT_GT30, constant.PBK_OVD_CURRENT),
+				Result:         constant.DECISION_REJECT,
+				SourceDecision: constant.SOURCE_DECISION_BIRO,
+			}
+		} else {
+			data = response.UsecaseApi{
+				Code:           constant.CODE_PEFINDO_OVD12LTE60_CURRENT_LTE30,
+				Reason:         fmt.Sprintf(constant.REASON_PEFINDO_OVD12LTE60_CURRENT_LTE30, constant.PBK_OVD_CURRENT),
+				Result:         constant.DECISION_PASS,
+				SourceDecision: constant.SOURCE_DECISION_BIRO,
+			}
+		}
+
+		if data.Result == constant.DECISION_REJECT {
+			if strings.Contains(os.Getenv("NAMA_SAMA"), bpkbName) {
+				if filtering.IsWoContractBiro != nil {
+					isWoContractBiro, err = utils.GetFloat(filtering.IsWoContractBiro)
+					if err != nil {
+						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat IsWoContractBiro Pefindo Error")
+						return
+					}
+				}
+
+				if filtering.IsWoWithCollateralBiro != nil {
+					isWoContractBiro, err = utils.GetFloat(filtering.IsWoWithCollateralBiro)
+					if err != nil {
+						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat IsWoWithCollateralBiro Pefindo Error")
+						return
+					}
+				}
+
+				if isWoContractBiro > 0 {
+					if isWoWithCollateralBiro > 0 {
+						data = response.UsecaseApi{
+							Code:           constant.NAMA_SAMA_WO_AGUNAN_REJECT_CODE,
+							Reason:         fmt.Sprintf("%s & %s", constant.REASON_BPKB_SAMA, constant.ADA_FASILITAS_WO_AGUNAN),
+							Result:         constant.DECISION_REJECT,
+							SourceDecision: constant.SOURCE_DECISION_BIRO,
+						}
+					} else {
+						if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
+							data = response.UsecaseApi{
+								Code:           constant.CODE_BPKB_SAMA_BAKI_DEBET_GT20J,
+								Reason:         constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI,
+								Result:         constant.DECISION_REJECT,
+								SourceDecision: constant.SOURCE_DECISION_BIRO,
+							}
+						} else {
+							data = response.UsecaseApi{
+								Code:           constant.CODE_BPKB_SAMA_BAKI_DEBET_LTE20J,
+								Reason:         constant.NAMA_SAMA_BAKI_DEBET_SESUAI,
+								Result:         constant.DECISION_PASS,
+								SourceDecision: constant.SOURCE_DECISION_BIRO,
+							}
+						}
+					}
+				} else {
+					if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
+						data = response.UsecaseApi{
+							Code:           constant.CODE_BPKB_SAMA_BAKI_DEBET_GT20J,
+							Reason:         constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI,
+							Result:         constant.DECISION_REJECT,
+							SourceDecision: constant.SOURCE_DECISION_BIRO,
+						}
+					} else {
+						data = response.UsecaseApi{
+							Code:           constant.NAMA_SAMA_NO_FACILITY_WO_CODE,
+							Reason:         fmt.Sprintf("%s & %s", constant.REASON_BPKB_SAMA, constant.TIDAK_ADA_FASILITAS_WO_AGUNAN),
+							Result:         constant.DECISION_PASS,
+							SourceDecision: constant.SOURCE_DECISION_BIRO,
+						}
+					}
+				}
+			} else {
+				data = response.UsecaseApi{
+					Code:           constant.CODE_PEFINDO_BPKB_BEDA,
+					Reason:         fmt.Sprintf("%s & %s", constant.REASON_BPKB_BEDA, data.Reason),
+					Result:         constant.DECISION_REJECT,
+					SourceDecision: constant.SOURCE_DECISION_BIRO,
+				}
+			}
+		}
+
+	} else {
+		data = response.UsecaseApi{
+			Code:           constant.CODE_PEFINDO_NOTFOUND,
+			Reason:         constant.REASON_PEFINDO_NOTFOUND,
+			Result:         constant.DECISION_PASS,
+			SourceDecision: constant.SOURCE_DECISION_BIRO,
+		}
+	}
+
+	return
+}
