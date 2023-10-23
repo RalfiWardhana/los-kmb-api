@@ -715,3 +715,10 @@ type ReviewPrescreening struct {
 	Decision   string      `json:"decision"`
 	Reason     string      `json:"reason"`
 }
+
+type SaveAsDraft struct {
+	ProspectID string `json:"prospect_id"`
+	Decision   string `json:"decision"`
+	SlikResult string `json:"slik_result"`
+	Note       string `json:"note"`
+}

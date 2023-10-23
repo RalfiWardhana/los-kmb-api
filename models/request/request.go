@@ -735,3 +735,12 @@ type ReqInquiryCa struct {
 	Filter   string `json:"filter"`
 	UserID   string `json:"user_id"`
 }
+
+type ReqSaveAsDraft struct {
+	ProspectID string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
+	Decision   string `json:"decision" validate:"required" example:"APPROVE,REJECT"`
+	SlikResult string `json:"slik_result" validate:"required"`
+	Note       string `json:"note"`
+	CreatedBy  string `json:"decision_by" validate:"required"`
+	DecisionBy string `json:"decision_by_name" validate:"required"`
+}

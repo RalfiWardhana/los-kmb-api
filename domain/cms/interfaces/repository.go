@@ -17,4 +17,5 @@ type Repository interface {
 	GetInquiryCa(req request.ReqInquiryCa, pagination interface{}) (data []entity.InquiryCa, rowTotal int, err error)
 	GetHistoryApproval(prospectID string) (history []entity.TrxHistoryApprovalScheme, err error)
 	GetInternalRecord(prospectID string) (record []entity.TrxInternalRecord, err error)
+	SaveDraftData(draft entity.TrxDraftCaDecision) (err error)
 }
