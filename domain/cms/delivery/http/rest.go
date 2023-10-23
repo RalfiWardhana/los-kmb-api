@@ -199,6 +199,8 @@ func (c *handlerCMS) CaInquiry(ctx echo.Context) (err error) {
 	req := request.ReqInquiryCa{
 		Search:   ctx.QueryParam("search"),
 		BranchID: ctx.QueryParam("branch_id"),
+		Filter:   ctx.QueryParam("filter"),
+		UserID:   ctx.QueryParam("user_id"),
 	}
 
 	page, _ := strconv.Atoi(ctx.QueryParam("page"))

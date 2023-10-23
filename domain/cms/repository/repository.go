@@ -776,18 +776,47 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		filter         string
 		filterBranch   string
 		filterPaginate string
+		query          string
 	)
 
 	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
-
-	// where := " AND tt.lob = 'KMB' AND tt.activity = 'UNPR' AND tt.decision = 'CPR' AND tt.source_decision = 'CRA'"
-	where := " AND tt.lob = 'KMB'"
 
 	filterBranch = utils.GenerateBranchFilter(req.BranchID)
 
 	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
 
-	filter = filter + where
+	// Filter By
+	if req.Filter != "" {
+		var (
+			decision string
+			activity string
+		)
+		switch req.Filter {
+		case constant.DECISION_APPROVE:
+			decision = constant.DB_DECISION_APR
+			query = fmt.Sprintf(" AND tt.decision= '%s'", decision)
+
+		case constant.DECISION_REJECT:
+			decision = constant.DB_DECISION_REJECT
+			query = fmt.Sprintf(" AND tt.decision= '%s'", decision)
+
+		case constant.DECISION_CANCEL:
+			decision = constant.DB_DECISION_CANCEL
+			query = fmt.Sprintf(" AND tt.decision= '%s'", decision)
+
+		case constant.NEED_DECISION:
+			activity = constant.ACTIVITY_UNPROCESS
+			decision = constant.DB_DECISION_CREDIT_PROCESS
+			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s'", activity, decision)
+
+		case constant.SAVED_AS_DRAFT:
+			if req.UserID != "" {
+				query = fmt.Sprintf(" AND tt.draft_created_by= '%s' ", req.UserID)
+			}
+		}
+	}
+
+	filter = filter + query
 
 	if pagination != nil {
 		page, _ := json.Marshal(pagination)
@@ -814,6 +843,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 			tst.activity,
 			tst.source_decision,
 			tst.decision,
+			tdd.created_by AS draft_created_by,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
 		FROM
@@ -838,6 +868,27 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN (
+			SELECT
+			  x.ProspectID,
+			  x.decision,
+			  x.slik_result,
+			  x.note,
+			  x.created_at,
+			  x.created_by,
+			  x.decision_by
+			FROM
+			  trx_draft_ca_decision x WITH (nolock)
+			WHERE
+			  x.created_at = (
+				SELECT
+				  max(created_at)
+				from
+				  trx_draft_ca_decision WITH (NOLOCK)
+				WHERE
+				  ProspectID = x.ProspectID
+			  )
+		) tdd ON tm.ProspectID = tdd.ProspectID
 		) AS tt %s`, filter)).Scan(&row).Error; err != nil {
 			return
 		}

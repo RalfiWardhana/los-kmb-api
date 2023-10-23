@@ -715,15 +715,3 @@ type ReviewPrescreening struct {
 	Decision   string      `json:"decision"`
 	Reason     string      `json:"reason"`
 }
-
-type AgreementCONFINS struct {
-	ApplicationID        string  `json:"application_id"`
-	ProductType          string  `json:"product_type"`
-	AgreementDate        string  `json:"agreement_date"`
-	AssetCode            string  `json:"asset_code"`
-	Tenor                int     `json:"period"`
-	OutstandingPrincipal float64 `json:"outstanding_principal"`
-	InstallmentAmount    float64 `json:"installment_amount"`
-	ContractStatus       string  `json:"contract_status"`
-	CurrentCondition     string  `json:"current_condition"`
-}

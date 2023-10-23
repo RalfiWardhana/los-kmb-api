@@ -732,4 +732,6 @@ type ReqReviewPrescreening struct {
 type ReqInquiryCa struct {
 	Search   string `json:"search"`
 	BranchID string `json:"branch_id"`
+	Filter   string `json:"filter"`
+	UserID   string `json:"user_id"`
 }
