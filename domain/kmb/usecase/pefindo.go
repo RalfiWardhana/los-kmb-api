@@ -13,22 +13,26 @@ import (
 
 func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.FilteringKMB, spDupcheck response.SpDupcheckMap) (data response.UsecaseApi, err error) {
 
-	if filtering.CustomerSegment == constant.RO_AO_PRIME || filtering.CustomerSegment == constant.RO_AO_PRIORITY {
+	var customerSegment string
+	if filtering.CustomerSegment != nil {
+		customerSegment = filtering.CustomerSegment.(string)
+	}
 
-		if filtering.CustomerStatus == constant.STATUS_KONSUMEN_AO && spDupcheck.InstallmentTopup == 0 && spDupcheck.NumberOfPaidInstallment >= 6 {
+	if customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY {
+		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_AO && spDupcheck.InstallmentTopup == 0 && spDupcheck.NumberOfPaidInstallment >= 6 {
 			data = response.UsecaseApi{
 				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
-				Reason:         fmt.Sprintf("%s %s >= 6 bulan - PBK Pass", filtering.CustomerStatus, filtering.CustomerSegment),
+				Reason:         fmt.Sprintf("%s %s >= 6 bulan - PBK Pass", spDupcheck.StatusKonsumen, customerSegment),
 				Result:         constant.DECISION_PASS,
 				SourceDecision: constant.SOURCE_DECISION_BIRO,
 			}
 			return
 		}
 
-		if filtering.CustomerStatus == constant.STATUS_KONSUMEN_RO || (spDupcheck.InstallmentTopup > 0 && spDupcheck.MaxOverdueDaysforActiveAgreement <= 30) {
+		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_RO || (spDupcheck.InstallmentTopup > 0 && spDupcheck.MaxOverdueDaysforActiveAgreement <= 30) {
 			data = response.UsecaseApi{
 				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
-				Reason:         fmt.Sprintf("%s %s - PBK Pass", filtering.CustomerStatus, filtering.CustomerSegment),
+				Reason:         fmt.Sprintf("%s %s - PBK Pass", spDupcheck.StatusKonsumen, customerSegment),
 				Result:         constant.DECISION_PASS,
 				SourceDecision: constant.SOURCE_DECISION_BIRO,
 			}
