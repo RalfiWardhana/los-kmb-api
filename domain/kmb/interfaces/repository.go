@@ -25,6 +25,13 @@ type Repository interface {
 	ScanWgOnl(query string) (data entity.ScanInstallmentAmount, err error)
 	GetMinimalIncomePMK(branchID string, statusKonsumen string) (responseIncomePMK entity.MappingIncomePMK, err error)
 
+	GetScoreGenerator(zipCode string) (score entity.ScoreGenerator, err error)
+	GetScoreGeneratorROAO() (score entity.ScoreGenerator, err error)
+	GetTrxDetailBIro(prospectID string) (trxDetailBiro []entity.TrxDetailBiro, err error)
+	GetActiveLoanTypeLast6M(customerID string) (score entity.GetActiveLoanTypeLast6M, err error)
+	GetActiveLoanTypeLast24M(customerID string) (score entity.GetActiveLoanTypeLast24M, err error)
+	GetMoblast(customerID string) (score entity.GetMoblast, err error)
+
 	GetLatestBannedRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error)
 	GetLatestRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error)
 	GetAllReject(idNumber string) (data []entity.DupcheckRejectionPMK, err error)

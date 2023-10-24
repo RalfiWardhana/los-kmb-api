@@ -45,6 +45,44 @@ type Filtering struct {
 	Cluster           interface{} `json:"-"`
 }
 
+type PefindoIDX struct {
+	ProspectID              string  `json:"prospect_id"`
+	OldestMobPl             int     `json:"oldestmob_pl"`
+	FinalNom6012Mth         int     `json:"final_nom60_12mth"`
+	TotBakiDebetBanksActive int     `json:"tot_bakidebet_banks_active"`
+	TotBakiDebet3160Dpd     int     `json:"tot_bakidebet_31_60dpd"`
+	Worst24Mth              int     `json:"worst_24mth"`
+	MaxLimitOth             float64 `json:"max_limit_oth"`
+
+	Nom036MonthAll int     `json:"nom03_6mth_all"`
+	MaxLimitPl     float64 `json:"max_limit_pl"`
+	TotBakiDebet4  int     `json:"tot_bakidebet4"`
+	Worst12MthAuto int     `json:"worst_12mth_auto"`
+
+	Nom0312MntAll  int `json:"nom03_12mth_all"`
+	Worst24MthAuto int `json:"worst_24mth_auto"`
+}
+
+type IntegratorScorePro struct {
+	ProspectID  string `json:"prospect_id"`
+	Score       int    `json:"score"`
+	Result      string `json:"result"`
+	ScoreBand   string `json:"score_band"`
+	ScoreResult string `json:"score_result"`
+	Status      string `json:"status"`
+	Segmen      string `json:"segmen"`
+	IsTsi       bool   `json:"is_tsi"`
+	ScoreBin    string `json:"score_bin"`
+}
+
+type ScorePro struct {
+	Result string `json:"result"`
+	Code   string `json:"code"`
+	Reason string `json:"reason"`
+	Source string `json:"source"`
+	Info   string `json:"info"`
+}
+
 type CustomerDomain struct {
 	Code      string       `json:"code"`
 	Message   string       `json:"message"`

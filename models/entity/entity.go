@@ -404,6 +404,25 @@ func (c *MappingResultDukcapil) TableName() string {
 	return "kmb_dukcapil_mapping_result"
 }
 
+type ScoreGenerator struct {
+	Key               string `gorm:"type:varchar(100);column:key"`
+	ScoreGeneratorsID string `gorm:"type:varchar(100);column:score_generators_id"`
+}
+
+type GetActiveLoanTypeLast6M struct {
+	CustomerID           string `gorm:"column:CustomerID"`
+	ActiveLoanTypeLast6M string `gorm:"column:active_loanType_last6m"`
+}
+
+type GetActiveLoanTypeLast24M struct {
+	AgreementNo string `gorm:"column:AgreementNo"`
+	MOB         string `gorm:"column:MOB"`
+}
+
+type GetMoblast struct {
+	Moblast string `gorm:"column:moblast"`
+}
+
 type TrxMaster struct {
 	ProspectID        string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
 	BranchID          string    `gorm:"type:varchar(5);column:BranchID"`

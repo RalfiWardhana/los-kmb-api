@@ -146,6 +146,11 @@ func main() {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
 	}
 
+	scorePro, err := database.OpenScorepro()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	var cache *bigcache.BigCache
 	isCacheActive, _ := strconv.ParseBool(config.Env("CACHE_ACTIVE"))
 	if isCacheActive {
@@ -216,7 +221,7 @@ func main() {
 	cmsDelivery.CMSHandler(apiGroupv3, cmsUsecases, cmsRepositories, jsonResponse, producer, accessToken)
 
 	// define new kmb journey
-	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, confins, staging, minilosWG, minilosKMB, newKMB)
+	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, confins, staging, minilosWG, minilosKMB, newKMB, scorePro)
 	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
 	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)

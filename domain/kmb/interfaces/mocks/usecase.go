@@ -354,6 +354,27 @@ func (_m *Usecase) PMK(branchID string, statusKonsumen string, income float64, h
 	return r0, r1
 }
 
+// Pefindo provides a mock function with given fields: cbFound, bpkbName, filtering, spDupcheck
+func (_m *Usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.FilteringKMB, spDupcheck response.SpDupcheckMap) (response.UsecaseApi, error) {
+	ret := _m.Called(cbFound, bpkbName, filtering, spDupcheck)
+
+	var r0 response.UsecaseApi
+	if rf, ok := ret.Get(0).(func(bool, string, entity.FilteringKMB, response.SpDupcheckMap) response.UsecaseApi); ok {
+		r0 = rf(cbFound, bpkbName, filtering, spDupcheck)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(bool, string, entity.FilteringKMB, response.SpDupcheckMap) error); ok {
+		r1 = rf(cbFound, bpkbName, filtering, spDupcheck)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Prescreening provides a mock function with given fields: ctx, reqs, filtering, accessToken
 func (_m *Usecase) Prescreening(ctx context.Context, reqs request.Metrics, filtering entity.FilteringKMB, accessToken string) (entity.TrxPrescreening, response.TrxFMF, entity.TrxDetail, error) {
 	ret := _m.Called(ctx, reqs, filtering, accessToken)

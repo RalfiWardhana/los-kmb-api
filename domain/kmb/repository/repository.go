@@ -25,24 +25,26 @@ var (
 )
 
 type repoHandler struct {
-	losDB     *gorm.DB
-	logsDB    *gorm.DB
-	confinsDB *gorm.DB
-	stagingDB *gorm.DB
-	wgOffDB   *gorm.DB
-	kmbOffDB  *gorm.DB
-	newKmbDB  *gorm.DB
+	losDB      *gorm.DB
+	logsDB     *gorm.DB
+	confinsDB  *gorm.DB
+	stagingDB  *gorm.DB
+	wgOffDB    *gorm.DB
+	kmbOffDB   *gorm.DB
+	newKmbDB   *gorm.DB
+	scoreProDB *gorm.DB
 }
 
-func NewRepository(los, logs, confins, staging, wgOffDB, kmbOff, newKmbDB *gorm.DB) interfaces.Repository {
+func NewRepository(los, logs, confins, staging, wgOffDB, kmbOff, newKmbDB, scorePro *gorm.DB) interfaces.Repository {
 	return &repoHandler{
-		losDB:     los,
-		logsDB:    logs,
-		confinsDB: confins,
-		stagingDB: staging,
-		wgOffDB:   wgOffDB,
-		kmbOffDB:  kmbOff,
-		newKmbDB:  newKmbDB,
+		losDB:      los,
+		logsDB:     logs,
+		confinsDB:  confins,
+		stagingDB:  staging,
+		wgOffDB:    wgOffDB,
+		kmbOffDB:   kmbOff,
+		newKmbDB:   newKmbDB,
+		scoreProDB: scorePro,
 	}
 }
 
@@ -127,8 +129,129 @@ func (r repoHandler) GetFilteringForJourney(prospectID string) (filtering entity
 	return
 }
 
+func (r repoHandler) GetTrxDetailBIro(prospectID string) (trxDetailBiro []entity.TrxDetailBiro, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.newKmbDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf("SELECT * FROM trx_detail_biro WITH (nolock) WHERE prospect_id = '%s'", prospectID)).Scan(&trxDetailBiro).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) GetMappingDukcapil(statusVD, statusFR string) (resultDukcapil entity.MappingResultDukcapil, err error) {
 	if err = r.losDB.Raw(fmt.Sprintf(`SELECT * FROM kmb_dukcapil_mapping_result WHERE result_vd='%s' AND result_fr='%s'`, statusVD, statusFR)).Scan(&resultDukcapil).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetScoreGenerator(zipCode string) (score entity.ScoreGenerator, err error) {
+
+	if err = r.scoreProDB.Raw(fmt.Sprintf(`SELECT TOP 1 x.* 
+	FROM
+	(
+		SELECT 
+		a.[key],
+		b.id AS score_generators_id
+		FROM [dbo].[score_models_rules_data] a
+		INNER JOIN score_generators b
+		ON b.id = a.score_generators
+		WHERE (a.[key] = 'first_residence_zipcode_2w_jabo' AND a.[value] = '%s')
+		OR (a.[key] = 'first_residence_zipcode_2w_others' AND a.[value] = '%s')
+	)x`, zipCode, zipCode)).Scan(&score).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetScoreGeneratorROAO() (score entity.ScoreGenerator, err error) {
+
+	if err = r.scoreProDB.Raw(`SELECT TOP 1 x.* 
+	FROM
+	(
+		SELECT 
+		a.[key],
+		b.id AS score_generators_id
+		FROM [dbo].[score_models_rules_data] a
+		INNER JOIN score_generators b
+		ON b.id = a.score_generators
+		WHERE a.[key] = 'first_residence_zipcode_2w_aoro'
+	)x`).Scan(&score).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetActiveLoanTypeLast6M(customerID string) (score entity.GetActiveLoanTypeLast6M, err error) {
+
+	if err = r.confinsDB.Raw(fmt.Sprintf(`SELECT CustomerID, Concat([1],' ',';',' ',[2],' ',';',' ',[3]) AS active_loanType_last6m FROM
+	( SELECT * FROM
+		( SELECT  CustomerID, PRODUCT, Seq_PRODUCT FROM
+			( SELECT DISTINCT CustomerID,PRODUCT, ROW_NUMBER() OVER (PARTITION BY CustomerID Order By PRODUCT DESC) AS Seq_PRODUCT FROM
+				( SELECT DISTINCT CustomerID,
+						CASE WHEN ContractStatus in ('ICP','PRP','LIV','RRD','ICL','INV') and MOB<=-1 and MOB>=-6 THEN PRODUCT
+						END AS 'PRODUCT'
+					FROM
+					( SELECT CustomerID,A.ApplicationID,DATEDIFF(MM, GETDATE(), AgingDate) AS 'MOB', CAST(aa.AssetTypeID AS int) AS PRODUCT, ContractStatus FROM																	   
+						( SELECT * FROM Agreement a WITH (NOLOCK) WHERE a.CustomerID = '%s' 
+						)A
+						LEFT JOIN
+						( SELECT DISTINCT ApplicationID,AgingDate,EndPastDueDays FROM SBOAging WITH (NOLOCK)
+							WHERE ApplicationID IN (SELECT DISTINCT a.ApplicationID  FROM Agreement a WITH (NOLOCK)) AND AgingDate=EOMONTH(AgingDate)
+						)B ON A.ApplicationID=B.ApplicationID
+						LEFT JOIN AgreementAsset aa WITH (NOLOCK) ON A.ApplicationID = aa.ApplicationID
+					)S
+				)T
+			)U
+		) AS SourceTable PIVOT(AVG(PRODUCT) FOR Seq_PRODUCT IN([1],[2],[3])) AS PivotTable
+	)V`, customerID)).Scan(&score).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetActiveLoanTypeLast24M(customerID string) (score entity.GetActiveLoanTypeLast24M, err error) {
+
+	if err = r.confinsDB.Raw(fmt.Sprintf(`SELECT a.AgreementNo, MIN(DATEDIFF(MM, GETDATE(), s.AgingDate)) AS 'MOB' FROM Agreement a WITH (NOLOCK)
+	LEFT JOIN SBOAging s WITH (NOLOCK) ON s.ApplicationId = a.ApplicationID
+	WHERE a.ContractStatus in ('ICP','PRP','LIV','RRD','ICL','INV') 
+	AND DATEDIFF(MM, GETDATE(), s.AgingDate)<=-7 AND DATEDIFF(MM, GETDATE(), s.AgingDate)>=-24
+	AND a.CustomerID = '%s' GROUP BY a.AgreementNo`, customerID)).Scan(&score).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetMoblast(customerID string) (score entity.GetMoblast, err error) {
+
+	if err = r.confinsDB.Raw(fmt.Sprintf(`SELECT TOP 1 DATEDIFF(MM, GoLiveDate, GETDATE()) AS 'moblast' FROM Agreement a WITH (NOLOCK) 
+	WHERE a.CustomerID = '%s' AND a.GoLiveDate IS NOT NULL ORDER BY a.GoLiveDate DESC`, customerID)).Scan(&score).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
 		return
 	}
 
