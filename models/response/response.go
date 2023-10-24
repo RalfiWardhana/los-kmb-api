@@ -716,7 +716,7 @@ type ReviewPrescreening struct {
 	Reason     string      `json:"reason"`
 }
 
-type SaveAsDraft struct {
+type CAResponse struct {
 	ProspectID string `json:"prospect_id"`
 	Decision   string `json:"decision"`
 	SlikResult string `json:"slik_result"`

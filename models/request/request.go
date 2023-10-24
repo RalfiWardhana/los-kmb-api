@@ -744,3 +744,13 @@ type ReqSaveAsDraft struct {
 	CreatedBy  string `json:"decision_by" validate:"required"`
 	DecisionBy string `json:"decision_by_name" validate:"required"`
 }
+
+type ReqSubmitDecision struct {
+	ProspectID   string  `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
+	NTFAkumulasi float64 `json:"ntf_akumulasi" validate:"required"`
+	Decision     string  `json:"decision" validate:"required" example:"APPROVE,REJECT"`
+	SlikResult   string  `json:"slik_result" validate:"required"`
+	Note         string  `json:"note"`
+	CreatedBy    string  `json:"decision_by" validate:"required"`
+	DecisionBy   string  `json:"decision_by_name" validate:"required"`
+}
