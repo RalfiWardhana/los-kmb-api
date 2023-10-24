@@ -18,7 +18,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u usecase) Scorepro(ctx context.Context, pefindoScore string, req request.Metrics, spDupcheck response.SpDupcheckMap, accessToken string) (responseScs response.IntegratorScorePro, data response.ScorePro, err error) {
+func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore, customerSegment string, spDupcheck response.SpDupcheckMap, accessToken string) (responseScs response.IntegratorScorePro, data response.ScorePro, err error) {
 
 	var (
 		residenceZipCode              string
@@ -277,6 +277,27 @@ func (u usecase) Scorepro(ctx context.Context, pefindoScore string, req request.
 
 		if segmen > 0 && segmen <= segmenAssScore {
 			responseScs.Result = constant.DECISION_REJECT
+		}
+	}
+
+	// PRIME PRIORITY
+	if customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY {
+		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_AO && spDupcheck.InstallmentTopup == 0 && spDupcheck.NumberOfPaidInstallment >= 6 {
+			data.Result = constant.DECISION_PASS
+			data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
+			data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
+			data.Source = constant.SOURCE_DECISION_SCOREPRO
+			data.Info = string(info)
+			return
+		}
+
+		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_RO || (spDupcheck.InstallmentTopup > 0 && spDupcheck.MaxOverdueDaysforActiveAgreement <= 30) {
+			data.Result = constant.DECISION_PASS
+			data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
+			data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
+			data.Source = constant.SOURCE_DECISION_SCOREPRO
+			data.Info = string(info)
+			return
 		}
 	}
 
