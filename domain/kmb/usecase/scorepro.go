@@ -18,7 +18,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u usecase) Scorepro(ctx context.Context, req request.Metrics, spDupcheck response.SpDupcheckMap, accessToken string) (responseScs response.IntegratorScorePro, data response.ScorePro, err error) {
+func (u usecase) Scorepro(ctx context.Context, pefindoScore string, req request.Metrics, spDupcheck response.SpDupcheckMap, accessToken string) (responseScs response.IntegratorScorePro, data response.ScorePro, err error) {
 
 	var (
 		residenceZipCode              string
@@ -32,8 +32,8 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, spDupcheck r
 
 	// DEFAULT
 	scoreGenerator = entity.ScoreGenerator{
-		Key:               "first_residence_zipcode_2w_others",
-		ScoreGeneratorsID: "37fe1525-1be1-48d1-aab5-6adf05305a0a",
+		Key:               os.Getenv("SCOREPRO_DEFAULT_KEY"),
+		ScoreGeneratorsID: os.Getenv("SCOREPRO_DEFAULT_SCORE_GENERATOR_ID"),
 	}
 
 	if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_NEW {
@@ -123,7 +123,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, spDupcheck r
 		bpkbKey = "O"
 	}
 
-	if scoreGenerator.Key == "first_residence_zipcode_2w_jabo" {
+	if scoreGenerator.Key == os.Getenv("KEY_SCOREPRO_IDX_2W_JABOJABAR") {
 
 		BPKBYear, _ := strconv.Atoi(req.Item.ManufactureYear)
 		ageVehicle := currentYear - BPKBYear
@@ -140,7 +140,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, spDupcheck r
 			"profession_id":  req.CustomerEmployment.ProfessionID,
 		}
 
-	} else if scoreGenerator.Key == "first_residence_zipcode_2w_others" {
+	} else if scoreGenerator.Key == os.Getenv("KEY_SCOREPRO_IDX_2W_OTHERS") {
 
 		employmentSinceYear, _ := strconv.Atoi(req.CustomerEmployment.EmploymentSinceYear)
 		employmentSinceYear = currentYear - employmentSinceYear
@@ -157,7 +157,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, spDupcheck r
 			"home_status":      req.CustomerPersonal.HomeStatus,
 		}
 
-	} else if scoreGenerator.Key == "first_residence_zipcode_2w_aoro" {
+	} else if scoreGenerator.Key == os.Getenv("KEY_SCOREPRO_IDX_2W_AORO") {
 
 		location, _ := time.LoadLocation("Asia/Jakarta")
 		layout := "2006-01-02"
@@ -241,47 +241,178 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, spDupcheck r
 			ScoreResult: constant.SCOREPRO_RESULT_MEDIUM_2ND,
 		}
 
-		info, _ := json.Marshal(responseScs)
+	} else {
 
-		data.Result = constant.DECISION_PASS
-		data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
-		data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
-		data.Source = constant.SOURCE_DECISION_SCOREPRO
-		data.Info = string(info)
+		err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &responseScs)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal IntegratorScorePro Error")
+			return
+		}
 
-		return
-	}
-
-	err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &responseScs)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal IntegratorScorePro Error")
-		return
 	}
 
 	info, _ := json.Marshal(responseScs)
 
+	// HANDLING RESPONSE TSI
+	if responseScs.IsTsi && responseScs.Status != "" {
+		if strings.Contains(responseScs.Status, "TSH") {
+			responseScs.ScoreResult = "HIGH"
+		} else if strings.Contains(responseScs.Status, "TSL") {
+			responseScs.ScoreResult = "LOW"
+		} else {
+			responseScs.ScoreResult = "MEDIUM"
+		}
+
+		if responseScs.Score != nil {
+			score := responseScs.Score.(string)
+			responseScs.Score = score[:strings.IndexByte(score, '-')]
+		}
+
+	}
+
+	// Handling ASS-SCORE
 	if strings.Contains(responseScs.Status, "ASS-") {
 		segmen, _ := strconv.Atoi(responseScs.Segmen)
-		segmenAssScore, _ := strconv.Atoi(os.Getenv("SEGMEN_ASS_SCORE"))
+		segmenAssScore, _ := strconv.Atoi(os.Getenv("SCOREPRO_SEGMEN_ASS_SCORE"))
 
 		if segmen > 0 && segmen <= segmenAssScore {
 			responseScs.Result = constant.DECISION_REJECT
 		}
 	}
 
-	if responseScs.Result == constant.DECISION_REJECT {
-		data.Result = constant.DECISION_REJECT
-		data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
-		data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
-		data.Source = constant.SOURCE_DECISION_SCOREPRO
-		data.Info = string(info)
-		return
+	if cbFound {
+		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_RO || spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
+			if strings.Contains(os.Getenv("NAMA_SAMA"), req.Item.BPKBName) {
+				data.Result = constant.DECISION_PASS
+				data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
+				data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
+				data.Source = constant.SOURCE_DECISION_SCOREPRO
+				data.Info = string(info)
+			} else {
+				if responseScs.ScoreResult == "LOW" {
+					data.Result = constant.DECISION_REJECT
+					data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
+					data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
+					data.Source = constant.SOURCE_DECISION_SCOREPRO
+					data.Info = string(info)
+				} else {
+					data.Result = constant.DECISION_PASS
+					data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
+					data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
+					data.Source = constant.SOURCE_DECISION_SCOREPRO
+					data.Info = string(info)
+				}
+			}
+		} else {
+			if strings.Contains(os.Getenv("NAMA_SAMA"), req.Item.BPKBName) {
+				data.Result = constant.DECISION_PASS
+				data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
+				data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
+				data.Source = constant.SOURCE_DECISION_SCOREPRO
+				data.Info = string(info)
+			} else {
+				if strings.ToUpper(pefindoScore) == "VERY HIGH RISK" {
+					if strings.Contains("2,3,4,5", responseScs.Segmen) {
+						data.Result = constant.DECISION_REJECT
+						data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
+						data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
+						data.Source = constant.SOURCE_DECISION_SCOREPRO
+						data.Info = string(info)
+					} else if strings.Contains("6,7,8,9,10,11,12", responseScs.Segmen) {
+						data.Result = constant.DECISION_PASS
+						data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
+						data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
+						data.Source = constant.SOURCE_DECISION_SCOREPRO
+						data.Info = string(info)
+					} else {
+						if responseScs.ScoreResult == "LOW" {
+							data.Result = constant.DECISION_REJECT
+							data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
+							data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
+							data.Source = constant.SOURCE_DECISION_SCOREPRO
+							data.Info = string(info)
+						} else {
+							data.Result = constant.DECISION_PASS
+							data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
+							data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
+							data.Source = constant.SOURCE_DECISION_SCOREPRO
+							data.Info = string(info)
+						}
+					}
+				} else {
+					if responseScs.ScoreResult == "LOW" {
+						data.Result = constant.DECISION_REJECT
+						data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
+						data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
+						data.Source = constant.SOURCE_DECISION_SCOREPRO
+						data.Info = string(info)
+					} else {
+						data.Result = constant.DECISION_PASS
+						data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
+						data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
+						data.Source = constant.SOURCE_DECISION_SCOREPRO
+						data.Info = string(info)
+					}
+				}
+			}
+		}
+	} else {
+		if responseScs.IsTsi {
+			if strings.Contains(os.Getenv("NAMA_SAMA"), req.Item.BPKBName) {
+				data.Result = constant.DECISION_PASS
+				data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
+				data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
+				data.Source = constant.SOURCE_DECISION_SCOREPRO
+				data.Info = string(info)
+			} else {
+				if responseScs.Result == constant.DECISION_PASS {
+					data.Result = constant.DECISION_PASS
+					data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
+					data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
+					data.Source = constant.SOURCE_DECISION_SCOREPRO
+					data.Info = string(info)
+				} else {
+					data.Result = constant.DECISION_REJECT
+					data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
+					data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
+					data.Source = constant.SOURCE_DECISION_SCOREPRO
+					data.Info = string(info)
+				}
+			}
+		} else {
+			if responseScs.Result == constant.DECISION_PASS {
+				data.Result = constant.DECISION_PASS
+				data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
+				data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
+				data.Source = constant.SOURCE_DECISION_SCOREPRO
+				data.Info = string(info)
+			} else {
+				if strings.Contains(os.Getenv("NAMA_SAMA"), req.Item.BPKBName) {
+					// Handling ASS-SCORE
+					segmen, _ := strconv.Atoi(responseScs.Segmen)
+					segmenAssScore, _ := strconv.Atoi(os.Getenv("SCOREPRO_SEGMEN_ASS_SCORE"))
+					if strings.Contains(responseScs.Status, "ASS-") && segmen > 0 && segmen <= segmenAssScore {
+						data.Result = constant.DECISION_REJECT
+						data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
+						data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
+						data.Source = constant.SOURCE_DECISION_SCOREPRO
+						data.Info = string(info)
+					} else {
+						data.Result = constant.DECISION_PASS
+						data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
+						data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
+						data.Source = constant.SOURCE_DECISION_SCOREPRO
+						data.Info = string(info)
+					}
+				} else {
+					data.Result = constant.DECISION_REJECT
+					data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
+					data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
+					data.Source = constant.SOURCE_DECISION_SCOREPRO
+					data.Info = string(info)
+				}
+			}
+		}
 	}
-
-	data.Result = constant.DECISION_PASS
-	data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
-	data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
-	data.Source = constant.SOURCE_DECISION_SCOREPRO
-	data.Info = string(info)
 	return
 }

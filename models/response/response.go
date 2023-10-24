@@ -64,15 +64,15 @@ type PefindoIDX struct {
 }
 
 type IntegratorScorePro struct {
-	ProspectID  string `json:"prospect_id"`
-	Score       int    `json:"score"`
-	Result      string `json:"result"`
-	ScoreBand   string `json:"score_band"`
-	ScoreResult string `json:"score_result"`
-	Status      string `json:"status"`
-	Segmen      string `json:"segmen"`
-	IsTsi       bool   `json:"is_tsi"`
-	ScoreBin    string `json:"score_bin"`
+	ProspectID  string      `json:"prospect_id"`
+	Score       interface{} `json:"score"`
+	Result      string      `json:"result"`
+	ScoreBand   string      `json:"score_band"`
+	ScoreResult string      `json:"score_result"`
+	Status      string      `json:"status"`
+	Segmen      string      `json:"segmen"`
+	IsTsi       bool        `json:"is_tsi"`
+	ScoreBin    string      `json:"score_bin"`
 }
 
 type ScorePro struct {
