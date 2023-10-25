@@ -1290,19 +1290,19 @@ type InquiryCa struct {
 }
 
 type InquiryDataCa struct {
-	CA             DataCa                     `json:"ca"`
-	InternalRecord []TrxInternalRecord        `json:"internal_record"`
-	Approval       []TrxHistoryApprovalScheme `json:"approval"`
-	Draft          TrxDraftCaDecision         `json:"draft"`
-	General        DataGeneral                `json:"general"`
-	Personal       CustomerPersonal           `json:"personal"`
-	Spouse         CustomerSpouse             `json:"spouse"`
-	Employment     CustomerEmployment         `json:"employment"`
-	ItemApk        DataItemApk                `json:"item_apk"`
-	Surveyor       []TrxSurveyor              `json:"surveyor"`
-	Emcon          CustomerEmcon              `json:"emcon"`
-	Address        DataAddress                `json:"address"`
-	Photo          []DataPhoto                `json:"photo"`
+	CA             DataCa              `json:"ca"`
+	InternalRecord []TrxInternalRecord `json:"internal_record"`
+	Approval       []HistoryApproval   `json:"approval"`
+	Draft          TrxDraftCaDecision  `json:"draft"`
+	General        DataGeneral         `json:"general"`
+	Personal       CustomerPersonal    `json:"personal"`
+	Spouse         CustomerSpouse      `json:"spouse"`
+	Employment     CustomerEmployment  `json:"employment"`
+	ItemApk        DataItemApk         `json:"item_apk"`
+	Surveyor       []TrxSurveyor       `json:"surveyor"`
+	Emcon          CustomerEmcon       `json:"emcon"`
+	Address        DataAddress         `json:"address"`
+	Photo          []DataPhoto         `json:"photo"`
 }
 
 type DataCa struct {
@@ -1311,22 +1311,22 @@ type DataCa struct {
 	CaNote             string `gorm:"column:ca_note" json:"ca_note"`
 	ActionDate         string `gorm:"column:ActionDate" json:"action_date"`
 	DocumentSurveyor   string `json:"doc_surveyor"`
-	ScsDate            string `gorm:"column:ScsDate" json:"scs_date"`
-	ScsScore           string `gorm:"column:ScsScore" json:"scs_score"`
-	ScsStatus          string `gorm:"column:ScsStatus" json:"scs_status"`
+	ScsDate            string `gorm:"column:ScsDate" json:"scorepro_date"`
+	ScsScore           string `gorm:"column:ScsScore" json:"scorepro_score"`
+	ScsStatus          string `gorm:"column:ScsStatus" json:"scorepro_status"`
 	BiroCustomerResult string `gorm:"column:BiroCustomerResult" json:"biro_customer_result"`
 	BiroSpouseResult   string `gorm:"column:BiroSpouseResult" json:"biro_spouse_result"`
 }
 
 type TrxCaDecision struct {
-	ProspectID    string    `gorm:"type:varchar(20);column:ProspectID" json:"-"`
-	Decision      string    `gorm:"type:varchar(3);column:decision" json:"decision"`
-	SlikResult    string    `gorm:"type:varchar(30);column:slik_result" json:"slik_result"`
-	Note          string    `gorm:"type:varchar(525);column:note" json:"note"`
-	CreatedAt     time.Time `gorm:"column:created_at" json:"-"`
-	CreatedBy     string    `gorm:"type:varchar(100);column:created_by" json:"-"`
-	DecisionBy    string    `gorm:"type:varchar(250);column:decision_by" json:"-"`
-	FinalApproval string    `gorm:"type:varchar(3);column:final_approval" json:"final_approval"`
+	ProspectID    string      `gorm:"type:varchar(20);column:ProspectID" json:"-"`
+	Decision      string      `gorm:"type:varchar(3);column:decision" json:"decision"`
+	SlikResult    interface{} `gorm:"type:varchar(30);column:slik_result" json:"slik_result"`
+	Note          string      `gorm:"type:varchar(525);column:note" json:"note"`
+	CreatedAt     time.Time   `gorm:"column:created_at" json:"-"`
+	CreatedBy     string      `gorm:"type:varchar(100);column:created_by" json:"-"`
+	DecisionBy    string      `gorm:"type:varchar(250);column:decision_by" json:"-"`
+	FinalApproval interface{} `gorm:"type:varchar(3);column:final_approval" json:"final_approval"`
 }
 
 func (c *TrxCaDecision) TableName() string {
@@ -1472,4 +1472,16 @@ type ActionSearch struct {
 	ActionReturn  bool `gorm:"column:ActionReturn" json:"action_return"`
 	ActionCancel  bool `gorm:"column:ActionCancel" json:"action_cancel"`
 	ActionFormAkk bool `gorm:"column:ActionFormAkk" json:"action_form_akk"`
+}
+
+type HistoryApproval struct {
+	Decision              string      `gorm:"column:decision" json:"decision"`
+	Note                  string      `gorm:"column:note" json:"note"`
+	CreatedAt             time.Time   `gorm:"column:created_at" json:"approval_date"`
+	DecisionBy            string      `gorm:"column:decision_by" json:"pic_approval"`
+	NeedEscalation        interface{} `gorm:"column:need_escalation" json:"need_escalation"`
+	NextFinalApprovalFlag int         `gorm:"column:next_final_approval_flag" json:"next_final_approval_flag"`
+	SourceDecision        string      `gorm:"column:source_decision" json:"source_decision"`
+	NextStep              string      `gorm:"column:next_step" json:"next_step"`
+	SlikResult            string      `gorm:"column:slik_result" json:"slik_result"`
 }
