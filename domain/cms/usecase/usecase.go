@@ -386,7 +386,7 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 		industry       []entity.SpIndustryTypeMaster
 		photos         []entity.DataPhoto
 		surveyor       []entity.TrxSurveyor
-		histories      []entity.TrxHistoryApprovalScheme
+		histories      []entity.HistoryApproval
 		internalRecord []entity.TrxInternalRecord
 	)
 
@@ -473,7 +473,7 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 		}
 
 		var (
-			historyData []entity.TrxHistoryApprovalScheme
+			historyData []entity.HistoryApproval
 			escalation  string
 		)
 
@@ -483,7 +483,7 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 				if history.NeedEscalation.(int64) == 1 {
 					escalation = "Yes"
 				}
-				historyEntry := entity.TrxHistoryApprovalScheme{
+				historyEntry := entity.HistoryApproval{
 					DecisionBy:            history.DecisionBy,
 					Decision:              history.Decision,
 					CreatedAt:             history.CreatedAt,
@@ -491,13 +491,15 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 					NeedEscalation:        escalation,
 					SourceDecision:        history.SourceDecision,
 					NextStep:              history.NextStep,
+					Note:                  history.Note,
+					SlikResult:            history.SlikResult,
 				}
 				historyData = append(historyData, historyEntry)
 			}
 		}
 
 		if len(historyData) < 1 {
-			historyData = []entity.TrxHistoryApprovalScheme{}
+			historyData = []entity.HistoryApproval{}
 		}
 
 		// get trx_internal_record
@@ -718,18 +720,18 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 		decision      string
 	)
 
-	switch req.Decision {
-	case constant.DECISION_REJECT:
-		decision = constant.DB_DECISION_REJECT
-	case constant.DECISION_APPROVE:
-		decision = constant.DB_DECISION_APR
-	}
-
 	// get limit approval for final_approval
 	limit, err := u.repository.GetLimitApproval(req.NTFAkumulasi)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get limit approval error")
 		return
+	}
+
+	switch req.Decision {
+	case constant.DECISION_REJECT:
+		decision = constant.DB_DECISION_REJECT
+	case constant.DECISION_APPROVE:
+		decision = constant.DB_DECISION_APR
 	}
 
 	trxCaDecision = entity.TrxCaDecision{
@@ -742,12 +744,6 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 		FinalApproval: limit.Alias,
 	}
 
-	err = u.repository.SaveCADecisionData(trxCaDecision)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Save CA Decision error")
-		return
-	}
-
 	trxStatus = entity.TrxStatus{
 		ProspectID:     req.ProspectID,
 		StatusProcess:  constant.STATUS_ONPROCESS,
@@ -755,12 +751,6 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
 		RuleCode:       constant.CODE_CREDIT_COMMITTEE,
 		SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
-	}
-
-	err = u.repository.UpdateTrxStatus(trxStatus)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Update Trx Status error")
-		return
 	}
 
 	trxDetail = entity.TrxDetail{
@@ -775,15 +765,9 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 		CreatedBy:      req.CreatedBy,
 	}
 
-	err = u.repository.SaveTrxDetail(trxDetail)
+	err = u.repository.ProcessTransaction(trxCaDecision, trxStatus, trxDetail)
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Update Trx Details error")
-		return
-	}
-
-	err = u.repository.DeleteDraft(req.ProspectID)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Delete Draft Data error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")
 		return
 	}
 
@@ -1048,12 +1032,6 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 		DecisionBy: req.DecisionBy,
 	}
 
-	err = u.repository.UpdateCADecision(trxCaDecision)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Save CA Decision error")
-		return
-	}
-
 	trxStatus = entity.TrxStatus{
 		ProspectID:     req.ProspectID,
 		StatusProcess:  constant.STATUS_FINAL,
@@ -1062,12 +1040,6 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 		RuleCode:       constant.CODE_CREDIT_COMMITTEE,
 		SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
 		Reason:         req.CancelReason,
-	}
-
-	err = u.repository.UpdateTrxStatus(trxStatus)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Update Trx Status error")
-		return
 	}
 
 	trxDetail = entity.TrxDetail{
@@ -1081,24 +1053,17 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 		CreatedBy:      req.CreatedBy,
 	}
 
-	err = u.repository.SaveTrxDetail(trxDetail)
+	err = u.repository.ProcessTransaction(trxCaDecision, trxStatus, trxDetail)
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Update Trx Details error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Process Cancel Order error")
 		return
 	}
 
-	err = u.repository.DeleteDraft(req.ProspectID)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Delete Draft Data error")
-		return
+	data = response.CancelResponse{
+		ProspectID: req.ProspectID,
+		Reason:     req.CancelReason,
+		Status:     "CANCEL SUCCESS",
 	}
-
-	resp := map[string]string{
-		"prospect_id": req.ProspectID,
-		"reason":      req.CancelReason,
-		"status":      "CANCEL SUCCESS",
-	}
-	data, _ = json.Marshal(resp)
 
 	return
 }

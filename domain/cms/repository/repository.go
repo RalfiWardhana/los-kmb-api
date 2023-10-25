@@ -664,45 +664,38 @@ func (r repoHandler) GetStatusPrescreening(prospectID string) (status entity.Trx
 }
 
 func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detail entity.TrxDetail, status entity.TrxStatus) (err error) {
-	var x sql.TxOptions
 
 	prescreening.CreatedAt = DtmRequest
 	detail.CreatedAt = DtmRequest
 	status.CreatedAt = DtmRequest
 
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
+		// update trx_status
+		result := tx.Model(&status).Where("ProspectID = ?", status.ProspectID).Updates(status)
 
-	db := r.NewKmb.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	// update trx_status
-	result := db.Model(&status).Where("ProspectID = ?", status.ProspectID).Updates(status)
-
-	if err = result.Error; err != nil {
-		return
-	}
-
-	if result.RowsAffected == 0 {
-		// record not found...
-		if err = db.Create(&status).Error; err != nil {
-			return
+		if err = result.Error; err != nil {
+			return err
 		}
-	}
 
-	// insert trx_details
-	if err = db.Create(&detail).Error; err != nil {
-		return
-	}
+		if result.RowsAffected == 0 {
+			// record not found...
+			if err = tx.Create(&status).Error; err != nil {
+				return err
+			}
+		}
 
-	// insert trx_prescreening
-	if err = db.Create(&prescreening).Error; err != nil {
-		return
-	}
+		// insert trx_details
+		if err = tx.Create(&detail).Error; err != nil {
+			return err
+		}
 
-	return
+		// insert trx_prescreening
+		if err = tx.Create(&prescreening).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func (r repoHandler) SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error) {
@@ -726,7 +719,7 @@ func (r repoHandler) SaveLogOrchestrator(header, request, response interface{}, 
 	return
 }
 
-func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.TrxHistoryApprovalScheme, err error) {
+func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.HistoryApproval, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
@@ -737,7 +730,21 @@ func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.Trx
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.NewKmb.Raw("SELECT decision, decision_by, next_final_approval_flag, need_escalation, source_decision, next_step, created_at FROM trx_history_approval_scheme WITH (nolock) WHERE ProspectID = ? ORDER BY created_at DESC", prospectID).Scan(&history).Error; err != nil {
+	if err = r.NewKmb.Raw(`SELECT
+				thas.decision,
+				thas.decision_by,
+				thas.next_final_approval_flag,
+				thas.need_escalation,
+				thas.source_decision,
+				thas.next_step,
+				thas.note,
+				thas.created_at,
+				CASE
+				  WHEN thas.source_decision = 'CRA' THEN tcd.slik_result
+				  ELSE
+				  '-'
+				END AS slik_result
+			FROM trx_history_approval_scheme thas WITH (nolock) LEFT JOIN trx_ca_decision tcd on thas.ProspectID = tcd.ProspectID WHERE thas.ProspectID = ? ORDER BY thas.created_at DESC`, prospectID).Scan(&history).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
@@ -1231,33 +1238,27 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 }
 
 func (r repoHandler) SaveDraftData(draft entity.TrxDraftCaDecision) (err error) {
-	var x sql.TxOptions
 
 	draft.CreatedAt = DtmRequest
 
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
+		// update trx_status
+		result := tx.Model(&draft).Where("ProspectID = ?", draft.ProspectID).Updates(draft)
 
-	db := r.NewKmb.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	// update trx_status
-	result := db.Model(&draft).Where("ProspectID = ?", draft.ProspectID).Updates(draft)
-
-	if err = result.Error; err != nil {
-		return
-	}
-
-	if result.RowsAffected == 0 {
-		// record not found will be create draft
-		if err = db.Create(&draft).Error; err != nil {
-			return
+		if err = result.Error; err != nil {
+			return err
 		}
-	}
 
-	return
+		if result.RowsAffected == 0 {
+			// record not found will be create draft
+			if err = tx.Create(&draft).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
 
 func (r repoHandler) GetLimitApproval(ntf float64) (limit entity.MappingLimitApprovalScheme, err error) {
@@ -1282,131 +1283,6 @@ func (r repoHandler) GetLimitApproval(ntf float64) (limit entity.MappingLimitApp
 	return
 }
 
-func (r repoHandler) SaveCADecisionData(trxCaDecision entity.TrxCaDecision) (err error) {
-	var x sql.TxOptions
-
-	trxCaDecision.CreatedAt = DtmRequest
-
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.NewKmb.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	// insert trx_ca_decision
-	if err = db.Create(&trxCaDecision).Error; err != nil {
-		return
-	}
-
-	return
-}
-
-func (r repoHandler) UpdateCADecision(trxCaDecision entity.TrxCaDecision) (err error) {
-	var x sql.TxOptions
-
-	trxCaDecision.CreatedAt = DtmRequest
-
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.NewKmb.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	// update trx_status
-	result := db.Model(&trxCaDecision).Where("ProspectID = ?", trxCaDecision.ProspectID).Updates(trxCaDecision)
-
-	if err = result.Error; err != nil {
-		return
-	}
-
-	if result.RowsAffected == 0 {
-		// record not found...
-		if err = db.Create(&trxCaDecision).Error; err != nil {
-			return
-		}
-	}
-
-	return
-}
-
-func (r repoHandler) UpdateTrxStatus(trxStatus entity.TrxStatus) (err error) {
-	var x sql.TxOptions
-
-	trxStatus.CreatedAt = DtmRequest
-
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.NewKmb.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	// update trx_status
-	result := db.Model(&trxStatus).Where("ProspectIDS = ?", trxStatus.ProspectID).Updates(trxStatus)
-
-	if err = result.Error; err != nil {
-		return
-	}
-
-	if result.RowsAffected == 0 {
-		// record not found...
-		if err = db.Create(&trxStatus).Error; err != nil {
-			return
-		}
-	}
-
-	return
-}
-
-func (r repoHandler) SaveTrxDetail(trxDetail entity.TrxDetail) (err error) {
-	var x sql.TxOptions
-
-	trxDetail.CreatedAt = DtmRequest
-
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.NewKmb.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	// insert trx_ca_decision
-	if err = db.Create(&trxDetail).Error; err != nil {
-		return
-	}
-
-	return
-}
-
-func (r repoHandler) DeleteDraft(prospectID string) (err error) {
-	var x sql.TxOptions
-
-	var txrDraft entity.TrxDraftCaDecision
-
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.NewKmb.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	// insert trx_ca_decision
-	result := db.Where("ProspectID = ?", prospectID).Delete(&txrDraft)
-
-	if err = result.Error; err != nil {
-		return
-	}
-
-	return
-}
-
 func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.TrxDetail, err error) {
 	var x sql.TxOptions
 
@@ -1419,44 +1295,44 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.TrxDe
 	defer db.Commit()
 
 	if err = r.NewKmb.Raw(`SELECT
-  CASE
-    WHEN source_decision = 'PSI' THEN 'PRE SCREENING'
-    WHEN source_decision = 'DCK' THEN 'DUPLICATION CHECKING'
-    WHEN source_decision = 'DCP'
-    OR source_decision = 'ARI' THEN 'EKYC'
-    WHEN source_decision = 'DSR' THEN 'DSR'
-    ELSE '-'
-  END AS source_decision,
-  CASE
-    WHEN decision = 'PAS' THEN 'Pass'
-    WHEN decision = 'REJ' THEN 'Reject'
-    WHEN decision = 'CAN' THEN 'Cancel'
-    ELSE '-'
-  END AS decision,
-  CASE
-    WHEN source_decision = 'ARI' THEN JSON_VALUE(cast([info] as nvarchar(max)), '$.asliri.reason')
-    WHEN source_decision = 'KTP' THEN JSON_VALUE(cast([info] as nvarchar(max)), '$.ktp.reason')
-    WHEN source_decision = 'DSR' THEN JSON_VALUE(cast([info] as nvarchar(max)), '$.reason')
-    ELSE info
-  END AS info,
-  created_at
-FROM
-  trx_details WITH (nolock)
-WHERE
-  ProspectID = ?
-  AND source_decision IN(
-    'PSI',
-    'DCK',
-    'DCP',
-    'ARI',
-    'KTP',
-    'PBK',
-    'SCP',
-    'DSR'
-  )
-  AND decision <> 'CTG'
-ORDER BY
-  created_at ASC`, prospectID).Scan(&detail).Error; err != nil {
+				CASE
+					WHEN source_decision = 'PSI' THEN 'PRE SCREENING'
+					WHEN source_decision = 'DCK' THEN 'DUPLICATION CHECKING'
+					WHEN source_decision = 'DCP'
+					OR source_decision = 'ARI' THEN 'EKYC'
+					WHEN source_decision = 'DSR' THEN 'DSR'
+					ELSE '-'
+				END AS source_decision,
+				CASE
+					WHEN decision = 'PAS' THEN 'Pass'
+					WHEN decision = 'REJ' THEN 'Reject'
+					WHEN decision = 'CAN' THEN 'Cancel'
+					ELSE '-'
+				END AS decision,
+				CASE
+					WHEN source_decision = 'ARI' THEN JSON_VALUE(cast([info] as nvarchar(max)), '$.asliri.reason')
+					WHEN source_decision = 'KTP' THEN JSON_VALUE(cast([info] as nvarchar(max)), '$.ktp.reason')
+					WHEN source_decision = 'DSR' THEN JSON_VALUE(cast([info] as nvarchar(max)), '$.reason')
+					ELSE info
+				END AS info,
+				created_at
+				FROM
+				trx_details WITH (nolock)
+				WHERE
+				ProspectID = ?
+				AND source_decision IN(
+					'PSI',
+					'DCK',
+					'DCP',
+					'ARI',
+					'KTP',
+					'PBK',
+					'SCP',
+					'DSR'
+				)
+				AND decision <> 'CTG'
+				ORDER BY
+				created_at ASC`, prospectID).Scan(&detail).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
@@ -1815,4 +1691,42 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
 	}
 	return
+}
+
+func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
+
+	trxCaDecision.CreatedAt = DtmRequest
+	trxStatus.CreatedAt = DtmRequest
+	trxDetail.CreatedAt = DtmRequest
+
+	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
+
+		// trx_ca_decision
+		result := tx.Model(&trxCaDecision).Where("ProspectID = ?", trxCaDecision.ProspectID).Updates(trxCaDecision)
+
+		if result.RowsAffected == 0 {
+			// record not found...
+			if err = tx.Create(&trxCaDecision).Error; err != nil {
+				return err
+			}
+		}
+
+		// trx_status
+		if err := tx.Model(&trxStatus).Where("ProspectID = ?", trxStatus.ProspectID).Updates(trxStatus).Error; err != nil {
+			return err
+		}
+
+		// trx_details
+		if err := tx.Create(&trxDetail).Error; err != nil {
+			return err
+		}
+
+		// trx_draft_ca_decision
+		var draft entity.TrxDraftCaDecision
+		if err := tx.Where("ProspectID = ?", trxCaDecision.ProspectID).Delete(&draft).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
