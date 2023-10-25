@@ -286,7 +286,19 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		married = true
 	}
 
-	dupcheckData, customerStatus, decisionMetrics, trxFMFDupcheck, trxDetailDupcheck, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken)
+	//Get parameterize config
+	config, err := u.repository.GetConfig("dupcheck", "KMB-OFF", "dupcheck_kmb_config")
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Dupcheck Config Error")
+		return
+	}
+
+	var configValue response.DupcheckConfig
+
+	json.Unmarshal([]byte(config.Value), &configValue)
+
+	dupcheckData, customerStatus, decisionMetrics, trxFMFDupcheck, trxDetailDupcheck, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken, configValue)
 	if err != nil {
 		return
 	}

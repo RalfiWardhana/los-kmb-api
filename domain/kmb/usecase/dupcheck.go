@@ -18,7 +18,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error) {
+func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string, configValue response.DupcheckConfig) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error) {
 
 	var (
 		customer     []request.SpouseDupcheck
@@ -28,18 +28,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		spMap        response.SpDupcheckMap
 		customerType string
 	)
-
-	//Get parameterize config
-	config, err := u.repository.GetConfig("dupcheck", "KMB-OFF", "dupcheck_kmb_config")
-
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Get Dupcheck Config Error")
-		return
-	}
-
-	var configValue response.DupcheckConfig
-
-	json.Unmarshal([]byte(config.Value), &configValue)
 
 	// Check Banned Chassis Number
 	bannedChassisNumber, err := u.usecase.CheckBannedChassisNumber(req.RangkaNo)

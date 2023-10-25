@@ -458,26 +458,28 @@ type OutstandingConfins struct {
 	TotalOutstanding float64 `json:"total_outstanding"`
 }
 type TrxFMF struct {
-	NTFAkumulasi           float64
-	NTFOtherAmount         float64
-	NTFOtherAmountSpouse   float64
-	NTFOtherAmountDetail   string
-	NTFConfinsAmount       float64
-	NTFConfins             float64
-	NTFTopup               float64
-	DupcheckData           SpDupcheckMap `json:"dupcheck_data"`
-	CustomerStatus         string        `json:"customer_status"`
-	ScsDecision            ScsDecision   `json:"scs_decision"`
-	CustomerType           interface{}   `json:"customer_type"`
-	SpouseType             interface{}   `json:"spouse_type"`
-	AsliriSimiliarity      interface{}   `json:"asliri_similiarity"`
-	AsliriReason           interface{}   `json:"asliri_reason"`
-	DSRFMF                 interface{}   `json:"dsr_fmf"`
-	DSRPBK                 interface{}   `json:"dsr_pbk"`
-	TotalDSR               interface{}   `json:"total_dsr"`
-	TrxBannedPMKDSR        entity.TrxBannedPMKDSR
-	TrxBannedChassisNumber entity.TrxBannedChassisNumber
-	AgreementCONFINS       []AgreementCONFINS
+	NTFAkumulasi            float64
+	NTFOtherAmount          float64
+	NTFOtherAmountSpouse    float64
+	NTFOtherAmountDetail    string
+	NTFConfinsAmount        float64
+	NTFConfins              float64
+	NTFTopup                float64
+	DupcheckData            SpDupcheckMap `json:"dupcheck_data"`
+	CustomerStatus          string        `json:"customer_status"`
+	ScsDecision             ScsDecision   `json:"scs_decision"`
+	CustomerType            interface{}   `json:"customer_type"`
+	SpouseType              interface{}   `json:"spouse_type"`
+	AsliriSimiliarity       interface{}   `json:"asliri_similiarity"`
+	AsliriReason            interface{}   `json:"asliri_reason"`
+	DSRFMF                  interface{}   `json:"dsr_fmf"`
+	DSRPBK                  interface{}   `json:"dsr_pbk"`
+	TotalDSR                interface{}   `json:"total_dsr"`
+	TrxBannedPMKDSR         entity.TrxBannedPMKDSR
+	TrxBannedChassisNumber  entity.TrxBannedChassisNumber
+	AgreementCONFINS        []AgreementCONFINS
+	InstallmentThreshold    float64
+	LatestInstallmentAmount float64
 }
 
 type RoaoAkkk struct {
