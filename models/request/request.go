@@ -754,3 +754,8 @@ type ReqSubmitDecision struct {
 	CreatedBy    string  `json:"decision_by" validate:"required"`
 	DecisionBy   string  `json:"decision_by_name" validate:"required"`
 }
+
+type ReqSearchInquiry struct {
+	UserID string `json:"user_id" validate:"required"`
+	Search string `json:"search" validate:"required"`
+}

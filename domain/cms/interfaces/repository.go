@@ -23,4 +23,6 @@ type Repository interface {
 	UpdateTrxStatus(trxStatus entity.TrxStatus) (err error)
 	SaveTrxDetail(trxDetail entity.TrxDetail) (err error)
 	DeleteDraft(prospectID string) (err error)
+	GetInquirySearch(req request.ReqSearchInquiry, pagination interface{}) (data []entity.InquirySearch, rowTotal int, err error)
+	GetHistoryProcess(prospectID string) (detail []entity.TrxDetail, err error)
 }
