@@ -1172,6 +1172,8 @@ type InquiryCa struct {
 	ActionDate         string `gorm:"column:ActionDate"`
 	Activity           string `gorm:"column:activity"`
 	SourceDecision     string `gorm:"column:source_decision"`
+	CaDecision         string `gorm:"column:ca_decision"`
+	CANote             string `gorm:"column:ca_note"`
 	ScsDate            string `gorm:"column:ScsDate"`
 	ScsScore           string `gorm:"column:ScsScore"`
 	ScsStatus          string `gorm:"column:ScsStatus"`
@@ -1305,6 +1307,8 @@ type InquiryDataCa struct {
 
 type DataCa struct {
 	ShowAction         bool   `gorm:"column:ShowAction" json:"show_action"`
+	CaDecision         string `gorm:"column:ca_decision" json:"ca_decision"`
+	CaNote             string `gorm:"column:ca_note" json:"ca_note"`
 	ActionDate         string `gorm:"column:ActionDate" json:"action_date"`
 	DocumentSurveyor   string `json:"doc_surveyor"`
 	ScsDate            string `gorm:"column:ScsDate" json:"scs_date"`

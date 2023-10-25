@@ -535,6 +535,8 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 		row := entity.InquiryDataCa{
 			CA: entity.DataCa{
 				ShowAction:         inq.ShowAction,
+				CaDecision:         inq.CaDecision,
+				CaNote:             inq.CANote,
 				ActionDate:         inq.ActionDate,
 				DocumentSurveyor:   os.Getenv("NEW_KMB_AKSI_MAYA") + inq.ProspectID,
 				ScsDate:            inq.ScsDate,
@@ -740,7 +742,7 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 		FinalApproval: limit.Alias,
 	}
 
-	err = u.repository.SaveCADecionData(trxCaDecision)
+	err = u.repository.SaveCADecisionData(trxCaDecision)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Save CA Decision error")
 		return
@@ -1026,6 +1028,77 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 		data = append(data, row)
 
 	}
+
+	return
+}
+
+func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (data interface{}, err error) {
+
+	var (
+		trxStatus     entity.TrxStatus
+		trxDetail     entity.TrxDetail
+		trxCaDecision entity.TrxCaDecision
+	)
+
+	trxCaDecision = entity.TrxCaDecision{
+		ProspectID: req.ProspectID,
+		Decision:   constant.DB_DECISION_CANCEL,
+		Note:       req.CancelReason,
+		CreatedBy:  req.CreatedBy,
+		DecisionBy: req.DecisionBy,
+	}
+
+	err = u.repository.UpdateCADecision(trxCaDecision)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Save CA Decision error")
+		return
+	}
+
+	trxStatus = entity.TrxStatus{
+		ProspectID:     req.ProspectID,
+		StatusProcess:  constant.STATUS_FINAL,
+		Activity:       constant.ACTIVITY_STOP,
+		Decision:       constant.DB_DECISION_CANCEL,
+		RuleCode:       constant.CODE_CREDIT_COMMITTEE,
+		SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
+		Reason:         req.CancelReason,
+	}
+
+	err = u.repository.UpdateTrxStatus(trxStatus)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Update Trx Status error")
+		return
+	}
+
+	trxDetail = entity.TrxDetail{
+		ProspectID:     req.ProspectID,
+		StatusProcess:  constant.STATUS_FINAL,
+		Activity:       constant.ACTIVITY_STOP,
+		Decision:       constant.DB_DECISION_CANCEL,
+		RuleCode:       constant.CODE_CREDIT_COMMITTEE,
+		SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
+		Info:           req.CancelReason,
+		CreatedBy:      req.CreatedBy,
+	}
+
+	err = u.repository.SaveTrxDetail(trxDetail)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Update Trx Details error")
+		return
+	}
+
+	err = u.repository.DeleteDraft(req.ProspectID)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Delete Draft Data error")
+		return
+	}
+
+	resp := map[string]string{
+		"prospect_id": req.ProspectID,
+		"reason":      req.CancelReason,
+		"status":      "CANCEL SUCCESS",
+	}
+	data, _ = json.Marshal(resp)
 
 	return
 }
