@@ -35,6 +35,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.GET("/cms/ca/inquiry", handler.CaInquiry, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/save-as-draft", handler.SaveAsDraft, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/submit-decision", handler.SubmitDecision, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/search", handler.SearchInquiry, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
@@ -189,8 +190,8 @@ func (c *handlerCMS) ListReason(ctx echo.Context) (err error) {
 // @Description Api CA
 // @Tags CA
 // @Produce json
-// @Param body body request. true "Body payload"
-// @Success 200 {object} response.ApiResponse{data=response.}
+// @Param body body request.ReqInquiryCa true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.InquiryRow}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
 // @Router /api/v3/kmb/cms/ca/inquiry [get]
@@ -292,4 +293,53 @@ func (c *handlerCMS) SubmitDecision(ctx echo.Context) (err error) {
 	}
 
 	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Submit Decision", req, data)
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Search Inquiry
+// @Tags Search Inquiry
+// @Produce json
+// @Param body body request.ReqSearchInquiry true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.InquiryRow}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/search [get]
+func (c *handlerCMS) SearchInquiry(ctx echo.Context) (err error) {
+
+	var accessToken = middlewares.UserInfoData.AccessToken
+
+	req := request.ReqSearchInquiry{
+		UserID: ctx.QueryParam("user_id"),
+		Search: ctx.QueryParam("search"),
+	}
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Search Inquiry", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Search Inquiry", req, err)
+	}
+
+	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	pagination := request.RequestPagination{
+		Page:  page,
+		Limit: 10,
+	}
+
+	data, rowTotal, err := c.usecase.GetSearchInquiry(ctx.Request().Context(), req, pagination)
+
+	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Search Inquiry", req, response.InquiryRow{Inquiry: data})
+	}
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Search Inquiry", req, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Search Inquiry", req, response.InquiryRow{
+		Inquiry:        data,
+		RecordFiltered: len(data),
+		RecordTotal:    rowTotal,
+	})
 }
