@@ -1016,7 +1016,7 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 	return
 }
 
-func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (data interface{}, err error) {
+func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (data response.CancelResponse, err error) {
 
 	var (
 		trxStatus     entity.TrxStatus
@@ -1062,7 +1062,7 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 	data = response.CancelResponse{
 		ProspectID: req.ProspectID,
 		Reason:     req.CancelReason,
-		Status:     "CANCEL SUCCESS",
+		Status:     constant.CANCEL_STATUS_SUCCESS,
 	}
 
 	return
