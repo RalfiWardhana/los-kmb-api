@@ -807,7 +807,8 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		case constant.NEED_DECISION:
 			activity = constant.ACTIVITY_UNPROCESS
 			decision = constant.DB_DECISION_CREDIT_PROCESS
-			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s'", activity, decision)
+			source := constant.DB_DECISION_CREDIT_ANALYST
+			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s' AND tt.decision_ca IS NULL", activity, decision, source)
 
 		case constant.SAVED_AS_DRAFT:
 			if req.UserID != "" {
@@ -843,6 +844,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 			tst.activity,
 			tst.source_decision,
 			tst.decision,
+			tcd.decision as decision_ca,
 			tdd.created_by AS draft_created_by,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
@@ -909,6 +911,14 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tst.activity,
 		tst.source_decision,
 		tst.decision,
+		tcd.decision as decision_ca,
+		CASE
+		  WHEN tcd.decision='APR' THEN 'APPROVE'
+		  WHEN tcd.decision='REJ' THEN 'REJECT'
+		  WHEN tcd.decision='CAN' THEN 'CANCEL'
+		  ELSE tcd.decision
+		END AS ca_decision,
+		tcd.note AS ca_note,
 		CASE
 		  WHEN tcd.created_at IS NOT NULL
 		  AND tfa.created_at IS NULL THEN tcd.created_at
@@ -1051,6 +1061,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		  SELECT
 			ProspectID,
 			decision,
+			note,
 			created_at
 		  FROM
 			trx_ca_decision WITH (nolock)
@@ -1271,7 +1282,7 @@ func (r repoHandler) GetLimitApproval(ntf float64) (limit entity.MappingLimitApp
 	return
 }
 
-func (r repoHandler) SaveCADecionData(trxCaDecision entity.TrxCaDecision) (err error) {
+func (r repoHandler) SaveCADecisionData(trxCaDecision entity.TrxCaDecision) (err error) {
 	var x sql.TxOptions
 
 	trxCaDecision.CreatedAt = DtmRequest
@@ -1292,6 +1303,36 @@ func (r repoHandler) SaveCADecionData(trxCaDecision entity.TrxCaDecision) (err e
 	return
 }
 
+func (r repoHandler) UpdateCADecision(trxCaDecision entity.TrxCaDecision) (err error) {
+	var x sql.TxOptions
+
+	trxCaDecision.CreatedAt = DtmRequest
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	// update trx_status
+	result := db.Model(&trxCaDecision).Where("ProspectID = ?", trxCaDecision.ProspectID).Updates(trxCaDecision)
+
+	if err = result.Error; err != nil {
+		return
+	}
+
+	if result.RowsAffected == 0 {
+		// record not found...
+		if err = db.Create(&trxCaDecision).Error; err != nil {
+			return
+		}
+	}
+
+	return
+}
+
 func (r repoHandler) UpdateTrxStatus(trxStatus entity.TrxStatus) (err error) {
 	var x sql.TxOptions
 
@@ -1306,7 +1347,7 @@ func (r repoHandler) UpdateTrxStatus(trxStatus entity.TrxStatus) (err error) {
 	defer db.Commit()
 
 	// update trx_status
-	result := db.Model(&trxStatus).Where("ProspectID = ?", trxStatus.ProspectID).Updates(trxStatus)
+	result := db.Model(&trxStatus).Where("ProspectIDS = ?", trxStatus.ProspectID).Updates(trxStatus)
 
 	if err = result.Error; err != nil {
 		return

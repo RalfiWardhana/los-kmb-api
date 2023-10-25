@@ -15,4 +15,5 @@ type Usecase interface {
 	SaveAsDraft(ctx context.Context, req request.ReqSaveAsDraft) (data response.CAResponse, err error)
 	SubmitDecision(ctx context.Context, req request.ReqSubmitDecision) (data response.CAResponse, err error)
 	GetSearchInquiry(ctx context.Context, req request.ReqSearchInquiry, pagination interface{}) (data []entity.InquiryDataSearch, rowTotal int, err error)
+	CancelOrder(ctx context.Context, req request.ReqCancelOrder) (data interface{}, err error)
 }
