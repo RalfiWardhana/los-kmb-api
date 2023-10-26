@@ -443,6 +443,48 @@ func (_m *Repository) GetMappingDukcapil(statusVD string, statusFR string) (enti
 	return r0, r1
 }
 
+// GetMappingElaborateIncome provides a mock function with given fields: mappingElaborateIncome
+func (_m *Repository) GetMappingElaborateIncome(mappingElaborateIncome entity.MappingElaborateIncome) (entity.MappingElaborateIncome, error) {
+	ret := _m.Called(mappingElaborateIncome)
+
+	var r0 entity.MappingElaborateIncome
+	if rf, ok := ret.Get(0).(func(entity.MappingElaborateIncome) entity.MappingElaborateIncome); ok {
+		r0 = rf(mappingElaborateIncome)
+	} else {
+		r0 = ret.Get(0).(entity.MappingElaborateIncome)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(entity.MappingElaborateIncome) error); ok {
+		r1 = rf(mappingElaborateIncome)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMasterBranch provides a mock function with given fields: branchID
+func (_m *Repository) GetMasterBranch(branchID string) (entity.MasterBranch, error) {
+	ret := _m.Called(branchID)
+
+	var r0 entity.MasterBranch
+	if rf, ok := ret.Get(0).(func(string) entity.MasterBranch); ok {
+		r0 = rf(branchID)
+	} else {
+		r0 = ret.Get(0).(entity.MasterBranch)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(branchID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetMinimalIncomePMK provides a mock function with given fields: branchID, statusKonsumen
 func (_m *Repository) GetMinimalIncomePMK(branchID string, statusKonsumen string) (entity.MappingIncomePMK, error) {
 	ret := _m.Called(branchID, statusKonsumen)

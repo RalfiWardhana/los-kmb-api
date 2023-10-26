@@ -383,6 +383,12 @@ type UsecaseApi struct {
 	Info           interface{} `json:"info,omitempty"`
 }
 
+type LowIncome struct {
+	NoApplication float64 `json:"no_application"`
+	Income        float64 `json:"income"`
+	Range         string  `json:"range"`
+}
+
 type DupcheckConfig struct {
 	Data DataDupcheckConfig `json:"data"`
 }

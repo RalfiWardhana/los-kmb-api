@@ -951,6 +951,24 @@ func (c *TrxElaborateLTV) TableName() string {
 	return "trx_elaborate_ltv"
 }
 
+type MasterBranch struct {
+	BranchCategory string `gorm:"column:branch_category"`
+}
+
+type MappingElaborateIncome struct {
+	BranchCategory   string `gorm:"column:branch_category"`
+	EstimationIncome string `gorm:"column:estimation_income"`
+	StatusKonsumen   string `gorm:"column:status_konsumen"`
+	BPKBNameType     int    `gorm:"column:bpkb_name_type"`
+	Scoreband        string `gorm:"column:scoreband"`
+	Worst24Mth       string `gorm:"column:worst_24mth"`
+	Result           string `gorm:"column:result"`
+}
+
+func (c *MappingElaborateIncome) TableName() string {
+	return "kmb_mapping_treatment_elaborated_income"
+}
+
 type SpIndustryTypeMaster struct {
 	IndustryTypeID string `gorm:"column:IndustryTypeID"`
 	Description    string `gorm:"column:Description"`

@@ -33,6 +33,8 @@ type Repository interface {
 	GetMoblast(customerID string) (score entity.GetMoblast, err error)
 
 	GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error)
+	GetMasterBranch(branchID string) (masterBranch entity.MasterBranch, err error)
+	GetMappingElaborateIncome(mappingElaborateIncome entity.MappingElaborateIncome) (result entity.MappingElaborateIncome, err error)
 
 	GetLatestBannedRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error)
 	GetLatestRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error)
