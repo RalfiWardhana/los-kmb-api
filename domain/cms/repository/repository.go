@@ -953,6 +953,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 
 		tcp.CustomerID,
 		tcp.CustomerStatus,
+		tcp.SurveyResult,
 		tm.created_at,
 		tm.order_at,
 		tm.lob,
@@ -1718,6 +1719,39 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxS
 		// trx_draft_ca_decision
 		var draft entity.TrxDraftCaDecision
 		if err := tx.Where("ProspectID = ?", trxCaDecision.ProspectID).Delete(&draft).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (r repoHandler) ProcessReturnOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
+
+	trxStatus.CreatedAt = DtmRequest
+	trxDetail.CreatedAt = DtmRequest
+
+	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
+
+		// update trx_status
+		if err := tx.Model(&trxStatus).Where("ProspectID = ?", prospectID).Updates(trxStatus).Error; err != nil {
+			return err
+		}
+
+		// insert trx_details
+		if err := tx.Create(&trxDetail).Error; err != nil {
+			return err
+		}
+
+		// delete trx_prescreening
+		var prescreening entity.TrxPrescreening
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&prescreening).Error; err != nil {
+			return err
+		}
+
+		// delete trx_draft_ca_decision
+		var draft entity.TrxDraftCaDecision
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&draft).Error; err != nil {
 			return err
 		}
 

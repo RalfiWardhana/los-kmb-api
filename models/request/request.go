@@ -766,3 +766,9 @@ type ReqCancelOrder struct {
 	DecisionBy   string `json:"decision_by_name" validate:"required"`
 	CancelReason string `json:"reason" validate:"required"`
 }
+
+type ReqReturnOrder struct {
+	ProspectID string `json:"prospect_id" validate:"required"`
+	CreatedBy  string `json:"decision_by" validate:"required"`
+	DecisionBy string `json:"decision_by_name" validate:"required"`
+}

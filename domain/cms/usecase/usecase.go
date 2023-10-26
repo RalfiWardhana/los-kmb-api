@@ -11,7 +11,6 @@ import (
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
-	"os"
 	"strings"
 )
 
@@ -540,7 +539,6 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 				CaDecision:         inq.CaDecision,
 				CaNote:             inq.CANote,
 				ActionDate:         inq.ActionDate,
-				DocumentSurveyor:   os.Getenv("NEW_KMB_AKSI_MAYA") + inq.ProspectID,
 				ScsDate:            inq.ScsDate,
 				ScsScore:           inq.ScsScore,
 				ScsStatus:          inq.ScsStatus,
@@ -580,6 +578,7 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 				Education:         inq.Education,
 				MaritalStatus:     inq.MaritalStatus,
 				HomeStatus:        inq.HomeStatus,
+				SurveyResult:      inq.SurveyResult,
 			},
 			Spouse: entity.CustomerSpouse{
 				IDNumber:     inq.SpouseIDNumber,
@@ -1063,6 +1062,47 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 		ProspectID: req.ProspectID,
 		Reason:     req.CancelReason,
 		Status:     constant.CANCEL_STATUS_SUCCESS,
+	}
+
+	return
+}
+
+func (u usecase) ReturnOrder(ctx context.Context, req request.ReqReturnOrder) (data response.ReturnResponse, err error) {
+
+	var (
+		trxStatus entity.TrxStatus
+		trxDetail entity.TrxDetail
+	)
+
+	trxStatus = entity.TrxStatus{
+		ProspectID:     req.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_UNPROCESS,
+		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+		SourceDecision: constant.PRESCREENING,
+		Reason:         constant.REASON_RETURN_ORDER,
+	}
+
+	trxDetail = entity.TrxDetail{
+		ProspectID:     req.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_PROCESS,
+		Decision:       constant.DB_DECISION_PASS,
+		SourceDecision: constant.CMO_AGENT,
+		NextStep:       constant.PRESCREENING,
+		Info:           constant.REASON_RETURN_ORDER,
+		CreatedBy:      constant.SYSTEM_CREATED,
+	}
+
+	err = u.repository.ProcessReturnOrder(req.ProspectID, trxStatus, trxDetail)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Process Return Order error")
+		return
+	}
+
+	data = response.ReturnResponse{
+		ProspectID: req.ProspectID,
+		Status:     constant.RETURN_STATUS_SUCCESS,
 	}
 
 	return
