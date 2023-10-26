@@ -51,10 +51,15 @@ func (u usecase) ElaborateIncome(ctx context.Context, req request.Metrics, filte
 
 	var mappingElaborateIncome entity.MappingElaborateIncome
 
+	mappingElaborateIncome.BranchCategory = "GOOD"
 	mBranch, err := u.repository.GetMasterBranch(req.Transaction.BranchID)
-	mappingElaborateIncome.BranchCategory = mBranch.BranchCategory
 	if err != nil {
-		mappingElaborateIncome.BranchCategory = "GOOD"
+		err = errors.New(constant.ERROR_UPSTREAM + " - GetMasterBranch Error")
+		return
+	}
+
+	if mBranch.BranchCategory != "" {
+		mappingElaborateIncome.BranchCategory = mBranch.BranchCategory
 	}
 
 	mappingElaborateIncome.Scoreband = "Segmen" + responseScs.Segmen

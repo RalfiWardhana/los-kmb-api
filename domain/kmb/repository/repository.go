@@ -272,6 +272,9 @@ func (r repoHandler) GetElaborateLtv(prospectID string) (elaborateLTV entity.Map
 func (r repoHandler) GetMasterBranch(branchID string) (masterBranch entity.MasterBranch, err error) {
 
 	if err = r.losDB.Raw(fmt.Sprintf(`SELECT branch_category FROM kmb_master_branch_category kmbc WHERE branch_id = '%s'`, branchID)).Scan(&masterBranch).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
 		return
 	}
 
@@ -283,6 +286,9 @@ func (r repoHandler) GetMappingElaborateIncome(mappingElaborateIncome entity.Map
 	if err = r.losDB.Raw(fmt.Sprintf(`SELECT branch_category, estimation_income, status_konsumen, bpkb_name_type, scoreband, worst_24mth, [result] 
 	FROM kmb_mapping_treatment_elaborated_income WHERE estimation_income='%s' AND status_konsumen='%s' AND bpkb_name_type=%d AND scoreband='%s' AND worst_24mth='%s' 
 	AND branch_category = '%s'`, mappingElaborateIncome.EstimationIncome, mappingElaborateIncome.StatusKonsumen, mappingElaborateIncome.BPKBNameType, mappingElaborateIncome.Scoreband, mappingElaborateIncome.Worst24Mth, mappingElaborateIncome.BranchCategory)).Scan(&result).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
 		return
 	}
 
