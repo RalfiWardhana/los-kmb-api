@@ -14,13 +14,13 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u usecase) ElaborateScheme(prospectID string, req request.Metrics) (data response.UsecaseApi, err error) {
+func (u usecase) ElaborateScheme(req request.Metrics) (data response.UsecaseApi, err error) {
 
 	var (
 		trxElaborateLtv entity.MappingElaborateLTV
 	)
 
-	trxElaborateLtv, err = u.repository.GetElaborateLtv(prospectID)
+	trxElaborateLtv, err = u.repository.GetElaborateLtv(req.Transaction.ProspectID)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - GetElaborateLtv Error")
 		return

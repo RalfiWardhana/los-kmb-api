@@ -537,7 +537,7 @@ const (
 	ADDRESS_TYPE_MAILING   = "MAILING"
 
 	// BIRO
-	SOURCE_DECISION_BIRO                    = "BIR"
+	SOURCE_DECISION_BIRO                    = "PBK"
 	CODE_PEFINDO_NOTFOUND                   = "897"
 	REASON_PEFINDO_NOTFOUND                 = "PBK Tidak Ditemukan"
 	CODE_PEFINDO_OVD12LTE60_CURRENT_LTE30   = "938"

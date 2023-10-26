@@ -18,7 +18,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore, customerSegment string, spDupcheck response.SpDupcheckMap, accessToken string) (responseScs response.IntegratorScorePro, data response.ScorePro, err error) {
+func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore, customerSegment string, spDupcheck response.SpDupcheckMap, accessToken string) (responseScs response.IntegratorScorePro, data response.ScorePro, respPefindoIDX response.PefindoIDX, err error) {
 
 	var (
 		residenceZipCode              string
@@ -26,7 +26,6 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 		scoreGenerator                entity.ScoreGenerator
 		trxDetailBiro                 []entity.TrxDetailBiro
 		pefindoIDX                    request.PefindoIDX
-		respPefindoIDX                response.PefindoIDX
 		reqScoreproIntegrator         request.ScoreProIntegrator
 	)
 
@@ -173,14 +172,14 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 		getActiveLoanTypeLast6M, err := u.repository.GetActiveLoanTypeLast6M(spDupcheck.CustomerID.(string))
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - GetActiveLoanTypeLast6M Scorepro Error")
-			return responseScs, data, err
+			return responseScs, data, respPefindoIDX, err
 		}
 
 		if strings.Replace(getActiveLoanTypeLast6M.ActiveLoanTypeLast6M, " ", "", -1) == ";;" {
 			getActiveLoanTypeLast24M, err := u.repository.GetActiveLoanTypeLast24M(spDupcheck.CustomerID.(string))
 			if err != nil {
 				err = errors.New(constant.ERROR_UPSTREAM + " - GetActiveLoanTypeLast24M Scorepro Error")
-				return responseScs, data, err
+				return responseScs, data, respPefindoIDX, err
 			}
 
 			if getActiveLoanTypeLast24M.AgreementNo != "" {
@@ -200,7 +199,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 		getMoblast, err := u.repository.GetMoblast(spDupcheck.CustomerID.(string))
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - GetMoblast Scorepro Error")
-			return responseScs, data, err
+			return responseScs, data, respPefindoIDX, err
 		}
 
 		if getMoblast.Moblast == "" {

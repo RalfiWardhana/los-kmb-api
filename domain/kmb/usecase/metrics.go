@@ -11,6 +11,7 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
@@ -405,17 +406,205 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		RuleCode:       decisionEkyc.Code,
 		SourceDecision: decisionEkyc.Source,
 		Info:           decisionEkyc.Info,
-		NextStep:       constant.SOURCE_DECISION_CA,
+		NextStep:       constant.SOURCE_DECISION_BIRO,
 	})
+
+	metricsPefindo, err := u.usecase.Pefindo(cbFound, reqMetrics.Item.BPKBName, filtering, dupcheckData)
+	if err != nil {
+		return
+	}
+
+	if metricsPefindo.Result == constant.DECISION_REJECT {
+
+		addDetail := entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_FINAL,
+			Activity:       constant.ACTIVITY_STOP,
+			Decision:       constant.DB_DECISION_REJECT,
+			RuleCode:       metricsPefindo.Code,
+			SourceDecision: metricsPefindo.SourceDecision,
+			Info:           metricsPefindo.Reason,
+		}
+
+		details = append(details, addDetail)
+
+		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, metricsPefindo.Reason)
+		if err != nil {
+			return
+		}
+
+		return
+	}
 
 	details = append(details, entity.TrxDetail{
 		ProspectID:     reqMetrics.Transaction.ProspectID,
 		StatusProcess:  constant.STATUS_ONPROCESS,
-		Activity:       constant.ACTIVITY_UNPROCESS,
-		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
-		RuleCode:       constant.CODE_CREDIT_COMMITTEE,
-		SourceDecision: constant.SOURCE_DECISION_CA,
+		Activity:       constant.ACTIVITY_PROCESS,
+		Decision:       constant.DB_DECISION_PASS,
+		RuleCode:       metricsPefindo.Code,
+		SourceDecision: metricsPefindo.SourceDecision,
+		Info:           metricsPefindo.Info,
+		NextStep:       constant.SOURCE_DECISION_SCOREPRO,
 	})
+
+	var scoreBiro string
+	if filtering.ScoreBiro != nil {
+		scoreBiro = filtering.ScoreBiro.(string)
+	}
+
+	responseScs, metricsScs, pefindoIDX, err := u.usecase.Scorepro(ctx, reqMetrics, scoreBiro, customerSegment, dupcheckData, accessToken)
+	if err != nil {
+		return
+	}
+
+	trxFMF.ScsDecision = response.ScsDecision{
+		ScsDate:   time.Now().Format("2006-01-02"),
+		ScsStatus: responseScs.Status,
+		ScsScore:  responseScs.Score,
+	}
+
+	if metricsScs.Result == constant.DECISION_REJECT {
+
+		addDetail := entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_FINAL,
+			Activity:       constant.ACTIVITY_STOP,
+			Decision:       constant.DB_DECISION_REJECT,
+			RuleCode:       metricsScs.Code,
+			SourceDecision: metricsScs.Source,
+			Info:           metricsScs.Info,
+		}
+
+		details = append(details, addDetail)
+
+		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, metricsScs.Reason)
+		if err != nil {
+			return
+		}
+
+		return
+	}
+
+	details = append(details, entity.TrxDetail{
+		ProspectID:     reqMetrics.Transaction.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_PROCESS,
+		Decision:       constant.DB_DECISION_PASS,
+		RuleCode:       metricsScs.Code,
+		SourceDecision: metricsScs.Source,
+		Info:           metricsScs.Info,
+		NextStep:       constant.SOURCE_DECISION_ELABORATE_LTV,
+	})
+
+	metricsElaborateScheme, err := u.usecase.ElaborateScheme(reqMetrics)
+	if err != nil {
+		return
+	}
+
+	if metricsElaborateScheme.Result == constant.DECISION_REJECT {
+
+		addDetail := entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_FINAL,
+			Activity:       constant.ACTIVITY_STOP,
+			Decision:       constant.DB_DECISION_REJECT,
+			RuleCode:       metricsElaborateScheme.Code,
+			SourceDecision: metricsElaborateScheme.SourceDecision,
+			Info:           metricsElaborateScheme.Reason,
+		}
+
+		details = append(details, addDetail)
+
+		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, metricsElaborateScheme.Reason)
+		if err != nil {
+			return
+		}
+
+		return
+	}
+
+	var metricsElaborateIncome response.UsecaseApi
+	if cbFound {
+		details = append(details, entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
+			Decision:       constant.DB_DECISION_PASS,
+			RuleCode:       metricsElaborateScheme.Code,
+			SourceDecision: metricsElaborateScheme.SourceDecision,
+			Info:           metricsElaborateScheme.Info,
+			NextStep:       constant.SOURCE_DECISION_ELABORATE_INCOME,
+		})
+
+		metricsElaborateIncome, err = u.usecase.ElaborateIncome(ctx, reqMetrics, filtering, pefindoIDX, dupcheckData, responseScs, accessToken)
+		if err != nil {
+			return
+		}
+
+		if metricsElaborateIncome.Result == constant.DECISION_REJECT {
+
+			addDetail := entity.TrxDetail{
+				ProspectID:     reqMetrics.Transaction.ProspectID,
+				StatusProcess:  constant.STATUS_FINAL,
+				Activity:       constant.ACTIVITY_STOP,
+				Decision:       constant.DB_DECISION_REJECT,
+				RuleCode:       metricsElaborateIncome.Code,
+				SourceDecision: metricsElaborateIncome.SourceDecision,
+				Info:           metricsElaborateIncome.Reason,
+			}
+
+			details = append(details, addDetail)
+
+			resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, metricsElaborateIncome.Reason)
+			if err != nil {
+				return
+			}
+
+			return
+		}
+
+		details = append(details, entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
+			Decision:       constant.DB_DECISION_PASS,
+			RuleCode:       metricsElaborateIncome.Code,
+			SourceDecision: metricsElaborateIncome.SourceDecision,
+			Info:           metricsElaborateIncome.Info,
+			NextStep:       constant.SOURCE_DECISION_CA,
+		})
+	} else {
+		details = append(details, entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
+			Decision:       constant.DB_DECISION_PASS,
+			RuleCode:       metricsElaborateScheme.Code,
+			SourceDecision: metricsElaborateScheme.SourceDecision,
+			Info:           metricsElaborateScheme.Info,
+			NextStep:       constant.SOURCE_DECISION_CA,
+		})
+	}
+
+	if trxFMF.NTFAkumulasi <= 20000000 {
+		details = append(details, entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_FINAL,
+			Activity:       constant.ACTIVITY_STOP,
+			Decision:       constant.DECISION_PASS,
+			RuleCode:       constant.CODE_CREDIT_COMMITTEE,
+			SourceDecision: constant.SOURCE_DECISION_CA,
+		})
+	} else {
+		details = append(details, entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_UNPROCESS,
+			Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+			RuleCode:       constant.CODE_CREDIT_COMMITTEE,
+			SourceDecision: constant.SOURCE_DECISION_CA,
+		})
+	}
 
 	resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, decisionMetrics.Reason)
 	if err != nil {
