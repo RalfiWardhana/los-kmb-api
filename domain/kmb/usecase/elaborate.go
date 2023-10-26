@@ -14,7 +14,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u usecase) ElaboratedScheme(prospectID string, req request.Metrics) (data response.UsecaseApi, err error) {
+func (u usecase) ElaborateScheme(prospectID string, req request.Metrics) (data response.UsecaseApi, err error) {
 
 	var (
 		trxElaborateLtv entity.MappingElaborateLTV
