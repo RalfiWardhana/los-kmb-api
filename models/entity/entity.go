@@ -1353,6 +1353,7 @@ type InquirySearch struct {
 	ActionFormAkk bool `gorm:"column:ActionFormAkk"`
 
 	ProspectID     string `gorm:"column:ProspectID"`
+	FinalStatus    string `gorm:"column:FinalStatus"`
 	BranchName     string `gorm:"column:BranchName"`
 	IncomingSource string `gorm:"column:incoming_source"`
 	CreatedAt      string `gorm:"column:created_at"`
@@ -1469,9 +1470,10 @@ type InquiryDataSearch struct {
 }
 
 type ActionSearch struct {
-	ActionReturn  bool `gorm:"column:ActionReturn" json:"action_return"`
-	ActionCancel  bool `gorm:"column:ActionCancel" json:"action_cancel"`
-	ActionFormAkk bool `gorm:"column:ActionFormAkk" json:"action_form_akk"`
+	FinalStatus   string `gorm:"column:FinalStatus" json:"final_status"`
+	ActionReturn  bool   `gorm:"column:ActionReturn" json:"action_return"`
+	ActionCancel  bool   `gorm:"column:ActionCancel" json:"action_cancel"`
+	ActionFormAkk bool   `gorm:"column:ActionFormAkk" json:"action_form_akk"`
 }
 
 type HistoryApproval struct {

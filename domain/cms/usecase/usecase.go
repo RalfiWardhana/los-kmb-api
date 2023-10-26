@@ -891,6 +891,7 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 
 		row := entity.InquiryDataSearch{
 			Action: entity.ActionSearch{
+				FinalStatus:   inq.FinalStatus,
 				ActionReturn:  inq.ActionReturn,
 				ActionCancel:  inq.ActionCancel,
 				ActionFormAkk: inq.ActionFormAkk,
