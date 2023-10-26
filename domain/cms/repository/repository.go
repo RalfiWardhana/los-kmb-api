@@ -1413,6 +1413,12 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		tst.source_decision,
 		tst.decision,
 		CASE
+		  WHEN tst.decision='APR' THEN 'Approve'
+		  WHEN tst.decision='REJ' THEN 'Reject'
+		  WHEN tst.decision='CAN' THEN 'Cancel'
+		  ELSE '-'
+		END AS FinalStatus,
+		CASE
 		  WHEN tps.ProspectID IS NOT NULL
 		  AND tst.status_process='ONP' THEN 1
 		  ELSE 0
