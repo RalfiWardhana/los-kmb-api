@@ -258,6 +258,17 @@ func (r repoHandler) GetMoblast(customerID string) (score entity.GetMoblast, err
 	return
 }
 
+func (r repoHandler) GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error) {
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT mmel.ltv FROM trx_elaborate_ltv tel 
+	LEFT JOIN m_mapping_elaborate_ltv mmel ON tel.m_mapping_elaborate_ltv_id = mmel.id 
+	WHERE tel.prospect_id ='%s'`, prospectID)).Scan(&elaborateLTV).Error; err != nil {
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (newErr error) {
 
 	location, _ := time.LoadLocation("Asia/Jakarta")

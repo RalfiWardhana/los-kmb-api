@@ -373,13 +373,14 @@ type DetailTopUP struct {
 }
 
 type UsecaseApi struct {
-	Code           string  `json:"code"`
-	Result         string  `json:"result"`
-	Reason         string  `json:"reason"`
-	StatusKonsumen string  `json:"status_konsumen,omitempty"`
-	Dsr            float64 `json:"dsr,omitempty"`
-	Confidence     string  `json:"confidence,omitempty"`
-	SourceDecision string  `json:"source_decision,omitempty"`
+	Code           string      `json:"code"`
+	Result         string      `json:"result"`
+	Reason         string      `json:"reason"`
+	StatusKonsumen string      `json:"status_konsumen,omitempty"`
+	Dsr            float64     `json:"dsr,omitempty"`
+	Confidence     string      `json:"confidence,omitempty"`
+	SourceDecision string      `json:"source_decision,omitempty"`
+	Info           interface{} `json:"info,omitempty"`
 }
 
 type DupcheckConfig struct {

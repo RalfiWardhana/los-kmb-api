@@ -231,6 +231,27 @@ func (_m *Repository) GetCurrentTrxWithRejectDSR(idNumber string) (entity.TrxSta
 	return r0, r1
 }
 
+// GetElaborateLtv provides a mock function with given fields: prospectID
+func (_m *Repository) GetElaborateLtv(prospectID string) (entity.MappingElaborateLTV, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 entity.MappingElaborateLTV
+	if rf, ok := ret.Get(0).(func(string) entity.MappingElaborateLTV); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.MappingElaborateLTV)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetEncB64 provides a mock function with given fields: myString
 func (_m *Repository) GetEncB64(myString string) (entity.EncryptedString, error) {
 	ret := _m.Called(myString)

@@ -32,6 +32,8 @@ type Repository interface {
 	GetActiveLoanTypeLast24M(customerID string) (score entity.GetActiveLoanTypeLast24M, err error)
 	GetMoblast(customerID string) (score entity.GetMoblast, err error)
 
+	GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error)
+
 	GetLatestBannedRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error)
 	GetLatestRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error)
 	GetAllReject(idNumber string) (data []entity.DupcheckRejectionPMK, err error)

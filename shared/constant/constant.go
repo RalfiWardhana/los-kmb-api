@@ -303,19 +303,23 @@ const (
 	NEW_KMB_LOG          = "NEW_KMB_LOG"
 
 	// ELABORATE SCHEME
-	MESSAGE_KMB_ELABORATE           = "KMB-ELABORATE"
-	CODE_PASS_ELABORATE             = 9601
-	CODE_REJECT_ELABORATE           = 9602
-	CODE_REJECT_NTF_ELABORATE       = 9603
-	RANGE_CLUSTER_BAKI_DEBET_REJECT = 3000000
-	REASON_PASS_ELABORATE           = "PASS - Elaborated Scheme"
-	REASON_REJECT_ELABORATE         = "REJECT - Elaborated Scheme"
-	REASON_REJECT_NTF_ELABORATE     = "REJECT - NTF Tidak Sesuai Threshold"
-	CLUSTER_C                       = "Cluster C"
-	CLUSTER_E                       = "Cluster E"
-	CLUSTER_F                       = "Cluster F"
-	BRANCH_ID_PRIME_PRIORITY        = "000"
-	CLUSTER_PRIME_PRIORITY          = "PRIME PRIORITY"
+	MESSAGE_KMB_ELABORATE            = "KMB-ELABORATE"
+	CODE_PASS_ELABORATE              = 9601
+	CODE_REJECT_ELABORATE            = 9602
+	CODE_REJECT_NTF_ELABORATE        = 9603
+	RANGE_CLUSTER_BAKI_DEBET_REJECT  = 3000000
+	REASON_PASS_ELABORATE            = "PASS - Elaborated Scheme"
+	REASON_REJECT_ELABORATE          = "REJECT - Elaborated Scheme"
+	REASON_REJECT_NTF_ELABORATE      = "REJECT - NTF Tidak Sesuai Threshold"
+	CLUSTER_C                        = "Cluster C"
+	CLUSTER_E                        = "Cluster E"
+	CLUSTER_F                        = "Cluster F"
+	BRANCH_ID_PRIME_PRIORITY         = "000"
+	CLUSTER_PRIME_PRIORITY           = "PRIME PRIORITY"
+	SOURCE_DECISION_LTV              = "LTV"
+	STRING_CODE_PASS_ELABORATE       = "9601"
+	STRING_CODE_REJECT_ELABORATE     = "9602"
+	STRING_CODE_REJECT_NTF_ELABORATE = "9603"
 
 	//HTTP MSG
 	MSG_CORE_API          = "CORE_API"

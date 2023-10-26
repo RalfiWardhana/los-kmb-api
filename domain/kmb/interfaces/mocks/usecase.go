@@ -452,6 +452,62 @@ func (_m *Usecase) SaveTransaction(countTrx int, data request.Metrics, trxPrescr
 	return r0, r1
 }
 
+// Scorepro provides a mock function with given fields: ctx, req, pefindoScore, customerSegment, spDupcheck, accessToken
+func (_m *Usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore string, customerSegment string, spDupcheck response.SpDupcheckMap, accessToken string) (response.IntegratorScorePro, response.ScorePro, error) {
+	ret := _m.Called(ctx, req, pefindoScore, customerSegment, spDupcheck, accessToken)
+
+	var r0 response.IntegratorScorePro
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, string, string, response.SpDupcheckMap, string) response.IntegratorScorePro); ok {
+		r0 = rf(ctx, req, pefindoScore, customerSegment, spDupcheck, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.IntegratorScorePro)
+	}
+
+	var r1 response.ScorePro
+	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, string, string, response.SpDupcheckMap, string) response.ScorePro); ok {
+		r1 = rf(ctx, req, pefindoScore, customerSegment, spDupcheck, accessToken)
+	} else {
+		r1 = ret.Get(1).(response.ScorePro)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, request.Metrics, string, string, response.SpDupcheckMap, string) error); ok {
+		r2 = rf(ctx, req, pefindoScore, customerSegment, spDupcheck, accessToken)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// TotalDsrFmfPbk provides a mock function with given fields: ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue
+func (_m *Usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome float64, newInstallment float64, totalInstallmentPBK float64, prospectID string, customerSegment string, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig) (response.UsecaseApi, response.TrxFMF, error) {
+	ret := _m.Called(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue)
+
+	var r0 response.UsecaseApi
+	if rf, ok := ret.Get(0).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig) response.UsecaseApi); ok {
+		r0 = rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	var r1 response.TrxFMF
+	if rf, ok := ret.Get(1).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig) response.TrxFMF); ok {
+		r1 = rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue)
+	} else {
+		r1 = ret.Get(1).(response.TrxFMF)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig) error); ok {
+		r2 = rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // VehicleCheck provides a mock function with given fields: manufactureYear, tenor, configValue
 func (_m *Usecase) VehicleCheck(manufactureYear string, tenor int, configValue response.DupcheckConfig) (response.UsecaseApi, error) {
 	ret := _m.Called(manufactureYear, tenor, configValue)
