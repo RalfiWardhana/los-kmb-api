@@ -30,7 +30,7 @@ func (u multiUsecase) Ekyc(ctx context.Context, req request.Metrics, cbFound boo
 
 		trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.Transaction.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_CONTINGENCY, RuleCode: data.Code, SourceDecision: data.Source, Info: data.Info, NextStep: constant.SOURCE_DECISION_ASLIRI})
 
-		data, err = u.usecase.Asliri(ctx, req, cbFound, accessToken)
+		data, err = u.usecase.Asliri(ctx, req, accessToken)
 
 		if err != nil {
 
@@ -221,7 +221,7 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, accessToken 
 	return
 }
 
-func (u usecase) Asliri(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (data response.Ekyc, err error) {
+func (u usecase) Asliri(ctx context.Context, req request.Metrics, accessToken string) (data response.Ekyc, err error) {
 
 	var (
 		resp        *resty.Response
@@ -335,14 +335,14 @@ func (u usecase) Asliri(ctx context.Context, req request.Metrics, cb_found bool,
 	return
 }
 
-func (u usecase) Ktp(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (data response.Ekyc, err error) {
+func (u usecase) Ktp(ctx context.Context, req request.Metrics, cbFound bool, accessToken string) (data response.Ekyc, err error) {
 
 	paramKtp, _ := json.Marshal(map[string]interface{}{
 		"data": map[string]interface{}{
 			"birth_date": req.CustomerPersonal.BirthDate,
 			"gender":     req.CustomerPersonal.Gender,
 			"id_number":  req.CustomerPersonal.IDNumber,
-			"is_pefindo": cb_found,
+			"is_pefindo": cbFound,
 			"request_id": uuid.New().String(),
 		},
 	})

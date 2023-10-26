@@ -23,7 +23,7 @@ type Usecase interface {
 	DsrCheck(ctx context.Context, req request.DupcheckApi, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, accessToken string, configValue response.DupcheckConfig) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error)
 	GetBase64Media(ctx context.Context, url string, customerID int, accessToken string) (base64Image string, err error)
 	Dukcapil(ctx context.Context, req request.Metrics, accessToken string) (data response.Ekyc, err error)
-	Asliri(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (data response.Ekyc, err error)
+	Asliri(ctx context.Context, req request.Metrics, accessToken string) (data response.Ekyc, err error)
 	Ktp(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (data response.Ekyc, err error)
 	Pefindo(cbFound bool, bpkbName string, filtering entity.FilteringKMB, spDupcheck response.SpDupcheckMap) (data response.UsecaseApi, err error)
 	Scorepro(ctx context.Context, req request.Metrics, pefindoScore, customerSegment string, spDupcheck response.SpDupcheckMap, accessToken string) (responseScs response.IntegratorScorePro, data response.ScorePro, pefindoIDX response.PefindoIDX, err error)
