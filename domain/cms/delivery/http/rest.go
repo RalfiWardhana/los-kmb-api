@@ -36,6 +36,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.POST("/cms/ca/save-as-draft", handler.SaveAsDraft, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/submit-decision", handler.SubmitDecision, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/cancel", handler.CancelOrder, middlewares.AccessMiddleware())
+	cmsroute.POST("/cms/ca/return", handler.ReturnOrder, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/search", handler.SearchInquiry, middlewares.AccessMiddleware())
 }
 
@@ -357,23 +358,88 @@ func (c *handlerCMS) SearchInquiry(ctx echo.Context) (err error) {
 func (c *handlerCMS) CancelOrder(ctx echo.Context) (err error) {
 
 	var (
+		resp        interface{}
 		accessToken = middlewares.UserInfoData.AccessToken
 		req         request.ReqCancelOrder
+		ctxJson     error
 	)
 
+	// Save Log Orchestrator
+	defer func() {
+		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
+		go c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/ca/cancel", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
+	}()
+
 	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Cancel Order", err)
+		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Cancel Order", err)
+		return ctxJson
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Cancel Order", req, err)
+		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Cancel Order", req, err)
+		return ctxJson
 	}
 
 	data, err := c.usecase.CancelOrder(ctx.Request().Context(), req)
 
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Cancel Order", req, err)
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Cancel Order", req, err)
+		return ctxJson
 	}
 
-	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Cancel Order", req, data)
+	if data.Status == constant.CANCEL_STATUS_SUCCESS {
+		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(resp), 0)
+	}
+
+	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Cancel Order", req, data)
+	return ctxJson
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api CA
+// @Tags CA
+// @Produce json
+// @Param body body request.ReqReturnOrder true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.ApiResponse}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/ca/return [post]
+func (c *handlerCMS) ReturnOrder(ctx echo.Context) (err error) {
+
+	var (
+		resp        interface{}
+		accessToken = middlewares.UserInfoData.AccessToken
+		req         request.ReqReturnOrder
+		ctxJson     error
+	)
+
+	// Save Log Orchestrator
+	defer func() {
+		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
+		go c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/ca/return", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
+	}()
+
+	if err := ctx.Bind(&req); err != nil {
+		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Return Order", err)
+		return ctxJson
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Return Order", req, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.ReturnOrder(ctx.Request().Context(), req)
+
+	if err != nil {
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Return Order", req, err)
+		return ctxJson
+	}
+
+	if data.Status == constant.RETURN_STATUS_SUCCESS {
+		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(resp), 0)
+	}
+
+	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Return Order", req, data)
+	return ctxJson
 }

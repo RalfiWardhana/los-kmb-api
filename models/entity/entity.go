@@ -464,7 +464,7 @@ type CustomerPersonal struct {
 	IsRCA                      *int        `gorm:"column:IsRCA" json:"-"`
 	CustomerID                 string      `gorm:"type:varchar(20);column:CustomerID" json:"customer_id"`
 	CustomerStatus             string      `gorm:"type:varchar(10);column:CustomerStatus" json:"customer_status"`
-	SurveyResult               interface{} `gorm:"type:varchar(255);column:SurveyResult" json:"-"`
+	SurveyResult               interface{} `gorm:"type:varchar(255);column:SurveyResult" json:"survey_result"`
 	RentFinishDate             *string     `gorm:"column:RentFinishDate" json:"-"`
 }
 
@@ -1211,6 +1211,7 @@ type InquiryCa struct {
 	StaySinceYear     string    `gorm:"column:StaySinceYear"`
 	ExtCompanyPhone   *string   `gorm:"column:ExtCompanyPhone"`
 	SourceOtherIncome *string   `gorm:"column:SourceOtherIncome"`
+	SurveyResult      string    `gorm:"column:SurveyResult"`
 
 	Supplier           string  `gorm:"column:dealer"`
 	ProductOfferingID  string  `gorm:"column:ProductOfferingID"`
@@ -1310,7 +1311,6 @@ type DataCa struct {
 	CaDecision         string `gorm:"column:ca_decision" json:"ca_decision"`
 	CaNote             string `gorm:"column:ca_note" json:"ca_note"`
 	ActionDate         string `gorm:"column:ActionDate" json:"action_date"`
-	DocumentSurveyor   string `json:"doc_surveyor"`
 	ScsDate            string `gorm:"column:ScsDate" json:"scorepro_date"`
 	ScsScore           string `gorm:"column:ScsScore" json:"scorepro_score"`
 	ScsStatus          string `gorm:"column:ScsStatus" json:"scorepro_status"`

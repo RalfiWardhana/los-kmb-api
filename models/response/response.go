@@ -728,3 +728,8 @@ type CancelResponse struct {
 	Reason     string `json:"reason"`
 	Status     string `json:"status"`
 }
+
+type ReturnResponse struct {
+	ProspectID string `json:"prospect_id"`
+	Status     string `json:"status"`
+}

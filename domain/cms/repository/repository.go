@@ -953,6 +953,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 
 		tcp.CustomerID,
 		tcp.CustomerStatus,
+		tcp.SurveyResult,
 		tm.created_at,
 		tm.order_at,
 		tm.lob,
@@ -1295,44 +1296,38 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.TrxDe
 	defer db.Commit()
 
 	if err = r.NewKmb.Raw(`SELECT
-				CASE
-					WHEN source_decision = 'PSI' THEN 'PRE SCREENING'
-					WHEN source_decision = 'DCK' THEN 'DUPLICATION CHECKING'
-					WHEN source_decision = 'DCP'
-					OR source_decision = 'ARI' THEN 'EKYC'
-					WHEN source_decision = 'DSR' THEN 'DSR'
-					ELSE '-'
-				END AS source_decision,
-				CASE
-					WHEN decision = 'PAS' THEN 'Pass'
-					WHEN decision = 'REJ' THEN 'Reject'
-					WHEN decision = 'CAN' THEN 'Cancel'
-					ELSE '-'
-				END AS decision,
-				CASE
-					WHEN source_decision = 'ARI' THEN JSON_VALUE(cast([info] as nvarchar(max)), '$.asliri.reason')
-					WHEN source_decision = 'KTP' THEN JSON_VALUE(cast([info] as nvarchar(max)), '$.ktp.reason')
-					WHEN source_decision = 'DSR' THEN JSON_VALUE(cast([info] as nvarchar(max)), '$.reason')
-					ELSE info
-				END AS info,
-				created_at
-				FROM
-				trx_details WITH (nolock)
-				WHERE
-				ProspectID = ?
-				AND source_decision IN(
-					'PSI',
-					'DCK',
-					'DCP',
-					'ARI',
-					'KTP',
-					'PBK',
-					'SCP',
-					'DSR'
-				)
-				AND decision <> 'CTG'
-				ORDER BY
-				created_at ASC`, prospectID).Scan(&detail).Error; err != nil {
+			CASE
+			 WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING'
+			 WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING'
+			 WHEN td.source_decision = 'DCP'
+			 OR td.source_decision = 'ARI'
+			 OR td.source_decision = 'KTP' THEN 'EKYC'
+			 WHEN td.source_decision = 'PBK' THEN 'PEFINDO'
+			 WHEN td.source_decision = 'SCS' THEN 'SCOREPRO'
+			 WHEN td.source_decision = 'DSR' THEN 'DSR'
+			 WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
+			 WHEN td.source_decision = 'CBM'
+			  OR td.source_decision = 'DRM'
+			  OR td.source_decision = 'GMO'
+			  OR td.source_decision = 'COM'
+			  OR td.source_decision = 'GMC'
+			  OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE'
+			 ELSE '-'
+			END AS source_decision,
+			CASE
+			 WHEN td.decision = 'PAS' THEN 'PASS'
+			 WHEN td.decision = 'REJ' THEN 'REJECT'
+			 WHEN td.decision = 'CAN' THEN 'CANCEL'
+			 WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS'
+			 ELSE '-'
+			END AS decision,
+			ap.reason AS info,
+			td.created_at
+		FROM
+			trx_details td WITH (nolock)
+			LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
+		WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCS','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC')
+		AND td.decision <> 'CTG' ORDER BY td.created_at ASC`, prospectID).Scan(&detail).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
@@ -1724,6 +1719,39 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxS
 		// trx_draft_ca_decision
 		var draft entity.TrxDraftCaDecision
 		if err := tx.Where("ProspectID = ?", trxCaDecision.ProspectID).Delete(&draft).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (r repoHandler) ProcessReturnOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
+
+	trxStatus.CreatedAt = DtmRequest
+	trxDetail.CreatedAt = DtmRequest
+
+	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
+
+		// update trx_status
+		if err := tx.Model(&trxStatus).Where("ProspectID = ?", prospectID).Updates(trxStatus).Error; err != nil {
+			return err
+		}
+
+		// insert trx_details
+		if err := tx.Create(&trxDetail).Error; err != nil {
+			return err
+		}
+
+		// delete trx_prescreening
+		var prescreening entity.TrxPrescreening
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&prescreening).Error; err != nil {
+			return err
+		}
+
+		// delete trx_draft_ca_decision
+		var draft entity.TrxDraftCaDecision
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&draft).Error; err != nil {
 			return err
 		}
 
