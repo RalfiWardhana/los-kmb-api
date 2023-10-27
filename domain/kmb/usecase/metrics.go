@@ -85,6 +85,13 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		}
 	}
 
+	// cek elaborate ltv
+	_, err = u.repository.GetElaborateLtv(reqMetrics.Transaction.ProspectID)
+	if err != nil {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Belum melakukan pengecekan LTV")
+		return
+	}
+
 	if filtering.ScoreBiro != nil {
 		if filtering.ScoreBiro.(string) != "" && filtering.ScoreBiro.(string) != constant.DECISION_PBK_NO_HIT && filtering.ScoreBiro.(string) != constant.PEFINDO_UNSCORE {
 			cbFound = true
