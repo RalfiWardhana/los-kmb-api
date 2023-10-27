@@ -868,6 +868,15 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 
 		}
 
+		if trxFMF.TrxCaDecision.Decision == constant.DB_DECISION_APR {
+			logInfo = trxFMF.TrxCaDecision
+
+			if err := tx.Create(&trxFMF.TrxCaDecision).Error; err != nil {
+				return err
+			}
+
+		}
+
 		for i := 0; i < len(details); i++ {
 			// skip prescreening unpr
 			if details[i].SourceDecision != constant.PRESCREENING || details[i].Activity != constant.ACTIVITY_UNPROCESS {

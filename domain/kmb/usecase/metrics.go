@@ -598,10 +598,17 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			ProspectID:     reqMetrics.Transaction.ProspectID,
 			StatusProcess:  constant.STATUS_FINAL,
 			Activity:       constant.ACTIVITY_STOP,
-			Decision:       constant.DECISION_PASS,
+			Decision:       constant.DB_DECISION_APR,
 			RuleCode:       constant.CODE_CREDIT_COMMITTEE,
 			SourceDecision: constant.SOURCE_DECISION_CA,
 		})
+
+		trxFMF.TrxCaDecision = entity.TrxCaDecision{
+			ProspectID: reqMetrics.Transaction.ProspectID,
+			Decision:   constant.DB_DECISION_APR,
+			CreatedBy:  constant.SYSTEM_CREATED,
+			DecisionBy: constant.SYSTEM_CREATED,
+		}
 	} else {
 		details = append(details, entity.TrxDetail{
 			ProspectID:     reqMetrics.Transaction.ProspectID,
@@ -618,11 +625,6 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		return
 	}
 
-	// log.Println(dupcheckData)
-	// log.Println(customerStatus)
-	// log.Println(decisionMetrics)
-	// log.Println(filtering)
-
 	return
 }
 
@@ -635,6 +637,9 @@ func (u usecase) SaveTransaction(countTrx int, data request.Metrics, trxPrescree
 	detail := details[len(details)-1]
 
 	switch detail.Decision {
+
+	case constant.DB_DECISION_APR:
+		decision = constant.DECISION_APPROVE
 
 	case constant.DB_DECISION_PASS:
 		decision = constant.JSON_DECISION_PASS

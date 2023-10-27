@@ -487,6 +487,7 @@ type TrxFMF struct {
 	AgreementCONFINS        []AgreementCONFINS
 	InstallmentThreshold    float64
 	LatestInstallmentAmount float64
+	TrxCaDecision           entity.TrxCaDecision
 }
 
 type RoaoAkkk struct {
