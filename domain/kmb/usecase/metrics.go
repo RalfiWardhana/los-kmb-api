@@ -522,13 +522,13 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	trxFMF.DSRFMF = trxFMFTotalDsrFmfPbk.DSRFMF
 	trxFMF.TotalDSR = trxFMFTotalDsrFmfPbk.TotalDSR
 
-	infoTotalDSR := map[string]interface{}{
+	infoTotalDSR, _ := json.Marshal(map[string]interface{}{
 		"dsr_fmf":                   trxFMF.DSRFMF,
 		"dsr_pbk":                   trxFMF.DSRPBK,
 		"total_dsr":                 trxFMF.TotalDSR,
 		"installment_threshold":     trxFMFTotalDsrFmfPbk.InstallmentThreshold,
 		"latest_installment_amount": trxFMFTotalDsrFmfPbk.LatestInstallmentAmount,
-	}
+	})
 
 	if metricsTotalDsrFmfPbk.Result == constant.DECISION_REJECT {
 
