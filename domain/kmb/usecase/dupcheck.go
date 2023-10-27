@@ -170,6 +170,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	}
 
 	status = customerKMB
+	mapping.StatusKonsumen = customerKMB
 
 	if mainCustomer.MaxOverdueDaysROAO != nil {
 		mapping.MaxOverdueDaysROAO = *mainCustomer.MaxOverdueDaysROAO
