@@ -195,3 +195,14 @@ func GetStagingDB() (string, string, string, int, string) {
 
 	return user, pwd, host, port, database
 }
+
+func GetScoreProDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("DB_SCOREPRO_USERNAME"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("DB_SCOREPRO_PORT"))
+	port, _ := strconv.Atoi(strPort)
+	host, _ := utils.DecryptCredential(os.Getenv("DB_SCOREPRO_HOST"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("DB_SCOREPRO_PASSWORD"))
+	database, _ := utils.DecryptCredential(os.Getenv("DB_SCOREPRO_DATABASE"))
+
+	return user, pwd, host, port, database
+}

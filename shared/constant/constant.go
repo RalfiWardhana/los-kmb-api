@@ -49,6 +49,7 @@ const (
 	STATUS_FINAL                     = "FIN"
 	STATUS_ONPROCESS                 = "ONP"
 	DECISION_CREDIT_PROCESS          = "CREDIT_PROCESS"
+	DB_DECISION_CONTINGENCY          = "CTG"
 	DB_DECISION_PASS                 = "PAS"
 	DB_DECISION_APR                  = "APR"
 	DB_DECISION_REJECT               = "REJ"
@@ -305,19 +306,28 @@ const (
 	NEW_KMB_LOG          = "NEW_KMB_LOG"
 
 	// ELABORATE SCHEME
-	MESSAGE_KMB_ELABORATE           = "KMB-ELABORATE"
-	CODE_PASS_ELABORATE             = 9601
-	CODE_REJECT_ELABORATE           = 9602
-	CODE_REJECT_NTF_ELABORATE       = 9603
-	RANGE_CLUSTER_BAKI_DEBET_REJECT = 3000000
-	REASON_PASS_ELABORATE           = "PASS - Elaborated Scheme"
-	REASON_REJECT_ELABORATE         = "REJECT - Elaborated Scheme"
-	REASON_REJECT_NTF_ELABORATE     = "REJECT - NTF Tidak Sesuai Threshold"
-	CLUSTER_C                       = "Cluster C"
-	CLUSTER_E                       = "Cluster E"
-	CLUSTER_F                       = "Cluster F"
-	BRANCH_ID_PRIME_PRIORITY        = "000"
-	CLUSTER_PRIME_PRIORITY          = "PRIME PRIORITY"
+	MESSAGE_KMB_ELABORATE            = "KMB-ELABORATE"
+	CODE_PASS_ELABORATE              = 9601
+	CODE_REJECT_ELABORATE            = 9602
+	CODE_REJECT_NTF_ELABORATE        = 9603
+	RANGE_CLUSTER_BAKI_DEBET_REJECT  = 3000000
+	REASON_PASS_ELABORATE            = "PASS - Elaborated Scheme"
+	REASON_REJECT_ELABORATE          = "REJECT - Elaborated Scheme"
+	REASON_REJECT_NTF_ELABORATE      = "REJECT - NTF Tidak Sesuai Threshold"
+	CLUSTER_C                        = "Cluster C"
+	CLUSTER_E                        = "Cluster E"
+	CLUSTER_F                        = "Cluster F"
+	BRANCH_ID_PRIME_PRIORITY         = "000"
+	CLUSTER_PRIME_PRIORITY           = "PRIME PRIORITY"
+	SOURCE_DECISION_ELABORATE_LTV    = "LTV"
+	STRING_CODE_PASS_ELABORATE       = "9601"
+	STRING_CODE_REJECT_ELABORATE     = "9602"
+	STRING_CODE_REJECT_NTF_ELABORATE = "9603"
+	SOURCE_DECISION_ELABORATE_INCOME = "INC"
+	CODE_PASS_ELABORATE_INCOME       = "302"
+	REASON_PASS_ELABORATE_INCOME     = "PASS - Elaborated Income"
+	CODE_REJECT_ELABORATE_INCOME     = "303"
+	REASON_REJECT_ELABORATE_INCOME   = "REJECT - Elaborated Income"
 
 	//HTTP MSG
 	MSG_CORE_API          = "CORE_API"
@@ -490,6 +500,7 @@ const (
 	DUKCAPIL_VERIFICATION_DATA          = "DVN"
 	DUKCAPIL_FACE_RECOGNITION           = "DFR"
 	SOURCE_DECISION_ASLIRI              = "ARI"
+	CODE_CONTINGENCY                    = "1529"
 	CODE_REJECT_ASLIRI_NOT_FOUND        = "1528"
 	CODE_REJECT_ASLIRI_NAME             = "1527"
 	CODE_REJECT_ASLIRI_SELFIE           = "1526"
@@ -518,6 +529,8 @@ const (
 	DATA_NOT_FOUND                      = "Data Not Found"
 	EKYC_VALID                          = "Ekyc Valid"
 
+	TYPE_CONTINGENCY = "CONTINGENCY"
+
 	// Address Type
 	ADDRESS_TYPE_LEGAL     = "LEGAL"
 	ADDRESS_TYPE_RESIDENCE = "RESIDENCE"
@@ -527,7 +540,32 @@ const (
 	ADDRESS_TYPE_MAILING   = "MAILING"
 
 	// BIRO
-	SOURCE_DECISION_BIRO = "BIR"
+	SOURCE_DECISION_BIRO                    = "PBK"
+	CODE_PEFINDO_NOTFOUND                   = "897"
+	REASON_PEFINDO_NOTFOUND                 = "PBK Tidak Ditemukan"
+	CODE_PEFINDO_OVD12LTE60_CURRENT_LTE30   = "938"
+	REASON_PEFINDO_OVD12LTE60_CURRENT_LTE30 = "PBK - Current OVD <= %v"
+	CODE_PEFINDO_CURRENT_GT30               = "941"
+	REASON_PEFINDO_CURRENT_GT30             = "PBK - Current OVD > %v"
+	CODE_PEFINDO_OVD12GT60                  = "962"
+	REASON_PEFINDO_OVD12GT60                = "PBK - Last 12 Month OVD > %v"
+	CODE_PEFINDO_BPKB_BEDA                  = "9416"
+	REASON_BPKB_BEDA                        = "Nama Beda"
+	REASON_BPKB_SAMA                        = "Nama Sama"
+	CODE_BPKB_SAMA_BAKI_DEBET_GT20J         = "9410"
+	CODE_BPKB_SAMA_BAKI_DEBET_LTE20J        = "9408"
+	CODE_PEFINDO_PRIME_PRIORITY             = "9422"
+	CUSTOMER                                = "CUSTOMER"
+	SPOUSE                                  = "SPOUSE"
+
+	// SCOREPRO
+	SOURCE_DECISION_SCOREPRO         = "SCP"
+	JOURNEY_SCOREPRO                 = "SCP1"
+	SCOREPRO_RESULT_MEDIUM_2ND       = "MEDIUM(2ND)"
+	CODE_SCOREPRO_LTMIN_THRESHOLD    = "3100"
+	REASON_SCOREPRO_LTMIN_THRESHOLD  = "Score Dibawah Ketentuan"
+	CODE_SCOREPRO_GTEMIN_THRESHOLD   = "3101"
+	REASON_SCOREPRO_GTEMIN_THRESHOLD = "Score Sesuai Ketentuan"
 
 	// CREDIT ANALYST
 	SOURCE_DECISION_CA    = "CRA"

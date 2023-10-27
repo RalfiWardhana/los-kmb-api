@@ -224,3 +224,96 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 	_ = mapstructure.Decode(data, &result)
 	return
 }
+
+func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment, totalInstallmentPBK float64, prospectID, customerSegment, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig) (data response.UsecaseApi, trxFMF response.TrxFMF, err error) {
+
+	dsrPBK := totalInstallmentPBK / totalIncome * 100
+
+	totalDSR := SpDupcheckMap.Dsr + dsrPBK
+
+	trxFMF = response.TrxFMF{
+		DSRPBK:   dsrPBK,
+		TotalDSR: totalDSR,
+	}
+
+	reasonMaxDsr := int(configValue.Data.MaxDsr)
+
+	var reasonCustomerStatus string
+	if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO || SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
+		reasonCustomerStatus = SpDupcheckMap.StatusKonsumen + " " + customerSegment
+	} else {
+		reasonCustomerStatus = SpDupcheckMap.StatusKonsumen
+	}
+
+	if totalDSR < configValue.Data.MaxDsr {
+		data = response.UsecaseApi{
+			Result:         constant.DECISION_PASS,
+			Code:           constant.CODE_DSRLTE35,
+			Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRLTE35, reasonMaxDsr),
+			SourceDecision: constant.SOURCE_DECISION_DSR,
+		}
+	} else {
+		data = response.UsecaseApi{
+			Result:         constant.DECISION_REJECT,
+			Code:           constant.CODE_DSRGT35,
+			Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRGT35, reasonMaxDsr),
+			SourceDecision: constant.SOURCE_DECISION_DSR,
+		}
+	}
+
+	if (SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO || (SpDupcheckMap.InstallmentTopup > 0 && SpDupcheckMap.MaxOverdueDaysforActiveAgreement <= 30)) && customerSegment == constant.RO_AO_PRIME {
+
+		var (
+			resp                      *resty.Response
+			respLatestPaidInstallment response.LatestPaidInstallmentData
+			latestInstallmentAmount   float64
+		)
+
+		if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO {
+			resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+SpDupcheckMap.CustomerID.(string), nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
+
+			if err != nil {
+				if err != nil {
+					err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout")
+					return
+				}
+			}
+
+			if resp.StatusCode() != 200 {
+				if err != nil {
+					err = errors.New(constant.ERROR_UPSTREAM + " - Call LatestPaidInstallmentData Error")
+					return
+				}
+			}
+
+			err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &respLatestPaidInstallment)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal LatestPaidInstallmentData Error")
+				return
+			}
+
+			latestInstallmentAmount = respLatestPaidInstallment.InstallmentAmount
+
+		} else if SpDupcheckMap.InstallmentTopup > 0 && SpDupcheckMap.MaxOverdueDaysforActiveAgreement <= 30 {
+			latestInstallmentAmount = SpDupcheckMap.InstallmentTopup
+		}
+
+		installmentThreshold := latestInstallmentAmount * 1.5
+
+		trxFMF = response.TrxFMF{
+			LatestInstallmentAmount: latestInstallmentAmount,
+			InstallmentThreshold:    installmentThreshold,
+		}
+
+		if newInstallment < installmentThreshold {
+			data = response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_DSRLTE35,
+				Reason:         fmt.Sprintf("%s", reasonCustomerStatus),
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+			}
+		}
+	}
+
+	return
+}

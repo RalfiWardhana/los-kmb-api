@@ -45,6 +45,44 @@ type Filtering struct {
 	Cluster           interface{} `json:"-"`
 }
 
+type PefindoIDX struct {
+	ProspectID              string  `json:"prospect_id"`
+	OldestMobPl             int     `json:"oldestmob_pl"`
+	FinalNom6012Mth         int     `json:"final_nom60_12mth"`
+	TotBakiDebetBanksActive int     `json:"tot_bakidebet_banks_active"`
+	TotBakiDebet3160Dpd     int     `json:"tot_bakidebet_31_60dpd"`
+	Worst24Mth              int     `json:"worst_24mth"`
+	MaxLimitOth             float64 `json:"max_limit_oth"`
+
+	Nom036MonthAll int     `json:"nom03_6mth_all"`
+	MaxLimitPl     float64 `json:"max_limit_pl"`
+	TotBakiDebet4  int     `json:"tot_bakidebet4"`
+	Worst12MthAuto int     `json:"worst_12mth_auto"`
+
+	Nom0312MntAll  int `json:"nom03_12mth_all"`
+	Worst24MthAuto int `json:"worst_24mth_auto"`
+}
+
+type IntegratorScorePro struct {
+	ProspectID  string      `json:"prospect_id"`
+	Score       interface{} `json:"score"`
+	Result      string      `json:"result"`
+	ScoreBand   string      `json:"score_band"`
+	ScoreResult string      `json:"score_result"`
+	Status      string      `json:"status"`
+	Segmen      string      `json:"segmen"`
+	IsTsi       bool        `json:"is_tsi"`
+	ScoreBin    string      `json:"score_bin"`
+}
+
+type ScorePro struct {
+	Result string `json:"result"`
+	Code   string `json:"code"`
+	Reason string `json:"reason"`
+	Source string `json:"source"`
+	Info   string `json:"info"`
+}
+
 type CustomerDomain struct {
 	Code      string       `json:"code"`
 	Message   string       `json:"message"`
@@ -335,13 +373,20 @@ type DetailTopUP struct {
 }
 
 type UsecaseApi struct {
-	Code           string  `json:"code"`
-	Result         string  `json:"result"`
-	Reason         string  `json:"reason"`
-	StatusKonsumen string  `json:"status_konsumen,omitempty"`
-	Dsr            float64 `json:"dsr,omitempty"`
-	Confidence     string  `json:"confidence,omitempty"`
-	SourceDecision string  `json:"source_decision,omitempty"`
+	Code           string      `json:"code"`
+	Result         string      `json:"result"`
+	Reason         string      `json:"reason"`
+	StatusKonsumen string      `json:"status_konsumen,omitempty"`
+	Dsr            float64     `json:"dsr,omitempty"`
+	Confidence     string      `json:"confidence,omitempty"`
+	SourceDecision string      `json:"source_decision,omitempty"`
+	Info           interface{} `json:"info,omitempty"`
+}
+
+type LowIncome struct {
+	NoApplication float64 `json:"no_application"`
+	Income        float64 `json:"income"`
+	Range         string  `json:"range"`
 }
 
 type DupcheckConfig struct {
@@ -420,26 +465,28 @@ type OutstandingConfins struct {
 	TotalOutstanding float64 `json:"total_outstanding"`
 }
 type TrxFMF struct {
-	NTFAkumulasi           float64
-	NTFOtherAmount         float64
-	NTFOtherAmountSpouse   float64
-	NTFOtherAmountDetail   string
-	NTFConfinsAmount       float64
-	NTFConfins             float64
-	NTFTopup               float64
-	DupcheckData           SpDupcheckMap `json:"dupcheck_data"`
-	CustomerStatus         string        `json:"customer_status"`
-	ScsDecision            ScsDecision   `json:"scs_decision"`
-	CustomerType           interface{}   `json:"customer_type"`
-	SpouseType             interface{}   `json:"spouse_type"`
-	AsliriSimiliarity      interface{}   `json:"asliri_similiarity"`
-	AsliriReason           interface{}   `json:"asliri_reason"`
-	DSRFMF                 interface{}   `json:"dsr_fmf"`
-	DSRPBK                 interface{}   `json:"dsr_pbk"`
-	TotalDSR               interface{}   `json:"total_dsr"`
-	TrxBannedPMKDSR        entity.TrxBannedPMKDSR
-	TrxBannedChassisNumber entity.TrxBannedChassisNumber
-	AgreementCONFINS       []AgreementCONFINS
+	NTFAkumulasi            float64
+	NTFOtherAmount          float64
+	NTFOtherAmountSpouse    float64
+	NTFOtherAmountDetail    string
+	NTFConfinsAmount        float64
+	NTFConfins              float64
+	NTFTopup                float64
+	DupcheckData            SpDupcheckMap `json:"dupcheck_data"`
+	CustomerStatus          string        `json:"customer_status"`
+	ScsDecision             ScsDecision   `json:"scs_decision"`
+	CustomerType            interface{}   `json:"customer_type"`
+	SpouseType              interface{}   `json:"spouse_type"`
+	AsliriSimiliarity       interface{}   `json:"asliri_similiarity"`
+	AsliriReason            interface{}   `json:"asliri_reason"`
+	DSRFMF                  interface{}   `json:"dsr_fmf"`
+	DSRPBK                  interface{}   `json:"dsr_pbk"`
+	TotalDSR                interface{}   `json:"total_dsr"`
+	TrxBannedPMKDSR         entity.TrxBannedPMKDSR
+	TrxBannedChassisNumber  entity.TrxBannedChassisNumber
+	AgreementCONFINS        []AgreementCONFINS
+	InstallmentThreshold    float64
+	LatestInstallmentAmount float64
 }
 
 type RoaoAkkk struct {
@@ -595,10 +642,12 @@ type Config struct {
 }
 
 type InfoEkyc struct {
-	Vd     interface{} `json:"vd"`
-	Fr     interface{} `json:"fr"`
-	Asliri interface{} `json:"asliri"`
-	Ktp    interface{} `json:"ktp"`
+	Vd      interface{} `json:"vd"`
+	VdError interface{} `json:"vd_error"`
+	Fr      interface{} `json:"fr"`
+	FrError interface{} `json:"fr_error"`
+	Asliri  interface{} `json:"asliri"`
+	Ktp     interface{} `json:"ktp"`
 }
 
 type Ekyc struct {
@@ -635,8 +684,8 @@ type VerifyDataIntegratorResponse struct {
 
 type VerifyDataDetailIntegratorResponse struct {
 	NoKk        string `json:"no_kk,omitempty"`
-	NamaLgkp    string `json:"nama_lgkp,omitempty"`
-	TmptLhr     string `json:"tmpt_lhr,omitempty"`
+	NamaLgkp    int    `json:"nama_lgkp,omitempty"`
+	TmptLhr     int    `json:"tmpt_lhr,omitempty"`
 	TglLhr      string `json:"tgl_lhr,omitempty"`
 	PropName    string `json:"prop_name,omitempty"`
 	KabName     string `json:"kab_name,omitempty"`
@@ -644,8 +693,8 @@ type VerifyDataDetailIntegratorResponse struct {
 	KelName     string `json:"kel_name,omitempty"`
 	NoRt        string `json:"no_rt,omitempty"`
 	NoRw        string `json:"no_rw,omitempty"`
-	Alamat      string `json:"alamat,omitempty"`
-	NamaLgkpIbu string `json:"nama_lgkp_ibu,omitempty"`
+	Alamat      int    `json:"alamat,omitempty"`
+	NamaLgkpIbu int    `json:"nama_lgkp_ibu,omitempty"`
 	StatusKawin string `json:"status_kawin,omitempty"`
 	JenisPkrjn  string `json:"jenis_pkrjn,omitempty"`
 	JenisKlmin  string `json:"jenis_klmin,omitempty"`

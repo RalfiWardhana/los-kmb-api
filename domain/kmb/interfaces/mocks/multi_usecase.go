@@ -18,41 +18,41 @@ type MultiUsecase struct {
 	mock.Mock
 }
 
-// Dupcheck provides a mock function with given fields: ctx, reqs, married, accessToken
-func (_m *MultiUsecase) Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken string) (response.SpDupcheckMap, string, response.UsecaseApi, response.TrxFMF, []entity.TrxDetail, error) {
-	ret := _m.Called(ctx, reqs, married, accessToken)
+// Dupcheck provides a mock function with given fields: ctx, reqs, married, accessToken, configValue
+func (_m *MultiUsecase) Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken string, configValue response.DupcheckConfig) (response.SpDupcheckMap, string, response.UsecaseApi, response.TrxFMF, []entity.TrxDetail, error) {
+	ret := _m.Called(ctx, reqs, married, accessToken, configValue)
 
 	var r0 response.SpDupcheckMap
-	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, bool, string) response.SpDupcheckMap); ok {
-		r0 = rf(ctx, reqs, married, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, bool, string, response.DupcheckConfig) response.SpDupcheckMap); ok {
+		r0 = rf(ctx, reqs, married, accessToken, configValue)
 	} else {
 		r0 = ret.Get(0).(response.SpDupcheckMap)
 	}
 
 	var r1 string
-	if rf, ok := ret.Get(1).(func(context.Context, request.DupcheckApi, bool, string) string); ok {
-		r1 = rf(ctx, reqs, married, accessToken)
+	if rf, ok := ret.Get(1).(func(context.Context, request.DupcheckApi, bool, string, response.DupcheckConfig) string); ok {
+		r1 = rf(ctx, reqs, married, accessToken, configValue)
 	} else {
 		r1 = ret.Get(1).(string)
 	}
 
 	var r2 response.UsecaseApi
-	if rf, ok := ret.Get(2).(func(context.Context, request.DupcheckApi, bool, string) response.UsecaseApi); ok {
-		r2 = rf(ctx, reqs, married, accessToken)
+	if rf, ok := ret.Get(2).(func(context.Context, request.DupcheckApi, bool, string, response.DupcheckConfig) response.UsecaseApi); ok {
+		r2 = rf(ctx, reqs, married, accessToken, configValue)
 	} else {
 		r2 = ret.Get(2).(response.UsecaseApi)
 	}
 
 	var r3 response.TrxFMF
-	if rf, ok := ret.Get(3).(func(context.Context, request.DupcheckApi, bool, string) response.TrxFMF); ok {
-		r3 = rf(ctx, reqs, married, accessToken)
+	if rf, ok := ret.Get(3).(func(context.Context, request.DupcheckApi, bool, string, response.DupcheckConfig) response.TrxFMF); ok {
+		r3 = rf(ctx, reqs, married, accessToken, configValue)
 	} else {
 		r3 = ret.Get(3).(response.TrxFMF)
 	}
 
 	var r4 []entity.TrxDetail
-	if rf, ok := ret.Get(4).(func(context.Context, request.DupcheckApi, bool, string) []entity.TrxDetail); ok {
-		r4 = rf(ctx, reqs, married, accessToken)
+	if rf, ok := ret.Get(4).(func(context.Context, request.DupcheckApi, bool, string, response.DupcheckConfig) []entity.TrxDetail); ok {
+		r4 = rf(ctx, reqs, married, accessToken, configValue)
 	} else {
 		if ret.Get(4) != nil {
 			r4 = ret.Get(4).([]entity.TrxDetail)
@@ -60,11 +60,41 @@ func (_m *MultiUsecase) Dupcheck(ctx context.Context, reqs request.DupcheckApi, 
 	}
 
 	var r5 error
-	if rf, ok := ret.Get(5).(func(context.Context, request.DupcheckApi, bool, string) error); ok {
-		r5 = rf(ctx, reqs, married, accessToken)
+	if rf, ok := ret.Get(5).(func(context.Context, request.DupcheckApi, bool, string, response.DupcheckConfig) error); ok {
+		r5 = rf(ctx, reqs, married, accessToken, configValue)
 	} else {
 		r5 = ret.Error(5)
 	}
 
 	return r0, r1, r2, r3, r4, r5
+}
+
+// Ekyc provides a mock function with given fields: ctx, req, cbFound, accessToken
+func (_m *MultiUsecase) Ekyc(ctx context.Context, req request.Metrics, cbFound bool, accessToken string) (response.Ekyc, []entity.TrxDetail, error) {
+	ret := _m.Called(ctx, req, cbFound, accessToken)
+
+	var r0 response.Ekyc
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, bool, string) response.Ekyc); ok {
+		r0 = rf(ctx, req, cbFound, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.Ekyc)
+	}
+
+	var r1 []entity.TrxDetail
+	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, bool, string) []entity.TrxDetail); ok {
+		r1 = rf(ctx, req, cbFound, accessToken)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]entity.TrxDetail)
+		}
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, request.Metrics, bool, string) error); ok {
+		r2 = rf(ctx, req, cbFound, accessToken)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }

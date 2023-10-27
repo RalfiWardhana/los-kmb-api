@@ -17,6 +17,48 @@ type Repository struct {
 	mock.Mock
 }
 
+// GetActiveLoanTypeLast24M provides a mock function with given fields: customerID
+func (_m *Repository) GetActiveLoanTypeLast24M(customerID string) (entity.GetActiveLoanTypeLast24M, error) {
+	ret := _m.Called(customerID)
+
+	var r0 entity.GetActiveLoanTypeLast24M
+	if rf, ok := ret.Get(0).(func(string) entity.GetActiveLoanTypeLast24M); ok {
+		r0 = rf(customerID)
+	} else {
+		r0 = ret.Get(0).(entity.GetActiveLoanTypeLast24M)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(customerID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetActiveLoanTypeLast6M provides a mock function with given fields: customerID
+func (_m *Repository) GetActiveLoanTypeLast6M(customerID string) (entity.GetActiveLoanTypeLast6M, error) {
+	ret := _m.Called(customerID)
+
+	var r0 entity.GetActiveLoanTypeLast6M
+	if rf, ok := ret.Get(0).(func(string) entity.GetActiveLoanTypeLast6M); ok {
+		r0 = rf(customerID)
+	} else {
+		r0 = ret.Get(0).(entity.GetActiveLoanTypeLast6M)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(customerID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetAllReject provides a mock function with given fields: idNumber
 func (_m *Repository) GetAllReject(idNumber string) ([]entity.DupcheckRejectionPMK, error) {
 	ret := _m.Called(idNumber)
@@ -182,6 +224,27 @@ func (_m *Repository) GetCurrentTrxWithRejectDSR(idNumber string) (entity.TrxSta
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(idNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetElaborateLtv provides a mock function with given fields: prospectID
+func (_m *Repository) GetElaborateLtv(prospectID string) (entity.MappingElaborateLTV, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 entity.MappingElaborateLTV
+	if rf, ok := ret.Get(0).(func(string) entity.MappingElaborateLTV); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.MappingElaborateLTV)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -359,6 +422,69 @@ func (_m *Repository) GetLogOrchestrator(prospectID string) (entity.LogOrchestra
 	return r0, r1
 }
 
+// GetMappingDukcapil provides a mock function with given fields: statusVD, statusFR
+func (_m *Repository) GetMappingDukcapil(statusVD string, statusFR string) (entity.MappingResultDukcapil, error) {
+	ret := _m.Called(statusVD, statusFR)
+
+	var r0 entity.MappingResultDukcapil
+	if rf, ok := ret.Get(0).(func(string, string) entity.MappingResultDukcapil); ok {
+		r0 = rf(statusVD, statusFR)
+	} else {
+		r0 = ret.Get(0).(entity.MappingResultDukcapil)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(statusVD, statusFR)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMappingElaborateIncome provides a mock function with given fields: mappingElaborateIncome
+func (_m *Repository) GetMappingElaborateIncome(mappingElaborateIncome entity.MappingElaborateIncome) (entity.MappingElaborateIncome, error) {
+	ret := _m.Called(mappingElaborateIncome)
+
+	var r0 entity.MappingElaborateIncome
+	if rf, ok := ret.Get(0).(func(entity.MappingElaborateIncome) entity.MappingElaborateIncome); ok {
+		r0 = rf(mappingElaborateIncome)
+	} else {
+		r0 = ret.Get(0).(entity.MappingElaborateIncome)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(entity.MappingElaborateIncome) error); ok {
+		r1 = rf(mappingElaborateIncome)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMasterBranch provides a mock function with given fields: branchID
+func (_m *Repository) GetMasterBranch(branchID string) (entity.MasterBranch, error) {
+	ret := _m.Called(branchID)
+
+	var r0 entity.MasterBranch
+	if rf, ok := ret.Get(0).(func(string) entity.MasterBranch); ok {
+		r0 = rf(branchID)
+	} else {
+		r0 = ret.Get(0).(entity.MasterBranch)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(branchID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetMinimalIncomePMK provides a mock function with given fields: branchID, statusKonsumen
 func (_m *Repository) GetMinimalIncomePMK(branchID string, statusKonsumen string) (entity.MappingIncomePMK, error) {
 	ret := _m.Called(branchID, statusKonsumen)
@@ -373,6 +499,92 @@ func (_m *Repository) GetMinimalIncomePMK(branchID string, statusKonsumen string
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, string) error); ok {
 		r1 = rf(branchID, statusKonsumen)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMoblast provides a mock function with given fields: customerID
+func (_m *Repository) GetMoblast(customerID string) (entity.GetMoblast, error) {
+	ret := _m.Called(customerID)
+
+	var r0 entity.GetMoblast
+	if rf, ok := ret.Get(0).(func(string) entity.GetMoblast); ok {
+		r0 = rf(customerID)
+	} else {
+		r0 = ret.Get(0).(entity.GetMoblast)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(customerID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetScoreGenerator provides a mock function with given fields: zipCode
+func (_m *Repository) GetScoreGenerator(zipCode string) (entity.ScoreGenerator, error) {
+	ret := _m.Called(zipCode)
+
+	var r0 entity.ScoreGenerator
+	if rf, ok := ret.Get(0).(func(string) entity.ScoreGenerator); ok {
+		r0 = rf(zipCode)
+	} else {
+		r0 = ret.Get(0).(entity.ScoreGenerator)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(zipCode)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetScoreGeneratorROAO provides a mock function with given fields:
+func (_m *Repository) GetScoreGeneratorROAO() (entity.ScoreGenerator, error) {
+	ret := _m.Called()
+
+	var r0 entity.ScoreGenerator
+	if rf, ok := ret.Get(0).(func() entity.ScoreGenerator); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(entity.ScoreGenerator)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetTrxDetailBIro provides a mock function with given fields: prospectID
+func (_m *Repository) GetTrxDetailBIro(prospectID string) ([]entity.TrxDetailBiro, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 []entity.TrxDetailBiro
+	if rf, ok := ret.Get(0).(func(string) []entity.TrxDetailBiro); ok {
+		r0 = rf(prospectID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.TrxDetailBiro)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
 	} else {
 		r1 = ret.Error(1)
 	}

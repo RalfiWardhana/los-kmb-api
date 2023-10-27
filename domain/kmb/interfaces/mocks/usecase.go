@@ -18,6 +18,27 @@ type Usecase struct {
 	mock.Mock
 }
 
+// Asliri provides a mock function with given fields: ctx, req, accessToken
+func (_m *Usecase) Asliri(ctx context.Context, req request.Metrics, accessToken string) (response.Ekyc, error) {
+	ret := _m.Called(ctx, req, accessToken)
+
+	var r0 response.Ekyc
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, string) response.Ekyc); ok {
+		r0 = rf(ctx, req, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.Ekyc)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, string) error); ok {
+		r1 = rf(ctx, req, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // BlacklistCheck provides a mock function with given fields: index, spDupcheck
 func (_m *Usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerByID) (response.UsecaseApi, string) {
 	ret := _m.Called(index, spDupcheck)
@@ -228,6 +249,27 @@ func (_m *Usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, custom
 	return r0, r1, r2, r3, r4, r5
 }
 
+// Dukcapil provides a mock function with given fields: ctx, req, accessToken
+func (_m *Usecase) Dukcapil(ctx context.Context, req request.Metrics, accessToken string) (response.Ekyc, error) {
+	ret := _m.Called(ctx, req, accessToken)
+
+	var r0 response.Ekyc
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, string) response.Ekyc); ok {
+		r0 = rf(ctx, req, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.Ekyc)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, string) error); ok {
+		r1 = rf(ctx, req, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DupcheckIntegrator provides a mock function with given fields: ctx, prospectID, idNumber, legalName, birthDate, surgateName, accessToken
 func (_m *Usecase) DupcheckIntegrator(ctx context.Context, prospectID string, idNumber string, legalName string, birthDate string, surgateName string, accessToken string) (response.SpDupCekCustomerByID, error) {
 	ret := _m.Called(ctx, prospectID, idNumber, legalName, birthDate, surgateName, accessToken)
@@ -242,6 +284,48 @@ func (_m *Usecase) DupcheckIntegrator(ctx context.Context, prospectID string, id
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string, string, string) error); ok {
 		r1 = rf(ctx, prospectID, idNumber, legalName, birthDate, surgateName, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ElaborateIncome provides a mock function with given fields: ctx, req, filtering, pefindoIDX, spDupcheckMap, responseScs, accessToken
+func (_m *Usecase) ElaborateIncome(ctx context.Context, req request.Metrics, filtering entity.FilteringKMB, pefindoIDX response.PefindoIDX, spDupcheckMap response.SpDupcheckMap, responseScs response.IntegratorScorePro, accessToken string) (response.UsecaseApi, error) {
+	ret := _m.Called(ctx, req, filtering, pefindoIDX, spDupcheckMap, responseScs, accessToken)
+
+	var r0 response.UsecaseApi
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, entity.FilteringKMB, response.PefindoIDX, response.SpDupcheckMap, response.IntegratorScorePro, string) response.UsecaseApi); ok {
+		r0 = rf(ctx, req, filtering, pefindoIDX, spDupcheckMap, responseScs, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, entity.FilteringKMB, response.PefindoIDX, response.SpDupcheckMap, response.IntegratorScorePro, string) error); ok {
+		r1 = rf(ctx, req, filtering, pefindoIDX, spDupcheckMap, responseScs, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ElaborateScheme provides a mock function with given fields: req
+func (_m *Usecase) ElaborateScheme(req request.Metrics) (response.UsecaseApi, error) {
+	ret := _m.Called(req)
+
+	var r0 response.UsecaseApi
+	if rf, ok := ret.Get(0).(func(request.Metrics) response.UsecaseApi); ok {
+		r0 = rf(req)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(request.Metrics) error); ok {
+		r1 = rf(req)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -270,6 +354,27 @@ func (_m *Usecase) GetBase64Media(ctx context.Context, url string, customerID in
 	return r0, r1
 }
 
+// Ktp provides a mock function with given fields: ctx, req, cb_found, accessToken
+func (_m *Usecase) Ktp(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (response.Ekyc, error) {
+	ret := _m.Called(ctx, req, cb_found, accessToken)
+
+	var r0 response.Ekyc
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, bool, string) response.Ekyc); ok {
+		r0 = rf(ctx, req, cb_found, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.Ekyc)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, bool, string) error); ok {
+		r1 = rf(ctx, req, cb_found, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // PMK provides a mock function with given fields: branchID, statusKonsumen, income, homeStatus, professionID, empYear, empMonth, stayYear, stayMonth, birthDate, tenor, maritalStatus
 func (_m *Usecase) PMK(branchID string, statusKonsumen string, income float64, homeStatus string, professionID string, empYear string, empMonth string, stayYear string, stayMonth string, birthDate string, tenor int, maritalStatus string) (response.UsecaseApi, error) {
 	ret := _m.Called(branchID, statusKonsumen, income, homeStatus, professionID, empYear, empMonth, stayYear, stayMonth, birthDate, tenor, maritalStatus)
@@ -284,6 +389,27 @@ func (_m *Usecase) PMK(branchID string, statusKonsumen string, income float64, h
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, string, float64, string, string, string, string, string, string, string, int, string) error); ok {
 		r1 = rf(branchID, statusKonsumen, income, homeStatus, professionID, empYear, empMonth, stayYear, stayMonth, birthDate, tenor, maritalStatus)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// Pefindo provides a mock function with given fields: cbFound, bpkbName, filtering, spDupcheck
+func (_m *Usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.FilteringKMB, spDupcheck response.SpDupcheckMap) (response.UsecaseApi, error) {
+	ret := _m.Called(cbFound, bpkbName, filtering, spDupcheck)
+
+	var r0 response.UsecaseApi
+	if rf, ok := ret.Get(0).(func(bool, string, entity.FilteringKMB, response.SpDupcheckMap) response.UsecaseApi); ok {
+		r0 = rf(cbFound, bpkbName, filtering, spDupcheck)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(bool, string, entity.FilteringKMB, response.SpDupcheckMap) error); ok {
+		r1 = rf(cbFound, bpkbName, filtering, spDupcheck)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -366,6 +492,69 @@ func (_m *Usecase) SaveTransaction(countTrx int, data request.Metrics, trxPrescr
 	}
 
 	return r0, r1
+}
+
+// Scorepro provides a mock function with given fields: ctx, req, pefindoScore, customerSegment, spDupcheck, accessToken
+func (_m *Usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore string, customerSegment string, spDupcheck response.SpDupcheckMap, accessToken string) (response.IntegratorScorePro, response.ScorePro, response.PefindoIDX, error) {
+	ret := _m.Called(ctx, req, pefindoScore, customerSegment, spDupcheck, accessToken)
+
+	var r0 response.IntegratorScorePro
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, string, string, response.SpDupcheckMap, string) response.IntegratorScorePro); ok {
+		r0 = rf(ctx, req, pefindoScore, customerSegment, spDupcheck, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.IntegratorScorePro)
+	}
+
+	var r1 response.ScorePro
+	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, string, string, response.SpDupcheckMap, string) response.ScorePro); ok {
+		r1 = rf(ctx, req, pefindoScore, customerSegment, spDupcheck, accessToken)
+	} else {
+		r1 = ret.Get(1).(response.ScorePro)
+	}
+
+	var r2 response.PefindoIDX
+	if rf, ok := ret.Get(2).(func(context.Context, request.Metrics, string, string, response.SpDupcheckMap, string) response.PefindoIDX); ok {
+		r2 = rf(ctx, req, pefindoScore, customerSegment, spDupcheck, accessToken)
+	} else {
+		r2 = ret.Get(2).(response.PefindoIDX)
+	}
+
+	var r3 error
+	if rf, ok := ret.Get(3).(func(context.Context, request.Metrics, string, string, response.SpDupcheckMap, string) error); ok {
+		r3 = rf(ctx, req, pefindoScore, customerSegment, spDupcheck, accessToken)
+	} else {
+		r3 = ret.Error(3)
+	}
+
+	return r0, r1, r2, r3
+}
+
+// TotalDsrFmfPbk provides a mock function with given fields: ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue
+func (_m *Usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome float64, newInstallment float64, totalInstallmentPBK float64, prospectID string, customerSegment string, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig) (response.UsecaseApi, response.TrxFMF, error) {
+	ret := _m.Called(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue)
+
+	var r0 response.UsecaseApi
+	if rf, ok := ret.Get(0).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig) response.UsecaseApi); ok {
+		r0 = rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	var r1 response.TrxFMF
+	if rf, ok := ret.Get(1).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig) response.TrxFMF); ok {
+		r1 = rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue)
+	} else {
+		r1 = ret.Get(1).(response.TrxFMF)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig) error); ok {
+		r2 = rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // VehicleCheck provides a mock function with given fields: manufactureYear, tenor, configValue

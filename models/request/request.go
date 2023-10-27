@@ -576,55 +576,14 @@ type SallyFilteringCallback struct {
 }
 
 type ScoreProIntegrator struct {
-	ProspectID       string       `json:"prospect_id"`
-	SupplierID       string       `json:"supplier_id"`
-	CBFound          bool         `json:"cb_found"`
-	StatusKonsumen   string       `json:"status_konsumen"`
-	RequestorID      string       `json:"requestor_id"`
-	Journey          string       `json:"journey"`
-	PhoneNumber      string       `json:"phone_number"`
-	ScoreGeneratorID string       `json:"score_generator_id"`
-	Data             DataScorePro `json:"data"`
-}
-
-type DataScorePro struct {
-	ZipCode         int     `json:"zip_code"`
-	Education       string  `json:"education"`
-	FirstFourOfCell string  `json:"first_four_of_cell"`
-	Ltv             float64 `json:"ltv"`
-	VehicleBrand    string  `json:"vehicle_brand"`
-	LengthOfStay    int     `json:"length_of_stay"`
-	NoKol1Active    int     `json:"no_kol1_active"`
-	StnkStatus      string  `json:"stnk_status"`
-	Nom0312MntAll   int     `json:"nom03_12mth_all"`
-	HomeStatus      string  `json:"home_status"`
-	Tenor           int     `json:"tenor"`
-}
-
-type ScoreProRoaoIntegrator struct {
-	ProspectID       string           `json:"prospect_id"`
-	SupplierID       string           `json:"supplier_id"`
-	CBFound          bool             `json:"cb_found"`
-	StatusKonsumen   string           `json:"status_konsumen"`
-	RequestorID      string           `json:"requestor_id"`
-	Journey          string           `json:"journey"`
-	PhoneNumber      string           `json:"phone_number"`
-	ScoreGeneratorID string           `json:"score_generator_id"`
-	Data             DataScoreProROAO `json:"data"`
-}
-
-type DataScoreProROAO struct {
-	StatusCustomer      string  `json:"status_customer"`
-	MobFirst            int     `json:"mob_first"`
-	NtfOtr              float64 `json:"ntf_otr"`
-	LengthOfStay        int     `json:"length_of_stay"`
-	ZipCode             int     `json:"zip_code"`
-	ProfessionID        string  `json:"profession_id"`
-	BPKBName            string  `json:"bpkb_name"`
-	Tenor               int     `json:"tenor"`
-	Gender              string  `json:"gender"`
-	WorstOvd            int     `json:"worst_ovd"`
-	TotBakiDebet3160Dpd int     `json:"tot_bakidebet_31_60dpd"`
+	ProspectID       string      `json:"prospect_id"`
+	CBFound          bool        `json:"cb_found"`
+	StatusKonsumen   string      `json:"status_konsumen"`
+	RequestorID      string      `json:"requestor_id"`
+	Journey          string      `json:"journey"`
+	PhoneNumber      string      `json:"phone_number"`
+	ScoreGeneratorID string      `json:"score_generator_id"`
+	Data             interface{} `json:"data"`
 }
 
 type OrderIDCheck struct {

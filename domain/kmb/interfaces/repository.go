@@ -11,6 +11,7 @@ type Repository interface {
 	ScanTrxPrescreening(prospectID string) (count int, err error)
 	GetFilteringResult(prospectID string) (filtering entity.FilteringKMB, err error)
 	GetFilteringForJourney(prospectID string) (filtering entity.FilteringKMB, err error)
+	GetMappingDukcapil(statusVD, statusFR string) (resultDukcapil entity.MappingResultDukcapil, err error)
 	SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (newErr error)
 	GetLogOrchestrator(prospectID string) (logOrchestrator entity.LogOrchestrator, err error)
 	SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error)
@@ -23,6 +24,17 @@ type Repository interface {
 	ScanWgOff(query string) (data entity.ScanInstallmentAmount, err error)
 	ScanWgOnl(query string) (data entity.ScanInstallmentAmount, err error)
 	GetMinimalIncomePMK(branchID string, statusKonsumen string) (responseIncomePMK entity.MappingIncomePMK, err error)
+
+	GetScoreGenerator(zipCode string) (score entity.ScoreGenerator, err error)
+	GetScoreGeneratorROAO() (score entity.ScoreGenerator, err error)
+	GetTrxDetailBIro(prospectID string) (trxDetailBiro []entity.TrxDetailBiro, err error)
+	GetActiveLoanTypeLast6M(customerID string) (score entity.GetActiveLoanTypeLast6M, err error)
+	GetActiveLoanTypeLast24M(customerID string) (score entity.GetActiveLoanTypeLast24M, err error)
+	GetMoblast(customerID string) (score entity.GetMoblast, err error)
+
+	GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error)
+	GetMasterBranch(branchID string) (masterBranch entity.MasterBranch, err error)
+	GetMappingElaborateIncome(mappingElaborateIncome entity.MappingElaborateIncome) (result entity.MappingElaborateIncome, err error)
 
 	GetLatestBannedRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error)
 	GetLatestRejectionNoka(noRangka string) (data entity.DupcheckRejectionNokaNosin, err error)

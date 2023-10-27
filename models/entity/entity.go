@@ -380,6 +380,49 @@ type AsliriConfig struct {
 	} `json:"data"`
 }
 
+type ConfigThresholdDukcapil struct {
+	Data struct {
+		VerifyData struct {
+			NamaLengkap float64 `json:"nama_lengkap"`
+			Alamat      float64 `json:"alamat"`
+		} `json:"verify_data"`
+		FaceRecognition float64 `json:"face_recognition"`
+	} `json:"data"`
+}
+
+type MappingResultDukcapil struct {
+	ID        string    `gorm:"column:id"`
+	ResultVD  string    `gorm:"column:result_vd"`
+	ResultFR  string    `gorm:"column:result_fr"`
+	Decision  string    `gorm:"column:decision"`
+	RuleCode  string    `gorm:"column:rule_code"`
+	CreatedAt time.Time `gorm:"column:created_at"`
+	UpdatedAt time.Time `gorm:"column:updated_at"`
+}
+
+func (c *MappingResultDukcapil) TableName() string {
+	return "kmb_dukcapil_mapping_result"
+}
+
+type ScoreGenerator struct {
+	Key               string `gorm:"type:varchar(100);column:key"`
+	ScoreGeneratorsID string `gorm:"type:varchar(100);column:score_generators_id"`
+}
+
+type GetActiveLoanTypeLast6M struct {
+	CustomerID           string `gorm:"column:CustomerID"`
+	ActiveLoanTypeLast6M string `gorm:"column:active_loanType_last6m"`
+}
+
+type GetActiveLoanTypeLast24M struct {
+	AgreementNo string `gorm:"column:AgreementNo"`
+	MOB         string `gorm:"column:MOB"`
+}
+
+type GetMoblast struct {
+	Moblast string `gorm:"column:moblast"`
+}
+
 type TrxMaster struct {
 	ProspectID        string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
 	BranchID          string    `gorm:"type:varchar(5);column:BranchID"`
@@ -939,6 +982,24 @@ type TrxDraftCaDecision struct {
 
 func (c *TrxDraftCaDecision) TableName() string {
 	return "trx_draft_ca_decision"
+}
+
+type MasterBranch struct {
+	BranchCategory string `gorm:"column:branch_category"`
+}
+
+type MappingElaborateIncome struct {
+	BranchCategory   string `gorm:"column:branch_category"`
+	EstimationIncome string `gorm:"column:estimation_income"`
+	StatusKonsumen   string `gorm:"column:status_konsumen"`
+	BPKBNameType     int    `gorm:"column:bpkb_name_type"`
+	Scoreband        string `gorm:"column:scoreband"`
+	Worst24Mth       string `gorm:"column:worst_24mth"`
+	Result           string `gorm:"column:result"`
+}
+
+func (c *MappingElaborateIncome) TableName() string {
+	return "kmb_mapping_treatment_elaborated_income"
 }
 
 type SpIndustryTypeMaster struct {

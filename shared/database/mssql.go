@@ -130,3 +130,28 @@ func OpenStaging() (*gorm.DB, error) {
 
 	return db, nil
 }
+
+func OpenScorepro() (*gorm.DB, error) {
+
+	user, pwd, host, port, database := config.GetScoreProDB()
+
+	connString := fmt.Sprintf("sqlserver://%s:%s@%s:%d?database=%s",
+		user, pwd, host, port, database,
+	)
+
+	db, err := gorm.Open("mssql", connString)
+	if err != nil {
+		return nil, err
+	}
+
+	maxIdle, _ := strconv.Atoi(os.Getenv("DB_SCOREPRO_MAX_IDLE_CONNECTION"))
+	// maxOpen, _ := strconv.Atoi(os.Getenv("DB_SCOREPRO_MAX_OPEN_CONNECTION"))
+
+	db.DB().SetMaxIdleConns(maxIdle)
+	db.DB().SetMaxOpenConns(100)
+	db.DB().SetConnMaxLifetime(time.Hour)
+	db.LogMode(config.IsDevelopment)
+
+	return db, nil
+
+}
