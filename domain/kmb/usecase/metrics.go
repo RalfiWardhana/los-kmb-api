@@ -539,7 +539,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			Decision:       constant.DB_DECISION_REJECT,
 			RuleCode:       metricsTotalDsrFmfPbk.Code,
 			SourceDecision: metricsTotalDsrFmfPbk.SourceDecision,
-			Info:           string(infoTotalDSR),
+			Info:           string(utils.SafeEncoding(infoTotalDSR)),
 		}
 
 		details = append(details, addDetail)
