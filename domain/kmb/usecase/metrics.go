@@ -637,7 +637,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			Decision:       constant.DB_DECISION_PASS,
 			RuleCode:       metricsElaborateIncome.Code,
 			SourceDecision: metricsElaborateIncome.SourceDecision,
-			Info:           metricsElaborateIncome.Info,
+			Info:           metricsElaborateIncome.Reason,
 			NextStep:       constant.SOURCE_DECISION_CA,
 		})
 	} else {
@@ -648,9 +648,20 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			Decision:       constant.DB_DECISION_PASS,
 			RuleCode:       metricsElaborateScheme.Code,
 			SourceDecision: metricsElaborateScheme.SourceDecision,
-			Info:           metricsElaborateScheme.Info,
+			Info:           metricsElaborateScheme.Reason,
 			NextStep:       constant.SOURCE_DECISION_CA,
 		})
+	}
+
+	var finalReasonMetrics string
+	if customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY {
+		customerStatus = fmt.Sprintf("%s - %s", customerStatus, customerSegment)
+
+	}
+	if metricsElaborateIncome.Reason != "" {
+		finalReasonMetrics = fmt.Sprintf("%s - %s", customerStatus, metricsElaborateIncome.Reason)
+	} else {
+		finalReasonMetrics = fmt.Sprintf("%s - %s", customerStatus, metricsElaborateScheme.Reason)
 	}
 
 	if trxFMF.NTFAkumulasi <= 20000000 {
@@ -669,6 +680,8 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			CreatedBy:  constant.SYSTEM_CREATED,
 			DecisionBy: constant.SYSTEM_CREATED,
 		}
+
+		finalReasonMetrics = fmt.Sprintf("%s - PBK %s - NTF <= Quick App", customerStatus, filtering.Decision)
 	} else {
 		details = append(details, entity.TrxDetail{
 			ProspectID:     reqMetrics.Transaction.ProspectID,
@@ -680,7 +693,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		})
 	}
 
-	resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, metricsDupcheck.Reason)
+	resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, finalReasonMetrics)
 	if err != nil {
 		return
 	}
