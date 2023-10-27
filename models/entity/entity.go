@@ -1068,6 +1068,16 @@ func (c *ReasonMessage) TableName() string {
 	return "m_reason_message"
 }
 
+type CancelReason struct {
+	ReasonID string `gorm:"column:id_cancel_reason" json:"reason_id"`
+	Show     string `gorm:"column:show" json:"show"`
+	Reason   string `gorm:"column:reason" json:"reason_message"`
+}
+
+func (c *CancelReason) TableName() string {
+	return "m_cancel_reason"
+}
+
 type InquiryData struct {
 	Prescreening DataPrescreening   `json:"prescreening"`
 	General      DataGeneral        `json:"general"`

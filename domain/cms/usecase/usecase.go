@@ -41,6 +41,17 @@ func (u usecase) GetReasonPrescreening(ctx context.Context, req request.ReqReaso
 	return
 }
 
+func (u usecase) GetCancelReason(ctx context.Context, pagination interface{}) (data []entity.CancelReason, rowTotal int, err error) {
+
+	data, rowTotal, err = u.repository.GetCancelReason(pagination)
+
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInquiryPrescreening, pagination interface{}) (data []entity.InquiryData, rowTotal int, err error) {
 
 	var (

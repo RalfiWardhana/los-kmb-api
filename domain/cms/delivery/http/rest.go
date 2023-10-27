@@ -36,6 +36,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.POST("/cms/ca/save-as-draft", handler.SaveAsDraft, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/submit-decision", handler.SubmitDecision, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/cancel", handler.CancelOrder, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/ca/cancel-reason", handler.CancelReason, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/return", handler.ReturnOrder, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/search", handler.SearchInquiry, middlewares.AccessMiddleware())
 }
@@ -341,6 +342,44 @@ func (c *handlerCMS) SearchInquiry(ctx echo.Context) (err error) {
 
 	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Search Inquiry", req, response.InquiryRow{
 		Inquiry:        data,
+		RecordFiltered: len(data),
+		RecordTotal:    rowTotal,
+	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api CA
+// @Tags CA
+// @Produce json
+// @Param page query string false "page"
+// @Success 200 {object} response.ApiResponse{data=response.ReasonMessageRow}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/ca/cancel-reason [get]
+func (c *handlerCMS) CancelReason(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+	)
+
+	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	pagination := request.RequestPagination{
+		Page:  page,
+		Limit: 10,
+	}
+
+	data, rowTotal, err := c.usecase.GetCancelReason(ctx.Request().Context(), pagination)
+
+	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA", pagination, response.ReasonMessageRow{Reason: data})
+	}
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA", pagination, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA", pagination, response.ReasonMessageRow{
+		Reason:         data,
 		RecordFiltered: len(data),
 		RecordTotal:    rowTotal,
 	})
