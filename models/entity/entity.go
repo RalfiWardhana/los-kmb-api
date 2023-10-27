@@ -921,6 +921,24 @@ func (c *TrxInternalRecord) TableName() string {
 	return "trx_internal_record"
 }
 
+type MasterBranch struct {
+	BranchCategory string `gorm:"column:branch_category"`
+}
+
+type MappingElaborateIncome struct {
+	BranchCategory   string `gorm:"column:branch_category"`
+	EstimationIncome string `gorm:"column:estimation_income"`
+	StatusKonsumen   string `gorm:"column:status_konsumen"`
+	BPKBNameType     int    `gorm:"column:bpkb_name_type"`
+	Scoreband        string `gorm:"column:scoreband"`
+	Worst24Mth       string `gorm:"column:worst_24mth"`
+	Result           string `gorm:"column:result"`
+}
+
+func (c *MappingElaborateIncome) TableName() string {
+	return "kmb_mapping_treatment_elaborated_income"
+}
+
 type MappingElaborateLTV struct {
 	ID                  int    `gorm:"column:id"`
 	ResultPefindo       string `gorm:"type:varchar(10);column:result_pefindo"`
@@ -949,24 +967,6 @@ type TrxElaborateLTV struct {
 
 func (c *TrxElaborateLTV) TableName() string {
 	return "trx_elaborate_ltv"
-}
-
-type MasterBranch struct {
-	BranchCategory string `gorm:"column:branch_category"`
-}
-
-type MappingElaborateIncome struct {
-	BranchCategory   string `gorm:"column:branch_category"`
-	EstimationIncome string `gorm:"column:estimation_income"`
-	StatusKonsumen   string `gorm:"column:status_konsumen"`
-	BPKBNameType     int    `gorm:"column:bpkb_name_type"`
-	Scoreband        string `gorm:"column:scoreband"`
-	Worst24Mth       string `gorm:"column:worst_24mth"`
-	Result           string `gorm:"column:result"`
-}
-
-func (c *MappingElaborateIncome) TableName() string {
-	return "kmb_mapping_treatment_elaborated_income"
 }
 
 type TrxHistoryApprovalScheme struct {
