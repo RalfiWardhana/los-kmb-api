@@ -14,4 +14,13 @@ type Repository interface {
 	GetStatusPrescreening(prospectID string) (status entity.TrxStatus, err error)
 	SavePrescreening(prescreening entity.TrxPrescreening, detail entity.TrxDetail, status entity.TrxStatus) (err error)
 	SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error)
+	GetInquiryCa(req request.ReqInquiryCa, pagination interface{}) (data []entity.InquiryCa, rowTotal int, err error)
+	GetHistoryApproval(prospectID string) (history []entity.TrxHistoryApprovalScheme, err error)
+	GetInternalRecord(prospectID string) (record []entity.TrxInternalRecord, err error)
+	SaveDraftData(draft entity.TrxDraftCaDecision) (err error)
+	GetLimitApproval(ntf float64) (limit entity.MappingLimitApprovalScheme, err error)
+	SaveCADecionData(trxCaDecision entity.TrxCaDecision) (err error)
+	UpdateTrxStatus(trxStatus entity.TrxStatus) (err error)
+	SaveTrxDetail(trxDetail entity.TrxDetail) (err error)
+	DeleteDraft(prospectID string) (err error)
 }

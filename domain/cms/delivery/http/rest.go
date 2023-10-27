@@ -32,6 +32,9 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.GET("/cms/prescreening/list-reason", handler.ListReason, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/prescreening/inquiry", handler.PrescreeningInquiry, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/prescreening/review", handler.ReviewPrescreening, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/ca/inquiry", handler.CaInquiry, middlewares.AccessMiddleware())
+	cmsroute.POST("/cms/ca/save-as-draft", handler.SaveAsDraft, middlewares.AccessMiddleware())
+	cmsroute.POST("/cms/ca/submit-decision", handler.SubmitDecision, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
@@ -180,4 +183,113 @@ func (c *handlerCMS) ListReason(ctx echo.Context) (err error) {
 		RecordFiltered: len(data),
 		RecordTotal:    rowTotal,
 	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api CA
+// @Tags CA
+// @Produce json
+// @Param body body request. true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/ca/inquiry [get]
+func (c *handlerCMS) CaInquiry(ctx echo.Context) (err error) {
+
+	var accessToken = middlewares.UserInfoData.AccessToken
+
+	req := request.ReqInquiryCa{
+		Search:   ctx.QueryParam("search"),
+		BranchID: ctx.QueryParam("branch_id"),
+		Filter:   ctx.QueryParam("filter"),
+		UserID:   ctx.QueryParam("user_id"),
+	}
+
+	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	pagination := request.RequestPagination{
+		Page:  page,
+		Limit: 10,
+	}
+
+	data, rowTotal, err := c.usecase.GetInquiryCa(ctx.Request().Context(), req, pagination)
+
+	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry", req, response.InquiryRow{Inquiry: data})
+	}
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry", req, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry", req, response.InquiryRow{
+		Inquiry:        data,
+		RecordFiltered: len(data),
+		RecordTotal:    rowTotal,
+	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api CA
+// @Tags CA
+// @Produce json
+// @Param body body request.ReqSaveAsDraft true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.CAResponse}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/save-as-draft [post]
+func (c *handlerCMS) SaveAsDraft(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		req         request.ReqSaveAsDraft
+	)
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Save as Draft", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Save as Draft", req, err)
+	}
+
+	data, err := c.usecase.SaveAsDraft(ctx.Request().Context(), req)
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Save as Draft", req, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Save as Draft", req, data)
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api CA
+// @Tags CA
+// @Produce json
+// @Param body body request.ReqSubmitDecision true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.CAResponse}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/submit-decision [post]
+func (c *handlerCMS) SubmitDecision(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		req         request.ReqSubmitDecision
+	)
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Submit Decision", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Submit Decision", req, err)
+	}
+
+	data, err := c.usecase.SubmitDecision(ctx.Request().Context(), req)
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Submit Decision", req, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Submit Decision", req, data)
 }

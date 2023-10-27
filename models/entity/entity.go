@@ -505,7 +505,7 @@ type CustomerPersonal struct {
 	Status                     string      `gorm:"type:varchar(30);column:Status" json:"-"`
 	IsPV                       *int        `gorm:"column:IsPV" json:"-"`
 	IsRCA                      *int        `gorm:"column:IsRCA" json:"-"`
-	CustomerID                 string      `gorm:"type:varchar(20);column:CustomerID" json:"-"`
+	CustomerID                 string      `gorm:"type:varchar(20);column:CustomerID" json:"customer_id"`
 	CustomerStatus             string      `gorm:"type:varchar(10);column:CustomerStatus" json:"customer_status"`
 	SurveyResult               interface{} `gorm:"type:varchar(255);column:SurveyResult" json:"-"`
 	RentFinishDate             *string     `gorm:"column:RentFinishDate" json:"-"`
@@ -903,18 +903,18 @@ func (c *TrxAkkk) TableName() string {
 }
 
 type TrxInternalRecord struct {
-	ProspectID           string    `gorm:"column:ProspectID"`
-	CustomerID           string    `gorm:"column:CustomerID"`
-	ApplicationID        string    `gorm:"column:ApplicationID"`
-	ProductType          string    `gorm:"column:ProductType"`
-	AgreementDate        time.Time `gorm:"column:AgreementDate"`
-	AssetCode            string    `gorm:"column:AssetCode"`
-	Tenor                int       `gorm:"column:Tenor"`
-	OutstandingPrincipal float64   `gorm:"column:OutstandingPrincipal"`
-	InstallmentAmount    float64   `gorm:"column:InstallmentAmount"`
-	ContractStatus       string    `gorm:"column:ContractStatus"`
-	CurrentCondition     string    `gorm:"column:CurrentCondition"`
-	CreatedAt            time.Time `gorm:"column:created_at"`
+	ProspectID           string    `gorm:"column:ProspectID" json:"-"`
+	CustomerID           string    `gorm:"column:CustomerID" json:"-"`
+	ApplicationID        string    `gorm:"column:ApplicationID" json:"application_id"`
+	ProductType          string    `gorm:"column:ProductType" json:"product_type"`
+	AgreementDate        time.Time `gorm:"column:AgreementDate" json:"agreement_date"`
+	AssetCode            string    `gorm:"column:AssetCode" json:"asset_code"`
+	Tenor                int       `gorm:"column:Tenor" json:"tenor"`
+	OutstandingPrincipal float64   `gorm:"column:OutstandingPrincipal" json:"outstanding_principal"`
+	InstallmentAmount    float64   `gorm:"column:InstallmentAmount" json:"installment_amount"`
+	ContractStatus       string    `gorm:"column:ContractStatus" json:"contract_status"`
+	CurrentCondition     string    `gorm:"column:CurrentCondition" json:"current_condition"`
+	CreatedAt            time.Time `gorm:"column:created_at" json:"-"`
 }
 
 func (c *TrxInternalRecord) TableName() string {
@@ -967,6 +967,39 @@ type MappingElaborateIncome struct {
 
 func (c *MappingElaborateIncome) TableName() string {
 	return "kmb_mapping_treatment_elaborated_income"
+}
+
+type TrxHistoryApprovalScheme struct {
+	ID                    string      `gorm:"type:varchar(255);column:id;primary_key:true" json:"-"`
+	ProspectID            string      `gorm:"type:varchar(20);column:ProspectID" json:"-"`
+	Decision              string      `gorm:"type:varchar(3);column:decision" json:"decision"`
+	Reason                string      `gorm:"type:varchar(100);column:reason" json:"-"`
+	Note                  string      `gorm:"type:varchar(525);column:note" json:"-"`
+	CreatedAt             time.Time   `gorm:"column:created_at" json:"approval_date"`
+	CreatedBy             string      `gorm:"type:varchar(100);column:created_by" json:"-"`
+	DecisionBy            string      `gorm:"type:varchar(250);column:decision_by" json:"pic_approval"`
+	NeedEscalation        interface{} `gorm:"column:need_escalation" json:"need_escalation"`
+	NextFinalApprovalFlag int         `gorm:"column:next_final_approval_flag" json:"next_final_approval_flag"`
+	SourceDecision        string      `gorm:"type:varchar(3);column:source_decision" json:"source_decision"`
+	NextStep              string      `gorm:"type:varchar(3);column:next_step" json:"next_step"`
+}
+
+func (c *TrxHistoryApprovalScheme) TableName() string {
+	return "trx_history_approval_scheme"
+}
+
+type TrxDraftCaDecision struct {
+	ProspectID string    `gorm:"type:varchar(20);column:ProspectID" json:"-"`
+	Decision   string    `gorm:"type:varchar(3);column:decision" json:"decision"`
+	SlikResult string    `gorm:"column:slik_result" json:"slik_result"`
+	Note       string    `gorm:"type:varchar(525);column:note" json:"note"`
+	CreatedAt  time.Time `gorm:"column:created_at" json:"-"`
+	CreatedBy  string    `gorm:"type:varchar(100);column:created_by" json:"-"`
+	DecisionBy string    `gorm:"type:varchar(250);column:decision_by" json:"-"`
+}
+
+func (c *TrxDraftCaDecision) TableName() string {
+	return "trx_draft_ca_decision"
 }
 
 type SpIndustryTypeMaster struct {
@@ -1193,4 +1226,180 @@ type DataPhoto struct {
 
 type TotalRow struct {
 	Total int `gorm:"column:totalRow" json:"total"`
+}
+
+type InquiryCa struct {
+	ShowAction         bool   `gorm:"column:ShowAction"`
+	ActionDate         string `gorm:"column:ActionDate"`
+	Activity           string `gorm:"column:activity"`
+	SourceDecision     string `gorm:"column:source_decision"`
+	ScsDate            string `gorm:"column:ScsDate"`
+	ScsScore           string `gorm:"column:ScsScore"`
+	ScsStatus          string `gorm:"column:ScsStatus"`
+	BiroCustomerResult string `gorm:"column:BiroCustomerResult"`
+	BiroSpouseResult   string `gorm:"column:BiroSpouseResult"`
+
+	DraftDecision   string    `gorm:"column:draft_decision"`
+	DraftSlikResult string    `gorm:"column:draft_slik_result"`
+	DraftNote       string    `gorm:"column:draft_note"`
+	DraftCreatedAt  time.Time `gorm:"column:draft_created_at"`
+	DraftCreatedBy  string    `gorm:"column:draft_created_by"`
+	DraftDecisionBy string    `gorm:"column:draft_decision_by"`
+
+	ProspectID     string `gorm:"column:ProspectID"`
+	BranchName     string `gorm:"column:BranchName"`
+	IncomingSource string `gorm:"column:incoming_source"`
+	CreatedAt      string `gorm:"column:created_at"`
+	OrderAt        string `gorm:"column:order_at"`
+
+	CustomerID        string    `gorm:"column:CustomerID"`
+	CustomerStatus    string    `gorm:"column:CustomerStatus"`
+	IDNumber          string    `gorm:"column:IDNumber"`
+	LegalName         string    `gorm:"column:LegalName"`
+	BirthPlace        string    `gorm:"column:BirthPlace"`
+	BirthDate         time.Time `gorm:"column:BirthDate"`
+	SurgateMotherName string    `gorm:"column:SurgateMotherName"`
+	Gender            string    `gorm:"column:Gender"`
+	MobilePhone       string    `gorm:"column:MobilePhone"`
+	Email             string    `gorm:"column:Email"`
+	Education         string    `gorm:"column:Education"`
+	MaritalStatus     string    `gorm:"column:MaritalStatus"`
+	NumOfDependence   int       `gorm:"column:NumOfDependence"`
+	HomeStatus        string    `gorm:"column:HomeStatus"`
+	StaySinceMonth    string    `gorm:"column:StaySinceMonth"`
+	StaySinceYear     string    `gorm:"column:StaySinceYear"`
+	ExtCompanyPhone   *string   `gorm:"column:ExtCompanyPhone"`
+	SourceOtherIncome *string   `gorm:"column:SourceOtherIncome"`
+
+	Supplier           string  `gorm:"column:dealer"`
+	ProductOfferingID  string  `gorm:"column:ProductOfferingID"`
+	AssetType          string  `gorm:"column:AssetType"`
+	AssetDescription   string  `gorm:"column:asset_description"`
+	ManufacturingYear  string  `gorm:"column:manufacture_year"`
+	Color              string  `gorm:"column:color"`
+	ChassisNumber      string  `gorm:"column:chassis_number"`
+	EngineNumber       string  `gorm:"column:engine_number"`
+	InterestRate       float64 `gorm:"column:interest_rate"`
+	InstallmentPeriod  int     `gorm:"column:InstallmentPeriod"`
+	OTR                float64 `gorm:"column:OTR"`
+	DPAmount           float64 `gorm:"column:DPAmount"`
+	FinanceAmount      float64 `gorm:"column:FinanceAmount"`
+	InterestAmount     float64 `gorm:"column:interest_amount"`
+	LifeInsuranceFee   float64 `gorm:"column:LifeInsuranceFee"`
+	AssetInsuranceFee  float64 `gorm:"column:AssetInsuranceFee"`
+	InsuranceAmount    float64 `gorm:"column:insurance_amount"`
+	AdminFee           float64 `gorm:"column:AdminFee"`
+	ProvisionFee       float64 `gorm:"column:provision_fee"`
+	NTF                float64 `gorm:"column:NTF"`
+	NTFAkumulasi       float64 `gorm:"column:NTFAkumulasi"`
+	Total              float64 `gorm:"column:Total"`
+	MonthlyInstallment float64 `gorm:"column:MonthlyInstallment"`
+	FirstInstallment   string  `gorm:"column:FirstInstallment"`
+
+	ProfessionID          string  `gorm:"column:ProfessionID"`
+	JobTypeID             string  `gorm:"column:JobType"`
+	JobPosition           string  `gorm:"column:JobPosition"`
+	CompanyName           string  `gorm:"column:CompanyName"`
+	IndustryTypeID        string  `gorm:"column:IndustryTypeID"`
+	EmploymentSinceYear   string  `gorm:"column:EmploymentSinceYear"`
+	EmploymentSinceMonth  string  `gorm:"column:EmploymentSinceMonth"`
+	MonthlyFixedIncome    float64 `gorm:"column:MonthlyFixedIncome"`
+	MonthlyVariableIncome float64 `gorm:"column:MonthlyVariableIncome"`
+	SpouseIncome          float64 `gorm:"column:SpouseIncome"`
+
+	SpouseIDNumber     string `gorm:"column:SpouseIDNumber"`
+	SpouseLegalName    string `gorm:"column:SpouseLegalName"`
+	SpouseCompanyName  string `gorm:"column:SpouseCompanyName"`
+	SpouseCompanyPhone string `gorm:"column:SpouseCompanyPhone"`
+	SpouseMobilePhone  string `gorm:"column:SpouseMobilePhone"`
+	SpouseProfession   string `gorm:"column:SpouseProfession"`
+
+	EmconName        string `gorm:"column:EmconName"`
+	Relationship     string `gorm:"column:Relationship"`
+	EmconMobilePhone string `gorm:"column:EmconMobilePhone"`
+
+	LegalAddress       string `gorm:"column:LegalAddress"`
+	LegalRTRW          string `gorm:"column:LegalRTRW"`
+	LegalKelurahan     string `gorm:"column:LegalKelurahan"`
+	LegalKecamatan     string `gorm:"column:LegalKecamatan"`
+	LegalZipCode       string `gorm:"column:LegalZipcode"`
+	LegalCity          string `gorm:"column:LegalCity"`
+	ResidenceAddress   string `gorm:"column:ResidenceAddress"`
+	ResidenceRTRW      string `gorm:"column:ResidenceRTRW"`
+	ResidenceKelurahan string `gorm:"column:ResidenceKelurahan"`
+	ResidenceKecamatan string `gorm:"column:ResidenceKecamatan"`
+	ResidenceZipCode   string `gorm:"column:ResidenceZipcode"`
+	ResidenceCity      string `gorm:"column:ResidenceCity"`
+	CompanyAddress     string `gorm:"column:CompanyAddress"`
+	CompanyRTRW        string `gorm:"column:CompanyRTRW"`
+	CompanyKelurahan   string `gorm:"column:CompanyKelurahan"`
+	CompanyKecamatan   string `gorm:"column:CompanyKecamatan"`
+	CompanyZipCode     string `gorm:"column:CompanyZipcode"`
+	CompanyCity        string `gorm:"column:CompanyCity"`
+	CompanyAreaPhone   string `gorm:"column:CompanyAreaPhone"`
+	CompanyPhone       string `gorm:"column:CompanyPhone"`
+	EmergencyAddress   string `gorm:"column:EmergencyAddress"`
+	EmergencyRTRW      string `gorm:"column:EmergencyRTRW"`
+	EmergencyKelurahan string `gorm:"column:EmergencyKelurahan"`
+	EmergencyKecamatan string `gorm:"column:EmergencyKecamatan"`
+	EmergencyZipcode   string `gorm:"column:EmergencyZipcode"`
+	EmergencyCity      string `gorm:"column:EmergencyCity"`
+	EmergencyAreaPhone string `gorm:"column:EmergencyAreaPhone"`
+	EmergencyPhone     string `gorm:"column:EmergencyPhone"`
+}
+
+type InquiryDataCa struct {
+	CA             DataCa                     `json:"ca"`
+	InternalRecord []TrxInternalRecord        `json:"internal_record"`
+	Approval       []TrxHistoryApprovalScheme `json:"approval"`
+	Draft          TrxDraftCaDecision         `json:"draft"`
+	General        DataGeneral                `json:"general"`
+	Personal       CustomerPersonal           `json:"personal"`
+	Spouse         CustomerSpouse             `json:"spouse"`
+	Employment     CustomerEmployment         `json:"employment"`
+	ItemApk        DataItemApk                `json:"item_apk"`
+	Surveyor       []TrxSurveyor              `json:"surveyor"`
+	Emcon          CustomerEmcon              `json:"emcon"`
+	Address        DataAddress                `json:"address"`
+	Photo          []DataPhoto                `json:"photo"`
+}
+
+type DataCa struct {
+	ShowAction         bool   `gorm:"column:ShowAction" json:"show_action"`
+	ActionDate         string `gorm:"column:ActionDate" json:"action_date"`
+	DocumentSurveyor   string `json:"doc_surveyor"`
+	ScsDate            string `gorm:"column:ScsDate" json:"scs_date"`
+	ScsScore           string `gorm:"column:ScsScore" json:"scs_score"`
+	ScsStatus          string `gorm:"column:ScsStatus" json:"scs_status"`
+	BiroCustomerResult string `gorm:"column:BiroCustomerResult" json:"biro_customer_result"`
+	BiroSpouseResult   string `gorm:"column:BiroSpouseResult" json:"biro_spouse_result"`
+}
+
+type TrxCaDecision struct {
+	ProspectID    string    `gorm:"type:varchar(20);column:ProspectID" json:"-"`
+	Decision      string    `gorm:"type:varchar(3);column:decision" json:"decision"`
+	SlikResult    string    `gorm:"type:varchar(30);column:slik_result" json:"slik_result"`
+	Note          string    `gorm:"type:varchar(525);column:note" json:"note"`
+	CreatedAt     time.Time `gorm:"column:created_at" json:"-"`
+	CreatedBy     string    `gorm:"type:varchar(100);column:created_by" json:"-"`
+	DecisionBy    string    `gorm:"type:varchar(250);column:decision_by" json:"-"`
+	FinalApproval string    `gorm:"type:varchar(3);column:final_approval" json:"final_approval"`
+}
+
+func (c *TrxCaDecision) TableName() string {
+	return "trx_ca_decision"
+}
+
+type MappingLimitApprovalScheme struct {
+	ID               string    `gorm:"type:varchar(60);column:id"`
+	Alias            string    `gorm:"type:varchar(3);column:alias"`
+	Name             string    `gorm:"type:varchar(100);column:name"`
+	CoverageNtfStart float64   `gorm:"column:coverage_ntf_start"`
+	CoverageNtfEnd   float64   `gorm:"column:coverage_ntf_end"`
+	Type             int       `gorm:"column:type"`
+	CreatedAt        time.Time `gorm:"column:created_at"`
+}
+
+func (c *MappingLimitApprovalScheme) TableName() string {
+	return "m_limit_approval_scheme"
 }

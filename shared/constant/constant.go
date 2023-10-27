@@ -53,8 +53,10 @@ const (
 	DB_DECISION_PASS                 = "PAS"
 	DB_DECISION_APR                  = "APR"
 	DB_DECISION_REJECT               = "REJ"
+	DB_DECISION_CANCEL               = "CAN"
 	DB_DECISION_CREDIT_PROCESS       = "CPR"
 	DB_DECISION_CREDIT_ANALYST       = "CRA"
+	DB_DECISION_BRANCH_MANAGER       = "CBM"
 	JSON_DECISION_PASS               = "PASS"
 	JSON_DECISION_REJECT             = "REJECTED"
 	JSON_DECISION_CREDIT_PROCESS     = "CREDIT_PROCESS"
@@ -182,6 +184,7 @@ const (
 	DECISION_REJECT                                              = "REJECT"
 	DECISION_PASS                                                = "PASS"
 	DECISION_APPROVE                                             = "APPROVE"
+	DECISION_CANCEL                                              = "CANCEL"
 	STATUS_KONSUMEN_RO_AO                                        = "RO/AO"
 	STATUS_KONSUMEN_NEW                                          = "NEW"
 	REASON_BADTYPE_B                                             = "Konsumen Blacklist - BadType B"
@@ -567,6 +570,8 @@ const (
 	// CREDIT ANALYST
 	SOURCE_DECISION_CA    = "CRA"
 	CODE_CREDIT_COMMITTEE = "2743"
+	NEED_DECISION         = "need_decision"
+	SAVED_AS_DRAFT        = "saved_as_draft"
 	// PRE SCREENING
 	CODE_PASS_PRESCREENING   = 9701
 	CODE_REJECT_PRESCREENING = 9702

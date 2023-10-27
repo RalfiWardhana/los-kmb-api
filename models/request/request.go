@@ -687,3 +687,29 @@ type ReqReviewPrescreening struct {
 	DecisionBy     string `json:"decision_by" validate:"required"`
 	DecisionByName string `json:"decision_by_name" validate:"required"`
 }
+
+type ReqInquiryCa struct {
+	Search   string `json:"search"`
+	BranchID string `json:"branch_id"`
+	Filter   string `json:"filter"`
+	UserID   string `json:"user_id"`
+}
+
+type ReqSaveAsDraft struct {
+	ProspectID string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
+	Decision   string `json:"decision" validate:"required" example:"APPROVE,REJECT"`
+	SlikResult string `json:"slik_result" validate:"required"`
+	Note       string `json:"note"`
+	CreatedBy  string `json:"decision_by" validate:"required"`
+	DecisionBy string `json:"decision_by_name" validate:"required"`
+}
+
+type ReqSubmitDecision struct {
+	ProspectID   string  `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
+	NTFAkumulasi float64 `json:"ntf_akumulasi" validate:"required"`
+	Decision     string  `json:"decision" validate:"required" example:"APPROVE,REJECT"`
+	SlikResult   string  `json:"slik_result" validate:"required"`
+	Note         string  `json:"note"`
+	CreatedBy    string  `json:"decision_by" validate:"required"`
+	DecisionBy   string  `json:"decision_by_name" validate:"required"`
+}
