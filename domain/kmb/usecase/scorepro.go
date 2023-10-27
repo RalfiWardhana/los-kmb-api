@@ -35,6 +35,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 		ScoreGeneratorsID: os.Getenv("SCOREPRO_DEFAULT_SCORE_GENERATOR_ID"),
 	}
 
+	residenceZipCode = "00000"
 	if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_NEW {
 		for _, v := range req.Address {
 			if v.Type == constant.ADDRESS_TYPE_RESIDENCE {
