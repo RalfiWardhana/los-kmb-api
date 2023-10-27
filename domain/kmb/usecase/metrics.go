@@ -328,7 +328,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 		err = json.Unmarshal([]byte(jsoniter.Get(resInternalRecord.Body(), "data").ToString()), &trxFMF.AgreementCONFINS)
 		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Unmarshal Interal Record Error")
+			err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal Interal Record Error")
 			return
 		}
 	}
@@ -500,6 +500,66 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		RuleCode:       metricsScs.Code,
 		SourceDecision: metricsScs.Source,
 		Info:           metricsScs.Info,
+		NextStep:       constant.SOURCE_DECISION_DSR,
+	})
+
+	var totalInstallmentPBK float64
+	if filtering.TotalInstallmentAmountBiro != nil {
+		totalInstallmentPBK, err = utils.GetFloat(filtering.TotalInstallmentAmountBiro)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat TotalInstallmentAmountBiro Error")
+			return
+		}
+	}
+
+	income := reqDupcheck.MonthlyFixedIncome + reqDupcheck.MonthlyVariableIncome + reqDupcheck.SpouseIncome
+	metricsTotalDsrFmfPbk, trxFMFTotalDsrFmfPbk, err := u.usecase.TotalDsrFmfPbk(ctx, income, reqMetrics.Apk.InstallmentAmount, totalInstallmentPBK, reqMetrics.Transaction.ProspectID, customerSegment, accessToken, dupcheckData, configValue)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - TotalDsrFmfPbk Error")
+		return
+	}
+
+	trxFMF.DSRFMF = trxFMFTotalDsrFmfPbk.DSRFMF
+	trxFMF.TotalDSR = trxFMFTotalDsrFmfPbk.TotalDSR
+
+	infoTotalDSR := map[string]interface{}{
+		"dsr_fmf":                   trxFMF.DSRFMF,
+		"dsr_pbk":                   trxFMF.DSRPBK,
+		"total_dsr":                 trxFMF.TotalDSR,
+		"installment_threshold":     trxFMFTotalDsrFmfPbk.InstallmentThreshold,
+		"latest_installment_amount": trxFMFTotalDsrFmfPbk.LatestInstallmentAmount,
+	}
+
+	if metricsTotalDsrFmfPbk.Result == constant.DECISION_REJECT {
+
+		addDetail := entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_FINAL,
+			Activity:       constant.ACTIVITY_STOP,
+			Decision:       constant.DB_DECISION_REJECT,
+			RuleCode:       metricsTotalDsrFmfPbk.Code,
+			SourceDecision: metricsTotalDsrFmfPbk.SourceDecision,
+			Info:           infoTotalDSR,
+		}
+
+		details = append(details, addDetail)
+
+		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, metricsTotalDsrFmfPbk.Reason)
+		if err != nil {
+			return
+		}
+
+		return
+	}
+
+	details = append(details, entity.TrxDetail{
+		ProspectID:     reqMetrics.Transaction.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_PROCESS,
+		Decision:       constant.DB_DECISION_PASS,
+		RuleCode:       metricsTotalDsrFmfPbk.Code,
+		SourceDecision: metricsTotalDsrFmfPbk.SourceDecision,
+		Info:           infoTotalDSR,
 		NextStep:       constant.SOURCE_DECISION_ELABORATE_LTV,
 	})
 

@@ -485,8 +485,8 @@ type TrxFMF struct {
 	TrxBannedPMKDSR         entity.TrxBannedPMKDSR
 	TrxBannedChassisNumber  entity.TrxBannedChassisNumber
 	AgreementCONFINS        []AgreementCONFINS
-	InstallmentThreshold    float64
-	LatestInstallmentAmount float64
+	InstallmentThreshold    float64 `json:"installment_threshold"`
+	LatestInstallmentAmount float64 `json:"latest_installment_amount"`
 	TrxCaDecision           entity.TrxCaDecision
 }
 
