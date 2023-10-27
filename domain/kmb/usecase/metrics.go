@@ -28,7 +28,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		dupcheckData      response.SpDupcheckMap
 		customerStatus    string
 		customerSegment   string
-		decisionMetrics   response.UsecaseApi
+		metricsDupcheck   response.UsecaseApi
 		filtering         entity.FilteringKMB
 		trxPrescreening   entity.TrxPrescreening
 		trxFMF            response.TrxFMF
@@ -306,7 +306,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 	json.Unmarshal([]byte(config.Value), &configValue)
 
-	dupcheckData, customerStatus, decisionMetrics, trxFMFDupcheck, trxDetailDupcheck, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken, configValue)
+	dupcheckData, customerStatus, metricsDupcheck, trxFMFDupcheck, trxDetailDupcheck, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken, configValue)
 	if err != nil {
 		return
 	}
@@ -333,7 +333,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		}
 	}
 
-	if decisionMetrics.Result == constant.DECISION_REJECT {
+	if metricsDupcheck.Result == constant.DECISION_REJECT {
 		details = append(details, trxDetailDupcheck...)
 
 		addDetail := entity.TrxDetail{
@@ -341,19 +341,19 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			StatusProcess:  constant.STATUS_FINAL,
 			Activity:       constant.ACTIVITY_STOP,
 			Decision:       constant.DB_DECISION_REJECT,
-			RuleCode:       decisionMetrics.Code,
-			SourceDecision: decisionMetrics.SourceDecision,
-			Info:           decisionMetrics.Reason,
+			RuleCode:       metricsDupcheck.Code,
+			SourceDecision: metricsDupcheck.SourceDecision,
+			Info:           metricsDupcheck.Reason,
 		}
 
-		if decisionMetrics.SourceDecision == constant.SOURCE_DECISION_DSR || decisionMetrics.SourceDecision == constant.SOURCE_DECISION_DUPCHECK {
+		if metricsDupcheck.SourceDecision == constant.SOURCE_DECISION_DSR || metricsDupcheck.SourceDecision == constant.SOURCE_DECISION_DUPCHECK {
 			info, _ := json.Marshal(dupcheckData)
 			addDetail.Info = string(utils.SafeEncoding(info))
 		}
 
 		details = append(details, addDetail)
 
-		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, decisionMetrics.Reason)
+		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, metricsDupcheck.Reason)
 		if err != nil {
 			return
 		}
@@ -368,9 +368,9 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		StatusProcess:  constant.STATUS_ONPROCESS,
 		Activity:       constant.ACTIVITY_PROCESS,
 		Decision:       constant.DB_DECISION_PASS,
-		RuleCode:       decisionMetrics.Code,
+		RuleCode:       metricsDupcheck.Code,
 		SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
-		Info:           decisionMetrics.Reason,
+		Info:           metricsDupcheck.Reason,
 		NextStep:       constant.SOURCE_DECISION_DUKCAPIL,
 	})
 
@@ -620,7 +620,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		})
 	}
 
-	resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, decisionMetrics.Reason)
+	resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, metricsDupcheck.Reason)
 	if err != nil {
 		return
 	}
