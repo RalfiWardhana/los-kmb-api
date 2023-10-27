@@ -559,7 +559,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		Decision:       constant.DB_DECISION_PASS,
 		RuleCode:       metricsTotalDsrFmfPbk.Code,
 		SourceDecision: metricsTotalDsrFmfPbk.SourceDecision,
-		Info:           infoTotalDSR,
+		Info:           string(utils.SafeEncoding(infoTotalDSR)),
 		NextStep:       constant.SOURCE_DECISION_ELABORATE_LTV,
 	})
 
