@@ -116,6 +116,56 @@ func (r repoHandler) GetReasonPrescreening(req request.ReqReasonPrescreening, pa
 	return
 }
 
+func (r repoHandler) GetCancelReason(pagination interface{}) (reason []entity.CancelReason, rowTotal int, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	var (
+		filterPaginate string
+	)
+
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.NewKmb.Raw(`
+		SELECT
+		COUNT(tt.id_cancel_reason) AS totalRow
+		FROM
+		(SELECT * FROM m_cancel_reason with (nolock) WHERE show = '1') AS tt`).Scan(&row).Error; err != nil {
+			return
+		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT * FROM m_cancel_reason with (nolock) WHERE show = '1' ORDER BY id_cancel_reason ASC %s`, filterPaginate)).Scan(&reason).Error; err != nil {
+		return
+	}
+
+	if len(reason) == 0 {
+		return reason, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
+	return
+}
+
 func (r repoHandler) GetCustomerPhoto(prospectID string) (photo []entity.DataPhoto, err error) {
 	var x sql.TxOptions
 
