@@ -968,6 +968,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tst.activity,
 		tst.source_decision,
 		tst.decision,
+		tst.reason,
 		tcd.decision as decision_ca,
 		CASE
 		  WHEN tcd.decision='APR' THEN 'APPROVE'

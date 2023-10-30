@@ -544,9 +544,20 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 			internalData = []entity.TrxInternalRecord{}
 		}
 
+		var statusDecision string
+		if inq.StatusDecision == constant.DB_DECISION_APR {
+			statusDecision = constant.DECISION_APPROVE
+		} else if inq.StatusDecision == constant.DB_DECISION_REJECT {
+			statusDecision = constant.DECISION_REJECT
+		} else if inq.StatusDecision == constant.DB_DECISION_CANCEL {
+			statusDecision = constant.DECISION_CANCEL
+		}
+
 		row := entity.InquiryDataCa{
 			CA: entity.DataCa{
 				ShowAction:         inq.ShowAction,
+				StatusDecision:     statusDecision,
+				StatusReason:       inq.StatusReason,
 				CaDecision:         inq.CaDecision,
 				CaNote:             inq.CANote,
 				ActionDate:         inq.ActionDate,
