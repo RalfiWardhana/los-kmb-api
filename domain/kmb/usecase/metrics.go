@@ -664,7 +664,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		finalReasonMetrics = fmt.Sprintf("%s - %s", customerStatus, metricsElaborateScheme.Reason)
 	}
 
-	if trxFMF.NTFAkumulasi <= 20000000 {
+	if countTrx == 0 && trxFMF.NTFAkumulasi <= 20000000 {
 		details = append(details, entity.TrxDetail{
 			ProspectID:     reqMetrics.Transaction.ProspectID,
 			StatusProcess:  constant.STATUS_FINAL,
