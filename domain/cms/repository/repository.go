@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	jsoniter "github.com/json-iterator/go"
 )
@@ -1791,7 +1792,7 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 	return
 }
 
-func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
+func (r repoHandler) ProcessTransaction(isCancel bool, trxCaDecision entity.TrxCaDecision, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
 
 	trxCaDecision.CreatedAt = DtmRequest
 	trxStatus.CreatedAt = DtmRequest
@@ -1817,6 +1818,38 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxS
 		// trx_details
 		if err := tx.Create(&trxDetail).Error; err != nil {
 			return err
+		}
+
+		if !isCancel {
+			var (
+				trxHistoryApproval entity.TrxHistoryApprovalScheme
+				nextFinal          int
+			)
+
+			nextFinal = 0
+			if trxCaDecision.FinalApproval == constant.DB_DECISION_BRANCH_MANAGER {
+				nextFinal = 1
+			}
+
+			trxHistoryApproval = entity.TrxHistoryApprovalScheme{
+				ID:                    uuid.New().String(),
+				ProspectID:            trxCaDecision.ProspectID,
+				Decision:              trxCaDecision.Decision,
+				Reason:                trxCaDecision.SlikResult.(string),
+				Note:                  trxCaDecision.Note,
+				CreatedAt:             DtmRequest,
+				CreatedBy:             trxCaDecision.CreatedBy,
+				DecisionBy:            trxCaDecision.DecisionBy,
+				NeedEscalation:        0,
+				NextFinalApprovalFlag: nextFinal,
+				SourceDecision:        trxDetail.SourceDecision,
+				NextStep:              trxDetail.NextStep.(string),
+			}
+
+			// trx_history_approval_scheme
+			if err := tx.Create(&trxHistoryApproval).Error; err != nil {
+				return err
+			}
 		}
 
 		// trx_draft_ca_decision

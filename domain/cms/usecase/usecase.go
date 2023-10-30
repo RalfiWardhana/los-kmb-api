@@ -738,7 +738,7 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 		trxCaDecision entity.TrxCaDecision
 		trxDetail     entity.TrxDetail
 		trxStatus     entity.TrxStatus
-		decision      string
+		isCancel      bool
 	)
 
 	// get limit approval for final_approval
@@ -748,16 +748,49 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 		return
 	}
 
-	switch req.Decision {
-	case constant.DECISION_REJECT:
-		decision = constant.DB_DECISION_REJECT
-	case constant.DECISION_APPROVE:
-		decision = constant.DB_DECISION_APR
+	decisionMapping := map[string]struct {
+		Code           int
+		StatusProcess  string
+		Activity       string
+		Decision       string
+		DecisionDetail string
+		DecisionStatus string
+		ActivityStatus string
+		NextStep       interface{}
+		SourceDecision string
+	}{
+		constant.DECISION_REJECT: {
+			Code:           constant.CODE_REJECT_PRESCREENING,
+			StatusProcess:  constant.STATUS_FINAL,
+			Activity:       constant.ACTIVITY_STOP,
+			Decision:       constant.DB_DECISION_REJECT,
+			DecisionStatus: constant.DB_DECISION_REJECT,
+			DecisionDetail: constant.DB_DECISION_REJECT,
+			ActivityStatus: constant.ACTIVITY_STOP,
+			SourceDecision: constant.PRESCREENING,
+		},
+		constant.DECISION_APPROVE: {
+			Code:           constant.CODE_PASS_PRESCREENING,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
+			Decision:       constant.DB_DECISION_APR,
+			DecisionStatus: constant.DB_DECISION_CREDIT_PROCESS,
+			DecisionDetail: constant.DB_DECISION_PASS,
+			ActivityStatus: constant.ACTIVITY_UNPROCESS,
+			SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+			NextStep:       constant.SOURCE_DECISION_DUPCHECK,
+		},
+	}
+
+	decisionInfo, ok := decisionMapping[req.Decision]
+	if !ok {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Decision tidak valid")
+		return
 	}
 
 	trxCaDecision = entity.TrxCaDecision{
 		ProspectID:    req.ProspectID,
-		Decision:      decision,
+		Decision:      decisionInfo.Decision,
 		SlikResult:    req.SlikResult,
 		Note:          req.Note,
 		CreatedBy:     req.CreatedBy,
@@ -765,20 +798,25 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 		FinalApproval: limit.Alias,
 	}
 
+	if req.Decision == constant.DECISION_REJECT {
+		trxStatus.RuleCode = decisionInfo.Code
+	}
+
 	trxStatus = entity.TrxStatus{
 		ProspectID:     req.ProspectID,
-		StatusProcess:  constant.STATUS_ONPROCESS,
-		Activity:       constant.ACTIVITY_UNPROCESS,
-		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+		StatusProcess:  decisionInfo.StatusProcess,
+		Activity:       decisionInfo.ActivityStatus,
+		Decision:       decisionInfo.DecisionStatus,
 		RuleCode:       constant.CODE_CREDIT_COMMITTEE,
 		SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
+		Reason:         req.SlikResult,
 	}
 
 	trxDetail = entity.TrxDetail{
 		ProspectID:     req.ProspectID,
-		StatusProcess:  constant.STATUS_ONPROCESS,
-		Activity:       constant.ACTIVITY_UNPROCESS,
-		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+		StatusProcess:  decisionInfo.StatusProcess,
+		Activity:       decisionInfo.Activity,
+		Decision:       decisionInfo.DecisionDetail,
 		RuleCode:       constant.CODE_CREDIT_COMMITTEE,
 		SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
 		NextStep:       constant.DB_DECISION_BRANCH_MANAGER,
@@ -786,7 +824,9 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 		CreatedBy:      req.CreatedBy,
 	}
 
-	err = u.repository.ProcessTransaction(trxCaDecision, trxStatus, trxDetail)
+	isCancel = false
+
+	err = u.repository.ProcessTransaction(isCancel, trxCaDecision, trxStatus, trxDetail)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")
 		return
@@ -1044,6 +1084,7 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 		trxStatus     entity.TrxStatus
 		trxDetail     entity.TrxDetail
 		trxCaDecision entity.TrxCaDecision
+		isCancel      bool
 	)
 
 	trxCaDecision = entity.TrxCaDecision{
@@ -1075,7 +1116,9 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 		CreatedBy:      req.CreatedBy,
 	}
 
-	err = u.repository.ProcessTransaction(trxCaDecision, trxStatus, trxDetail)
+	isCancel = true
+
+	err = u.repository.ProcessTransaction(isCancel, trxCaDecision, trxStatus, trxDetail)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Process Cancel Order error")
 		return
