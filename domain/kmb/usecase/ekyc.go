@@ -163,12 +163,12 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, accessToken 
 
 	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("DUKCAPIL_FR_URL"), paramFr, map[string]string{}, constant.METHOD_POST, true, 2, timeout, req.Transaction.ProspectID, accessToken)
 
-	if err != nil || resp.StatusCode() == 504 || resp.StatusCode() == 502 {
+	if resp.StatusCode() == 504 || resp.StatusCode() == 502 {
 		statusFR = "RTO"
 		infoDukcapil.FrError = "Request Timed Out"
 	}
 
-	if err == nil && resp.StatusCode() != 200 && resp.StatusCode() != 504 && resp.StatusCode() != 502 {
+	if resp.StatusCode() != 200 && resp.StatusCode() != 504 && resp.StatusCode() != 502 {
 		statusFR = "NOT CHECK"
 		var responseIntegrator response.ApiResponse
 		json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &responseIntegrator)
