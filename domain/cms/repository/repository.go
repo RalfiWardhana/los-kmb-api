@@ -968,6 +968,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tst.activity,
 		tst.source_decision,
 		tst.decision,
+		tst.reason,
 		tcd.decision as decision_ca,
 		CASE
 		  WHEN tcd.decision='APR' THEN 'APPROVE'
@@ -1016,23 +1017,23 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
 		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
 		END AS 'Gender',
-		tca.LegalAddress,
-		tca.LegalRTRW,
-		tca.LegalKelurahan,
-		tca.LegalKecamatan,
-		tca.LegalZipcode,
-		tca.LegalCity,
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
 		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
 		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
 		edu.value AS Education,
 		mst.value AS MaritalStatus,
 		tcp.NumOfDependence,
-		tca.ResidenceAddress,
-		tca.ResidenceRTRW,
-		tca.ResidenceKelurahan,
-		tca.ResidenceKecamatan,
-		tca.ResidenceZipcode,
-		tca.ResidenceCity,
 		hst.value AS HomeStatus,
 		mn.value AS StaySinceMonth,
 		tcp.StaySinceYear,
@@ -1066,15 +1067,15 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		mn2.value AS EmploymentSinceMonth,
 		tce.EmploymentSinceYear,
 		tce.CompanyName,
-		tca.CompanyAreaPhone,
-		tca.CompanyPhone,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
 		tcp.ExtCompanyPhone,
-		tca.CompanyAddress,
-		tca.CompanyRTRW,
-		tca.CompanyKelurahan,
-		tca.CompanyKecamatan,
-		tca.CompanyZipcode,
-		tca.CompanyCity,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
 		tce.MonthlyFixedIncome,
 		tce.MonthlyVariableIncome,
 		tce.SpouseIncome,
@@ -1088,14 +1089,14 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		em.Name AS EmconName,
 		em.Relationship,
 		em.MobilePhone AS EmconMobilePhone,
-	    tca.EmergencyAddress,
-		tca.EmergencyRTRW,
-		tca.EmergencyKelurahan,
-		tca.EmergencyKecamatan,
-		tca.EmergencyZipcode,
-		tca.EmergencyCity,
-		tca.EmergencyAreaPhone,
-		tca.EmergencyPhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
 		tce.IndustryTypeID,
 		tak.ScsDate,
 		tak.ScsScore,
@@ -1133,45 +1134,69 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		) tdb ON tm.ProspectID = tdb.prospect_id 
 
 		INNER JOIN (
-			SELECT ProspectID,
-			MAX(Case [Type] When 'LEGAL' Then scp.dbo.DEC_B64('SEC', Address) End) LegalAddress,
-			MAX(Case [Type] When 'LEGAL' Then CONCAT(RT, '/', RW) End) LegalRTRW,
-			MAX(Case [Type] When 'LEGAL' Then Kelurahan End) LegalKelurahan,
-			MAX(Case [Type] When 'LEGAL' Then Kecamatan End) LegalKecamatan,
-			MAX(Case [Type] When 'LEGAL' Then ZipCode End) LegalZipCode,
-			MAX(Case [Type] When 'LEGAL' Then City End) LegalCity,
-			MAX(Case [Type] When 'LEGAL' Then Phone End) LegalPhone,
-			MAX(Case [Type] When 'LEGAL' Then AreaPhone End) LegalAreaPhone,
-
-			MAX(Case [Type] When 'COMPANY' Then scp.dbo.DEC_B64('SEC', Address) End) CompanyAddress,
-			MAX(Case [Type] When 'COMPANY' Then CONCAT(RT, '/', RW) End) CompanyRTRW,
-			MAX(Case [Type] When 'COMPANY' Then Kelurahan End) CompanyKelurahan,
-			MAX(Case [Type] When 'COMPANY' Then Kecamatan End) CompanyKecamatan,
-			MAX(Case [Type] When 'COMPANY' Then ZipCode End) CompanyZipCode,
-			MAX(Case [Type] When 'COMPANY' Then City End) CompanyCity,
-			MAX(Case [Type] When 'COMPANY' Then Phone End) CompanyPhone,
-			MAX(Case [Type] When 'COMPANY' Then AreaPhone End) CompanyAreaPhone,
-
-			MAX(Case [Type] When 'RESIDENCE' Then scp.dbo.DEC_B64('SEC', Address) End) ResidenceAddress,
-			MAX(Case [Type] When 'RESIDENCE' Then CONCAT(RT, '/', RW) End) ResidenceRTRW,
-			MAX(Case [Type] When 'RESIDENCE' Then Kelurahan End) ResidenceKelurahan,
-			MAX(Case [Type] When 'RESIDENCE' Then Kecamatan End) ResidenceKecamatan,
-			MAX(Case [Type] When 'RESIDENCE' Then ZipCode End) ResidenceZipCode,
-			MAX(Case [Type] When 'RESIDENCE' Then City End) ResidenceCity,
-			MAX(Case [Type] When 'RESIDENCE' Then Phone End) ResidencePhone,
-			MAX(Case [Type] When 'RESIDENCE' Then AreaPhone End) ResidenceAreaPhone,
-
-			MAX(Case [Type] When 'EMERGENCY' Then scp.dbo.DEC_B64('SEC', Address) End) EmergencyAddress,
-			MAX(Case [Type] When 'EMERGENCY' Then CONCAT(RT, '/', RW) End) EmergencyRTRW,
-			MAX(Case [Type] When 'EMERGENCY' Then Kelurahan End) EmergencyKelurahan,
-			MAX(Case [Type] When 'EMERGENCY' Then Kecamatan End) EmergencyKecamatan,
-			MAX(Case [Type] When 'EMERGENCY' Then ZipCode End) EmergencyZipcode,
-			MAX(Case [Type] When 'EMERGENCY' Then City End) EmergencyCity,
-			MAX(Case [Type] When 'EMERGENCY' Then Phone End) EmergencyPhone,
-			MAX(Case [Type] When 'EMERGENCY' Then AreaPhone End) EmergencyAreaPhone
-			FROM trx_customer_address
-			GROUP BY ProspectID
-		) tca ON tm.ProspectID = tca.ProspectID 
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
 
 		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
@@ -1508,23 +1533,22 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
 		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
 		END AS 'Gender',
-		tca.LegalAddress,
-		tca.LegalRTRW,
-		tca.LegalKelurahan,
-		tca.LegalKecamatan,
-		tca.LegalZipcode,
-		tca.LegalCity,
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
 		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
 		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
 		edu.value AS Education,
 		mst.value AS MaritalStatus,
-		tcp.NumOfDependence,
-		tca.ResidenceAddress,
-		tca.ResidenceRTRW,
-		tca.ResidenceKelurahan,
-		tca.ResidenceKecamatan,
-		tca.ResidenceZipcode,
-		tca.ResidenceCity,
 		hst.value AS HomeStatus,
 		mn.value AS StaySinceMonth,
 		tcp.StaySinceYear,
@@ -1558,15 +1582,15 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		mn2.value AS EmploymentSinceMonth,
 		tce.EmploymentSinceYear,
 		tce.CompanyName,
-		tca.CompanyAreaPhone,
-		tca.CompanyPhone,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
 		tcp.ExtCompanyPhone,
-		tca.CompanyAddress,
-		tca.CompanyRTRW,
-		tca.CompanyKelurahan,
-		tca.CompanyKecamatan,
-		tca.CompanyZipcode,
-		tca.CompanyCity,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
 		tce.MonthlyFixedIncome,
 		tce.MonthlyVariableIncome,
 		tce.SpouseIncome,
@@ -1580,14 +1604,14 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		em.Name AS EmconName,
 		em.Relationship,
 		em.MobilePhone AS EmconMobilePhone,
-	    tca.EmergencyAddress,
-		tca.EmergencyRTRW,
-		tca.EmergencyKelurahan,
-		tca.EmergencyKecamatan,
-		tca.EmergencyZipcode,
-		tca.EmergencyCity,
-		tca.EmergencyAreaPhone,
-		tca.EmergencyPhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
 		tce.IndustryTypeID
 	  FROM
 		trx_master tm WITH (nolock)
@@ -1610,46 +1634,69 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		) tcd ON tm.ProspectID = tcd.ProspectID
 
 		INNER JOIN (
-			SELECT ProspectID,
-			MAX(Case [Type] When 'LEGAL' Then scp.dbo.DEC_B64('SEC', Address) End) LegalAddress,
-			MAX(Case [Type] When 'LEGAL' Then CONCAT(RT, '/', RW) End) LegalRTRW,
-			MAX(Case [Type] When 'LEGAL' Then Kelurahan End) LegalKelurahan,
-			MAX(Case [Type] When 'LEGAL' Then Kecamatan End) LegalKecamatan,
-			MAX(Case [Type] When 'LEGAL' Then ZipCode End) LegalZipCode,
-			MAX(Case [Type] When 'LEGAL' Then City End) LegalCity,
-			MAX(Case [Type] When 'LEGAL' Then Phone End) LegalPhone,
-			MAX(Case [Type] When 'LEGAL' Then AreaPhone End) LegalAreaPhone,
-
-			MAX(Case [Type] When 'COMPANY' Then scp.dbo.DEC_B64('SEC', Address) End) CompanyAddress,
-			MAX(Case [Type] When 'COMPANY' Then CONCAT(RT, '/', RW) End) CompanyRTRW,
-			MAX(Case [Type] When 'COMPANY' Then Kelurahan End) CompanyKelurahan,
-			MAX(Case [Type] When 'COMPANY' Then Kecamatan End) CompanyKecamatan,
-			MAX(Case [Type] When 'COMPANY' Then ZipCode End) CompanyZipCode,
-			MAX(Case [Type] When 'COMPANY' Then City End) CompanyCity,
-			MAX(Case [Type] When 'COMPANY' Then Phone End) CompanyPhone,
-			MAX(Case [Type] When 'COMPANY' Then AreaPhone End) CompanyAreaPhone,
-
-			MAX(Case [Type] When 'RESIDENCE' Then scp.dbo.DEC_B64('SEC', Address) End) ResidenceAddress,
-			MAX(Case [Type] When 'RESIDENCE' Then CONCAT(RT, '/', RW) End) ResidenceRTRW,
-			MAX(Case [Type] When 'RESIDENCE' Then Kelurahan End) ResidenceKelurahan,
-			MAX(Case [Type] When 'RESIDENCE' Then Kecamatan End) ResidenceKecamatan,
-			MAX(Case [Type] When 'RESIDENCE' Then ZipCode End) ResidenceZipCode,
-			MAX(Case [Type] When 'RESIDENCE' Then City End) ResidenceCity,
-			MAX(Case [Type] When 'RESIDENCE' Then Phone End) ResidencePhone,
-			MAX(Case [Type] When 'RESIDENCE' Then AreaPhone End) ResidenceAreaPhone,
-
-			MAX(Case [Type] When 'EMERGENCY' Then scp.dbo.DEC_B64('SEC', Address) End) EmergencyAddress,
-			MAX(Case [Type] When 'EMERGENCY' Then CONCAT(RT, '/', RW) End) EmergencyRTRW,
-			MAX(Case [Type] When 'EMERGENCY' Then Kelurahan End) EmergencyKelurahan,
-			MAX(Case [Type] When 'EMERGENCY' Then Kecamatan End) EmergencyKecamatan,
-			MAX(Case [Type] When 'EMERGENCY' Then ZipCode End) EmergencyZipcode,
-			MAX(Case [Type] When 'EMERGENCY' Then City End) EmergencyCity,
-			MAX(Case [Type] When 'EMERGENCY' Then Phone End) EmergencyPhone,
-			MAX(Case [Type] When 'EMERGENCY' Then AreaPhone End) EmergencyAreaPhone
-			FROM trx_customer_address
-			GROUP BY ProspectID
-		) tca ON tm.ProspectID = tca.ProspectID 
-
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
 		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
