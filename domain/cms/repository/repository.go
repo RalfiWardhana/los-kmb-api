@@ -692,7 +692,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	return
 }
 
-func (r repoHandler) GetStatusPrescreening(prospectID string) (status entity.TrxStatus, err error) {
+func (r repoHandler) GetTrxStatus(prospectID string) (status entity.TrxStatus, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
@@ -703,7 +703,7 @@ func (r repoHandler) GetStatusPrescreening(prospectID string) (status entity.Trx
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.NewKmb.Raw("SELECT activity, source_decision FROM trx_status WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&status).Error; err != nil {
+	if err = r.NewKmb.Raw("SELECT activity, decision, source_decision FROM trx_status WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&status).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
