@@ -833,6 +833,40 @@ func (c *MasterMappingCluster) TableName() string {
 	return "m_mapping_cluster"
 }
 
+type TrxAgreement struct {
+	ProspectID          string      `gorm:"type:varchar(20);column:ProspectID"`
+	BranchID            interface{} `gorm:"type:varchar(5);column:BranchID"`
+	CustomerID          interface{} `gorm:"type:varchar(50);column:CustomerID"`
+	ApplicationID       interface{} `gorm:"type:varchar(50);column:ApplicationID"`
+	AgreementNo         interface{} `gorm:"type:varchar(50);column:AgreementNo"`
+	AgreementDate       interface{} `gorm:"column:AgreementDate"`
+	NextInstallmentDate interface{} `gorm:"column:NextInstallmentDate"`
+	MaturityDate        interface{} `gorm:"column:MaturityDate"`
+	ContractStatus      string      `gorm:"type:varchar(10);column:ContractStatus"`
+	NewApplicationDate  interface{} `gorm:"column:NewApplicationDate"`
+	ApprovalDate        interface{} `gorm:"column:ApprovalDate"`
+	PurchaseOrderDate   interface{} `gorm:"column:PurchaseOrderDate"`
+	GoLiveDate          interface{} `gorm:"column:GoLiveDate"`
+	ProductID           interface{} `gorm:"type:varchar(20);column:ProductID"`
+	ProductOfferingID   interface{} `gorm:"type:varchar(20);column:ProductOfferingID"`
+	TotalOTR            interface{} `gorm:"column:TotalOTR"`
+	DownPayment         interface{} `gorm:"column:DownPayment"`
+	NTF                 interface{} `gorm:"column:NTF"`
+	PayToDealerAmount   interface{} `gorm:"column:PayToDealerAmount"`
+	PayToDealerDate     interface{} `gorm:"column:PayToDealerDate"`
+	CheckingStatus      string      `gorm:"type:varchar(5);column:checking_status"`
+	LastCheckingAt      interface{} `gorm:"column:last_checking_at"`
+	CreatedAt           time.Time   `gorm:"column:created_at"`
+	UpdatedAt           time.Time   `gorm:"column:updated_at"`
+	AF                  float64     `gorm:"column:AF"`
+	MobilePhone         string      `gorm:"type:varchar(20);column:MobilePhone"`
+	CustomerIDKreditmu  string      `gorm:"type:varchar(50);column:customer_id_kreditmu"`
+}
+
+func (c *TrxAgreement) TableName() string {
+	return "trx_agreements"
+}
+
 type LogOrchestrator struct {
 	ID           string    `gorm:"type:varchar(50);column:id;primary_key:true"`
 	ProspectID   string    `gorm:"type:varchar(20);column:ProspectID"`

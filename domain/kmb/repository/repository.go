@@ -868,10 +868,26 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 
 		}
 
+		// quick approve
 		if trxFMF.TrxCaDecision.Decision == constant.DB_DECISION_APR {
 			logInfo = trxFMF.TrxCaDecision
 
 			if err := tx.Create(&trxFMF.TrxCaDecision).Error; err != nil {
+				return err
+			}
+
+			trxAgreement := entity.TrxAgreement{
+				ProspectID:         data.Transaction.ProspectID,
+				CheckingStatus:     constant.ACTIVITY_UNPROCESS,
+				ContractStatus:     "0",
+				AF:                 data.Apk.AF,
+				MobilePhone:        data.CustomerPersonal.MobilePhone,
+				CustomerIDKreditmu: constant.LOB_NEW_KMB,
+			}
+
+			logInfo = trxAgreement
+
+			if err := tx.Create(&trxAgreement).Error; err != nil {
 				return err
 			}
 
