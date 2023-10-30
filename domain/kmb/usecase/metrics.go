@@ -466,8 +466,8 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 	trxFMF.ScsDecision = response.ScsDecision{
 		ScsDate:   time.Now().Format("2006-01-02"),
-		ScsStatus: responseScs.Status,
-		ScsScore:  responseScs.Score,
+		ScsStatus: metricsScs.Result,
+		ScsScore:  responseScs.ScoreResult,
 	}
 
 	if metricsScs.Result == constant.DECISION_REJECT {
