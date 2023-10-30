@@ -56,7 +56,7 @@ func (r repoHandler) ScanTrxMaster(prospectID string) (countMaster int, err erro
 
 	if err = r.newKmbDB.Raw(fmt.Sprintf(`
 		SELECT tm.ProspectID FROM trx_master tm WITH (nolock) 
-		LEFT JOIN trx_status ts ON tm.ProspectID = ts.ProspectID 
+		LEFT JOIN trx_status ts WITH (nolock) ON tm.ProspectID = ts.ProspectID 
 		WHERE tm.ProspectID = '%s' AND ((ts.activity = '%s' AND ts.source_decision = '%s') OR (ts.activity != '%s' OR ts.source_decision != '%s'))`,
 		prospectID, constant.ACTIVITY_UNPROCESS, constant.PRESCREENING, constant.ACTIVITY_UNPROCESS, constant.SOURCE_DECISION_DUPCHECK)).Scan(&master).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
@@ -151,7 +151,7 @@ func (r repoHandler) GetTrxDetailBIro(prospectID string) (trxDetailBiro []entity
 }
 
 func (r repoHandler) GetMappingDukcapil(statusVD, statusFR string) (resultDukcapil entity.MappingResultDukcapil, err error) {
-	if err = r.losDB.Raw(fmt.Sprintf(`SELECT * FROM kmb_dukcapil_mapping_result WHERE result_vd='%s' AND result_fr='%s'`, statusVD, statusFR)).Scan(&resultDukcapil).Error; err != nil {
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT * FROM kmb_dukcapil_mapping_result WITH (nolock) WHERE result_vd='%s' AND result_fr='%s'`, statusVD, statusFR)).Scan(&resultDukcapil).Error; err != nil {
 		return
 	}
 
@@ -260,8 +260,8 @@ func (r repoHandler) GetMoblast(customerID string) (score entity.GetMoblast, err
 
 func (r repoHandler) GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error) {
 
-	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT mmel.ltv FROM trx_elaborate_ltv tel 
-	LEFT JOIN m_mapping_elaborate_ltv mmel ON tel.m_mapping_elaborate_ltv_id = mmel.id 
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT mmel.ltv FROM trx_elaborate_ltv tel WITH (nolock) 
+	LEFT JOIN m_mapping_elaborate_ltv mmel WITH (nolock) ON tel.m_mapping_elaborate_ltv_id = mmel.id 
 	WHERE tel.prospect_id ='%s'`, prospectID)).Scan(&elaborateLTV).Error; err != nil {
 		return
 	}
@@ -271,7 +271,7 @@ func (r repoHandler) GetElaborateLtv(prospectID string) (elaborateLTV entity.Map
 
 func (r repoHandler) GetMasterBranch(branchID string) (masterBranch entity.MasterBranch, err error) {
 
-	if err = r.losDB.Raw(fmt.Sprintf(`SELECT branch_category FROM kmb_master_branch_category kmbc WHERE branch_id = '%s'`, branchID)).Scan(&masterBranch).Error; err != nil {
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT branch_category FROM kmb_master_branch_category kmbc WITH (nolock) WHERE branch_id = '%s'`, branchID)).Scan(&masterBranch).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
@@ -284,7 +284,7 @@ func (r repoHandler) GetMasterBranch(branchID string) (masterBranch entity.Maste
 func (r repoHandler) GetMappingElaborateIncome(mappingElaborateIncome entity.MappingElaborateIncome) (result entity.MappingElaborateIncome, err error) {
 
 	if err = r.losDB.Raw(fmt.Sprintf(`SELECT branch_category, estimation_income, status_konsumen, bpkb_name_type, scoreband, worst_24mth, [result] 
-	FROM kmb_mapping_treatment_elaborated_income WHERE estimation_income='%s' AND status_konsumen='%s' AND bpkb_name_type=%d AND scoreband='%s' AND worst_24mth='%s' 
+	FROM kmb_mapping_treatment_elaborated_income WITH (nolock) WHERE estimation_income='%s' AND status_konsumen='%s' AND bpkb_name_type=%d AND scoreband='%s' AND worst_24mth='%s' 
 	AND branch_category = '%s'`, mappingElaborateIncome.EstimationIncome, mappingElaborateIncome.StatusKonsumen, mappingElaborateIncome.BPKBNameType, mappingElaborateIncome.Scoreband, mappingElaborateIncome.Worst24Mth, mappingElaborateIncome.BranchCategory)).Scan(&result).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
@@ -1045,9 +1045,9 @@ func (r repoHandler) ScanWgOnl(query string) (data entity.ScanInstallmentAmount,
 }
 
 func (r repoHandler) GetMinimalIncomePMK(branchID string, statusKonsumen string) (responseIncomePMK entity.MappingIncomePMK, err error) {
-	if err = r.losDB.Raw(fmt.Sprintf(`SELECT * FROM mapping_income_pmk WHERE lob='los_kmb_off' AND branch_id='%s' AND status_konsumen='%s'`, branchID, statusKonsumen)).Scan(&responseIncomePMK).Error; err != nil {
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT * FROM mapping_income_pmk WITH (nolock) WHERE lob='los_kmb_off' AND branch_id='%s' AND status_konsumen='%s'`, branchID, statusKonsumen)).Scan(&responseIncomePMK).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			if err = r.losDB.Raw(fmt.Sprintf(`SELECT * FROM mapping_income_pmk WHERE lob='los_kmb_off' AND branch_id='%s' AND status_konsumen='%s'`, constant.DEFAULT_BRANCH_ID, statusKonsumen)).Scan(&responseIncomePMK).Error; err != nil {
+			if err = r.losDB.Raw(fmt.Sprintf(`SELECT * FROM mapping_income_pmk WITH (nolock) WHERE lob='los_kmb_off' AND branch_id='%s' AND status_konsumen='%s'`, constant.DEFAULT_BRANCH_ID, statusKonsumen)).Scan(&responseIncomePMK).Error; err != nil {
 				return
 			}
 		}
@@ -1168,7 +1168,7 @@ func (r repoHandler) GetCurrentTrxWithRejectDSR(idNumber string) (data entity.Tr
 
 	currentDate := time.Now().Format(constant.FORMAT_DATE)
 
-	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT TOP 1 ts.* FROM trx_status ts LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT TOP 1 ts.* FROM trx_status ts WITH (nolock) LEFT JOIN trx_customer_personal tcp WITH (nolock) ON ts.ProspectID = tcp.ProspectID
 	WHERE ts.decision = 'REJ' AND ts.source_decision = 'DSR' AND tcp.IDNumber = '%s' AND CAST(ts.created_at as DATE) = '%s'`, idNumber, currentDate)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
@@ -1183,7 +1183,7 @@ func (r repoHandler) GetBannedPMKDSR(idNumber string) (data entity.TrxBannedPMKD
 
 	date := time.Now().AddDate(0, 0, -30).Format(constant.FORMAT_DATE)
 
-	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT * FROM trx_banned_pmk_dsr WHERE IDNumber = '%s' AND CAST(created_at as DATE) >= '%s'`, idNumber, date)).Scan(&data).Error; err != nil {
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT * FROM trx_banned_pmk_dsr WITH (nolock) WHERE IDNumber = '%s' AND CAST(created_at as DATE) >= '%s'`, idNumber, date)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
@@ -1200,7 +1200,7 @@ func (r repoHandler) GetCurrentTrxWithReject(idNumber string) (data entity.TrxRe
 	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT 
 	COUNT(CASE WHEN ts.source_decision = 'PMK' OR ts.source_decision = 'DSR' OR ts.source_decision = 'PRJ' THEN 1 END) as reject_pmk_dsr,
 	COUNT(CASE WHEN ts.source_decision != 'PMK' AND ts.source_decision != 'DSR' AND ts.source_decision != 'PRJ' AND ts.source_decision != 'NKA' THEN 1 END) as reject_nik 
-	FROM trx_status ts LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+	FROM trx_status ts WITH (nolock) LEFT JOIN trx_customer_personal tcp WITH (nolock) ON ts.ProspectID = tcp.ProspectID
 	WHERE ts.decision = 'REJ' AND tcp.IDNumber = '%s' AND CAST(ts.created_at as DATE) = '%s'`, idNumber, currentDate)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
@@ -1215,7 +1215,7 @@ func (r repoHandler) GetBannedChassisNumber(chassisNumber string) (data entity.T
 
 	date := time.Now().AddDate(0, 0, -30).Format(constant.FORMAT_DATE)
 
-	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT * FROM trx_banned_chassis_number WHERE chassis_number = '%s' AND CAST(created_at as DATE) >= '%s'`, chassisNumber, date)).Scan(&data).Error; err != nil {
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT * FROM trx_banned_chassis_number WITH (nolock) WHERE chassis_number = '%s' AND CAST(created_at as DATE) >= '%s'`, chassisNumber, date)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
@@ -1241,8 +1241,8 @@ func (r repoHandler) GetCurrentTrxWithRejectChassisNumber(chassisNumber string) 
 		tcp.StaySinceYear,
 		tcp.StaySinceMonth,
 		tcp.HomeStatus,
-		tca.LegalZipCode,
-		tca.CompanyZipCode,
+		tca1.LegalZipCode,
+		tca2.CompanyZipCode,
 		tce.ProfessionID,
 		tce.MonthlyFixedIncome,
 		tce.EmploymentSinceYear,
@@ -1255,17 +1255,20 @@ func (r repoHandler) GetCurrentTrxWithRejectChassisNumber(chassisNumber string) 
 		ta.OTR,
 		ta.Tenor
 		FROM trx_status ts 
-		LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
-		LEFT JOIN (
-			SELECT ProspectID, 
-			MAX(Case [Type] When 'LEGAL' Then ZipCode End) LegalZipCode,
-			MAX(Case [Type] When 'COMPANY' Then ZipCode End) CompanyZipCode
-			FROM trx_customer_address
-			GROUP BY ProspectID 
-		) tca ON ts.ProspectID = tca.ProspectID 
-		LEFT JOIN trx_customer_employment tce ON ts.ProspectID = tce.ProspectID
-		LEFT JOIN trx_item ti ON ts.ProspectID = ti.ProspectID
-		LEFT JOIN trx_apk ta ON ts.ProspectID = ta.ProspectID
+		LEFT JOIN trx_customer_personal tcp WITH (nolock) ON ts.ProspectID = tcp.ProspectID
+		INNER JOIN (
+			SELECT ProspectID, ZipCode AS LegalZipCode
+			FROM trx_customer_address WITH (nolock)
+			WHERE "Type" = 'LEGAL'
+		) tca1 ON ts.ProspectID = tca1.ProspectID
+		INNER JOIN (
+			SELECT ProspectID, ZipCode AS CompanyZipCode
+			FROM trx_customer_address WITH (nolock)
+			WHERE "Type" = 'COMPANY'
+		) tca2 ON ts.ProspectID = tca2.ProspectID
+		LEFT JOIN trx_customer_employment tce WITH (nolock) ON ts.ProspectID = tce.ProspectID
+		LEFT JOIN trx_item ti WITH (nolock) ON ts.ProspectID = ti.ProspectID
+		LEFT JOIN trx_apk ta WITH (nolock) ON ts.ProspectID = ta.ProspectID
 		WHERE ts.decision = 'REJ' AND ts.source_decision = 'NKA' 
 		AND ti.chassis_number = '%s' AND CAST(ts.created_at as DATE) = '%s'`, chassisNumber, currentDate)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
