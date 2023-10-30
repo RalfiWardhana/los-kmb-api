@@ -117,13 +117,13 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, accessToken 
 
 	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("DUKCAPIL_VD_URL"), paramVd, map[string]string{}, constant.METHOD_POST, true, 2, timeout, req.Transaction.ProspectID, accessToken)
 
-	if err != nil || resp.StatusCode() == 504 || resp.StatusCode() == 502 {
+	if resp.StatusCode() == 504 || resp.StatusCode() == 502 {
 		statusVD = "RTO"
 
 		infoDukcapil.VdError = "Request Timed Out"
 	}
 
-	if err == nil && resp.StatusCode() != 200 && resp.StatusCode() != 504 && resp.StatusCode() != 502 {
+	if resp.StatusCode() != 200 && resp.StatusCode() != 504 && resp.StatusCode() != 502 {
 		statusVD = "NOT CHECK"
 
 		var responseIntegrator response.ApiResponse
