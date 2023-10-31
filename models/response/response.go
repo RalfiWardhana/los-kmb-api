@@ -384,7 +384,7 @@ type UsecaseApi struct {
 }
 
 type LowIncome struct {
-	NoApplication float64 `json:"no_application"`
+	NoApplication string  `json:"no_application"`
 	Income        float64 `json:"income"`
 	Range         string  `json:"range"`
 }
