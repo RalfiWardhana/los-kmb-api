@@ -248,15 +248,15 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 	if totalDSR < configValue.Data.MaxDsr {
 		data = response.UsecaseApi{
 			Result:         constant.DECISION_PASS,
-			Code:           constant.CODE_DSRLTE35,
-			Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRLTE35, reasonMaxDsr),
+			Code:           constant.CODE_TOTAL_DSRLTE35,
+			Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_TOTAL_DSRLTE, reasonMaxDsr),
 			SourceDecision: constant.SOURCE_DECISION_DSR,
 		}
 	} else {
 		data = response.UsecaseApi{
 			Result:         constant.DECISION_REJECT,
-			Code:           constant.CODE_DSRGT35,
-			Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRGT35, reasonMaxDsr),
+			Code:           constant.CODE_TOTAL_DSRLTE35,
+			Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_TOTAL_DSRGT, reasonMaxDsr),
 			SourceDecision: constant.SOURCE_DECISION_DSR,
 		}
 	}
@@ -270,7 +270,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 		)
 
 		if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO {
-			resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+SpDupcheckMap.CustomerID.(string), nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
+			resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+SpDupcheckMap.CustomerID.(string)+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
 
 			if err != nil {
 				if err != nil {
@@ -308,7 +308,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 		if newInstallment < installmentThreshold {
 			data = response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
-				Code:           constant.CODE_DSRLTE35,
+				Code:           constant.CODE_TOTAL_DSRLTE35,
 				Reason:         fmt.Sprintf("%s", reasonCustomerStatus),
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 			}
