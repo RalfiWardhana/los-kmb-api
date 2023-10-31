@@ -257,14 +257,9 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	}
 
 	// Check Confins
-
 	reasonCustomer := customerKMB
 	if strings.Contains("PRIME PRIORITY", req.CustomerSegment) {
 		reasonCustomer = fmt.Sprintf("%s %s", customerKMB, req.CustomerSegment)
-	}
-
-	if mapping.InstallmentTopup > 0 {
-		reasonCustomer = fmt.Sprintf("%s Top Up", reasonCustomer)
 	}
 
 	if customerKMB == constant.STATUS_KONSUMEN_RO {
@@ -293,6 +288,11 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 			mapping.Reason = data.Reason
 		}
 	} else if customerKMB == constant.STATUS_KONSUMEN_AO {
+
+		if mapping.InstallmentTopup > 0 {
+			reasonCustomer = fmt.Sprintf("%s Top Up", reasonCustomer)
+		}
+
 		if (req.CustomerSegment == constant.RO_AO_REGULAR && mapping.MaxOverdueDaysforActiveAgreement > configValue.Data.MaxOvdAORegular) ||
 			(strings.Contains("PRIME PRIORITY", req.CustomerSegment) && mapping.MaxOverdueDaysforActiveAgreement > configValue.Data.MaxOvdAOPrimePriority) {
 
