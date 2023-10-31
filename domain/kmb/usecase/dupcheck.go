@@ -256,7 +256,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
-	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: data.Code, SourceDecision: data.SourceDecision, Info: data.Reason, NextStep: constant.SOURCE_DECISION_DUPCHECK})
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: dsr.Code, SourceDecision: dsr.SourceDecision, Info: dsr.Reason, NextStep: constant.SOURCE_DECISION_DUPCHECK})
 
 	// Check Confins
 	reasonCustomer := customerKMB
