@@ -257,7 +257,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	}
 
 	// Check Confins
-
 	reasonCustomer := customerKMB
 	if strings.Contains("PRIME PRIORITY", req.CustomerSegment) {
 		reasonCustomer = fmt.Sprintf("%s %s", customerKMB, req.CustomerSegment)
