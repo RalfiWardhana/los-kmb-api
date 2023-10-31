@@ -263,6 +263,10 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		reasonCustomer = fmt.Sprintf("%s %s", customerKMB, req.CustomerSegment)
 	}
 
+	if mapping.InstallmentTopup > 0 {
+		reasonCustomer = fmt.Sprintf("%s Top Up", reasonCustomer)
+	}
+
 	if customerKMB == constant.STATUS_KONSUMEN_RO {
 		if mapping.MaxOverdueDaysROAO > configValue.Data.MaxOvd {
 			checkConfins := response.UsecaseApi{
