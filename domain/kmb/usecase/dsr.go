@@ -300,10 +300,8 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 
 		installmentThreshold := latestInstallmentAmount * 1.5
 
-		trxFMF = response.TrxFMF{
-			LatestInstallmentAmount: latestInstallmentAmount,
-			InstallmentThreshold:    installmentThreshold,
-		}
+		trxFMF.LatestInstallmentAmount = latestInstallmentAmount
+		trxFMF.InstallmentThreshold = installmentThreshold
 
 		if newInstallment < installmentThreshold {
 			data = response.UsecaseApi{
