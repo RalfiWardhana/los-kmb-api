@@ -326,7 +326,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			return
 		}
 
-		err = json.Unmarshal([]byte(jsoniter.Get(resInternalRecord.Body(), "data").ToString()), &trxFMF.AgreementCONFINS)
+		err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(jsoniter.Get(resInternalRecord.Body(), "data").ToString()), &trxFMF.AgreementCONFINS)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal Interal Record Error")
 			return
