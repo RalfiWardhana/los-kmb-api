@@ -59,7 +59,9 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 
 	resultPefindo := filteringKMB.Decision
 	if filteringKMB.ScoreBiro == nil || filteringKMB.ScoreBiro == "" || filteringKMB.ScoreBiro == constant.UNSCORE_PBK {
-		resultPefindo = constant.DECISION_PBK_NO_HIT
+		if filteringKMB.CustomerSegment != nil && !strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string)) {
+			resultPefindo = constant.DECISION_PBK_NO_HIT
+		}
 	}
 
 	if strings.Contains(os.Getenv("NAMA_SAMA"), filteringKMB.BpkbName) {

@@ -12,6 +12,7 @@ import (
 	"los-kmb-api/shared/utils"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -251,9 +252,144 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	mapping.Reason = data.Reason
 	mapping.DetailsDSR = mappingDSR.Details
 
-	if dsr.Result == constant.DECISION_PASS {
+	if dsr.Result == constant.DECISION_REJECT {
+		return
+	}
+
+	// Check Confins
+	if customerKMB == constant.STATUS_KONSUMEN_RO {
+		if mapping.MaxOverdueDaysROAO > configValue.Data.MaxOvd {
+			checkConfins := response.UsecaseApi{
+				Result:         constant.DECISION_REJECT,
+				Code:           constant.CODE_MAX_OVD_CONFINS,
+				Reason:         fmt.Sprintf("%s %s %d", customerKMB, constant.REASON_REJECT_CONFINS_MAXOVD, configValue.Data.MaxOvd),
+				StatusKonsumen: customerKMB,
+				SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+			}
+
+			data = checkConfins
+			mapping.Reason = data.Reason
+			return
+		} else {
+			checkConfins := response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_PASS_MAX_OVD_CONFINS,
+				Reason:         fmt.Sprintf("%s %s %d", customerKMB, constant.REASON_PASS_CONFINS_MAXOVD, configValue.Data.MaxOvd),
+				StatusKonsumen: customerKMB,
+				SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+			}
+
+			data = checkConfins
+			mapping.Reason = data.Reason
+		}
+	} else if customerKMB == constant.STATUS_KONSUMEN_AO {
+		if (req.CustomerSegment == constant.RO_AO_REGULAR && mapping.MaxOverdueDaysforActiveAgreement > configValue.Data.MaxOvdAORegular) ||
+			(strings.Contains("PRIME PRIORITY", req.CustomerSegment) && mapping.MaxOverdueDaysforActiveAgreement > configValue.Data.MaxOvdAOPrimePriority) {
+
+			reasonCustomer := customerKMB
+			if strings.Contains("PRIME PRIORITY", req.CustomerSegment) {
+				reasonCustomer = fmt.Sprintf("%s %s", customerKMB, req.CustomerSegment)
+			}
+
+			checkConfins := response.UsecaseApi{
+				Result:         constant.DECISION_REJECT,
+				Code:           constant.CODE_MENUNGGAK,
+				Reason:         fmt.Sprintf("%s %s", reasonCustomer, constant.REASON_MENUNGGAK),
+				StatusKonsumen: customerKMB,
+				SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+			}
+
+			data = checkConfins
+			mapping.Reason = data.Reason
+			return
+
+		} else {
+			if mapping.NumberOfPaidInstallment >= configValue.Data.AngsuranBerjalan {
+				if mapping.MaxOverdueDaysROAO > configValue.Data.MaxOvd {
+					checkConfins := response.UsecaseApi{
+						Result:         constant.DECISION_REJECT,
+						Code:           constant.CODE_MAX_OVD_CONFINS,
+						Reason:         fmt.Sprintf("%s - Current >= 6 Bulan Angsuran %s %d", customerKMB, constant.REASON_REJECT_CONFINS_MAXOVD, configValue.Data.MaxOvd),
+						StatusKonsumen: customerKMB,
+						SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+					}
+
+					data = checkConfins
+					mapping.Reason = data.Reason
+					return
+
+				} else {
+					checkConfins := response.UsecaseApi{
+						Result:         constant.DECISION_PASS,
+						Code:           constant.CODE_PASS_MAX_OVD_CONFINS,
+						Reason:         fmt.Sprintf("%s - Current >= 6 Bulan Angsuran %s %d", customerKMB, constant.REASON_PASS_CONFINS_MAXOVD, configValue.Data.MaxOvd),
+						StatusKonsumen: customerKMB,
+						SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+					}
+
+					data = checkConfins
+					mapping.Reason = data.Reason
+
+				}
+			} else if mapping.NumberOfPaidInstallment > 1 && mapping.NumberOfPaidInstallment < configValue.Data.AngsuranBerjalan {
+				if mapping.MaxOverdueDaysROAO > configValue.Data.MaxOvd {
+					checkConfins := response.UsecaseApi{
+						Result:         constant.DECISION_REJECT,
+						Code:           constant.CODE_MAX_OVD_CONFINS,
+						Reason:         fmt.Sprintf("%s - Current < 6 Bulan Angsuran %s %d", customerKMB, constant.REASON_REJECT_CONFINS_MAXOVD, configValue.Data.MaxOvd),
+						StatusKonsumen: customerKMB,
+						SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+					}
+
+					data = checkConfins
+					mapping.Reason = data.Reason
+					return
+
+				} else {
+					checkConfins := response.UsecaseApi{
+						Result:         constant.DECISION_PASS,
+						Code:           constant.CODE_PASS_MAX_OVD_CONFINS,
+						Reason:         fmt.Sprintf("%s - Current < 6 Bulan Angsuran %s %d", customerKMB, constant.REASON_PASS_CONFINS_MAXOVD, configValue.Data.MaxOvd),
+						StatusKonsumen: customerKMB,
+						SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+					}
+
+					data = checkConfins
+					mapping.Reason = data.Reason
+
+				}
+			} else if mapping.NumberOfPaidInstallment <= 1 {
+				if mapping.MaxOverdueDaysforActiveAgreement == 0 {
+					checkConfins := response.UsecaseApi{
+						Result:         constant.DECISION_REJECT,
+						Code:           constant.CODE_REJECT_JATUH_TEMPO_PERTAMA,
+						Reason:         fmt.Sprintf("%s - Current < 6 Bulan Angsuran - Belum Jatuh Tempo Pertama", customerKMB),
+						StatusKonsumen: customerKMB,
+						SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+					}
+
+					data = checkConfins
+					mapping.Reason = data.Reason
+					return
+				}
+			}
+		}
+	} else {
+		checkConfins := response.UsecaseApi{
+			Result:         constant.DECISION_PASS,
+			Code:           constant.CODE_PASS_MAX_OVD_CONFINS,
+			Reason:         fmt.Sprintf("%s %s %d", customerKMB, constant.REASON_PASS_CONFINS_MAXOVD, configValue.Data.MaxOvd),
+			StatusKonsumen: customerKMB,
+			SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+		}
+
+		data = checkConfins
+		mapping.Reason = data.Reason
+	}
+
+	if data.Result == constant.DECISION_PASS {
 		info, _ := json.Marshal(mapping)
-		trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: dsr.Code, SourceDecision: constant.SOURCE_DECISION_DSR, Info: string(utils.SafeEncoding(info)), NextStep: constant.SOURCE_DECISION_DUPCHECK})
+		trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: data.Code, SourceDecision: data.SourceDecision, Info: string(utils.SafeEncoding(info)), NextStep: constant.SOURCE_DECISION_DUPCHECK})
 	}
 
 	return

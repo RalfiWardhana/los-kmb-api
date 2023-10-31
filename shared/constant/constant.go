@@ -371,6 +371,9 @@ const (
 	REASON_REJECT_CONFINS_MAXOVD            = "- Confins Max Ovd >"
 	REASON_KONSUMEN_UNIDENTIFIED            = "Konsumen Unidentified"
 	REASON_KONSUMEN_NEW                     = "Konsumen NEW"
+	CODE_PASS_MAX_OVD_CONFINS               = "650"
+	REASON_PASS_CONFINS_MAXOVD              = "- Confins Max Ovd <"
+	CODE_REJECT_JATUH_TEMPO_PERTAMA         = "649"
 
 	// PERNAH REJECT
 	CODE_PERNAH_REJECT_PMK_DSR            = "301"
@@ -413,6 +416,8 @@ const (
 	CODE_TOPUP_MENUNGGAK   = "2703"
 	REASON_TOPUP_MENUNGGAK = "- Top Up Menunggak"
 	TOP_UP                 = "Top Up"
+	CODE_MENUNGGAK         = "2704"
+	REASON_MENUNGGAK       = "- Menunggak"
 
 	DEALER_PSA     = "PSA"
 	DEALER_NON_PSA = "NON PSA"
