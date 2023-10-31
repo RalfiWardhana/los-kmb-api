@@ -270,7 +270,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 		)
 
 		if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO {
-			resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+SpDupcheckMap.CustomerID.(string), nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
+			resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+SpDupcheckMap.CustomerID.(string)+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
 
 			if err != nil {
 				if err != nil {
