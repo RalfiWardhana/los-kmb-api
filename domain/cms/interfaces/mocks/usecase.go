@@ -19,15 +19,15 @@ type Usecase struct {
 }
 
 // GetInquiryCa provides a mock function with given fields: ctx, req, pagination
-func (_m *Usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pagination interface{}) ([]entity.InquiryData, int, error) {
+func (_m *Usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pagination interface{}) ([]entity.InquiryDataCa, int, error) {
 	ret := _m.Called(ctx, req, pagination)
 
-	var r0 []entity.InquiryData
-	if rf, ok := ret.Get(0).(func(context.Context, request.ReqInquiryCa, interface{}) []entity.InquiryData); ok {
+	var r0 []entity.InquiryDataCa
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqInquiryCa, interface{}) []entity.InquiryDataCa); ok {
 		r0 = rf(ctx, req, pagination)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.InquiryData)
+			r0 = ret.Get(0).([]entity.InquiryDataCa)
 		}
 	}
 
@@ -127,4 +127,148 @@ func (_m *Usecase) ReviewPrescreening(ctx context.Context, req request.ReqReview
 	}
 
 	return r0, r1
+}
+
+// CancelOrder provides a mock function with given fields: ctx, req
+func (_m *Usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (response.CancelResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	var r0 response.CancelResponse
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqCancelOrder) response.CancelResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(response.CancelResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqCancelOrder) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetSearchInquiry provides a mock function with given fields: ctx, req, pagination
+func (_m *Usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInquiry, pagination interface{}) ([]entity.InquiryDataSearch, int, error) {
+	ret := _m.Called(ctx, req, pagination)
+
+	var r0 []entity.InquiryDataSearch
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqSearchInquiry, interface{}) []entity.InquiryDataSearch); ok {
+		r0 = rf(ctx, req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.InquiryDataSearch)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqSearchInquiry, interface{}) int); ok {
+		r1 = rf(ctx, req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, request.ReqSearchInquiry, interface{}) error); ok {
+		r2 = rf(ctx, req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// ReturnOrder provides a mock function with given fields: ctx, req
+func (_m *Usecase) ReturnOrder(ctx context.Context, req request.ReqReturnOrder) (response.ReturnResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	var r0 response.ReturnResponse
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqReturnOrder) response.ReturnResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(response.ReturnResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqReturnOrder) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SaveAsDraft provides a mock function with given fields: ctx, req
+func (_m *Usecase) SaveAsDraft(ctx context.Context, req request.ReqSaveAsDraft) (response.CAResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	var r0 response.CAResponse
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqSaveAsDraft) response.CAResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(response.CAResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqSaveAsDraft) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SubmitDecision provides a mock function with given fields: ctx, req
+func (_m *Usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecision) (response.CAResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	var r0 response.CAResponse
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqSubmitDecision) response.CAResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(response.CAResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqSubmitDecision) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetCancelReason provides a mock function with given fields: ctx, pagination
+func (_m *Usecase) GetCancelReason(ctx context.Context, pagination interface{}) ([]entity.CancelReason, int, error) {
+	ret := _m.Called(ctx, pagination)
+
+	var r0 []entity.CancelReason
+	if rf, ok := ret.Get(0).(func(context.Context, interface{}) []entity.CancelReason); ok {
+		r0 = rf(ctx, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.CancelReason)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(context.Context, interface{}) int); ok {
+		r1 = rf(ctx, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, interface{}) error); ok {
+		r2 = rf(ctx, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }

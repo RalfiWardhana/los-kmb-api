@@ -182,7 +182,7 @@ func TestReviewPrescreening(t *testing.T) {
 			Activity:       constant.ACTIVITY_UNPROCESS,
 			SourceDecision: constant.PRESCREENING,
 		}
-		mockRepository.On("GetStatusPrescreening", req.ProspectID).Return(status, errSave).Once()
+		mockRepository.On("GetTrxStatus", req.ProspectID).Return(status, errSave).Once()
 		mockRepository.On("SavePrescreening", prescreening, trxDetail, trxStatus).Return(errSave).Once()
 
 		result, err := usecase.ReviewPrescreening(context.Background(), req)
@@ -293,7 +293,7 @@ func TestReviewPrescreening(t *testing.T) {
 			Activity:       constant.ACTIVITY_UNPROCESS,
 			SourceDecision: constant.PRESCREENING,
 		}
-		mockRepository.On("GetStatusPrescreening", req.ProspectID).Return(status, errSave).Once()
+		mockRepository.On("GetTrxStatus", req.ProspectID).Return(status, errSave).Once()
 		mockRepository.On("SavePrescreening", prescreening, trxDetail, trxStatus).Return(errSave).Once()
 
 		result, err := usecase.ReviewPrescreening(context.Background(), req)
@@ -325,7 +325,7 @@ func TestReviewPrescreening(t *testing.T) {
 			Activity:       constant.ACTIVITY_UNPROCESS,
 			SourceDecision: constant.PRESCREENING,
 		}
-		mockRepository.On("GetStatusPrescreening", req.ProspectID).Return(status, errSave).Once()
+		mockRepository.On("GetTrxStatus", req.ProspectID).Return(status, errSave).Once()
 		mockRepository.On("SavePrescreening", prescreening, trxDetail, trxStatus).Return(errSave).Once()
 
 		_, err := usecase.ReviewPrescreening(context.Background(), req)
@@ -348,7 +348,7 @@ func TestReviewPrescreening(t *testing.T) {
 
 		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dalam prescreening")
 
-		mockRepository.On("GetStatusPrescreening", req.ProspectID).Return(entity.TrxStatus{
+		mockRepository.On("GetTrxStatus", req.ProspectID).Return(entity.TrxStatus{
 			Activity:       constant.ACTIVITY_PROCESS,
 			SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
 		}, errSave).Once()
@@ -371,9 +371,9 @@ func TestReviewPrescreening(t *testing.T) {
 			Reason:     "Valid reason",
 			DecisionBy: "User123",
 		}
-		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Get status prescreening error")
+		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Get status order error")
 
-		mockRepository.On("GetStatusPrescreening", req.ProspectID).Return(entity.TrxStatus{}, errors.New(constant.RECORD_NOT_FOUND)).Once()
+		mockRepository.On("GetTrxStatus", req.ProspectID).Return(entity.TrxStatus{}, errors.New(constant.RECORD_NOT_FOUND)).Once()
 
 		_, err := usecase.ReviewPrescreening(context.Background(), req)
 
@@ -393,7 +393,7 @@ func TestReviewPrescreening(t *testing.T) {
 			Reason:     "Valid reason",
 			DecisionBy: "User123",
 		}
-		mockRepository.On("GetStatusPrescreening", mock.Anything).Return(entity.TrxStatus{
+		mockRepository.On("GetTrxStatus", mock.Anything).Return(entity.TrxStatus{
 			Activity:       constant.ACTIVITY_UNPROCESS,
 			SourceDecision: constant.PRESCREENING,
 		}, nil).Once()
@@ -431,7 +431,7 @@ func TestReviewPrescreeningInvalidStatus(t *testing.T) {
 		}
 		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dalam prescreening")
 
-		mockRepository.On("GetStatusPrescreening", req.ProspectID).Return(entity.TrxStatus{
+		mockRepository.On("GetTrxStatus", req.ProspectID).Return(entity.TrxStatus{
 			Activity:       constant.ACTIVITY_PROCESS,
 			SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
 		}, errSave)

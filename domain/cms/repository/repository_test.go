@@ -216,7 +216,7 @@ func TestGetStatusPrescreening(t *testing.T) {
 			AddRow(constant.ACTIVITY_UNPROCESS, constant.PRESCREENING))
 
 	// Call the function
-	photo, err := repo.GetStatusPrescreening(prospectID)
+	photo, err := repo.GetTrxStatus(prospectID)
 
 	// Verify the result
 	if err != nil {
@@ -251,7 +251,7 @@ func TestGetStatusPrescreening_RecordNotFound(t *testing.T) {
 		WillReturnError(gorm.ErrRecordNotFound)
 
 	// Call the function
-	_, err := repo.GetStatusPrescreening(prospectID)
+	_, err := repo.GetTrxStatus(prospectID)
 
 	// Verify the error message
 	expectedErr := errors.New(constant.RECORD_NOT_FOUND)
@@ -2257,4 +2257,337 @@ func TestSaveLogOrchestrator(t *testing.T) {
 		t.Errorf("error '%s' was not expected, but got: ", err)
 	}
 
+}
+
+func TestGetHistoryApproval(t *testing.T) {
+	// Setup mock database connection
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB)
+
+	// Expected input and output
+	prospectID := "12345"
+	expectedData := []entity.HistoryApproval{
+		{
+			Decision:              "APR",
+			Note:                  "Ok dari CA",
+			CreatedAt:             time.Time{},
+			DecisionBy:            "User CA KMB",
+			NeedEscalation:        "No",
+			NextFinalApprovalFlag: 1,
+			SourceDecision:        "CRA",
+			NextStep:              "CBM",
+			SlikResult:            "Lancar",
+		},
+	}
+
+	t.Run("success", func(t *testing.T) {
+
+		// Mock SQL query and result
+		mock.ExpectQuery(`SELECT thas.decision, thas.decision_by, thas.next_final_approval_flag, thas.need_escalation, thas.source_decision, thas.next_step, thas.note, thas.created_at, CASE WHEN thas.source_decision = 'CRA' THEN tcd.slik_result ELSE '-' END AS slik_result FROM trx_history_approval_scheme thas WITH \(nolock\) LEFT JOIN trx_ca_decision tcd on thas.ProspectID = tcd.ProspectID WHERE thas.ProspectID = \? ORDER BY thas.created_at DESC`).WithArgs(prospectID).
+			WillReturnRows(sqlmock.NewRows([]string{"decision", "decision_by", "next_final_approval_flag", "need_escalation", "source_decision", "next_step", "note", "created_at", "slik_result"}).
+				AddRow("APR", "User CA KMB", 1, "No", "CRA", "CBM", "Ok dari CA", time.Time{}, "Lancar"))
+
+		// Call the function
+		data, err := repo.GetHistoryApproval(prospectID)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+
+		// Mock SQL query to simulate record not found
+		mock.ExpectQuery(`SELECT thas.decision, thas.decision_by, thas.next_final_approval_flag, thas.need_escalation, thas.source_decision, thas.next_step, thas.note, thas.created_at, CASE WHEN thas.source_decision = 'CRA' THEN tcd.slik_result ELSE '-' END AS slik_result FROM trx_history_approval_scheme thas WITH \(nolock\) LEFT JOIN trx_ca_decision tcd on thas.ProspectID = tcd.ProspectID WHERE thas.ProspectID = \? ORDER BY thas.created_at DESC`).WithArgs(prospectID).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		// Call the function
+		_, err := repo.GetHistoryApproval(prospectID)
+
+		// Verify the error message
+		expectedErr := errors.New(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestGetInternalRecord(t *testing.T) {
+	// Setup mock database connection
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB)
+
+	// Expected input and output
+	prospectID := "12345"
+	expectedData := []entity.TrxInternalRecord{
+		{
+			ApplicationID:        "426A202201124155",
+			ProductType:          "KMB",
+			AgreementDate:        time.Time{},
+			AssetCode:            "K-YMH.MOTOR.NMAX (B6H A/T)",
+			Tenor:                26,
+			OutstandingPrincipal: 0,
+			InstallmentAmount:    1866000,
+			ContractStatus:       "LIV",
+			CurrentCondition:     "OVD 204 hari",
+		},
+	}
+
+	t.Run("success", func(t *testing.T) {
+
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM trx_internal_record WITH (nolock) WHERE ProspectID = ? ORDER BY created_at DESC`)).WithArgs(prospectID).
+			WillReturnRows(sqlmock.NewRows([]string{"ApplicationID", "ProductType", "AgreementDate", "AssetCode", "Tenor", "OutstandingPrincipal", "InstallmentAmount", "ContractStatus", "CurrentCondition"}).
+				AddRow("426A202201124155", "KMB", time.Time{}, "K-YMH.MOTOR.NMAX (B6H A/T)", 26, 0, 1866000, "LIV", "OVD 204 hari"))
+
+		// Call the function
+		data, err := repo.GetInternalRecord(prospectID)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+
+		// Mock SQL query to simulate record not found
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM trx_internal_record WITH (nolock) WHERE ProspectID = ? ORDER BY created_at DESC`)).WithArgs(prospectID).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		// Call the function
+		_, err := repo.GetInternalRecord(prospectID)
+
+		// Verify the error message
+		expectedErr := errors.New(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestGetLimitApproval(t *testing.T) {
+	// Setup mock database connection
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB)
+
+	// Expected input and output
+	ntf := 10000.65
+	expectedData := entity.MappingLimitApprovalScheme{
+		Alias: "CBM",
+	}
+
+	t.Run("success", func(t *testing.T) {
+
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT [alias] FROM m_limit_approval_scheme WITH (nolock) WHERE ? between coverage_ntf_start AND coverage_ntf_end`)).WithArgs(ntf).
+			WillReturnRows(sqlmock.NewRows([]string{"alias"}).
+				AddRow("CBM"))
+
+		// Call the function
+		data, err := repo.GetLimitApproval(ntf)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+
+		// Mock SQL query to simulate record not found
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT [alias] FROM m_limit_approval_scheme WITH (nolock) WHERE ? between coverage_ntf_start AND coverage_ntf_end`)).WithArgs(ntf).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		// Call the function
+		_, err := repo.GetLimitApproval(ntf)
+
+		// Verify the error message
+		expectedErr := errors.New(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestGetHistoryProcess(t *testing.T) {
+	// Setup mock database connection
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB)
+
+	// Expected input and output
+	prospectID := "12345"
+	expectedData := []entity.TrxDetail{
+		{
+			Decision:       "PASS",
+			SourceDecision: "PRE SCREENING",
+			Info:           "Dokumen Sesuai",
+			CreatedAt:      time.Time{},
+		},
+	}
+
+	t.Run("success", func(t *testing.T) {
+
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		CASE
+		 WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING'
+		 WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING'
+		 WHEN td.source_decision = 'DCP'
+		 OR td.source_decision = 'ARI'
+		 OR td.source_decision = 'KTP' THEN 'EKYC'
+		 WHEN td.source_decision = 'PBK' THEN 'PEFINDO'
+		 WHEN td.source_decision = 'SCS' THEN 'SCOREPRO'
+		 WHEN td.source_decision = 'DSR' THEN 'DSR'
+		 WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
+		 WHEN td.source_decision = 'CBM'
+		  OR td.source_decision = 'DRM'
+		  OR td.source_decision = 'GMO'
+		  OR td.source_decision = 'COM'
+		  OR td.source_decision = 'GMC'
+		  OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE'
+		 ELSE '-'
+		END AS source_decision,
+		CASE
+		 WHEN td.decision = 'PAS' THEN 'PASS'
+		 WHEN td.decision = 'REJ' THEN 'REJECT'
+		 WHEN td.decision = 'CAN' THEN 'CANCEL'
+		 WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS'
+		 ELSE '-'
+		END AS decision,
+		ap.reason AS info,
+		td.created_at
+	FROM
+		trx_details td WITH (nolock)
+		LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
+	WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCS','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC')
+	AND td.decision <> 'CTG' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
+			WillReturnRows(sqlmock.NewRows([]string{"source_decision", "decision", "info", "created_at"}).
+				AddRow("PRE SCREENING", "PASS", "Dokumen Sesuai", time.Time{}))
+
+		// Call the function
+		data, err := repo.GetHistoryProcess(prospectID)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+
+		// Mock SQL query to simulate record not found
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		CASE
+		 WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING'
+		 WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING'
+		 WHEN td.source_decision = 'DCP'
+		 OR td.source_decision = 'ARI'
+		 OR td.source_decision = 'KTP' THEN 'EKYC'
+		 WHEN td.source_decision = 'PBK' THEN 'PEFINDO'
+		 WHEN td.source_decision = 'SCS' THEN 'SCOREPRO'
+		 WHEN td.source_decision = 'DSR' THEN 'DSR'
+		 WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
+		 WHEN td.source_decision = 'CBM'
+		  OR td.source_decision = 'DRM'
+		  OR td.source_decision = 'GMO'
+		  OR td.source_decision = 'COM'
+		  OR td.source_decision = 'GMC'
+		  OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE'
+		 ELSE '-'
+		END AS source_decision,
+		CASE
+		 WHEN td.decision = 'PAS' THEN 'PASS'
+		 WHEN td.decision = 'REJ' THEN 'REJECT'
+		 WHEN td.decision = 'CAN' THEN 'CANCEL'
+		 WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS'
+		 ELSE '-'
+		END AS decision,
+		ap.reason AS info,
+		td.created_at
+	FROM
+		trx_details td WITH (nolock)
+		LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
+	WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCS','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC')
+	AND td.decision <> 'CTG' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		// Call the function
+		_, err := repo.GetHistoryProcess(prospectID)
+
+		// Verify the error message
+		expectedErr := errors.New(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
 }
