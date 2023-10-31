@@ -312,6 +312,8 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 				Reason:         fmt.Sprintf("%s", reasonCustomerStatus),
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 			}
+
+			trxFMF.TotalDSR = SpDupcheckMap.Dsr
 		}
 	}
 
