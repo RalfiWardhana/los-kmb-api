@@ -395,8 +395,9 @@ type DupcheckConfig struct {
 
 type DataDupcheckConfig struct {
 	VehicleAge              int     `json:"vehicle_age"`
-	MinOvd                  int     `json:"min_ovd"`
 	MaxOvd                  int     `json:"max_ovd"`
+	MaxOvdAOPrimePriority   int     `json:"max_ovd_ao_prime_priority"`
+	MaxOvdAORegular         int     `json:"max_ovd_ao_regular"`
 	MaxDsr                  float64 `json:"max_dsr"`
 	AngsuranBerjalan        int     `json:"angsuran_berjalan"`
 	AttemptPMKDSR           int     `json:"attempt_pmk_dsr"`

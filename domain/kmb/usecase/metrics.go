@@ -359,17 +359,6 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 	details = append(details, trxDetailDupcheck...)
 
-	details = append(details, entity.TrxDetail{
-		ProspectID:     reqMetrics.Transaction.ProspectID,
-		StatusProcess:  constant.STATUS_ONPROCESS,
-		Activity:       constant.ACTIVITY_PROCESS,
-		Decision:       constant.DB_DECISION_PASS,
-		RuleCode:       metricsDupcheck.Code,
-		SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
-		Info:           metricsDupcheck.Reason,
-		NextStep:       constant.SOURCE_DECISION_DUKCAPIL,
-	})
-
 	decisionEkyc, trxDetailEkyc, err := u.multiUsecase.Ekyc(ctx, reqMetrics, cbFound, accessToken)
 	if err != nil {
 		return
