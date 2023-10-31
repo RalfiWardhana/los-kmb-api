@@ -638,15 +638,12 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		})
 	}
 
-	var finalReasonMetrics string
-	if customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY {
-		customerStatus = fmt.Sprintf("%s - %s", customerStatus, customerSegment)
+	finalReasonMetrics := metricsDupcheck.Reason
 
-	}
 	if metricsElaborateIncome.Reason != "" {
-		finalReasonMetrics = fmt.Sprintf("%s - %s", customerStatus, metricsElaborateIncome.Reason)
+		finalReasonMetrics = fmt.Sprintf("%s - %s", finalReasonMetrics, metricsElaborateIncome.Reason)
 	} else {
-		finalReasonMetrics = fmt.Sprintf("%s - %s", customerStatus, metricsElaborateScheme.Reason)
+		finalReasonMetrics = fmt.Sprintf("%s - %s", finalReasonMetrics, metricsElaborateScheme.Reason)
 	}
 
 	if countTrx == 0 && trxFMF.NTFAkumulasi <= 20000000 {
@@ -666,7 +663,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			DecisionBy: constant.SYSTEM_CREATED,
 		}
 
-		finalReasonMetrics = fmt.Sprintf("%s - PBK %s - NTF <= Quick App", customerStatus, filtering.Decision)
+		finalReasonMetrics = fmt.Sprintf("%s - PBK PASS - NTF <= Quick App", metricsDupcheck.Reason)
 	} else {
 		details = append(details, entity.TrxDetail{
 			ProspectID:     reqMetrics.Transaction.ProspectID,
