@@ -197,22 +197,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		}
 	}
 
-	if customerKMB == constant.STATUS_KONSUMEN_AO || customerKMB == constant.STATUS_KONSUMEN_RO {
-
-		if mapping.MaxOverdueDaysROAO > configValue.Data.MaxOvd {
-			checkOVD := response.UsecaseApi{
-				Result:         constant.DECISION_REJECT,
-				Code:           constant.CODE_MAX_OVD_CONFINS,
-				Reason:         fmt.Sprintf("%s %s %d", customerKMB, constant.REASON_REJECT_CONFINS_MAXOVD, configValue.Data.MaxOvd),
-				StatusKonsumen: customerKMB,
-			}
-
-			data = checkOVD
-			mapping.Reason = data.Reason
-			return
-		}
-	}
-
 	// Check PMK
 	pmk, err := u.usecase.PMK(req.BranchID, customerKMB, req.MonthlyFixedIncome, req.HomeStatus, req.ProfessionID, req.EmploymentSinceYear, req.EmploymentSinceMonth, req.StaySinceYear, req.StaySinceMonth, req.BirthDate, req.Tenor, req.MaritalStatus)
 	if err != nil {
