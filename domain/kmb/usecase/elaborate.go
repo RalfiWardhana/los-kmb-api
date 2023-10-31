@@ -98,10 +98,8 @@ func (u usecase) ElaborateIncome(ctx context.Context, req request.Metrics, filte
 	}
 
 	if resp.StatusCode() != 200 {
-		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Call Low Income Error")
-			return
-		}
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call Low Income Error")
+		return
 	}
 
 	var respLowIncome response.LowIncome
