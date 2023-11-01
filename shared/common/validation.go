@@ -16,7 +16,7 @@ import (
 	"gopkg.in/go-playground/validator.v9"
 )
 
-var Key, ClientKey, Gender, StatusKonsumen, Channel, Lob, Incoming, Home, Education, Marital, ProfID, Photo, Relationship, AppSource, Address, Tenor, Relation string
+var Key, ClientKey, Gender, StatusKonsumen, Channel, Lob, Incoming, Home, Education, Marital, ProfID, Photo, Relationship, AppSource, Address, Tenor, Relation, Decision string
 
 func NewValidator() *Validator {
 
@@ -81,6 +81,7 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("tenor", tenorValidation)
 	v.validator.RegisterValidation("notnull", notNullValidation)
 	v.validator.RegisterValidation("mustnull", mustNullValidation)
+	v.validator.RegisterValidation("decision", DecisionValidation)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
@@ -570,4 +571,17 @@ func relationValidation(fl validator.FieldLevel) bool {
 
 	return validator
 
+}
+
+func DecisionValidation(fl validator.FieldLevel) (validator bool) {
+
+	decision := "APPROVE,REJECT"
+
+	arrDecision := strings.Split(decision, ",")
+
+	validator = contains(arrDecision, fl.Field().String())
+
+	Decision = decision
+
+	return
 }
