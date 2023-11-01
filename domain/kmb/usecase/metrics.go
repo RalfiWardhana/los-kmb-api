@@ -435,7 +435,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		Decision:       constant.DB_DECISION_PASS,
 		RuleCode:       metricsPefindo.Code,
 		SourceDecision: metricsPefindo.SourceDecision,
-		Info:           metricsPefindo.Info,
+		Info:           metricsPefindo.Reason,
 		NextStep:       constant.SOURCE_DECISION_SCOREPRO,
 	})
 
