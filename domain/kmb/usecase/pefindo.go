@@ -99,9 +99,17 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 				}
 
 				if filtering.IsWoWithCollateralBiro != nil {
-					isWoContractBiro, err = utils.GetFloat(filtering.IsWoWithCollateralBiro)
+					isWoWithCollateralBiro, err = utils.GetFloat(filtering.IsWoWithCollateralBiro)
 					if err != nil {
 						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat IsWoWithCollateralBiro Pefindo Error")
+						return
+					}
+				}
+
+				if filtering.TotalBakiDebetNonCollateralBiro != nil {
+					totalBakiDebetNonAgunan, err = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
+					if err != nil {
+						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat TotalBakiDebetNonCollateralBiro Pefindo Error")
 						return
 					}
 				}
