@@ -152,7 +152,7 @@ func (_m *Repository) GetSpIndustryTypeMaster() ([]entity.SpIndustryTypeMaster, 
 }
 
 // GetStatusPrescreening provides a mock function with given fields: prospectID
-func (_m *Repository) GetStatusPrescreening(prospectID string) (entity.TrxStatus, error) {
+func (_m *Repository) GetTrxStatus(prospectID string) (entity.TrxStatus, error) {
 	ret := _m.Called(prospectID)
 
 	var r0 entity.TrxStatus
@@ -221,4 +221,197 @@ func (_m *Repository) SavePrescreening(prescreening entity.TrxPrescreening, deta
 	}
 
 	return r0
+}
+
+
+// GetHistoryApproval provides a mock function with given fields: prospectID
+func (_m *Repository) GetHistoryApproval(prospectID string) ([]entity.HistoryApproval, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 []entity.HistoryApproval
+	if rf, ok := ret.Get(0).(func(string) []entity.HistoryApproval); ok {
+		r0 = rf(prospectID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.HistoryApproval)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetHistoryProcess provides a mock function with given fields: prospectID
+func (_m *Repository) GetHistoryProcess(prospectID string) ([]entity.TrxDetail, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 []entity.TrxDetail
+	if rf, ok := ret.Get(0).(func(string) []entity.TrxDetail); ok {
+		r0 = rf(prospectID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.TrxDetail)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetInquirySearch provides a mock function with given fields: req, pagination
+func (_m *Repository) GetInquirySearch(req request.ReqSearchInquiry, pagination interface{}) ([]entity.InquirySearch, int, error) {
+	ret := _m.Called(req, pagination)
+
+	var r0 []entity.InquirySearch
+	if rf, ok := ret.Get(0).(func(request.ReqSearchInquiry, interface{}) []entity.InquirySearch); ok {
+		r0 = rf(req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.InquirySearch)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(request.ReqSearchInquiry, interface{}) int); ok {
+		r1 = rf(req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(request.ReqSearchInquiry, interface{}) error); ok {
+		r2 = rf(req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// GetInternalRecord provides a mock function with given fields: prospectID
+func (_m *Repository) GetInternalRecord(prospectID string) ([]entity.TrxInternalRecord, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 []entity.TrxInternalRecord
+	if rf, ok := ret.Get(0).(func(string) []entity.TrxInternalRecord); ok {
+		r0 = rf(prospectID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.TrxInternalRecord)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetLimitApproval provides a mock function with given fields: ntf
+func (_m *Repository) GetLimitApproval(ntf float64) (entity.MappingLimitApprovalScheme, error) {
+	ret := _m.Called(ntf)
+
+	var r0 entity.MappingLimitApprovalScheme
+	if rf, ok := ret.Get(0).(func(float64) entity.MappingLimitApprovalScheme); ok {
+		r0 = rf(ntf)
+	} else {
+		r0 = ret.Get(0).(entity.MappingLimitApprovalScheme)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(float64) error); ok {
+		r1 = rf(ntf)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ProcessReturnOrder provides a mock function with given fields: prospectID, trxStatus, trxDetail
+func (_m *Repository) ProcessReturnOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) error {
+	ret := _m.Called(prospectID, trxStatus, trxDetail)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, entity.TrxStatus, entity.TrxDetail) error); ok {
+		r0 = rf(prospectID, trxStatus, trxDetail)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ProcessTransaction provides a mock function with given fields: trxCaDecision, trxStatus, trxDetail
+func (_m *Repository) ProcessTransaction(isCancel bool, trxCaDecision entity.TrxCaDecision, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) error {
+	ret := _m.Called(isCancel, trxCaDecision, trxStatus, trxDetail)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(bool, entity.TrxCaDecision, entity.TrxStatus, entity.TrxDetail) error); ok {
+		r0 = rf(isCancel, trxCaDecision, trxStatus, trxDetail)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SaveDraftData provides a mock function with given fields: draft
+func (_m *Repository) SaveDraftData(draft entity.TrxDraftCaDecision) error {
+	ret := _m.Called(draft)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(entity.TrxDraftCaDecision) error); ok {
+		r0 = rf(draft)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// GetCancelReason provides a mock function with given fields: pagination
+func (_m *Repository) GetCancelReason(pagination interface{}) ([]entity.CancelReason, int, error) {
+	ret := _m.Called(pagination)
+
+	var r0 []entity.CancelReason
+	if rf, ok := ret.Get(0).(func(interface{}) []entity.CancelReason); ok {
+		r0 = rf(pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.CancelReason)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(interface{}) int); ok {
+		r1 = rf(pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(interface{}) error); ok {
+		r2 = rf(pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }

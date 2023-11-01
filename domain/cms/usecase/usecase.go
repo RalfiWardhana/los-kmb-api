@@ -490,7 +490,7 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 		if len(histories) > 0 {
 			for _, history := range histories {
 				escalation = "No"
-				if history.NeedEscalation.(int64) == 1 {
+				if history.NeedEscalation == 1 {
 					escalation = "Yes"
 				}
 				historyEntry := entity.HistoryApproval{
