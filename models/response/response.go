@@ -773,3 +773,14 @@ type CAResponse struct {
 	SlikResult string `json:"slik_result"`
 	Note       string `json:"note"`
 }
+
+type CancelResponse struct {
+	ProspectID string `json:"prospect_id"`
+	Reason     string `json:"reason"`
+	Status     string `json:"status"`
+}
+
+type ReturnResponse struct {
+	ProspectID string `json:"prospect_id"`
+	Status     string `json:"status"`
+}

@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jinzhu/gorm"
 	jsoniter "github.com/json-iterator/go"
 )
@@ -107,6 +108,56 @@ func (r repoHandler) GetReasonPrescreening(req request.ReqReasonPrescreening, pa
 	defer db.Commit()
 
 	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT tt.* FROM (SELECT Code, ReasonID, ReasonMessage FROM m_reason_message WITH (nolock)) AS tt %s ORDER BY tt.ReasonID asc %s`, filter, filterPaginate)).Scan(&reason).Error; err != nil {
+		return
+	}
+
+	if len(reason) == 0 {
+		return reason, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
+	return
+}
+
+func (r repoHandler) GetCancelReason(pagination interface{}) (reason []entity.CancelReason, rowTotal int, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	var (
+		filterPaginate string
+	)
+
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.NewKmb.Raw(`
+		SELECT
+		COUNT(tt.id_cancel_reason) AS totalRow
+		FROM
+		(SELECT * FROM m_cancel_reason with (nolock) WHERE show = '1') AS tt`).Scan(&row).Error; err != nil {
+			return
+		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT * FROM m_cancel_reason with (nolock) WHERE show = '1' ORDER BY id_cancel_reason ASC %s`, filterPaginate)).Scan(&reason).Error; err != nil {
 		return
 	}
 
@@ -641,7 +692,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	return
 }
 
-func (r repoHandler) GetStatusPrescreening(prospectID string) (status entity.TrxStatus, err error) {
+func (r repoHandler) GetTrxStatus(prospectID string) (status entity.TrxStatus, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
@@ -652,7 +703,7 @@ func (r repoHandler) GetStatusPrescreening(prospectID string) (status entity.Trx
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.NewKmb.Raw("SELECT activity, source_decision FROM trx_status WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&status).Error; err != nil {
+	if err = r.NewKmb.Raw("SELECT activity, decision, source_decision FROM trx_status WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&status).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
@@ -664,45 +715,38 @@ func (r repoHandler) GetStatusPrescreening(prospectID string) (status entity.Trx
 }
 
 func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detail entity.TrxDetail, status entity.TrxStatus) (err error) {
-	var x sql.TxOptions
 
 	prescreening.CreatedAt = DtmRequest
 	detail.CreatedAt = DtmRequest
 	status.CreatedAt = DtmRequest
 
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
+		// update trx_status
+		result := tx.Model(&status).Where("ProspectID = ?", status.ProspectID).Updates(status)
 
-	db := r.NewKmb.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	// update trx_status
-	result := db.Model(&status).Where("ProspectID = ?", status.ProspectID).Updates(status)
-
-	if err = result.Error; err != nil {
-		return
-	}
-
-	if result.RowsAffected == 0 {
-		// record not found...
-		if err = db.Create(&status).Error; err != nil {
-			return
+		if err = result.Error; err != nil {
+			return err
 		}
-	}
 
-	// insert trx_details
-	if err = db.Create(&detail).Error; err != nil {
-		return
-	}
+		if result.RowsAffected == 0 {
+			// record not found...
+			if err = tx.Create(&status).Error; err != nil {
+				return err
+			}
+		}
 
-	// insert trx_prescreening
-	if err = db.Create(&prescreening).Error; err != nil {
-		return
-	}
+		// insert trx_details
+		if err = tx.Create(&detail).Error; err != nil {
+			return err
+		}
 
-	return
+		// insert trx_prescreening
+		if err = tx.Create(&prescreening).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }
 
 func (r repoHandler) SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error) {
@@ -726,7 +770,7 @@ func (r repoHandler) SaveLogOrchestrator(header, request, response interface{}, 
 	return
 }
 
-func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.TrxHistoryApprovalScheme, err error) {
+func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.HistoryApproval, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
@@ -737,7 +781,21 @@ func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.Trx
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.NewKmb.Raw("SELECT decision, decision_by, next_final_approval_flag, need_escalation, source_decision, next_step, created_at FROM trx_history_approval_scheme WITH (nolock) WHERE ProspectID = ? ORDER BY created_at DESC", prospectID).Scan(&history).Error; err != nil {
+	if err = r.NewKmb.Raw(`SELECT
+				thas.decision,
+				thas.decision_by,
+				thas.next_final_approval_flag,
+				thas.need_escalation,
+				thas.source_decision,
+				thas.next_step,
+				thas.note,
+				thas.created_at,
+				CASE
+				  WHEN thas.source_decision = 'CRA' THEN tcd.slik_result
+				  ELSE
+				  '-'
+				END AS slik_result
+			FROM trx_history_approval_scheme thas WITH (nolock) LEFT JOIN trx_ca_decision tcd on thas.ProspectID = tcd.ProspectID WHERE thas.ProspectID = ? ORDER BY thas.created_at DESC`, prospectID).Scan(&history).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
@@ -807,7 +865,8 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		case constant.NEED_DECISION:
 			activity = constant.ACTIVITY_UNPROCESS
 			decision = constant.DB_DECISION_CREDIT_PROCESS
-			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s'", activity, decision)
+			source := constant.DB_DECISION_CREDIT_ANALYST
+			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s' AND tt.decision_ca IS NULL", activity, decision, source)
 
 		case constant.SAVED_AS_DRAFT:
 			if req.UserID != "" {
@@ -843,6 +902,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 			tst.activity,
 			tst.source_decision,
 			tst.decision,
+			tcd.decision as decision_ca,
 			tdd.created_by AS draft_created_by,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
@@ -909,6 +969,15 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tst.activity,
 		tst.source_decision,
 		tst.decision,
+		tst.reason,
+		tcd.decision as decision_ca,
+		CASE
+		  WHEN tcd.decision='APR' THEN 'APPROVE'
+		  WHEN tcd.decision='REJ' THEN 'REJECT'
+		  WHEN tcd.decision='CAN' THEN 'CANCEL'
+		  ELSE tcd.decision
+		END AS ca_decision,
+		tcd.note AS ca_note,
 		CASE
 		  WHEN tcd.created_at IS NOT NULL
 		  AND tfa.created_at IS NULL THEN tcd.created_at
@@ -936,6 +1005,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 
 		tcp.CustomerID,
 		tcp.CustomerStatus,
+		tcp.SurveyResult,
 		tm.created_at,
 		tm.order_at,
 		tm.lob,
@@ -948,23 +1018,23 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
 		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
 		END AS 'Gender',
-		tca.LegalAddress,
-		tca.LegalRTRW,
-		tca.LegalKelurahan,
-		tca.LegalKecamatan,
-		tca.LegalZipcode,
-		tca.LegalCity,
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
 		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
 		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
 		edu.value AS Education,
 		mst.value AS MaritalStatus,
 		tcp.NumOfDependence,
-		tca.ResidenceAddress,
-		tca.ResidenceRTRW,
-		tca.ResidenceKelurahan,
-		tca.ResidenceKecamatan,
-		tca.ResidenceZipcode,
-		tca.ResidenceCity,
 		hst.value AS HomeStatus,
 		mn.value AS StaySinceMonth,
 		tcp.StaySinceYear,
@@ -998,15 +1068,15 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		mn2.value AS EmploymentSinceMonth,
 		tce.EmploymentSinceYear,
 		tce.CompanyName,
-		tca.CompanyAreaPhone,
-		tca.CompanyPhone,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
 		tcp.ExtCompanyPhone,
-		tca.CompanyAddress,
-		tca.CompanyRTRW,
-		tca.CompanyKelurahan,
-		tca.CompanyKecamatan,
-		tca.CompanyZipcode,
-		tca.CompanyCity,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
 		tce.MonthlyFixedIncome,
 		tce.MonthlyVariableIncome,
 		tce.SpouseIncome,
@@ -1020,14 +1090,14 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		em.Name AS EmconName,
 		em.Relationship,
 		em.MobilePhone AS EmconMobilePhone,
-	    tca.EmergencyAddress,
-		tca.EmergencyRTRW,
-		tca.EmergencyKelurahan,
-		tca.EmergencyKecamatan,
-		tca.EmergencyZipcode,
-		tca.EmergencyCity,
-		tca.EmergencyAreaPhone,
-		tca.EmergencyPhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
 		tce.IndustryTypeID,
 		tak.ScsDate,
 		tak.ScsScore,
@@ -1051,6 +1121,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		  SELECT
 			ProspectID,
 			decision,
+			note,
 			created_at
 		  FROM
 			trx_ca_decision WITH (nolock)
@@ -1064,45 +1135,69 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		) tdb ON tm.ProspectID = tdb.prospect_id 
 
 		INNER JOIN (
-			SELECT ProspectID,
-			MAX(Case [Type] When 'LEGAL' Then scp.dbo.DEC_B64('SEC', Address) End) LegalAddress,
-			MAX(Case [Type] When 'LEGAL' Then CONCAT(RT, '/', RW) End) LegalRTRW,
-			MAX(Case [Type] When 'LEGAL' Then Kelurahan End) LegalKelurahan,
-			MAX(Case [Type] When 'LEGAL' Then Kecamatan End) LegalKecamatan,
-			MAX(Case [Type] When 'LEGAL' Then ZipCode End) LegalZipCode,
-			MAX(Case [Type] When 'LEGAL' Then City End) LegalCity,
-			MAX(Case [Type] When 'LEGAL' Then Phone End) LegalPhone,
-			MAX(Case [Type] When 'LEGAL' Then AreaPhone End) LegalAreaPhone,
-
-			MAX(Case [Type] When 'COMPANY' Then scp.dbo.DEC_B64('SEC', Address) End) CompanyAddress,
-			MAX(Case [Type] When 'COMPANY' Then CONCAT(RT, '/', RW) End) CompanyRTRW,
-			MAX(Case [Type] When 'COMPANY' Then Kelurahan End) CompanyKelurahan,
-			MAX(Case [Type] When 'COMPANY' Then Kecamatan End) CompanyKecamatan,
-			MAX(Case [Type] When 'COMPANY' Then ZipCode End) CompanyZipCode,
-			MAX(Case [Type] When 'COMPANY' Then City End) CompanyCity,
-			MAX(Case [Type] When 'COMPANY' Then Phone End) CompanyPhone,
-			MAX(Case [Type] When 'COMPANY' Then AreaPhone End) CompanyAreaPhone,
-
-			MAX(Case [Type] When 'RESIDENCE' Then scp.dbo.DEC_B64('SEC', Address) End) ResidenceAddress,
-			MAX(Case [Type] When 'RESIDENCE' Then CONCAT(RT, '/', RW) End) ResidenceRTRW,
-			MAX(Case [Type] When 'RESIDENCE' Then Kelurahan End) ResidenceKelurahan,
-			MAX(Case [Type] When 'RESIDENCE' Then Kecamatan End) ResidenceKecamatan,
-			MAX(Case [Type] When 'RESIDENCE' Then ZipCode End) ResidenceZipCode,
-			MAX(Case [Type] When 'RESIDENCE' Then City End) ResidenceCity,
-			MAX(Case [Type] When 'RESIDENCE' Then Phone End) ResidencePhone,
-			MAX(Case [Type] When 'RESIDENCE' Then AreaPhone End) ResidenceAreaPhone,
-
-			MAX(Case [Type] When 'EMERGENCY' Then scp.dbo.DEC_B64('SEC', Address) End) EmergencyAddress,
-			MAX(Case [Type] When 'EMERGENCY' Then CONCAT(RT, '/', RW) End) EmergencyRTRW,
-			MAX(Case [Type] When 'EMERGENCY' Then Kelurahan End) EmergencyKelurahan,
-			MAX(Case [Type] When 'EMERGENCY' Then Kecamatan End) EmergencyKecamatan,
-			MAX(Case [Type] When 'EMERGENCY' Then ZipCode End) EmergencyZipcode,
-			MAX(Case [Type] When 'EMERGENCY' Then City End) EmergencyCity,
-			MAX(Case [Type] When 'EMERGENCY' Then Phone End) EmergencyPhone,
-			MAX(Case [Type] When 'EMERGENCY' Then AreaPhone End) EmergencyAreaPhone
-			FROM trx_customer_address
-			GROUP BY ProspectID
-		) tca ON tm.ProspectID = tca.ProspectID 
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
 
 		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
@@ -1220,33 +1315,27 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 }
 
 func (r repoHandler) SaveDraftData(draft entity.TrxDraftCaDecision) (err error) {
-	var x sql.TxOptions
 
 	draft.CreatedAt = DtmRequest
 
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
+		// update trx_status
+		result := tx.Model(&draft).Where("ProspectID = ?", draft.ProspectID).Updates(draft)
 
-	db := r.NewKmb.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	// update trx_status
-	result := db.Model(&draft).Where("ProspectID = ?", draft.ProspectID).Updates(draft)
-
-	if err = result.Error; err != nil {
-		return
-	}
-
-	if result.RowsAffected == 0 {
-		// record not found will be create draft
-		if err = db.Create(&draft).Error; err != nil {
-			return
+		if err = result.Error; err != nil {
+			return err
 		}
-	}
 
-	return
+		if result.RowsAffected == 0 {
+			// record not found will be create draft
+			if err = tx.Create(&draft).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }
 
 func (r repoHandler) GetLimitApproval(ntf float64) (limit entity.MappingLimitApprovalScheme, err error) {
@@ -1271,12 +1360,10 @@ func (r repoHandler) GetLimitApproval(ntf float64) (limit entity.MappingLimitApp
 	return
 }
 
-func (r repoHandler) SaveCADecionData(trxCaDecision entity.TrxCaDecision) (err error) {
+func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.TrxDetail, err error) {
 	var x sql.TxOptions
 
-	trxCaDecision.CreatedAt = DtmRequest
-
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -1284,84 +1371,526 @@ func (r repoHandler) SaveCADecionData(trxCaDecision entity.TrxCaDecision) (err e
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	// insert trx_ca_decision
-	if err = db.Create(&trxCaDecision).Error; err != nil {
+	if err = r.NewKmb.Raw(`SELECT
+			CASE
+			 WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING'
+			 WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING'
+			 WHEN td.source_decision = 'DCP'
+			 OR td.source_decision = 'ARI'
+			 OR td.source_decision = 'KTP' THEN 'EKYC'
+			 WHEN td.source_decision = 'PBK' THEN 'PEFINDO'
+			 WHEN td.source_decision = 'SCS' THEN 'SCOREPRO'
+			 WHEN td.source_decision = 'DSR' THEN 'DSR'
+			 WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
+			 WHEN td.source_decision = 'CBM'
+			  OR td.source_decision = 'DRM'
+			  OR td.source_decision = 'GMO'
+			  OR td.source_decision = 'COM'
+			  OR td.source_decision = 'GMC'
+			  OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE'
+			 ELSE '-'
+			END AS source_decision,
+			CASE
+			 WHEN td.decision = 'PAS' THEN 'PASS'
+			 WHEN td.decision = 'REJ' THEN 'REJECT'
+			 WHEN td.decision = 'CAN' THEN 'CANCEL'
+			 WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS'
+			 ELSE '-'
+			END AS decision,
+			ap.reason AS info,
+			td.created_at
+		FROM
+			trx_details td WITH (nolock)
+			LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
+		WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCS','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC')
+		AND td.decision <> 'CTG' ORDER BY td.created_at ASC`, prospectID).Scan(&detail).Error; err != nil {
+
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
 		return
 	}
 
 	return
 }
 
-func (r repoHandler) UpdateTrxStatus(trxStatus entity.TrxStatus) (err error) {
-	var x sql.TxOptions
+func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination interface{}) (data []entity.InquirySearch, rowTotal int, err error) {
 
-	trxStatus.CreatedAt = DtmRequest
+	var (
+		filter         string
+		filterPaginate string
+	)
 
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	search := req.Search
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.NewKmb.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	// update trx_status
-	result := db.Model(&trxStatus).Where("ProspectID = ?", trxStatus.ProspectID).Updates(trxStatus)
-
-	if err = result.Error; err != nil {
-		return
+	if search != "" {
+		filter = fmt.Sprintf("WHERE (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
 	}
 
-	if result.RowsAffected == 0 {
-		// record not found...
-		if err = db.Create(&trxStatus).Error; err != nil {
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.NewKmb.Raw(fmt.Sprintf(`
+		SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.decision,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+		FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		) AS tt %s`, filter)).Scan(&row).Error; err != nil {
 			return
 		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
 	}
 
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT
+		tt.*
+		FROM
+		(
+		SELECT
+		tm.ProspectID,
+		cb.BranchName,
+		cb.BranchID,
+		tst.activity,
+		tst.source_decision,
+		tst.decision,
+		CASE
+		  WHEN tst.decision='APR' THEN 'Approve'
+		  WHEN tst.decision='REJ' THEN 'Reject'
+		  WHEN tst.decision='CAN' THEN 'Cancel'
+		  ELSE '-'
+		END AS FinalStatus,
+		CASE
+		  WHEN tps.ProspectID IS NOT NULL
+		  AND tst.status_process='ONP' THEN 1
+		  ELSE 0
+		END AS ActionReturn,
+		CASE
+		  WHEN tst.status_process='FIN'
+		  AND tst.activity='STOP'
+		  AND tst.decision='REJ' THEN 0
+		  ELSE 1
+		END AS ActionCancel,
+		CASE
+		  WHEN tcd.decision='CAN' THEN 0
+		  ELSE 1
+		END AS ActionFormAkk,
+		CASE
+		  WHEN tst.decision = 'CPR'
+		  AND tst.source_decision = 'CRA'
+		  AND tst.activity = 'UNPR'
+		  AND tcd.decision IS NULL THEN 1
+		  ELSE 0
+		END AS ShowAction,
+		CASE
+		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+		  ELSE 'NE'
+		END AS incoming_source,
+		tcp.CustomerID,
+		tcp.CustomerStatus,
+		tm.created_at,
+		tm.order_at,
+		tm.lob,
+		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+		scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+		tcp.BirthDate,
+		scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+		CASE
+		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
+		END AS 'Gender',
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
+		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+		edu.value AS Education,
+		mst.value AS MaritalStatus,
+		hst.value AS HomeStatus,
+		mn.value AS StaySinceMonth,
+		tcp.StaySinceYear,
+		ta.ProductOfferingID,
+		ta.dealer,
+		ta.LifeInsuranceFee,
+		ta.AssetInsuranceFee,
+		'KMB MOTOR' AS AssetType,
+		ti.asset_description,
+		ti.manufacture_year,
+		ti.color,
+		chassis_number,
+		engine_number,
+		interest_rate,
+		Tenor AS InstallmentPeriod,
+		OTR,
+		DPAmount,
+		AF AS FinanceAmount,
+		interest_amount,
+		insurance_amount,
+		AdminFee,
+		provision_fee,
+		NTF,
+		NTFAkumulasi,
+		(NTF + interest_amount) AS Total,
+		InstallmentAmount AS MonthlyInstallment,
+		FirstInstallment,
+		pr.value AS ProfessionID,
+		jt.value AS JobType,
+		jb.value AS JobPosition,
+		mn2.value AS EmploymentSinceMonth,
+		tce.EmploymentSinceYear,
+		tce.CompanyName,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
+		tcp.ExtCompanyPhone,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		tcp.SourceOtherIncome,
+		tcs.FullName AS SpouseLegalName,
+		tcs.CompanyName AS SpouseCompanyName,
+		tcs.CompanyPhone AS SpouseCompanyPhone,
+		tcs.MobilePhone AS SpouseMobilePhone,
+		tcs.IDNumber AS SpouseIDNumber,
+		pr2.value AS SpouseProfession,
+		em.Name AS EmconName,
+		em.Relationship,
+		em.MobilePhone AS EmconMobilePhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
+		tce.IndustryTypeID
+	  FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			created_at
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+
+		INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'Education'
+		) edu ON tcp.Education = edu.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MaritalStatus'
+		) mst ON tcp.MaritalStatus = mst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'HomeStatus'
+		) hst ON tcp.HomeStatus = hst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn ON tcp.StaySinceMonth = mn.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr ON tce.ProfessionID = pr.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobType'
+		) jt ON tce.JobType = jt.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobPosition'
+		) jb ON tce.JobPosition = jb.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr2 ON tcs.ProfessionID = pr2.[key]
+	) AS tt %s ORDER BY tt.created_at DESC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	if len(data) == 0 {
+		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
 	return
 }
 
-func (r repoHandler) SaveTrxDetail(trxDetail entity.TrxDetail) (err error) {
-	var x sql.TxOptions
+func (r repoHandler) ProcessTransaction(isCancel bool, trxCaDecision entity.TrxCaDecision, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
 
+	trxCaDecision.CreatedAt = DtmRequest
+	trxStatus.CreatedAt = DtmRequest
 	trxDetail.CreatedAt = DtmRequest
 
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
+		// trx_ca_decision
+		result := tx.Model(&trxCaDecision).Where("ProspectID = ?", trxCaDecision.ProspectID).Updates(trxCaDecision)
 
-	db := r.NewKmb.BeginTx(ctx, &x)
-	defer db.Commit()
+		if result.RowsAffected == 0 {
+			// record not found...
+			if err = tx.Create(&trxCaDecision).Error; err != nil {
+				return err
+			}
+		}
 
-	// insert trx_ca_decision
-	if err = db.Create(&trxDetail).Error; err != nil {
-		return
-	}
+		// trx_status
+		if err := tx.Model(&trxStatus).Where("ProspectID = ?", trxStatus.ProspectID).Updates(trxStatus).Error; err != nil {
+			return err
+		}
 
-	return
+		// trx_details
+		if err := tx.Create(&trxDetail).Error; err != nil {
+			return err
+		}
+
+		if !isCancel {
+			var (
+				trxHistoryApproval entity.TrxHistoryApprovalScheme
+				nextFinal          int
+			)
+
+			nextFinal = 0
+			if trxCaDecision.FinalApproval == constant.DB_DECISION_BRANCH_MANAGER {
+				nextFinal = 1
+			}
+
+			trxHistoryApproval = entity.TrxHistoryApprovalScheme{
+				ID:                    uuid.New().String(),
+				ProspectID:            trxCaDecision.ProspectID,
+				Decision:              trxCaDecision.Decision,
+				Reason:                trxCaDecision.SlikResult.(string),
+				Note:                  trxCaDecision.Note,
+				CreatedAt:             DtmRequest,
+				CreatedBy:             trxCaDecision.CreatedBy,
+				DecisionBy:            trxCaDecision.DecisionBy,
+				NeedEscalation:        0,
+				NextFinalApprovalFlag: nextFinal,
+				SourceDecision:        trxDetail.SourceDecision,
+				NextStep:              trxDetail.NextStep.(string),
+			}
+
+			// trx_history_approval_scheme
+			if err := tx.Create(&trxHistoryApproval).Error; err != nil {
+				return err
+			}
+		}
+
+		// trx_draft_ca_decision
+		var draft entity.TrxDraftCaDecision
+		if err := tx.Where("ProspectID = ?", trxCaDecision.ProspectID).Delete(&draft).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
-func (r repoHandler) DeleteDraft(prospectID string) (err error) {
-	var x sql.TxOptions
+func (r repoHandler) ProcessReturnOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
 
-	var txrDraft entity.TrxDraftCaDecision
+	trxStatus.CreatedAt = DtmRequest
+	trxDetail.CreatedAt = DtmRequest
 
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
+		// update trx_status
+		if err := tx.Model(&trxStatus).Where("ProspectID = ?", prospectID).Updates(trxStatus).Error; err != nil {
+			return err
+		}
 
-	db := r.NewKmb.BeginTx(ctx, &x)
-	defer db.Commit()
+		// insert trx_details
+		if err := tx.Create(&trxDetail).Error; err != nil {
+			return err
+		}
 
-	// insert trx_ca_decision
-	result := db.Where("ProspectID = ?", prospectID).Delete(&txrDraft)
+		// delete trx_prescreening
+		var prescreening entity.TrxPrescreening
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&prescreening).Error; err != nil {
+			return err
+		}
 
-	if err = result.Error; err != nil {
-		return
-	}
+		// delete trx_draft_ca_decision
+		var draft entity.TrxDraftCaDecision
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&draft).Error; err != nil {
+			return err
+		}
 
-	return
+		return nil
+	})
 }
