@@ -287,7 +287,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 			data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 			data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
 			data.Source = constant.SOURCE_DECISION_SCOREPRO
-			data.Info = string(info)
+			data.Info = string(utils.SafeEncoding(info))
 			return
 		}
 
@@ -296,7 +296,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 			data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 			data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
 			data.Source = constant.SOURCE_DECISION_SCOREPRO
-			data.Info = string(info)
+			data.Info = string(utils.SafeEncoding(info))
 			return
 		}
 	}
@@ -308,20 +308,20 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 				data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 				data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
 				data.Source = constant.SOURCE_DECISION_SCOREPRO
-				data.Info = string(info)
+				data.Info = string(utils.SafeEncoding(info))
 			} else {
 				if responseScs.ScoreResult == "LOW" {
 					data.Result = constant.DECISION_REJECT
 					data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
 					data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
 					data.Source = constant.SOURCE_DECISION_SCOREPRO
-					data.Info = string(info)
+					data.Info = string(utils.SafeEncoding(info))
 				} else {
 					data.Result = constant.DECISION_PASS
 					data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 					data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
 					data.Source = constant.SOURCE_DECISION_SCOREPRO
-					data.Info = string(info)
+					data.Info = string(utils.SafeEncoding(info))
 				}
 			}
 		} else {
@@ -330,7 +330,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 				data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 				data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
 				data.Source = constant.SOURCE_DECISION_SCOREPRO
-				data.Info = string(info)
+				data.Info = string(utils.SafeEncoding(info))
 			} else {
 				if strings.ToUpper(pefindoScore) == "VERY HIGH RISK" {
 					if strings.Contains("2,3,4,5", responseScs.Segmen) {
@@ -338,26 +338,26 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 						data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
 						data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
 						data.Source = constant.SOURCE_DECISION_SCOREPRO
-						data.Info = string(info)
+						data.Info = string(utils.SafeEncoding(info))
 					} else if strings.Contains("6,7,8,9,10,11,12", responseScs.Segmen) {
 						data.Result = constant.DECISION_PASS
 						data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 						data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
 						data.Source = constant.SOURCE_DECISION_SCOREPRO
-						data.Info = string(info)
+						data.Info = string(utils.SafeEncoding(info))
 					} else {
 						if responseScs.ScoreResult == "LOW" {
 							data.Result = constant.DECISION_REJECT
 							data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
 							data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
 							data.Source = constant.SOURCE_DECISION_SCOREPRO
-							data.Info = string(info)
+							data.Info = string(utils.SafeEncoding(info))
 						} else {
 							data.Result = constant.DECISION_PASS
 							data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 							data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
 							data.Source = constant.SOURCE_DECISION_SCOREPRO
-							data.Info = string(info)
+							data.Info = string(utils.SafeEncoding(info))
 						}
 					}
 				} else {
@@ -366,13 +366,13 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 						data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
 						data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
 						data.Source = constant.SOURCE_DECISION_SCOREPRO
-						data.Info = string(info)
+						data.Info = string(utils.SafeEncoding(info))
 					} else {
 						data.Result = constant.DECISION_PASS
 						data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 						data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
 						data.Source = constant.SOURCE_DECISION_SCOREPRO
-						data.Info = string(info)
+						data.Info = string(utils.SafeEncoding(info))
 					}
 				}
 			}
@@ -384,20 +384,20 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 				data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 				data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
 				data.Source = constant.SOURCE_DECISION_SCOREPRO
-				data.Info = string(info)
+				data.Info = string(utils.SafeEncoding(info))
 			} else {
 				if responseScs.Result == constant.DECISION_PASS {
 					data.Result = constant.DECISION_PASS
 					data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 					data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
 					data.Source = constant.SOURCE_DECISION_SCOREPRO
-					data.Info = string(info)
+					data.Info = string(utils.SafeEncoding(info))
 				} else {
 					data.Result = constant.DECISION_REJECT
 					data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
 					data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
 					data.Source = constant.SOURCE_DECISION_SCOREPRO
-					data.Info = string(info)
+					data.Info = string(utils.SafeEncoding(info))
 				}
 			}
 		} else {
@@ -406,7 +406,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 				data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 				data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
 				data.Source = constant.SOURCE_DECISION_SCOREPRO
-				data.Info = string(info)
+				data.Info = string(utils.SafeEncoding(info))
 			} else {
 				if strings.Contains(os.Getenv("NAMA_SAMA"), req.Item.BPKBName) {
 					// Handling ASS-SCORE
@@ -417,20 +417,20 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 						data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
 						data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
 						data.Source = constant.SOURCE_DECISION_SCOREPRO
-						data.Info = string(info)
+						data.Info = string(utils.SafeEncoding(info))
 					} else {
 						data.Result = constant.DECISION_PASS
 						data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 						data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
 						data.Source = constant.SOURCE_DECISION_SCOREPRO
-						data.Info = string(info)
+						data.Info = string(utils.SafeEncoding(info))
 					}
 				} else {
 					data.Result = constant.DECISION_REJECT
 					data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
 					data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
 					data.Source = constant.SOURCE_DECISION_SCOREPRO
-					data.Info = string(info)
+					data.Info = string(utils.SafeEncoding(info))
 				}
 			}
 		}
