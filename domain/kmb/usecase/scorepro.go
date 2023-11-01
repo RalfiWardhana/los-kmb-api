@@ -333,13 +333,16 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 				data.Info = string(utils.SafeEncoding(info))
 			} else {
 				if strings.ToUpper(pefindoScore) == "VERY HIGH RISK" {
-					if strings.Contains("2,3,4,5", responseScs.Segmen) {
+					segmenReject := map[string]bool{"2": true, "3": true, "4": true, "5": true}
+					segmenPass := map[string]bool{"6": true, "7": true, "8": true, "9": true, "10": true, "11": true, "12": true}
+
+					if _, ok := segmenReject[responseScs.Segmen]; ok {
 						data.Result = constant.DECISION_REJECT
 						data.Code = constant.CODE_SCOREPRO_LTMIN_THRESHOLD
 						data.Reason = constant.REASON_SCOREPRO_LTMIN_THRESHOLD
 						data.Source = constant.SOURCE_DECISION_SCOREPRO
 						data.Info = string(utils.SafeEncoding(info))
-					} else if strings.Contains("6,7,8,9,10,11,12", responseScs.Segmen) {
+					} else if _, ok := segmenPass[responseScs.Segmen]; ok {
 						data.Result = constant.DECISION_PASS
 						data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 						data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
