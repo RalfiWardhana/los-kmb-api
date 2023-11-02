@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
@@ -91,7 +90,7 @@ func (u usecase) Prescreening(ctx context.Context, req request.Metrics, filterin
 	}
 
 	var ntfTopup *resty.Response
-	ntfTopup, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, fmt.Sprintf("%s/%s", os.Getenv("NTF_TOPUP_URL"), req.Item.NoChassis), nil, header, constant.METHOD_GET, true, 3, 60, req.Transaction.ProspectID, accessToken)
+	ntfTopup, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+req.Item.NoChassis, nil, header, constant.METHOD_GET, true, 3, 60, req.Transaction.ProspectID, accessToken)
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Call NTF Topup API Error")

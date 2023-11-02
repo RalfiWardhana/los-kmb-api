@@ -28,7 +28,7 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 
 	konsumen := customerData[0]
 
-	if konsumen.StatusKonsumen == constant.STATUS_KONSUMEN_RO || konsumen.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
+	if konsumen.CustomerSegment == constant.RO_AO_PRIME || konsumen.CustomerSegment == constant.RO_AO_PRIORITY {
 		reasonCustomerStatus = konsumen.StatusKonsumen + " " + konsumen.CustomerSegment
 	} else {
 		reasonCustomerStatus = konsumen.StatusKonsumen
@@ -41,7 +41,7 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 		jsonCustomer, _ := json.Marshal(customer)
 		var installmentLOS *resty.Response
 
-		installmentLOS, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("INSTALLMENT_PENDING_URL"), jsonCustomer, header, constant.METHOD_POST, true, 3, 60, req.ProspectID, accessToken)
+		installmentLOS, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("INSTALLMENT_PENDING_URL"), jsonCustomer, header, constant.METHOD_POST, true, 2, 60, req.ProspectID, accessToken)
 
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Call Installment Pending API Error")
@@ -97,7 +97,7 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 
 			var hitChassisNumber *resty.Response
 
-			hitChassisNumber, err = u.httpclient.EngineAPI(ctx, constant.DUPCHECK_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+req.RangkaNo, nil, map[string]string{}, constant.METHOD_GET, true, 6, 60, req.ProspectID, accessToken)
+			hitChassisNumber, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+req.RangkaNo, nil, map[string]string{}, constant.METHOD_GET, true, 2, 60, req.ProspectID, accessToken)
 
 			if err != nil {
 				err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - DsrCheck Call Get Agreement of Chassis Number Timeout")
@@ -148,6 +148,8 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 
 				if minimumPencairan < configValue.Data.MinimumPencairanROTopUp {
 
+					dsr = ((installmentAmount + (installment + installmentConfinsSpouse) + (installmentOther + installmentOtherSpouse)) / income) * 100
+					data.Dsr = dsr
 					data.Result = constant.DECISION_REJECT
 					data.Code = constant.CODE_TOPUP_MENUNGGAK
 					data.Reason = fmt.Sprintf("%s %s", reasonCustomerStatus, constant.REASON_TOPUP_MENUNGGAK)
@@ -204,14 +206,6 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 				_ = mapstructure.Decode(data, &result)
 				return
 			}
-		} else if dsr > configValue.Data.MaxDsr {
-			data.Result = constant.DECISION_REJECT
-			data.Code = constant.CODE_DSRGT35
-			data.Reason = fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRGT35, reasonMaxDsr)
-			data.SourceDecision = constant.SOURCE_DECISION_DSR
-
-			_ = mapstructure.Decode(data, &result)
-			return
 		}
 
 	}
@@ -239,7 +233,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 	reasonMaxDsr := int(configValue.Data.MaxDsr)
 
 	var reasonCustomerStatus string
-	if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO || SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
+	if customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY {
 		reasonCustomerStatus = SpDupcheckMap.StatusKonsumen + " " + customerSegment
 	} else {
 		reasonCustomerStatus = SpDupcheckMap.StatusKonsumen
@@ -255,7 +249,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 	} else {
 		data = response.UsecaseApi{
 			Result:         constant.DECISION_REJECT,
-			Code:           constant.CODE_TOTAL_DSRLTE35,
+			Code:           constant.CODE_TOTAL_DSRGT35,
 			Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_TOTAL_DSRGT, reasonMaxDsr),
 			SourceDecision: constant.SOURCE_DECISION_DSR,
 		}
@@ -295,6 +289,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 			latestInstallmentAmount = respLatestPaidInstallment.InstallmentAmount
 
 		} else if SpDupcheckMap.InstallmentTopup > 0 && SpDupcheckMap.MaxOverdueDaysforActiveAgreement <= 30 {
+			reasonCustomerStatus = reasonCustomerStatus + " " + constant.TOP_UP
 			latestInstallmentAmount = SpDupcheckMap.InstallmentTopup
 		}
 
