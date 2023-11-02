@@ -412,7 +412,7 @@ const (
 	REASON_DSRLTE35        = "- Confins DSR <="
 	REASON_DSRGT35         = "- Confins DSR >"
 	CODE_TOPUP_MENUNGGAK   = "2703"
-	REASON_TOPUP_MENUNGGAK = "- Top Up Menunggak"
+	REASON_TOPUP_MENUNGGAK = "Menunggak"
 	TOP_UP                 = "Top Up"
 	CODE_MENUNGGAK         = "2704"
 	CODE_TOTAL_DSRLTE35    = "2705"

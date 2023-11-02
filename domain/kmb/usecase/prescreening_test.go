@@ -113,7 +113,7 @@ func TestPrescreening(t *testing.T) {
 
 			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("NTF_PENDING_URL"), jsonCustomer, map[string]string{}, constant.METHOD_POST, true, 3, 60, "", accessToken).Return(resp, tc.errNtfOtherApi).Once()
 
-			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("NTF_PENDING_URL"), mock.Anything, map[string]string{}, constant.METHOD_GET, true, 3, 60, "", accessToken).Return(resp, tc.errNtfOtherApi).Once()
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, mock.Anything, mock.Anything, map[string]string{}, constant.METHOD_GET, true, 3, 60, "", accessToken).Return(resp, tc.errNtfOtherApi).Once()
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 

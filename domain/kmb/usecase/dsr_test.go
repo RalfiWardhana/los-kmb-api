@@ -22,6 +22,8 @@ import (
 func TestDsrCheck(t *testing.T) {
 	// always set the valid url
 	os.Setenv("INSTALLMENT_PENDING_URL", "http://localhost/")
+	os.Setenv("AGREEMENT_OF_CHASSIS_NUMBER_URL", "http://localhost/")
+
 	config := entity.AppConfig{
 		Key:   "parameterize",
 		Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35}}`,
@@ -43,31 +45,47 @@ func TestDsrCheck(t *testing.T) {
 		},
 	}
 
-	// konsumenOnlyRo := []request.CustomerData{
-	// 	{
-	// 		StatusKonsumen: constant.STATUS_KONSUMEN_RO,
-	// 		IDNumber:       idNumber,
-	// 		LegalName:      legalName,
-	// 		BirthDate:      birthDate,
-	// 		MotherName:     motherName,
-	// 	},
-	// }
+	konsumenOnlyRo := []request.CustomerData{
+		{
+			StatusKonsumen: constant.STATUS_KONSUMEN_RO,
+			IDNumber:       idNumber,
+			LegalName:      legalName,
+			BirthDate:      birthDate,
+			MotherName:     motherName,
+		},
+	}
 
-	// konsumenSpouseAo := []request.CustomerData{
-	// 	{
-	// 		StatusKonsumen: constant.STATUS_KONSUMEN_AO,
-	// 		IDNumber:       idNumber,
-	// 		LegalName:      legalName,
-	// 		BirthDate:      birthDate,
-	// 		MotherName:     motherName,
-	// 	},
-	// 	{
-	// 		IDNumber:   idNumber,
-	// 		LegalName:  legalName,
-	// 		BirthDate:  birthDate,
-	// 		MotherName: motherName,
-	// 	},
-	// }
+	konsumenOnlyRoPrime := []request.CustomerData{
+		{
+			StatusKonsumen:  constant.STATUS_KONSUMEN_RO,
+			IDNumber:        idNumber,
+			LegalName:       legalName,
+			BirthDate:       birthDate,
+			MotherName:      motherName,
+			CustomerSegment: constant.RO_AO_PRIME,
+		},
+	}
+
+	konsumenOnlyAO := []request.CustomerData{
+		{
+			StatusKonsumen: constant.STATUS_KONSUMEN_AO,
+			IDNumber:       idNumber,
+			LegalName:      legalName,
+			BirthDate:      birthDate,
+			MotherName:     motherName,
+		},
+	}
+
+	konsumenOnlyAoPrime := []request.CustomerData{
+		{
+			StatusKonsumen:  constant.STATUS_KONSUMEN_AO,
+			IDNumber:        idNumber,
+			LegalName:       legalName,
+			BirthDate:       birthDate,
+			MotherName:      motherName,
+			CustomerSegment: constant.RO_AO_PRIME,
+		},
+	}
 
 	testcases := []struct {
 		name                                                                    string
@@ -82,6 +100,8 @@ func TestDsrCheck(t *testing.T) {
 		responseAgreementChassisNumber                                          response.AgreementChassisNumber
 		customerData                                                            []request.CustomerData
 		installmentAmount, installmentConfins, installmentConfinsSpouse, income float64
+		bodyChassisNumber                                                       string
+		codeChassisNumber                                                       int
 	}{
 		{
 			name:           "DsrCheck error EngineAPI",
@@ -112,6 +132,163 @@ func TestDsrCheck(t *testing.T) {
 			installmentAmount: 260000,
 			income:            10000000,
 		},
+		{
+			name:           "DsrCheck reject",
+			dupcheckConfig: config,
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+				RangkaNo:   "198091461892",
+			},
+			customerData: konsumenOnly,
+			code:         200,
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_REJECT,
+				Code:           constant.CODE_DSRGT35,
+				Reason:         "NEW - Confins DSR > 35",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+				Dsr:            65,
+			},
+			installmentAmount: 260000,
+			income:            400000,
+		},
+		{
+			name:           "DsrCheck ro",
+			dupcheckConfig: config,
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+				RangkaNo:   "198091461892",
+			},
+			customerData: konsumenOnlyRo,
+			code:         200,
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_REJECT,
+				Code:           constant.CODE_DSRGT35,
+				Reason:         "RO - Confins DSR > 35",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+				Dsr:            65,
+			},
+			installmentAmount:  260000,
+			installmentConfins: 200000,
+			income:             400000,
+			codeChassisNumber:  200,
+			bodyChassisNumber: `{ "code": "OK", "message": "operasi berhasil dieksekusi.", "data": { "go_live_date": null, "id_number": "", 
+			"installment_amount": 0, "is_active": false, "is_registered": false, "lc_installment": 0, "legal_name": "", "outstanding_interest": 0, 
+			"outstanding_principal": 0, "status": "" }, "errors": null, "request_id": "e818eaf9-cc7b-40cb-b707-37ab3006ae5c", 
+			"timestamp": "2023-11-02 06:22:17" }`,
+		},
+		{
+			name:           "DsrCheck ro prime",
+			dupcheckConfig: config,
+			req: request.DupcheckApi{
+				ProspectID:      "TEST198091461892",
+				RangkaNo:        "198091461892",
+				CustomerSegment: constant.RO_AO_PRIME,
+			},
+			customerData: konsumenOnlyRoPrime,
+			code:         200,
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_DSRLTE35,
+				Reason:         "RO PRIME",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+				Dsr:            65,
+			},
+			installmentAmount:  260000,
+			installmentConfins: 200000,
+			income:             400000,
+			codeChassisNumber:  200,
+			bodyChassisNumber: `{ "code": "OK", "message": "operasi berhasil dieksekusi.", "data": { "go_live_date": null, "id_number": "", 
+			"installment_amount": 0, "is_active": false, "is_registered": false, "lc_installment": 0, "legal_name": "", "outstanding_interest": 0, 
+			"outstanding_principal": 0, "status": "" }, "errors": null, "request_id": "e818eaf9-cc7b-40cb-b707-37ab3006ae5c", 
+			"timestamp": "2023-11-02 06:22:17" }`,
+		},
+		{
+			name:           "DsrCheck ao top up",
+			dupcheckConfig: config,
+			req: request.DupcheckApi{
+				ProspectID:      "TEST198091461892",
+				RangkaNo:        "198091461892",
+				CustomerSegment: constant.RO_AO_PRIME,
+				OTRPrice:        17000000,
+				DPAmount:        2000000,
+			},
+			customerData: konsumenOnlyAO,
+			code:         200,
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_REJECT,
+				Code:           constant.CODE_DSRGT35,
+				Reason:         "AO Top Up - Confins DSR > 35",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+				Dsr:            40,
+			},
+			installmentAmount:  260000,
+			installmentConfins: 200000,
+			income:             400000,
+			codeChassisNumber:  200,
+			bodyChassisNumber: `{ "code": "OK", "message": "operasi berhasil dieksekusi.", "data": { "go_live_date": null, "id_number": "", 
+			"installment_amount": 300000, "is_active": true, "is_registered": false, "lc_installment": 0, "legal_name": "", "outstanding_interest": 0, 
+			"outstanding_principal": 0, "status": "" }, "errors": null, "request_id": "e818eaf9-cc7b-40cb-b707-37ab3006ae5c", 
+			"timestamp": "2023-11-02 06:22:17" }`,
+		},
+		{
+			name: "DsrCheck ao top up menunggak",
+			dupcheckConfig: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			req: request.DupcheckApi{
+				ProspectID:      "TEST198091461892",
+				RangkaNo:        "198091461892",
+				CustomerSegment: constant.RO_AO_PRIME,
+				OTRPrice:        17000000,
+				DPAmount:        2000000,
+			},
+			customerData: konsumenOnlyAO,
+			code:         200,
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_REJECT,
+				Code:           constant.CODE_TOPUP_MENUNGGAK,
+				Reason:         "AO Top Up Menunggak",
+				SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+				Dsr:            40,
+			},
+			installmentAmount:  260000,
+			installmentConfins: 200000,
+			income:             400000,
+			codeChassisNumber:  200,
+			bodyChassisNumber: `{ "code": "OK", "message": "operasi berhasil dieksekusi.", "data": { "go_live_date": null, "id_number": "", 
+			"installment_amount": 300000, "is_active": true, "is_registered": false, "lc_installment": 0, "legal_name": "", "outstanding_interest": 0, 
+			"outstanding_principal": 0, "status": "" }, "errors": null, "request_id": "e818eaf9-cc7b-40cb-b707-37ab3006ae5c", 
+			"timestamp": "2023-11-02 06:22:17" }`,
+		},
+		{
+			name:           "DsrCheck ao prime",
+			dupcheckConfig: config,
+			req: request.DupcheckApi{
+				ProspectID:      "TEST198091461892",
+				RangkaNo:        "198091461892",
+				CustomerSegment: constant.RO_AO_PRIME,
+				OTRPrice:        17000000,
+				DPAmount:        2000000,
+			},
+			customerData: konsumenOnlyAoPrime,
+			code:         200,
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_DSRLTE35,
+				Reason:         "AO PRIME Top Up",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+				Dsr:            65,
+			},
+			installmentAmount:  260000,
+			installmentConfins: 200000,
+			income:             400000,
+			codeChassisNumber:  200,
+			bodyChassisNumber: `{ "code": "OK", "message": "operasi berhasil dieksekusi.", "data": { "go_live_date": null, "id_number": "", 
+			"installment_amount": 200000, "is_active": true, "is_registered": false, "lc_installment": 0, "legal_name": "", "outstanding_interest": 0, 
+			"outstanding_principal": 12000000, "status": "" }, "errors": null, "request_id": "e818eaf9-cc7b-40cb-b707-37ab3006ae5c", 
+			"timestamp": "2023-11-02 06:22:17" }`,
+		},
 	}
 
 	for _, tc := range testcases {
@@ -131,7 +308,16 @@ func TestDsrCheck(t *testing.T) {
 			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("INSTALLMENT_PENDING_URL"), httpmock.NewStringResponder(tc.code, tc.body))
 			resp, _ := rst.R().Post(os.Getenv("INSTALLMENT_PENDING_URL"))
 
-			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("INSTALLMENT_PENDING_URL"), mock.Anything, mock.Anything, constant.METHOD_POST, true, 3, 60, tc.req.ProspectID, accessToken).Return(resp, tc.errResp).Once()
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("INSTALLMENT_PENDING_URL"), mock.Anything, mock.Anything, constant.METHOD_POST, true, 2, 60, tc.req.ProspectID, accessToken).Return(resp, tc.errResp).Once()
+
+			rst = resty.New()
+			httpmock.ActivateNonDefault(rst.GetClient())
+			defer httpmock.DeactivateAndReset()
+
+			httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL"), httpmock.NewStringResponder(tc.codeChassisNumber, tc.bodyChassisNumber))
+			resp, _ = rst.R().Get(os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL"))
+
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+tc.req.RangkaNo, mock.Anything, mock.Anything, constant.METHOD_GET, true, 2, 60, tc.req.ProspectID, accessToken).Return(resp, tc.errResp).Once()
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
@@ -142,4 +328,209 @@ func TestDsrCheck(t *testing.T) {
 		})
 	}
 
+}
+
+func TestTotalDsrFmfPbk(t *testing.T) {
+	testcases := []struct {
+		name                                             string
+		totalIncome, newInstallment, totalInstallmentPBK float64
+		prospectID, customerSegment, accessToken         string
+		SpDupcheckMap                                    response.SpDupcheckMap
+		codeLatestInstallment                            int
+		bodyLatestInstallment                            string
+		errLatestInstallment                             error
+		configValue                                      entity.AppConfig
+		result                                           response.UsecaseApi
+		trxFMF                                           response.TrxFMF
+		errResult                                        error
+	}{
+		{
+			name:                "TotalDsrFmfPbk reject",
+			totalIncome:         6000000,
+			newInstallment:      2000000,
+			totalInstallmentPBK: 3000000,
+			prospectID:          "TEST1",
+			customerSegment:     "",
+			accessToken:         "token",
+			configValue: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			SpDupcheckMap: response.SpDupcheckMap{
+				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
+				Dsr:            30,
+				CustomerID:     "",
+			},
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_REJECT,
+				Code:           constant.CODE_TOTAL_DSRGT35,
+				Reason:         "NEW - DSR > 35",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+			},
+			trxFMF: response.TrxFMF{
+				DSRPBK:   float64(50),
+				TotalDSR: float64(80),
+			},
+		},
+		{
+			name:                "TotalDsrFmfPbk reject",
+			totalIncome:         6000000,
+			newInstallment:      2000000,
+			totalInstallmentPBK: 30000,
+			prospectID:          "TEST1",
+			customerSegment:     "",
+			accessToken:         "token",
+			configValue: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			SpDupcheckMap: response.SpDupcheckMap{
+				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
+				Dsr:            30,
+				CustomerID:     "",
+			},
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_TOTAL_DSRLTE35,
+				Reason:         "NEW - DSR <= 35",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+			},
+			trxFMF: response.TrxFMF{
+				DSRPBK:   float64(0.5),
+				TotalDSR: float64(30.5),
+			},
+		},
+		{
+			name:                "TotalDsrFmfPbk ro prime",
+			totalIncome:         6000000,
+			newInstallment:      200000,
+			totalInstallmentPBK: 30000,
+			prospectID:          "TEST1",
+			customerSegment:     constant.RO_AO_PRIME,
+			accessToken:         "token",
+			configValue: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			SpDupcheckMap: response.SpDupcheckMap{
+				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
+				Dsr:            30,
+				CustomerID:     "123456",
+			},
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_TOTAL_DSRLTE35,
+				Reason:         "RO PRIME",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+			},
+			trxFMF: response.TrxFMF{
+				DSRPBK:                  float64(0.5),
+				TotalDSR:                float64(30),
+				LatestInstallmentAmount: 1000000,
+				InstallmentThreshold:    1500000,
+			},
+			codeLatestInstallment: 200,
+			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
+			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 1000000, "contract_status": "", "outstanding_principal": 0, 
+			"rrd_date": "" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
+		},
+		{
+			name:                "TotalDsrFmfPbk ao top up prime",
+			totalIncome:         6000000,
+			newInstallment:      200000,
+			totalInstallmentPBK: 30000,
+			prospectID:          "TEST1",
+			customerSegment:     constant.RO_AO_PRIME,
+			accessToken:         "token",
+			configValue: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			SpDupcheckMap: response.SpDupcheckMap{
+				StatusKonsumen:   constant.STATUS_KONSUMEN_AO,
+				Dsr:              30,
+				CustomerID:       "123456",
+				InstallmentTopup: 1000000,
+			},
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_TOTAL_DSRLTE35,
+				Reason:         "AO PRIME Top Up",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+			},
+			trxFMF: response.TrxFMF{
+				DSRPBK:                  float64(0.5),
+				TotalDSR:                float64(30),
+				LatestInstallmentAmount: 1000000,
+				InstallmentThreshold:    1500000,
+			},
+			codeLatestInstallment: 200,
+			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
+			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 1000000, "contract_status": "", "outstanding_principal": 0, 
+			"rrd_date": "" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
+		},
+		{
+			name:                "TotalDsrFmfPbk ro prime err",
+			totalIncome:         6000000,
+			newInstallment:      200000,
+			totalInstallmentPBK: 30000,
+			prospectID:          "TEST1",
+			customerSegment:     constant.RO_AO_PRIME,
+			accessToken:         "token",
+			configValue: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			SpDupcheckMap: response.SpDupcheckMap{
+				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
+				Dsr:            30,
+				CustomerID:     "123456",
+			},
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_TOTAL_DSRLTE35,
+				Reason:         "RO PRIME - DSR <= 35",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+			},
+			trxFMF: response.TrxFMF{
+				DSRPBK:   float64(0.5),
+				TotalDSR: float64(30.5),
+			},
+			codeLatestInstallment: 500,
+			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
+			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 1000000, "contract_status": "", "outstanding_principal": 0, 
+			"rrd_date": "" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
+			errLatestInstallment: errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout"),
+			errResult:            errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout"),
+		},
+	}
+
+	os.Setenv("LASTEST_PAID_INSTALLMENT_URL", "http://10.9.100.231/los-int-dupcheck-v2/api/v2/mdm/installment/")
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+
+			var configValue response.DupcheckConfig
+			json.Unmarshal([]byte(tc.configValue.Value), &configValue)
+
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			rst := resty.New()
+			httpmock.ActivateNonDefault(rst.GetClient())
+			defer httpmock.DeactivateAndReset()
+
+			httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("LASTEST_PAID_INSTALLMENT_URL"), httpmock.NewStringResponder(tc.codeLatestInstallment, tc.bodyLatestInstallment))
+			resp, _ := rst.R().Get(os.Getenv("LASTEST_PAID_INSTALLMENT_URL"))
+
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.SpDupcheckMap.CustomerID.(string)+"/2", mock.Anything, mock.Anything, constant.METHOD_GET, false, 0, 30, tc.prospectID, tc.accessToken).Return(resp, tc.errLatestInstallment).Once()
+
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			data, trx, err := usecase.TotalDsrFmfPbk(ctx, tc.totalIncome, tc.newInstallment, tc.totalInstallmentPBK, tc.prospectID, tc.customerSegment, tc.accessToken, tc.SpDupcheckMap, configValue)
+			require.Equal(t, tc.result, data)
+			require.Equal(t, tc.trxFMF, trx)
+			require.Equal(t, tc.errResult, err)
+		})
+	}
 }
