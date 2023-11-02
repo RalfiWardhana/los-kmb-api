@@ -731,3 +731,11 @@ type ReqReturnOrder struct {
 	CreatedBy  string `json:"decision_by" validate:"required"`
 	DecisionBy string `json:"decision_by_name" validate:"required"`
 }
+
+type ReqInquiryApproval struct {
+	Search   string `json:"search"`
+	BranchID string `json:"branch_id"`
+	Filter   string `json:"filter"`
+	UserID   string `json:"user_id" validate:"required"`
+	Alias    string `json:"alias" validate:"required"`
+}

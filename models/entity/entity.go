@@ -1286,6 +1286,7 @@ type InquiryCa struct {
 	ScsStatus          string `gorm:"column:ScsStatus"`
 	BiroCustomerResult string `gorm:"column:BiroCustomerResult"`
 	BiroSpouseResult   string `gorm:"column:BiroSpouseResult"`
+	IsLastApproval     bool   `gorm:"column:is_last_approval"`
 
 	DraftDecision   string    `gorm:"column:draft_decision"`
 	DraftSlikResult string    `gorm:"column:draft_slik_result"`
@@ -1415,6 +1416,7 @@ type InquiryDataCa struct {
 
 type DataCa struct {
 	ShowAction         bool   `gorm:"column:ShowAction" json:"show_action"`
+	IsLastApproval     bool   `gorm:"column:IsLastApproval" json:"is_last_approval"`
 	StatusDecision     string `gorm:"column:decision" json:"status_decision"`
 	StatusReason       string `gorm:"column:reason" json:"status_reason"`
 	CaDecision         string `gorm:"column:ca_decision" json:"ca_decision"`

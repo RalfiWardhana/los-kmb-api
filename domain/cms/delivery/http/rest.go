@@ -39,6 +39,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.GET("/cms/ca/cancel-reason", handler.CancelReason, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/return", handler.ReturnOrder, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/search", handler.SearchInquiry, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/approval/inquiry", handler.ApprovalInquiry, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
@@ -481,4 +482,56 @@ func (c *handlerCMS) ReturnOrder(ctx echo.Context) (err error) {
 
 	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Return Order", req, data)
 	return ctxJson
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Credit Approval
+// @Tags Credit Approval
+// @Produce json
+// @Param body body request.ReqInquiryCa true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.InquiryRow}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/approval/inquiry [get]
+func (c *handlerCMS) ApprovalInquiry(ctx echo.Context) (err error) {
+
+	var accessToken = middlewares.UserInfoData.AccessToken
+
+	req := request.ReqInquiryApproval{
+		Search:   ctx.QueryParam("search"),
+		BranchID: ctx.QueryParam("branch_id"),
+		Filter:   ctx.QueryParam("filter"),
+		UserID:   ctx.QueryParam("user_id"),
+		Alias:    ctx.QueryParam("alias"),
+	}
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry", req, err)
+	}
+
+	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	pagination := request.RequestPagination{
+		Page:  page,
+		Limit: 10,
+	}
+
+	data, rowTotal, err := c.usecase.GetInquiryApproval(ctx.Request().Context(), req, pagination)
+
+	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry", req, response.InquiryRow{Inquiry: data})
+	}
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry", req, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry", req, response.InquiryRow{
+		Inquiry:        data,
+		RecordFiltered: len(data),
+		RecordTotal:    rowTotal,
+	})
 }
