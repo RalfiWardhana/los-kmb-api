@@ -52,6 +52,17 @@ func (u usecase) GetCancelReason(ctx context.Context, pagination interface{}) (d
 	return
 }
 
+func (u usecase) GetApprovalReason(ctx context.Context, req request.ReqApprovalReason, pagination interface{}) (data []entity.ApprovalReason, rowTotal int, err error) {
+
+	data, rowTotal, err = u.repository.GetApprovalReason(req, pagination)
+
+	if err != nil {
+		return
+	}
+
+	return
+}
+
 func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInquiryPrescreening, pagination interface{}) (data []entity.InquiryData, rowTotal int, err error) {
 
 	var (

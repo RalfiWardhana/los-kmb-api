@@ -680,6 +680,10 @@ type ReqReasonPrescreening struct {
 	ReasonID string `json:"reason_id"`
 }
 
+type ReqApprovalReason struct {
+	Type string `json:"type"`
+}
+
 type ReqReviewPrescreening struct {
 	ProspectID     string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
 	Decision       string `json:"decision" validate:"required,decision" example:"APPROVE,REJECT"`

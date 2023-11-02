@@ -141,6 +141,11 @@ func main() {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
 	}
 
+	core, err := database.OpenCore()
+	if err != nil {
+		panic(fmt.Sprintf("Failed to open database connection: %s", err))
+	}
+
 	staging, err := database.OpenStaging()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
@@ -216,12 +221,12 @@ func main() {
 
 	// define new kmb cms
 	cacheRepository := cacheRepository.NewRepository(cache)
-	cmsRepositories := cmsRepository.NewRepository(confins, newKMB, kpLosLogs)
+	cmsRepositories := cmsRepository.NewRepository(core, confins, newKMB, kpLosLogs)
 	cmsUsecases := cmsUsecase.NewUsecase(cmsRepositories, httpClient, cacheRepository)
 	cmsDelivery.CMSHandler(apiGroupv3, cmsUsecases, cmsRepositories, jsonResponse, producer, accessToken)
 
 	// define new kmb journey
-	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, confins, staging, minilosWG, minilosKMB, newKMB, scorePro)
+	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, core, staging, minilosWG, minilosKMB, newKMB, scorePro)
 	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
 	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)

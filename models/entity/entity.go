@@ -1598,3 +1598,9 @@ type HistoryApproval struct {
 	NextStep              string      `gorm:"column:next_step" json:"next_step"`
 	SlikResult            string      `gorm:"column:slik_result" json:"slik_result"`
 }
+
+type ApprovalReason struct {
+	ReasonID string `gorm:"column:id" json:"reason_id"`
+	Value    string `gorm:"column:value" json:"value"`
+	Type     string `gorm:"column:Type" json:"type"`
+}

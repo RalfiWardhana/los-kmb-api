@@ -40,6 +40,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.POST("/cms/ca/return", handler.ReturnOrder, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/search", handler.SearchInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/approval/inquiry", handler.ApprovalInquiry, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/approval/reason", handler.ApprovalReason, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
@@ -531,6 +532,56 @@ func (c *handlerCMS) ApprovalInquiry(ctx echo.Context) (err error) {
 
 	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry", req, response.InquiryRow{
 		Inquiry:        data,
+		RecordFiltered: len(data),
+		RecordTotal:    rowTotal,
+	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Credit Approval
+// @Tags Credit Approval
+// @Produce json
+// @Param page query string false "page" and type
+// @Success 200 {object} response.ApiResponse{data=response.ReasonMessageRow}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/approval/reason [get]
+func (c *handlerCMS) ApprovalReason(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+	)
+
+	req := request.ReqApprovalReason{
+		Type: ctx.QueryParam("type"),
+	}
+
+	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	pagination := request.RequestPagination{
+		Page:  page,
+		Limit: 50,
+	}
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Reason", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Reason", req, err)
+	}
+
+	data, rowTotal, err := c.usecase.GetApprovalReason(ctx.Request().Context(), req, pagination)
+
+	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Reason", pagination, response.ReasonMessageRow{Reason: data})
+	}
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Reason", pagination, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Reason", pagination, response.ReasonMessageRow{
+		Reason:         data,
 		RecordFiltered: len(data),
 		RecordTotal:    rowTotal,
 	})

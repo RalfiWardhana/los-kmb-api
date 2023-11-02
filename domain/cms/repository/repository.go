@@ -28,12 +28,14 @@ var (
 type repoHandler struct {
 	NewKmb    *gorm.DB
 	core      *gorm.DB
+	confins   *gorm.DB
 	KpLosLogs *gorm.DB
 }
 
-func NewRepository(core, NewKmb, KpLosLogs *gorm.DB) interfaces.Repository {
+func NewRepository(core, confins, NewKmb, KpLosLogs *gorm.DB) interfaces.Repository {
 	return &repoHandler{
 		core:      core,
+		confins:   confins,
 		NewKmb:    NewKmb,
 		KpLosLogs: KpLosLogs,
 	}
@@ -158,6 +160,61 @@ func (r repoHandler) GetCancelReason(pagination interface{}) (reason []entity.Ca
 	defer db.Commit()
 
 	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT * FROM m_cancel_reason with (nolock) WHERE show = '1' ORDER BY id_cancel_reason ASC %s`, filterPaginate)).Scan(&reason).Error; err != nil {
+		return
+	}
+
+	if len(reason) == 0 {
+		return reason, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
+	return
+}
+
+func (r repoHandler) GetApprovalReason(req request.ReqApprovalReason, pagination interface{}) (reason []entity.ApprovalReason, rowTotal int, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	var (
+		filterPaginate string
+		filter         string
+	)
+
+	if req.Type != "" {
+		filter = fmt.Sprintf(" AND [Type] = '%s'", req.Type)
+	}
+
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.confins.Raw(fmt.Sprintf(`
+		SELECT
+		COUNT(tt.id) AS totalRow
+		FROM
+		(SELECT CONCAT(ReasonID, '|', Type, '|', Description) AS 'id', Description AS 'value', [Type] FROM tblApprovalReason WHERE IsActive = 'True' %s) AS tt`, filter)).Scan(&row).Error; err != nil {
+			return
+		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.confins.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.confins.Raw(fmt.Sprintf(`SELECT CONCAT(ReasonID, '|', Type, '|', Description) AS 'id', Description AS 'value', [Type] FROM tblApprovalReason WHERE IsActive = 'True' %s ORDER BY ReasonID ASC %s`, filter, filterPaginate)).Scan(&reason).Error; err != nil {
 		return
 	}
 
