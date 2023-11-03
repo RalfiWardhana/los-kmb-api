@@ -1215,7 +1215,7 @@ func (u usecase) ReturnOrder(ctx context.Context, req request.ReqReturnOrder) (d
 	return
 }
 
-func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryApproval, pagination interface{}) (data []entity.InquiryDataCa, rowTotal int, err error) {
+func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryApproval, pagination interface{}) (data []entity.InquiryDataApproval, rowTotal int, err error) {
 
 	var (
 		industry       []entity.SpIndustryTypeMaster
@@ -1229,7 +1229,7 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 	result, rowTotal, err := u.repository.GetInquiryApproval(req, pagination)
 
 	if err != nil {
-		return []entity.InquiryDataCa{}, 0, err
+		return []entity.InquiryDataApproval{}, 0, err
 	}
 
 	for _, inq := range result {
@@ -1378,8 +1378,8 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 			statusDecision = constant.DECISION_CANCEL
 		}
 
-		row := entity.InquiryDataCa{
-			CA: entity.DataCa{
+		row := entity.InquiryDataApproval{
+			CA: entity.DataApproval{
 				ShowAction:         inq.ShowAction,
 				IsLastApproval:     inq.IsLastApproval,
 				StatusDecision:     statusDecision,
@@ -1510,6 +1510,131 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 
 		data = append(data, row)
 
+	}
+
+	return
+}
+
+func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApproval) (data response.ApprovalResponse, err error) {
+
+	var (
+		trxCaDecision entity.TrxCaDecision
+		trxDetail     entity.TrxDetail
+		trxStatus     entity.TrxStatus
+		limit         entity.MappingLimitApprovalScheme
+		isCancel      bool
+	)
+
+	status, err := u.repository.GetTrxStatus(req.ProspectID)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get status order error")
+		return
+	}
+
+	// Bisa melakukan submit jika status UNPR dan decision CPR
+	if status.Activity == constant.ACTIVITY_UNPROCESS && status.Decision == constant.DB_DECISION_CREDIT_PROCESS {
+
+		// get limit approval for final_approval
+		limit, err = u.repository.GetLimitApproval(req.NTFAkumulasi)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get limit approval error")
+			return
+		}
+
+		decisionMapping := map[string]struct {
+			Code           int
+			StatusProcess  string
+			Activity       string
+			Decision       string
+			DecisionDetail string
+			DecisionStatus string
+			ActivityStatus string
+			NextStep       interface{}
+			SourceDecision string
+		}{
+			constant.DECISION_REJECT: {
+				Code:           constant.CODE_REJECT_PRESCREENING,
+				StatusProcess:  constant.STATUS_FINAL,
+				Activity:       constant.ACTIVITY_STOP,
+				Decision:       constant.DB_DECISION_REJECT,
+				DecisionStatus: constant.DB_DECISION_REJECT,
+				DecisionDetail: constant.DB_DECISION_REJECT,
+				ActivityStatus: constant.ACTIVITY_STOP,
+				SourceDecision: constant.PRESCREENING,
+			},
+			constant.DECISION_APPROVE: {
+				Code:           constant.CODE_PASS_PRESCREENING,
+				StatusProcess:  constant.STATUS_ONPROCESS,
+				Activity:       constant.ACTIVITY_PROCESS,
+				Decision:       constant.DB_DECISION_APR,
+				DecisionStatus: constant.DB_DECISION_CREDIT_PROCESS,
+				DecisionDetail: constant.DB_DECISION_PASS,
+				ActivityStatus: constant.ACTIVITY_UNPROCESS,
+				SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+				NextStep:       constant.SOURCE_DECISION_DUPCHECK,
+			},
+		}
+
+		decisionInfo, ok := decisionMapping[req.Decision]
+		if !ok {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Decision tidak valid")
+			return
+		}
+
+		trxCaDecision = entity.TrxCaDecision{
+			ProspectID:    req.ProspectID,
+			Decision:      decisionInfo.Decision,
+			SlikResult:    req.Reason,
+			Note:          req.Note,
+			CreatedBy:     req.CreatedBy,
+			DecisionBy:    req.DecisionBy,
+			FinalApproval: limit.Alias,
+		}
+
+		if req.Decision == constant.DECISION_REJECT {
+			trxStatus.RuleCode = decisionInfo.Code
+		}
+
+		trxStatus = entity.TrxStatus{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  decisionInfo.StatusProcess,
+			Activity:       decisionInfo.ActivityStatus,
+			Decision:       decisionInfo.DecisionStatus,
+			RuleCode:       constant.CODE_CREDIT_COMMITTEE,
+			SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
+			Reason:         req.Reason,
+		}
+
+		trxDetail = entity.TrxDetail{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  decisionInfo.StatusProcess,
+			Activity:       decisionInfo.Activity,
+			Decision:       decisionInfo.DecisionDetail,
+			RuleCode:       constant.CODE_CREDIT_COMMITTEE,
+			SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
+			NextStep:       constant.DB_DECISION_BRANCH_MANAGER,
+			Info:           req.Reason,
+			CreatedBy:      req.CreatedBy,
+		}
+
+		isCancel = false
+
+		err = u.repository.ProcessTransaction(isCancel, trxCaDecision, trxStatus, trxDetail)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")
+			return
+		}
+
+		data = response.ApprovalResponse{
+			ProspectID: req.ProspectID,
+			Decision:   req.Decision,
+			Reason:     req.Reason,
+			Note:       req.Note,
+		}
+	} else {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Status order tidak sedang dalam credit process")
+		return
 	}
 
 	return

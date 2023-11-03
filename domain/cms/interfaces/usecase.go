@@ -18,6 +18,7 @@ type Usecase interface {
 	CancelOrder(ctx context.Context, req request.ReqCancelOrder) (data response.CancelResponse, err error)
 	GetCancelReason(ctx context.Context, pagination interface{}) (data []entity.CancelReason, rowTotal int, err error)
 	ReturnOrder(ctx context.Context, req request.ReqReturnOrder) (data response.ReturnResponse, err error)
-	GetInquiryApproval(ctx context.Context, req request.ReqInquiryApproval, pagination interface{}) (data []entity.InquiryDataCa, rowTotal int, err error)
+	GetInquiryApproval(ctx context.Context, req request.ReqInquiryApproval, pagination interface{}) (data []entity.InquiryDataApproval, rowTotal int, err error)
 	GetApprovalReason(ctx context.Context, req request.ReqApprovalReason, pagination interface{}) (data []entity.ApprovalReason, rowTotal int, err error)
+	SubmitApproval(ctx context.Context, req request.ReqSubmitApproval) (data response.ApprovalResponse, err error)
 }

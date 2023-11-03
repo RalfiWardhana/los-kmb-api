@@ -41,6 +41,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.GET("/cms/search", handler.SearchInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/approval/inquiry", handler.ApprovalInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/approval/reason", handler.ApprovalReason, middlewares.AccessMiddleware())
+	cmsroute.POST("/cms/approval/submit-approval", handler.SubmitApproval, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
@@ -275,7 +276,7 @@ func (c *handlerCMS) SaveAsDraft(ctx echo.Context) (err error) {
 // @Success 200 {object} response.ApiResponse{data=response.CAResponse}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
-// @Router /api/v3/kmb/cms/submit-decision [post]
+// @Router /api/v3/kmb/cms/ca/submit-decision [post]
 func (c *handlerCMS) SubmitDecision(ctx echo.Context) (err error) {
 
 	var (
@@ -585,4 +586,37 @@ func (c *handlerCMS) ApprovalReason(ctx echo.Context) (err error) {
 		RecordFiltered: len(data),
 		RecordTotal:    rowTotal,
 	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Credit Approval
+// @Tags Credit Approval
+// @Produce json
+// @Param body body request.ReqSubmitApproval true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.ApprovalResponse}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/approval/submit-approval [post]
+func (c *handlerCMS) SubmitApproval(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		req         request.ReqSubmitApproval
+	)
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", req, err)
+	}
+
+	data, err := c.usecase.SubmitApproval(ctx.Request().Context(), req)
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", req, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", req, data)
 }
