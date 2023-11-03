@@ -784,3 +784,10 @@ type ReturnResponse struct {
 	ProspectID string `json:"prospect_id"`
 	Status     string `json:"status"`
 }
+
+type ApprovalResponse struct {
+	ProspectID string `json:"prospect_id"`
+	Decision   string `json:"decision"`
+	Reason     string `json:"reason"`
+	Note       string `json:"note"`
+}

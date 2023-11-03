@@ -1416,7 +1416,6 @@ type InquiryDataCa struct {
 
 type DataCa struct {
 	ShowAction         bool   `gorm:"column:ShowAction" json:"show_action"`
-	IsLastApproval     bool   `gorm:"column:IsLastApproval" json:"is_last_approval"`
 	StatusDecision     string `gorm:"column:decision" json:"status_decision"`
 	StatusReason       string `gorm:"column:reason" json:"status_reason"`
 	CaDecision         string `gorm:"column:ca_decision" json:"ca_decision"`
@@ -1603,4 +1602,34 @@ type ApprovalReason struct {
 	ReasonID string `gorm:"column:id" json:"reason_id"`
 	Value    string `gorm:"column:value" json:"value"`
 	Type     string `gorm:"column:Type" json:"type"`
+}
+
+type InquiryDataApproval struct {
+	CA             DataApproval        `json:"ca"`
+	InternalRecord []TrxInternalRecord `json:"internal_record"`
+	Approval       []HistoryApproval   `json:"approval"`
+	General        DataGeneral         `json:"general"`
+	Personal       CustomerPersonal    `json:"personal"`
+	Spouse         CustomerSpouse      `json:"spouse"`
+	Employment     CustomerEmployment  `json:"employment"`
+	ItemApk        DataItemApk         `json:"item_apk"`
+	Surveyor       []TrxSurveyor       `json:"surveyor"`
+	Emcon          CustomerEmcon       `json:"emcon"`
+	Address        DataAddress         `json:"address"`
+	Photo          []DataPhoto         `json:"photo"`
+}
+
+type DataApproval struct {
+	ShowAction         bool   `gorm:"column:ShowAction" json:"show_action"`
+	IsLastApproval     bool   `gorm:"column:IsLastApproval" json:"is_last_approval"`
+	StatusDecision     string `gorm:"column:decision" json:"status_decision"`
+	StatusReason       string `gorm:"column:reason" json:"status_reason"`
+	CaDecision         string `gorm:"column:ca_decision" json:"ca_decision"`
+	CaNote             string `gorm:"column:ca_note" json:"ca_note"`
+	ActionDate         string `gorm:"column:ActionDate" json:"action_date"`
+	ScsDate            string `gorm:"column:ScsDate" json:"scorepro_date"`
+	ScsScore           string `gorm:"column:ScsScore" json:"scorepro_score"`
+	ScsStatus          string `gorm:"column:ScsStatus" json:"scorepro_status"`
+	BiroCustomerResult string `gorm:"column:BiroCustomerResult" json:"biro_customer_result"`
+	BiroSpouseResult   string `gorm:"column:BiroSpouseResult" json:"biro_spouse_result"`
 }
