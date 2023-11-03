@@ -475,3 +475,17 @@ func (_m *Repository) GetInquiryApproval(req request.ReqInquiryApproval, paginat
 
 	return r0, r1, r2
 }
+
+// SubmitApproval provides a mock function with given fields: req, trxStatus, trxDetail
+func (_m *Repository) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) error {
+	ret := _m.Called(req, trxStatus, trxDetail)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(request.ReqSubmitApproval, entity.TrxStatus, entity.TrxDetail) error); ok {
+		r0 = rf(req, trxStatus, trxDetail)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}

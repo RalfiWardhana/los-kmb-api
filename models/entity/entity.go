@@ -1457,6 +1457,20 @@ func (c *MappingLimitApprovalScheme) TableName() string {
 	return "m_limit_approval_scheme"
 }
 
+type TrxFinalApproval struct {
+	ProspectID string      `gorm:"type:varchar(20);column:ProspectID" json:"-"`
+	Decision   string      `gorm:"type:varchar(3);column:decision" json:"decision"`
+	Reason     string      `gorm:"type:varchar(100);column:reason" json:"reason"`
+	Note       interface{} `gorm:"type:varchar(525);column:note" json:"note"`
+	CreatedAt  time.Time   `gorm:"column:created_at" json:"-"`
+	CreatedBy  string      `gorm:"type:varchar(100);column:created_by" json:"-"`
+	DecisionBy string      `gorm:"type:varchar(250);column:decision_by" json:"-"`
+}
+
+func (c *TrxFinalApproval) TableName() string {
+	return "trx_final_approval"
+}
+
 type InquirySearch struct {
 	ActionReturn  bool `gorm:"column:ActionReturn"`
 	ActionCancel  bool `gorm:"column:ActionCancel"`
