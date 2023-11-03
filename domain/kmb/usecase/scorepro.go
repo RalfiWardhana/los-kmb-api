@@ -243,11 +243,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 
 	} else {
 
-		err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &responseScs)
-		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal IntegratorScorePro Error")
-			return
-		}
+		json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &responseScs)
 
 	}
 
