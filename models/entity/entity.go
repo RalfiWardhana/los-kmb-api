@@ -1281,6 +1281,7 @@ type InquiryCa struct {
 	StatusDecision     string `gorm:"column:decision"`
 	StatusReason       string `gorm:"column:reason"`
 	CaDecision         string `gorm:"column:ca_decision"`
+	FinalApproval      string `gorm:"column:final_approval"`
 	CANote             string `gorm:"column:ca_note"`
 	ScsDate            string `gorm:"column:ScsDate"`
 	ScsScore           string `gorm:"column:ScsScore"`
@@ -1640,6 +1641,7 @@ type DataApproval struct {
 	IsLastApproval     bool   `gorm:"column:IsLastApproval" json:"is_last_approval"`
 	StatusDecision     string `gorm:"column:decision" json:"status_decision"`
 	StatusReason       string `gorm:"column:reason" json:"status_reason"`
+	FinalApproval      string `gorm:"column:final_approval" json:"final_approval"`
 	CaDecision         string `gorm:"column:ca_decision" json:"ca_decision"`
 	CaNote             string `gorm:"column:ca_note" json:"ca_note"`
 	ActionDate         string `gorm:"column:ActionDate" json:"action_date"`
