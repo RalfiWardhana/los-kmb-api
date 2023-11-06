@@ -1575,7 +1575,7 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 		Activity:       decisionInfo.ActivityStatus,
 		Decision:       decisionInfo.DecisionStatus,
 		RuleCode:       decisionInfo.Code,
-		SourceDecision: decisionInfo.SourceDecision,
+		SourceDecision: approvalScheme.NextStep,
 		Reason:         req.Reason,
 	}
 
