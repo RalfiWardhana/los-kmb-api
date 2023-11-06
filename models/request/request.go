@@ -737,14 +737,14 @@ type ReqSearchInquiry struct {
 }
 
 type ReqCancelOrder struct {
-	ProspectID   string `json:"prospect_id" validate:"required"`
+	ProspectID   string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
 	CreatedBy    string `json:"decision_by" validate:"required"`
 	DecisionBy   string `json:"decision_by_name" validate:"required"`
 	CancelReason string `json:"reason" validate:"required"`
 }
 
 type ReqReturnOrder struct {
-	ProspectID string `json:"prospect_id" validate:"required"`
+	ProspectID string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
 	CreatedBy  string `json:"decision_by" validate:"required"`
 	DecisionBy string `json:"decision_by_name" validate:"required"`
 }
