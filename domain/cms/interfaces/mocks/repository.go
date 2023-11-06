@@ -472,74 +472,7 @@ func (_m *Repository) SavePrescreening(prescreening entity.TrxPrescreening, deta
 		r0 = ret.Error(0)
 	}
 
-	var r2 error
-	if rf, ok := ret.Get(2).(func(interface{}) error); ok {
-		r2 = rf(pagination)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
-}
-
-// GetApprovalReason provides a mock function with given fields: req, pagination
-func (_m *Repository) GetApprovalReason(req request.ReqApprovalReason, pagination interface{}) ([]entity.ApprovalReason, int, error) {
-	ret := _m.Called(req, pagination)
-
-	var r0 []entity.ApprovalReason
-	if rf, ok := ret.Get(0).(func(request.ReqApprovalReason, interface{}) []entity.ApprovalReason); ok {
-		r0 = rf(req, pagination)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.ApprovalReason)
-		}
-	}
-
-	var r1 int
-	if rf, ok := ret.Get(1).(func(request.ReqApprovalReason, interface{}) int); ok {
-		r1 = rf(req, pagination)
-	} else {
-		r1 = ret.Get(1).(int)
-	}
-
-	var r2 error
-	if rf, ok := ret.Get(2).(func(request.ReqApprovalReason, interface{}) error); ok {
-		r2 = rf(req, pagination)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
-}
-
-// GetInquiryApproval provides a mock function with given fields: req, pagination
-func (_m *Repository) GetInquiryApproval(req request.ReqInquiryApproval, pagination interface{}) ([]entity.InquiryCa, int, error) {
-	ret := _m.Called(req, pagination)
-
-	var r0 []entity.InquiryCa
-	if rf, ok := ret.Get(0).(func(request.ReqInquiryApproval, interface{}) []entity.InquiryCa); ok {
-		r0 = rf(req, pagination)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.InquiryCa)
-		}
-	}
-
-	var r1 int
-	if rf, ok := ret.Get(1).(func(request.ReqInquiryApproval, interface{}) int); ok {
-		r1 = rf(req, pagination)
-	} else {
-		r1 = ret.Get(1).(int)
-	}
-
-	var r2 error
-	if rf, ok := ret.Get(2).(func(request.ReqInquiryApproval, interface{}) error); ok {
-		r2 = rf(req, pagination)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
+	return r0
 }
 
 // SubmitApproval provides a mock function with given fields: req, trxStatus, trxDetail

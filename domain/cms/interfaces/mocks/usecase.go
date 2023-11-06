@@ -121,15 +121,15 @@ func (_m *Usecase) GetCancelReason(ctx context.Context, pagination interface{}) 
 }
 
 // GetInquiryApproval provides a mock function with given fields: ctx, req, pagination
-func (_m *Usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryApproval, pagination interface{}) ([]entity.InquiryDataCa, int, error) {
+func (_m *Usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryApproval, pagination interface{}) ([]entity.InquiryDataApproval, int, error) {
 	ret := _m.Called(ctx, req, pagination)
 
-	var r0 []entity.InquiryDataCa
-	if rf, ok := ret.Get(0).(func(context.Context, request.ReqInquiryApproval, interface{}) []entity.InquiryDataCa); ok {
+	var r0 []entity.InquiryDataApproval
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqInquiryApproval, interface{}) []entity.InquiryDataApproval); ok {
 		r0 = rf(ctx, req, pagination)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.InquiryDataCa)
+			r0 = ret.Get(0).([]entity.InquiryDataApproval)
 		}
 	}
 
@@ -333,117 +333,6 @@ func (_m *Usecase) SaveAsDraft(ctx context.Context, req request.ReqSaveAsDraft) 
 	return r0, r1
 }
 
-// SubmitDecision provides a mock function with given fields: ctx, req
-func (_m *Usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecision) (response.CAResponse, error) {
-	ret := _m.Called(ctx, req)
-
-	var r0 response.CAResponse
-	if rf, ok := ret.Get(0).(func(context.Context, request.ReqSubmitDecision) response.CAResponse); ok {
-		r0 = rf(ctx, req)
-	} else {
-		r0 = ret.Get(0).(response.CAResponse)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, request.ReqSubmitDecision) error); ok {
-		r1 = rf(ctx, req)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetCancelReason provides a mock function with given fields: ctx, pagination
-func (_m *Usecase) GetCancelReason(ctx context.Context, pagination interface{}) ([]entity.CancelReason, int, error) {
-	ret := _m.Called(ctx, pagination)
-
-	var r0 []entity.CancelReason
-	if rf, ok := ret.Get(0).(func(context.Context, interface{}) []entity.CancelReason); ok {
-		r0 = rf(ctx, pagination)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.CancelReason)
-		}
-	}
-
-	var r1 int
-	if rf, ok := ret.Get(1).(func(context.Context, interface{}) int); ok {
-		r1 = rf(ctx, pagination)
-	} else {
-		r1 = ret.Get(1).(int)
-	}
-
-	var r2 error
-	if rf, ok := ret.Get(2).(func(context.Context, interface{}) error); ok {
-		r2 = rf(ctx, pagination)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
-}
-
-// GetApprovalReason provides a mock function with given fields: ctx, req, pagination
-func (_m *Usecase) GetApprovalReason(ctx context.Context, req request.ReqApprovalReason, pagination interface{}) ([]entity.ApprovalReason, int, error) {
-	ret := _m.Called(ctx, req, pagination)
-
-	var r0 []entity.ApprovalReason
-	if rf, ok := ret.Get(0).(func(context.Context, request.ReqApprovalReason, interface{}) []entity.ApprovalReason); ok {
-		r0 = rf(ctx, req, pagination)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.ApprovalReason)
-		}
-	}
-
-	var r1 int
-	if rf, ok := ret.Get(1).(func(context.Context, request.ReqApprovalReason, interface{}) int); ok {
-		r1 = rf(ctx, req, pagination)
-	} else {
-		r1 = ret.Get(1).(int)
-	}
-
-	var r2 error
-	if rf, ok := ret.Get(2).(func(context.Context, request.ReqApprovalReason, interface{}) error); ok {
-		r2 = rf(ctx, req, pagination)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
-}
-
-// GetInquiryApproval provides a mock function with given fields: ctx, req, pagination
-func (_m *Usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryApproval, pagination interface{}) ([]entity.InquiryDataApproval, int, error) {
-	ret := _m.Called(ctx, req, pagination)
-
-	var r0 []entity.InquiryDataApproval
-	if rf, ok := ret.Get(0).(func(context.Context, request.ReqInquiryApproval, interface{}) []entity.InquiryDataApproval); ok {
-		r0 = rf(ctx, req, pagination)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.InquiryDataApproval)
-		}
-	}
-
-	var r1 int
-	if rf, ok := ret.Get(1).(func(context.Context, request.ReqInquiryApproval, interface{}) int); ok {
-		r1 = rf(ctx, req, pagination)
-	} else {
-		r1 = ret.Get(1).(int)
-	}
-
-	var r2 error
-	if rf, ok := ret.Get(2).(func(context.Context, request.ReqInquiryApproval, interface{}) error); ok {
-		r2 = rf(ctx, req, pagination)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
-}
-
 // SubmitApproval provides a mock function with given fields: ctx, req
 func (_m *Usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApproval) (response.ApprovalResponse, error) {
 	ret := _m.Called(ctx, req)
@@ -457,6 +346,27 @@ func (_m *Usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitAppr
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, request.ReqSubmitApproval) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SubmitDecision provides a mock function with given fields: ctx, req
+func (_m *Usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecision) (response.CAResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	var r0 response.CAResponse
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqSubmitDecision) response.CAResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(response.CAResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqSubmitDecision) error); ok {
 		r1 = rf(ctx, req)
 	} else {
 		r1 = ret.Error(1)
