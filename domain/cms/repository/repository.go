@@ -1992,8 +1992,8 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		case constant.NEED_DECISION:
 			activity = constant.ACTIVITY_UNPROCESS
 			decision = constant.DB_DECISION_CREDIT_PROCESS
-			source := constant.DB_DECISION_CREDIT_ANALYST
-			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s' AND tt.decision_ca IS NULL", activity, decision, source)
+			source := alias
+			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s'", activity, decision, source)
 		}
 	}
 
@@ -2087,6 +2087,10 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		  ELSE NULL
 		END AS ca_decision,
 		tcd.note AS ca_note,
+		CASE
+		  WHEN tcd.decision='CAN' THEN 0
+		  ELSE 1
+		END AS ActionFormAkk,
 		CASE
 		  WHEN tcd.decision = 'CAN' THEN tcd.created_at 
 		  WHEN tcd.created_at IS NOT NULL THEN tfa.created_at
@@ -2391,4 +2395,72 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
 	}
 	return
+}
+
+func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
+
+	trxStatus.CreatedAt = DtmRequest
+	trxDetail.CreatedAt = DtmRequest
+
+	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
+
+		// trx_status
+		if err := tx.Model(&trxStatus).Where("ProspectID = ?", trxStatus.ProspectID).Updates(trxStatus).Error; err != nil {
+			return err
+		}
+
+		// trx_details
+		if err := tx.Create(&trxDetail).Error; err != nil {
+			return err
+		}
+
+		var (
+			trxHistoryApproval entity.TrxHistoryApprovalScheme
+			nextFinal          int
+		)
+
+		nextFinal = 0
+		if trxDetail.NextStep.(string) == req.FinalApproval {
+			nextFinal = 1
+		}
+
+		trxHistoryApproval = entity.TrxHistoryApprovalScheme{
+			ID:                    uuid.New().String(),
+			ProspectID:            req.ProspectID,
+			Decision:              trxStatus.Decision,
+			Reason:                req.Reason,
+			Note:                  req.Note,
+			CreatedAt:             DtmRequest,
+			CreatedBy:             req.CreatedBy,
+			DecisionBy:            req.DecisionBy,
+			NextFinalApprovalFlag: nextFinal,
+			NeedEscalation:        req.NeedEscalation,
+			SourceDecision:        trxDetail.SourceDecision,
+			NextStep:              trxDetail.NextStep.(string),
+		}
+
+		// trx_history_approval_scheme
+		if err := tx.Create(&trxHistoryApproval).Error; err != nil {
+			return err
+		}
+
+		if req.Alias == req.FinalApproval {
+			trxFinalApproval := entity.TrxFinalApproval{
+				ProspectID: req.ProspectID,
+				Decision:   trxStatus.Decision,
+				Reason:     req.Reason,
+				Note:       req.Note,
+				CreatedAt:  DtmRequest,
+				CreatedBy:  req.CreatedBy,
+				DecisionBy: req.DecisionBy,
+			}
+
+			// trx_final_approval
+			if err := tx.Create(&trxFinalApproval).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }

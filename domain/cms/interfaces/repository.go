@@ -26,4 +26,5 @@ type Repository interface {
 	ProcessTransaction(isCancel bool, trxCaDecision entity.TrxCaDecision, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error)
 	ProcessReturnOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error)
 	GetInquiryApproval(req request.ReqInquiryApproval, pagination interface{}) (data []entity.InquiryCa, rowTotal int, err error)
+	SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error)
 }
