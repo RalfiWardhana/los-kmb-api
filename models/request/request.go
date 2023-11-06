@@ -586,6 +586,16 @@ type ScoreProIntegrator struct {
 	Data             interface{} `json:"data"`
 }
 
+type ReqApprovalScheme struct {
+	ProspectID     string
+	Decision       string
+	Reason         string
+	Note           string
+	DecisionAlias  string
+	DecisionBy     string
+	DecisionByName string
+}
+
 type OrderIDCheck struct {
 	ProspectID string `json:"prospect_id" validate:"prospectID"`
 }

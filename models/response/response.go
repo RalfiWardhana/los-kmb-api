@@ -173,6 +173,12 @@ type ElaborateLTV struct {
 	Reason      string `json:"reason"`
 }
 
+type RespApprovalScheme struct {
+	ProspectID string
+	IsFinal    bool
+	NextStep   string
+}
+
 type KreditMuResponse struct {
 	Code      string       `json:"code"`
 	Message   string       `json:"message"`

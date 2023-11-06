@@ -15,6 +15,66 @@ type Repository struct {
 	mock.Mock
 }
 
+// GetApprovalReason provides a mock function with given fields: req, pagination
+func (_m *Repository) GetApprovalReason(req request.ReqApprovalReason, pagination interface{}) ([]entity.ApprovalReason, int, error) {
+	ret := _m.Called(req, pagination)
+
+	var r0 []entity.ApprovalReason
+	if rf, ok := ret.Get(0).(func(request.ReqApprovalReason, interface{}) []entity.ApprovalReason); ok {
+		r0 = rf(req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.ApprovalReason)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(request.ReqApprovalReason, interface{}) int); ok {
+		r1 = rf(req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(request.ReqApprovalReason, interface{}) error); ok {
+		r2 = rf(req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// GetCancelReason provides a mock function with given fields: pagination
+func (_m *Repository) GetCancelReason(pagination interface{}) ([]entity.CancelReason, int, error) {
+	ret := _m.Called(pagination)
+
+	var r0 []entity.CancelReason
+	if rf, ok := ret.Get(0).(func(interface{}) []entity.CancelReason); ok {
+		r0 = rf(pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.CancelReason)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(interface{}) int); ok {
+		r1 = rf(pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(interface{}) error); ok {
+		r2 = rf(pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // GetCustomerPhoto provides a mock function with given fields: prospectID
 func (_m *Repository) GetCustomerPhoto(prospectID string) ([]entity.DataPhoto, error) {
 	ret := _m.Called(prospectID)
@@ -36,6 +96,82 @@ func (_m *Repository) GetCustomerPhoto(prospectID string) ([]entity.DataPhoto, e
 	}
 
 	return r0, r1
+}
+
+// GetHistoryApproval provides a mock function with given fields: prospectID
+func (_m *Repository) GetHistoryApproval(prospectID string) ([]entity.HistoryApproval, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 []entity.HistoryApproval
+	if rf, ok := ret.Get(0).(func(string) []entity.HistoryApproval); ok {
+		r0 = rf(prospectID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.HistoryApproval)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetHistoryProcess provides a mock function with given fields: prospectID
+func (_m *Repository) GetHistoryProcess(prospectID string) ([]entity.TrxDetail, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 []entity.TrxDetail
+	if rf, ok := ret.Get(0).(func(string) []entity.TrxDetail); ok {
+		r0 = rf(prospectID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.TrxDetail)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetInquiryApproval provides a mock function with given fields: req, pagination
+func (_m *Repository) GetInquiryApproval(req request.ReqInquiryApproval, pagination interface{}) ([]entity.InquiryCa, int, error) {
+	ret := _m.Called(req, pagination)
+
+	var r0 []entity.InquiryCa
+	if rf, ok := ret.Get(0).(func(request.ReqInquiryApproval, interface{}) []entity.InquiryCa); ok {
+		r0 = rf(req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.InquiryCa)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(request.ReqInquiryApproval, interface{}) int); ok {
+		r1 = rf(req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(request.ReqInquiryApproval, interface{}) error); ok {
+		r2 = rf(req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // GetInquiryCa provides a mock function with given fields: req, pagination
@@ -96,178 +232,6 @@ func (_m *Repository) GetInquiryPrescreening(req request.ReqInquiryPrescreening,
 	}
 
 	return r0, r1, r2
-}
-
-// GetReasonPrescreening provides a mock function with given fields: req, pagination
-func (_m *Repository) GetReasonPrescreening(req request.ReqReasonPrescreening, pagination interface{}) ([]entity.ReasonMessage, int, error) {
-	ret := _m.Called(req, pagination)
-
-	var r0 []entity.ReasonMessage
-	if rf, ok := ret.Get(0).(func(request.ReqReasonPrescreening, interface{}) []entity.ReasonMessage); ok {
-		r0 = rf(req, pagination)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.ReasonMessage)
-		}
-	}
-
-	var r1 int
-	if rf, ok := ret.Get(1).(func(request.ReqReasonPrescreening, interface{}) int); ok {
-		r1 = rf(req, pagination)
-	} else {
-		r1 = ret.Get(1).(int)
-	}
-
-	var r2 error
-	if rf, ok := ret.Get(2).(func(request.ReqReasonPrescreening, interface{}) error); ok {
-		r2 = rf(req, pagination)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
-}
-
-// GetSpIndustryTypeMaster provides a mock function with given fields:
-func (_m *Repository) GetSpIndustryTypeMaster() ([]entity.SpIndustryTypeMaster, error) {
-	ret := _m.Called()
-
-	var r0 []entity.SpIndustryTypeMaster
-	if rf, ok := ret.Get(0).(func() []entity.SpIndustryTypeMaster); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.SpIndustryTypeMaster)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetStatusPrescreening provides a mock function with given fields: prospectID
-func (_m *Repository) GetTrxStatus(prospectID string) (entity.TrxStatus, error) {
-	ret := _m.Called(prospectID)
-
-	var r0 entity.TrxStatus
-	if rf, ok := ret.Get(0).(func(string) entity.TrxStatus); ok {
-		r0 = rf(prospectID)
-	} else {
-		r0 = ret.Get(0).(entity.TrxStatus)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(prospectID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetSurveyorData provides a mock function with given fields: prospectID
-func (_m *Repository) GetSurveyorData(prospectID string) ([]entity.TrxSurveyor, error) {
-	ret := _m.Called(prospectID)
-
-	var r0 []entity.TrxSurveyor
-	if rf, ok := ret.Get(0).(func(string) []entity.TrxSurveyor); ok {
-		r0 = rf(prospectID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.TrxSurveyor)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(prospectID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// SaveLogOrchestrator provides a mock function with given fields: header, _a1, response, path, method, prospectID, requestID
-func (_m *Repository) SaveLogOrchestrator(header interface{}, _a1 interface{}, response interface{}, path string, method string, prospectID string, requestID string) error {
-	ret := _m.Called(header, _a1, response, path, method, prospectID, requestID)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(interface{}, interface{}, interface{}, string, string, string, string) error); ok {
-		r0 = rf(header, _a1, response, path, method, prospectID, requestID)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// SavePrescreening provides a mock function with given fields: prescreening, detail, status
-func (_m *Repository) SavePrescreening(prescreening entity.TrxPrescreening, detail entity.TrxDetail, status entity.TrxStatus) error {
-	ret := _m.Called(prescreening, detail, status)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(entity.TrxPrescreening, entity.TrxDetail, entity.TrxStatus) error); ok {
-		r0 = rf(prescreening, detail, status)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-
-// GetHistoryApproval provides a mock function with given fields: prospectID
-func (_m *Repository) GetHistoryApproval(prospectID string) ([]entity.HistoryApproval, error) {
-	ret := _m.Called(prospectID)
-
-	var r0 []entity.HistoryApproval
-	if rf, ok := ret.Get(0).(func(string) []entity.HistoryApproval); ok {
-		r0 = rf(prospectID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.HistoryApproval)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(prospectID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// GetHistoryProcess provides a mock function with given fields: prospectID
-func (_m *Repository) GetHistoryProcess(prospectID string) ([]entity.TrxDetail, error) {
-	ret := _m.Called(prospectID)
-
-	var r0 []entity.TrxDetail
-	if rf, ok := ret.Get(0).(func(string) []entity.TrxDetail); ok {
-		r0 = rf(prospectID)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.TrxDetail)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(prospectID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
 }
 
 // GetInquirySearch provides a mock function with given fields: req, pagination
@@ -344,6 +308,103 @@ func (_m *Repository) GetLimitApproval(ntf float64) (entity.MappingLimitApproval
 	return r0, r1
 }
 
+// GetReasonPrescreening provides a mock function with given fields: req, pagination
+func (_m *Repository) GetReasonPrescreening(req request.ReqReasonPrescreening, pagination interface{}) ([]entity.ReasonMessage, int, error) {
+	ret := _m.Called(req, pagination)
+
+	var r0 []entity.ReasonMessage
+	if rf, ok := ret.Get(0).(func(request.ReqReasonPrescreening, interface{}) []entity.ReasonMessage); ok {
+		r0 = rf(req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.ReasonMessage)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(request.ReqReasonPrescreening, interface{}) int); ok {
+		r1 = rf(req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(request.ReqReasonPrescreening, interface{}) error); ok {
+		r2 = rf(req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// GetSpIndustryTypeMaster provides a mock function with given fields:
+func (_m *Repository) GetSpIndustryTypeMaster() ([]entity.SpIndustryTypeMaster, error) {
+	ret := _m.Called()
+
+	var r0 []entity.SpIndustryTypeMaster
+	if rf, ok := ret.Get(0).(func() []entity.SpIndustryTypeMaster); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.SpIndustryTypeMaster)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetSurveyorData provides a mock function with given fields: prospectID
+func (_m *Repository) GetSurveyorData(prospectID string) ([]entity.TrxSurveyor, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 []entity.TrxSurveyor
+	if rf, ok := ret.Get(0).(func(string) []entity.TrxSurveyor); ok {
+		r0 = rf(prospectID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.TrxSurveyor)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetTrxStatus provides a mock function with given fields: prospectID
+func (_m *Repository) GetTrxStatus(prospectID string) (entity.TrxStatus, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 entity.TrxStatus
+	if rf, ok := ret.Get(0).(func(string) entity.TrxStatus); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.TrxStatus)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ProcessReturnOrder provides a mock function with given fields: prospectID, trxStatus, trxDetail
 func (_m *Repository) ProcessReturnOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) error {
 	ret := _m.Called(prospectID, trxStatus, trxDetail)
@@ -358,7 +419,7 @@ func (_m *Repository) ProcessReturnOrder(prospectID string, trxStatus entity.Trx
 	return r0
 }
 
-// ProcessTransaction provides a mock function with given fields: trxCaDecision, trxStatus, trxDetail
+// ProcessTransaction provides a mock function with given fields: isCancel, trxCaDecision, trxStatus, trxDetail
 func (_m *Repository) ProcessTransaction(isCancel bool, trxCaDecision entity.TrxCaDecision, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) error {
 	ret := _m.Called(isCancel, trxCaDecision, trxStatus, trxDetail)
 
@@ -386,32 +447,30 @@ func (_m *Repository) SaveDraftData(draft entity.TrxDraftCaDecision) error {
 	return r0
 }
 
-// GetCancelReason provides a mock function with given fields: pagination
-func (_m *Repository) GetCancelReason(pagination interface{}) ([]entity.CancelReason, int, error) {
-	ret := _m.Called(pagination)
+// SaveLogOrchestrator provides a mock function with given fields: header, _a1, response, path, method, prospectID, requestID
+func (_m *Repository) SaveLogOrchestrator(header interface{}, _a1 interface{}, response interface{}, path string, method string, prospectID string, requestID string) error {
+	ret := _m.Called(header, _a1, response, path, method, prospectID, requestID)
 
-	var r0 []entity.CancelReason
-	if rf, ok := ret.Get(0).(func(interface{}) []entity.CancelReason); ok {
-		r0 = rf(pagination)
+	var r0 error
+	if rf, ok := ret.Get(0).(func(interface{}, interface{}, interface{}, string, string, string, string) error); ok {
+		r0 = rf(header, _a1, response, path, method, prospectID, requestID)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.CancelReason)
-		}
+		r0 = ret.Error(0)
 	}
 
-	var r1 int
-	if rf, ok := ret.Get(1).(func(interface{}) int); ok {
-		r1 = rf(pagination)
+	return r0
+}
+
+// SavePrescreening provides a mock function with given fields: prescreening, detail, status
+func (_m *Repository) SavePrescreening(prescreening entity.TrxPrescreening, detail entity.TrxDetail, status entity.TrxStatus) error {
+	ret := _m.Called(prescreening, detail, status)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(entity.TrxPrescreening, entity.TrxDetail, entity.TrxStatus) error); ok {
+		r0 = rf(prescreening, detail, status)
 	} else {
-		r1 = ret.Get(1).(int)
+		r0 = ret.Error(0)
 	}
 
-	var r2 error
-	if rf, ok := ret.Get(2).(func(interface{}) error); ok {
-		r2 = rf(pagination)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
+	return r0
 }
