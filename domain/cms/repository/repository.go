@@ -2026,7 +2026,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 			tst.source_decision,
 			tst.decision,
 			tcd.final_approval,
-			thas.next_step,
+			has.next_step,
 			tcd.decision as decision_ca,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
@@ -2044,7 +2044,12 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-		LEFT JOIN trx_history_approval_scheme thas WITH (nolock) ON tm.ProspectID = thas.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN (SELECT ProspectID FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTL') rtl
+		ON rtl.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID FROM trx_history_approval_scheme has WITH (nolock) WHERE has.need_escalation = 1 ) esc
+		ON esc.ProspectID = tm.ProspectID   	
+		LEFT JOIN trx_history_approval_scheme has WITH (nolock) ON has.ProspectID = tm.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -2077,7 +2082,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		tst.reason,
 		tcd.decision as decision_ca,
 		tcd.final_approval,
-		thas.next_step,
+		has.next_step,
 		CASE
 		  WHEN tcd.final_approval='%s' THEN 1
 		  ELSE 0
@@ -2099,8 +2104,9 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		  ELSE tst.created_at
 		END AS ActionDate,
 		CASE
-		  WHEN tcd.decision <> 'CAN'
-		  AND tfa.decision IS NULL THEN 1
+		  WHEN (tfa.decision IS NULL)
+		  AND (tcd.decision <> 'CAN') 
+		  AND (tst.source_decision='%s') THEN 1
 		  ELSE 0
 		END AS ShowAction,
 		CASE
@@ -2221,7 +2227,11 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
-		LEFT JOIN trx_history_approval_scheme thas WITH (nolock) ON tm.ProspectID = thas.ProspectID
+		LEFT JOIN (SELECT ProspectID FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTL') rtl
+		ON rtl.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID FROM trx_history_approval_scheme has WITH (nolock) WHERE has.need_escalation = 1 ) esc
+		ON esc.ProspectID = tm.ProspectID   	
+		LEFT JOIN trx_history_approval_scheme has WITH (nolock) ON has.ProspectID = tm.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -2389,7 +2399,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt %s AND tt.next_step='%s' ORDER BY tt.created_at DESC %s`, alias, filter, alias, filterPaginate)).Scan(&data).Error; err != nil {
+	) AS tt %s AND tt.next_step = '%s'  ORDER BY tt.created_at DESC %s`, alias, alias, filter, alias, filterPaginate)).Scan(&data).Error; err != nil {
 		return
 	}
 
@@ -2420,6 +2430,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			trxHistoryApproval entity.TrxHistoryApprovalScheme
 			nextFinal          int
 			isEscalation       int
+			decision           string
 		)
 
 		nextFinal = 0
@@ -2432,10 +2443,17 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			isEscalation = 1
 		}
 
+		switch req.Decision {
+		case constant.DECISION_REJECT:
+			decision = constant.DB_DECISION_REJECT
+		case constant.DECISION_APPROVE:
+			decision = constant.DB_DECISION_APR
+		}
+
 		trxHistoryApproval = entity.TrxHistoryApprovalScheme{
 			ID:                    uuid.New().String(),
 			ProspectID:            req.ProspectID,
-			Decision:              trxStatus.Decision,
+			Decision:              decision,
 			Reason:                req.Reason,
 			Note:                  req.Note,
 			CreatedAt:             DtmRequest,
