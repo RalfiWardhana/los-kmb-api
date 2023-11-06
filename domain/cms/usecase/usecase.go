@@ -1376,6 +1376,7 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 		row := entity.InquiryDataApproval{
 			CA: entity.DataApproval{
 				ShowAction:         inq.ShowAction,
+				ActionFormAkk:      inq.ActionFormAkk,
 				IsLastApproval:     inq.IsLastApproval,
 				StatusDecision:     statusDecision,
 				StatusReason:       inq.StatusReason,

@@ -2088,6 +2088,10 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		END AS ca_decision,
 		tcd.note AS ca_note,
 		CASE
+		  WHEN tcd.decision='CAN' THEN 0
+		  ELSE 1
+		END AS ActionFormAkk,
+		CASE
 		  WHEN tcd.decision = 'CAN' THEN tcd.created_at 
 		  WHEN tcd.created_at IS NOT NULL THEN tfa.created_at
 		  ELSE tst.created_at

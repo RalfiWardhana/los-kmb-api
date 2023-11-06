@@ -1275,6 +1275,7 @@ type TotalRow struct {
 type InquiryCa struct {
 	ShowAction         bool   `gorm:"column:ShowAction"`
 	ActionDate         string `gorm:"column:ActionDate"`
+	ActionFormAkk      bool   `gorm:"column:ActionFormAkk"`
 	Activity           string `gorm:"column:activity"`
 	SourceDecision     string `gorm:"column:source_decision"`
 	StatusDecision     string `gorm:"column:decision"`
@@ -1635,6 +1636,7 @@ type InquiryDataApproval struct {
 
 type DataApproval struct {
 	ShowAction         bool   `gorm:"column:ShowAction" json:"show_action"`
+	ActionFormAkk      bool   `gorm:"column:ActionFormAkk" json:"action_form_akk"`
 	IsLastApproval     bool   `gorm:"column:IsLastApproval" json:"is_last_approval"`
 	StatusDecision     string `gorm:"column:decision" json:"status_decision"`
 	StatusReason       string `gorm:"column:reason" json:"status_reason"`
