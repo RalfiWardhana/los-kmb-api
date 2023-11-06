@@ -9,6 +9,7 @@ import (
 	"los-kmb-api/domain/cms/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
@@ -2075,6 +2076,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		tst.decision,
 		tst.reason,
 		tcd.decision as decision_ca,
+		tcd.final_approval,
 		thas.next_step,
 		CASE
 		  WHEN tcd.final_approval='%s' THEN 1
@@ -2397,7 +2399,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 	return
 }
 
-func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
+func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, approval response.RespApprovalScheme) (err error) {
 
 	trxStatus.CreatedAt = DtmRequest
 	trxDetail.CreatedAt = DtmRequest
@@ -2417,11 +2419,17 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 		var (
 			trxHistoryApproval entity.TrxHistoryApprovalScheme
 			nextFinal          int
+			isEscalation       int
 		)
 
 		nextFinal = 0
-		if trxDetail.NextStep.(string) == req.FinalApproval {
+		if approval.IsFinal {
 			nextFinal = 1
+		}
+
+		isEscalation = 0
+		if approval.IsEscalation {
+			isEscalation = 1
 		}
 
 		trxHistoryApproval = entity.TrxHistoryApprovalScheme{
@@ -2434,9 +2442,9 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			CreatedBy:             req.CreatedBy,
 			DecisionBy:            req.DecisionBy,
 			NextFinalApprovalFlag: nextFinal,
-			NeedEscalation:        req.NeedEscalation,
+			NeedEscalation:        isEscalation,
 			SourceDecision:        trxDetail.SourceDecision,
-			NextStep:              trxDetail.NextStep.(string),
+			NextStep:              approval.NextStep,
 		}
 
 		// trx_history_approval_scheme
@@ -2444,7 +2452,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			return err
 		}
 
-		if req.Alias == req.FinalApproval {
+		if approval.IsFinal {
 			trxFinalApproval := entity.TrxFinalApproval{
 				ProspectID: req.ProspectID,
 				Decision:   trxStatus.Decision,

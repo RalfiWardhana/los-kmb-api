@@ -11,6 +11,7 @@ import (
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
+	"los-kmb-api/shared/utils"
 	"strings"
 )
 
@@ -1380,6 +1381,7 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 				IsLastApproval:     inq.IsLastApproval,
 				StatusDecision:     statusDecision,
 				StatusReason:       inq.StatusReason,
+				FinalApproval:      inq.FinalApproval,
 				CaDecision:         inq.CaDecision,
 				CaNote:             inq.CANote,
 				ActionDate:         inq.ActionDate,
@@ -1514,101 +1516,92 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApproval) (data response.ApprovalResponse, err error) {
 
 	var (
-		trxDetail entity.TrxDetail
-		trxStatus entity.TrxStatus
+		trxDetail      entity.TrxDetail
+		trxStatus      entity.TrxStatus
+		approvalScheme response.RespApprovalScheme
 	)
 
-	status, err := u.repository.GetTrxStatus(req.ProspectID)
+	decisionMapping := map[string]struct {
+		Code           string
+		StatusProcess  string
+		Activity       string
+		Decision       string
+		DecisionDetail string
+		DecisionStatus string
+		ActivityStatus string
+		SourceDecision string
+	}{
+		constant.DECISION_REJECT: {
+			Code:           req.RuleCode,
+			StatusProcess:  constant.STATUS_FINAL,
+			Activity:       constant.ACTIVITY_STOP,
+			Decision:       constant.DB_DECISION_REJECT,
+			DecisionStatus: constant.DB_DECISION_REJECT,
+			DecisionDetail: constant.DB_DECISION_REJECT,
+			ActivityStatus: constant.ACTIVITY_STOP,
+			SourceDecision: req.Alias,
+		},
+		constant.DECISION_APPROVE: {
+			Code:           req.RuleCode,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
+			Decision:       constant.DB_DECISION_APR,
+			DecisionStatus: constant.DB_DECISION_CREDIT_PROCESS,
+			DecisionDetail: constant.DB_DECISION_PASS,
+			ActivityStatus: constant.ACTIVITY_UNPROCESS,
+			SourceDecision: req.Alias,
+		},
+	}
 
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Get status order error")
+	decisionInfo, ok := decisionMapping[req.Decision]
+	if !ok {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Decision tidak valid")
 		return
 	}
 
-	// Bisa melakukan submit jika status UNPR dan decision CPR
-	if status.Activity == constant.ACTIVITY_UNPROCESS && status.Decision == constant.DB_DECISION_CREDIT_PROCESS {
+	if req.Decision == constant.DECISION_REJECT {
+		trxStatus.RuleCode = decisionInfo.Code
+	}
 
-		decisionMapping := map[string]struct {
-			Code           string
-			StatusProcess  string
-			Activity       string
-			Decision       string
-			DecisionDetail string
-			DecisionStatus string
-			ActivityStatus string
-			NextStep       interface{}
-			SourceDecision string
-		}{
-			constant.DECISION_REJECT: {
-				Code:           req.RuleCode,
-				StatusProcess:  constant.STATUS_FINAL,
-				Activity:       constant.ACTIVITY_STOP,
-				Decision:       constant.DB_DECISION_REJECT,
-				DecisionStatus: constant.DB_DECISION_REJECT,
-				DecisionDetail: constant.DB_DECISION_REJECT,
-				ActivityStatus: constant.ACTIVITY_STOP,
-				SourceDecision: req.Alias,
-			},
-			constant.DECISION_APPROVE: {
-				Code:           req.RuleCode,
-				StatusProcess:  constant.STATUS_ONPROCESS,
-				Activity:       constant.ACTIVITY_PROCESS,
-				Decision:       constant.DB_DECISION_APR,
-				DecisionStatus: constant.DB_DECISION_CREDIT_PROCESS,
-				DecisionDetail: constant.DB_DECISION_PASS,
-				ActivityStatus: constant.ACTIVITY_UNPROCESS,
-				SourceDecision: req.Alias,
-				NextStep:       constant.SOURCE_DECISION_DUPCHECK, //dari usecase approval scheme
-			},
-		}
-
-		decisionInfo, ok := decisionMapping[req.Decision]
-		if !ok {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Decision tidak valid")
-			return
-		}
-
-		if req.Decision == constant.DECISION_REJECT {
-			trxStatus.RuleCode = decisionInfo.Code
-		}
-
-		trxStatus = entity.TrxStatus{
-			ProspectID:     req.ProspectID,
-			StatusProcess:  decisionInfo.StatusProcess,
-			Activity:       decisionInfo.ActivityStatus,
-			Decision:       decisionInfo.DecisionStatus,
-			RuleCode:       decisionInfo.Code,
-			SourceDecision: decisionInfo.SourceDecision,
-			Reason:         req.Reason,
-		}
-
-		trxDetail = entity.TrxDetail{
-			ProspectID:     req.ProspectID,
-			StatusProcess:  decisionInfo.StatusProcess,
-			Activity:       decisionInfo.Activity,
-			Decision:       decisionInfo.DecisionDetail,
-			RuleCode:       decisionInfo.Code,
-			SourceDecision: decisionInfo.SourceDecision,
-			NextStep:       decisionInfo.NextStep,
-			Info:           req.Reason,
-			CreatedBy:      req.CreatedBy,
-		}
-
-		err = u.repository.SubmitApproval(req, trxStatus, trxDetail)
-		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")
-			return
-		}
-
-		data = response.ApprovalResponse{
-			ProspectID: req.ProspectID,
-			Decision:   req.Decision,
-			Reason:     req.Reason,
-			Note:       req.Note,
-		}
-	} else {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Status order tidak sedang dalam credit approval")
+	approvalScheme, err = utils.ApprovalScheme(req)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Approval Scheme error")
 		return
+	}
+
+	trxStatus = entity.TrxStatus{
+		ProspectID:     req.ProspectID,
+		StatusProcess:  decisionInfo.StatusProcess,
+		Activity:       decisionInfo.ActivityStatus,
+		Decision:       decisionInfo.DecisionStatus,
+		RuleCode:       decisionInfo.Code,
+		SourceDecision: decisionInfo.SourceDecision,
+		Reason:         req.Reason,
+	}
+
+	trxDetail = entity.TrxDetail{
+		ProspectID:     req.ProspectID,
+		StatusProcess:  decisionInfo.StatusProcess,
+		Activity:       decisionInfo.Activity,
+		Decision:       decisionInfo.DecisionDetail,
+		RuleCode:       decisionInfo.Code,
+		SourceDecision: decisionInfo.SourceDecision,
+		NextStep:       approvalScheme.NextStep,
+		Info:           req.Reason,
+		CreatedBy:      req.CreatedBy,
+	}
+
+	err = u.repository.SubmitApproval(req, trxStatus, trxDetail, approvalScheme)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")
+		return
+	}
+
+	data = response.ApprovalResponse{
+		ProspectID: req.ProspectID,
+		Decision:   req.Decision,
+		Reason:     req.Reason,
+		Note:       req.Note,
 	}
 
 	return

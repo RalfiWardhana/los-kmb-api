@@ -719,17 +719,16 @@ type ReqSubmitDecision struct {
 }
 
 type ReqSubmitApproval struct {
-	ProspectID     string  `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
-	NTFAkumulasi   float64 `json:"ntf_akumulasi" validate:"required"`
-	FinalApproval  string  `json:"final_approval" validate:"required"`
-	Decision       string  `json:"decision" validate:"required,decision" example:"APPROVE,REJECT"`
-	RuleCode       string  `json:"code" validate:"required"`
-	Alias          string  `json:"alias" validate:"required"`
-	Reason         string  `json:"reason" validate:"required"`
-	NeedEscalation bool    `json:"need_escalation"`
-	Note           string  `json:"note"`
-	CreatedBy      string  `json:"decision_by" validate:"required"`
-	DecisionBy     string  `json:"decision_by_name" validate:"required"`
+	ProspectID     string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
+	FinalApproval  string `json:"final_approval" validate:"required"`
+	Decision       string `json:"decision" validate:"required,decision" example:"APPROVE,REJECT"`
+	RuleCode       string `json:"code" validate:"required"`
+	Alias          string `json:"alias" validate:"required"`
+	Reason         string `json:"reason" validate:"required"`
+	NeedEscalation bool   `json:"need_escalation"`
+	Note           string `json:"note"`
+	CreatedBy      string `json:"decision_by" validate:"required"`
+	DecisionBy     string `json:"decision_by_name" validate:"required"`
 }
 
 type ReqSearchInquiry struct {
