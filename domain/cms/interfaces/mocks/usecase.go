@@ -18,27 +18,6 @@ type Usecase struct {
 	mock.Mock
 }
 
-// ApprovalScheme provides a mock function with given fields: req
-func (_m *Usecase) ApprovalScheme(req request.ReqSubmitApproval) (response.RespApprovalScheme, error) {
-	ret := _m.Called(req)
-
-	var r0 response.RespApprovalScheme
-	if rf, ok := ret.Get(0).(func(request.ReqSubmitApproval) response.RespApprovalScheme); ok {
-		r0 = rf(req)
-	} else {
-		r0 = ret.Get(0).(response.RespApprovalScheme)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(request.ReqSubmitApproval) error); ok {
-		r1 = rf(req)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // CancelOrder provides a mock function with given fields: ctx, req
 func (_m *Usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (response.CancelResponse, error) {
 	ret := _m.Called(ctx, req)
