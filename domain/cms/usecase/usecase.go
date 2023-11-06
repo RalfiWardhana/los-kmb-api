@@ -1381,6 +1381,7 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 				IsLastApproval:     inq.IsLastApproval,
 				StatusDecision:     statusDecision,
 				StatusReason:       inq.StatusReason,
+				FinalApproval:      inq.FinalApproval,
 				CaDecision:         inq.CaDecision,
 				CaNote:             inq.CANote,
 				ActionDate:         inq.ActionDate,

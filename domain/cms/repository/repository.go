@@ -2076,6 +2076,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		tst.decision,
 		tst.reason,
 		tcd.decision as decision_ca,
+		tcd.final_approval,
 		thas.next_step,
 		CASE
 		  WHEN tcd.final_approval='%s' THEN 1
