@@ -1275,6 +1275,7 @@ type TotalRow struct {
 type InquiryCa struct {
 	ShowAction         bool   `gorm:"column:ShowAction"`
 	ActionDate         string `gorm:"column:ActionDate"`
+	ActionFormAkk      bool   `gorm:"column:ActionFormAkk"`
 	Activity           string `gorm:"column:activity"`
 	SourceDecision     string `gorm:"column:source_decision"`
 	StatusDecision     string `gorm:"column:decision"`
@@ -1416,7 +1417,6 @@ type InquiryDataCa struct {
 
 type DataCa struct {
 	ShowAction         bool   `gorm:"column:ShowAction" json:"show_action"`
-	IsLastApproval     bool   `gorm:"column:IsLastApproval" json:"is_last_approval"`
 	StatusDecision     string `gorm:"column:decision" json:"status_decision"`
 	StatusReason       string `gorm:"column:reason" json:"status_reason"`
 	CaDecision         string `gorm:"column:ca_decision" json:"ca_decision"`
@@ -1456,6 +1456,20 @@ type MappingLimitApprovalScheme struct {
 
 func (c *MappingLimitApprovalScheme) TableName() string {
 	return "m_limit_approval_scheme"
+}
+
+type TrxFinalApproval struct {
+	ProspectID string      `gorm:"type:varchar(20);column:ProspectID" json:"-"`
+	Decision   string      `gorm:"type:varchar(3);column:decision" json:"decision"`
+	Reason     string      `gorm:"type:varchar(100);column:reason" json:"reason"`
+	Note       interface{} `gorm:"type:varchar(525);column:note" json:"note"`
+	CreatedAt  time.Time   `gorm:"column:created_at" json:"-"`
+	CreatedBy  string      `gorm:"type:varchar(100);column:created_by" json:"-"`
+	DecisionBy string      `gorm:"type:varchar(250);column:decision_by" json:"-"`
+}
+
+func (c *TrxFinalApproval) TableName() string {
+	return "trx_final_approval"
 }
 
 type InquirySearch struct {
@@ -1603,4 +1617,35 @@ type ApprovalReason struct {
 	ReasonID string `gorm:"column:id" json:"reason_id"`
 	Value    string `gorm:"column:value" json:"value"`
 	Type     string `gorm:"column:Type" json:"type"`
+}
+
+type InquiryDataApproval struct {
+	CA             DataApproval        `json:"ca"`
+	InternalRecord []TrxInternalRecord `json:"internal_record"`
+	Approval       []HistoryApproval   `json:"approval"`
+	General        DataGeneral         `json:"general"`
+	Personal       CustomerPersonal    `json:"personal"`
+	Spouse         CustomerSpouse      `json:"spouse"`
+	Employment     CustomerEmployment  `json:"employment"`
+	ItemApk        DataItemApk         `json:"item_apk"`
+	Surveyor       []TrxSurveyor       `json:"surveyor"`
+	Emcon          CustomerEmcon       `json:"emcon"`
+	Address        DataAddress         `json:"address"`
+	Photo          []DataPhoto         `json:"photo"`
+}
+
+type DataApproval struct {
+	ShowAction         bool   `gorm:"column:ShowAction" json:"show_action"`
+	ActionFormAkk      bool   `gorm:"column:ActionFormAkk" json:"action_form_akk"`
+	IsLastApproval     bool   `gorm:"column:IsLastApproval" json:"is_last_approval"`
+	StatusDecision     string `gorm:"column:decision" json:"status_decision"`
+	StatusReason       string `gorm:"column:reason" json:"status_reason"`
+	CaDecision         string `gorm:"column:ca_decision" json:"ca_decision"`
+	CaNote             string `gorm:"column:ca_note" json:"ca_note"`
+	ActionDate         string `gorm:"column:ActionDate" json:"action_date"`
+	ScsDate            string `gorm:"column:ScsDate" json:"scorepro_date"`
+	ScsScore           string `gorm:"column:ScsScore" json:"scorepro_score"`
+	ScsStatus          string `gorm:"column:ScsStatus" json:"scorepro_status"`
+	BiroCustomerResult string `gorm:"column:BiroCustomerResult" json:"biro_customer_result"`
+	BiroSpouseResult   string `gorm:"column:BiroSpouseResult" json:"biro_spouse_result"`
 }

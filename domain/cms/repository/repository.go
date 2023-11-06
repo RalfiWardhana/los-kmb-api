@@ -1992,8 +1992,8 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		case constant.NEED_DECISION:
 			activity = constant.ACTIVITY_UNPROCESS
 			decision = constant.DB_DECISION_CREDIT_PROCESS
-			source := constant.DB_DECISION_CREDIT_ANALYST
-			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s' AND tt.decision_ca IS NULL", activity, decision, source)
+			source := alias
+			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s'", activity, decision, source)
 		}
 	}
 
@@ -2025,8 +2025,8 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 			tst.source_decision,
 			tst.decision,
 			tcd.final_approval,
+			thas.next_step,
 			tcd.decision as decision_ca,
-			tdd.created_by AS draft_created_by,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
 		FROM
@@ -2043,6 +2043,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_history_approval_scheme thas WITH (nolock) ON tm.ProspectID = thas.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -2052,28 +2053,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
-		LEFT JOIN (
-			SELECT
-			  x.ProspectID,
-			  x.decision,
-			  x.slik_result,
-			  x.note,
-			  x.created_at,
-			  x.created_by,
-			  x.decision_by
-			FROM
-			  trx_draft_ca_decision x WITH (nolock)
-			WHERE
-			  x.created_at = (
-				SELECT
-				  max(created_at)
-				from
-				  trx_draft_ca_decision WITH (NOLOCK)
-				WHERE
-				  ProspectID = x.ProspectID
-			  )
-		) tdd ON tm.ProspectID = tdd.ProspectID
-		) AS tt %s`, filter)).Scan(&row).Error; err != nil {
+		) AS tt %s AND tt.next_step='%s'`, filter, alias)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -2095,42 +2075,36 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		tst.decision,
 		tst.reason,
 		tcd.decision as decision_ca,
+		thas.next_step,
 		CASE
 		  WHEN tcd.final_approval='%s' THEN 1
 		  ELSE 0
 		END AS is_last_approval,
 		CASE
-		  WHEN tcd.decision='APR' THEN 'APPROVE'
-		  WHEN tcd.decision='REJ' THEN 'REJECT'
-		  WHEN tcd.decision='CAN' THEN 'CANCEL'
-		  ELSE tcd.decision
+		  WHEN tcd.decision = 'CAN' THEN tcd.decision
+		  WHEN tcd.decision IS NOT NULL THEN tfa.decision
+		  WHEN tst.decision = 'REJ' THEN 'REJECT'
+		  ELSE NULL
 		END AS ca_decision,
 		tcd.note AS ca_note,
 		CASE
-		  WHEN tcd.created_at IS NOT NULL
-		  AND tfa.created_at IS NULL THEN tcd.created_at
-		  WHEN tfa.created_at IS NOT NULL THEN tfa.created_at
-		  ELSE NULL
+		  WHEN tcd.decision='CAN' THEN 0
+		  ELSE 1
+		END AS ActionFormAkk,
+		CASE
+		  WHEN tcd.decision = 'CAN' THEN tcd.created_at 
+		  WHEN tcd.created_at IS NOT NULL THEN tfa.created_at
+		  ELSE tst.created_at
 		END AS ActionDate,
 		CASE
-		  WHEN tst.decision = 'CPR'
-		  AND tst.source_decision = 'CRA'
-		  AND tst.activity = 'UNPR'
-		  AND tcd.decision IS NULL THEN 1
+		  WHEN tcd.decision <> 'CAN'
+		  AND tfa.decision IS NULL THEN 1
 		  ELSE 0
 		END AS ShowAction,
 		CASE
 		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
 		  ELSE 'NE'
 		END AS incoming_source,
-		
-		tdd.decision AS draft_decision,
-		tdd.slik_result AS draft_slik_result,
-		tdd.note AS draft_note,
-		tdd.created_at AS draft_created_at,
-		tdd.created_by AS draft_created_by,
-		tdd.decision_by AS draft_decision_by,
-
 		tcp.CustomerID,
 		tcp.CustomerStatus,
 		tcp.SurveyResult,
@@ -2245,6 +2219,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_history_approval_scheme thas WITH (nolock) ON tm.ProspectID = thas.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -2412,28 +2387,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-		LEFT JOIN (
-		  SELECT
-			x.ProspectID,
-			x.decision,
-			x.slik_result,
-			x.note,
-			x.created_at,
-			x.created_by,
-			x.decision_by
-		  FROM
-			trx_draft_ca_decision x WITH (nolock)
-		  WHERE
-			x.created_at = (
-			  SELECT
-				max(created_at)
-			  from
-				trx_draft_ca_decision WITH (NOLOCK)
-			  WHERE
-				ProspectID = x.ProspectID
-			)
-		) tdd ON tm.ProspectID = tdd.ProspectID
-	) AS tt %s ORDER BY tt.created_at DESC %s`, alias, filter, filterPaginate)).Scan(&data).Error; err != nil {
+	) AS tt %s AND tt.next_step='%s' ORDER BY tt.created_at DESC %s`, alias, filter, alias, filterPaginate)).Scan(&data).Error; err != nil {
 		return
 	}
 
@@ -2441,4 +2395,72 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
 	}
 	return
+}
+
+func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
+
+	trxStatus.CreatedAt = DtmRequest
+	trxDetail.CreatedAt = DtmRequest
+
+	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
+
+		// trx_status
+		if err := tx.Model(&trxStatus).Where("ProspectID = ?", trxStatus.ProspectID).Updates(trxStatus).Error; err != nil {
+			return err
+		}
+
+		// trx_details
+		if err := tx.Create(&trxDetail).Error; err != nil {
+			return err
+		}
+
+		var (
+			trxHistoryApproval entity.TrxHistoryApprovalScheme
+			nextFinal          int
+		)
+
+		nextFinal = 0
+		if trxDetail.NextStep.(string) == req.FinalApproval {
+			nextFinal = 1
+		}
+
+		trxHistoryApproval = entity.TrxHistoryApprovalScheme{
+			ID:                    uuid.New().String(),
+			ProspectID:            req.ProspectID,
+			Decision:              trxStatus.Decision,
+			Reason:                req.Reason,
+			Note:                  req.Note,
+			CreatedAt:             DtmRequest,
+			CreatedBy:             req.CreatedBy,
+			DecisionBy:            req.DecisionBy,
+			NextFinalApprovalFlag: nextFinal,
+			NeedEscalation:        req.NeedEscalation,
+			SourceDecision:        trxDetail.SourceDecision,
+			NextStep:              trxDetail.NextStep.(string),
+		}
+
+		// trx_history_approval_scheme
+		if err := tx.Create(&trxHistoryApproval).Error; err != nil {
+			return err
+		}
+
+		if req.Alias == req.FinalApproval {
+			trxFinalApproval := entity.TrxFinalApproval{
+				ProspectID: req.ProspectID,
+				Decision:   trxStatus.Decision,
+				Reason:     req.Reason,
+				Note:       req.Note,
+				CreatedAt:  DtmRequest,
+				CreatedBy:  req.CreatedBy,
+				DecisionBy: req.DecisionBy,
+			}
+
+			// trx_final_approval
+			if err := tx.Create(&trxFinalApproval).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
 }

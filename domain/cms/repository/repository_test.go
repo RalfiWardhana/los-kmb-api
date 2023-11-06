@@ -50,7 +50,7 @@ func TestGetCustomerPhoto(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -87,7 +87,7 @@ func TestGetCustomerPhoto_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -120,7 +120,7 @@ func TestGetSurveyorData(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -168,7 +168,7 @@ func TestGetSurveyorData_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -201,7 +201,7 @@ func TestGetStatusPrescreening(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -241,7 +241,7 @@ func TestGetStatusPrescreening_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -274,7 +274,7 @@ func TestGetReasonPrescreening(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 
@@ -324,7 +324,7 @@ func TestGetReasonPrescreening_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqReasonPrescreening{
@@ -359,7 +359,7 @@ func TestGetSpIndustryTypeMaster(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 
@@ -403,7 +403,7 @@ func TestGetSpIndustryTypeMaster_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Mock SQL query to simulate record not found
 	mock.ExpectQuery(regexp.QuoteMeta(`exec[spIndustryTypeMaster] '01/01/2007'`)).
@@ -433,7 +433,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqInquiryPrescreening{
@@ -913,7 +913,7 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	expectedInquiry := []entity.InquiryPrescreening{{CmoRecommendation: 0, Activity: "", SourceDecision: "", Decision: "", Reason: "", DecisionBy: "", DecisionAt: "", ProspectID: "", BranchName: "", IncomingSource: "", CreatedAt: "", OrderAt: "", CustomerStatus: "", IDNumber: "", LegalName: "", BirthPlace: "", BirthDate: time.Time{}, SurgateMotherName: "", Gender: "", MobilePhone: "", Email: "", Education: "", MaritalStatus: "", NumOfDependence: 0, HomeStatus: "", StaySinceMonth: "", StaySinceYear: "", ExtCompanyPhone: (*string)(nil), SourceOtherIncome: (*string)(nil), Supplier: "", ProductOfferingID: "", AssetType: "", AssetDescription: "", ManufacturingYear: "", Color: "", ChassisNumber: "", EngineNumber: "", InterestRate: 0, InstallmentPeriod: 0, OTR: 0, DPAmount: 0, FinanceAmount: 0, InterestAmount: 0, LifeInsuranceFee: 0, AssetInsuranceFee: 0, InsuranceAmount: 0, AdminFee: 0, ProvisionFee: 0, NTF: 0, NTFAkumulasi: 0, Total: 0, MonthlyInstallment: 0, FirstInstallment: "", ProfessionID: "", JobTypeID: "", JobPosition: "", CompanyName: "", IndustryTypeID: "", EmploymentSinceYear: "", EmploymentSinceMonth: "", MonthlyFixedIncome: 0, MonthlyVariableIncome: 0, SpouseIncome: 0, SpouseIDNumber: "", SpouseLegalName: "", SpouseCompanyName: "", SpouseCompanyPhone: "", SpouseMobilePhone: "", SpouseProfession: "", EmconName: "", Relationship: "", EmconMobilePhone: "", LegalAddress: "", LegalRTRW: "", LegalKelurahan: "", LegalKecamatan: "", LegalZipCode: "", LegalCity: "", ResidenceAddress: "", ResidenceRTRW: "", ResidenceKelurahan: "", ResidenceKecamatan: "", ResidenceZipCode: "", ResidenceCity: "", CompanyAddress: "", CompanyRTRW: "", CompanyKelurahan: "", CompanyKecamatan: "", CompanyZipCode: "", CompanyCity: "", CompanyAreaPhone: "", CompanyPhone: "", EmergencyAddress: "", EmergencyRTRW: "", EmergencyKelurahan: "", EmergencyKecamatan: "", EmergencyZipcode: "", EmergencyCity: "", EmergencyAreaPhone: "", EmergencyPhone: ""}}
 
@@ -1860,7 +1860,7 @@ func TestGetInquiryPrescreening_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqInquiryPrescreening{}
@@ -2161,7 +2161,7 @@ func Test_repoHandler_SavePrescreening(t *testing.T) {
 
 	_ = gormDB
 
-	newDB := NewRepository(gormDB, gormDB, gormDB)
+	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB)
 	data := response.ReviewPrescreening{
 		ProspectID: "TST001",
 		Code:       constant.CODE_REJECT_PRESCREENING,
@@ -2234,7 +2234,7 @@ func TestSaveLogOrchestrator(t *testing.T) {
 
 	gormDB = gormDB.Debug()
 
-	newDB := NewRepository(gormDB, gormDB, gormDB)
+	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	header := "{'header':'header-id'}"
 	request := "{'request':'request-id'}"
@@ -2270,7 +2270,7 @@ func TestGetHistoryApproval(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -2341,7 +2341,7 @@ func TestGetInternalRecord(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -2412,7 +2412,7 @@ func TestGetLimitApproval(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	ntf := 10000.65
@@ -2473,7 +2473,7 @@ func TestGetHistoryProcess(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -2603,7 +2603,7 @@ func TestGetCancelReason(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	expectedReason := []entity.CancelReason{
 		{
@@ -2672,7 +2672,7 @@ func TestGetInquiryCa(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqInquiryCa{
@@ -3124,7 +3124,7 @@ func TestSaveDraftData(t *testing.T) {
 
 	_ = gormDB
 
-	newDB := NewRepository(gormDB, gormDB, gormDB)
+	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	data := entity.TrxDraftCaDecision{
 		ProspectID: "TST001",
@@ -3179,7 +3179,7 @@ func TestProcessTransaction(t *testing.T) {
 
 	_ = gormDB
 
-	newDB := NewRepository(gormDB, gormDB, gormDB)
+	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	trxCaDecision := entity.TrxCaDecision{
 		ProspectID:    "TST001",
@@ -3255,7 +3255,7 @@ func TestProcessReturnOrder(t *testing.T) {
 
 	_ = gormDB
 
-	newDB := NewRepository(gormDB, gormDB, gormDB)
+	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	ppid := "TST001"
 
@@ -3316,7 +3316,7 @@ func TestGetInquirySearch(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqSearchInquiry{
