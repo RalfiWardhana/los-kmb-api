@@ -14,14 +14,15 @@ import (
 func TestApprovalScheme(t *testing.T) {
 	testcases := []struct {
 		name string
-		req  request.ReqApprovalScheme
+		req  request.ReqSubmitApproval
 		resp response.RespApprovalScheme
 		err  error
 	}{
 		{
-			name: "test app",
-			req: request.ReqApprovalScheme{
-				DecisionAlias: "CBM",
+			name: "test app DRM",
+			req: request.ReqSubmitApproval{
+				FinalApproval: "COM",
+				Alias:         "CBM",
 			},
 			resp: response.RespApprovalScheme{
 				NextStep: "DRM",
@@ -29,9 +30,10 @@ func TestApprovalScheme(t *testing.T) {
 			},
 		},
 		{
-			name: "test app",
-			req: request.ReqApprovalScheme{
-				DecisionAlias: "DRM",
+			name: "test app GMO",
+			req: request.ReqSubmitApproval{
+				FinalApproval: "COM",
+				Alias:         "DRM",
 			},
 			resp: response.RespApprovalScheme{
 				NextStep: "GMO",
@@ -39,13 +41,27 @@ func TestApprovalScheme(t *testing.T) {
 			},
 		},
 		{
-			name: "test app",
-			req: request.ReqApprovalScheme{
-				DecisionAlias: "COM",
+			name: "test app final",
+			req: request.ReqSubmitApproval{
+				FinalApproval: "COM",
+				Alias:         "COM",
 			},
 			resp: response.RespApprovalScheme{
 				NextStep: "",
 				IsFinal:  true,
+			},
+		},
+		{
+			name: "test app final need escalation",
+			req: request.ReqSubmitApproval{
+				FinalApproval:  "COM",
+				Alias:          "COM",
+				NeedEscalation: true,
+			},
+			resp: response.RespApprovalScheme{
+				NextStep:     "GMC",
+				IsFinal:      false,
+				IsEscalation: true,
 			},
 		},
 	}

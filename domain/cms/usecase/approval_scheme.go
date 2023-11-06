@@ -6,7 +6,7 @@ import (
 	"los-kmb-api/models/response"
 )
 
-func (u usecase) ApprovalScheme(req request.ReqApprovalScheme) (app response.RespApprovalScheme, err error) {
+func (u usecase) ApprovalScheme(req request.ReqSubmitApproval) (result response.RespApprovalScheme, err error) {
 
 	// get master limit
 	limit := []entity.MappingLimitApprovalScheme{
@@ -30,28 +30,22 @@ func (u usecase) ApprovalScheme(req request.ReqApprovalScheme) (app response.Res
 		},
 	}
 
-	final := "COM"
-
-	var nextStep string
-	isFinal := false
-
 	for i, v := range limit {
-		if req.DecisionAlias == v.Alias {
+		if req.Alias == v.Alias {
 			// add next
-			if req.DecisionAlias != final {
-				nextStep = limit[i+1].Alias
+			if req.Alias != req.FinalApproval {
+				result.NextStep = limit[i+1].Alias
 				break
 			} else {
-				isFinal = true
+				if req.NeedEscalation {
+					result.NextStep = limit[i+1].Alias
+					result.IsEscalation = true
+				} else {
+					result.IsFinal = true
+				}
 				break
 			}
 		}
 	}
-
-	app = response.RespApprovalScheme{
-		NextStep: nextStep,
-		IsFinal:  isFinal,
-	}
-
 	return
 }

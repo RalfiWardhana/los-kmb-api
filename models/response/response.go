@@ -174,9 +174,9 @@ type ElaborateLTV struct {
 }
 
 type RespApprovalScheme struct {
-	ProspectID string
-	IsFinal    bool
-	NextStep   string
+	NextStep     string
+	IsFinal      bool
+	IsEscalation bool
 }
 
 type KreditMuResponse struct {
