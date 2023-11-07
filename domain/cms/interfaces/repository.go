@@ -24,7 +24,7 @@ type Repository interface {
 	GetLimitApproval(ntf float64) (limit entity.MappingLimitApprovalScheme, err error)
 	GetInquirySearch(req request.ReqSearchInquiry, pagination interface{}) (data []entity.InquirySearch, rowTotal int, err error)
 	GetHistoryProcess(prospectID string) (detail []entity.TrxDetail, err error)
-	ProcessTransaction(isCancel bool, trxCaDecision entity.TrxCaDecision, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error)
+	ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxHistoryApproval entity.TrxHistoryApprovalScheme, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error)
 	ProcessReturnOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error)
 	GetInquiryApproval(req request.ReqInquiryApproval, pagination interface{}) (data []entity.InquiryCa, rowTotal int, err error)
 	SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, approval response.RespApprovalScheme) (err error)
