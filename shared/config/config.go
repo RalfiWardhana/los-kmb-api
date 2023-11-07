@@ -28,6 +28,11 @@ func LoadEnv() {
 	}
 }
 
+func SetupTimezone() {
+	location, _ := time.LoadLocation("Asia/Jakarta")
+	time.Local = location
+}
+
 func NewConfiguration(appEnv string) {
 
 	if strings.ToLower(appEnv) != "prod" && strings.ToLower(appEnv) != "production" {
