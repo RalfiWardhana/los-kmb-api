@@ -377,6 +377,15 @@ func (u usecase) Ktp(ctx context.Context, req request.Metrics, cbFound bool, acc
 	data.Source = constant.SOURCE_DECISION_KTP_VALIDATOR
 	data.Info = string(infoKtp)
 
+	if data.Result == constant.DECISION_REJECT {
+		if strings.Contains(os.Getenv("NAMA_SAMA"), req.Item.BPKBName) {
+			data.Result = constant.DECISION_APPROVE
+		}
+		if cbFound {
+			data.Result = constant.DECISION_APPROVE
+		}
+	}
+
 	return
 }
 
