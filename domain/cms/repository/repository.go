@@ -22,10 +22,6 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-var (
-	DtmRequest = time.Now()
-)
-
 type repoHandler struct {
 	NewKmb    *gorm.DB
 	core      *gorm.DB
@@ -774,9 +770,9 @@ func (r repoHandler) GetTrxStatus(prospectID string) (status entity.TrxStatus, e
 
 func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detail entity.TrxDetail, status entity.TrxStatus) (err error) {
 
-	prescreening.CreatedAt = DtmRequest
-	detail.CreatedAt = DtmRequest
-	status.CreatedAt = DtmRequest
+	prescreening.CreatedAt = time.Now()
+	detail.CreatedAt = time.Now()
+	status.CreatedAt = time.Now()
 
 	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
@@ -1374,7 +1370,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 
 func (r repoHandler) SaveDraftData(draft entity.TrxDraftCaDecision) (err error) {
 
-	draft.CreatedAt = DtmRequest
+	draft.CreatedAt = time.Now()
 
 	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
@@ -1852,9 +1848,9 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 
 func (r repoHandler) ProcessTransaction(isCancel bool, trxCaDecision entity.TrxCaDecision, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
 
-	trxCaDecision.CreatedAt = DtmRequest
-	trxStatus.CreatedAt = DtmRequest
-	trxDetail.CreatedAt = DtmRequest
+	trxCaDecision.CreatedAt = time.Now()
+	trxStatus.CreatedAt = time.Now()
+	trxDetail.CreatedAt = time.Now()
 
 	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
@@ -1895,7 +1891,7 @@ func (r repoHandler) ProcessTransaction(isCancel bool, trxCaDecision entity.TrxC
 				Decision:              trxCaDecision.Decision,
 				Reason:                trxCaDecision.SlikResult.(string),
 				Note:                  trxCaDecision.Note,
-				CreatedAt:             DtmRequest,
+				CreatedAt:             time.Now(),
 				CreatedBy:             trxCaDecision.CreatedBy,
 				DecisionBy:            trxCaDecision.DecisionBy,
 				NeedEscalation:        0,
@@ -1922,8 +1918,8 @@ func (r repoHandler) ProcessTransaction(isCancel bool, trxCaDecision entity.TrxC
 
 func (r repoHandler) ProcessReturnOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
 
-	trxStatus.CreatedAt = DtmRequest
-	trxDetail.CreatedAt = DtmRequest
+	trxStatus.CreatedAt = time.Now()
+	trxDetail.CreatedAt = time.Now()
 
 	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
@@ -2416,8 +2412,8 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 
 func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, approval response.RespApprovalScheme) (err error) {
 
-	trxStatus.CreatedAt = DtmRequest
-	trxDetail.CreatedAt = DtmRequest
+	trxStatus.CreatedAt = time.Now()
+	trxDetail.CreatedAt = time.Now()
 
 	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
@@ -2455,13 +2451,24 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			decision = constant.DB_DECISION_APR
 		}
 
+		if approval.IsEscalation {
+			trxCaDecision := entity.TrxCaDecision{
+				FinalApproval: approval.NextStep,
+			}
+
+			// trx_ca_decision
+			if err := tx.Model(&trxCaDecision).Where("ProspectID = ?", req.ProspectID).Updates(trxCaDecision).Error; err != nil {
+				return err
+			}
+		}
+
 		trxHistoryApproval = entity.TrxHistoryApprovalScheme{
 			ID:                    uuid.New().String(),
 			ProspectID:            req.ProspectID,
 			Decision:              decision,
 			Reason:                req.Reason,
 			Note:                  req.Note,
-			CreatedAt:             DtmRequest,
+			CreatedAt:             time.Now(),
 			CreatedBy:             req.CreatedBy,
 			DecisionBy:            req.DecisionBy,
 			NextFinalApprovalFlag: nextFinal,
@@ -2481,7 +2488,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 				Decision:   trxStatus.Decision,
 				Reason:     req.Reason,
 				Note:       req.Note,
-				CreatedAt:  DtmRequest,
+				CreatedAt:  time.Now(),
 				CreatedBy:  req.CreatedBy,
 				DecisionBy: req.DecisionBy,
 			}
