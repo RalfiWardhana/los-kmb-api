@@ -319,14 +319,15 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 	// internal record
 	if dupcheckData.CustomerID != nil {
-		var resInternalRecord *resty.Response
-		resInternalRecord, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("INTERNAL_RECORD_URL")+dupcheckData.CustomerID.(string), nil, map[string]string{}, constant.METHOD_GET, true, 3, 60, reqMetrics.Transaction.ProspectID, accessToken)
-		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get Interal Record Error")
-			return
+		if dupcheckData.CustomerID.(string) != "" {
+			var resInternalRecord *resty.Response
+			resInternalRecord, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("INTERNAL_RECORD_URL")+dupcheckData.CustomerID.(string), nil, map[string]string{}, constant.METHOD_GET, true, 3, 60, reqMetrics.Transaction.ProspectID, accessToken)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get Interal Record Error")
+				return
+			}
+			jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(jsoniter.Get(resInternalRecord.Body(), "data").ToString()), &trxFMF.AgreementCONFINS)
 		}
-
-		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(jsoniter.Get(resInternalRecord.Body(), "data").ToString()), &trxFMF.AgreementCONFINS)
 	}
 
 	if metricsDupcheck.Result == constant.DECISION_REJECT {
