@@ -13,6 +13,9 @@ import (
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
 	"strings"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type (
@@ -855,11 +858,12 @@ func (u usecase) SaveAsDraft(ctx context.Context, req request.ReqSaveAsDraft) (d
 func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecision) (data response.CAResponse, err error) {
 
 	var (
-		trxCaDecision entity.TrxCaDecision
-		trxDetail     entity.TrxDetail
-		trxStatus     entity.TrxStatus
-		limit         entity.MappingLimitApprovalScheme
-		isCancel      bool
+		trxCaDecision      entity.TrxCaDecision
+		trxDetail          entity.TrxDetail
+		trxStatus          entity.TrxStatus
+		limit              entity.MappingLimitApprovalScheme
+		trxHistoryApproval entity.TrxHistoryApprovalScheme
+		nextFinal          int
 	)
 
 	status, err := u.repository.GetTrxStatus(req.ProspectID)
@@ -950,9 +954,27 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 			CreatedBy:      req.CreatedBy,
 		}
 
-		isCancel = false
+		nextFinal = 0
+		if trxCaDecision.FinalApproval == constant.DB_DECISION_BRANCH_MANAGER {
+			nextFinal = 1
+		}
 
-		err = u.repository.ProcessTransaction(isCancel, trxCaDecision, trxStatus, trxDetail)
+		trxHistoryApproval = entity.TrxHistoryApprovalScheme{
+			ID:                    uuid.New().String(),
+			ProspectID:            trxCaDecision.ProspectID,
+			Decision:              trxCaDecision.Decision,
+			Reason:                trxCaDecision.SlikResult.(string),
+			Note:                  trxCaDecision.Note,
+			CreatedAt:             time.Now(),
+			CreatedBy:             trxCaDecision.CreatedBy,
+			DecisionBy:            trxCaDecision.DecisionBy,
+			NeedEscalation:        0,
+			NextFinalApprovalFlag: nextFinal,
+			SourceDecision:        trxDetail.SourceDecision,
+			NextStep:              trxDetail.NextStep.(string),
+		}
+
+		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")
 			return
@@ -1211,10 +1233,10 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (data response.CancelResponse, err error) {
 
 	var (
-		trxStatus     entity.TrxStatus
-		trxDetail     entity.TrxDetail
-		trxCaDecision entity.TrxCaDecision
-		isCancel      bool
+		trxStatus          entity.TrxStatus
+		trxDetail          entity.TrxDetail
+		trxCaDecision      entity.TrxCaDecision
+		trxHistoryApproval entity.TrxHistoryApprovalScheme
 	)
 
 	status, err := u.repository.GetTrxStatus(req.ProspectID)
@@ -1231,6 +1253,7 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 			ProspectID: req.ProspectID,
 			Decision:   constant.DB_DECISION_CANCEL,
 			Note:       req.CancelReason,
+			SlikResult: "",
 			CreatedBy:  req.CreatedBy,
 			DecisionBy: req.DecisionBy,
 		}
@@ -1256,9 +1279,20 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 			CreatedBy:      req.CreatedBy,
 		}
 
-		isCancel = true
+		trxHistoryApproval = entity.TrxHistoryApprovalScheme{
+			ID:                    uuid.New().String(),
+			ProspectID:            trxCaDecision.ProspectID,
+			Decision:              trxCaDecision.Decision,
+			Reason:                req.CancelReason,
+			CreatedAt:             time.Now(),
+			CreatedBy:             trxCaDecision.CreatedBy,
+			DecisionBy:            trxCaDecision.DecisionBy,
+			NeedEscalation:        0,
+			NextFinalApprovalFlag: 0,
+			SourceDecision:        trxDetail.SourceDecision,
+		}
 
-		err = u.repository.ProcessTransaction(isCancel, trxCaDecision, trxStatus, trxDetail)
+		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Process Cancel Order error")
 			return
@@ -1413,21 +1447,16 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 
 		var (
 			historyData []entity.HistoryApproval
-			escalation  string
 		)
 
 		if len(histories) > 0 {
 			for _, history := range histories {
-				escalation = "No"
-				if history.NeedEscalation == 1 {
-					escalation = "Yes"
-				}
 				historyEntry := entity.HistoryApproval{
 					DecisionBy:            history.DecisionBy,
 					Decision:              history.Decision,
 					CreatedAt:             history.CreatedAt,
 					NextFinalApprovalFlag: history.NextFinalApprovalFlag,
-					NeedEscalation:        escalation,
+					NeedEscalation:        history.NeedEscalation,
 					SourceDecision:        history.SourceDecision,
 					NextStep:              history.NextStep,
 					Note:                  history.Note,
