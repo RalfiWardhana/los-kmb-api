@@ -839,7 +839,10 @@ func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.His
 				thas.decision,
 				thas.decision_by,
 				thas.next_final_approval_flag,
-				thas.need_escalation,
+				CASE
+					WHEN thas.need_escalation = 1 THEN 'Yes'
+					ELSE 'No'
+				END AS need_escalation,
 				thas.source_decision,
 				thas.next_step,
 				thas.note,
@@ -1858,7 +1861,7 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 	return
 }
 
-func (r repoHandler) ProcessTransaction(isCancel bool, trxCaDecision entity.TrxCaDecision, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
+func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxHistoryApproval entity.TrxHistoryApprovalScheme, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
 
 	trxCaDecision.CreatedAt = time.Now()
 	trxStatus.CreatedAt = time.Now()
@@ -1886,36 +1889,9 @@ func (r repoHandler) ProcessTransaction(isCancel bool, trxCaDecision entity.TrxC
 			return err
 		}
 
-		if !isCancel {
-			var (
-				trxHistoryApproval entity.TrxHistoryApprovalScheme
-				nextFinal          int
-			)
-
-			nextFinal = 0
-			if trxCaDecision.FinalApproval == constant.DB_DECISION_BRANCH_MANAGER {
-				nextFinal = 1
-			}
-
-			trxHistoryApproval = entity.TrxHistoryApprovalScheme{
-				ID:                    uuid.New().String(),
-				ProspectID:            trxCaDecision.ProspectID,
-				Decision:              trxCaDecision.Decision,
-				Reason:                trxCaDecision.SlikResult.(string),
-				Note:                  trxCaDecision.Note,
-				CreatedAt:             time.Now(),
-				CreatedBy:             trxCaDecision.CreatedBy,
-				DecisionBy:            trxCaDecision.DecisionBy,
-				NeedEscalation:        0,
-				NextFinalApprovalFlag: nextFinal,
-				SourceDecision:        trxDetail.SourceDecision,
-				NextStep:              trxDetail.NextStep.(string),
-			}
-
-			// trx_history_approval_scheme
-			if err := tx.Create(&trxHistoryApproval).Error; err != nil {
-				return err
-			}
+		// trx_history_approval_scheme
+		if err := tx.Create(&trxHistoryApproval).Error; err != nil {
+			return err
 		}
 
 		// trx_draft_ca_decision
@@ -2057,11 +2033,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
-		LEFT JOIN (SELECT ProspectID FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTL') rtl
-		ON rtl.ProspectID = tm.ProspectID
-		LEFT JOIN (SELECT ProspectID FROM trx_history_approval_scheme has WITH (nolock) WHERE has.need_escalation = 1 ) esc
-		ON esc.ProspectID = tm.ProspectID   	
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID   	
 		LEFT JOIN trx_history_approval_scheme has WITH (nolock) ON has.ProspectID = tm.ProspectID
 		LEFT JOIN (
 		  SELECT
@@ -2240,10 +2212,6 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
-		LEFT JOIN (SELECT ProspectID FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTL') rtl
-		ON rtl.ProspectID = tm.ProspectID
-		LEFT JOIN (SELECT ProspectID FROM trx_history_approval_scheme has WITH (nolock) WHERE has.need_escalation = 1 ) esc
-		ON esc.ProspectID = tm.ProspectID   	
 		LEFT JOIN trx_history_approval_scheme has WITH (nolock) ON has.ProspectID = tm.ProspectID
 		LEFT JOIN (
 		  SELECT
@@ -2470,11 +2438,6 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 
 			// trx_ca_decision
 			if err := tx.Model(&trxCaDecision).Where("ProspectID = ?", req.ProspectID).Updates(trxCaDecision).Error; err != nil {
-				return err
-			}
-
-			// update need_escalation to = 0
-			if err := tx.Model(&entity.TrxHistoryApprovalScheme{}).Where("ProspectID = ? AND next_step = ?", req.ProspectID, req.Alias).Updates(entity.TrxHistoryApprovalScheme{NeedEscalation: 0}).Error; err != nil {
 				return err
 			}
 		}
