@@ -1473,12 +1473,24 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 	var (
 		filter         string
 		filterPaginate string
+		filterBranch   string
+		query          string
 	)
+
+	filterBranch = utils.GenerateBranchFilter(req.BranchID)
+
+	filter = filterBranch
 
 	search := req.Search
 
 	if search != "" {
-		filter = fmt.Sprintf("WHERE (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+		query = fmt.Sprintf("WHERE (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+	}
+
+	if filter == "" {
+		filter = query
+	} else {
+		filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
 	}
 
 	if pagination != nil {
@@ -2460,6 +2472,11 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			if err := tx.Model(&trxCaDecision).Where("ProspectID = ?", req.ProspectID).Updates(trxCaDecision).Error; err != nil {
 				return err
 			}
+
+			// update need_escalation to = 0
+			if err := tx.Model(&entity.TrxHistoryApprovalScheme{}).Where("ProspectID = ? AND next_step = ?", req.ProspectID, req.Alias).Updates(entity.TrxHistoryApprovalScheme{NeedEscalation: 0}).Error; err != nil {
+				return err
+			}
 		}
 
 		trxHistoryApproval = entity.TrxHistoryApprovalScheme{
@@ -2485,7 +2502,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 		if approval.IsFinal {
 			trxFinalApproval := entity.TrxFinalApproval{
 				ProspectID: req.ProspectID,
-				Decision:   trxStatus.Decision,
+				Decision:   decision,
 				Reason:     req.Reason,
 				Note:       req.Note,
 				CreatedAt:  time.Now(),
