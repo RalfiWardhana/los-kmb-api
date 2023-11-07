@@ -732,8 +732,9 @@ type ReqSubmitApproval struct {
 }
 
 type ReqSearchInquiry struct {
-	UserID string `json:"user_id" validate:"required"`
-	Search string `json:"search" validate:"required"`
+	UserID   string `json:"user_id" validate:"required"`
+	BranchID string `json:"branch_id" validate:"required"`
+	Search   string `json:"search" validate:"required"`
 }
 
 type ReqCancelOrder struct {

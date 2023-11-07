@@ -317,8 +317,9 @@ func (c *handlerCMS) SearchInquiry(ctx echo.Context) (err error) {
 	var accessToken = middlewares.UserInfoData.AccessToken
 
 	req := request.ReqSearchInquiry{
-		UserID: ctx.QueryParam("user_id"),
-		Search: ctx.QueryParam("search"),
+		UserID:   ctx.QueryParam("user_id"),
+		BranchID: ctx.QueryParam("branch_id"),
+		Search:   ctx.QueryParam("search"),
 	}
 
 	if err := ctx.Bind(&req); err != nil {
