@@ -71,6 +71,7 @@ func main() {
 
 	validator := common.NewValidator()
 
+	config.SetupTimezone()
 	config.LoadEnv()
 
 	env := strings.ToLower(os.Getenv("APP_ENV"))
