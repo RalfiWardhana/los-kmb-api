@@ -359,7 +359,7 @@ func GetFloat(unk interface{}) (float64, error) {
 }
 
 func GenerateBranchFilter(branchId string) string {
-	if branchId == "" {
+	if branchId == "" || branchId == "999" {
 		return ""
 	}
 
