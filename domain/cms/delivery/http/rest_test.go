@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"los-kmb-api/domain/cms/interfaces/mocks"
+	"los-kmb-api/domain/cms/mocks"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
@@ -87,9 +87,102 @@ func TestListReason(t *testing.T) {
 
 		mockResponse := []entity.ReasonMessage{}
 		statusCode := http.StatusBadRequest
-		mockUsecase.On("GetReasonPrescreening", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
+		mockUsecase.On("GetReasonPrescreening", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
 
 		err := handler.ListReason(ctx)
+		assert.Nil(t, err)
+	})
+}
+
+func TestApprovalReason(t *testing.T) {
+	// Create a new Echo instance
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	mockJson := new(mocksJson.JSON)
+
+	// Create an instance of the handler
+	handler := &handlerCMS{
+		usecase:    mockUsecase,
+		repository: mockRepository,
+		Json:       mockJson,
+	}
+
+	t.Run("success", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/reason?type=REJ&page=1", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockUsecase.On("GetApprovalReason", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]entity.ApprovalReason{}, 0, nil).Once()
+
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		// Call the handler
+		err := handler.ApprovalReason(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/reason?type=APR", nil)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		mockResponse := []entity.ApprovalReason{}
+		statusCode := http.StatusNotFound
+
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		mockUsecase.On("GetApprovalReason", mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		err := handler.ApprovalReason(ctx)
+		assert.Nil(t, err)
+	})
+
+	t.Run("Error parameter approval reason", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/reason", strings.NewReader("error"))
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		err := handler.ApprovalReason(ctx)
+		assert.Nil(t, err)
+	})
+
+	t.Run("bad request", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/reason", nil)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		mockResponse := []entity.ApprovalReason{}
+		statusCode := http.StatusBadRequest
+		mockUsecase.On("GetApprovalReason", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
+
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		err := handler.ApprovalReason(ctx)
 		assert.Nil(t, err)
 	})
 }
@@ -187,7 +280,7 @@ func TestReviewPrescreening(t *testing.T) {
 	t.Run("success review", func(t *testing.T) {
 		e := echo.New()
 		e.Validator = common.NewValidator()
-		var errData error
+		// var errData error
 
 		data, _ := json.Marshal(body)
 
@@ -208,7 +301,13 @@ func TestReviewPrescreening(t *testing.T) {
 
 		mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
-		mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything).Return(response.ReviewPrescreening{}, errData).Once()
+		mockResponse := response.ReviewPrescreening{
+			ProspectID: body.ProspectID,
+			Code:       constant.CODE_PASS_PRESCREENING,
+			Decision:   constant.DECISION_PASS,
+			Reason:     "OK",
+		}
+		mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything).Return(mockResponse, nil)
 
 		mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
@@ -273,7 +372,7 @@ func TestCMSHandler(t *testing.T) {
 	e.Validator = common.NewValidator()
 
 	// Create a request and recorder for testing
-	req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/prescreening/list-reason", strings.NewReader("error"))
+	req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/prescreening/list-reason?reason_id=xxx&page=2", nil)
 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 	rec := httptest.NewRecorder()
 	reqID := utils.GenerateUUID()
@@ -302,16 +401,16 @@ func TestCMSHandler(t *testing.T) {
 	cmsRoute := e.Group("/cms")
 	CMSHandler(cmsRoute, mockUsecase, mockRepository, mockJson, platformEvent, mockMiddleware)
 
-	mockResponse := entity.ReasonMessage{}
+	mockResponse := []entity.ReasonMessage{}
 	statusCode := http.StatusOK
-	mockUsecase.On("GetInquiryPrescreening", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
-
-	mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+	mockUsecase.On("GetReasonPrescreening", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
+	mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 	err := handler.ListReason(c)
 	if err != nil {
 		t.Errorf("error '%s' was not expected, but got: ", err)
 	}
+	assert.Nil(t, err)
 
 	// Cleanup resources if needed
 	srv.Close()
@@ -899,5 +998,176 @@ func TestCancelReason(t *testing.T) {
 
 		err := handler.CancelReason(ctx)
 		assert.Nil(t, err)
+	})
+}
+
+func TestApprovalInquiry(t *testing.T) {
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	mockJson := new(mocksJson.JSON)
+
+	handler := &handlerCMS{
+		usecase:    mockUsecase,
+		repository: mockRepository,
+		Json:       mockJson,
+	}
+	t.Run("success_approval_inquiry", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/inquiry?user_id=1212&search=aa&page=1", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockUsecase.On("GetInquiryApproval", mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryDataApproval{}, 0, nil).Once()
+
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		// Call the handler
+		err := handler.ApprovalInquiry(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
+	t.Run("error not found", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/inquiry?user_id=1212&search=aa&page=2", strings.NewReader("error"))
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		mockResponse := []entity.InquiryDataApproval{}
+		statusCode := http.StatusOK
+		mockUsecase.On("GetInquiryApproval", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
+
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		err := handler.ApprovalInquiry(ctx)
+		assert.Nil(t, err)
+	})
+
+	t.Run("bad request approval", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/inquiry?user_id=1212&search=aa&page=1", nil)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		mockResponse := []entity.InquiryDataApproval{}
+		statusCode := http.StatusBadRequest
+		mockUsecase.On("GetInquiryApproval", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
+
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		err := handler.ApprovalInquiry(ctx)
+		assert.Nil(t, err)
+	})
+}
+
+func TestSubmitApproval(t *testing.T) {
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	mockJson := new(mocksJson.JSON)
+
+	// Create an instance of the handler
+	handler := &handlerCMS{
+		usecase:    mockUsecase,
+		repository: mockRepository,
+		Json:       mockJson,
+	}
+	body := request.ReqSubmitApproval{
+		ProspectID:     "EFM03406412522151348",
+		FinalApproval:  "UCC",
+		Decision:       "REJECT",
+		RuleCode:       "3741",
+		Alias:          "CBM",
+		Reason:         "Oke",
+		NeedEscalation: false,
+		Note:           "Bahaya Nih",
+		CreatedBy:      "5XeZs9PCeiPcZGS6azt",
+		DecisionBy:     "User CA - KMB",
+	}
+
+	t.Run("success submit approval", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+		var errData error
+
+		data, _ := json.Marshal(body)
+
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/approval/submit-approval", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		mockUsecase.On("SubmitApproval", mock.Anything, mock.Anything).Return(response.ApprovalResponse{}, errData).Once()
+
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		// Call the handler
+		err := handler.SubmitApproval(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
+	t.Run("error bind", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/approval/submit-approval", strings.NewReader("error"))
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		err := handler.SubmitApproval(ctx)
+		assert.Nil(t, err)
+	})
+
+	t.Run("error bad request", func(t *testing.T) {
+		body.ProspectID = "EFM0340641252215134812345"
+		data, _ := json.Marshal(body)
+
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/approval/submit-approval", bytes.NewBuffer(data))
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+		ctx.Request().Header.Add("content-type", "application/json")
+
+		mockResponse := response.ApprovalResponse{}
+		statusCode := http.StatusBadRequest
+
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		mockUsecase.On("SubmitApproval", mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
+
+		err := handler.SubmitApproval(ctx)
+		assert.Nil(t, err)
+
 	})
 }

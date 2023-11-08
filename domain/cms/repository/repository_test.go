@@ -87,7 +87,7 @@ func TestGetCustomerPhoto_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -120,7 +120,7 @@ func TestGetSurveyorData(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -168,7 +168,7 @@ func TestGetSurveyorData_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -201,7 +201,7 @@ func TestGetStatusPrescreening(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -241,7 +241,7 @@ func TestGetStatusPrescreening_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -274,7 +274,7 @@ func TestGetReasonPrescreening(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 
@@ -324,7 +324,7 @@ func TestGetReasonPrescreening_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqReasonPrescreening{
@@ -359,7 +359,7 @@ func TestGetSpIndustryTypeMaster(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 
@@ -403,7 +403,7 @@ func TestGetSpIndustryTypeMaster_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Mock SQL query to simulate record not found
 	mock.ExpectQuery(regexp.QuoteMeta(`exec[spIndustryTypeMaster] '01/01/2007'`)).
@@ -433,7 +433,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqInquiryPrescreening{
@@ -913,7 +913,7 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	expectedInquiry := []entity.InquiryPrescreening{{CmoRecommendation: 0, Activity: "", SourceDecision: "", Decision: "", Reason: "", DecisionBy: "", DecisionAt: "", ProspectID: "", BranchName: "", IncomingSource: "", CreatedAt: "", OrderAt: "", CustomerStatus: "", IDNumber: "", LegalName: "", BirthPlace: "", BirthDate: time.Time{}, SurgateMotherName: "", Gender: "", MobilePhone: "", Email: "", Education: "", MaritalStatus: "", NumOfDependence: 0, HomeStatus: "", StaySinceMonth: "", StaySinceYear: "", ExtCompanyPhone: (*string)(nil), SourceOtherIncome: (*string)(nil), Supplier: "", ProductOfferingID: "", AssetType: "", AssetDescription: "", ManufacturingYear: "", Color: "", ChassisNumber: "", EngineNumber: "", InterestRate: 0, InstallmentPeriod: 0, OTR: 0, DPAmount: 0, FinanceAmount: 0, InterestAmount: 0, LifeInsuranceFee: 0, AssetInsuranceFee: 0, InsuranceAmount: 0, AdminFee: 0, ProvisionFee: 0, NTF: 0, NTFAkumulasi: 0, Total: 0, MonthlyInstallment: 0, FirstInstallment: "", ProfessionID: "", JobTypeID: "", JobPosition: "", CompanyName: "", IndustryTypeID: "", EmploymentSinceYear: "", EmploymentSinceMonth: "", MonthlyFixedIncome: 0, MonthlyVariableIncome: 0, SpouseIncome: 0, SpouseIDNumber: "", SpouseLegalName: "", SpouseCompanyName: "", SpouseCompanyPhone: "", SpouseMobilePhone: "", SpouseProfession: "", EmconName: "", Relationship: "", EmconMobilePhone: "", LegalAddress: "", LegalRTRW: "", LegalKelurahan: "", LegalKecamatan: "", LegalZipCode: "", LegalCity: "", ResidenceAddress: "", ResidenceRTRW: "", ResidenceKelurahan: "", ResidenceKecamatan: "", ResidenceZipCode: "", ResidenceCity: "", CompanyAddress: "", CompanyRTRW: "", CompanyKelurahan: "", CompanyKecamatan: "", CompanyZipCode: "", CompanyCity: "", CompanyAreaPhone: "", CompanyPhone: "", EmergencyAddress: "", EmergencyRTRW: "", EmergencyKelurahan: "", EmergencyKecamatan: "", EmergencyZipcode: "", EmergencyCity: "", EmergencyAreaPhone: "", EmergencyPhone: ""}}
 
@@ -1860,7 +1860,7 @@ func TestGetInquiryPrescreening_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqInquiryPrescreening{}
@@ -2270,7 +2270,7 @@ func TestGetHistoryApproval(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -2291,7 +2291,7 @@ func TestGetHistoryApproval(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 
 		// Mock SQL query and result
-		mock.ExpectQuery(`SELECT thas.decision, thas.decision_by, thas.next_final_approval_flag, thas.need_escalation, thas.source_decision, thas.next_step, thas.note, thas.created_at, CASE WHEN thas.source_decision = 'CRA' THEN tcd.slik_result ELSE '-' END AS slik_result FROM trx_history_approval_scheme thas WITH \(nolock\) LEFT JOIN trx_ca_decision tcd on thas.ProspectID = tcd.ProspectID WHERE thas.ProspectID = \? ORDER BY thas.created_at DESC`).WithArgs(prospectID).
+		mock.ExpectQuery(`SELECT thas.decision_by, thas.next_final_approval_flag, CASE WHEN thas.decision = 'APR' THEN 'Approve' WHEN thas.decision = 'REJ' THEN 'Reject' WHEN thas.decision = 'CAN' THEN 'Cancel' ELSE '-' END AS decision, CASE WHEN thas.need_escalation = 1 THEN 'Yes' ELSE 'No' END AS need_escalation, thas.source_decision, CASE WHEN thas.next_step<>'' THEN thas.next_step ELSE '-' END AS next_step, CASE WHEN thas.note<>'' THEN thas.note ELSE '-' END AS note, thas.created_at, CASE WHEN thas.source_decision = 'CRA' AND tcd.slik_result<>'' THEN tcd.slik_result ELSE '-' END AS slik_result FROM trx_history_approval_scheme thas WITH \(nolock\) LEFT JOIN trx_ca_decision tcd on thas.ProspectID = tcd.ProspectID WHERE thas.ProspectID = \? ORDER BY thas.created_at DESC`).WithArgs(prospectID).
 			WillReturnRows(sqlmock.NewRows([]string{"decision", "decision_by", "next_final_approval_flag", "need_escalation", "source_decision", "next_step", "note", "created_at", "slik_result"}).
 				AddRow("APR", "User CA KMB", 1, "No", "CRA", "CBM", "Ok dari CA", time.Time{}, "Lancar"))
 
@@ -2313,7 +2313,7 @@ func TestGetHistoryApproval(t *testing.T) {
 	t.Run("record not found", func(t *testing.T) {
 
 		// Mock SQL query to simulate record not found
-		mock.ExpectQuery(`SELECT thas.decision, thas.decision_by, thas.next_final_approval_flag, thas.need_escalation, thas.source_decision, thas.next_step, thas.note, thas.created_at, CASE WHEN thas.source_decision = 'CRA' THEN tcd.slik_result ELSE '-' END AS slik_result FROM trx_history_approval_scheme thas WITH \(nolock\) LEFT JOIN trx_ca_decision tcd on thas.ProspectID = tcd.ProspectID WHERE thas.ProspectID = \? ORDER BY thas.created_at DESC`).WithArgs(prospectID).
+		mock.ExpectQuery(`SELECT thas.decision_by, thas.next_final_approval_flag, CASE WHEN thas.decision = 'APR' THEN 'Approve' WHEN thas.decision = 'REJ' THEN 'Reject' WHEN thas.decision = 'CAN' THEN 'Cancel' ELSE '-' END AS decision, CASE WHEN thas.need_escalation = 1 THEN 'Yes' ELSE 'No' END AS need_escalation, thas.source_decision, CASE WHEN thas.next_step<>'' THEN thas.next_step ELSE '-' END AS next_step, CASE WHEN thas.note<>'' THEN thas.note ELSE '-' END AS note, thas.created_at, CASE WHEN thas.source_decision = 'CRA' AND tcd.slik_result<>'' THEN tcd.slik_result ELSE '-' END AS slik_result FROM trx_history_approval_scheme thas WITH \(nolock\) LEFT JOIN trx_ca_decision tcd on thas.ProspectID = tcd.ProspectID WHERE thas.ProspectID = \? ORDER BY thas.created_at DESC`).WithArgs(prospectID).
 			WillReturnError(gorm.ErrRecordNotFound)
 
 		// Call the function
@@ -2341,7 +2341,7 @@ func TestGetInternalRecord(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -2412,7 +2412,7 @@ func TestGetLimitApproval(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	ntf := 10000.65
@@ -2473,7 +2473,7 @@ func TestGetHistoryProcess(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -2603,7 +2603,7 @@ func TestGetCancelReason(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	expectedReason := []entity.CancelReason{
 		{
@@ -2672,7 +2672,7 @@ func TestGetInquiryCa(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqInquiryCa{
@@ -2713,7 +2713,6 @@ func TestGetInquiryCa(t *testing.T) {
 	INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 	INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 	LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
-	LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 	LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 	LEFT JOIN (
 	  SELECT
@@ -2744,7 +2743,7 @@ func TestGetInquiryCa(t *testing.T) {
 			  ProspectID = x.ProspectID
 		  )
 	) tdd ON tm.ProspectID = tdd.ProspectID
-	) AS tt`)).
+	) AS tt WHERE tt.BranchID IN ('426','903') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision= 'APR' AND tt.source_decision<>'PSI'`)).
 		WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 			AddRow("27"))
 
@@ -2991,7 +2990,6 @@ func TestGetInquiryCa(t *testing.T) {
 
 	INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 	LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
-	LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 	LEFT JOIN (
 	  SELECT
 		[key],
@@ -3094,7 +3092,7 @@ func TestGetInquiryCa(t *testing.T) {
 			ProspectID = x.ProspectID
 		)
 	) tdd ON tm.ProspectID = tdd.ProspectID
-) AS tt`)).
+) AS tt WHERE tt.BranchID IN ('426','903') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision= 'APR' AND tt.source_decision<>'PSI' ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 		WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
 			AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
@@ -3213,6 +3211,18 @@ func TestProcessTransaction(t *testing.T) {
 		CreatedBy:      trxCaDecision.CreatedBy,
 	}
 
+	trxHistoryApproval := entity.TrxHistoryApprovalScheme{
+		ID:                    "xxxxx",
+		ProspectID:            trxCaDecision.ProspectID,
+		Decision:              trxCaDecision.Decision,
+		Reason:                "lancar",
+		Note:                  trxCaDecision.Note,
+		CreatedBy:             trxCaDecision.CreatedBy,
+		DecisionBy:            trxCaDecision.DecisionBy,
+		NeedEscalation:        0,
+		NextFinalApprovalFlag: 0,
+		SourceDecision:        trxDetail.SourceDecision,
+	}
 	t.Run("success update", func(t *testing.T) {
 
 		mock.ExpectBegin()
@@ -3237,7 +3247,7 @@ func TestProcessTransaction(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
 
-		err := newDB.ProcessTransaction(false, trxCaDecision, trxStatus, trxDetail)
+		err := newDB.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail)
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
 		}
@@ -3285,6 +3295,10 @@ func TestProcessReturnOrder(t *testing.T) {
 			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
+		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "trx_details" WHERE "trx_details"."ProspectID" = ? AND ((ProspectID = ?))`)).
+			WithArgs(ppid, ppid).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?)`)).
 			WithArgs(trxDetail.ProspectID, trxDetail.StatusProcess, trxDetail.Activity, trxDetail.Decision, trxDetail.RuleCode, trxDetail.SourceDecision, trxDetail.NextStep, sqlmock.AnyArg(), trxDetail.Info, trxDetail.CreatedBy, sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -3316,7 +3330,7 @@ func TestGetInquirySearch(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB,gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqSearchInquiry{
@@ -3681,4 +3695,74 @@ func TestGetInquirySearch(t *testing.T) {
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Fatalf("There were unfulfilled expectations: %s", err)
 	}
+}
+
+func TestGetApprovalReason(t *testing.T) {
+	// Setup mock database connection
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	expectedReason := []entity.ApprovalReason{
+		{
+			ReasonID: "1|APR|Oke",
+			Value:    "Oke",
+			Type:     "APR",
+		},
+	}
+
+	req := request.ReqApprovalReason{
+		Type: "APR",
+	}
+
+	t.Run("success", func(t *testing.T) {
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT COUNT(tt.id) AS totalRow FROM (SELECT CONCAT(ReasonID, '|', Type, '|', Description) AS 'id', Description AS 'value', [Type] FROM tblApprovalReason WHERE IsActive = 'True' AND [Type] = 'APR') AS tt`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
+				AddRow("8"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT CONCAT(ReasonID, '|', Type, '|', Description) AS 'id', Description AS 'value', [Type] FROM tblApprovalReason WHERE IsActive = 'True'  AND [Type] = 'APR' ORDER BY ReasonID ASC`)).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "value", "Type"}).
+				AddRow("1|APR|Oke", "Oke", "APR"))
+
+		// Call the function
+		reason, _, err := repo.GetApprovalReason(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedReason, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success not found", func(t *testing.T) {
+		// Mock SQL query to simulate record not found
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT CONCAT(ReasonID, '|', Type, '|', Description) AS 'id', Description AS 'value', [Type] FROM tblApprovalReason WHERE IsActive = 'True'  AND [Type] = 'APR' ORDER BY ReasonID ASC`)).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		// Call the function
+		_, _, err := repo.GetApprovalReason(req, nil)
+
+		// Verify the error message
+		expectedErr := errors.New(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
 }

@@ -442,13 +442,13 @@ func (_m *Repository) ProcessReturnOrder(prospectID string, trxStatus entity.Trx
 	return r0
 }
 
-// ProcessTransaction provides a mock function with given fields: isCancel, trxCaDecision, trxStatus, trxDetail
-func (_m *Repository) ProcessTransaction(isCancel bool, trxCaDecision entity.TrxCaDecision, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) error {
-	ret := _m.Called(isCancel, trxCaDecision, trxStatus, trxDetail)
+// ProcessTransaction provides a mock function with given fields: trxCaDecision, trxHistoryApproval, trxStatus, trxDetail
+func (_m *Repository) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxHistoryApproval entity.TrxHistoryApprovalScheme, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) error {
+	ret := _m.Called(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(bool, entity.TrxCaDecision, entity.TrxStatus, entity.TrxDetail) error); ok {
-		r0 = rf(isCancel, trxCaDecision, trxStatus, trxDetail)
+	if rf, ok := ret.Get(0).(func(entity.TrxCaDecision, entity.TrxHistoryApprovalScheme, entity.TrxStatus, entity.TrxDetail) error); ok {
+		r0 = rf(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail)
 	} else {
 		r0 = ret.Error(0)
 	}

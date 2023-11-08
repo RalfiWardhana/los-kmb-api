@@ -1730,7 +1730,7 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 
 	err = u.repository.SubmitApproval(req, trxStatus, trxDetail, approvalScheme)
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error")
 		return
 	}
 

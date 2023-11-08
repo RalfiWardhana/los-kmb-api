@@ -836,19 +836,30 @@ func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.His
 	defer db.Commit()
 
 	if err = r.NewKmb.Raw(`SELECT
-				thas.decision,
 				thas.decision_by,
 				thas.next_final_approval_flag,
+				CASE
+					WHEN thas.decision = 'APR' THEN 'Approve'
+					WHEN thas.decision = 'REJ' THEN 'Reject'
+					WHEN thas.decision = 'CAN' THEN 'Cancel'
+					ELSE '-'
+				END AS decision,
 				CASE
 					WHEN thas.need_escalation = 1 THEN 'Yes'
 					ELSE 'No'
 				END AS need_escalation,
 				thas.source_decision,
-				thas.next_step,
-				thas.note,
+				CASE
+					WHEN thas.next_step<>'' THEN thas.next_step
+					ELSE '-'
+				END AS next_step,
+				CASE
+					WHEN thas.note<>'' THEN thas.note
+					ELSE '-'
+				END AS note,
 				thas.created_at,
 				CASE
-				  WHEN thas.source_decision = 'CRA' THEN tcd.slik_result
+				  WHEN thas.source_decision = 'CRA' AND tcd.slik_result<>'' THEN tcd.slik_result
 				  ELSE
 				  '-'
 				END AS slik_result
@@ -1145,7 +1156,6 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
-		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN (
 		  SELECT
@@ -1176,7 +1186,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 				  ProspectID = x.ProspectID
 			  )
 		) tdd ON tm.ProspectID = tdd.ProspectID
-		) AS tt %s`, filter)).Scan(&row).Error; err != nil {
+		) AS tt %s AND tt.source_decision<>'%s'`, filter, constant.PRESCREENING)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -1428,7 +1438,6 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 
 		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
-		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN (
 		  SELECT
 			[key],
@@ -1531,7 +1540,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 				ProspectID = x.ProspectID
 			)
 		) tdd ON tm.ProspectID = tdd.ProspectID
-	) AS tt %s ORDER BY tt.created_at DESC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
+	) AS tt %s AND tt.source_decision<>'%s' ORDER BY tt.created_at DESC %s`, filter, constant.PRESCREENING, filterPaginate)).Scan(&data).Error; err != nil {
 		return
 	}
 
