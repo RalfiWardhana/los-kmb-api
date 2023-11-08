@@ -22,10 +22,6 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-var (
-	DtmRequest = time.Now()
-)
-
 type repoHandler struct {
 	NewKmb    *gorm.DB
 	core      *gorm.DB
@@ -774,9 +770,9 @@ func (r repoHandler) GetTrxStatus(prospectID string) (status entity.TrxStatus, e
 
 func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detail entity.TrxDetail, status entity.TrxStatus) (err error) {
 
-	prescreening.CreatedAt = DtmRequest
-	detail.CreatedAt = DtmRequest
-	status.CreatedAt = DtmRequest
+	prescreening.CreatedAt = time.Now()
+	detail.CreatedAt = time.Now()
+	status.CreatedAt = time.Now()
 
 	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
@@ -843,7 +839,10 @@ func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.His
 				thas.decision,
 				thas.decision_by,
 				thas.next_final_approval_flag,
-				thas.need_escalation,
+				CASE
+					WHEN thas.need_escalation = 1 THEN 'Yes'
+					ELSE 'No'
+				END AS need_escalation,
 				thas.source_decision,
 				thas.next_step,
 				thas.note,
@@ -1374,7 +1373,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 
 func (r repoHandler) SaveDraftData(draft entity.TrxDraftCaDecision) (err error) {
 
-	draft.CreatedAt = DtmRequest
+	draft.CreatedAt = time.Now()
 
 	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
@@ -1477,12 +1476,24 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 	var (
 		filter         string
 		filterPaginate string
+		filterBranch   string
+		query          string
 	)
+
+	filterBranch = utils.GenerateBranchFilter(req.BranchID)
+
+	filter = filterBranch
 
 	search := req.Search
 
 	if search != "" {
-		filter = fmt.Sprintf("WHERE (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+		query = fmt.Sprintf("WHERE (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+	}
+
+	if filter == "" {
+		filter = query
+	} else {
+		filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
 	}
 
 	if pagination != nil {
@@ -1850,11 +1861,11 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 	return
 }
 
-func (r repoHandler) ProcessTransaction(isCancel bool, trxCaDecision entity.TrxCaDecision, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
+func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxHistoryApproval entity.TrxHistoryApprovalScheme, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
 
-	trxCaDecision.CreatedAt = DtmRequest
-	trxStatus.CreatedAt = DtmRequest
-	trxDetail.CreatedAt = DtmRequest
+	trxCaDecision.CreatedAt = time.Now()
+	trxStatus.CreatedAt = time.Now()
+	trxDetail.CreatedAt = time.Now()
 
 	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
@@ -1878,36 +1889,9 @@ func (r repoHandler) ProcessTransaction(isCancel bool, trxCaDecision entity.TrxC
 			return err
 		}
 
-		if !isCancel {
-			var (
-				trxHistoryApproval entity.TrxHistoryApprovalScheme
-				nextFinal          int
-			)
-
-			nextFinal = 0
-			if trxCaDecision.FinalApproval == constant.DB_DECISION_BRANCH_MANAGER {
-				nextFinal = 1
-			}
-
-			trxHistoryApproval = entity.TrxHistoryApprovalScheme{
-				ID:                    uuid.New().String(),
-				ProspectID:            trxCaDecision.ProspectID,
-				Decision:              trxCaDecision.Decision,
-				Reason:                trxCaDecision.SlikResult.(string),
-				Note:                  trxCaDecision.Note,
-				CreatedAt:             DtmRequest,
-				CreatedBy:             trxCaDecision.CreatedBy,
-				DecisionBy:            trxCaDecision.DecisionBy,
-				NeedEscalation:        0,
-				NextFinalApprovalFlag: nextFinal,
-				SourceDecision:        trxDetail.SourceDecision,
-				NextStep:              trxDetail.NextStep.(string),
-			}
-
-			// trx_history_approval_scheme
-			if err := tx.Create(&trxHistoryApproval).Error; err != nil {
-				return err
-			}
+		// trx_history_approval_scheme
+		if err := tx.Create(&trxHistoryApproval).Error; err != nil {
+			return err
 		}
 
 		// trx_draft_ca_decision
@@ -1922,8 +1906,8 @@ func (r repoHandler) ProcessTransaction(isCancel bool, trxCaDecision entity.TrxC
 
 func (r repoHandler) ProcessReturnOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
 
-	trxStatus.CreatedAt = DtmRequest
-	trxDetail.CreatedAt = DtmRequest
+	trxStatus.CreatedAt = time.Now()
+	trxDetail.CreatedAt = time.Now()
 
 	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
@@ -2049,11 +2033,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
-		LEFT JOIN (SELECT ProspectID FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTL') rtl
-		ON rtl.ProspectID = tm.ProspectID
-		LEFT JOIN (SELECT ProspectID FROM trx_history_approval_scheme has WITH (nolock) WHERE has.need_escalation = 1 ) esc
-		ON esc.ProspectID = tm.ProspectID   	
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID   	
 		LEFT JOIN trx_history_approval_scheme has WITH (nolock) ON has.ProspectID = tm.ProspectID
 		LEFT JOIN (
 		  SELECT
@@ -2232,10 +2212,6 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
-		LEFT JOIN (SELECT ProspectID FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTL') rtl
-		ON rtl.ProspectID = tm.ProspectID
-		LEFT JOIN (SELECT ProspectID FROM trx_history_approval_scheme has WITH (nolock) WHERE has.need_escalation = 1 ) esc
-		ON esc.ProspectID = tm.ProspectID   	
 		LEFT JOIN trx_history_approval_scheme has WITH (nolock) ON has.ProspectID = tm.ProspectID
 		LEFT JOIN (
 		  SELECT
@@ -2416,8 +2392,8 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 
 func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, approval response.RespApprovalScheme) (err error) {
 
-	trxStatus.CreatedAt = DtmRequest
-	trxDetail.CreatedAt = DtmRequest
+	trxStatus.CreatedAt = time.Now()
+	trxDetail.CreatedAt = time.Now()
 
 	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
@@ -2455,13 +2431,24 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			decision = constant.DB_DECISION_APR
 		}
 
+		if approval.IsEscalation {
+			trxCaDecision := entity.TrxCaDecision{
+				FinalApproval: approval.NextStep,
+			}
+
+			// trx_ca_decision
+			if err := tx.Model(&trxCaDecision).Where("ProspectID = ?", req.ProspectID).Updates(trxCaDecision).Error; err != nil {
+				return err
+			}
+		}
+
 		trxHistoryApproval = entity.TrxHistoryApprovalScheme{
 			ID:                    uuid.New().String(),
 			ProspectID:            req.ProspectID,
 			Decision:              decision,
 			Reason:                req.Reason,
 			Note:                  req.Note,
-			CreatedAt:             DtmRequest,
+			CreatedAt:             time.Now(),
 			CreatedBy:             req.CreatedBy,
 			DecisionBy:            req.DecisionBy,
 			NextFinalApprovalFlag: nextFinal,
@@ -2478,10 +2465,10 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 		if approval.IsFinal {
 			trxFinalApproval := entity.TrxFinalApproval{
 				ProspectID: req.ProspectID,
-				Decision:   trxStatus.Decision,
+				Decision:   decision,
 				Reason:     req.Reason,
 				Note:       req.Note,
-				CreatedAt:  DtmRequest,
+				CreatedAt:  time.Now(),
 				CreatedBy:  req.CreatedBy,
 				DecisionBy: req.DecisionBy,
 			}
