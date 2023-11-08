@@ -1,7 +1,7 @@
 package usecase
 
 import (
-	"los-kmb-api/domain/cms/interfaces/mocks"
+	"los-kmb-api/domain/cms/mocks"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/httpclient"
