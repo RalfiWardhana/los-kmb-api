@@ -10,7 +10,6 @@ import (
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
-	"los-kmb-api/models/response"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/platformevent"
 	"los-kmb-api/shared/constant"
@@ -184,15 +183,15 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 		// save req journey
 		_ = h.repository.SaveTrxJourney(req.Transaction.ProspectID, reqEncrypted)
 
-		var result response.Metrics
-		json.Unmarshal([]byte(resp.(string)), &result)
+		// var result response.Metrics
+		// json.Unmarshal([]byte(resp.(string)), &result)
 
 		resp = h.Json.EventSuccess(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, resp)
 
 		// callback
-		if result.Decision == constant.DECISION_APPROVE || result.Decision == constant.DECISION_REJECT || result.Decision == constant.DECISION_CANCEL {
-			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
-		}
+		// if result.Decision == constant.DECISION_APPROVE || result.Decision == constant.DECISION_REJECT || result.Decision == constant.DECISION_CANCEL {
+		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
+		// }
 	}
 
 	return nil
@@ -360,15 +359,15 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
 
 	} else {
-		var result response.Metrics
-		json.Unmarshal([]byte(resp.(string)), &result)
+		// var result response.Metrics
+		// json.Unmarshal([]byte(resp.(string)), &result)
 
 		resp = h.Json.EventSuccess(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, resp)
 
 		// callback
-		if result.Decision == constant.DECISION_APPROVE || result.Decision == constant.DECISION_REJECT || result.Decision == constant.DECISION_CANCEL {
-			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
-		}
+		// if result.Decision == constant.DECISION_APPROVE || result.Decision == constant.DECISION_REJECT || result.Decision == constant.DECISION_CANCEL {
+		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
+		// }
 	}
 
 	return nil
