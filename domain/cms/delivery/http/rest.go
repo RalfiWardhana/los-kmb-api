@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"los-kmb-api/domain/cms/interfaces"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
@@ -51,30 +52,23 @@ func (c *handlerCMS) GetAkkk(ctx echo.Context) (err error) {
 		ctxJson error
 	)
 
-	var accessToken = middlewares.UserInfoData.AccessToken
-
 	prospectID := ctx.Param("prospect_id")
 
 	if prospectID == "" {
-		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", req, err)
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID does not exist")
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB AKKK", prospectID, err)
 		return ctxJson
 	}
 
-	data, rowTotal, err := c.usecase.GetInquiryPrescreening(ctx.Request().Context(), req, pagination)
-
-	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
-		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry", req, response.InquiryRow{Inquiry: data})
-	}
+	data, err := c.usecase.GetAkkk(prospectID)
 
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry", req, err)
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB AKKK", prospectID, err)
+		return ctxJson
 	}
 
-	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry", req, response.InquiryRow{
-		Inquiry:        data,
-		RecordFiltered: len(data),
-		RecordTotal:    rowTotal,
-	})
+	ctxJson, _ = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB AKKK", prospectID, data)
+	return ctxJson
 }
 
 // CMS NEW KMB Tools godoc
