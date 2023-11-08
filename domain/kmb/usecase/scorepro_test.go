@@ -100,6 +100,38 @@ func TestScorepro(t *testing.T) {
 			},
 		},
 		{
+			name: "scorepro jabo nama sama no pefindo reject",
+			req: request.Metrics{
+				Address: []request.Address{
+					{
+						Type:    constant.ADDRESS_TYPE_RESIDENCE,
+						ZipCode: "12908",
+					},
+				},
+				Item: request.Item{BPKBName: "K"},
+			},
+			spDupcheck: response.SpDupcheckMap{
+				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
+				CustomerID:     "",
+			},
+			codePefindoIDX: 200,
+			bodyPefindoIDX: `{"message":"success","errors":null,"data":{"id":"pbk_idx6541d4b0a7ea1","prospect_id":"EFM01454202307020007",
+			"created_at":"2023-11-01 11:31:44","oldestmob_pl":-999,"final_nom60_12mth":0,"tot_bakidebet_banks_active":-999,"tot_bakidebet_31_60dpd":0,
+			"worst_24mth":0,"max_limit_oth":-999,"pefindo_add_info":null},"server_time":"2023-11-01 11:31:44"}`,
+			scoreGenerator: entity.ScoreGenerator{
+				Key: "first_residence_zipcode_2w_jabo",
+			},
+			codeScoreproIDX: 200,
+			bodyScoreproIDX: `{"messages":"OK","data":{"prospect_id":"EFM0TSTRT87183109505","score":200,"result":"REJECT","score_result":"LOW","status":"ASS-LOW","phone_number":"0817344026205","segmen":"1","is_tsi":false,"score_bin":0},"errors":null,"server_time":"2023-11-07T17:48:36+07:00"}`,
+			result: response.ScorePro{
+				Result: constant.DECISION_REJECT,
+				Code:   constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
+				Reason: constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
+				Source: constant.SOURCE_DECISION_SCOREPRO,
+				Info:   `{"prospect_id":"EFM0TSTRT87183109505","score":200,"result":"REJECT","score_band":"","score_result":"LOW","status":"ASS-LOW","segmen":"1","is_tsi":false,"score_bin":""}`,
+			},
+		},
+		{
 			name: "scorepro jabo bpkb nama beda",
 			req: request.Metrics{
 				Address: []request.Address{
