@@ -36,14 +36,15 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 	}
 
 	residenceZipCode = "00000"
-	if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_NEW {
-		for _, v := range req.Address {
-			if v.Type == constant.ADDRESS_TYPE_RESIDENCE {
-				residenceZipCode = v.ZipCode
-				firstDigitsOfResidenceZipCode = string(v.ZipCode[0])
-				break
-			}
+	for _, v := range req.Address {
+		if v.Type == constant.ADDRESS_TYPE_RESIDENCE {
+			residenceZipCode = v.ZipCode
+			firstDigitsOfResidenceZipCode = string(v.ZipCode[0])
+			break
 		}
+	}
+
+	if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_NEW {
 		scoreGenerator, err = u.repository.GetScoreGenerator(firstDigitsOfResidenceZipCode)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - GetScoreGenerator Scorepro Error")
@@ -196,7 +197,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 			}
 		}
 
-		var moblast string
+		var moblast int
 		getMoblast, err := u.repository.GetMoblast(spDupcheck.CustomerID.(string))
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - GetMoblast Scorepro Error")
@@ -204,13 +205,13 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 		}
 
 		if getMoblast.Moblast == "" {
-			moblast = "9999"
+			moblast = 9999
 		} else {
 			intMob, _ := strconv.Atoi(getMoblast.Moblast)
 			if intMob > 24 {
-				moblast = "9999"
+				moblast = 9999
 			} else {
-				moblast = getMoblast.Moblast
+				moblast = intMob
 			}
 		}
 
