@@ -939,73 +939,73 @@ func (c *TrxAkkk) TableName() string {
 }
 
 type Akkk struct {
-	ProspectID              string      `gorm:"column:ProspectID"`
-	FinancePurpose          interface{} `gorm:"column:FinancePurpose"`
-	LegalName               interface{} `gorm:"column:LegalName"`
-	IDNumber                interface{} `gorm:"column:IDNumber"`
-	PersonalNPWP            interface{} `gorm:"column:PersonalNPWP"`
-	SurgateMotherName       interface{} `gorm:"column:SurgateMotherName"`
-	ProfessionID            interface{} `gorm:"column:ProfessionID"`
-	CustomerStatus          interface{} `gorm:"column:CustomerStatus"`
-	CustomerType            interface{} `gorm:"column:CustomerType"`
-	Gender                  interface{} `gorm:"column:Gender"`
-	BirthPlace              interface{} `gorm:"column:BirthPlace"`
-	BirthDate               interface{} `gorm:"column:BirthDate"`
-	Education               interface{} `gorm:"column:Education"`
-	MobilePhone             interface{} `gorm:"column:MobilePhone"`
-	Email                   interface{} `gorm:"column:Email"`
-	SpouseLegalName         interface{} `gorm:"column:SpouseLegalName"`
-	SpouseIDNumber          interface{} `gorm:"column:SpouseIDNumber"`
-	SpouseSurgateMotherName interface{} `gorm:"column:SpouseSurgateMotherName"`
-	SpouseProfessionID      interface{} `gorm:"column:SpouseProfessionID"`
-	SpouseType              interface{} `gorm:"column:SpouseType"`
-	SpouseGender            interface{} `gorm:"column:SpouseGender"`
-	SpouseBirthPlace        interface{} `gorm:"column:SpouseBirthPlace"`
-	SpouseBirthDate         interface{} `gorm:"column:SpouseBirthDate"`
-	SpouseMobilePhone       interface{} `gorm:"column:SpouseMobilePhone"`
-	VerificationWith        interface{} `gorm:"column:VerificationWith"`
-	EmconRelationship       interface{} `gorm:"column:EmconRelationship"`
-	EmconVerified           interface{} `gorm:"column:EmconVerified"`
-	Address                 interface{} `gorm:"column:Address"`
-	VerifyBy                interface{} `gorm:"column:VerifyBy"`
-	KnownCustomerAddress    interface{} `gorm:"column:KnownCustomerAddress"`
-	StaySinceYear           interface{} `gorm:"column:StaySinceYear"`
-	StaySinceMonth          interface{} `gorm:"column:StaySinceMonth"`
-	KnownCustomerJob        interface{} `gorm:"column:KnownCustomerJob"`
-	Job                     interface{} `gorm:"column:Job"`
-	EmploymentSinceYear     interface{} `gorm:"column:EmploymentSinceYear"`
-	EmploymentSinceMonth    interface{} `gorm:"column:EmploymentSinceMonth"`
-	IndustryTypeID          interface{} `gorm:"column:IndustryTypeID"`
-	MonthlyFixedIncome      interface{} `gorm:"column:MonthlyFixedIncome"`
-	MonthlyVariableIncome   interface{} `gorm:"column:MonthlyVariableIncome"`
-	SpouseIncome            interface{} `gorm:"column:SpouseIncome"`
-	BpkbName                interface{} `gorm:"column:BpkbName"`
-	Plafond                 interface{} `gorm:"column:Plafond"`
-	BakiDebet               interface{} `gorm:"column:BakiDebet"`
-	FasilitasAktif          interface{} `gorm:"column:FasilitasAktif"`
-	ColTerburuk             interface{} `gorm:"column:ColTerburuk"`
-	BakiDebetTerburuk       interface{} `gorm:"column:BakiDebetTerburuk"`
-	ColTerakhirAktif        interface{} `gorm:"column:ColTerakhirAktif"`
-	SpousePlafond           interface{} `gorm:"column:SpousePlafond"`
-	SpouseBakiDebet         interface{} `gorm:"column:SpouseBakiDebet"`
-	SpouseFasilitasAktif    interface{} `gorm:"column:SpouseFasilitasAktif"`
-	SpouseColTerburuk       interface{} `gorm:"column:SpouseColTerburuk"`
-	SpouseBakiDebetTerburuk interface{} `gorm:"column:SpouseBakiDebetTerburuk"`
-	SpouseColTerakhirAktif  interface{} `gorm:"column:SpouseColTerakhirAktif"`
-	ScsScore                interface{} `gorm:"column:ScsScore"`
-	AgreementStatus         interface{} `gorm:"column:AgreementStatus"`
-	TotalAgreementAktif     interface{} `gorm:"column:TotalAgreementAktif"`
-	MaxOVDAgreementAktif    interface{} `gorm:"column:MaxOVDAgreementAktif"`
-	LastMaxOVDAgreement     interface{} `gorm:"column:LastMaxOVDAgreement"`
-	customer_segment        interface{} `gorm:"column:customer_segment"`
-	LatestInstallment       interface{} `gorm:"column:LatestInstallment"`
-	NTFAkumulasi            interface{} `gorm:"column:NTFAkumulasi"`
-	TotalInstallment        interface{} `gorm:"column:TotalInstallment"`
-	TotalIncome             interface{} `gorm:"column:TotalIncome"`
-	TotalDSR                interface{} `gorm:"column:TotalDSR"`
-	EkycSource              interface{} `gorm:"column:EkycSource"`
-	EkycSimiliarity         interface{} `gorm:"column:EkycSimiliarity"`
-	EkycReason              interface{} `gorm:"column:EkycReason"`
+	ProspectID              string      `gorm:"column:ProspectID" json:"prospect_id"`
+	FinancePurpose          interface{} `gorm:"column:FinancePurpose" json:"finance_purpose"`
+	LegalName               interface{} `gorm:"column:LegalName" json:"legal_name"`
+	IDNumber                interface{} `gorm:"column:IDNumber" json:"id_number"`
+	PersonalNPWP            interface{} `gorm:"column:PersonalNPWP" json:"personal_npwp"`
+	SurgateMotherName       interface{} `gorm:"column:SurgateMotherName" json:"surgate_mother_name"`
+	ProfessionID            interface{} `gorm:"column:ProfessionID" json:"profession_id"`
+	CustomerStatus          interface{} `gorm:"column:CustomerStatus" json:"customer_status"`
+	CustomerType            interface{} `gorm:"column:CustomerType" json:"customer_type"`
+	Gender                  interface{} `gorm:"column:Gender" json:"gender"`
+	BirthPlace              interface{} `gorm:"column:BirthPlace" json:"birth_place"`
+	BirthDate               interface{} `gorm:"column:BirthDate" json:"birth_date"`
+	Education               interface{} `gorm:"column:Education" json:"education"`
+	MobilePhone             interface{} `gorm:"column:MobilePhone" json:"mobile_phone"`
+	Email                   interface{} `gorm:"column:Email" json:"email"`
+	SpouseLegalName         interface{} `gorm:"column:SpouseLegalName" json:"spouse_legal_name"`
+	SpouseIDNumber          interface{} `gorm:"column:SpouseIDNumber" json:"spouse_id_number"`
+	SpouseSurgateMotherName interface{} `gorm:"column:SpouseSurgateMotherName" json:"spouse_surgate_mother_name"`
+	SpouseProfessionID      interface{} `gorm:"column:SpouseProfessionID" json:"spouse_profession_id"`
+	SpouseType              interface{} `gorm:"column:SpouseType" json:"spouse_type"`
+	SpouseGender            interface{} `gorm:"column:SpouseGender" json:"spouse_gender"`
+	SpouseBirthPlace        interface{} `gorm:"column:SpouseBirthPlace" json:"spouse_birth_place"`
+	SpouseBirthDate         interface{} `gorm:"column:SpouseBirthDate" json:"spouse_birth_date"`
+	SpouseMobilePhone       interface{} `gorm:"column:SpouseMobilePhone" json:"spouse_mobile_phone"`
+	VerificationWith        interface{} `gorm:"column:VerificationWith" json:"verification_with"`
+	EmconRelationship       interface{} `gorm:"column:EmconRelationship" json:"emcon_relationship"`
+	EmconVerified           interface{} `gorm:"column:EmconVerified" json:"emcon_verified"`
+	Address                 interface{} `gorm:"column:Address" json:"address"`
+	VerifyBy                interface{} `gorm:"column:VerifyBy" json:"verify_by"`
+	KnownCustomerAddress    interface{} `gorm:"column:KnownCustomerAddress" json:"known_customer_address"`
+	StaySinceYear           interface{} `gorm:"column:StaySinceYear" json:"stay_since_year"`
+	StaySinceMonth          interface{} `gorm:"column:StaySinceMonth" json:"stay_since_month"`
+	KnownCustomerJob        interface{} `gorm:"column:KnownCustomerJob" json:"known_customer_job"`
+	Job                     interface{} `gorm:"column:Job" json:"job"`
+	EmploymentSinceYear     interface{} `gorm:"column:EmploymentSinceYear" json:"employment_since_year"`
+	EmploymentSinceMonth    interface{} `gorm:"column:EmploymentSinceMonth" json:"employment_since_month"`
+	IndustryTypeID          interface{} `gorm:"column:IndustryTypeID" json:"industry_type_id"`
+	MonthlyFixedIncome      interface{} `gorm:"column:MonthlyFixedIncome" json:"monthly_fixed_income"`
+	MonthlyVariableIncome   interface{} `gorm:"column:MonthlyVariableIncome" json:"monthly_variable_income"`
+	SpouseIncome            interface{} `gorm:"column:SpouseIncome" json:"spouse_income"`
+	BpkbName                interface{} `gorm:"column:BpkbName" json:"bpkb_name"`
+	Plafond                 interface{} `gorm:"column:Plafond" json:"plafond"`
+	BakiDebet               interface{} `gorm:"column:BakiDebet" json:"baki_debet"`
+	FasilitasAktif          interface{} `gorm:"column:FasilitasAktif" json:"fasilitas_aktif"`
+	ColTerburuk             interface{} `gorm:"column:ColTerburuk" json:"col_terburuk"`
+	BakiDebetTerburuk       interface{} `gorm:"column:BakiDebetTerburuk" json:"baki_debet_terburuk"`
+	ColTerakhirAktif        interface{} `gorm:"column:ColTerakhirAktif" json:"col_terakhir_aktif"`
+	SpousePlafond           interface{} `gorm:"column:SpousePlafond" json:"spouse_plafond"`
+	SpouseBakiDebet         interface{} `gorm:"column:SpouseBakiDebet" json:"spouse_baki_debet"`
+	SpouseFasilitasAktif    interface{} `gorm:"column:SpouseFasilitasAktif" json:"spouse_fasilitas_aktif"`
+	SpouseColTerburuk       interface{} `gorm:"column:SpouseColTerburuk" json:"spouse_col_terburuk"`
+	SpouseBakiDebetTerburuk interface{} `gorm:"column:SpouseBakiDebetTerburuk" json:"spouse_baki_debet_terburuk"`
+	SpouseColTerakhirAktif  interface{} `gorm:"column:SpouseColTerakhirAktif" json:"spouse_col_terakhir_aktif"`
+	ScsScore                interface{} `gorm:"column:ScsScore" json:"scs_score"`
+	AgreementStatus         interface{} `gorm:"column:AgreementStatus" json:"agreement_status"`
+	TotalAgreementAktif     interface{} `gorm:"column:TotalAgreementAktif" json:"total_agreement_aktif"`
+	MaxOVDAgreementAktif    interface{} `gorm:"column:MaxOVDAgreementAktif" json:"max_ovd_agreement_aktif"`
+	LastMaxOVDAgreement     interface{} `gorm:"column:LastMaxOVDAgreement" json:"last_max_ovd_agreement"`
+	CustomerSegment         interface{} `gorm:"column:customer_segment" json:"customer_segment"`
+	LatestInstallment       interface{} `gorm:"column:LatestInstallment" json:"latest_installment"`
+	NTFAkumulasi            interface{} `gorm:"column:NTFAkumulasi" json:"ntf_akumulasi"`
+	TotalInstallment        interface{} `gorm:"column:TotalInstallment" json:"total_installment"`
+	TotalIncome             interface{} `gorm:"column:TotalIncome" json:"total_income"`
+	TotalDSR                interface{} `gorm:"column:TotalDSR" json:"total_dsr"`
+	EkycSource              interface{} `gorm:"column:EkycSource" json:"ekyc_source"`
+	EkycSimiliarity         interface{} `gorm:"column:EkycSimiliarity" json:"ekyc_similarity"`
+	EkycReason              interface{} `gorm:"column:EkycReason" json:"ekyc_reason"`
 }
 
 type TrxInternalRecord struct {

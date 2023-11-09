@@ -31,7 +31,90 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 	}
 }
 
-func (u usecase) GetAkkk(prospectID string) (data interface{}, err error) {
+func (u usecase) GetAkkk(prospectID string) (data entity.Akkk, err error) {
+	data, err = u.repository.GetAkkk(prospectID)
+
+	if err != nil {
+		if err.Error() == constant.RECORD_NOT_FOUND {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - " + err.Error())
+			return
+		}
+		err = errors.New(constant.ERROR_UPSTREAM + err.Error())
+		return
+	}
+
+	if data.MonthlyFixedIncome != nil {
+		data.MonthlyFixedIncome, _ = utils.GetFloat(data.MonthlyFixedIncome)
+	}
+
+	if data.MonthlyVariableIncome != nil {
+		data.MonthlyVariableIncome, _ = utils.GetFloat(data.MonthlyVariableIncome)
+	}
+
+	if data.SpouseIncome != nil {
+		data.SpouseIncome, _ = utils.GetFloat(data.SpouseIncome)
+	}
+
+	if data.Plafond != nil {
+		data.Plafond, _ = utils.GetFloat(data.Plafond)
+	}
+
+	if data.BakiDebet != nil {
+		data.BakiDebet, _ = utils.GetFloat(data.BakiDebet)
+	}
+
+	if data.BakiDebetTerburuk != nil {
+		data.BakiDebetTerburuk, _ = utils.GetFloat(data.BakiDebetTerburuk)
+	}
+
+	if data.SpousePlafond != nil {
+		data.SpousePlafond, _ = utils.GetFloat(data.SpousePlafond)
+	}
+
+	if data.SpouseBakiDebet != nil {
+		data.SpouseBakiDebet, _ = utils.GetFloat(data.SpouseBakiDebet)
+	}
+
+	if data.SpouseBakiDebetTerburuk != nil {
+		data.SpouseBakiDebetTerburuk, _ = utils.GetFloat(data.SpouseBakiDebetTerburuk)
+	}
+
+	if data.TotalAgreementAktif != nil {
+		data.TotalAgreementAktif, _ = utils.GetFloat(data.TotalAgreementAktif)
+	}
+
+	if data.MaxOVDAgreementAktif != nil {
+		data.MaxOVDAgreementAktif, _ = utils.GetFloat(data.MaxOVDAgreementAktif)
+	}
+
+	if data.LastMaxOVDAgreement != nil {
+		data.LastMaxOVDAgreement, _ = utils.GetFloat(data.LastMaxOVDAgreement)
+	}
+
+	if data.LatestInstallment != nil {
+		data.LatestInstallment, _ = utils.GetFloat(data.LatestInstallment)
+	}
+
+	if data.NTFAkumulasi != nil {
+		data.NTFAkumulasi, _ = utils.GetFloat(data.NTFAkumulasi)
+	}
+
+	if data.TotalInstallment != nil {
+		data.TotalInstallment, _ = utils.GetFloat(data.TotalInstallment)
+	}
+
+	if data.TotalIncome != nil {
+		data.TotalIncome, _ = utils.GetFloat(data.TotalIncome)
+	}
+
+	if data.TotalDSR != nil {
+		data.TotalDSR, _ = utils.GetFloat(data.TotalDSR)
+	}
+
+	if data.EkycSimiliarity != nil {
+		data.EkycSimiliarity, _ = utils.GetFloat(data.EkycSimiliarity)
+	}
+
 	return
 }
 
