@@ -691,7 +691,7 @@ type ReqReviewPrescreening struct {
 	Decision       string `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
 	Reason         string `json:"reason" validate:"max=255"`
 	DecisionBy     string `json:"decision_by" validate:"required,max=100"`
-	DecisionByName string `json:"decision_by_name" validate:"required,max-250"`
+	DecisionByName string `json:"decision_by_name" validate:"required,max=250"`
 }
 
 type ReqInquiryCa struct {
