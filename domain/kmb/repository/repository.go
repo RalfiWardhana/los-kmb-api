@@ -810,12 +810,12 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				}
 			}
 
-			var asliriReason interface{}
+			var ekycReason interface{}
 
-			if trxFMF.AsliriReason == constant.REASON_EKYC_INVALID {
-				asliriReason = constant.REASON_TIDAK_SESUAI
-			} else if trxFMF.AsliriReason != nil {
-				asliriReason = constant.REASON_SESUAI
+			if trxFMF.EkycReason == constant.REASON_EKYC_INVALID {
+				ekycReason = constant.REASON_TIDAK_SESUAI
+			} else if trxFMF.EkycReason != nil {
+				ekycReason = constant.REASON_SESUAI
 			}
 
 			var roaoAkkk response.RoaoAkkk
@@ -849,8 +849,9 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				DSRFMF:                       trxFMF.DSRFMF,
 				DSRPBK:                       trxFMF.DSRPBK,
 				TotalDSR:                     trxFMF.TotalDSR,
-				AsliriSimiliarity:            trxFMF.AsliriSimiliarity,
-				AsliriReason:                 asliriReason,
+				EkycSource:                   trxFMF.EkycSource,
+				EkycSimiliarity:              trxFMF.EkycSimiliarity,
+				EkycReason:                   ekycReason,
 				NumberOfPaidInstallment:      roaoAkkk.NumberOfPaidInstallment,
 				OSInstallmentDue:             roaoAkkk.OSInstallmentDue,
 				InstallmentAmountFMF:         roaoAkkk.InstallmentAmountFMF,

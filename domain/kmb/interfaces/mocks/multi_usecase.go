@@ -70,7 +70,7 @@ func (_m *MultiUsecase) Dupcheck(ctx context.Context, reqs request.DupcheckApi, 
 }
 
 // Ekyc provides a mock function with given fields: ctx, req, cbFound, accessToken
-func (_m *MultiUsecase) Ekyc(ctx context.Context, req request.Metrics, cbFound bool, accessToken string) (response.Ekyc, []entity.TrxDetail, error) {
+func (_m *MultiUsecase) Ekyc(ctx context.Context, req request.Metrics, cbFound bool, accessToken string) (response.Ekyc, []entity.TrxDetail, response.TrxFMF, error) {
 	ret := _m.Called(ctx, req, cbFound, accessToken)
 
 	var r0 response.Ekyc
@@ -89,12 +89,19 @@ func (_m *MultiUsecase) Ekyc(ctx context.Context, req request.Metrics, cbFound b
 		}
 	}
 
-	var r2 error
-	if rf, ok := ret.Get(2).(func(context.Context, request.Metrics, bool, string) error); ok {
+	var r2 response.TrxFMF
+	if rf, ok := ret.Get(2).(func(context.Context, request.Metrics, bool, string) response.TrxFMF); ok {
 		r2 = rf(ctx, req, cbFound, accessToken)
 	} else {
-		r2 = ret.Error(2)
+		r2 = ret.Get(2).(response.TrxFMF)
 	}
 
-	return r0, r1, r2
+	var r3 error
+	if rf, ok := ret.Get(3).(func(context.Context, request.Metrics, bool, string) error); ok {
+		r3 = rf(ctx, req, cbFound, accessToken)
+	} else {
+		r3 = ret.Error(3)
+	}
+
+	return r0, r1, r2, r3
 }
