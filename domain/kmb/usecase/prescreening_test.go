@@ -54,8 +54,8 @@ func TestPrescreening(t *testing.T) {
 			trxPrescreening: entity.TrxPrescreening{
 				Decision:   "APR",
 				Reason:     "Dokumen Sesuai",
-				CreatedBy:  "SYSTEM",
-				DecisionBy: "SYSTEM",
+				CreatedBy:  constant.SYSTEM_CREATED,
+				DecisionBy: constant.SYSTEM_CREATED,
 			},
 			req: request.Metrics{
 				CustomerPersonal: request.CustomerPersonal{
