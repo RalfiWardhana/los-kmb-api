@@ -60,14 +60,24 @@ func (c *handlerCMS) PrescreeningInquiry(ctx echo.Context) (err error) {
 	var accessToken = middlewares.UserInfoData.AccessToken
 
 	req := request.ReqInquiryPrescreening{
-		Search:   ctx.QueryParam("search"),
-		BranchID: ctx.QueryParam("branch_id"),
+		Search:      ctx.QueryParam("search"),
+		UserID:      ctx.QueryParam("user_id"),
+		BranchID:    ctx.QueryParam("branch_id"),
+		MultiBranch: ctx.QueryParam("multi_branch"),
 	}
 
 	page, _ := strconv.Atoi(ctx.QueryParam("page"))
 	pagination := request.RequestPagination{
 		Page:  page,
 		Limit: 10,
+	}
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry", req, err)
 	}
 
 	data, rowTotal, err := c.usecase.GetInquiryPrescreening(ctx.Request().Context(), req, pagination)
@@ -216,6 +226,14 @@ func (c *handlerCMS) CaInquiry(ctx echo.Context) (err error) {
 	pagination := request.RequestPagination{
 		Page:  page,
 		Limit: 10,
+	}
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry", req, err)
 	}
 
 	data, rowTotal, err := c.usecase.GetInquiryCa(ctx.Request().Context(), req, pagination)

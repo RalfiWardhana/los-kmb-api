@@ -1651,3 +1651,8 @@ type DataApproval struct {
 	BiroCustomerResult string `gorm:"column:BiroCustomerResult" json:"biro_customer_result"`
 	BiroSpouseResult   string `gorm:"column:BiroSpouseResult" json:"biro_spouse_result"`
 }
+
+type RegionBranch struct {
+	RegionName   string `gorm:"column:region_name"`
+	BranchMember string `gorm:"column:branch_member"`
+}
