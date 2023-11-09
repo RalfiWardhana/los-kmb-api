@@ -484,8 +484,6 @@ type TrxFMF struct {
 	ScsDecision             ScsDecision   `json:"scs_decision"`
 	CustomerType            interface{}   `json:"customer_type"`
 	SpouseType              interface{}   `json:"spouse_type"`
-	AsliriSimiliarity       interface{}   `json:"asliri_similiarity"`
-	AsliriReason            interface{}   `json:"asliri_reason"`
 	DSRFMF                  interface{}   `json:"dsr_fmf"`
 	DSRPBK                  interface{}   `json:"dsr_pbk"`
 	TotalDSR                interface{}   `json:"total_dsr"`
@@ -495,6 +493,9 @@ type TrxFMF struct {
 	InstallmentThreshold    float64 `json:"installment_threshold"`
 	LatestInstallmentAmount float64 `json:"latest_installment_amount"`
 	TrxCaDecision           entity.TrxCaDecision
+	EkycSource              interface{} `json:"ekyc_source"`
+	EkycSimiliarity         interface{} `json:"ekyc_similiarity"`
+	EkycReason              interface{} `json:"ekyc_reason"`
 }
 
 type RoaoAkkk struct {
@@ -509,6 +510,7 @@ type RoaoAkkk struct {
 	InstallmentAmountOther           interface{} `json:"installment_amount_other"`
 	InstallmentAmountOtherSpouse     interface{} `json:"installment_amount_other_spouse"`
 	InstallmentTopup                 interface{} `json:"installment_topup"`
+	LatestInstallment                interface{} `json:"latest_installment"`
 }
 
 type Metrics struct {
@@ -719,6 +721,7 @@ type FaceRecognitionIntegratorData struct {
 	Reason        string `json:"reason"`
 	Threshold     string `json:"threshold"`
 	RefID         string `json:"ref_id"`
+	MatchScore    string `json:"matchScore"`
 }
 
 type ScsDecision struct {

@@ -18,7 +18,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u multiUsecase) Ekyc(ctx context.Context, req request.Metrics, cbFound bool, accessToken string) (data response.Ekyc, trxDetail []entity.TrxDetail, err error) {
+func (u multiUsecase) Ekyc(ctx context.Context, req request.Metrics, cbFound bool, accessToken string) (data response.Ekyc, trxDetail []entity.TrxDetail, trxFMF response.TrxFMF, err error) {
 
 	data, err = u.usecase.Dukcapil(ctx, req, accessToken)
 
@@ -37,10 +37,22 @@ func (u multiUsecase) Ekyc(ctx context.Context, req request.Metrics, cbFound boo
 			trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.Transaction.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_CONTINGENCY, RuleCode: constant.CODE_CONTINGENCY, SourceDecision: constant.SOURCE_DECISION_ASLIRI, Info: constant.TYPE_CONTINGENCY, NextStep: constant.SOURCE_DECISION_KTP_VALIDATOR})
 
 			data, err = u.usecase.Ktp(ctx, req, cbFound, accessToken)
+
+			trxFMF.EkycSource = "KTP VALIDATOR"
+			trxFMF.EkycSimiliarity = data.Similiarity
+			trxFMF.EkycReason = data.Reason
 			return
 		}
 
+		trxFMF.EkycSource = "ASLI RI"
+		trxFMF.EkycSimiliarity = data.Similiarity
+		trxFMF.EkycReason = data.Reason
+		return
 	}
+
+	trxFMF.EkycSource = "DUKCAPIL"
+	trxFMF.EkycSimiliarity = data.Similiarity
+	trxFMF.EkycReason = data.Reason
 
 	return
 
@@ -183,6 +195,7 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, accessToken 
 		infoDukcapil.Fr = face
 
 		statusFR = decisionFR
+		data.Similiarity = face.MatchScore
 	}
 
 	resultDukcapil, err := u.repository.GetMappingDukcapil(statusVD, statusFR)
@@ -306,6 +319,8 @@ func (u usecase) Asliri(ctx context.Context, req request.Metrics, accessToken st
 		return
 
 	}
+
+	data.Similiarity = asliriSelfie
 
 	if name < asliriConfig.Data.KMB.AsliriName || pdob < asliriConfig.Data.KMB.AsliriPDOB {
 		data.Result = constant.DECISION_REJECT

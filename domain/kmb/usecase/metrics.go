@@ -360,7 +360,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 	details = append(details, trxDetailDupcheck...)
 
-	decisionEkyc, trxDetailEkyc, err := u.multiUsecase.Ekyc(ctx, reqMetrics, cbFound, accessToken)
+	decisionEkyc, trxDetailEkyc, trxFMFEkyc, err := u.multiUsecase.Ekyc(ctx, reqMetrics, cbFound, accessToken)
 	if err != nil {
 		return
 	}
@@ -368,6 +368,10 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	if len(trxDetailEkyc) > 0 {
 		details = append(details, trxDetailEkyc...)
 	}
+
+	trxFMF.EkycSource = trxFMFEkyc.EkycSource
+	trxFMF.EkycSimiliarity = trxFMFEkyc.EkycSimiliarity
+	trxFMF.EkycReason = trxFMFEkyc.EkycReason
 
 	if decisionEkyc.Result == constant.DECISION_REJECT {
 
@@ -514,6 +518,10 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		"installment_threshold":     trxFMFTotalDsrFmfPbk.InstallmentThreshold,
 		"latest_installment_amount": trxFMFTotalDsrFmfPbk.LatestInstallmentAmount,
 	})
+
+	if trxFMFTotalDsrFmfPbk.LatestInstallmentAmount > 0 {
+		trxFMF.LatestInstallmentAmount = trxFMFTotalDsrFmfPbk.LatestInstallmentAmount
+	}
 
 	if metricsTotalDsrFmfPbk.Result == constant.DECISION_REJECT {
 
