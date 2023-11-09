@@ -483,8 +483,10 @@ const (
 	REASON_CONFIDENCE_UPPER_THRESHOLD = "Confidence Di Atas Threshold"
 
 	//LOB
-	LOB_NEW_KMB = "NEW-KMB"
-	LOB_KMB     = "KMB"
+	LOB_ID_NEW_KMB = "125"
+	LOB_NEW_KMB    = "NEW-KMB"
+	LOB_KMB        = "KMB"
+	REGION_ALL     = "ALL"
 
 	//LOG
 	LOG_FILTERING_LOG = "FILTERING_LOG"

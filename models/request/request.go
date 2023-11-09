@@ -672,8 +672,10 @@ type RequestPagination struct {
 }
 
 type ReqInquiryPrescreening struct {
-	Search   string `json:"search"`
-	BranchID string `json:"branch_id"`
+	Search      string `json:"search"`
+	UserID      string `json:"user_id" validate:"max=20"`
+	BranchID    string `json:"branch_id" validate:"max=3"`
+	MultiBranch string `json:"multi_branch" validate:"max=1"`
 }
 
 type ReqReasonPrescreening struct {
@@ -686,74 +688,74 @@ type ReqApprovalReason struct {
 
 type ReqReviewPrescreening struct {
 	ProspectID     string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
-	Decision       string `json:"decision" validate:"required,decision" example:"APPROVE,REJECT"`
-	Reason         string `json:"reason"`
-	DecisionBy     string `json:"decision_by" validate:"required"`
-	DecisionByName string `json:"decision_by_name" validate:"required"`
+	Decision       string `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
+	Reason         string `json:"reason" validate:"max=255"`
+	DecisionBy     string `json:"decision_by" validate:"required,max=100"`
+	DecisionByName string `json:"decision_by_name" validate:"required,max-250"`
 }
 
 type ReqInquiryCa struct {
 	Search   string `json:"search"`
-	BranchID string `json:"branch_id"`
-	Filter   string `json:"filter"`
-	UserID   string `json:"user_id"`
+	BranchID string `json:"branch_id" validate:"max=3"`
+	Filter   string `json:"filter" validate:"max=15"`
+	UserID   string `json:"user_id" validate:"max=20"`
 }
 
 type ReqSaveAsDraft struct {
 	ProspectID string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
-	Decision   string `json:"decision" validate:"required,decision" example:"APPROVE,REJECT"`
-	SlikResult string `json:"slik_result" validate:"required"`
-	Note       string `json:"note"`
-	CreatedBy  string `json:"decision_by" validate:"required"`
-	DecisionBy string `json:"decision_by_name" validate:"required"`
+	Decision   string `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
+	SlikResult string `json:"slik_result" validate:"required,max=30"`
+	Note       string `json:"note" validate:"max=525"`
+	CreatedBy  string `json:"decision_by" validate:"required,max=100"`
+	DecisionBy string `json:"decision_by_name" validate:"required,max=250"`
 }
 
 type ReqSubmitDecision struct {
 	ProspectID   string  `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
-	NTFAkumulasi float64 `json:"ntf_akumulasi" validate:"required"`
-	Decision     string  `json:"decision" validate:"required,decision" example:"APPROVE,REJECT"`
-	SlikResult   string  `json:"slik_result" validate:"required"`
-	Note         string  `json:"note"`
-	CreatedBy    string  `json:"decision_by" validate:"required"`
-	DecisionBy   string  `json:"decision_by_name" validate:"required"`
+	NTFAkumulasi float64 `json:"ntf_akumulasi" validate:"required,max=9999999999"`
+	Decision     string  `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
+	SlikResult   string  `json:"slik_result" validate:"required,max=30"`
+	Note         string  `json:"note" validate:"max=525"`
+	CreatedBy    string  `json:"decision_by" validate:"required,max=100"`
+	DecisionBy   string  `json:"decision_by_name" validate:"required,max=250"`
 }
 
 type ReqSubmitApproval struct {
 	ProspectID     string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
-	FinalApproval  string `json:"final_approval" validate:"required"`
-	Decision       string `json:"decision" validate:"required,decision" example:"APPROVE,REJECT"`
-	RuleCode       string `json:"code" validate:"required"`
-	Alias          string `json:"alias" validate:"required"`
-	Reason         string `json:"reason" validate:"required"`
+	FinalApproval  string `json:"final_approval" validate:"required,max=3"`
+	Decision       string `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
+	RuleCode       string `json:"code" validate:"required,max=4"`
+	Alias          string `json:"alias" validate:"required,max=3"`
+	Reason         string `json:"reason" validate:"required,max=100"`
 	NeedEscalation bool   `json:"need_escalation"`
-	Note           string `json:"note"`
-	CreatedBy      string `json:"decision_by" validate:"required"`
-	DecisionBy     string `json:"decision_by_name" validate:"required"`
+	Note           string `json:"note" validate:"max=525"`
+	CreatedBy      string `json:"decision_by" validate:"required,max=100"`
+	DecisionBy     string `json:"decision_by_name" validate:"required,max=250"`
 }
 
 type ReqSearchInquiry struct {
-	UserID   string `json:"user_id" validate:"required"`
-	BranchID string `json:"branch_id" validate:"required"`
+	UserID   string `json:"user_id" validate:"required,max=20"`
+	BranchID string `json:"branch_id" validate:"required,max=3"`
 	Search   string `json:"search" validate:"required"`
 }
 
 type ReqCancelOrder struct {
 	ProspectID   string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
-	CreatedBy    string `json:"decision_by" validate:"required"`
-	DecisionBy   string `json:"decision_by_name" validate:"required"`
-	CancelReason string `json:"reason" validate:"required"`
+	CreatedBy    string `json:"decision_by" validate:"required,max=100"`
+	DecisionBy   string `json:"decision_by_name" validate:"required,max=250"`
+	CancelReason string `json:"reason" validate:"required,max=100"`
 }
 
 type ReqReturnOrder struct {
 	ProspectID string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
-	CreatedBy  string `json:"decision_by" validate:"required"`
-	DecisionBy string `json:"decision_by_name" validate:"required"`
+	CreatedBy  string `json:"decision_by" validate:"required,max=100"`
+	DecisionBy string `json:"decision_by_name" validate:"required,max=250"`
 }
 
 type ReqInquiryApproval struct {
 	Search   string `json:"search"`
-	BranchID string `json:"branch_id"`
-	Filter   string `json:"filter"`
-	UserID   string `json:"user_id" validate:"required"`
-	Alias    string `json:"alias" validate:"required"`
+	BranchID string `json:"branch_id" validate:"max=3"`
+	Filter   string `json:"filter" validate:"max=15"`
+	UserID   string `json:"user_id" validate:"required,max=20"`
+	Alias    string `json:"alias" validate:"required,max=3"`
 }

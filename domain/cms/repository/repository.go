@@ -26,16 +26,38 @@ type repoHandler struct {
 	NewKmb    *gorm.DB
 	core      *gorm.DB
 	confins   *gorm.DB
+	losDB     *gorm.DB
 	KpLosLogs *gorm.DB
 }
 
-func NewRepository(core, confins, NewKmb, KpLosLogs *gorm.DB) interfaces.Repository {
+func NewRepository(core, confins, NewKmb, kpLos, KpLosLogs *gorm.DB) interfaces.Repository {
 	return &repoHandler{
 		core:      core,
 		confins:   confins,
 		NewKmb:    NewKmb,
+		losDB:     kpLos,
 		KpLosLogs: KpLosLogs,
 	}
+}
+
+func (r repoHandler) GetRegionBranch(userId string) (data []entity.RegionBranch, err error) {
+
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
+	INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+	(	SELECT value 
+		FROM region_user ru WITH (nolock)
+		cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+		WHERE ru.user_id = '%s' 
+	)
+	AND b.lob_id='%s'`, userId, constant.LOB_ID_NEW_KMB)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	if len(data) == 0 {
+		return
+	}
+
+	return
 }
 
 func (r repoHandler) GetSpIndustryTypeMaster() (data []entity.SpIndustryTypeMaster, err error) {
@@ -271,11 +293,42 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 		filter         string
 		filterBranch   string
 		filterPaginate string
+		getRegion      []entity.RegionBranch
 	)
 
 	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
 
-	filterBranch = utils.GenerateBranchFilter(req.BranchID)
+	if req.MultiBranch == "1" {
+		getRegion, _ = r.GetRegionBranch(req.UserID)
+
+		if len(getRegion) > 0 {
+			extractBranchIDUser := ""
+			userAllRegion := false
+			for _, value := range getRegion {
+				if strings.ToUpper(value.RegionName) == constant.REGION_ALL {
+					userAllRegion = true
+					break
+				} else if value.BranchMember != "" {
+					branch := strings.Trim(strings.ReplaceAll(value.BranchMember, `"`, `'`), "'")
+					replace := strings.ReplaceAll(branch, `[`, ``)
+					branchMember := strings.ReplaceAll(replace, `]`, ``)
+					extractBranchIDUser += branchMember
+					if value != getRegion[len(getRegion)-1] {
+						extractBranchIDUser += ","
+					}
+				}
+			}
+			if userAllRegion {
+				filterBranch += ""
+			} else {
+				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
+			}
+		} else {
+			filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+		}
+	} else {
+		filterBranch = utils.GenerateBranchFilter(req.BranchID)
+	}
 
 	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
 
@@ -2194,6 +2247,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 			tst.source_decision,
 			tst.decision,
 			tcd.final_approval,
+			tcd.decision_by,
 			has.next_step,
 			tcd.decision as decision_ca,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
@@ -2219,11 +2273,12 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 			ProspectID,
 			decision,
 			created_at,
-			final_approval
+			final_approval,
+			decision_by
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
-		) AS tt %s AND tt.next_step='%s'`, filter, alias)).Scan(&row).Error; err != nil {
+		) AS tt %s AND (tt.next_step='%s' OR tt.decision_by='%s')`, filter, alias, constant.SYSTEM_CREATED)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -2245,6 +2300,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		tst.decision,
 		tst.reason,
 		tcd.decision as decision_ca,
+		tcd.decision_by,
 		tcd.final_approval,
 		has.next_step,
 		CASE
@@ -2398,7 +2454,8 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 			decision,
 			note,
 			created_at,
-			final_approval
+			final_approval,
+			decision_by
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
@@ -2559,7 +2616,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt %s AND tt.next_step = '%s'  ORDER BY tt.created_at DESC %s`, alias, alias, filter, alias, filterPaginate)).Scan(&data).Error; err != nil {
+	) AS tt %s AND (tt.next_step='%s' OR tt.decision_by='%s') ORDER BY tt.created_at DESC %s`, alias, alias, filter, alias, constant.SYSTEM_CREATED, filterPaginate)).Scan(&data).Error; err != nil {
 		return
 	}
 
