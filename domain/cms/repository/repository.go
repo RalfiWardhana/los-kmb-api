@@ -874,6 +874,127 @@ func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.His
 	return
 }
 
+func (r repoHandler) GetAkkk(prospectID string) (data entity.Akkk, err error) {
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT ts.ProspectID, 
+		ta2.FinancePurpose,
+		scp.dbo.DEC_B64('SEC',tcp.LegalName) as LegalName,
+		scp.dbo.DEC_B64('SEC',tcp.IDNumber) as IDNumber,  
+		tcp.PersonalNPWP,
+		scp.dbo.DEC_B64('SEC',tcp.SurgateMotherName) as SurgateMotherName,
+		tce.ProfessionID,
+		tcp.CustomerStatus,
+		ta.CustomerType,
+		tcp.Gender,
+		scp.dbo.DEC_B64('SEC',tcp.BirthPlace) as BirthPlace,
+		tcp.BirthDate,
+		tcp.Education,
+		scp.dbo.DEC_B64('SEC',tcp.MobilePhone) as MobilePhone,
+		scp.dbo.DEC_B64('SEC',tcp.Email) as Email,
+		tcs.LegalName as SpouseLegalName,
+		tcs.IDNumber as SpouseIDNumber,
+		tcs.SurgateMotherName as SpouseSurgateMotherName,
+		tcs.ProfessionID as SpouseProfessionID,
+		ta.SpouseType,
+		tcs.Gender as SpouseGender,
+		tcs.BirthPlace as SpouseBirthPlace,
+		tcs.BirthDate as SpouseBirthDate,
+		tcs.MobilePhone as SpouseMobilePhone,
+		tce2.VerificationWith,
+		tce2.Relationship as EmconRelationship,
+		tce2.EmconVerified,
+		tca.Address,
+		tce2.VerifyBy,
+		tce2.KnownCustomerAddress,
+		tcp.StaySinceYear,
+		tcp.StaySinceMonth,
+		tce2.KnownCustomerJob,
+		CASE tce.ProfessionID 
+			WHEN 'WRST' THEN 'WIRASWASTA'
+			WHEN 'PRO' THEN 'PROFESSIONAL'
+			WHEN 'KRYSW' THEN 'KARYAWAN SWASTA'
+			WHEN 'PNS' THEN 'PEGAWAI NEGERI SIPIL'
+			WHEN 'ANG' THEN 'ANGKATAN'
+			ELSE '-'
+		END as Job,
+		tce.EmploymentSinceYear,
+		tce.EmploymentSinceMonth,
+		tce.IndustryTypeID,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		CASE ti.bpkb_name
+			WHEN 'K' THEN 'NAMA SAMA'
+			WHEN 'P' THEN 'NAMA SAMA'
+			WHEN 'KK' THEN 'NAMA BEDA'
+			WHEN 'O' THEN 'NAMA BEDA'
+			ELSE '-'
+		END as BpkbName,
+		NULL as Plafond,
+		tdb.baki_debet_non_collateral as BakiDebet,
+		NULL as FasilitasAktif,
+		NULL as ColTerburuk,
+		NULL as BakiDebetTerburuk,
+		NULL as ColTerakhirAktif,
+		NULL as SpousePlafond,
+		tdb2.baki_debet_non_collateral as SpouseBakiDebet,
+		NULL as SpouseFasilitasAktif,
+		NULL as SpouseColTerburuk,
+		NULL as SpouseBakiDebetTerburuk,
+		NULL as SpouseColTerakhirAktif,
+		ta.ScsScore,
+		ta.AgreementStatus,
+		ta.TotalAgreementAktif,
+		ta.MaxOVDAgreementAktif,
+		ta.LastMaxOVDAgreement,
+		tf.customer_segment,
+		ta.LatestInstallment,
+		ta2.NTFAkumulasi,
+		(CAST(ISNULL(ta2.InstallmentAmount, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(tf.total_installment_amount_biro, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(ta.InstallmentAmountFMF, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(ta.InstallmentAmountSpouseFMF, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(ta.InstallmentAmountOther, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(ta.InstallmentAmountOtherSpouse, 0) AS NUMERIC(17,2)) -
+		CAST(ISNULL(ta.InstallmentTopup, 0) AS NUMERIC(17,2)) ) as TotalInstallment,
+		(CAST(ISNULL(tce.MonthlyFixedIncome, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(tce.MonthlyVariableIncome, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(tce.SpouseIncome, 0) AS NUMERIC(17,2)) ) as TotalIncome,
+		ta.TotalDSR,
+		ta.EkycSource,
+		ta.EkycSimiliarity,
+		ta.EkycReason  
+		FROM trx_status ts WITH (nolock)
+		LEFT JOIN trx_customer_personal tcp WITH (nolock) ON ts.ProspectID = tcp.ProspectID 
+		LEFT JOIN trx_customer_employment tce WITH (nolock) ON ts.ProspectID = tce.ProspectID
+		LEFT JOIN trx_akkk ta WITH (nolock) ON ts.ProspectID = ta.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON ts.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_customer_emcon tce2 WITH (nolock) ON ts.ProspectID = tce2.ProspectID
+		LEFT OUTER JOIN ( 
+			SELECT scp.dbo.DEC_B64('SEC', Address) AS Address, ProspectID, Phone 
+			FROM trx_customer_address WITH (nolock)
+			WHERE Type = 'EMERGENCY' 
+		) AS tca ON ts.ProspectID = tca.ProspectID 
+		LEFT JOIN trx_item ti WITH (nolock) ON ts.ProspectID = ti.ProspectID
+		LEFT OUTER JOIN ( 
+			SELECT * FROM trx_detail_biro WITH (nolock)
+			WHERE subject = 'CUSTOMER' 
+		) AS tdb ON ts.ProspectID = tdb.prospect_id
+		LEFT JOIN trx_filtering tf WITH (nolock) ON ts.ProspectID = tf.prospect_id 
+		LEFT JOIN trx_apk ta2 WITH (nolock) ON ts.ProspectID = ta2.ProspectID
+		LEFT OUTER JOIN ( 
+			SELECT * FROM trx_detail_biro WITH (nolock)
+			WHERE subject = 'SPOUSE' 
+		) AS tdb2 ON ts.ProspectID = tdb2.prospect_id
+		WHERE ts.ProspectID = '%s'`, prospectID)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) GetInternalRecord(prospectID string) (record []entity.TrxInternalRecord, err error) {
 	var x sql.TxOptions
 

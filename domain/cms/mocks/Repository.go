@@ -17,6 +17,27 @@ type Repository struct {
 	mock.Mock
 }
 
+// GetAkkk provides a mock function with given fields: prospectID
+func (_m *Repository) GetAkkk(prospectID string) (entity.Akkk, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 entity.Akkk
+	if rf, ok := ret.Get(0).(func(string) entity.Akkk); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.Akkk)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetApprovalReason provides a mock function with given fields: req, pagination
 func (_m *Repository) GetApprovalReason(req request.ReqApprovalReason, pagination interface{}) ([]entity.ApprovalReason, int, error) {
 	ret := _m.Called(req, pagination)

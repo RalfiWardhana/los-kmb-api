@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"los-kmb-api/domain/cms/interfaces"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
@@ -35,6 +36,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.GET("/cms/ca/inquiry", handler.CaInquiry, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/save-as-draft", handler.SaveAsDraft, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/submit-decision", handler.SubmitDecision, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/akkk/view/:prospect_id", handler.GetAkkk, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/cancel", handler.CancelOrder, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/ca/cancel-reason", handler.CancelReason, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/return", handler.ReturnOrder, middlewares.AccessMiddleware())
@@ -349,6 +351,40 @@ func (c *handlerCMS) SearchInquiry(ctx echo.Context) (err error) {
 		RecordFiltered: len(data),
 		RecordTotal:    rowTotal,
 	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api AKKK
+// @Tags AKKK
+// @Produce json
+// @Param prospect_id path string true "Prospect ID"
+// @Success 200 {object} response.ApiResponse{data=response.ReasonMessageRow}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/akkk/view/{prospect_id} [get]
+func (c *handlerCMS) GetAkkk(ctx echo.Context) (err error) {
+
+	var (
+		ctxJson error
+	)
+
+	prospectID := ctx.Param("prospect_id")
+
+	if prospectID == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID does not exist")
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB AKKK", prospectID, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.GetAkkk(prospectID)
+
+	if err != nil {
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB AKKK", prospectID, err)
+		return ctxJson
+	}
+
+	ctxJson, _ = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB AKKK", prospectID, data)
+	return ctxJson
 }
 
 // CMS NEW KMB Tools godoc
