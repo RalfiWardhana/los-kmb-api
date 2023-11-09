@@ -1005,7 +1005,18 @@ type Akkk struct {
 	TotalDSR                interface{} `gorm:"column:TotalDSR" json:"total_dsr"`
 	EkycSource              interface{} `gorm:"column:EkycSource" json:"ekyc_source"`
 	EkycSimiliarity         interface{} `gorm:"column:EkycSimiliarity" json:"ekyc_similarity"`
-	EkycReason              interface{} `gorm:"column:EkycReason" json:"ekyc_reason"`
+	CaDecision              interface{} `gorm:"column:ca_decision" json:"ca_decision"`
+	CaNote                  interface{} `gorm:"column:ca_note" json:"ca_note"`
+	CaName                  interface{} `gorm:"column:ca_name" json:"ca_name"`
+	CbmDecision             interface{} `gorm:"column:cbm_decision" json:"cbm_decision"`
+	CbmNote                 interface{} `gorm:"column:cbm_note" json:"cbm_note"`
+	CbmName                 interface{} `gorm:"column:cbm_name" json:"cbm_name"`
+	DrmDecision             interface{} `gorm:"column:drm_decision" json:"drm_decision"`
+	DrmNote                 interface{} `gorm:"column:drm_note" json:"drm_note"`
+	DrmName                 interface{} `gorm:"column:drm_name" json:"drm_name"`
+	GmoDecision             interface{} `gorm:"column:gmo_decision" json:"gmo_decision"`
+	GmoNote                 interface{} `gorm:"column:gmo_note" json:"gmo_note"`
+	GmoName                 interface{} `gorm:"column:gmo_name" json:"gmo_name"`
 }
 
 type TrxInternalRecord struct {
