@@ -952,7 +952,19 @@ func (r repoHandler) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 		ta.TotalDSR,
 		ta.EkycSource,
 		ta.EkycSimiliarity,
-		ta.EkycReason  
+		ta.EkycReason,
+		tcd.decision as ca_decision,
+		tcd.note as ca_note,
+		tcd.decision_by as ca_name,
+		cbm.decision as cbm_decision,
+		cbm.note as cbm_note,
+		cbm.decision_by as cbm_name,
+		drm.decision as drm_decision,
+		drm.note as drm_note,
+		drm.decision_by as drm_name,
+		gmo.decision as gmo_decision,
+		gmo.note as gmo_note,
+		gmo.decision_by as gmo_name  
 		FROM trx_status ts WITH (nolock)
 		LEFT JOIN trx_customer_personal tcp WITH (nolock) ON ts.ProspectID = tcp.ProspectID 
 		LEFT JOIN trx_customer_employment tce WITH (nolock) ON ts.ProspectID = tce.ProspectID
@@ -975,6 +987,22 @@ func (r repoHandler) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 			SELECT * FROM trx_detail_biro WITH (nolock)
 			WHERE subject = 'SPOUSE' 
 		) AS tdb2 ON ts.ProspectID = tdb2.prospect_id
+		LEFT JOIN trx_ca_decision tcd WITH (nolock) ON ts.ProspectID = tcd.ProspectID
+		LEFT OUTER JOIN ( 
+			SELECT TOP 1 * FROM trx_history_approval_scheme thas WITH (nolock)
+			WHERE source_decision = 'CBM'
+			ORDER BY created_at DESC 
+		) AS cbm ON ts.ProspectID = cbm.ProspectID
+		LEFT OUTER JOIN ( 
+			SELECT TOP 1 * FROM trx_history_approval_scheme thas WITH (nolock)
+			WHERE source_decision = 'DRM'
+			ORDER BY created_at DESC 
+		) AS drm ON ts.ProspectID = drm.ProspectID
+		LEFT OUTER JOIN ( 
+			SELECT TOP 1 * FROM trx_history_approval_scheme thas WITH (nolock)
+			WHERE source_decision = 'GMO'
+			ORDER BY created_at DESC 
+		) AS gmo ON ts.ProspectID = gmo.ProspectID
 		WHERE ts.ProspectID = '%s'`, prospectID)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
