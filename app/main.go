@@ -222,7 +222,7 @@ func main() {
 
 	// define new kmb cms
 	cacheRepository := cacheRepository.NewRepository(cache)
-	cmsRepositories := cmsRepository.NewRepository(core, confins, newKMB, kpLosLogs)
+	cmsRepositories := cmsRepository.NewRepository(core, confins, newKMB, kpLos, kpLosLogs)
 	cmsUsecases := cmsUsecase.NewUsecase(cmsRepositories, httpClient, cacheRepository)
 	cmsDelivery.CMSHandler(apiGroupv3, cmsUsecases, cmsRepositories, jsonResponse, producer, accessToken)
 
