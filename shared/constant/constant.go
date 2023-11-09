@@ -86,7 +86,7 @@ const (
 	RESPONSE_PEFINDO_DUMMY_NOT_FOUND = "Pefindo Dummy Data Not Found"
 	ERRORS_E                         = "Failed Process Blacklist Confins"
 	REASON_E                         = "Failed Process Blacklist Confins"
-	SYSTEM_CREATED                   = "SYSTEM"
+	SYSTEM_CREATED                   = "CREDIT DECISION ENGINE"
 
 	CMO_AGENT                  = "CMO"
 	CODE_CMO_RECOMMENDED       = "1410"
