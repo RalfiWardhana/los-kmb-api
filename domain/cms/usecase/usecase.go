@@ -43,6 +43,28 @@ func (u usecase) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 		return
 	}
 
+	industryType, _ := u.cache.Get(data.IndustryTypeID.(string))
+
+	var industry []entity.SpIndustryTypeMaster
+	if industryType == nil {
+		industry, err = u.repository.GetSpIndustryTypeMaster()
+
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + err.Error())
+			return
+		}
+
+		for _, description := range industry {
+			u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
+		}
+	}
+
+	industryType, _ = u.cache.Get(data.IndustryTypeID.(string))
+
+	if industryType != nil {
+		data.IndustryType = strings.TrimSpace(string(industryType))
+	}
+
 	if data.MonthlyFixedIncome != nil {
 		data.MonthlyFixedIncome, _ = utils.GetFloat(data.MonthlyFixedIncome)
 	}
