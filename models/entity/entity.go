@@ -975,6 +975,7 @@ type Akkk struct {
 	Job                     interface{} `gorm:"column:Job" json:"job"`
 	EmploymentSinceYear     interface{} `gorm:"column:EmploymentSinceYear" json:"employment_since_year"`
 	EmploymentSinceMonth    interface{} `gorm:"column:EmploymentSinceMonth" json:"employment_since_month"`
+	IndustryType            interface{} `gorm:"column:IndustryType" json:"industry_type"`
 	IndustryTypeID          interface{} `gorm:"column:IndustryTypeID" json:"industry_type_id"`
 	MonthlyFixedIncome      interface{} `gorm:"column:MonthlyFixedIncome" json:"monthly_fixed_income"`
 	MonthlyVariableIncome   interface{} `gorm:"column:MonthlyVariableIncome" json:"monthly_variable_income"`
