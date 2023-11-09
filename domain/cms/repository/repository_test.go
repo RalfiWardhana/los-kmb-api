@@ -2150,7 +2150,7 @@ func TestGetInquiryPrescreening_RecordNotFound(t *testing.T) {
 	}
 }
 
-func Test_repoHandler_SavePrescreening(t *testing.T) {
+func TestSavePrescreening(t *testing.T) {
 	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
 
 	sqlDB, mock, _ := sqlmock.New()
@@ -3398,7 +3398,7 @@ func TestGetInquirySearch(t *testing.T) {
 	CASE
 	  WHEN tst.status_process='FIN'
 	  AND tst.activity='STOP'
-	  AND tst.decision='REJ' THEN 0
+	  AND tst.decision='REJ' OR tst.decision='CAN' THEN 0
 	  ELSE 1
 	END AS ActionCancel,
 	CASE
@@ -3501,7 +3501,7 @@ func TestGetInquirySearch(t *testing.T) {
 	em.Name AS EmconName,
 	em.Relationship,
 	em.MobilePhone AS EmconMobilePhone,
-	scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
 	CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
 	cae.Kelurahan AS EmergencyKelurahan,
 	cae.Kecamatan AS EmergencyKecamatan,
@@ -3510,7 +3510,7 @@ func TestGetInquirySearch(t *testing.T) {
 	cae.AreaPhone AS EmergencyAreaPhone,
 	cae.Phone AS EmergencyPhone,
 	tce.IndustryTypeID
-  FROM
+FROM
 	trx_master tm WITH (nolock)
 	INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
 	INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
@@ -3523,162 +3523,162 @@ func TestGetInquirySearch(t *testing.T) {
 	LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 	LEFT JOIN (
 	  SELECT
-		ProspectID,
-		decision,
-		created_at
+			ProspectID,
+			decision,
+			created_at
 	  FROM
-		trx_ca_decision WITH (nolock)
+			trx_ca_decision WITH (nolock)
 	) tcd ON tm.ProspectID = tcd.ProspectID
 
 	INNER JOIN (
-		SELECT
-		  ProspectID,
-		  Address,
-		  RT,
-		  RW,
-		  Kelurahan,
-		  Kecamatan,
-		  ZipCode,
-		  City
-		FROM
-		  trx_customer_address WITH (nolock)
-		WHERE
-		  "Type" = 'LEGAL'
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
 	  ) cal ON tm.ProspectID = cal.ProspectID
 	  INNER JOIN (
-		SELECT
-		  ProspectID,
-		  Address,
-		  RT,
-		  RW,
-		  Kelurahan,
-		  Kecamatan,
-		  ZipCode,
-		  City
-		FROM
-		  trx_customer_address WITH (nolock)
-		WHERE
-		  "Type" = 'RESIDENCE'
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
 	  ) car ON tm.ProspectID = car.ProspectID
 	  INNER JOIN (
-		SELECT
-		  ProspectID,
-		  Address,
-		  RT,
-		  RW,
-		  Kelurahan,
-		  Kecamatan,
-		  ZipCode,
-		  City,
-		  Phone,
-		  AreaPhone
-		FROM
-		  trx_customer_address WITH (nolock)
-		WHERE
-		  "Type" = 'COMPANY'
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
 	  ) cac ON tm.ProspectID = cac.ProspectID
 	  INNER JOIN (
-		SELECT
-		  ProspectID,
-		  Address,
-		  RT,
-		  RW,
-		  Kelurahan,
-		  Kecamatan,
-		  ZipCode,
-		  City,
-		  Phone,
-		  AreaPhone
-		FROM
-		  trx_customer_address WITH (nolock)
-		WHERE
-		  "Type" = 'EMERGENCY'
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
 	  ) cae ON tm.ProspectID = cae.ProspectID
 	INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 	LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 	LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'Education'
+			group_name = 'Education'
 	) edu ON tcp.Education = edu.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'MaritalStatus'
+			group_name = 'MaritalStatus'
 	) mst ON tcp.MaritalStatus = mst.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'HomeStatus'
+			group_name = 'HomeStatus'
 	) hst ON tcp.HomeStatus = hst.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'MonthName'
+			group_name = 'MonthName'
 	) mn ON tcp.StaySinceMonth = mn.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'ProfessionID'
+			group_name = 'ProfessionID'
 	) pr ON tce.ProfessionID = pr.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'JobType'
+			group_name = 'JobType'
 	) jt ON tce.JobType = jt.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'JobPosition'
+			group_name = 'JobPosition'
 	) jb ON tce.JobPosition = jb.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'MonthName'
+			group_name = 'MonthName'
 	) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'ProfessionID'
+			group_name = 'ProfessionID'
 	) pr2 ON tcs.ProfessionID = pr2.[key]
-) AS tt`)).
+) AS tt WHERE (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 		WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
 			AddRow("EFM03406412522151347", "BANDUNG", "426"))
 

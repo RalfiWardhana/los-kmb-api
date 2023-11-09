@@ -209,6 +209,8 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 			}
 		}
 
+		industryType, _ = u.cache.Get(inq.IndustryTypeID)
+
 		// get trx_customer_photo
 		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
 
@@ -545,6 +547,8 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 				u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
 			}
 		}
+
+		industryType, _ = u.cache.Get(inq.IndustryTypeID)
 
 		// get trx_customer_photo
 		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
@@ -1026,6 +1030,8 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 			}
 		}
 
+		industryType, _ = u.cache.Get(inq.IndustryTypeID)
+
 		// get trx_customer_photo
 		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
 
@@ -1385,6 +1391,8 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 				u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
 			}
 		}
+
+		industryType, _ = u.cache.Get(inq.IndustryTypeID)
 
 		// get trx_customer_photo
 		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
