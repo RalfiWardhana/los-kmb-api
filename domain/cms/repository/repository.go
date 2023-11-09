@@ -1126,11 +1126,42 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		filterBranch   string
 		filterPaginate string
 		query          string
+		getRegion      []entity.RegionBranch
 	)
 
 	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
 
-	filterBranch = utils.GenerateBranchFilter(req.BranchID)
+	if req.MultiBranch == "1" {
+		getRegion, _ = r.GetRegionBranch(req.UserID)
+
+		if len(getRegion) > 0 {
+			extractBranchIDUser := ""
+			userAllRegion := false
+			for _, value := range getRegion {
+				if strings.ToUpper(value.RegionName) == constant.REGION_ALL {
+					userAllRegion = true
+					break
+				} else if value.BranchMember != "" {
+					branch := strings.Trim(strings.ReplaceAll(value.BranchMember, `"`, `'`), "'")
+					replace := strings.ReplaceAll(branch, `[`, ``)
+					branchMember := strings.ReplaceAll(replace, `]`, ``)
+					extractBranchIDUser += branchMember
+					if value != getRegion[len(getRegion)-1] {
+						extractBranchIDUser += ","
+					}
+				}
+			}
+			if userAllRegion {
+				filterBranch += ""
+			} else {
+				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
+			}
+		} else {
+			filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+		}
+	} else {
+		filterBranch = utils.GenerateBranchFilter(req.BranchID)
+	}
 
 	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
 
@@ -1710,9 +1741,39 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		filterPaginate string
 		filterBranch   string
 		query          string
+		getRegion      []entity.RegionBranch
 	)
+	if req.MultiBranch == "1" {
+		getRegion, _ = r.GetRegionBranch(req.UserID)
 
-	filterBranch = utils.GenerateBranchFilter(req.BranchID)
+		if len(getRegion) > 0 {
+			extractBranchIDUser := ""
+			userAllRegion := false
+			for _, value := range getRegion {
+				if strings.ToUpper(value.RegionName) == constant.REGION_ALL {
+					userAllRegion = true
+					break
+				} else if value.BranchMember != "" {
+					branch := strings.Trim(strings.ReplaceAll(value.BranchMember, `"`, `'`), "'")
+					replace := strings.ReplaceAll(branch, `[`, ``)
+					branchMember := strings.ReplaceAll(replace, `]`, ``)
+					extractBranchIDUser += branchMember
+					if value != getRegion[len(getRegion)-1] {
+						extractBranchIDUser += ","
+					}
+				}
+			}
+			if userAllRegion {
+				filterBranch += ""
+			} else {
+				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
+			}
+		} else {
+			filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+		}
+	} else {
+		filterBranch = utils.GenerateBranchFilter(req.BranchID)
+	}
 
 	filter = filterBranch
 
@@ -2182,13 +2243,44 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		filterPaginate string
 		query          string
 		alias          string
+		getRegion      []entity.RegionBranch
 	)
 
 	alias = req.Alias
 
 	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
 
-	filterBranch = utils.GenerateBranchFilter(req.BranchID)
+	if req.MultiBranch == "1" {
+		getRegion, _ = r.GetRegionBranch(req.UserID)
+
+		if len(getRegion) > 0 {
+			extractBranchIDUser := ""
+			userAllRegion := false
+			for _, value := range getRegion {
+				if strings.ToUpper(value.RegionName) == constant.REGION_ALL {
+					userAllRegion = true
+					break
+				} else if value.BranchMember != "" {
+					branch := strings.Trim(strings.ReplaceAll(value.BranchMember, `"`, `'`), "'")
+					replace := strings.ReplaceAll(branch, `[`, ``)
+					branchMember := strings.ReplaceAll(replace, `]`, ``)
+					extractBranchIDUser += branchMember
+					if value != getRegion[len(getRegion)-1] {
+						extractBranchIDUser += ","
+					}
+				}
+			}
+			if userAllRegion {
+				filterBranch += ""
+			} else {
+				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
+			}
+		} else {
+			filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+		}
+	} else {
+		filterBranch = utils.GenerateBranchFilter(req.BranchID)
+	}
 
 	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
 
