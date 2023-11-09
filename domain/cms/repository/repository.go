@@ -1580,7 +1580,7 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		CASE
 		  WHEN tst.status_process='FIN'
 		  AND tst.activity='STOP'
-		  AND tst.decision='REJ' THEN 0
+		  AND tst.decision='REJ' OR tst.decision='CAN' THEN 0
 		  ELSE 1
 		END AS ActionCancel,
 		CASE
