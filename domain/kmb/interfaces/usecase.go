@@ -35,7 +35,7 @@ type Usecase interface {
 
 type MultiUsecase interface {
 	Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken string, configValue response.DupcheckConfig) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error)
-	Ekyc(ctx context.Context, req request.Metrics, cbFound bool, accessToken string) (data response.Ekyc, trxDetail []entity.TrxDetail, err error)
+	Ekyc(ctx context.Context, req request.Metrics, cbFound bool, accessToken string) (data response.Ekyc, trxDetail []entity.TrxDetail, trxFMF response.TrxFMF, err error)
 }
 
 type Metrics interface {
