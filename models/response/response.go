@@ -228,29 +228,43 @@ type PefindoResult struct {
 }
 
 type PefindoResultKonsumen struct {
-	SearchID               string      `json:"search_id"`
-	PefindoID              string      `json:"pefindo_id"`
-	Score                  string      `json:"score"`
-	MaxOverdue             interface{} `json:"max_overdue"`
-	MaxOverdueLast12Months interface{} `json:"max_overdue_last12months"`
-	AngsuranAktifPbk       float64     `json:"angsuran_aktif_pbk"`
-	WoContract             int         `json:"wo_contract"`
-	WoAdaAgunan            int         `json:"wo_ada_agunan"`
-	BakiDebetNonAgunan     float64     `json:"baki_debet_non_agunan"`
-	DetailReport           string      `json:"detail_report"`
+	SearchID                    string      `json:"search_id"`
+	PefindoID                   string      `json:"pefindo_id"`
+	Score                       string      `json:"score"`
+	MaxOverdue                  interface{} `json:"max_overdue"`
+	MaxOverdueLast12Months      interface{} `json:"max_overdue_last12months"`
+	AngsuranAktifPbk            float64     `json:"angsuran_aktif_pbk"`
+	WoContract                  int         `json:"wo_contract"`
+	WoAdaAgunan                 int         `json:"wo_ada_agunan"`
+	BakiDebetNonAgunan          float64     `json:"baki_debet_non_agunan"`
+	DetailReport                string      `json:"detail_report"`
+	Plafon                      float64     `json:"plafon"`
+	FasilitasAktif              int         `json:"fasilitas_aktif"`
+	KualitasKreditTerburuk      string      `json:"kualitas_kredit_terburuk"`
+	BulanKualitasTerburuk       string      `json:"bulan_kualitas_terburuk"`
+	BakiDebetKualitasTerburuk   float64     `json:"baki_debet_kualitas_terburuk"`
+	KualitasKreditTerakhir      string      `json:"kualitas_kredit_terakhir"`
+	BulanKualitasKreditTerakhir string      `json:"bulan_kualitas_kredit_terakhir"`
 }
 
 type PefindoResultPasangan struct {
-	SearchID               string      `json:"search_id"`
-	PefindoID              string      `json:"pefindo_id"`
-	Score                  string      `json:"score"`
-	MaxOverdue             interface{} `json:"max_overdue"`
-	MaxOverdueLast12Months interface{} `json:"max_overdue_last12months"`
-	AngsuranAktifPbk       float64     `json:"angsuran_aktif_pbk"`
-	WoContract             int         `json:"wo_contract"`
-	WoAdaAgunan            int         `json:"wo_ada_agunan"`
-	BakiDebetNonAgunan     float64     `json:"baki_debet_non_agunan"`
-	DetailReport           string      `json:"detail_report"`
+	SearchID                    string      `json:"search_id"`
+	PefindoID                   string      `json:"pefindo_id"`
+	Score                       string      `json:"score"`
+	MaxOverdue                  interface{} `json:"max_overdue"`
+	MaxOverdueLast12Months      interface{} `json:"max_overdue_last12months"`
+	AngsuranAktifPbk            float64     `json:"angsuran_aktif_pbk"`
+	WoContract                  int         `json:"wo_contract"`
+	WoAdaAgunan                 int         `json:"wo_ada_agunan"`
+	BakiDebetNonAgunan          float64     `json:"baki_debet_non_agunan"`
+	DetailReport                string      `json:"detail_report"`
+	Plafon                      float64     `json:"plafon"`
+	FasilitasAktif              int         `json:"fasilitas_aktif"`
+	KualitasKreditTerburuk      string      `json:"kualitas_kredit_terburuk"`
+	BulanKualitasTerburuk       string      `json:"bulan_kualitas_terburuk"`
+	BakiDebetKualitasTerburuk   float64     `json:"baki_debet_kualitas_terburuk"`
+	KualitasKreditTerakhir      string      `json:"kualitas_kredit_terakhir"`
+	BulanKualitasKreditTerakhir string      `json:"bulan_kualitas_kredit_terakhir"`
 }
 
 type ElaborateResult struct {
