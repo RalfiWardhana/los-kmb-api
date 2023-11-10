@@ -2739,14 +2739,10 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			decision           string
 		)
 
-		nextFinal = 0
-		if approval.IsFinal {
-			nextFinal = 1
-		}
-
 		isEscalation = 0
 		if approval.IsEscalation {
 			isEscalation = 1
+			nextFinal = 1
 		}
 
 		switch req.Decision {
