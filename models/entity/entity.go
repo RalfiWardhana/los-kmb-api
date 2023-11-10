@@ -802,19 +802,26 @@ func (c *TrxDetail) TableName() string {
 }
 
 type TrxDetailBiro struct {
-	ProspectID             string      `gorm:"type:varchar(20);column:prospect_id;primary_key:true"`
-	Subject                string      `gorm:"type:varchar(10);column:subject"`
-	Source                 string      `gorm:"type:varchar(5);column:source"`
-	BiroID                 string      `gorm:"type:varchar(20);column:biro_id"`
-	Score                  string      `gorm:"type:varchar(20);column:score"`
-	MaxOverdue             interface{} `gorm:"column:max_overdue"`
-	MaxOverdueLast12months interface{} `gorm:"column:max_overdue_last12months"`
-	InstallmentAmount      interface{} `gorm:"column:installment_amount"`
-	WoContract             int         `gorm:"column:wo_contract"`
-	WoWithCollateral       int         `gorm:"column:wo_with_collateral"`
-	BakiDebetNonCollateral float64     `gorm:"column:baki_debet_non_collateral"`
-	UrlPdfReport           string      `gorm:"type:varchar(200);column:url_pdf_report"`
-	CreatedAt              time.Time   `gorm:"column:created_at"`
+	ProspectID                  string      `gorm:"type:varchar(20);column:prospect_id;primary_key:true"`
+	Subject                     string      `gorm:"type:varchar(10);column:subject"`
+	Source                      string      `gorm:"type:varchar(5);column:source"`
+	BiroID                      string      `gorm:"type:varchar(20);column:biro_id"`
+	Score                       string      `gorm:"type:varchar(20);column:score"`
+	MaxOverdue                  interface{} `gorm:"column:max_overdue"`
+	MaxOverdueLast12months      interface{} `gorm:"column:max_overdue_last12months"`
+	InstallmentAmount           interface{} `gorm:"column:installment_amount"`
+	WoContract                  int         `gorm:"column:wo_contract"`
+	WoWithCollateral            int         `gorm:"column:wo_with_collateral"`
+	BakiDebetNonCollateral      float64     `gorm:"column:baki_debet_non_collateral"`
+	UrlPdfReport                string      `gorm:"type:varchar(200);column:url_pdf_report"`
+	CreatedAt                   time.Time   `gorm:"column:created_at"`
+	Plafon                      interface{} `gorm:"column:plafon"`
+	FasilitasAktif              interface{} `gorm:"column:fasilitas_aktif"`
+	KualitasKreditTerburuk      interface{} `gorm:"column:kualitas_kredit_terburuk"`
+	BulanKualitasTerburuk       interface{} `gorm:"column:bulan_kualitas_terburuk"`
+	BakiDebetKualitasTerburuk   interface{} `gorm:"column:baki_debet_kualitas_terburuk"`
+	KualitasKreditTerakhir      interface{} `gorm:"column:kualitas_kredit_terakhir"`
+	BulanKualitasKreditTerakhir interface{} `gorm:"column:bulan_kualitas_kredit_terakhir"`
 }
 
 func (c *TrxDetailBiro) TableName() string {
