@@ -1280,8 +1280,8 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tcd.note AS ca_note,
 		CASE
 		  WHEN tcd.created_at IS NOT NULL
-		  AND tfa.created_at IS NULL THEN tcd.created_at
-		  WHEN tfa.created_at IS NOT NULL THEN tfa.created_at
+		  AND tfa.created_at IS NULL THEN FORMAT(tcd.created_at,'yyyy-MM-dd HH:mm:ss')
+		  WHEN tfa.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
 		  ELSE NULL
 		END AS ActionDate,
 		CASE
@@ -2397,8 +2397,8 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		END AS ActionFormAkk,
 		CASE
 		  WHEN tcd.decision = 'CAN' THEN tcd.created_at 
-		  WHEN tcd.created_at IS NOT NULL THEN tfa.created_at
-		  ELSE tst.created_at
+		  WHEN tcd.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+		  ELSE FORMAT(tst.created_at,'yyyy-MM-dd HH:mm:ss')
 		END AS ActionDate,
 		CASE
 		  WHEN (tfa.decision IS NULL)
