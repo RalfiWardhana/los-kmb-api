@@ -1115,13 +1115,13 @@ func (c *TrxHistoryApprovalScheme) TableName() string {
 }
 
 type TrxDraftCaDecision struct {
-	ProspectID string    `gorm:"type:varchar(20);column:ProspectID" json:"-"`
-	Decision   string    `gorm:"type:varchar(3);column:decision" json:"decision"`
-	SlikResult string    `gorm:"column:slik_result" json:"slik_result"`
-	Note       string    `gorm:"type:varchar(525);column:note" json:"note"`
-	CreatedAt  time.Time `gorm:"column:created_at" json:"-"`
-	CreatedBy  string    `gorm:"type:varchar(100);column:created_by" json:"-"`
-	DecisionBy string    `gorm:"type:varchar(250);column:decision_by" json:"-"`
+	ProspectID string      `gorm:"type:varchar(20);column:ProspectID" json:"-"`
+	Decision   string      `gorm:"type:varchar(3);column:decision" json:"decision"`
+	SlikResult string      `gorm:"column:slik_result" json:"slik_result"`
+	Note       interface{} `gorm:"type:varchar(525);column:note" json:"note"`
+	CreatedAt  time.Time   `gorm:"column:created_at" json:"-"`
+	CreatedBy  string      `gorm:"type:varchar(100);column:created_by" json:"-"`
+	DecisionBy string      `gorm:"type:varchar(250);column:decision_by" json:"-"`
 }
 
 func (c *TrxDraftCaDecision) TableName() string {
