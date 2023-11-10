@@ -1373,7 +1373,6 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 		surveyor       []entity.TrxSurveyor
 		histories      []entity.HistoryApproval
 		internalRecord []entity.TrxInternalRecord
-		action         bool
 	)
 
 	// get inquiry pre screening
@@ -1526,14 +1525,9 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 			statusDecision = constant.DECISION_CANCEL
 		}
 
-		action = inq.ShowAction
-		if req.BranchID == constant.BRANCHID_HO {
-			action = false
-		}
-
 		row := entity.InquiryDataApproval{
 			CA: entity.DataApproval{
-				ShowAction:         action,
+				ShowAction:         inq.ShowAction,
 				ActionFormAkk:      inq.ActionFormAkk,
 				IsLastApproval:     inq.IsLastApproval,
 				StatusDecision:     statusDecision,
