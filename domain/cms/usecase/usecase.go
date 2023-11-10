@@ -264,7 +264,7 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 		}
 
 		action = false
-		if inq.Activity == constant.ACTIVITY_UNPROCESS && inq.SourceDecision == constant.PRESCREENING {
+		if req.BranchID != constant.BRANCHID_HO && inq.Activity == constant.ACTIVITY_UNPROCESS && inq.SourceDecision == constant.PRESCREENING {
 			action = true
 		}
 		if inq.CmoRecommendation == 1 {
@@ -523,6 +523,7 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 		surveyor       []entity.TrxSurveyor
 		histories      []entity.HistoryApproval
 		internalRecord []entity.TrxInternalRecord
+		action         bool
 	)
 
 	// get inquiry pre screening
@@ -680,9 +681,14 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 			statusDecision = constant.DECISION_CANCEL
 		}
 
+		action = inq.ShowAction
+		if req.BranchID == constant.BRANCHID_HO {
+			action = false
+		}
+
 		row := entity.InquiryDataCa{
 			CA: entity.DataCa{
-				ShowAction:         inq.ShowAction,
+				ShowAction:         action,
 				StatusDecision:     statusDecision,
 				StatusReason:       inq.StatusReason,
 				CaDecision:         inq.CaDecision,
@@ -1367,6 +1373,7 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 		surveyor       []entity.TrxSurveyor
 		histories      []entity.HistoryApproval
 		internalRecord []entity.TrxInternalRecord
+		action         bool
 	)
 
 	// get inquiry pre screening
@@ -1519,9 +1526,14 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 			statusDecision = constant.DECISION_CANCEL
 		}
 
+		action = inq.ShowAction
+		if req.BranchID == constant.BRANCHID_HO {
+			action = false
+		}
+
 		row := entity.InquiryDataApproval{
 			CA: entity.DataApproval{
-				ShowAction:         inq.ShowAction,
+				ShowAction:         action,
 				ActionFormAkk:      inq.ActionFormAkk,
 				IsLastApproval:     inq.IsLastApproval,
 				StatusDecision:     statusDecision,
