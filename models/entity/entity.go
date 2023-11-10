@@ -967,6 +967,7 @@ type Akkk struct {
 	EmconRelationship       interface{} `gorm:"column:EmconRelationship" json:"emcon_relationship"`
 	EmconVerified           interface{} `gorm:"column:EmconVerified" json:"emcon_verified"`
 	Address                 interface{} `gorm:"column:Address" json:"address"`
+	EmconMobilePhone        interface{} `gorm:"column:EmconMobilePhone" json:"emcon_mobile_phone"`
 	VerifyBy                interface{} `gorm:"column:VerifyBy" json:"verify_by"`
 	KnownCustomerAddress    interface{} `gorm:"column:KnownCustomerAddress" json:"known_customer_address"`
 	StaySinceYear           interface{} `gorm:"column:StaySinceYear" json:"stay_since_year"`
@@ -1006,18 +1007,25 @@ type Akkk struct {
 	TotalDSR                interface{} `gorm:"column:TotalDSR" json:"total_dsr"`
 	EkycSource              interface{} `gorm:"column:EkycSource" json:"ekyc_source"`
 	EkycSimiliarity         interface{} `gorm:"column:EkycSimiliarity" json:"ekyc_similarity"`
+	CmoDecision             interface{} `gorm:"column:cmo_decision" json:"cmo_decision"`
+	CmoName                 interface{} `gorm:"column:cmo_name" json:"cmo_name"`
+	CmoDate                 interface{} `gorm:"column:cmo_date" json:"cmo_date"`
 	CaDecision              interface{} `gorm:"column:ca_decision" json:"ca_decision"`
 	CaNote                  interface{} `gorm:"column:ca_note" json:"ca_note"`
 	CaName                  interface{} `gorm:"column:ca_name" json:"ca_name"`
+	CaDate                  interface{} `gorm:"column:ca_date" json:"ca_date"`
 	CbmDecision             interface{} `gorm:"column:cbm_decision" json:"cbm_decision"`
 	CbmNote                 interface{} `gorm:"column:cbm_note" json:"cbm_note"`
 	CbmName                 interface{} `gorm:"column:cbm_name" json:"cbm_name"`
+	CbmDate                 interface{} `gorm:"column:cbm_date" json:"cbm_date"`
 	DrmDecision             interface{} `gorm:"column:drm_decision" json:"drm_decision"`
 	DrmNote                 interface{} `gorm:"column:drm_note" json:"drm_note"`
 	DrmName                 interface{} `gorm:"column:drm_name" json:"drm_name"`
+	DrmDate                 interface{} `gorm:"column:drm_date" json:"drm_date"`
 	GmoDecision             interface{} `gorm:"column:gmo_decision" json:"gmo_decision"`
 	GmoNote                 interface{} `gorm:"column:gmo_note" json:"gmo_note"`
 	GmoName                 interface{} `gorm:"column:gmo_name" json:"gmo_name"`
+	GmoDate                 interface{} `gorm:"column:gmo_date" json:"gmo_date"`
 }
 
 type TrxInternalRecord struct {
