@@ -1000,20 +1000,17 @@ func (r repoHandler) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 		) AS tdb2 ON ts.ProspectID = tdb2.prospect_id
 		LEFT JOIN trx_ca_decision tcd WITH (nolock) ON ts.ProspectID = tcd.ProspectID
 		LEFT JOIN trx_info_agent tia WITH (nolock) ON ts.ProspectID = tia.ProspectID
-		LEFT OUTER JOIN ( 
-			SELECT TOP 1 * FROM trx_history_approval_scheme thas WITH (nolock)
-			WHERE source_decision = 'CBM'
-			ORDER BY created_at DESC 
+		LEFT JOIN ( 
+			SELECT * FROM trx_history_approval_scheme thas1 WITH (nolock)
+			WHERE thas1.source_decision = 'CBM' AND thas1.created_at = (SELECT MAX(tha1.created_at) From trx_history_approval_scheme tha1 WHERE tha1.source_decision = thas1.source_decision AND tha1.ProspectID = thas1.ProspectID)
 		) AS cbm ON ts.ProspectID = cbm.ProspectID
-		LEFT OUTER JOIN ( 
-			SELECT TOP 1 * FROM trx_history_approval_scheme thas WITH (nolock)
-			WHERE source_decision = 'DRM'
-			ORDER BY created_at DESC 
+		LEFT JOIN ( 
+			SELECT * FROM trx_history_approval_scheme thas2 WITH (nolock)
+			WHERE thas2.source_decision = 'DRM' AND thas2.created_at = (SELECT MAX(tha2.created_at) From trx_history_approval_scheme tha2 WHERE tha2.source_decision = thas2.source_decision AND tha2.ProspectID = thas2.ProspectID)
 		) AS drm ON ts.ProspectID = drm.ProspectID
-		LEFT OUTER JOIN ( 
-			SELECT TOP 1 * FROM trx_history_approval_scheme thas WITH (nolock)
-			WHERE source_decision = 'GMO'
-			ORDER BY created_at DESC 
+		LEFT JOIN ( 
+			SELECT * FROM trx_history_approval_scheme thas3 WITH (nolock)
+			WHERE thas3.source_decision = 'GMO' AND thas3.created_at = (SELECT MAX(tha3.created_at) From trx_history_approval_scheme tha3 WHERE tha3.source_decision = thas3.source_decision AND tha3.ProspectID = thas3.ProspectID)
 		) AS gmo ON ts.ProspectID = gmo.ProspectID
 		WHERE ts.ProspectID = '%s'`, prospectID)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
