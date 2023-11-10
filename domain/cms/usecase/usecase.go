@@ -39,7 +39,7 @@ func (u usecase) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 			err = errors.New(constant.ERROR_BAD_REQUEST + " - " + err.Error())
 			return
 		}
-		err = errors.New(constant.ERROR_UPSTREAM + err.Error())
+		err = errors.New(constant.ERROR_UPSTREAM + " - " + err.Error())
 		return
 	}
 
@@ -50,7 +50,7 @@ func (u usecase) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 		industry, err = u.repository.GetSpIndustryTypeMaster()
 
 		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + err.Error())
+			err = errors.New(constant.ERROR_UPSTREAM + " - " + err.Error())
 			return
 		}
 
