@@ -1868,10 +1868,6 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		  ELSE 1
 		END AS ActionCancel,
 		CASE
-		  WHEN tcd.decision='CAN' THEN 0
-		  ELSE 1
-		END AS ActionFormAkk,
-		CASE
 		  WHEN tst.decision = 'CPR'
 		  AND tst.source_decision = 'CRA'
 		  AND tst.activity = 'UNPR'

@@ -1574,10 +1574,8 @@ func (c *TrxFinalApproval) TableName() string {
 }
 
 type InquirySearch struct {
-	ActionReturn  bool `gorm:"column:ActionReturn"`
-	ActionCancel  bool `gorm:"column:ActionCancel"`
-	ActionFormAkk bool `gorm:"column:ActionFormAkk"`
-
+	ActionReturn   bool   `gorm:"column:ActionReturn"`
+	ActionCancel   bool   `gorm:"column:ActionCancel"`
 	ProspectID     string `gorm:"column:ProspectID"`
 	FinalStatus    string `gorm:"column:FinalStatus"`
 	BranchName     string `gorm:"column:BranchName"`
