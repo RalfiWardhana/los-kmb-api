@@ -1411,7 +1411,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
 		tce.IndustryTypeID,
-		tak.ScsDate,
+		FORMAT(tak.ScsDate,'dd-MM-yyyy') as ScsDate,
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
@@ -2302,6 +2302,12 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		}
 	}
 
+	if req.Alias == constant.DB_DECISION_BRANCH_MANAGER {
+		query += fmt.Sprintf(" AND (tt.next_step = '%s' OR tt.decision_by = '%s')", req.Alias, constant.SYSTEM_CREATED)
+	} else {
+		query += fmt.Sprintf(" AND tt.next_step= '%s'", req.Alias)
+	}
+
 	filter = filter + query
 
 	if pagination != nil {
@@ -2361,7 +2367,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
-		) AS tt %s AND (tt.next_step='%s' OR tt.decision_by='%s')`, filter, alias, constant.SYSTEM_CREATED)).Scan(&row).Error; err != nil {
+		) AS tt %s`, filter)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -2512,7 +2518,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
 		tce.IndustryTypeID,
-		tak.ScsDate,
+		FORMAT(tak.ScsDate,'dd-MM-yyyy') as ScsDate,
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
@@ -2699,7 +2705,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt %s AND (tt.next_step='%s' OR tt.decision_by='%s') ORDER BY tt.created_at DESC %s`, alias, alias, filter, alias, constant.SYSTEM_CREATED, filterPaginate)).Scan(&data).Error; err != nil {
+	) AS tt %s ORDER BY tt.created_at DESC %s`, alias, alias, filter, filterPaginate)).Scan(&data).Error; err != nil {
 		return
 	}
 
