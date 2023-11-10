@@ -1260,7 +1260,7 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 	}
 
 	// Bisa melakukan review jika status STOP dan decision REJECT
-	if status.Activity != constant.ACTIVITY_STOP && status.Decision != constant.DB_DECISION_REJECT {
+	if status.Decision != constant.DB_DECISION_REJECT {
 
 		trxCaDecision = entity.TrxCaDecision{
 			ProspectID: req.ProspectID,
