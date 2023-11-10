@@ -673,9 +673,9 @@ type RequestPagination struct {
 
 type ReqInquiryPrescreening struct {
 	Search      string `json:"search"`
-	UserID      string `json:"user_id" validate:"max=20"`
-	BranchID    string `json:"branch_id" validate:"max=3"`
-	MultiBranch string `json:"multi_branch" validate:"max=1"`
+	UserID      string `json:"user_id" validate:"required,max=20"`
+	BranchID    string `json:"branch_id" validate:"required,max=3"`
+	MultiBranch string `json:"multi_branch" validate:"required,max=1"`
 }
 
 type ReqReasonPrescreening struct {
@@ -683,7 +683,7 @@ type ReqReasonPrescreening struct {
 }
 
 type ReqApprovalReason struct {
-	Type string `json:"type"`
+	Type string `json:"type" validate:"required"`
 }
 
 type ReqReviewPrescreening struct {
@@ -691,14 +691,15 @@ type ReqReviewPrescreening struct {
 	Decision       string `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
 	Reason         string `json:"reason" validate:"max=255"`
 	DecisionBy     string `json:"decision_by" validate:"required,max=100"`
-	DecisionByName string `json:"decision_by_name" validate:"required,max-250"`
+	DecisionByName string `json:"decision_by_name" validate:"required,max=250"`
 }
 
 type ReqInquiryCa struct {
-	Search   string `json:"search"`
-	BranchID string `json:"branch_id" validate:"max=3"`
-	Filter   string `json:"filter" validate:"max=15"`
-	UserID   string `json:"user_id" validate:"max=20"`
+	Search      string `json:"search"`
+	BranchID    string `json:"branch_id" validate:"required,max=3"`
+	MultiBranch string `json:"multi_branch" validate:"required,max=1"`
+	Filter      string `json:"filter" validate:"max=15"`
+	UserID      string `json:"user_id" validate:"required,max=20"`
 }
 
 type ReqSaveAsDraft struct {
@@ -734,9 +735,10 @@ type ReqSubmitApproval struct {
 }
 
 type ReqSearchInquiry struct {
-	UserID   string `json:"user_id" validate:"required,max=20"`
-	BranchID string `json:"branch_id" validate:"required,max=3"`
-	Search   string `json:"search" validate:"required"`
+	UserID      string `json:"user_id" validate:"required,max=20"`
+	BranchID    string `json:"branch_id" validate:"required,max=3"`
+	MultiBranch string `json:"multi_branch" validate:"required,max=1"`
+	Search      string `json:"search" validate:"required"`
 }
 
 type ReqCancelOrder struct {
@@ -753,9 +755,10 @@ type ReqReturnOrder struct {
 }
 
 type ReqInquiryApproval struct {
-	Search   string `json:"search"`
-	BranchID string `json:"branch_id" validate:"max=3"`
-	Filter   string `json:"filter" validate:"max=15"`
-	UserID   string `json:"user_id" validate:"required,max=20"`
-	Alias    string `json:"alias" validate:"required,max=3"`
+	Search      string `json:"search"`
+	BranchID    string `json:"branch_id" validate:"required,max=3"`
+	MultiBranch string `json:"multi_branch" validate:"required,max=1"`
+	Filter      string `json:"filter" validate:"max=15"`
+	UserID      string `json:"user_id" validate:"required,max=20"`
+	Alias       string `json:"alias" validate:"required,max=3"`
 }
