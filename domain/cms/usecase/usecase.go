@@ -1121,7 +1121,7 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 				FinalStatus:   inq.FinalStatus,
 				ActionReturn:  inq.ActionReturn,
 				ActionCancel:  inq.ActionCancel,
-				ActionFormAkk: inq.ActionFormAkk,
+				ActionFormAkk: true,
 			},
 			HistoryProcess: historyData,
 			General: entity.DataGeneral{
