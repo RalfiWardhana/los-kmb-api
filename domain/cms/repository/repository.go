@@ -956,6 +956,7 @@ func (r repoHandler) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 		tce2.Relationship as EmconRelationship,
 		tce2.EmconVerified,
 		tca.Address,
+		tce2.MobilePhone as EmconMobilePhone,
 		tce2.VerifyBy,
 		tce2.KnownCustomerAddress,
 		tcp.StaySinceYear,
@@ -1016,18 +1017,28 @@ func (r repoHandler) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 		ta.EkycSource,
 		ta.EkycSimiliarity,
 		ta.EkycReason,
+		CASE tia.info 
+			WHEN '1' THEN 'APR'
+			ELSE 'REJ'
+		END cmo_decision,
+		tia.name as cmo_name,
+		tia.recom_date cmo_date,
 		tcd.decision as ca_decision,
 		tcd.note as ca_note,
 		tcd.decision_by as ca_name,
+		FORMAT(tcd.created_at,'yyyy-MM-dd') as ca_date,
 		cbm.decision as cbm_decision,
 		cbm.note as cbm_note,
 		cbm.decision_by as cbm_name,
+		FORMAT(cbm.created_at,'yyyy-MM-dd') as cbm_date,
 		drm.decision as drm_decision,
 		drm.note as drm_note,
 		drm.decision_by as drm_name,
+		FORMAT(drm.created_at,'yyyy-MM-dd') as drm_date,
 		gmo.decision as gmo_decision,
 		gmo.note as gmo_note,
-		gmo.decision_by as gmo_name  
+		gmo.decision_by as gmo_name,
+		FORMAT(gmo.created_at,'yyyy-MM-dd') as gmo_date
 		FROM trx_status ts WITH (nolock)
 		LEFT JOIN trx_customer_personal tcp WITH (nolock) ON ts.ProspectID = tcp.ProspectID 
 		LEFT JOIN trx_customer_employment tce WITH (nolock) ON ts.ProspectID = tce.ProspectID
@@ -1051,6 +1062,7 @@ func (r repoHandler) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 			WHERE subject = 'SPOUSE' 
 		) AS tdb2 ON ts.ProspectID = tdb2.prospect_id
 		LEFT JOIN trx_ca_decision tcd WITH (nolock) ON ts.ProspectID = tcd.ProspectID
+		LEFT JOIN trx_info_agent tia WITH (nolock) ON ts.ProspectID = tia.ProspectID
 		LEFT OUTER JOIN ( 
 			SELECT TOP 1 * FROM trx_history_approval_scheme thas WITH (nolock)
 			WHERE source_decision = 'CBM'
