@@ -2733,6 +2733,10 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			nextFinal = 1
 		}
 
+		if approval.IsFinal {
+			nextFinal = 1
+		}
+
 		switch req.Decision {
 		case constant.DECISION_REJECT:
 			decision = constant.DB_DECISION_REJECT
