@@ -2263,33 +2263,27 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 	if req.Filter != "" {
 		var (
 			decision string
-			activity string
 		)
 		switch req.Filter {
 		case constant.DECISION_APPROVE:
 			decision = constant.DB_DECISION_APR
-			query = fmt.Sprintf(" AND tt.decision= '%s'", decision)
+			if req.Alias == constant.DB_DECISION_BRANCH_MANAGER {
+				query = fmt.Sprintf(" AND (tt.decision_by='%s' AND tt.decision_ca='%s') OR (tt.approval_decision='%s' AND tt.approval_source_decision='%s')", constant.SYSTEM_CREATED, decision, decision, constant.DB_DECISION_BRANCH_MANAGER)
+			} else {
+				query = fmt.Sprintf(" AND tt.approval_decision='%s' AND tt.approval_source_decision='%s'", decision, req.Alias)
+			}
 
 		case constant.DECISION_REJECT:
 			decision = constant.DB_DECISION_REJECT
-			query = fmt.Sprintf(" AND tt.decision= '%s'", decision)
+			query = fmt.Sprintf(" AND tt.approval_decision='%s' AND tt.approval_source_decision='%s'", decision, req.Alias)
 
 		case constant.DECISION_CANCEL:
 			decision = constant.DB_DECISION_CANCEL
-			query = fmt.Sprintf(" AND tt.decision= '%s'", decision)
+			query = fmt.Sprintf(" AND tt.approval_decision='%s'", decision)
 
 		case constant.NEED_DECISION:
-			activity = constant.ACTIVITY_UNPROCESS
-			decision = constant.DB_DECISION_CREDIT_PROCESS
-			source := alias
-			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s'", activity, decision, source)
+			query = fmt.Sprintf(" AND tt.source_decision = '%s' AND tt.next_step = '%s'", alias, alias)
 		}
-	}
-
-	if req.Alias == constant.DB_DECISION_BRANCH_MANAGER {
-		query += fmt.Sprintf(" AND (tt.next_step = '%s' OR tt.decision_by = '%s')", req.Alias, constant.SYSTEM_CREATED)
-	} else {
-		query += fmt.Sprintf(" AND tt.next_step= '%s'", req.Alias)
 	}
 
 	filter = filter + query
@@ -2322,6 +2316,8 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 			tcd.final_approval,
 			tcd.decision_by,
 			has.next_step,
+			has.decision AS approval_decision,
+			has.source_decision AS approval_source_decision,
 			tcd.decision as decision_ca,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
@@ -2376,6 +2372,8 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		tcd.decision_by,
 		tcd.final_approval,
 		has.next_step,
+		has.decision AS approval_decision,
+		has.source_decision AS approval_source_decision,
 		CASE
 		  WHEN tcd.final_approval='%s' THEN 1
 		  ELSE 0

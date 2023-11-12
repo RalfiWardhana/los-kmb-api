@@ -1259,7 +1259,7 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 		return
 	}
 
-	// Bisa melakukan review jika status STOP dan decision REJECT
+	// Bisa melakukan CANCEL jika decision tidak sama dengan REJECT
 	if status.Decision != constant.DB_DECISION_REJECT {
 
 		trxCaDecision = entity.TrxCaDecision{
