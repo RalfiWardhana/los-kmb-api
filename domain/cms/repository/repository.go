@@ -1858,7 +1858,7 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		END AS FinalStatus,
 		CASE
 		  WHEN tps.ProspectID IS NOT NULL
-		  AND tst.status_process='ONP' THEN 1
+		  AND tcd.decision IS NULL THEN 1
 		  ELSE 0
 		END AS ActionReturn,
 		CASE
@@ -2221,9 +2221,21 @@ func (r repoHandler) ProcessReturnOrder(prospectID string, trxStatus entity.TrxS
 			return err
 		}
 
+		// delete trx_ca_decision
+		var ca entity.TrxCaDecision
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&ca).Error; err != nil {
+			return err
+		}
+
 		// delete trx_draft_ca_decision
 		var draft entity.TrxDraftCaDecision
 		if err := tx.Where("ProspectID = ?", prospectID).Delete(&draft).Error; err != nil {
+			return err
+		}
+
+		// delete trx_history_approval_scheme
+		var history entity.TrxHistoryApprovalScheme
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&history).Error; err != nil {
 			return err
 		}
 
@@ -2284,26 +2296,34 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 	if req.Filter != "" {
 		var (
 			decision string
+			activity string
 		)
 		switch req.Filter {
 		case constant.DECISION_APPROVE:
 			decision = constant.DB_DECISION_APR
 			if req.Alias == constant.DB_DECISION_BRANCH_MANAGER {
-				query = fmt.Sprintf(" AND (tt.decision_by='%s' AND tt.decision_ca='%s') OR (tt.approval_decision='%s' AND tt.approval_source_decision='%s')", constant.SYSTEM_CREATED, decision, decision, constant.DB_DECISION_BRANCH_MANAGER)
+				query = fmt.Sprintf(" AND (tt.decision_by='%s' AND tt.ca_decision='%s' OR tt.approval_decision='%s' AND tt.approval_source_decision='%s')", constant.SYSTEM_CREATED, decision, decision, constant.DB_DECISION_BRANCH_MANAGER)
 			} else {
 				query = fmt.Sprintf(" AND tt.approval_decision='%s' AND tt.approval_source_decision='%s'", decision, req.Alias)
 			}
 
 		case constant.DECISION_REJECT:
 			decision = constant.DB_DECISION_REJECT
-			query = fmt.Sprintf(" AND tt.approval_decision='%s' AND tt.approval_source_decision='%s'", decision, req.Alias)
+			query = fmt.Sprintf(" AND tt.approval_decision='%s' AND tt.approval_source_decision='%s' AND tt.ca_decision<>'%s'", decision, req.Alias, constant.DB_DECISION_CANCEL)
 
 		case constant.DECISION_CANCEL:
 			decision = constant.DB_DECISION_CANCEL
-			query = fmt.Sprintf(" AND tt.approval_decision='%s'", decision)
+			query = fmt.Sprintf(" AND tt.next_step='%s' AND tt.ca_decision='%s'", alias, decision)
 
 		case constant.NEED_DECISION:
-			query = fmt.Sprintf(" AND tt.source_decision = '%s' AND tt.next_step = '%s'", alias, alias)
+			activity = constant.ACTIVITY_UNPROCESS
+			decision = constant.DB_DECISION_CREDIT_PROCESS
+			source := alias
+			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s'", activity, decision, source)
+		}
+	} else {
+		if req.Alias != constant.DB_DECISION_BRANCH_MANAGER {
+			query = fmt.Sprintf(" AND tt.next_step = '%s'", alias)
 		}
 	}
 
@@ -2339,7 +2359,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 			has.next_step,
 			has.decision AS approval_decision,
 			has.source_decision AS approval_source_decision,
-			tcd.decision as decision_ca,
+			tcd.decision as ca_decision,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
 		FROM
@@ -2389,7 +2409,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		tst.source_decision,
 		tst.decision,
 		tst.reason,
-		tcd.decision as decision_ca,
+		tcd.decision as ca_decision,
 		tcd.decision_by,
 		tcd.final_approval,
 		has.next_step,
@@ -2399,12 +2419,6 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		  WHEN tcd.final_approval='%s' THEN 1
 		  ELSE 0
 		END AS is_last_approval,
-		CASE
-		  WHEN tcd.decision = 'CAN' THEN tcd.decision
-		  WHEN tcd.decision IS NOT NULL THEN tfa.decision
-		  WHEN tst.decision = 'REJ' THEN 'REJECT'
-		  ELSE NULL
-		END AS ca_decision,
 		tcd.note AS ca_note,
 		CASE
 		  WHEN tcd.decision='CAN' THEN 0
