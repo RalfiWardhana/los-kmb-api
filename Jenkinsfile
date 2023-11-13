@@ -84,7 +84,7 @@ podTemplate(
                 configUrl       = "${configUrl_devtest}"
                 targetVM        = "${testVM}"
                 credVm          = "${vmCred_test}"
-                portVm          = "${devtestPort}"
+                portVm          = "${testPort}"
                 projectName     = "${env.ENVIRONMENT}-${serviceName}:${serviceVersion}"
                 projectKey      = "${env.ENVIRONMENT}-${serviceName}"
                 refs            = "+refs/tags/*:refs/remotes/origin/tags/*"
