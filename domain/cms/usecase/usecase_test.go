@@ -634,6 +634,90 @@ func Test_usecase_GetInquiryPrescreening(t *testing.T) {
 
 }
 
+func TestGetAkkk(t *testing.T) {
+	testcases := []struct {
+		name       string
+		getAkkk    entity.Akkk
+		getAkkkErr error
+		industry   []entity.SpIndustryTypeMaster
+		result     entity.Akkk
+		err        error
+	}{
+		{
+			name: "get akkk",
+			getAkkk: entity.Akkk{
+				IndustryTypeID:          "SE_e8521",
+				MonthlyFixedIncome:      float64(5000000),
+				MonthlyVariableIncome:   float64(600000),
+				SpouseIncome:            float64(4000000),
+				Plafond:                 float64(21000000),
+				BakiDebet:               float64(300000),
+				BakiDebetTerburuk:       float64(600000),
+				SpousePlafond:           float64(200000),
+				SpouseBakiDebet:         float64(100000),
+				SpouseBakiDebetTerburuk: float64(333000),
+				TotalAgreementAktif:     float64(2),
+				MaxOVDAgreementAktif:    float64(4),
+				LastMaxOVDAgreement:     float64(3),
+				LatestInstallment:       float64(304000),
+				NTFAkumulasi:            float64(23000000),
+				TotalInstallment:        float64(4000000),
+				TotalIncome:             float64(7899800),
+				TotalDSR:                float64(7.8),
+				EkycSimiliarity:         float64(9.7),
+			},
+			industry: []entity.SpIndustryTypeMaster{
+				{
+					IndustryTypeID: "SE_e8521",
+					Description:    "Pendidikan Menengah Umum/Madrasah Aliyah Pemerintah",
+				},
+			},
+			result: entity.Akkk{
+				IndustryType:            "Pendidikan Menengah Umum/Madrasah Aliyah Pemerintah",
+				IndustryTypeID:          "SE_e8521",
+				MonthlyFixedIncome:      float64(5000000),
+				MonthlyVariableIncome:   float64(600000),
+				SpouseIncome:            float64(4000000),
+				Plafond:                 float64(21000000),
+				BakiDebet:               float64(300000),
+				BakiDebetTerburuk:       float64(600000),
+				SpousePlafond:           float64(200000),
+				SpouseBakiDebet:         float64(100000),
+				SpouseBakiDebetTerburuk: float64(333000),
+				TotalAgreementAktif:     float64(2),
+				MaxOVDAgreementAktif:    float64(4),
+				LastMaxOVDAgreement:     float64(3),
+				LatestInstallment:       float64(304000),
+				NTFAkumulasi:            float64(23000000),
+				TotalInstallment:        float64(4000000),
+				TotalIncome:             float64(7899800),
+				TotalDSR:                float64(7.8),
+				EkycSimiliarity:         float64(9.7),
+			},
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+			mocksCache := &mocksCache.Repository{}
+
+			mocksCache.On("Get", mock.Anything).Return(nil, errors.New("data not found")).Once()
+			mockRepository.On("GetAkkk", "TEST001").Return(tc.getAkkk, tc.getAkkkErr).Once()
+			mockRepository.On("GetSpIndustryTypeMaster").Return(tc.industry, nil).Once()
+			mocksCache.On("Set", mock.Anything, mock.Anything).Return(nil)
+			mocksCache.On("Get", mock.Anything).Return([]byte("Pendidikan Menengah Umum/Madrasah Aliyah Pemerintah"), nil).Once()
+
+			usecase := NewUsecase(mockRepository, mockHttpClient, mocksCache)
+
+			akkk, err := usecase.GetAkkk("TEST001")
+			require.Equal(t, tc.result, akkk)
+			require.Equal(t, tc.err, err)
+		})
+	}
+	return
+}
+
 func TestGetInquiryPrescreening(t *testing.T) {
 
 	testcases := []struct {
