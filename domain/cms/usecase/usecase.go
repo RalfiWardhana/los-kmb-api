@@ -60,9 +60,8 @@ func (u usecase) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 		for _, description := range industry {
 			u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
 		}
+		industryType, _ = u.cache.Get(data.IndustryTypeID.(string))
 	}
-
-	industryType, _ = u.cache.Get(data.IndustryTypeID.(string))
 
 	if industryType != nil {
 		data.IndustryType = strings.TrimSpace(string(industryType))
