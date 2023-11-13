@@ -383,7 +383,7 @@ type AsliriConfig struct {
 type ConfigThresholdDukcapil struct {
 	Data struct {
 		VerifyData struct {
-			NamaLengkap float64 `json:"nama_lengkap"`
+			NamaLengkap float64 `json:"nama_lgkp"`
 			Alamat      float64 `json:"alamat"`
 		} `json:"verify_data"`
 		FaceRecognition float64 `json:"face_recognition"`
