@@ -324,7 +324,10 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
 			}
 		} else {
-			filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+			filterBranch += ""
+			if req.BranchID != "999" {
+				filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+			}
 		}
 	} else {
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
@@ -1157,7 +1160,10 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
 			}
 		} else {
-			filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+			filterBranch += ""
+			if req.BranchID != "999" {
+				filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+			}
 		}
 	} else {
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
@@ -1174,15 +1180,15 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		switch req.Filter {
 		case constant.DECISION_APPROVE:
 			decision = constant.DB_DECISION_APR
-			query = fmt.Sprintf(" AND tt.decision= '%s'", decision)
+			query = fmt.Sprintf(" AND tt.decision_ca = '%s' AND (tt.decision_by_ca='%s' OR tt.decision_by_ca='%s')", decision, req.UserID, constant.SYSTEM_CREATED)
 
 		case constant.DECISION_REJECT:
 			decision = constant.DB_DECISION_REJECT
-			query = fmt.Sprintf(" AND tt.decision= '%s'", decision)
+			query = fmt.Sprintf(" AND tt.decision_ca= '%s'", decision)
 
 		case constant.DECISION_CANCEL:
 			decision = constant.DB_DECISION_CANCEL
-			query = fmt.Sprintf(" AND tt.decision= '%s'", decision)
+			query = fmt.Sprintf(" AND tt.decision_ca= '%s'", decision)
 
 		case constant.NEED_DECISION:
 			activity = constant.ACTIVITY_UNPROCESS
@@ -1225,6 +1231,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 			tst.source_decision,
 			tst.decision,
 			tcd.decision as decision_ca,
+			tcd.created_by as decision_by_ca,
 			tdd.created_by AS draft_created_by,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
@@ -1245,7 +1252,8 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		  SELECT
 			ProspectID,
 			decision,
-			created_at
+			created_at,
+			created_by
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
@@ -1292,6 +1300,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tst.decision,
 		tst.reason,
 		tcd.decision as decision_ca,
+		tcd.created_by as decision_by_ca,
 		CASE
 		  WHEN tcd.decision='APR' THEN 'APPROVE'
 		  WHEN tcd.decision='REJ' THEN 'REJECT'
@@ -1443,7 +1452,8 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 			ProspectID,
 			decision,
 			note,
-			created_at
+			created_at,
+			created_by
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
@@ -1769,7 +1779,10 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
 			}
 		} else {
-			filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+			filterBranch += ""
+			if req.BranchID != "999" {
+				filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+			}
 		}
 	} else {
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
@@ -2284,7 +2297,10 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
 			}
 		} else {
-			filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+			filterBranch += ""
+			if req.BranchID != "999" {
+				filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+			}
 		}
 	} else {
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
@@ -2322,9 +2338,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s'", activity, decision, source)
 		}
 	} else {
-		if req.Alias != constant.DB_DECISION_BRANCH_MANAGER {
-			query = fmt.Sprintf(" AND tt.next_step = '%s'", alias)
-		}
+		query = fmt.Sprintf(" AND tt.next_step = '%s'", alias)
 	}
 
 	filter = filter + query
