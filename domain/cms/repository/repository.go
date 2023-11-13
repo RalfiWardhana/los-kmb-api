@@ -1858,7 +1858,7 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		END AS FinalStatus,
 		CASE
 		  WHEN tps.ProspectID IS NOT NULL
-		  AND tst.status_process='ONP' THEN 1
+		  AND tcd.decision IS NULL THEN 1
 		  ELSE 0
 		END AS ActionReturn,
 		CASE
@@ -1867,10 +1867,6 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		  AND tst.decision='REJ' OR tst.decision='CAN' THEN 0
 		  ELSE 1
 		END AS ActionCancel,
-		CASE
-		  WHEN tcd.decision='CAN' THEN 0
-		  ELSE 1
-		END AS ActionFormAkk,
 		CASE
 		  WHEN tst.decision = 'CPR'
 		  AND tst.source_decision = 'CRA'
@@ -2225,9 +2221,21 @@ func (r repoHandler) ProcessReturnOrder(prospectID string, trxStatus entity.TrxS
 			return err
 		}
 
+		// delete trx_ca_decision
+		var ca entity.TrxCaDecision
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&ca).Error; err != nil {
+			return err
+		}
+
 		// delete trx_draft_ca_decision
 		var draft entity.TrxDraftCaDecision
 		if err := tx.Where("ProspectID = ?", prospectID).Delete(&draft).Error; err != nil {
+			return err
+		}
+
+		// delete trx_history_approval_scheme
+		var history entity.TrxHistoryApprovalScheme
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&history).Error; err != nil {
 			return err
 		}
 
@@ -2293,15 +2301,19 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		switch req.Filter {
 		case constant.DECISION_APPROVE:
 			decision = constant.DB_DECISION_APR
-			query = fmt.Sprintf(" AND tt.decision= '%s'", decision)
+			if req.Alias == constant.DB_DECISION_BRANCH_MANAGER {
+				query = fmt.Sprintf(" AND (tt.decision_by='%s' AND tt.ca_decision='%s' OR tt.approval_decision='%s' AND tt.approval_source_decision='%s')", constant.SYSTEM_CREATED, decision, decision, constant.DB_DECISION_BRANCH_MANAGER)
+			} else {
+				query = fmt.Sprintf(" AND tt.approval_decision='%s' AND tt.approval_source_decision='%s'", decision, req.Alias)
+			}
 
 		case constant.DECISION_REJECT:
 			decision = constant.DB_DECISION_REJECT
-			query = fmt.Sprintf(" AND tt.decision= '%s'", decision)
+			query = fmt.Sprintf(" AND tt.approval_decision='%s' AND tt.approval_source_decision='%s' AND tt.ca_decision<>'%s'", decision, req.Alias, constant.DB_DECISION_CANCEL)
 
 		case constant.DECISION_CANCEL:
 			decision = constant.DB_DECISION_CANCEL
-			query = fmt.Sprintf(" AND tt.decision= '%s'", decision)
+			query = fmt.Sprintf(" AND tt.next_step='%s' AND tt.ca_decision='%s'", alias, decision)
 
 		case constant.NEED_DECISION:
 			activity = constant.ACTIVITY_UNPROCESS
@@ -2309,12 +2321,10 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 			source := alias
 			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s'", activity, decision, source)
 		}
-	}
-
-	if req.Alias == constant.DB_DECISION_BRANCH_MANAGER {
-		query += fmt.Sprintf(" AND (tt.next_step = '%s' OR tt.decision_by = '%s')", req.Alias, constant.SYSTEM_CREATED)
 	} else {
-		query += fmt.Sprintf(" AND tt.next_step= '%s'", req.Alias)
+		if req.Alias != constant.DB_DECISION_BRANCH_MANAGER {
+			query = fmt.Sprintf(" AND tt.next_step = '%s'", alias)
+		}
 	}
 
 	filter = filter + query
@@ -2347,7 +2357,9 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 			tcd.final_approval,
 			tcd.decision_by,
 			has.next_step,
-			tcd.decision as decision_ca,
+			has.decision AS approval_decision,
+			has.source_decision AS approval_source_decision,
+			tcd.decision as ca_decision,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
 		FROM
@@ -2397,20 +2409,16 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		tst.source_decision,
 		tst.decision,
 		tst.reason,
-		tcd.decision as decision_ca,
+		tcd.decision as ca_decision,
 		tcd.decision_by,
 		tcd.final_approval,
 		has.next_step,
+		has.decision AS approval_decision,
+		has.source_decision AS approval_source_decision,
 		CASE
 		  WHEN tcd.final_approval='%s' THEN 1
 		  ELSE 0
 		END AS is_last_approval,
-		CASE
-		  WHEN tcd.decision = 'CAN' THEN tcd.decision
-		  WHEN tcd.decision IS NOT NULL THEN tfa.decision
-		  WHEN tst.decision = 'REJ' THEN 'REJECT'
-		  ELSE NULL
-		END AS ca_decision,
 		tcd.note AS ca_note,
 		CASE
 		  WHEN tcd.decision='CAN' THEN 0
@@ -2751,6 +2759,10 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 		isEscalation = 0
 		if approval.IsEscalation {
 			isEscalation = 1
+			nextFinal = 1
+		}
+
+		if approval.IsFinal {
 			nextFinal = 1
 		}
 
