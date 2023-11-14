@@ -2317,13 +2317,14 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		)
 		switch req.Filter {
 		case constant.DECISION_APPROVE:
-			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s'", constant.DB_DECISION_APR, constant.STATUS_FINAL)
+			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s' AND tt.approval_source_decision='%s'", constant.DB_DECISION_APR, constant.STATUS_FINAL, alias)
 
 		case constant.DECISION_REJECT:
-			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s'", constant.DB_DECISION_REJECT, constant.STATUS_FINAL)
+
+			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s' AND tt.approval_source_decision='%s'", constant.DB_DECISION_REJECT, constant.STATUS_FINAL, alias)
 
 		case constant.DECISION_CANCEL:
-			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s'", constant.DB_DECISION_CANCEL, constant.STATUS_FINAL)
+			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s' AND tt.approval_source_decision='%s'", constant.DB_DECISION_CANCEL, constant.STATUS_FINAL, alias)
 
 		case constant.NEED_DECISION:
 			activity = constant.ACTIVITY_UNPROCESS
