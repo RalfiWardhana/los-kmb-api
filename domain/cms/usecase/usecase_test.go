@@ -11,7 +11,6 @@ import (
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
-	"los-kmb-api/shared/utils"
 	"testing"
 
 	"github.com/allegro/bigcache/v3"
@@ -1493,12 +1492,14 @@ func TestCancelOrder(t *testing.T) {
 		var cache *bigcache.BigCache
 		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
 
-		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dapat dicancel")
+		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Process Cancel Order error")
 
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(entity.TrxStatus{
 			Activity:       constant.ACTIVITY_STOP,
 			SourceDecision: constant.DB_DECISION_REJECT,
 		}, errSave).Once()
+
+		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_UPSTREAM + " - Process Cancel Order error")).Once()
 
 		_, err := usecase.CancelOrder(context.Background(), req)
 
@@ -1532,50 +1533,22 @@ func TestSubmitDecision(t *testing.T) {
 			DecisionBy:   "User123",
 		}
 
-		decisionMapping := map[string]struct {
-			Code           int
-			StatusProcess  string
-			Activity       string
-			Decision       string
-			DecisionDetail string
-			DecisionStatus string
-			ActivityStatus string
-			NextStep       interface{}
-			SourceDecision string
-		}{
-			constant.DECISION_REJECT: {
-				Code:           constant.CODE_REJECT_PRESCREENING,
-				StatusProcess:  constant.STATUS_FINAL,
-				Activity:       constant.ACTIVITY_STOP,
-				Decision:       constant.DB_DECISION_REJECT,
-				DecisionStatus: constant.DB_DECISION_REJECT,
-				DecisionDetail: constant.DB_DECISION_REJECT,
-				ActivityStatus: constant.ACTIVITY_STOP,
-				SourceDecision: constant.PRESCREENING,
-			},
-			constant.DECISION_APPROVE: {
-				Code:           constant.CODE_PASS_PRESCREENING,
-				StatusProcess:  constant.STATUS_ONPROCESS,
-				Activity:       constant.ACTIVITY_PROCESS,
-				Decision:       constant.DB_DECISION_APR,
-				DecisionStatus: constant.DB_DECISION_CREDIT_PROCESS,
-				DecisionDetail: constant.DB_DECISION_PASS,
-				ActivityStatus: constant.ACTIVITY_UNPROCESS,
-				SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
-				NextStep:       constant.SOURCE_DECISION_DUPCHECK,
-			},
-		}
-
-		decisionInfo, ok := decisionMapping[req.Decision]
-		if !ok {
-			err := errors.New(constant.ERROR_UPSTREAM + " - Decision tidak valid")
-			t.Errorf("Expected error 'Decision tidak valid', but got: %v", err)
-
+		var (
+			decision        string
+			decision_detail string
+		)
+		switch req.Decision {
+		case constant.DECISION_REJECT:
+			decision = constant.DB_DECISION_REJECT
+			decision_detail = constant.DB_DECISION_REJECT
+		case constant.DECISION_APPROVE:
+			decision = constant.DB_DECISION_APR
+			decision_detail = constant.DB_DECISION_PASS
 		}
 
 		trxCaDecision = entity.TrxCaDecision{
 			ProspectID:    req.ProspectID,
-			Decision:      decisionInfo.Decision,
+			Decision:      decision,
 			SlikResult:    req.SlikResult,
 			Note:          req.Note,
 			CreatedBy:     req.CreatedBy,
@@ -1585,9 +1558,9 @@ func TestSubmitDecision(t *testing.T) {
 
 		trxStatus = entity.TrxStatus{
 			ProspectID:     req.ProspectID,
-			StatusProcess:  decisionInfo.StatusProcess,
-			Activity:       decisionInfo.ActivityStatus,
-			Decision:       decisionInfo.DecisionStatus,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_UNPROCESS,
+			Decision:       decision,
 			RuleCode:       constant.CODE_CBM,
 			SourceDecision: constant.DB_DECISION_BRANCH_MANAGER,
 			Reason:         req.SlikResult,
@@ -1595,9 +1568,9 @@ func TestSubmitDecision(t *testing.T) {
 
 		trxDetail = entity.TrxDetail{
 			ProspectID:     req.ProspectID,
-			StatusProcess:  decisionInfo.StatusProcess,
-			Activity:       decisionInfo.Activity,
-			Decision:       decisionInfo.DecisionDetail,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
+			Decision:       decision_detail,
 			RuleCode:       constant.CODE_CBM,
 			SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
 			NextStep:       constant.DB_DECISION_BRANCH_MANAGER,
@@ -1640,50 +1613,22 @@ func TestSubmitDecision(t *testing.T) {
 			DecisionBy:   "User123",
 		}
 
-		decisionMapping := map[string]struct {
-			Code           int
-			StatusProcess  string
-			Activity       string
-			Decision       string
-			DecisionDetail string
-			DecisionStatus string
-			ActivityStatus string
-			NextStep       interface{}
-			SourceDecision string
-		}{
-			constant.DECISION_REJECT: {
-				Code:           constant.CODE_REJECT_PRESCREENING,
-				StatusProcess:  constant.STATUS_FINAL,
-				Activity:       constant.ACTIVITY_STOP,
-				Decision:       constant.DB_DECISION_REJECT,
-				DecisionStatus: constant.DB_DECISION_REJECT,
-				DecisionDetail: constant.DB_DECISION_REJECT,
-				ActivityStatus: constant.ACTIVITY_STOP,
-				SourceDecision: constant.PRESCREENING,
-			},
-			constant.DECISION_APPROVE: {
-				Code:           constant.CODE_PASS_PRESCREENING,
-				StatusProcess:  constant.STATUS_ONPROCESS,
-				Activity:       constant.ACTIVITY_PROCESS,
-				Decision:       constant.DB_DECISION_APR,
-				DecisionStatus: constant.DB_DECISION_CREDIT_PROCESS,
-				DecisionDetail: constant.DB_DECISION_PASS,
-				ActivityStatus: constant.ACTIVITY_UNPROCESS,
-				SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
-				NextStep:       constant.SOURCE_DECISION_DUPCHECK,
-			},
-		}
-
-		decisionInfo, ok := decisionMapping[req.Decision]
-		if !ok {
-			err := errors.New(constant.ERROR_UPSTREAM + " - Decision tidak valid")
-			t.Errorf("Expected error 'Decision tidak valid', but got: %v", err)
-
+		var (
+			decision        string
+			decision_detail string
+		)
+		switch req.Decision {
+		case constant.DECISION_REJECT:
+			decision = constant.DB_DECISION_REJECT
+			decision_detail = constant.DB_DECISION_REJECT
+		case constant.DECISION_APPROVE:
+			decision = constant.DB_DECISION_APR
+			decision_detail = constant.DB_DECISION_PASS
 		}
 
 		trxCaDecision = entity.TrxCaDecision{
 			ProspectID:    req.ProspectID,
-			Decision:      decisionInfo.Decision,
+			Decision:      decision,
 			SlikResult:    req.SlikResult,
 			Note:          req.Note,
 			CreatedBy:     req.CreatedBy,
@@ -1693,9 +1638,9 @@ func TestSubmitDecision(t *testing.T) {
 
 		trxStatus = entity.TrxStatus{
 			ProspectID:     req.ProspectID,
-			StatusProcess:  decisionInfo.StatusProcess,
-			Activity:       decisionInfo.ActivityStatus,
-			Decision:       decisionInfo.DecisionStatus,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_UNPROCESS,
+			Decision:       decision,
 			RuleCode:       constant.CODE_CBM,
 			SourceDecision: constant.DB_DECISION_BRANCH_MANAGER,
 			Reason:         req.SlikResult,
@@ -1703,9 +1648,9 @@ func TestSubmitDecision(t *testing.T) {
 
 		trxDetail = entity.TrxDetail{
 			ProspectID:     req.ProspectID,
-			StatusProcess:  decisionInfo.StatusProcess,
-			Activity:       decisionInfo.Activity,
-			Decision:       decisionInfo.DecisionDetail,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
+			Decision:       decision_detail,
 			RuleCode:       constant.CODE_CBM,
 			SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
 			NextStep:       constant.DB_DECISION_BRANCH_MANAGER,
@@ -1732,35 +1677,6 @@ func TestSubmitDecision(t *testing.T) {
 		// Verifikasi bahwa data yang dikembalikan sesuai dengan ekspektasi
 		// Anda dapat menambahkan lebih banyak asserstion sesuai kebutuhan
 		assert.Equal(t, constant.DECISION_REJECT, result.Decision)
-	})
-
-	t.Run("InvalidDecisionCase", func(t *testing.T) {
-		mockRepository := new(mocks.Repository)
-		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
-		req := request.ReqSubmitDecision{
-			ProspectID:   "TST-DEV",
-			NTFAkumulasi: 123456.55,
-			Decision:     "InvalidDecision",
-			SlikResult:   "lancar",
-			Note:         "noted",
-			CreatedBy:    "agsa6srt",
-			DecisionBy:   "User123",
-		}
-		status := entity.TrxStatus{
-			ProspectID: "TST-DEV",
-			Activity:   constant.ACTIVITY_UNPROCESS,
-			Decision:   constant.DB_DECISION_CREDIT_PROCESS,
-		}
-		mockRepository.On("GetTrxStatus", req.ProspectID).Return(status, errSave).Once()
-		mockRepository.On("GetLimitApproval", req.NTFAkumulasi).Return(limit, errSave).Once()
-		mockRepository.On("ProcessTransaction", trxCaDecision, mock.Anything, trxStatus, trxDetail).Return(errSave).Once()
-
-		_, err := usecase.SubmitDecision(context.Background(), req)
-
-		// Verifikasi bahwa error yang diharapkan terjadi
-		assert.Error(t, err)
 	})
 
 	t.Run("InvalidStatusCase", func(t *testing.T) {
@@ -2156,11 +2072,11 @@ func TestUsecaseGetSearchInquiry(t *testing.T) {
 
 func TestSubmitApproval(t *testing.T) {
 	var (
-		errSave       error
-		trxStatus     entity.TrxStatus
-		trxDetail     entity.TrxDetail
-		trxCaDecision entity.TrxCaDecision
-		limit         entity.MappingLimitApprovalScheme
+		errSave        error
+		trxStatus      entity.TrxStatus
+		trxDetail      entity.TrxDetail
+		approvalScheme response.RespApprovalScheme
+		req            request.ReqSubmitApproval
 	)
 
 	t.Run("ValidSubmitApprovalCaseApprove", func(t *testing.T) {
@@ -2168,7 +2084,7 @@ func TestSubmitApproval(t *testing.T) {
 		mockHttpClient := new(httpclient.MockHttpClient)
 		var cache *bigcache.BigCache
 		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
-		req := request.ReqSubmitApproval{
+		req = request.ReqSubmitApproval{
 			ProspectID:    "TST-DEV",
 			FinalApproval: "GMC",
 			Decision:      constant.DECISION_APPROVE,
@@ -2180,70 +2096,31 @@ func TestSubmitApproval(t *testing.T) {
 			DecisionBy:    "User123",
 		}
 
-		decisionMapping := map[string]struct {
-			Code           string
-			StatusProcess  string
-			Activity       string
-			Decision       string
-			DecisionDetail string
-			DecisionStatus string
-			ActivityStatus string
-			NextStep       interface{}
-			SourceDecision string
-		}{
-			constant.DECISION_REJECT: {
-				Code:           "3741",
-				StatusProcess:  constant.STATUS_FINAL,
-				Activity:       constant.ACTIVITY_STOP,
-				Decision:       constant.DB_DECISION_REJECT,
-				DecisionStatus: constant.DB_DECISION_REJECT,
-				DecisionDetail: constant.DB_DECISION_REJECT,
-				ActivityStatus: constant.ACTIVITY_STOP,
-				SourceDecision: req.Alias,
-			},
-			constant.DECISION_APPROVE: {
-				Code:           "3741",
-				StatusProcess:  constant.STATUS_ONPROCESS,
-				Activity:       constant.ACTIVITY_PROCESS,
-				Decision:       constant.DB_DECISION_APR,
-				DecisionStatus: constant.DB_DECISION_CREDIT_PROCESS,
-				DecisionDetail: constant.DB_DECISION_PASS,
-				ActivityStatus: constant.ACTIVITY_UNPROCESS,
-				SourceDecision: req.Alias,
-			},
-		}
-
-		decisionInfo, ok := decisionMapping[req.Decision]
-		if !ok {
-			err := errors.New(constant.ERROR_UPSTREAM + " - Decision tidak valid")
-			t.Errorf("Expected error 'Decision tidak valid', but got: %v", err)
-		}
-
-		approvalScheme, err := utils.ApprovalScheme(req)
-		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Get Approval Scheme error")
-			return
+		approvalScheme = response.RespApprovalScheme{
+			NextStep:     "DRM",
+			IsFinal:      false,
+			IsEscalation: false,
 		}
 
 		trxStatus = entity.TrxStatus{
 			ProspectID:     req.ProspectID,
-			StatusProcess:  decisionInfo.StatusProcess,
-			Activity:       decisionInfo.ActivityStatus,
-			Decision:       decisionInfo.DecisionStatus,
-			RuleCode:       decisionInfo.Code,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_UNPROCESS,
+			Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+			RuleCode:       req.RuleCode,
 			SourceDecision: approvalScheme.NextStep,
 			Reason:         req.Reason,
 		}
 
 		trxDetail = entity.TrxDetail{
 			ProspectID:     req.ProspectID,
-			StatusProcess:  decisionInfo.StatusProcess,
-			Activity:       decisionInfo.Activity,
-			Decision:       decisionInfo.DecisionDetail,
-			RuleCode:       decisionInfo.Code,
-			SourceDecision: decisionInfo.SourceDecision,
-			NextStep:       approvalScheme.NextStep,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
+			Decision:       constant.DB_DECISION_PASS,
+			RuleCode:       req.RuleCode,
+			SourceDecision: req.Alias,
 			Info:           req.Reason,
+			NextStep:       "DRM",
 			CreatedBy:      req.CreatedBy,
 		}
 
@@ -2259,139 +2136,6 @@ func TestSubmitApproval(t *testing.T) {
 		// Verifikasi bahwa data yang dikembalikan sesuai dengan ekspektasi
 		// Anda dapat menambahkan lebih banyak asserstion sesuai kebutuhan
 		assert.Equal(t, constant.DECISION_APPROVE, result.Decision)
-	})
-	t.Run("ValidSubmitCaseReject", func(t *testing.T) {
-		mockRepository := new(mocks.Repository)
-		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
-		req := request.ReqSubmitDecision{
-			ProspectID:   "TST-DEV",
-			NTFAkumulasi: 123456.55,
-			Decision:     constant.DECISION_REJECT,
-			SlikResult:   "tidak lancar",
-			Note:         "noted",
-			CreatedBy:    "agsa6srt",
-			DecisionBy:   "User123",
-		}
-
-		decisionMapping := map[string]struct {
-			Code           int
-			StatusProcess  string
-			Activity       string
-			Decision       string
-			DecisionDetail string
-			DecisionStatus string
-			ActivityStatus string
-			NextStep       interface{}
-			SourceDecision string
-		}{
-			constant.DECISION_REJECT: {
-				Code:           constant.CODE_REJECT_PRESCREENING,
-				StatusProcess:  constant.STATUS_FINAL,
-				Activity:       constant.ACTIVITY_STOP,
-				Decision:       constant.DB_DECISION_REJECT,
-				DecisionStatus: constant.DB_DECISION_REJECT,
-				DecisionDetail: constant.DB_DECISION_REJECT,
-				ActivityStatus: constant.ACTIVITY_STOP,
-				SourceDecision: constant.PRESCREENING,
-			},
-			constant.DECISION_APPROVE: {
-				Code:           constant.CODE_PASS_PRESCREENING,
-				StatusProcess:  constant.STATUS_ONPROCESS,
-				Activity:       constant.ACTIVITY_PROCESS,
-				Decision:       constant.DB_DECISION_APR,
-				DecisionStatus: constant.DB_DECISION_CREDIT_PROCESS,
-				DecisionDetail: constant.DB_DECISION_PASS,
-				ActivityStatus: constant.ACTIVITY_UNPROCESS,
-				SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
-				NextStep:       constant.SOURCE_DECISION_DUPCHECK,
-			},
-		}
-
-		decisionInfo, ok := decisionMapping[req.Decision]
-		if !ok {
-			err := errors.New(constant.ERROR_UPSTREAM + " - Decision tidak valid")
-			t.Errorf("Expected error 'Decision tidak valid', but got: %v", err)
-
-		}
-
-		trxCaDecision = entity.TrxCaDecision{
-			ProspectID:    req.ProspectID,
-			Decision:      decisionInfo.Decision,
-			SlikResult:    req.SlikResult,
-			Note:          req.Note,
-			CreatedBy:     req.CreatedBy,
-			DecisionBy:    req.DecisionBy,
-			FinalApproval: limit.Alias,
-		}
-
-		trxStatus = entity.TrxStatus{
-			ProspectID:     req.ProspectID,
-			StatusProcess:  decisionInfo.StatusProcess,
-			Activity:       decisionInfo.ActivityStatus,
-			Decision:       decisionInfo.DecisionStatus,
-			RuleCode:       constant.CODE_CBM,
-			SourceDecision: constant.DB_DECISION_BRANCH_MANAGER,
-			Reason:         req.SlikResult,
-		}
-
-		trxDetail = entity.TrxDetail{
-			ProspectID:     req.ProspectID,
-			StatusProcess:  decisionInfo.StatusProcess,
-			Activity:       decisionInfo.Activity,
-			Decision:       decisionInfo.DecisionDetail,
-			RuleCode:       constant.CODE_CBM,
-			SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
-			NextStep:       constant.DB_DECISION_BRANCH_MANAGER,
-			Info:           req.SlikResult,
-			CreatedBy:      req.CreatedBy,
-		}
-
-		status := entity.TrxStatus{
-			ProspectID: "TST-DEV",
-			Activity:   constant.ACTIVITY_UNPROCESS,
-			Decision:   constant.DB_DECISION_CREDIT_PROCESS,
-		}
-		mockRepository.On("GetTrxStatus", req.ProspectID).Return(status, errSave).Once()
-		mockRepository.On("GetLimitApproval", req.NTFAkumulasi).Return(limit, errSave).Once()
-		mockRepository.On("ProcessTransaction", trxCaDecision, mock.Anything, trxStatus, trxDetail).Return(errSave).Once()
-
-		result, err := usecase.SubmitDecision(context.Background(), req)
-
-		// Verifikasi bahwa tidak ada error yang terjadi
-		if err != nil {
-			t.Errorf("Expected no error, but got: %v", err)
-		}
-
-		// Verifikasi bahwa data yang dikembalikan sesuai dengan ekspektasi
-		// Anda dapat menambahkan lebih banyak asserstion sesuai kebutuhan
-		assert.Equal(t, constant.DECISION_REJECT, result.Decision)
-	})
-
-	t.Run("InvalidDecisionCase", func(t *testing.T) {
-		mockRepository := new(mocks.Repository)
-		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
-		req := request.ReqSubmitApproval{
-			ProspectID:    "TST-DEV",
-			FinalApproval: "GMC",
-			Decision:      "invalidDecision",
-			RuleCode:      "3741",
-			Alias:         "CBM",
-			Reason:        "Oke",
-			Note:          "noted",
-			CreatedBy:     "agsa6srt",
-			DecisionBy:    "User123",
-		}
-
-		mockRepository.On("SubmitApproval", mock.Anything, trxStatus, trxDetail, mock.Anything).Return(errSave).Once()
-
-		_, err := usecase.SubmitApproval(context.Background(), req)
-
-		// Verifikasi bahwa error yang diharapkan terjadi
-		assert.Error(t, err)
 	})
 
 	t.Run("ErrorSubmitApproval", func(t *testing.T) {

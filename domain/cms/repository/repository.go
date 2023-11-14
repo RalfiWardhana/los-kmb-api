@@ -1706,7 +1706,7 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.TrxDe
 			 OR td.source_decision = 'ARI'
 			 OR td.source_decision = 'KTP' THEN 'EKYC'
 			 WHEN td.source_decision = 'PBK' THEN 'PEFINDO'
-			 WHEN td.source_decision = 'SCS' THEN 'SCOREPRO'
+			 WHEN td.source_decision = 'SCP' THEN 'SCOREPRO'
 			 WHEN td.source_decision = 'DSR' THEN 'DSR'
 			 WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
 			 WHEN td.source_decision = 'CBM'
@@ -1725,12 +1725,13 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.TrxDe
 			 ELSE '-'
 			END AS decision,
 			ap.reason AS info,
-			td.created_at
+			td.created_at,
+			td.next_step
 		FROM
 			trx_details td WITH (nolock)
 			LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
-		WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCS','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC')
-		AND td.decision <> 'CTG' ORDER BY td.created_at ASC`, prospectID).Scan(&detail).Error; err != nil {
+		WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC')
+		AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`, prospectID).Scan(&detail).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
