@@ -96,7 +96,7 @@ podTemplate(
                 sourceCode      = "${Tag}"
                 appId           = "${appId_stg}"
                 configFolder    = "${stgFolder}"
-                configUrl       = "${configUrl_stgprd}"
+                configUrl       = "${configUrl_devtest}"
                 targetVM        = "${stgVM}"
                 credVm          = "${vmCred_stg}"
                 portVm          = "${stgPort}"
