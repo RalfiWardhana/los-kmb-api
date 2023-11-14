@@ -50,7 +50,7 @@ func TestGetCustomerPhoto(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -87,7 +87,7 @@ func TestGetCustomerPhoto_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -120,7 +120,7 @@ func TestGetSurveyorData(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -168,7 +168,7 @@ func TestGetSurveyorData_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -201,7 +201,7 @@ func TestGetStatusPrescreening(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -241,7 +241,7 @@ func TestGetStatusPrescreening_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -274,7 +274,7 @@ func TestGetReasonPrescreening(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 
@@ -324,7 +324,7 @@ func TestGetReasonPrescreening_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqReasonPrescreening{
@@ -359,7 +359,7 @@ func TestGetSpIndustryTypeMaster(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 
@@ -403,7 +403,7 @@ func TestGetSpIndustryTypeMaster_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Mock SQL query to simulate record not found
 	mock.ExpectQuery(regexp.QuoteMeta(`exec[spIndustryTypeMaster] '01/01/2007'`)).
@@ -433,7 +433,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqInquiryPrescreening{
@@ -913,7 +913,7 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	expectedInquiry := []entity.InquiryPrescreening{{CmoRecommendation: 0, Activity: "", SourceDecision: "", Decision: "", Reason: "", DecisionBy: "", DecisionAt: "", ProspectID: "", BranchName: "", IncomingSource: "", CreatedAt: "", OrderAt: "", CustomerStatus: "", IDNumber: "", LegalName: "", BirthPlace: "", BirthDate: time.Time{}, SurgateMotherName: "", Gender: "", MobilePhone: "", Email: "", Education: "", MaritalStatus: "", NumOfDependence: 0, HomeStatus: "", StaySinceMonth: "", StaySinceYear: "", ExtCompanyPhone: (*string)(nil), SourceOtherIncome: (*string)(nil), Supplier: "", ProductOfferingID: "", AssetType: "", AssetDescription: "", ManufacturingYear: "", Color: "", ChassisNumber: "", EngineNumber: "", InterestRate: 0, InstallmentPeriod: 0, OTR: 0, DPAmount: 0, FinanceAmount: 0, InterestAmount: 0, LifeInsuranceFee: 0, AssetInsuranceFee: 0, InsuranceAmount: 0, AdminFee: 0, ProvisionFee: 0, NTF: 0, NTFAkumulasi: 0, Total: 0, MonthlyInstallment: 0, FirstInstallment: "", ProfessionID: "", JobTypeID: "", JobPosition: "", CompanyName: "", IndustryTypeID: "", EmploymentSinceYear: "", EmploymentSinceMonth: "", MonthlyFixedIncome: 0, MonthlyVariableIncome: 0, SpouseIncome: 0, SpouseIDNumber: "", SpouseLegalName: "", SpouseCompanyName: "", SpouseCompanyPhone: "", SpouseMobilePhone: "", SpouseProfession: "", EmconName: "", Relationship: "", EmconMobilePhone: "", LegalAddress: "", LegalRTRW: "", LegalKelurahan: "", LegalKecamatan: "", LegalZipCode: "", LegalCity: "", ResidenceAddress: "", ResidenceRTRW: "", ResidenceKelurahan: "", ResidenceKecamatan: "", ResidenceZipCode: "", ResidenceCity: "", CompanyAddress: "", CompanyRTRW: "", CompanyKelurahan: "", CompanyKecamatan: "", CompanyZipCode: "", CompanyCity: "", CompanyAreaPhone: "", CompanyPhone: "", EmergencyAddress: "", EmergencyRTRW: "", EmergencyKelurahan: "", EmergencyKecamatan: "", EmergencyZipcode: "", EmergencyCity: "", EmergencyAreaPhone: "", EmergencyPhone: ""}}
 
@@ -1860,7 +1860,7 @@ func TestGetInquiryPrescreening_RecordNotFound(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqInquiryPrescreening{}
@@ -2161,7 +2161,7 @@ func TestSavePrescreening(t *testing.T) {
 
 	_ = gormDB
 
-	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 	data := response.ReviewPrescreening{
 		ProspectID: "TST001",
 		Code:       constant.CODE_REJECT_PRESCREENING,
@@ -2234,7 +2234,7 @@ func TestSaveLogOrchestrator(t *testing.T) {
 
 	gormDB = gormDB.Debug()
 
-	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	header := "{'header':'header-id'}"
 	request := "{'request':'request-id'}"
@@ -2270,7 +2270,7 @@ func TestGetHistoryApproval(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -2341,7 +2341,7 @@ func TestGetInternalRecord(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -2412,7 +2412,7 @@ func TestGetLimitApproval(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	ntf := 10000.65
@@ -2473,7 +2473,7 @@ func TestGetHistoryProcess(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	prospectID := "12345"
@@ -2603,7 +2603,7 @@ func TestGetCancelReason(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	expectedReason := []entity.CancelReason{
 		{
@@ -2672,7 +2672,7 @@ func TestGetInquiryCa(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqInquiryCa{
@@ -2689,18 +2689,19 @@ func TestGetInquiryCa(t *testing.T) {
 	COUNT(tt.ProspectID) AS totalRow
 	FROM
 	(
-		SELECT
-		cb.BranchID,
-		tm.ProspectID,
-		tm.lob,
-		tm.created_at,
-		tst.activity,
-		tst.source_decision,
-		tst.decision,
-		tcd.decision as decision_ca,
-		tdd.created_by AS draft_created_by,
-		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.decision,
+			tcd.decision as decision_ca,
+			tcd.created_by as decision_by_ca,
+			tdd.created_by AS draft_created_by,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
 	FROM
 	trx_master tm WITH (nolock)
 	INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -2716,34 +2717,35 @@ func TestGetInquiryCa(t *testing.T) {
 	LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 	LEFT JOIN (
 	  SELECT
-		ProspectID,
-		decision,
-		created_at
+			ProspectID,
+			decision,
+			created_at,
+			created_by
 	  FROM
-		trx_ca_decision WITH (nolock)
+			trx_ca_decision WITH (nolock)
 	) tcd ON tm.ProspectID = tcd.ProspectID
 	LEFT JOIN (
-		SELECT
-		  x.ProspectID,
-		  x.decision,
-		  x.slik_result,
-		  x.note,
-		  x.created_at,
-		  x.created_by,
-		  x.decision_by
-		FROM
-		  trx_draft_ca_decision x WITH (nolock)
-		WHERE
-		  x.created_at = (
 			SELECT
-			  max(created_at)
-			from
-			  trx_draft_ca_decision WITH (NOLOCK)
+			  x.ProspectID,
+			  x.decision,
+			  x.slik_result,
+			  x.note,
+			  x.created_at,
+			  x.created_by,
+			  x.decision_by
+			FROM
+			  trx_draft_ca_decision x WITH (nolock)
 			WHERE
-			  ProspectID = x.ProspectID
-		  )
+			  x.created_at = (
+					SELECT
+					  max(created_at)
+					from
+					  trx_draft_ca_decision WITH (NOLOCK)
+					WHERE
+					  ProspectID = x.ProspectID
+			  )
 	) tdd ON tm.ProspectID = tdd.ProspectID
-	) AS tt WHERE tt.BranchID IN ('426','903') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision= 'APR' AND tt.source_decision<>'PSI'`)).
+	) AS tt WHERE tt.BranchID IN ('426','903') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision_ca = 'APR' AND (tt.decision_by_ca='5XeZs9PCeiPcZGS6azt' OR tt.decision_by_ca='CREDIT DECISION ENGINE') AND tt.source_decision<>'PSI'`)).
 		WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 			AddRow("27"))
 
@@ -2760,6 +2762,7 @@ func TestGetInquiryCa(t *testing.T) {
 	tst.decision,
 	tst.reason,
 	tcd.decision as decision_ca,
+	tcd.created_by as decision_by_ca,
 	CASE
 	  WHEN tcd.decision='APR' THEN 'APPROVE'
 	  WHEN tcd.decision='REJ' THEN 'REJECT'
@@ -2769,8 +2772,8 @@ func TestGetInquiryCa(t *testing.T) {
 	tcd.note AS ca_note,
 	CASE
 	  WHEN tcd.created_at IS NOT NULL
-	  AND tfa.created_at IS NULL THEN tcd.created_at
-	  WHEN tfa.created_at IS NOT NULL THEN tfa.created_at
+	  AND tfa.created_at IS NULL THEN FORMAT(tcd.created_at,'yyyy-MM-dd HH:mm:ss')
+	  WHEN tfa.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
 	  ELSE NULL
 	END AS ActionDate,
 	CASE
@@ -2784,7 +2787,7 @@ func TestGetInquiryCa(t *testing.T) {
 	  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
 	  ELSE 'NE'
 	END AS incoming_source,
-	
+
 	tdd.decision AS draft_decision,
 	tdd.slik_result AS draft_slik_result,
 	tdd.note AS draft_note,
@@ -2879,7 +2882,7 @@ func TestGetInquiryCa(t *testing.T) {
 	em.Name AS EmconName,
 	em.Relationship,
 	em.MobilePhone AS EmconMobilePhone,
-	scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
 	CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
 	cae.Kelurahan AS EmergencyKelurahan,
 	cae.Kecamatan AS EmergencyKecamatan,
@@ -2888,13 +2891,13 @@ func TestGetInquiryCa(t *testing.T) {
 	cae.AreaPhone AS EmergencyAreaPhone,
 	cae.Phone AS EmergencyPhone,
 	tce.IndustryTypeID,
-	tak.ScsDate,
+	FORMAT(tak.ScsDate,'dd-MM-yyyy') as ScsDate,
 	tak.ScsScore,
 	tak.ScsStatus,
 	tdb.BiroCustomerResult,
 	tdb.BiroSpouseResult
 
-  FROM
+FROM
 	trx_master tm WITH (nolock)
 	INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
 	INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
@@ -2908,191 +2911,192 @@ func TestGetInquiryCa(t *testing.T) {
 	LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
 	LEFT JOIN (
 	  SELECT
-		ProspectID,
-		decision,
-		note,
-		created_at
+			ProspectID,
+			decision,
+			note,
+			created_at,
+			created_by
 	  FROM
-		trx_ca_decision WITH (nolock)
+			trx_ca_decision WITH (nolock)
 	) tcd ON tm.ProspectID = tcd.ProspectID
 	LEFT JOIN (
-		SELECT prospect_id, 
-		MAX(Case [subject] When 'CUSTOMER' Then url_pdf_report End) BiroCustomerResult,
-		MAX(Case [subject] When 'SPOUSE' Then url_pdf_report End) BiroSpouseResult
-		FROM trx_detail_biro
-		GROUP BY prospect_id
-	) tdb ON tm.ProspectID = tdb.prospect_id 
+			SELECT prospect_id,
+			MAX(Case [subject] When 'CUSTOMER' Then url_pdf_report End) BiroCustomerResult,
+			MAX(Case [subject] When 'SPOUSE' Then url_pdf_report End) BiroSpouseResult
+			FROM trx_detail_biro
+			GROUP BY prospect_id
+	) tdb ON tm.ProspectID = tdb.prospect_id
 
 	INNER JOIN (
-		SELECT
-		  ProspectID,
-		  Address,
-		  RT,
-		  RW,
-		  Kelurahan,
-		  Kecamatan,
-		  ZipCode,
-		  City
-		FROM
-		  trx_customer_address WITH (nolock)
-		WHERE
-		  "Type" = 'LEGAL'
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
 	  ) cal ON tm.ProspectID = cal.ProspectID
 	  INNER JOIN (
-		SELECT
-		  ProspectID,
-		  Address,
-		  RT,
-		  RW,
-		  Kelurahan,
-		  Kecamatan,
-		  ZipCode,
-		  City
-		FROM
-		  trx_customer_address WITH (nolock)
-		WHERE
-		  "Type" = 'RESIDENCE'
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
 	  ) car ON tm.ProspectID = car.ProspectID
 	  INNER JOIN (
-		SELECT
-		  ProspectID,
-		  Address,
-		  RT,
-		  RW,
-		  Kelurahan,
-		  Kecamatan,
-		  ZipCode,
-		  City,
-		  Phone,
-		  AreaPhone
-		FROM
-		  trx_customer_address WITH (nolock)
-		WHERE
-		  "Type" = 'COMPANY'
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
 	  ) cac ON tm.ProspectID = cac.ProspectID
 	  INNER JOIN (
-		SELECT
-		  ProspectID,
-		  Address,
-		  RT,
-		  RW,
-		  Kelurahan,
-		  Kecamatan,
-		  ZipCode,
-		  City,
-		  Phone,
-		  AreaPhone
-		FROM
-		  trx_customer_address WITH (nolock)
-		WHERE
-		  "Type" = 'EMERGENCY'
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
 	  ) cae ON tm.ProspectID = cae.ProspectID
 
 	INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 	LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'Education'
+			group_name = 'Education'
 	) edu ON tcp.Education = edu.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'MaritalStatus'
+			group_name = 'MaritalStatus'
 	) mst ON tcp.MaritalStatus = mst.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'HomeStatus'
+			group_name = 'HomeStatus'
 	) hst ON tcp.HomeStatus = hst.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'MonthName'
+			group_name = 'MonthName'
 	) mn ON tcp.StaySinceMonth = mn.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'ProfessionID'
+			group_name = 'ProfessionID'
 	) pr ON tce.ProfessionID = pr.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'JobType'
+			group_name = 'JobType'
 	) jt ON tce.JobType = jt.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'JobPosition'
+			group_name = 'JobPosition'
 	) jb ON tce.JobPosition = jb.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'MonthName'
+			group_name = 'MonthName'
 	) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
 	LEFT JOIN (
 	  SELECT
-		[key],
-		value
+			[key],
+			value
 	  FROM
-		app_config ap WITH (nolock)
+			app_config ap WITH (nolock)
 	  WHERE
-		group_name = 'ProfessionID'
+			group_name = 'ProfessionID'
 	) pr2 ON tcs.ProfessionID = pr2.[key]
 	LEFT JOIN (
 	  SELECT
-		x.ProspectID,
-		x.decision,
-		x.slik_result,
-		x.note,
-		x.created_at,
-		x.created_by,
-		x.decision_by
+			x.ProspectID,
+			x.decision,
+			x.slik_result,
+			x.note,
+			x.created_at,
+			x.created_by,
+			x.decision_by
 	  FROM
-		trx_draft_ca_decision x WITH (nolock)
+			trx_draft_ca_decision x WITH (nolock)
 	  WHERE
-		x.created_at = (
-		  SELECT
-			max(created_at)
-		  from
-			trx_draft_ca_decision WITH (NOLOCK)
-		  WHERE
-			ProspectID = x.ProspectID
-		)
+			x.created_at = (
+			  SELECT
+					max(created_at)
+			  from
+					trx_draft_ca_decision WITH (NOLOCK)
+			  WHERE
+					ProspectID = x.ProspectID
+			)
 	) tdd ON tm.ProspectID = tdd.ProspectID
-) AS tt WHERE tt.BranchID IN ('426','903') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision= 'APR' AND tt.source_decision<>'PSI' ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+) AS tt WHERE tt.BranchID IN ('426','903') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision_ca = 'APR' AND (tt.decision_by_ca='5XeZs9PCeiPcZGS6azt' OR tt.decision_by_ca='CREDIT DECISION ENGINE') AND tt.source_decision<>'PSI' ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 		WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
 			AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
@@ -3122,7 +3126,7 @@ func TestSaveDraftData(t *testing.T) {
 
 	_ = gormDB
 
-	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	data := entity.TrxDraftCaDecision{
 		ProspectID: "TST001",
@@ -3177,7 +3181,7 @@ func TestProcessTransaction(t *testing.T) {
 
 	_ = gormDB
 
-	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	trxCaDecision := entity.TrxCaDecision{
 		ProspectID:    "TST001",
@@ -3265,7 +3269,7 @@ func TestProcessReturnOrder(t *testing.T) {
 
 	_ = gormDB
 
-	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	ppid := "TST001"
 
@@ -3307,7 +3311,15 @@ func TestProcessReturnOrder(t *testing.T) {
 			WithArgs(ppid).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
+		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "trx_ca_decision"  WHERE (ProspectID = ?)`)).
+			WithArgs(ppid).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
 		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "trx_draft_ca_decision"  WHERE (ProspectID = ?)`)).
+			WithArgs(ppid).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "trx_history_approval_scheme"  WHERE (ProspectID = ?)`)).
 			WithArgs(ppid).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
@@ -3330,7 +3342,7 @@ func TestGetInquirySearch(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	// Expected input and output
 	req := request.ReqSearchInquiry{
@@ -3345,16 +3357,16 @@ func TestGetInquirySearch(t *testing.T) {
 	COUNT(tt.ProspectID) AS totalRow
 	FROM
 	(
-		SELECT
-		cb.BranchID,
-		tm.ProspectID,
-		tm.lob,
-		tm.created_at,
-		tst.activity,
-		tst.source_decision,
-		tst.decision,
-		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.decision,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
 	FROM
 	trx_master tm WITH (nolock)
 	INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -3369,7 +3381,7 @@ func TestGetInquirySearch(t *testing.T) {
 	LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 	LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 	LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-	) AS tt`)).
+	) AS tt WHERE (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
 		WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 			AddRow("27"))
 
@@ -3392,7 +3404,7 @@ func TestGetInquirySearch(t *testing.T) {
 	END AS FinalStatus,
 	CASE
 	  WHEN tps.ProspectID IS NOT NULL
-	  AND tst.status_process='ONP' THEN 1
+	  AND tcd.decision IS NULL THEN 1
 	  ELSE 0
 	END AS ActionReturn,
 	CASE
@@ -3401,10 +3413,6 @@ func TestGetInquirySearch(t *testing.T) {
 	  AND tst.decision='REJ' OR tst.decision='CAN' THEN 0
 	  ELSE 1
 	END AS ActionCancel,
-	CASE
-	  WHEN tcd.decision='CAN' THEN 0
-	  ELSE 1
-	END AS ActionFormAkk,
 	CASE
 	  WHEN tst.decision = 'CPR'
 	  AND tst.source_decision = 'CRA'
@@ -3708,7 +3716,7 @@ func TestGetApprovalReason(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	// Create a repository instance
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
 	expectedReason := []entity.ApprovalReason{
 		{
