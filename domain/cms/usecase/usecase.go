@@ -929,7 +929,7 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 			StatusProcess:  constant.STATUS_ONPROCESS,
 			Activity:       constant.ACTIVITY_PROCESS,
 			Decision:       decision_detail,
-			RuleCode:       constant.CODE_CBM,
+			RuleCode:       constant.CODE_CREDIT_COMMITTEE,
 			SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
 			NextStep:       constant.DB_DECISION_BRANCH_MANAGER,
 			Info:           req.SlikResult,
@@ -1073,13 +1073,15 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 
 		if len(trxDetail) > 0 {
 			for _, detail := range trxDetail {
-				detailEntry := entity.TrxDetail{
-					SourceDecision: detail.SourceDecision,
-					Decision:       detail.Decision,
-					Info:           detail.Info,
-					CreatedAt:      detail.CreatedAt,
+				if detail.SourceDecision != constant.SOURCE_DECISION_DSR || detail.NextStep != constant.SOURCE_DECISION_DUPCHECK {
+					detailEntry := entity.TrxDetail{
+						SourceDecision: detail.SourceDecision,
+						Decision:       detail.Decision,
+						Info:           detail.Info,
+						CreatedAt:      detail.CreatedAt,
+					}
+					historyData = append(historyData, detailEntry)
 				}
-				historyData = append(historyData, detailEntry)
 			}
 		}
 
