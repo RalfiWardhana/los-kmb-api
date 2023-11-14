@@ -173,7 +173,7 @@ podTemplate(
             // ::DEV & STG
             if (environment != "Production") {
                 dir('code') {
-                    /*stage('Unit Test') {
+                    stage('Unit Test') {
                         stage = 'Unit Test'
                             container('golang') {
                             echo "Running unit test"
@@ -196,7 +196,7 @@ podTemplate(
                                 error("Sorry your unit test score not fulfill standard with score ${unitTest_score}/${env.UNITTEST_STANDARD}")
                             }
                         }
-                    }*/
+                    }
 
                     stage('Code Review') {
                         stage = 'Code Review'
