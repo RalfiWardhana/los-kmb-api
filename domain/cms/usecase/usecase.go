@@ -1092,7 +1092,7 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 				FinalStatus:   inq.FinalStatus,
 				ActionReturn:  inq.ActionReturn,
 				ActionCancel:  inq.ActionCancel,
-				ActionFormAkk: true,
+				ActionFormAkk: inq.ActionFormAkk,
 			},
 			HistoryProcess: historyData,
 			General: entity.DataGeneral{
