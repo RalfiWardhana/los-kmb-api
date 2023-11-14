@@ -1153,27 +1153,22 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 	// Filter By
 	if req.Filter != "" {
 		var (
-			decision string
 			activity string
 		)
 		switch req.Filter {
 		case constant.DECISION_APPROVE:
-			decision = constant.DB_DECISION_APR
-			query = fmt.Sprintf(" AND tt.decision_ca = '%s' AND (tt.decision_by_ca='%s' OR tt.decision_by_ca='%s')", decision, req.UserID, constant.SYSTEM_CREATED)
+			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s'", constant.DB_DECISION_APR, constant.STATUS_FINAL)
 
 		case constant.DECISION_REJECT:
-			decision = constant.DB_DECISION_REJECT
-			query = fmt.Sprintf(" AND tt.decision_ca= '%s'", decision)
+			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s'", constant.DB_DECISION_REJECT, constant.STATUS_FINAL)
 
 		case constant.DECISION_CANCEL:
-			decision = constant.DB_DECISION_CANCEL
-			query = fmt.Sprintf(" AND tt.decision_ca= '%s'", decision)
+			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s'", constant.DB_DECISION_CANCEL, constant.STATUS_FINAL)
 
 		case constant.NEED_DECISION:
 			activity = constant.ACTIVITY_UNPROCESS
-			decision = constant.DB_DECISION_CREDIT_PROCESS
 			source := constant.DB_DECISION_CREDIT_ANALYST
-			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s' AND tt.decision_ca IS NULL", activity, decision, source)
+			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s' AND tt.decision_ca IS NULL", activity, constant.DB_DECISION_CREDIT_PROCESS, source)
 
 		case constant.SAVED_AS_DRAFT:
 			if req.UserID != "" {
@@ -1208,6 +1203,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 			tm.created_at,
 			tst.activity,
 			tst.source_decision,
+			tst.status_process,
 			tst.decision,
 			tcd.decision as decision_ca,
 			tcd.created_by as decision_by_ca,
@@ -1276,6 +1272,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		cb.BranchID,
 		tst.activity,
 		tst.source_decision,
+		tst.status_process,
 		tst.decision,
 		tst.reason,
 		tcd.decision as decision_ca,
@@ -1860,6 +1857,11 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		  ELSE 1
 		END AS ActionCancel,
 		CASE
+		  WHEN tst.status_process='FIN'
+		  AND tst.activity='STOP' THEN 1
+		  ELSE 0
+		END AS ActionFormAkk,
+		CASE
 		  WHEN tst.decision = 'CPR'
 		  AND tst.source_decision = 'CRA'
 		  AND tst.activity = 'UNPR'
@@ -2290,31 +2292,21 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 	// Filter By
 	if req.Filter != "" {
 		var (
-			decision string
 			activity string
 		)
 		switch req.Filter {
 		case constant.DECISION_APPROVE:
-			decision = constant.DB_DECISION_APR
-			if req.Alias == constant.DB_DECISION_BRANCH_MANAGER {
-				query = fmt.Sprintf(" AND (tt.decision_by='%s' AND tt.ca_decision='%s' OR tt.approval_decision='%s' AND tt.approval_source_decision='%s')", constant.SYSTEM_CREATED, decision, decision, constant.DB_DECISION_BRANCH_MANAGER)
-			} else {
-				query = fmt.Sprintf(" AND tt.approval_decision='%s' AND tt.approval_source_decision='%s'", decision, req.Alias)
-			}
+			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s'", constant.DB_DECISION_APR, constant.STATUS_FINAL)
 
 		case constant.DECISION_REJECT:
-			decision = constant.DB_DECISION_REJECT
-			query = fmt.Sprintf(" AND tt.approval_decision='%s' AND tt.approval_source_decision='%s' AND tt.ca_decision<>'%s'", decision, req.Alias, constant.DB_DECISION_CANCEL)
+			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s'", constant.DB_DECISION_REJECT, constant.STATUS_FINAL)
 
 		case constant.DECISION_CANCEL:
-			decision = constant.DB_DECISION_CANCEL
-			query = fmt.Sprintf(" AND tt.next_step='%s' AND tt.ca_decision='%s'", alias, decision)
+			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s'", constant.DB_DECISION_CANCEL, constant.STATUS_FINAL)
 
 		case constant.NEED_DECISION:
 			activity = constant.ACTIVITY_UNPROCESS
-			decision = constant.DB_DECISION_CREDIT_PROCESS
-			source := alias
-			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s'", activity, decision, source)
+			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s'", activity, constant.DB_DECISION_CREDIT_PROCESS, alias)
 		}
 	} else {
 		query = fmt.Sprintf(" AND tt.next_step = '%s'", alias)
@@ -2414,8 +2406,9 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		END AS is_last_approval,
 		tcd.note AS ca_note,
 		CASE
-		  WHEN tcd.decision='CAN' THEN 0
-		  ELSE 1
+		  WHEN tst.status_process='FIN'
+		  AND tst.activity='STOP' THEN 1
+		  ELSE 0
 		END AS ActionFormAkk,
 		CASE
 		  WHEN tcd.decision = 'CAN' THEN tcd.created_at 
