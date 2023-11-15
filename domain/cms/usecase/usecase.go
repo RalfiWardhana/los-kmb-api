@@ -1712,6 +1712,19 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 		trxDetail.Activity = constant.ACTIVITY_STOP
 	}
 
+	if approvalScheme.NextStep != "" {
+		trxDetail.NextStep = approvalScheme.NextStep
+	}
+
+	if approvalScheme.IsFinal && !req.NeedEscalation {
+		trxStatus.Decision = decision
+		trxStatus.StatusProcess = constant.STATUS_FINAL
+		trxStatus.Activity = constant.ACTIVITY_STOP
+
+		trxDetail.StatusProcess = constant.STATUS_FINAL
+		trxDetail.Activity = constant.ACTIVITY_STOP
+	}
+
 	err = u.repository.SubmitApproval(req, trxStatus, trxDetail, approvalScheme)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error")
