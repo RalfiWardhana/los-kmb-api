@@ -256,6 +256,7 @@ func TestReviewPrescreening(t *testing.T) {
 			NextStep:       decisionInfo.NextStep,
 			Info:           string(info),
 			CreatedBy:      req.DecisionBy,
+			Reason:         string(info),
 		}
 		if req.Decision == constant.DECISION_REJECT {
 			trxStatus.RuleCode = decisionInfo.Code
@@ -367,6 +368,7 @@ func TestReviewPrescreening(t *testing.T) {
 			NextStep:       decisionInfo.NextStep,
 			Info:           string(info),
 			CreatedBy:      req.DecisionBy,
+			Reason:         string(info),
 		}
 		if req.Decision == constant.DECISION_REJECT {
 			trxStatus.RuleCode = decisionInfo.Code
@@ -1336,6 +1338,7 @@ func TestReturnOrder(t *testing.T) {
 		NextStep:       constant.PRESCREENING,
 		Info:           constant.REASON_RETURN_ORDER,
 		CreatedBy:      constant.SYSTEM_CREATED,
+		Reason:         constant.REASON_RETURN_ORDER,
 	}
 
 	t.Run("ValidSaveApprove", func(t *testing.T) {
@@ -1381,7 +1384,6 @@ func TestCancelOrder(t *testing.T) {
 		trxStatus     entity.TrxStatus
 		trxDetail     entity.TrxDetail
 		trxCaDecision entity.TrxCaDecision
-		// data          response.CancelResponse
 	)
 
 	status := entity.TrxStatus{
@@ -1431,6 +1433,7 @@ func TestCancelOrder(t *testing.T) {
 			SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
 			Info:           req.CancelReason,
 			CreatedBy:      req.CreatedBy,
+			Reason:         req.CancelReason,
 		}
 
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(status, errSave).Once()
@@ -1510,11 +1513,12 @@ func TestCancelOrder(t *testing.T) {
 
 func TestSubmitDecision(t *testing.T) {
 	var (
-		errSave       error
-		trxStatus     entity.TrxStatus
-		trxDetail     entity.TrxDetail
-		trxCaDecision entity.TrxCaDecision
-		limit         entity.MappingLimitApprovalScheme
+		errSave            error
+		trxStatus          entity.TrxStatus
+		trxDetail          entity.TrxDetail
+		trxCaDecision      entity.TrxCaDecision
+		limit              entity.MappingLimitApprovalScheme
+		trxHistoryApproval entity.TrxHistoryApprovalScheme
 		// data          response.CAResponse
 	)
 
@@ -1533,22 +1537,9 @@ func TestSubmitDecision(t *testing.T) {
 			DecisionBy:   "User123",
 		}
 
-		var (
-			decision        string
-			decision_detail string
-		)
-		switch req.Decision {
-		case constant.DECISION_REJECT:
-			decision = constant.DB_DECISION_REJECT
-			decision_detail = constant.DB_DECISION_REJECT
-		case constant.DECISION_APPROVE:
-			decision = constant.DB_DECISION_APR
-			decision_detail = constant.DB_DECISION_PASS
-		}
-
 		trxCaDecision = entity.TrxCaDecision{
 			ProspectID:    req.ProspectID,
-			Decision:      decision,
+			Decision:      constant.DB_DECISION_APR,
 			SlikResult:    req.SlikResult,
 			Note:          req.Note,
 			CreatedBy:     req.CreatedBy,
@@ -1560,7 +1551,7 @@ func TestSubmitDecision(t *testing.T) {
 			ProspectID:     req.ProspectID,
 			StatusProcess:  constant.STATUS_ONPROCESS,
 			Activity:       constant.ACTIVITY_UNPROCESS,
-			Decision:       decision,
+			Decision:       constant.DB_DECISION_APR,
 			RuleCode:       constant.CODE_CBM,
 			SourceDecision: constant.DB_DECISION_BRANCH_MANAGER,
 			Reason:         req.SlikResult,
@@ -1570,12 +1561,25 @@ func TestSubmitDecision(t *testing.T) {
 			ProspectID:     req.ProspectID,
 			StatusProcess:  constant.STATUS_ONPROCESS,
 			Activity:       constant.ACTIVITY_PROCESS,
-			Decision:       decision_detail,
-			RuleCode:       constant.CODE_CBM,
+			Decision:       constant.DB_DECISION_PASS,
+			RuleCode:       constant.CODE_CREDIT_COMMITTEE,
 			SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
 			NextStep:       constant.DB_DECISION_BRANCH_MANAGER,
 			Info:           req.SlikResult,
 			CreatedBy:      req.CreatedBy,
+		}
+
+		trxHistoryApproval = entity.TrxHistoryApprovalScheme{
+			ProspectID:            trxCaDecision.ProspectID,
+			Decision:              trxCaDecision.Decision,
+			Reason:                trxCaDecision.SlikResult.(string),
+			Note:                  trxCaDecision.Note,
+			CreatedBy:             trxCaDecision.CreatedBy,
+			DecisionBy:            trxCaDecision.DecisionBy,
+			NeedEscalation:        0,
+			NextFinalApprovalFlag: 0,
+			SourceDecision:        trxDetail.SourceDecision,
+			NextStep:              trxDetail.NextStep.(string),
 		}
 
 		status := entity.TrxStatus{
@@ -1585,7 +1589,7 @@ func TestSubmitDecision(t *testing.T) {
 		}
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(status, errSave).Once()
 		mockRepository.On("GetLimitApproval", req.NTFAkumulasi).Return(limit, errSave).Once()
-		mockRepository.On("ProcessTransaction", trxCaDecision, mock.Anything, trxStatus, trxDetail).Return(errSave).Once()
+		mockRepository.On("ProcessTransaction", trxCaDecision, trxHistoryApproval, trxStatus, trxDetail).Return(errSave).Once()
 
 		result, err := usecase.SubmitDecision(context.Background(), req)
 
@@ -1613,22 +1617,9 @@ func TestSubmitDecision(t *testing.T) {
 			DecisionBy:   "User123",
 		}
 
-		var (
-			decision        string
-			decision_detail string
-		)
-		switch req.Decision {
-		case constant.DECISION_REJECT:
-			decision = constant.DB_DECISION_REJECT
-			decision_detail = constant.DB_DECISION_REJECT
-		case constant.DECISION_APPROVE:
-			decision = constant.DB_DECISION_APR
-			decision_detail = constant.DB_DECISION_PASS
-		}
-
 		trxCaDecision = entity.TrxCaDecision{
 			ProspectID:    req.ProspectID,
-			Decision:      decision,
+			Decision:      constant.DB_DECISION_REJECT,
 			SlikResult:    req.SlikResult,
 			Note:          req.Note,
 			CreatedBy:     req.CreatedBy,
@@ -1640,7 +1631,7 @@ func TestSubmitDecision(t *testing.T) {
 			ProspectID:     req.ProspectID,
 			StatusProcess:  constant.STATUS_ONPROCESS,
 			Activity:       constant.ACTIVITY_UNPROCESS,
-			Decision:       decision,
+			Decision:       constant.DB_DECISION_REJECT,
 			RuleCode:       constant.CODE_CBM,
 			SourceDecision: constant.DB_DECISION_BRANCH_MANAGER,
 			Reason:         req.SlikResult,
@@ -1650,12 +1641,25 @@ func TestSubmitDecision(t *testing.T) {
 			ProspectID:     req.ProspectID,
 			StatusProcess:  constant.STATUS_ONPROCESS,
 			Activity:       constant.ACTIVITY_PROCESS,
-			Decision:       decision_detail,
-			RuleCode:       constant.CODE_CBM,
+			Decision:       constant.DB_DECISION_REJECT,
+			RuleCode:       constant.CODE_CREDIT_COMMITTEE,
 			SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
 			NextStep:       constant.DB_DECISION_BRANCH_MANAGER,
 			Info:           req.SlikResult,
 			CreatedBy:      req.CreatedBy,
+		}
+
+		trxHistoryApproval = entity.TrxHistoryApprovalScheme{
+			ProspectID:            trxCaDecision.ProspectID,
+			Decision:              trxCaDecision.Decision,
+			Reason:                trxCaDecision.SlikResult.(string),
+			Note:                  trxCaDecision.Note,
+			CreatedBy:             trxCaDecision.CreatedBy,
+			DecisionBy:            trxCaDecision.DecisionBy,
+			NeedEscalation:        0,
+			NextFinalApprovalFlag: 0,
+			SourceDecision:        trxDetail.SourceDecision,
+			NextStep:              trxDetail.NextStep.(string),
 		}
 
 		status := entity.TrxStatus{
@@ -1665,7 +1669,7 @@ func TestSubmitDecision(t *testing.T) {
 		}
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(status, errSave).Once()
 		mockRepository.On("GetLimitApproval", req.NTFAkumulasi).Return(limit, errSave).Once()
-		mockRepository.On("ProcessTransaction", trxCaDecision, mock.Anything, trxStatus, trxDetail).Return(errSave).Once()
+		mockRepository.On("ProcessTransaction", trxCaDecision, trxHistoryApproval, trxStatus, trxDetail).Return(errSave).Once()
 
 		result, err := usecase.SubmitDecision(context.Background(), req)
 
@@ -2122,6 +2126,7 @@ func TestSubmitApproval(t *testing.T) {
 			Info:           req.Reason,
 			NextStep:       "DRM",
 			CreatedBy:      req.CreatedBy,
+			Reason:         req.Reason,
 		}
 
 		mockRepository.On("SubmitApproval", req, trxStatus, trxDetail, approvalScheme).Return(errSave).Once()
