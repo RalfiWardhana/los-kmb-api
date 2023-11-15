@@ -792,8 +792,8 @@ type TrxDetail struct {
 	SourceDecision string      `gorm:"type:varchar(3);column:source_decision" json:"source"`
 	NextStep       interface{} `gorm:"type:varchar(3);column:next_step" json:"-"`
 	Type           interface{} `gorm:"type:varchar(3);column:type" json:"-"`
-	Info           interface{} `gorm:"type:text;column:info" json:"reason"`
-	Reason         interface{} `gorm:"type:text;column:reason" json:"-"`
+	Info           interface{} `gorm:"type:text;column:info" json:"-"`
+	Reason         interface{} `gorm:"type:text;column:reason" json:"reason"`
 	CreatedBy      string      `gorm:"type:varchar(100);column:created_by" json:"-"`
 	CreatedAt      time.Time   `gorm:"column:created_at" json:"created_at"`
 }
