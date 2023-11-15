@@ -82,7 +82,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
-	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: trxReject.Code, SourceDecision: constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR, Info: trxReject.Reason, NextStep: constant.SOURCE_DECISION_BLACKLIST})
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: trxReject.Code, SourceDecision: constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR, Reason: trxReject.Reason, NextStep: constant.SOURCE_DECISION_BLACKLIST})
 
 	prospectID := req.ProspectID
 	income := req.MonthlyFixedIncome + req.MonthlyVariableIncome + req.SpouseIncome
@@ -121,7 +121,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		}
 	}
 
-	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: blackList.Code, SourceDecision: constant.SOURCE_DECISION_BLACKLIST, Info: blackList.Reason, NextStep: constant.SOURCE_DECISION_PMK})
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: blackList.Code, SourceDecision: constant.SOURCE_DECISION_BLACKLIST, Reason: blackList.Reason, NextStep: constant.SOURCE_DECISION_PMK})
 
 	//Set Data customerType and spouseType -- Blacklist. Warning, Or Clean --
 	mapping.CustomerType = spMap.CustomerType
@@ -140,7 +140,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
-	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: ageVehicle.Code, SourceDecision: constant.SOURCE_DECISION_PMK, Info: ageVehicle.Reason, NextStep: constant.SOURCE_DECISION_NOKANOSIN})
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: ageVehicle.Code, SourceDecision: constant.SOURCE_DECISION_PMK, Reason: ageVehicle.Reason, NextStep: constant.SOURCE_DECISION_NOKANOSIN})
 
 	// Check Chassis Number with Active Aggrement
 	checkChassisNumber, err := u.usecase.CheckAgreementChassisNumber(ctx, req, accessToken)
@@ -154,7 +154,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
-	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: checkChassisNumber.Code, SourceDecision: constant.SOURCE_DECISION_NOKANOSIN, Info: checkChassisNumber.Reason, NextStep: constant.SOURCE_DECISION_PMK})
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: checkChassisNumber.Code, SourceDecision: constant.SOURCE_DECISION_NOKANOSIN, Reason: checkChassisNumber.Reason, NextStep: constant.SOURCE_DECISION_PMK})
 
 	//dataCustomer[0] is result main dupcheck customer
 	mainCustomer := dataCustomer[0]
@@ -210,7 +210,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
-	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: pmk.Code, SourceDecision: constant.SOURCE_DECISION_PMK, Info: pmk.Reason, NextStep: constant.SOURCE_DECISION_DSR})
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: pmk.Code, SourceDecision: constant.SOURCE_DECISION_PMK, Reason: pmk.Reason, NextStep: constant.SOURCE_DECISION_DSR})
 
 	var customerData []request.CustomerData
 	customerData = append(customerData, request.CustomerData{
@@ -256,7 +256,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
-	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: dsr.Code, SourceDecision: dsr.SourceDecision, Info: dsr.Reason, NextStep: constant.SOURCE_DECISION_DUPCHECK})
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: dsr.Code, SourceDecision: dsr.SourceDecision, Reason: dsr.Reason, NextStep: constant.SOURCE_DECISION_DUPCHECK})
 
 	// Check Confins
 	reasonCustomer := customerKMB
@@ -396,7 +396,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 	if data.Result == constant.DECISION_PASS {
 		info, _ := json.Marshal(mapping)
-		trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: data.Code, SourceDecision: data.SourceDecision, Info: string(utils.SafeEncoding(info)), NextStep: constant.SOURCE_DECISION_DUKCAPIL})
+		trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: data.Code, SourceDecision: data.SourceDecision, Reason: data.Reason, Info: string(utils.SafeEncoding(info)), NextStep: constant.SOURCE_DECISION_DUKCAPIL})
 	}
 
 	return

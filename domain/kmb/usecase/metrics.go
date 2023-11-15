@@ -108,7 +108,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 				Activity:       constant.ACTIVITY_PROCESS,
 				Decision:       constant.DB_DECISION_REJECT,
 				RuleCode:       constant.CODE_CMO_NOT_RECOMMEDED,
-				Info:           constant.REASON_CMO_NOT_RECOMMENDED,
+				Reason:         constant.REASON_CMO_NOT_RECOMMENDED,
 				SourceDecision: constant.CMO_AGENT,
 				NextStep:       constant.PRESCREENING,
 			})
@@ -120,7 +120,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 				Decision:       constant.DB_DECISION_REJECT,
 				SourceDecision: constant.PRESCREENING,
 				RuleCode:       constant.CODE_CMO_NOT_RECOMMEDED,
-				Info:           constant.REASON_CMO_NOT_RECOMMENDED,
+				Reason:         constant.REASON_CMO_NOT_RECOMMENDED,
 				CreatedBy:      constant.SYSTEM_CREATED,
 			})
 
@@ -147,7 +147,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			Activity:       constant.ACTIVITY_PROCESS,
 			Decision:       constant.DB_DECISION_PASS,
 			RuleCode:       constant.CODE_CMO_RECOMMENDED,
-			Info:           constant.REASON_CMO_RECOMMENDED,
+			Reason:         constant.REASON_CMO_RECOMMENDED,
 			SourceDecision: constant.CMO_AGENT,
 			NextStep:       constant.PRESCREENING,
 		})
@@ -189,7 +189,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 				RuleCode:       trxTenor.Code,
 				SourceDecision: constant.SOURCE_DECISION_TENOR,
 				CreatedBy:      constant.SYSTEM_CREATED,
-				Info:           trxTenor.Reason,
+				Reason:         trxTenor.Reason,
 			})
 
 			resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, trxTenor.Reason)
@@ -207,6 +207,8 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			RuleCode:       trxTenor.Code,
 			SourceDecision: constant.SOURCE_DECISION_TENOR,
 			NextStep:       constant.SOURCE_DECISION_DUPCHECK,
+			CreatedBy:      constant.SYSTEM_CREATED,
+			Reason:         trxTenor.Reason,
 		})
 	}
 
@@ -340,15 +342,35 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			Decision:       constant.DB_DECISION_REJECT,
 			RuleCode:       metricsDupcheck.Code,
 			SourceDecision: metricsDupcheck.SourceDecision,
-			Info:           metricsDupcheck.Reason,
+			Reason:         metricsDupcheck.Reason,
 		}
 
-		if metricsDupcheck.SourceDecision == constant.SOURCE_DECISION_DSR || metricsDupcheck.SourceDecision == constant.SOURCE_DECISION_DUPCHECK {
+		if metricsDupcheck.SourceDecision == constant.SOURCE_DECISION_DUPCHECK {
 			info, _ := json.Marshal(dupcheckData)
 			addDetail.Info = string(utils.SafeEncoding(info))
-		}
 
-		details = append(details, addDetail)
+			details = append(details, addDetail)
+		} else {
+
+			details = append(details, addDetail)
+
+			addDetail2 := entity.TrxDetail{
+				ProspectID:     reqMetrics.Transaction.ProspectID,
+				StatusProcess:  constant.STATUS_FINAL,
+				Activity:       constant.ACTIVITY_STOP,
+				Decision:       constant.DB_DECISION_REJECT,
+				RuleCode:       metricsDupcheck.Code,
+				SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+				Reason:         metricsDupcheck.Reason,
+			}
+
+			if metricsDupcheck.SourceDecision == constant.SOURCE_DECISION_DSR {
+				info, _ := json.Marshal(dupcheckData)
+				addDetail2.Info = string(utils.SafeEncoding(info))
+			}
+
+			details = append(details, addDetail2)
+		}
 
 		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, metricsDupcheck.Reason)
 		if err != nil {
@@ -382,7 +404,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			Decision:       constant.DB_DECISION_REJECT,
 			RuleCode:       decisionEkyc.Code,
 			SourceDecision: decisionEkyc.Source,
-			Info:           decisionEkyc.Info,
+			Reason:         decisionEkyc.Reason,
 		}
 
 		details = append(details, addDetail)
@@ -403,6 +425,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		RuleCode:       decisionEkyc.Code,
 		SourceDecision: decisionEkyc.Source,
 		Info:           decisionEkyc.Info,
+		Reason:         decisionEkyc.Reason,
 		NextStep:       constant.SOURCE_DECISION_BIRO,
 	})
 
@@ -420,7 +443,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			Decision:       constant.DB_DECISION_REJECT,
 			RuleCode:       metricsPefindo.Code,
 			SourceDecision: metricsPefindo.SourceDecision,
-			Info:           metricsPefindo.Reason,
+			Reason:         metricsPefindo.Reason,
 		}
 
 		details = append(details, addDetail)
@@ -440,7 +463,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		Decision:       constant.DB_DECISION_PASS,
 		RuleCode:       metricsPefindo.Code,
 		SourceDecision: metricsPefindo.SourceDecision,
-		Info:           metricsPefindo.Reason,
+		Reason:         metricsPefindo.Reason,
 		NextStep:       constant.SOURCE_DECISION_SCOREPRO,
 	})
 
@@ -470,6 +493,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			RuleCode:       metricsScs.Code,
 			SourceDecision: metricsScs.Source,
 			Info:           metricsScs.Info,
+			Reason:         responseScs.ScoreResult,
 		}
 
 		details = append(details, addDetail)
@@ -490,6 +514,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		RuleCode:       metricsScs.Code,
 		SourceDecision: metricsScs.Source,
 		Info:           metricsScs.Info,
+		Reason:         responseScs.ScoreResult,
 		NextStep:       constant.SOURCE_DECISION_DSR,
 	})
 
@@ -533,6 +558,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			RuleCode:       metricsTotalDsrFmfPbk.Code,
 			SourceDecision: metricsTotalDsrFmfPbk.SourceDecision,
 			Info:           string(utils.SafeEncoding(infoTotalDSR)),
+			Reason:         metricsTotalDsrFmfPbk.Reason,
 		}
 
 		details = append(details, addDetail)
@@ -553,6 +579,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		RuleCode:       metricsTotalDsrFmfPbk.Code,
 		SourceDecision: metricsTotalDsrFmfPbk.SourceDecision,
 		Info:           string(utils.SafeEncoding(infoTotalDSR)),
+		Reason:         metricsTotalDsrFmfPbk.Reason,
 		NextStep:       constant.SOURCE_DECISION_ELABORATE_LTV,
 	})
 
@@ -570,7 +597,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			Decision:       constant.DB_DECISION_REJECT,
 			RuleCode:       metricsElaborateScheme.Code,
 			SourceDecision: metricsElaborateScheme.SourceDecision,
-			Info:           metricsElaborateScheme.Reason,
+			Reason:         metricsElaborateScheme.Reason,
 		}
 
 		details = append(details, addDetail)
@@ -592,7 +619,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			Decision:       constant.DB_DECISION_PASS,
 			RuleCode:       metricsElaborateScheme.Code,
 			SourceDecision: metricsElaborateScheme.SourceDecision,
-			Info:           metricsElaborateScheme.Info,
+			Reason:         metricsElaborateScheme.Reason,
 			NextStep:       constant.SOURCE_DECISION_ELABORATE_INCOME,
 		})
 
@@ -610,7 +637,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 				Decision:       constant.DB_DECISION_REJECT,
 				RuleCode:       metricsElaborateIncome.Code,
 				SourceDecision: metricsElaborateIncome.SourceDecision,
-				Info:           metricsElaborateIncome.Reason,
+				Reason:         metricsElaborateIncome.Reason,
 			}
 
 			details = append(details, addDetail)
@@ -630,7 +657,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			Decision:       constant.DB_DECISION_PASS,
 			RuleCode:       metricsElaborateIncome.Code,
 			SourceDecision: metricsElaborateIncome.SourceDecision,
-			Info:           metricsElaborateIncome.Reason,
+			Reason:         metricsElaborateIncome.Reason,
 			NextStep:       constant.SOURCE_DECISION_CA,
 		})
 	} else {
@@ -641,7 +668,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			Decision:       constant.DB_DECISION_PASS,
 			RuleCode:       metricsElaborateScheme.Code,
 			SourceDecision: metricsElaborateScheme.SourceDecision,
-			Info:           metricsElaborateScheme.Reason,
+			Reason:         metricsElaborateScheme.Reason,
 			NextStep:       constant.SOURCE_DECISION_CA,
 		})
 	}
