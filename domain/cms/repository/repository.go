@@ -1724,7 +1724,10 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.TrxDe
 			 WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS'
 			 ELSE '-'
 			END AS decision,
-			ap.reason AS info,
+			CASE
+			 WHEN ap.reason IS NULL THEN td.reason 
+			 ELSE ap.reason 
+			END AS reason,
 			td.created_at,
 			td.next_step
 		FROM
@@ -1862,9 +1865,9 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		tst.source_decision,
 		tst.decision,
 		CASE
-		  WHEN tst.decision='APR' THEN 'Approve'
-		  WHEN tst.decision='REJ' THEN 'Reject'
-		  WHEN tst.decision='CAN' THEN 'Cancel'
+		  WHEN tst.status_process='FIN' AND tst.decision='APR' THEN 'Approve'
+		  WHEN tst.status_process='FIN' AND tst.decision='REJ' THEN 'Reject'
+		  WHEN tst.status_process='FIN' AND tst.decision='CAN' THEN 'Cancel'
 		  ELSE '-'
 		END AS FinalStatus,
 		CASE
@@ -2171,6 +2174,8 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 	trxCaDecision.CreatedAt = time.Now()
 	trxStatus.CreatedAt = time.Now()
 	trxDetail.CreatedAt = time.Now()
+	trxHistoryApproval.ID = uuid.New().String()
+	trxHistoryApproval.CreatedAt = time.Now()
 
 	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 

@@ -2489,39 +2489,7 @@ func TestGetHistoryProcess(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 
 		// Mock SQL query and result
-		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
-		CASE
-		 WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING'
-		 WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING'
-		 WHEN td.source_decision = 'DCP'
-		 OR td.source_decision = 'ARI'
-		 OR td.source_decision = 'KTP' THEN 'EKYC'
-		 WHEN td.source_decision = 'PBK' THEN 'PEFINDO'
-		 WHEN td.source_decision = 'SCS' THEN 'SCOREPRO'
-		 WHEN td.source_decision = 'DSR' THEN 'DSR'
-		 WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
-		 WHEN td.source_decision = 'CBM'
-		  OR td.source_decision = 'DRM'
-		  OR td.source_decision = 'GMO'
-		  OR td.source_decision = 'COM'
-		  OR td.source_decision = 'GMC'
-		  OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE'
-		 ELSE '-'
-		END AS source_decision,
-		CASE
-		 WHEN td.decision = 'PAS' THEN 'PASS'
-		 WHEN td.decision = 'REJ' THEN 'REJECT'
-		 WHEN td.decision = 'CAN' THEN 'CANCEL'
-		 WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS'
-		 ELSE '-'
-		END AS decision,
-		ap.reason AS info,
-		td.created_at
-	FROM
-		trx_details td WITH (nolock)
-		LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
-	WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCS','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC')
-	AND td.decision <> 'CTG' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT CASE WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING' WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING' WHEN td.source_decision = 'DCP' OR td.source_decision = 'ARI' OR td.source_decision = 'KTP' THEN 'EKYC' WHEN td.source_decision = 'PBK' THEN 'PEFINDO' WHEN td.source_decision = 'SCP' THEN 'SCOREPRO' WHEN td.source_decision = 'DSR' THEN 'DSR' WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS' WHEN td.source_decision = 'CBM' OR td.source_decision = 'DRM' OR td.source_decision = 'GMO' OR td.source_decision = 'COM' OR td.source_decision = 'GMC' OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE' ELSE '-' END AS source_decision, CASE WHEN td.decision = 'PAS' THEN 'PASS' WHEN td.decision = 'REJ' THEN 'REJECT' WHEN td.decision = 'CAN' THEN 'CANCEL' WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS' ELSE '-' END AS decision, CASE WHEN ap.reason IS NULL THEN td.reason ELSE ap.reason END AS reason, td.created_at, td.next_step FROM trx_details td WITH (nolock) LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC') AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
 			WillReturnRows(sqlmock.NewRows([]string{"source_decision", "decision", "info", "created_at"}).
 				AddRow("PRE SCREENING", "PASS", "Dokumen Sesuai", time.Time{}))
 
@@ -2543,39 +2511,8 @@ func TestGetHistoryProcess(t *testing.T) {
 	t.Run("record not found", func(t *testing.T) {
 
 		// Mock SQL query to simulate record not found
-		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
-		CASE
-		 WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING'
-		 WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING'
-		 WHEN td.source_decision = 'DCP'
-		 OR td.source_decision = 'ARI'
-		 OR td.source_decision = 'KTP' THEN 'EKYC'
-		 WHEN td.source_decision = 'PBK' THEN 'PEFINDO'
-		 WHEN td.source_decision = 'SCS' THEN 'SCOREPRO'
-		 WHEN td.source_decision = 'DSR' THEN 'DSR'
-		 WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
-		 WHEN td.source_decision = 'CBM'
-		  OR td.source_decision = 'DRM'
-		  OR td.source_decision = 'GMO'
-		  OR td.source_decision = 'COM'
-		  OR td.source_decision = 'GMC'
-		  OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE'
-		 ELSE '-'
-		END AS source_decision,
-		CASE
-		 WHEN td.decision = 'PAS' THEN 'PASS'
-		 WHEN td.decision = 'REJ' THEN 'REJECT'
-		 WHEN td.decision = 'CAN' THEN 'CANCEL'
-		 WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS'
-		 ELSE '-'
-		END AS decision,
-		ap.reason AS info,
-		td.created_at
-	FROM
-		trx_details td WITH (nolock)
-		LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
-	WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCS','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC')
-	AND td.decision <> 'CTG' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT CASE WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING' WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING' WHEN td.source_decision = 'DCP' OR td.source_decision = 'ARI' OR td.source_decision = 'KTP' THEN 'EKYC' WHEN td.source_decision = 'PBK' THEN 'PEFINDO' WHEN td.source_decision = 'SCP' THEN 'SCOREPRO' WHEN td.source_decision = 'DSR' THEN 'DSR' WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS' WHEN td.source_decision = 'CBM' OR td.source_decision = 'DRM' OR td.source_decision = 'GMO' OR td.source_decision = 'COM' OR td.source_decision = 'GMC' OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE' ELSE '-' END AS source_decision, CASE WHEN td.decision = 'PAS' THEN 'PASS' WHEN td.decision = 'REJ' THEN 'REJECT' WHEN td.decision = 'CAN' THEN 'CANCEL' WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS' ELSE '-' END AS decision, CASE WHEN ap.reason IS NULL THEN td.reason ELSE ap.reason END AS reason, td.created_at, td.next_step
+		FROM trx_details td WITH (nolock) LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC') AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
 			WillReturnError(gorm.ErrRecordNotFound)
 
 		// Call the function
@@ -3215,10 +3152,10 @@ func TestProcessTransaction(t *testing.T) {
 		NextStep:       constant.DB_DECISION_BRANCH_MANAGER,
 		Info:           trxCaDecision.SlikResult,
 		CreatedBy:      trxCaDecision.CreatedBy,
+		Reason:         trxCaDecision.SlikResult,
 	}
 
 	trxHistoryApproval := entity.TrxHistoryApprovalScheme{
-		ID:                    "xxxxx",
 		ProspectID:            trxCaDecision.ProspectID,
 		Decision:              trxCaDecision.Decision,
 		Reason:                "lancar",
@@ -3240,8 +3177,8 @@ func TestProcessTransaction(t *testing.T) {
 			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?)`)).
-			WithArgs(trxDetail.ProspectID, trxDetail.StatusProcess, trxDetail.Activity, trxDetail.Decision, trxDetail.RuleCode, trxDetail.SourceDecision, trxDetail.NextStep, sqlmock.AnyArg(), trxDetail.Info, trxDetail.CreatedBy, sqlmock.AnyArg()).
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","reason","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxDetail.ProspectID, trxDetail.StatusProcess, trxDetail.Activity, trxDetail.Decision, trxDetail.RuleCode, trxDetail.SourceDecision, trxDetail.NextStep, sqlmock.AnyArg(), trxDetail.Info, trxDetail.Reason, sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_history_approval_scheme" ("id","ProspectID","decision","reason","note","created_at","created_by","decision_by","need_escalation","next_final_approval_flag","source_decision","next_step") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
@@ -3292,6 +3229,7 @@ func TestProcessReturnOrder(t *testing.T) {
 		RuleCode:       constant.CODE_CREDIT_COMMITTEE,
 		SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
 		NextStep:       constant.DB_DECISION_BRANCH_MANAGER,
+		Reason:         constant.REASON_RETURN_ORDER,
 	}
 
 	t.Run("success update", func(t *testing.T) {
@@ -3305,8 +3243,8 @@ func TestProcessReturnOrder(t *testing.T) {
 			WithArgs(ppid, ppid).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?)`)).
-			WithArgs(trxDetail.ProspectID, trxDetail.StatusProcess, trxDetail.Activity, trxDetail.Decision, trxDetail.RuleCode, trxDetail.SourceDecision, trxDetail.NextStep, sqlmock.AnyArg(), trxDetail.Info, trxDetail.CreatedBy, sqlmock.AnyArg()).
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","reason","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxDetail.ProspectID, trxDetail.StatusProcess, trxDetail.Activity, trxDetail.Decision, trxDetail.RuleCode, trxDetail.SourceDecision, trxDetail.NextStep, sqlmock.AnyArg(), trxDetail.Info, trxDetail.Reason, trxDetail.CreatedBy, sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "trx_prescreening" WHERE (ProspectID = ?)`)).
@@ -3399,9 +3337,9 @@ func TestGetInquirySearch(t *testing.T) {
 	tst.source_decision,
 	tst.decision,
 	CASE
-	  WHEN tst.decision='APR' THEN 'Approve'
-	  WHEN tst.decision='REJ' THEN 'Reject'
-	  WHEN tst.decision='CAN' THEN 'Cancel'
+	WHEN tst.status_process='FIN' AND tst.decision='APR' THEN 'Approve'
+	WHEN tst.status_process='FIN' AND tst.decision='REJ' THEN 'Reject'
+	WHEN tst.status_process='FIN' AND tst.decision='CAN' THEN 'Cancel'
 	  ELSE '-'
 	END AS FinalStatus,
 	CASE

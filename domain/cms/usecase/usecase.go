@@ -490,6 +490,7 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 			NextStep:       decisionInfo.NextStep,
 			Info:           string(info),
 			CreatedBy:      req.DecisionBy,
+			Reason:         string(info),
 		}
 
 		if req.Decision == constant.DECISION_REJECT {
@@ -942,12 +943,10 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 		}
 
 		trxHistoryApproval = entity.TrxHistoryApprovalScheme{
-			ID:                    uuid.New().String(),
 			ProspectID:            trxCaDecision.ProspectID,
 			Decision:              trxCaDecision.Decision,
 			Reason:                trxCaDecision.SlikResult.(string),
 			Note:                  trxCaDecision.Note,
-			CreatedAt:             time.Now(),
 			CreatedBy:             trxCaDecision.CreatedBy,
 			DecisionBy:            trxCaDecision.DecisionBy,
 			NeedEscalation:        0,
@@ -1077,7 +1076,7 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 					detailEntry := entity.TrxDetail{
 						SourceDecision: detail.SourceDecision,
 						Decision:       detail.Decision,
-						Info:           detail.Info,
+						Reason:         detail.Reason,
 						CreatedAt:      detail.CreatedAt,
 					}
 					historyData = append(historyData, detailEntry)
@@ -1263,6 +1262,7 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 			SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
 			Info:           req.CancelReason,
 			CreatedBy:      req.CreatedBy,
+			Reason:         req.CancelReason,
 		}
 
 		trxHistoryApproval = entity.TrxHistoryApprovalScheme{
@@ -1323,6 +1323,7 @@ func (u usecase) ReturnOrder(ctx context.Context, req request.ReqReturnOrder) (d
 		NextStep:       constant.PRESCREENING,
 		Info:           constant.REASON_RETURN_ORDER,
 		CreatedBy:      constant.SYSTEM_CREATED,
+		Reason:         constant.REASON_RETURN_ORDER,
 	}
 
 	err = u.repository.ProcessReturnOrder(req.ProspectID, trxStatus, trxDetail)
@@ -1682,6 +1683,33 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 		SourceDecision: req.Alias,
 		Info:           req.Reason,
 		CreatedBy:      req.CreatedBy,
+		Reason:         req.Reason,
+	}
+
+	if approvalScheme.NextStep != "" {
+		trxDetail.NextStep = approvalScheme.NextStep
+	}
+
+	if approvalScheme.IsFinal && !req.NeedEscalation {
+		trxStatus.Decision = decision
+		trxStatus.StatusProcess = constant.STATUS_FINAL
+		trxStatus.Activity = constant.ACTIVITY_STOP
+
+		trxDetail.StatusProcess = constant.STATUS_FINAL
+		trxDetail.Activity = constant.ACTIVITY_STOP
+	}
+
+	if approvalScheme.NextStep != "" {
+		trxDetail.NextStep = approvalScheme.NextStep
+	}
+
+	if approvalScheme.IsFinal && !req.NeedEscalation {
+		trxStatus.Decision = decision
+		trxStatus.StatusProcess = constant.STATUS_FINAL
+		trxStatus.Activity = constant.ACTIVITY_STOP
+
+		trxDetail.StatusProcess = constant.STATUS_FINAL
+		trxDetail.Activity = constant.ACTIVITY_STOP
 	}
 
 	if approvalScheme.NextStep != "" {

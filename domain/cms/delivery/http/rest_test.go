@@ -202,20 +202,14 @@ func TestPrescreeningInquiry(t *testing.T) {
 		e.Validator = common.NewValidator()
 
 		// Create a request and recorder for testing
-		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/prescreening/inquiry?search=aa&page=1", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/prescreening/inquiry?search=aa&user_id=abc&branch_id=426&multi_branch=0&page=1", nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
-		mockUsecase.On("GetInquiryPrescreening", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryData{}, 0, nil).Once()
+		mockUsecase.On("GetInquiryPrescreening", mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryData{}, 0, nil).Once()
 
-		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		// Call the handler
 		err := handler.PrescreeningInquiry(c)
@@ -224,18 +218,41 @@ func TestPrescreeningInquiry(t *testing.T) {
 		}
 	})
 
-	// Create an
-	t.Run("error not found", func(t *testing.T) {
+	t.Run("record not found", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/prescreening/inquiry?search=aa&user_id=abc&branch_id=426&multi_branch=0&page=1", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockResponse := []entity.InquiryData{}
+		statusCode := http.StatusOK
+
+		mockUsecase.On("GetInquiryPrescreening", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
+
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.PrescreeningInquiry(c)
+		assert.Nil(t, err)
+	})
+
+	t.Run("internal server", func(t *testing.T) {
 		e := echo.New()
 
-		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/prescreening/inquiry", strings.NewReader("error"))
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/prescreening/inquiry?search=aa&user_id=abc&branch_id=426&page=1", strings.NewReader("error"))
 		rec := httptest.NewRecorder()
 
 		ctx := e.NewContext(req, rec)
 
 		mockResponse := []entity.InquiryData{}
 		statusCode := http.StatusOK
-		mockUsecase.On("GetInquiryPrescreening", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
+
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		mockUsecase.On("GetInquiryPrescreening", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
 
 		err := handler.PrescreeningInquiry(ctx)
 		assert.Nil(t, err)
@@ -251,6 +268,9 @@ func TestPrescreeningInquiry(t *testing.T) {
 
 		mockResponse := []entity.InquiryData{}
 		statusCode := http.StatusBadRequest
+
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
 		mockUsecase.On("GetInquiryPrescreening", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
 
 		err := handler.PrescreeningInquiry(ctx)
