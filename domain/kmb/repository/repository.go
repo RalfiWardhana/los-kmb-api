@@ -906,6 +906,7 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 					SourceDecision: details[i].SourceDecision,
 					NextStep:       details[i].NextStep,
 					Info:           details[i].Info,
+					Reason:         details[i].Reason,
 					CreatedBy:      constant.SYSTEM_CREATED,
 				}
 

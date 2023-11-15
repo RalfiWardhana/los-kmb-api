@@ -793,6 +793,7 @@ type TrxDetail struct {
 	NextStep       interface{} `gorm:"type:varchar(3);column:next_step" json:"-"`
 	Type           interface{} `gorm:"type:varchar(3);column:type" json:"-"`
 	Info           interface{} `gorm:"type:text;column:info" json:"reason"`
+	Reason         interface{} `gorm:"type:text;column:reason" json:"-"`
 	CreatedBy      string      `gorm:"type:varchar(100);column:created_by" json:"-"`
 	CreatedAt      time.Time   `gorm:"column:created_at" json:"created_at"`
 }
