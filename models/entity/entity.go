@@ -1755,3 +1755,8 @@ type RegionBranch struct {
 	RegionName   string `gorm:"column:region_name"`
 	BranchMember string `gorm:"column:branch_member"`
 }
+
+type AFMobilePhone struct {
+	AFValue     float64 `gorm:"column:AF"`
+	MobilePhone string  `gorm:"column:MobilePhone"`
+}

@@ -40,6 +40,15 @@ func NewRepository(core, confins, NewKmb, kpLos, KpLosLogs *gorm.DB) interfaces.
 	}
 }
 
+func (r repoHandler) GetAFMobilePhone(prospectID string) (data entity.AFMobilePhone, err error) {
+
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT AF, SCP.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone FROM trx_apk apk WITH (nolock) INNER JOIN trx_customer_personal tcp WITH (nolock) ON apk.ProspectID = tcp.ProspectID WHERE apk.ProspectID = '%s'`, prospectID)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) GetRegionBranch(userId string) (data []entity.RegionBranch, err error) {
 
 	if err = r.losDB.Raw(fmt.Sprintf(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
@@ -2820,7 +2829,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			return err
 		}
 
-		if approval.IsFinal {
+		if approval.IsFinal && !approval.IsEscalation {
 			trxFinalApproval := entity.TrxFinalApproval{
 				ProspectID: req.ProspectID,
 				Decision:   decision,
@@ -2833,6 +2842,22 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 
 			// trx_final_approval
 			if err := tx.Create(&trxFinalApproval).Error; err != nil {
+				return err
+			}
+
+			// will insert trx_agreement
+			getAFPhone, _ := r.GetAFMobilePhone(req.ProspectID)
+
+			trxAgreement := entity.TrxAgreement{
+				ProspectID:         req.ProspectID,
+				CheckingStatus:     constant.ACTIVITY_UNPROCESS,
+				ContractStatus:     "0",
+				AF:                 getAFPhone.AFValue,
+				MobilePhone:        getAFPhone.MobilePhone,
+				CustomerIDKreditmu: constant.LOB_NEW_KMB,
+			}
+
+			if err := tx.Create(&trxAgreement).Error; err != nil {
 				return err
 			}
 		}
