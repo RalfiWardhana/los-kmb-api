@@ -819,6 +819,10 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 			}
 
 			var roaoAkkk response.RoaoAkkk
+			roaoAkkk.InstallmentAmountOther = trxFMF.DupcheckData.InstallmentAmountOther
+			roaoAkkk.InstallmentAmountOtherSpouse = trxFMF.DupcheckData.InstallmentAmountOtherSpouse
+			roaoAkkk.InstallmentAmountSpouseFMF = trxFMF.DupcheckData.InstallmentAmountSpouseFMF
+
 			if trxFMF.DupcheckData.StatusKonsumen != constant.STATUS_KONSUMEN_NEW {
 				roaoAkkk = response.RoaoAkkk{
 					MaxOverdueDaysROAO:               trxFMF.DupcheckData.MaxOverdueDaysROAO,
@@ -828,9 +832,6 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 					NumberOfPaidInstallment:          trxFMF.DupcheckData.NumberOfPaidInstallment,
 					OSInstallmentDue:                 trxFMF.DupcheckData.OSInstallmentDue,
 					InstallmentAmountFMF:             trxFMF.DupcheckData.InstallmentAmountFMF,
-					InstallmentAmountSpouseFMF:       trxFMF.DupcheckData.InstallmentAmountSpouseFMF,
-					InstallmentAmountOther:           trxFMF.DupcheckData.InstallmentAmountOther,
-					InstallmentAmountOtherSpouse:     trxFMF.DupcheckData.InstallmentAmountOtherSpouse,
 					InstallmentTopup:                 trxFMF.DupcheckData.InstallmentTopup,
 				}
 			}
