@@ -53,6 +53,7 @@ const (
 	DB_DECISION_PASS                 = "PAS"
 	DB_DECISION_APR                  = "APR"
 	DB_DECISION_RTN                  = "RTN"
+	DB_DECISION_SDP                  = "SDP" //Submit Data Pembiayaan
 	DB_DECISION_REJECT               = "REJ"
 	DB_DECISION_CANCEL               = "CAN"
 	DB_DECISION_CREDIT_PROCESS       = "CPR"
@@ -579,15 +580,18 @@ const (
 	REASON_SCOREPRO_GTEMIN_THRESHOLD = "Score Sesuai Ketentuan"
 
 	// CREDIT ANALYST
-	BRANCHID_HO            = "999"
-	SOURCE_DECISION_CA     = "CRA"
-	CODE_CREDIT_COMMITTEE  = "2743"
-	NEED_DECISION          = "NEED_DECISION"
-	SAVED_AS_DRAFT         = "SAVED_AS_DRAFT"
-	CANCEL_STATUS_SUCCESS  = "Cancel Success"
-	RETURN_STATUS_SUCCESS  = "Return Success"
-	REASON_RETURN_ORDER    = "Return Order"
-	REASON_RETURN_APPROVAL = "Final Approval Return"
+	BRANCHID_HO                = "999"
+	SOURCE_DECISION_CA         = "CRA"
+	CODE_CREDIT_COMMITTEE      = "2743"
+	NEED_DECISION              = "NEED_DECISION"
+	NEED_RECALCULATE           = "NRC"
+	SAVED_AS_DRAFT             = "SAVED_AS_DRAFT"
+	CANCEL_STATUS_SUCCESS      = "Cancel Success"
+	RETURN_STATUS_SUCCESS      = "Return Success"
+	RECALCULATE_STATUS_SUCCESS = "Recalculate Success"
+	REASON_RETURN_ORDER        = "Return Order"
+	REASON_RETURN_APPROVAL     = "Final Approval Return"
+	REASON_NEED_RECALCULATE    = "Submit Need Recalculation"
 	// PRE SCREENING
 	CODE_PASS_PRESCREENING   = 9701
 	CODE_REJECT_PRESCREENING = 9702

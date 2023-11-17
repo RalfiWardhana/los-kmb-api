@@ -808,6 +808,12 @@ type ReturnResponse struct {
 	Status     string `json:"status"`
 }
 
+type RecalculateResponse struct {
+	ProspectID string  `json:"prospect_id"`
+	DPAmount   float64 `json:"dp_amount"`
+	Status     string  `json:"status"`
+}
+
 type ApprovalResponse struct {
 	ProspectID string `json:"prospect_id"`
 	Decision   string `json:"decision"`

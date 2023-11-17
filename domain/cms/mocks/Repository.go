@@ -17,6 +17,27 @@ type Repository struct {
 	mock.Mock
 }
 
+// GetAFMobilePhone provides a mock function with given fields: prospectID
+func (_m *Repository) GetAFMobilePhone(prospectID string) (entity.AFMobilePhone, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 entity.AFMobilePhone
+	if rf, ok := ret.Get(0).(func(string) entity.AFMobilePhone); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.AFMobilePhone)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetAkkk provides a mock function with given fields: prospectID
 func (_m *Repository) GetAkkk(prospectID string) (entity.Akkk, error) {
 	ret := _m.Called(prospectID)
@@ -361,6 +382,29 @@ func (_m *Repository) GetReasonPrescreening(req request.ReqReasonPrescreening, p
 	return r0, r1, r2
 }
 
+// GetRegionBranch provides a mock function with given fields: userId
+func (_m *Repository) GetRegionBranch(userId string) ([]entity.RegionBranch, error) {
+	ret := _m.Called(userId)
+
+	var r0 []entity.RegionBranch
+	if rf, ok := ret.Get(0).(func(string) []entity.RegionBranch); ok {
+		r0 = rf(userId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.RegionBranch)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(userId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetSpIndustryTypeMaster provides a mock function with given fields:
 func (_m *Repository) GetSpIndustryTypeMaster() ([]entity.SpIndustryTypeMaster, error) {
 	ret := _m.Called()
@@ -426,6 +470,20 @@ func (_m *Repository) GetTrxStatus(prospectID string) (entity.TrxStatus, error) 
 	}
 
 	return r0, r1
+}
+
+// ProcessRecalculateOrder provides a mock function with given fields: prospectID, trxStatus, trxDetail, trxHistoryApproval
+func (_m *Repository) ProcessRecalculateOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, trxHistoryApproval entity.TrxHistoryApprovalScheme) error {
+	ret := _m.Called(prospectID, trxStatus, trxDetail, trxHistoryApproval)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, entity.TrxStatus, entity.TrxDetail, entity.TrxHistoryApprovalScheme) error); ok {
+		r0 = rf(prospectID, trxStatus, trxDetail, trxHistoryApproval)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // ProcessReturnOrder provides a mock function with given fields: prospectID, trxStatus, trxDetail

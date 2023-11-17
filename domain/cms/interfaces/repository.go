@@ -27,6 +27,7 @@ type Repository interface {
 	GetHistoryProcess(prospectID string) (detail []entity.TrxDetail, err error)
 	ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxHistoryApproval entity.TrxHistoryApprovalScheme, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error)
 	ProcessReturnOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error)
+	ProcessRecalculateOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, trxHistoryApproval entity.TrxHistoryApprovalScheme) (err error)
 	GetInquiryApproval(req request.ReqInquiryApproval, pagination interface{}) (data []entity.InquiryCa, rowTotal int, err error)
 	SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, approval response.RespApprovalScheme) (err error)
 	GetAFMobilePhone(prospectID string) (data entity.AFMobilePhone, err error)

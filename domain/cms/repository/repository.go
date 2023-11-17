@@ -908,6 +908,7 @@ func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.His
 					WHEN thas.decision = 'REJ' THEN 'Reject'
 					WHEN thas.decision = 'CAN' THEN 'Cancel'
 					WHEN thas.decision = 'RTN' THEN 'Return'
+					WHEN thas.decision = 'SDP' THEN 'Submit Perubahan Data Pembiayaan'
 					ELSE '-'
 				END AS decision,
 				CASE
@@ -925,7 +926,7 @@ func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.His
 				END AS note,
 				thas.created_at,
 				CASE
-				  WHEN thas.source_decision = 'CRA' AND tcd.slik_result<>'' THEN tcd.slik_result
+				  WHEN thas.source_decision = 'CRA' AND tcd.slik_result<>'' AND thas.decision<>'SDP' THEN tcd.slik_result
 				  ELSE
 				  '-'
 				END AS slik_result
@@ -1199,7 +1200,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		case constant.NEED_DECISION:
 			activity = constant.ACTIVITY_UNPROCESS
 			source := constant.DB_DECISION_CREDIT_ANALYST
-			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s' AND tt.decision_ca IS NULL", activity, constant.DB_DECISION_CREDIT_PROCESS, source)
+			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s' AND (tt.decision_ca IS NULL OR tt.ActionEditData=1)", activity, constant.DB_DECISION_CREDIT_PROCESS, source)
 
 		case constant.SAVED_AS_DRAFT:
 			if req.UserID != "" {
@@ -1240,7 +1241,11 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 			tcd.created_by as decision_by_ca,
 			tdd.created_by AS draft_created_by,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+			CASE
+			 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+			 ELSE 0
+			END AS ActionEditData
 		FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -1254,6 +1259,8 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -1442,7 +1449,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tdb.BiroCustomerResult,
 		tdb.BiroSpouseResult,
 		CASE
-		 WHEN rtn.decision IS NOT NULL THEN 1
+		 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
 		 ELSE 0
 		END AS ActionEditData
 
@@ -1458,8 +1465,8 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
-		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn
-		ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -2273,6 +2280,34 @@ func (r repoHandler) ProcessReturnOrder(prospectID string, trxStatus entity.TrxS
 		// delete trx_history_approval_scheme
 		var history entity.TrxHistoryApprovalScheme
 		if err := tx.Where("ProspectID = ?", prospectID).Delete(&history).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (r repoHandler) ProcessRecalculateOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, trxHistoryApproval entity.TrxHistoryApprovalScheme) (err error) {
+
+	trxStatus.CreatedAt = time.Now()
+	trxDetail.CreatedAt = time.Now()
+	trxHistoryApproval.ID = uuid.New().String()
+	trxHistoryApproval.CreatedAt = time.Now()
+
+	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
+
+		// update trx_status
+		if err := tx.Model(&trxStatus).Where("ProspectID = ?", prospectID).Updates(trxStatus).Error; err != nil {
+			return err
+		}
+
+		// insert trx_details
+		if err := tx.Create(&trxDetail).Error; err != nil {
+			return err
+		}
+
+		// trx_history_approval_scheme
+		if err := tx.Create(&trxHistoryApproval).Error; err != nil {
 			return err
 		}
 

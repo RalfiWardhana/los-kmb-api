@@ -40,6 +40,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.POST("/cms/ca/cancel", handler.CancelOrder, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/ca/cancel-reason", handler.CancelReason, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/return", handler.ReturnOrder, middlewares.AccessMiddleware())
+	cmsroute.POST("/cms/ca/recalculate", handler.RecalculateOrder, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/search", handler.SearchInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/approval/inquiry", handler.ApprovalInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/approval/reason", handler.ApprovalReason, middlewares.AccessMiddleware())
@@ -540,6 +541,55 @@ func (c *handlerCMS) ReturnOrder(ctx echo.Context) (err error) {
 	}
 
 	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Return Order", req, data)
+	return ctxJson
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api CA
+// @Tags CA
+// @Produce json
+// @Param body body request.ReqRecalculateOrder true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.ApiResponse}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/ca/recalculate [post]
+func (c *handlerCMS) RecalculateOrder(ctx echo.Context) (err error) {
+
+	var (
+		resp        interface{}
+		accessToken = middlewares.UserInfoData.AccessToken
+		req         request.ReqRecalculateOrder
+		ctxJson     error
+	)
+
+	// Save Log Orchestrator
+	defer func() {
+		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
+		go c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/ca/recalculate", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
+	}()
+
+	if err := ctx.Bind(&req); err != nil {
+		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Recalculate Order", err)
+		return ctxJson
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Recalculate Order", req, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.RecalculateOrder(ctx.Request().Context(), req)
+
+	if err != nil {
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Recalculate Order", req, err)
+		return ctxJson
+	}
+
+	if data.Status == constant.RECALCULATE_STATUS_SUCCESS {
+		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(resp), 0)
+	}
+
+	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Recalculate Order", req, data)
 	return ctxJson
 }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	cache "los-kmb-api/domain/cache/interfaces"
 	"los-kmb-api/domain/cms/interfaces"
 	"los-kmb-api/models/entity"
@@ -1336,6 +1337,71 @@ func (u usecase) ReturnOrder(ctx context.Context, req request.ReqReturnOrder) (d
 	data = response.ReturnResponse{
 		ProspectID: req.ProspectID,
 		Status:     constant.RETURN_STATUS_SUCCESS,
+	}
+
+	return
+}
+
+func (u usecase) RecalculateOrder(ctx context.Context, req request.ReqRecalculateOrder) (data response.RecalculateResponse, err error) {
+
+	var (
+		trxStatus          entity.TrxStatus
+		trxDetail          entity.TrxDetail
+		trxHistoryApproval entity.TrxHistoryApprovalScheme
+	)
+
+	trxStatus = entity.TrxStatus{
+		ProspectID:     req.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_UNPROCESS,
+		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+		SourceDecision: constant.NEED_RECALCULATE,
+		Reason:         constant.REASON_NEED_RECALCULATE,
+	}
+
+	infoMap := map[string]float64{
+		"dp_amount": req.DPAmount,
+	}
+	info, _ := json.Marshal(infoMap)
+
+	trxDetail = entity.TrxDetail{
+		ProspectID:     req.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_UNPROCESS,
+		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+		RuleCode:       constant.CODE_CREDIT_COMMITTEE,
+		SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
+		NextStep:       constant.NEED_RECALCULATE,
+		Info:           string(info),
+		CreatedBy:      req.CreatedBy,
+		Reason:         constant.REASON_NEED_RECALCULATE,
+	}
+
+	trxHistoryApproval = entity.TrxHistoryApprovalScheme{
+		ProspectID:            req.ProspectID,
+		Decision:              constant.DB_DECISION_SDP,
+		Reason:                trxStatus.Reason,
+		Note:                  fmt.Sprintf("Nilai DP: %.0f", req.DPAmount),
+		CreatedBy:             req.CreatedBy,
+		DecisionBy:            req.DecisionBy,
+		NeedEscalation:        0,
+		NextFinalApprovalFlag: 1,
+		SourceDecision:        trxDetail.SourceDecision,
+	}
+
+	// hit sally recalculate
+	// ..
+
+	err = u.repository.ProcessRecalculateOrder(req.ProspectID, trxStatus, trxDetail, trxHistoryApproval)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Process Recalculate Order error")
+		return
+	}
+
+	data = response.RecalculateResponse{
+		ProspectID: req.ProspectID,
+		DPAmount:   req.DPAmount,
+		Status:     constant.RECALCULATE_STATUS_SUCCESS,
 	}
 
 	return

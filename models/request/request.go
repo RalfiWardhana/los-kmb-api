@@ -755,6 +755,14 @@ type ReqReturnOrder struct {
 	DecisionBy string `json:"decision_by_name" validate:"required,max=250"`
 }
 
+type ReqRecalculateOrder struct {
+	ProspectID      string  `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
+	DPAmount        float64 `json:"dp_amount" validate:"required" example:"245000"`
+	NeedRecalculate bool    `json:"need_recalculate" validate:"required"`
+	CreatedBy       string  `json:"decision_by" validate:"required,max=100"`
+	DecisionBy      string  `json:"decision_by_name" validate:"required,max=250"`
+}
+
 type ReqInquiryApproval struct {
 	Search      string `json:"search"`
 	BranchID    string `json:"branch_id" validate:"required,max=3"`
