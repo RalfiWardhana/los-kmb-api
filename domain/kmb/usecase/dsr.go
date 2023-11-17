@@ -307,6 +307,78 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 			}
 
 			trxFMF.TotalDSR = SpDupcheckMap.Dsr
+		} else {
+			totalDSR = SpDupcheckMap.Dsr
+			trxFMF.TotalDSR = SpDupcheckMap.Dsr
+			if totalDSR < configValue.Data.MaxDsr {
+				data = response.UsecaseApi{
+					Result:         constant.DECISION_PASS,
+					Code:           constant.CODE_TOTAL_DSRLTE35,
+					Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_TOTAL_DSRLTE, reasonMaxDsr),
+					SourceDecision: constant.SOURCE_DECISION_DSR,
+				}
+			} else {
+				data = response.UsecaseApi{
+					Result:         constant.DECISION_REJECT,
+					Code:           constant.CODE_TOTAL_DSRGT35,
+					Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_TOTAL_DSRGT, reasonMaxDsr),
+					SourceDecision: constant.SOURCE_DECISION_DSR,
+				}
+			}
+		}
+	} else if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO && customerSegment == constant.RO_AO_PRIORITY {
+		totalDSR = SpDupcheckMap.Dsr
+		trxFMF.TotalDSR = SpDupcheckMap.Dsr
+		if totalDSR < configValue.Data.MaxDsr {
+			data = response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_TOTAL_DSRLTE35,
+				Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_TOTAL_DSRLTE, reasonMaxDsr),
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+			}
+		} else {
+			data = response.UsecaseApi{
+				Result:         constant.DECISION_REJECT,
+				Code:           constant.CODE_TOTAL_DSRGT35,
+				Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_TOTAL_DSRGT, reasonMaxDsr),
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+			}
+		}
+	} else if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO && customerSegment == constant.RO_AO_PRIORITY {
+		if SpDupcheckMap.MaxOverdueDaysforActiveAgreement <= 30 {
+			totalDSR = SpDupcheckMap.Dsr
+			trxFMF.TotalDSR = SpDupcheckMap.Dsr
+			if totalDSR < configValue.Data.MaxDsr {
+				data = response.UsecaseApi{
+					Result:         constant.DECISION_PASS,
+					Code:           constant.CODE_TOTAL_DSRLTE35,
+					Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_TOTAL_DSRLTE, reasonMaxDsr),
+					SourceDecision: constant.SOURCE_DECISION_DSR,
+				}
+			} else {
+				data = response.UsecaseApi{
+					Result:         constant.DECISION_REJECT,
+					Code:           constant.CODE_TOTAL_DSRGT35,
+					Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_TOTAL_DSRGT, reasonMaxDsr),
+					SourceDecision: constant.SOURCE_DECISION_DSR,
+				}
+			}
+		} else {
+			if totalDSR < configValue.Data.MaxDsr {
+				data = response.UsecaseApi{
+					Result:         constant.DECISION_PASS,
+					Code:           constant.CODE_TOTAL_DSRLTE35,
+					Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_TOTAL_DSRLTE, reasonMaxDsr),
+					SourceDecision: constant.SOURCE_DECISION_DSR,
+				}
+			} else {
+				data = response.UsecaseApi{
+					Result:         constant.DECISION_REJECT,
+					Code:           constant.CODE_TOTAL_DSRGT35,
+					Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_TOTAL_DSRGT, reasonMaxDsr),
+					SourceDecision: constant.SOURCE_DECISION_DSR,
+				}
+			}
 		}
 	}
 
