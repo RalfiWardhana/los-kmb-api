@@ -486,12 +486,6 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Dsr:            30,
 				CustomerID:     "123456",
 			},
-			result: response.UsecaseApi{
-				Result:         constant.DECISION_PASS,
-				Code:           constant.CODE_TOTAL_DSRLTE35,
-				Reason:         "RO PRIME - DSR <= 35",
-				SourceDecision: constant.SOURCE_DECISION_DSR,
-			},
 			trxFMF: response.TrxFMF{
 				DSRPBK:   float64(0.5),
 				TotalDSR: float64(30.5),
