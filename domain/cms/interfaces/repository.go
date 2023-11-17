@@ -29,4 +29,6 @@ type Repository interface {
 	ProcessReturnOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error)
 	GetInquiryApproval(req request.ReqInquiryApproval, pagination interface{}) (data []entity.InquiryCa, rowTotal int, err error)
 	SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, approval response.RespApprovalScheme) (err error)
+	GetAFMobilePhone(prospectID string) (data entity.AFMobilePhone, err error)
+	GetRegionBranch(userId string) (data []entity.RegionBranch, err error)
 }

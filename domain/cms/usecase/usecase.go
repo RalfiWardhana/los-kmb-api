@@ -690,6 +690,7 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 		row := entity.InquiryDataCa{
 			CA: entity.DataCa{
 				ShowAction:         action,
+				ActionEditData:     inq.ActionEditData,
 				StatusDecision:     statusDecision,
 				StatusReason:       inq.StatusReason,
 				CaDecision:         inq.CaDecision,
@@ -1642,20 +1643,53 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApproval) (data response.ApprovalResponse, err error) {
 
 	var (
-		trxDetail       entity.TrxDetail
-		trxStatus       entity.TrxStatus
-		approvalScheme  response.RespApprovalScheme
-		decision        string
-		decision_detail string
+		trxDetail                                     entity.TrxDetail
+		trxStatus                                     entity.TrxStatus
+		recentDP                                      entity.AFMobilePhone
+		approvalScheme                                response.RespApprovalScheme
+		decision                                      string
+		decision_detail                               string
+		rej, apr, pas, rtn, cpr, cra, onp, unpr, prcd string
 	)
+
+	rej = constant.DB_DECISION_REJECT
+	apr = constant.DB_DECISION_APR
+	pas = constant.DB_DECISION_PASS
+	rtn = constant.DB_DECISION_RTN
+	cpr = constant.DB_DECISION_CREDIT_PROCESS
+	cra = constant.DB_DECISION_CREDIT_ANALYST
+	onp = constant.STATUS_ONPROCESS
+	unpr = constant.ACTIVITY_UNPROCESS
+	prcd = constant.ACTIVITY_PROCESS
 
 	switch req.Decision {
 	case constant.DECISION_REJECT:
-		decision = constant.DB_DECISION_REJECT
-		decision_detail = constant.DB_DECISION_REJECT
+		decision = rej
+		decision_detail = rej
+
 	case constant.DECISION_APPROVE:
-		decision = constant.DB_DECISION_APR
-		decision_detail = constant.DB_DECISION_PASS
+		decision = apr
+		decision_detail = pas
+
+	case constant.DECISION_RETURN:
+		decision = rtn
+		decision_detail = cpr
+	}
+
+	if req.Decision == constant.DECISION_RETURN {
+
+		recentDP, err = u.repository.GetAFMobilePhone(req.ProspectID)
+
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get Recently DP Amount error")
+			return
+		}
+
+		// validate DP Amount should greather than recent DP
+		if req.DPAmount <= recentDP.DPAmount {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Nilai DP harus lebih besar dari DP Awal")
+			return
+		}
 	}
 
 	approvalScheme, err = utils.ApprovalScheme(req)
@@ -1666,9 +1700,9 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 
 	trxStatus = entity.TrxStatus{
 		ProspectID:     req.ProspectID,
-		StatusProcess:  constant.STATUS_ONPROCESS,
-		Activity:       constant.ACTIVITY_UNPROCESS,
-		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+		StatusProcess:  onp,
+		Activity:       unpr,
+		Decision:       cpr,
 		RuleCode:       req.RuleCode,
 		SourceDecision: approvalScheme.NextStep,
 		Reason:         req.Reason,
@@ -1676,8 +1710,8 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 
 	trxDetail = entity.TrxDetail{
 		ProspectID:     req.ProspectID,
-		StatusProcess:  constant.STATUS_ONPROCESS,
-		Activity:       constant.ACTIVITY_PROCESS,
+		StatusProcess:  onp,
+		Activity:       prcd,
 		Decision:       decision_detail,
 		RuleCode:       req.RuleCode,
 		SourceDecision: req.Alias,
@@ -1697,6 +1731,18 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 
 		trxDetail.StatusProcess = constant.STATUS_FINAL
 		trxDetail.Activity = constant.ACTIVITY_STOP
+	}
+
+	if req.Decision == constant.DECISION_RETURN {
+		trxStatus.SourceDecision = cra
+		trxStatus.RuleCode = constant.CODE_CREDIT_COMMITTEE
+		trxStatus.Reason = constant.REASON_RETURN_APPROVAL
+
+		trxDetail.NextStep = cra
+		trxDetail.Activity = unpr
+		trxDetail.RuleCode = constant.CODE_CREDIT_COMMITTEE
+		trxDetail.Info = constant.REASON_RETURN_APPROVAL
+		trxDetail.Reason = constant.REASON_RETURN_APPROVAL
 	}
 
 	err = u.repository.SubmitApproval(req, trxStatus, trxDetail, approvalScheme)

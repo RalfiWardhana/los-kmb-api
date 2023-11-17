@@ -1376,6 +1376,7 @@ type InquiryCa struct {
 	ShowAction         bool   `gorm:"column:ShowAction"`
 	ActionDate         string `gorm:"column:ActionDate"`
 	ActionFormAkk      bool   `gorm:"column:ActionFormAkk"`
+	ActionEditData     bool   `gorm:"column:ActionEditData"`
 	Activity           string `gorm:"column:activity"`
 	SourceDecision     string `gorm:"column:source_decision"`
 	StatusDecision     string `gorm:"column:decision"`
@@ -1518,6 +1519,7 @@ type InquiryDataCa struct {
 
 type DataCa struct {
 	ShowAction         bool   `gorm:"column:ShowAction" json:"show_action"`
+	ActionEditData     bool   `gorm:"column:ActionEditData" json:"show_edit_data"`
 	StatusDecision     string `gorm:"column:decision" json:"status_decision"`
 	StatusReason       string `gorm:"column:reason" json:"status_reason"`
 	CaDecision         string `gorm:"column:ca_decision" json:"ca_decision"`
@@ -1758,5 +1760,6 @@ type RegionBranch struct {
 
 type AFMobilePhone struct {
 	AFValue     float64 `gorm:"column:AF"`
+	DPAmount    float64 `gorm:"column:DPAmount"`
 	MobilePhone string  `gorm:"column:MobilePhone"`
 }

@@ -42,7 +42,7 @@ func NewRepository(core, confins, NewKmb, kpLos, KpLosLogs *gorm.DB) interfaces.
 
 func (r repoHandler) GetAFMobilePhone(prospectID string) (data entity.AFMobilePhone, err error) {
 
-	if err = r.losDB.Raw(fmt.Sprintf(`SELECT AF, SCP.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone FROM trx_apk apk WITH (nolock) INNER JOIN trx_customer_personal tcp WITH (nolock) ON apk.ProspectID = tcp.ProspectID WHERE apk.ProspectID = '%s'`, prospectID)).Scan(&data).Error; err != nil {
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT AF, SCP.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone, DPAmount FROM trx_apk apk WITH (nolock) INNER JOIN trx_customer_personal tcp WITH (nolock) ON apk.ProspectID = tcp.ProspectID WHERE apk.ProspectID = '%s'`, prospectID)).Scan(&data).Error; err != nil {
 		return
 	}
 
@@ -907,6 +907,7 @@ func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.His
 					WHEN thas.decision = 'APR' THEN 'Approve'
 					WHEN thas.decision = 'REJ' THEN 'Reject'
 					WHEN thas.decision = 'CAN' THEN 'Cancel'
+					WHEN thas.decision = 'RTN' THEN 'Return'
 					ELSE '-'
 				END AS decision,
 				CASE
@@ -1439,7 +1440,11 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
-		tdb.BiroSpouseResult
+		tdb.BiroSpouseResult,
+		CASE
+		 WHEN rtn.decision IS NOT NULL THEN 1
+		 ELSE 0
+		END AS ActionEditData
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -1453,6 +1458,8 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn
+		ON rtn.ProspectID = tm.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -2822,6 +2829,14 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			NeedEscalation:        isEscalation,
 			SourceDecision:        trxDetail.SourceDecision,
 			NextStep:              approval.NextStep,
+		}
+
+		if req.Decision == constant.DECISION_RETURN {
+			trxHistoryApproval.Decision = constant.DB_DECISION_RTN
+			trxHistoryApproval.Reason = constant.REASON_RETURN_APPROVAL
+			trxHistoryApproval.Note = constant.DECISION_RETURN
+			trxHistoryApproval.NextFinalApprovalFlag = 0
+			trxHistoryApproval.NextStep = constant.DB_DECISION_CREDIT_ANALYST
 		}
 
 		// trx_history_approval_scheme
