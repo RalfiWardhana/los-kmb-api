@@ -125,7 +125,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	}
 
 	mainCustomer := dataCustomer[0]
-	if mainCustomer.CustomerStatus == "" {
+	if mainCustomer.CustomerStatus == "" || mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_NEW {
 		mainCustomer.CustomerStatus = constant.STATUS_KONSUMEN_NEW
 		mainCustomer.CustomerSegment = constant.RO_AO_REGULAR
 	}
