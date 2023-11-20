@@ -301,7 +301,7 @@ func (u usecase) Asliri(ctx context.Context, req request.Metrics, accessToken st
 
 	var asliriConfig entity.AsliriConfig
 
-	config, err := u.repository.GetConfig("asliri", "KMB", "asliri_tier2_parameter")
+	config, err := u.repository.GetConfig("asliri", "KMB-OFF", "threshold_asliri")
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get ASLI RI Config Error")
