@@ -14,6 +14,7 @@ import (
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -1398,12 +1399,18 @@ func (u usecase) RecalculateOrder(ctx context.Context, req request.ReqRecalculat
 	}
 
 	// hit sally recalculate
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	header := map[string]string{
+		"Authorization": accessToken,
+	}
+
 	param, _ := json.Marshal(map[string]interface{}{
 		"prospect_id":   req.ProspectID,
 		"dp_amount_los": req.DPAmount,
 	})
 
-	submitRecalculate, err := u.httpclient.CustomerAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("SUBMIT_RECALCULATE_SALLY"), param, constant.METHOD_POST, accessToken, req.ProspectID, "DEFAULT_TIMEOUT_30S")
+	submitRecalculate, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("SUBMIT_RECALCULATE_SALLY"), param, header, constant.METHOD_POST, false, 0, timeout, req.ProspectID, accessToken)
 
 	if submitRecalculate.StatusCode() == 504 || submitRecalculate.StatusCode() == 502 {
 		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Submit Recalculate to Sally Timeout")
