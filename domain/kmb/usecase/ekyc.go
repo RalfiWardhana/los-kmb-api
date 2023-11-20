@@ -322,7 +322,7 @@ func (u usecase) Asliri(ctx context.Context, req request.Metrics, accessToken st
 
 	data.Similiarity = asliriSelfie
 
-	if name < asliriConfig.Data.KMB.AsliriName || pdob < asliriConfig.Data.KMB.AsliriPDOB {
+	if name < asliriConfig.Data.AsliriName || pdob < asliriConfig.Data.AsliriPDOB {
 		data.Result = constant.DECISION_REJECT
 		data.Code = constant.CODE_REJECT_ASLIRI_NAME
 		data.Reason = constant.REASON_EKYC_INVALID
@@ -332,7 +332,7 @@ func (u usecase) Asliri(ctx context.Context, req request.Metrics, accessToken st
 
 	}
 
-	if asliriSelfie < asliriConfig.Data.KMB.AsliriPhoto {
+	if asliriSelfie < asliriConfig.Data.AsliriPhoto {
 		data.Result = constant.DECISION_REJECT
 		data.Code = constant.CODE_REJECT_ASLIRI_SELFIE
 		data.Reason = constant.REASON_EKYC_INVALID

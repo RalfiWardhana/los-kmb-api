@@ -509,14 +509,12 @@ func TestAsliri(t *testing.T) {
 			Key:       "",
 			Value: `{
 				"data": {
-				"kmb": {
-				"asliri_service_active": true,
-				"asliri_photo_threshold": 70,
-				"asliri_name_threshold": 80,
-				"asliri_pdob_threshold": 80
+					"asliri_service_active": true,
+					"asliri_threshold_selfie_photo": 70,
+					"asliri_threshold_name": 80,
+					"asliri_threshold_pdob": 80
 				}
-				}
-				} `,
+			}`,
 			IsActive:  0,
 			CreatedAt: time.Time{},
 			UpdatedAt: time.Time{},
