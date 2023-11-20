@@ -1765,7 +1765,7 @@ type AFMobilePhone struct {
 }
 
 type HistoryProcess struct {
-	SourceDecision string `gorm:"column:source_decision" json:"source_decision"`
+	SourceDecision string `gorm:"column:source_decision" json:"source"`
 	Alias          string `gorm:"column:alias" json:"-"`
 	Decision       string `gorm:"column:decision" json:"decision"`
 	Reason         string `gorm:"column:reason" json:"reason"`
