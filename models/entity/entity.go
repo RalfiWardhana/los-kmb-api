@@ -1765,10 +1765,10 @@ type AFMobilePhone struct {
 }
 
 type HistoryProcess struct {
-	SourceDecision string    `gorm:"column:source_decision"`
-	Alias          string    `gorm:"column:alias" json:"-"`
-	Decision       string    `gorm:"column:decision"`
-	Reason         string    `gorm:"column:reason"`
-	CreatedAt      time.Time `gorm:"column:created_at"`
-	NextStep       string    `gorm:"column:next_step" json:"-"`
+	SourceDecision string `gorm:"column:source_decision" json:"source_decision"`
+	Alias          string `gorm:"column:alias" json:"-"`
+	Decision       string `gorm:"column:decision" json:"decision"`
+	Reason         string `gorm:"column:reason" json:"reason"`
+	CreatedAt      string `gorm:"column:created_at" json:"created_at"`
+	NextStep       string `gorm:"column:next_step" json:"-"`
 }

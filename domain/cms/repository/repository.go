@@ -1763,7 +1763,7 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.Histo
 			 WHEN ap.reason IS NULL THEN td.reason 
 			 ELSE ap.reason 
 			END AS reason,
-			td.created_at,
+			FORMAT(td.created_at,'yyyy-MM-dd HH:mm:ss') as created_at,
 			td.next_step
 		FROM
 			trx_details td WITH (nolock)

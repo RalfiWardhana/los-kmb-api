@@ -166,15 +166,15 @@ func (_m *Repository) GetHistoryApproval(prospectID string) ([]entity.HistoryApp
 }
 
 // GetHistoryProcess provides a mock function with given fields: prospectID
-func (_m *Repository) GetHistoryProcess(prospectID string) ([]entity.TrxDetail, error) {
+func (_m *Repository) GetHistoryProcess(prospectID string) ([]entity.HistoryProcess, error) {
 	ret := _m.Called(prospectID)
 
-	var r0 []entity.TrxDetail
-	if rf, ok := ret.Get(0).(func(string) []entity.TrxDetail); ok {
+	var r0 []entity.HistoryProcess
+	if rf, ok := ret.Get(0).(func(string) []entity.HistoryProcess); ok {
 		r0 = rf(prospectID)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.TrxDetail)
+			r0 = ret.Get(0).([]entity.HistoryProcess)
 		}
 	}
 
