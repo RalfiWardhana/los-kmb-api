@@ -270,20 +270,20 @@ func (_m *Usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchIn
 	return r0, r1, r2
 }
 
-// RecalculateOrder provides a mock function with given fields: ctx, req
-func (_m *Usecase) RecalculateOrder(ctx context.Context, req request.ReqRecalculateOrder) (response.RecalculateResponse, error) {
-	ret := _m.Called(ctx, req)
+// RecalculateOrder provides a mock function with given fields: ctx, req, accessToken
+func (_m *Usecase) RecalculateOrder(ctx context.Context, req request.ReqRecalculateOrder, accessToken string) (response.RecalculateResponse, error) {
+	ret := _m.Called(ctx, req, accessToken)
 
 	var r0 response.RecalculateResponse
-	if rf, ok := ret.Get(0).(func(context.Context, request.ReqRecalculateOrder) response.RecalculateResponse); ok {
-		r0 = rf(ctx, req)
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqRecalculateOrder, string) response.RecalculateResponse); ok {
+		r0 = rf(ctx, req, accessToken)
 	} else {
 		r0 = ret.Get(0).(response.RecalculateResponse)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, request.ReqRecalculateOrder) error); ok {
-		r1 = rf(ctx, req)
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqRecalculateOrder, string) error); ok {
+		r1 = rf(ctx, req, accessToken)
 	} else {
 		r1 = ret.Error(1)
 	}

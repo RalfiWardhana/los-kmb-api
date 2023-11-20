@@ -578,7 +578,7 @@ func (c *handlerCMS) RecalculateOrder(ctx echo.Context) (err error) {
 		return ctxJson
 	}
 
-	data, err := c.usecase.RecalculateOrder(ctx.Request().Context(), req)
+	data, err := c.usecase.RecalculateOrder(ctx.Request().Context(), req, accessToken)
 
 	if err != nil {
 		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Recalculate Order", req, err)

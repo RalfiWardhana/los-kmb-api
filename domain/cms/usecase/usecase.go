@@ -13,10 +13,12 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
+	"os"
 	"strings"
 	"time"
 
 	"github.com/google/uuid"
+	jsoniter "github.com/json-iterator/go"
 )
 
 type (
@@ -1347,12 +1349,13 @@ func (u usecase) ReturnOrder(ctx context.Context, req request.ReqReturnOrder) (d
 	return
 }
 
-func (u usecase) RecalculateOrder(ctx context.Context, req request.ReqRecalculateOrder) (data response.RecalculateResponse, err error) {
+func (u usecase) RecalculateOrder(ctx context.Context, req request.ReqRecalculateOrder, accessToken string) (data response.RecalculateResponse, err error) {
 
 	var (
-		trxStatus          entity.TrxStatus
-		trxDetail          entity.TrxDetail
-		trxHistoryApproval entity.TrxHistoryApprovalScheme
+		trxStatus             entity.TrxStatus
+		trxDetail             entity.TrxDetail
+		trxHistoryApproval    entity.TrxHistoryApprovalScheme
+		respSubmitRecalculate response.SubmitRecalculateResponse
 	)
 
 	trxStatus = entity.TrxStatus{
@@ -1395,18 +1398,42 @@ func (u usecase) RecalculateOrder(ctx context.Context, req request.ReqRecalculat
 	}
 
 	// hit sally recalculate
-	// ..
+	param, _ := json.Marshal(map[string]interface{}{
+		"prospect_id":   req.ProspectID,
+		"dp_amount_los": req.DPAmount,
+	})
 
-	err = u.repository.ProcessRecalculateOrder(req.ProspectID, trxStatus, trxDetail, trxHistoryApproval)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Process Recalculate Order error")
+	submitRecalculate, err := u.httpclient.CustomerAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("SUBMIT_RECALCULATE_SALLY"), param, constant.METHOD_POST, accessToken, req.ProspectID, "DEFAULT_TIMEOUT_30S")
+
+	if submitRecalculate.StatusCode() == 504 || submitRecalculate.StatusCode() == 502 {
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Submit Recalculate to Sally Timeout")
 		return
 	}
 
-	data = response.RecalculateResponse{
-		ProspectID: req.ProspectID,
-		DPAmount:   req.DPAmount,
-		Status:     constant.RECALCULATE_STATUS_SUCCESS,
+	if submitRecalculate.StatusCode() != 200 && submitRecalculate.StatusCode() != 504 && submitRecalculate.StatusCode() != 502 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Submit Recalculate to Sally Error")
+		return
+	}
+
+	if err == nil && submitRecalculate.StatusCode() == 200 {
+		json.Unmarshal([]byte(jsoniter.Get(submitRecalculate.Body()).ToString()), &respSubmitRecalculate)
+	}
+
+	if err == nil && respSubmitRecalculate.Code == 200 {
+		err = u.repository.ProcessRecalculateOrder(req.ProspectID, trxStatus, trxDetail, trxHistoryApproval)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Process Recalculate Order error")
+			return
+		}
+
+		data = response.RecalculateResponse{
+			ProspectID: req.ProspectID,
+			DPAmount:   req.DPAmount,
+			Status:     constant.RECALCULATE_STATUS_SUCCESS,
+		}
+	} else {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Submit Recalculate to Sally Error")
+		return
 	}
 
 	return
