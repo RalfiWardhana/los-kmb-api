@@ -296,8 +296,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		}
 
 		if (req.CustomerSegment == constant.RO_AO_REGULAR && mapping.MaxOverdueDaysforActiveAgreement > configValue.Data.MaxOvdAORegular) ||
-			(strings.Contains("PRIME PRIORITY", req.CustomerSegment) && mapping.MaxOverdueDaysforActiveAgreement > configValue.Data.MaxOvdAOPrimePriority) {
-
+			(strings.Contains("PRIME PRIORITY", req.CustomerSegment) && mapping.InstallmentTopup <= 0 && mapping.MaxOverdueDaysforActiveAgreement > configValue.Data.MaxOvdAOPrimePriority) {
 			checkConfins := response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
 				Code:           constant.CODE_MENUNGGAK,
@@ -309,7 +308,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 			data = checkConfins
 			mapping.Reason = data.Reason
 			return
-
 		} else {
 			if mapping.NumberOfPaidInstallment >= configValue.Data.AngsuranBerjalan {
 				if mapping.MaxOverdueDaysROAO > configValue.Data.MaxOvd {
