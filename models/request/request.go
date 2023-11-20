@@ -722,16 +722,17 @@ type ReqSubmitDecision struct {
 }
 
 type ReqSubmitApproval struct {
-	ProspectID     string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
-	FinalApproval  string `json:"final_approval" validate:"required,max=3"`
-	Decision       string `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
-	RuleCode       string `json:"code" validate:"required,max=4"`
-	Alias          string `json:"alias" validate:"required,max=3"`
-	Reason         string `json:"reason" validate:"required,max=100"`
-	NeedEscalation bool   `json:"need_escalation"`
-	Note           string `json:"note" validate:"max=525"`
-	CreatedBy      string `json:"decision_by" validate:"required,max=100"`
-	DecisionBy     string `json:"decision_by_name" validate:"required,max=250"`
+	ProspectID     string  `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
+	FinalApproval  string  `json:"final_approval" validate:"required,max=3"`
+	Decision       string  `json:"decision" validate:"required,max=7" example:"APPROVE,REJECT,RETURN"`
+	RuleCode       string  `json:"code" validate:"required,max=4"`
+	Alias          string  `json:"alias" validate:"required,max=3"`
+	Reason         string  `json:"reason" validate:"required,max=100"`
+	NeedEscalation bool    `json:"need_escalation"`
+	DPAmount       float64 `json:"dp_amount"`
+	Note           string  `json:"note" validate:"max=525"`
+	CreatedBy      string  `json:"decision_by" validate:"required,max=100"`
+	DecisionBy     string  `json:"decision_by_name" validate:"required,max=250"`
 }
 
 type ReqSearchInquiry struct {
@@ -752,6 +753,13 @@ type ReqReturnOrder struct {
 	ProspectID string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
 	CreatedBy  string `json:"decision_by" validate:"required,max=100"`
 	DecisionBy string `json:"decision_by_name" validate:"required,max=250"`
+}
+
+type ReqRecalculateOrder struct {
+	ProspectID string  `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
+	DPAmount   float64 `json:"dp_amount" validate:"required" example:"245000"`
+	CreatedBy  string  `json:"decision_by" validate:"required,max=100"`
+	DecisionBy string  `json:"decision_by_name" validate:"required,max=250"`
 }
 
 type ReqInquiryApproval struct {

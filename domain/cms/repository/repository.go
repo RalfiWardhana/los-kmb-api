@@ -42,7 +42,7 @@ func NewRepository(core, confins, NewKmb, kpLos, KpLosLogs *gorm.DB) interfaces.
 
 func (r repoHandler) GetAFMobilePhone(prospectID string) (data entity.AFMobilePhone, err error) {
 
-	if err = r.losDB.Raw(fmt.Sprintf(`SELECT AF, SCP.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone FROM trx_apk apk WITH (nolock) INNER JOIN trx_customer_personal tcp WITH (nolock) ON apk.ProspectID = tcp.ProspectID WHERE apk.ProspectID = '%s'`, prospectID)).Scan(&data).Error; err != nil {
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT AF, SCP.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone, DPAmount FROM trx_apk apk WITH (nolock) INNER JOIN trx_customer_personal tcp WITH (nolock) ON apk.ProspectID = tcp.ProspectID WHERE apk.ProspectID = '%s'`, prospectID)).Scan(&data).Error; err != nil {
 		return
 	}
 
@@ -907,6 +907,8 @@ func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.His
 					WHEN thas.decision = 'APR' THEN 'Approve'
 					WHEN thas.decision = 'REJ' THEN 'Reject'
 					WHEN thas.decision = 'CAN' THEN 'Cancel'
+					WHEN thas.decision = 'RTN' THEN 'Return'
+					WHEN thas.decision = 'SDP' THEN 'Submit Perubahan Data Pembiayaan'
 					ELSE '-'
 				END AS decision,
 				CASE
@@ -924,7 +926,7 @@ func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.His
 				END AS note,
 				thas.created_at,
 				CASE
-				  WHEN thas.source_decision = 'CRA' AND tcd.slik_result<>'' THEN tcd.slik_result
+				  WHEN thas.source_decision = 'CRA' AND tcd.slik_result<>'' AND thas.decision<>'SDP' THEN tcd.slik_result
 				  ELSE
 				  '-'
 				END AS slik_result
@@ -1204,7 +1206,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		case constant.NEED_DECISION:
 			activity = constant.ACTIVITY_UNPROCESS
 			source := constant.DB_DECISION_CREDIT_ANALYST
-			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s' AND tt.decision_ca IS NULL", activity, constant.DB_DECISION_CREDIT_PROCESS, source)
+			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s' AND (tt.decision_ca IS NULL OR tt.ActionEditData=1)", activity, constant.DB_DECISION_CREDIT_PROCESS, source)
 
 		case constant.SAVED_AS_DRAFT:
 			if req.UserID != "" {
@@ -1245,7 +1247,11 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 			tcd.created_by as decision_by_ca,
 			tdd.created_by AS draft_created_by,
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+			CASE
+			 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+			 ELSE 0
+			END AS ActionEditData
 		FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -1257,8 +1263,11 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -1313,6 +1322,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tst.reason,
 		tcd.decision as decision_ca,
 		tcd.created_by as decision_by_ca,
+		tr.additional_dp,
 		CASE
 		  WHEN tcd.decision='APR' THEN 'APPROVE'
 		  WHEN tcd.decision='REJ' THEN 'REJECT'
@@ -1390,19 +1400,19 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		ti.color,
 		chassis_number,
 		engine_number,
-		interest_rate,
-		Tenor AS InstallmentPeriod,
+		ta.interest_rate,
+		ta.Tenor AS InstallmentPeriod,
 		OTR,
-		DPAmount,
-		AF AS FinanceAmount,
+		ta.DPAmount,
+		ta.AF AS FinanceAmount,
 		interest_amount,
-		insurance_amount,
-		AdminFee,
-		provision_fee,
-		NTF,
-		NTFAkumulasi,
-		(NTF + interest_amount) AS Total,
-		InstallmentAmount AS MonthlyInstallment,
+		ta.insurance_amount,
+		ta.AdminFee,
+		ta.provision_fee,
+		ta.NTF,
+		ta.NTFAkumulasi,
+		(ta.NTF + ta.interest_amount) AS Total,
+		ta.InstallmentAmount AS MonthlyInstallment,
 		FirstInstallment,
 		pr.value AS ProfessionID,
 		jt.value AS JobType,
@@ -1445,7 +1455,11 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
-		tdb.BiroSpouseResult
+		tdb.BiroSpouseResult,
+		CASE
+		 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+		 ELSE 0
+		END AS ActionEditData
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -1457,8 +1471,11 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
 		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -1702,7 +1719,7 @@ func (r repoHandler) GetLimitApproval(ntf float64) (limit entity.MappingLimitApp
 	return
 }
 
-func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.TrxDetail, err error) {
+func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.HistoryProcess, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
@@ -1724,6 +1741,7 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.TrxDe
 			 WHEN td.source_decision = 'SCP' THEN 'SCOREPRO'
 			 WHEN td.source_decision = 'DSR' THEN 'DSR'
 			 WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
+			 WHEN td.source_decision = 'NRC' THEN 'RECALCULATE PROCESS'
 			 WHEN td.source_decision = 'CBM'
 			  OR td.source_decision = 'DRM'
 			  OR td.source_decision = 'GMO'
@@ -1733,9 +1751,20 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.TrxDe
 			 ELSE '-'
 			END AS source_decision,
 			CASE
+			 WHEN td.source_decision = 'CRA' THEN 'CA'
+			 WHEN td.source_decision = 'CBM' THEN 'BM'
+			 WHEN td.source_decision = 'DRM' THEN 'RM'
+			 WHEN td.source_decision = 'GMO' THEN 'GMO'
+			 WHEN td.source_decision = 'COM' THEN 'COM'
+			 WHEN td.source_decision = 'GMC' THEN 'GMC'
+			 WHEN td.source_decision = 'UCC' THEN 'UCC'
+			 ELSE td.source_decision
+			END AS alias,
+			CASE
 			 WHEN td.decision = 'PAS' THEN 'PASS'
 			 WHEN td.decision = 'REJ' THEN 'REJECT'
 			 WHEN td.decision = 'CAN' THEN 'CANCEL'
+			 WHEN td.decision = 'RTN' THEN 'RETURN'
 			 WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS'
 			 ELSE '-'
 			END AS decision,
@@ -1743,12 +1772,12 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.TrxDe
 			 WHEN ap.reason IS NULL THEN td.reason 
 			 ELSE ap.reason 
 			END AS reason,
-			td.created_at,
+			FORMAT(td.created_at,'yyyy-MM-dd HH:mm:ss') as created_at,
 			td.next_step
 		FROM
 			trx_details td WITH (nolock)
 			LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
-		WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC')
+		WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC')
 		AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`, prospectID).Scan(&detail).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {
@@ -2279,6 +2308,34 @@ func (r repoHandler) ProcessReturnOrder(prospectID string, trxStatus entity.TrxS
 	})
 }
 
+func (r repoHandler) ProcessRecalculateOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, trxHistoryApproval entity.TrxHistoryApprovalScheme) (err error) {
+
+	trxStatus.CreatedAt = time.Now()
+	trxDetail.CreatedAt = time.Now()
+	trxHistoryApproval.ID = uuid.New().String()
+	trxHistoryApproval.CreatedAt = time.Now()
+
+	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
+
+		// update trx_status
+		if err := tx.Model(&trxStatus).Where("ProspectID = ?", prospectID).Updates(trxStatus).Error; err != nil {
+			return err
+		}
+
+		// insert trx_details
+		if err := tx.Create(&trxDetail).Error; err != nil {
+			return err
+		}
+
+		// insert trx_history_approval_scheme
+		if err := tx.Create(&trxHistoryApproval).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
 func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, pagination interface{}) (data []entity.InquiryCa, rowTotal int, err error) {
 
 	var (
@@ -2763,10 +2820,11 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 	return
 }
 
-func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, approval response.RespApprovalScheme) (err error) {
+func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, trxRecalculate entity.TrxRecalculate, approval response.RespApprovalScheme) (err error) {
 
 	trxStatus.CreatedAt = time.Now()
 	trxDetail.CreatedAt = time.Now()
+	trxRecalculate.CreatedAt = time.Now()
 
 	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
@@ -2830,12 +2888,25 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			NextStep:              approval.NextStep,
 		}
 
+		if req.Decision == constant.DECISION_RETURN {
+			trxHistoryApproval.Decision = constant.DB_DECISION_RTN
+			trxHistoryApproval.Reason = constant.REASON_RETURN_APPROVAL
+			trxHistoryApproval.Note = constant.DECISION_RETURN
+			trxHistoryApproval.NextFinalApprovalFlag = 0
+			trxHistoryApproval.NextStep = constant.DB_DECISION_CREDIT_ANALYST
+
+			// insert trx_recalculate
+			if err := tx.Create(&trxRecalculate).Error; err != nil {
+				return err
+			}
+		}
+
 		// trx_history_approval_scheme
 		if err := tx.Create(&trxHistoryApproval).Error; err != nil {
 			return err
 		}
 
-		if approval.IsFinal && !approval.IsEscalation {
+		if approval.IsFinal && !approval.IsEscalation && req.Decision != constant.DECISION_RETURN {
 			trxFinalApproval := entity.TrxFinalApproval{
 				ProspectID: req.ProspectID,
 				Decision:   decision,

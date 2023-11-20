@@ -52,6 +52,8 @@ const (
 	DB_DECISION_CONTINGENCY          = "CTG"
 	DB_DECISION_PASS                 = "PAS"
 	DB_DECISION_APR                  = "APR"
+	DB_DECISION_RTN                  = "RTN"
+	DB_DECISION_SDP                  = "SDP" //Submit Data Pembiayaan
 	DB_DECISION_REJECT               = "REJ"
 	DB_DECISION_CANCEL               = "CAN"
 	DB_DECISION_CREDIT_PROCESS       = "CPR"
@@ -184,6 +186,7 @@ const (
 	DECISION_REJECT                                              = "REJECT"
 	DECISION_PASS                                                = "PASS"
 	DECISION_APPROVE                                             = "APPROVE"
+	DECISION_RETURN                                              = "RETURN"
 	DECISION_CANCEL                                              = "CANCEL"
 	STATUS_KONSUMEN_RO_AO                                        = "RO/AO"
 	STATUS_KONSUMEN_NEW                                          = "NEW"
@@ -575,14 +578,20 @@ const (
 	REASON_SCOREPRO_GTEMIN_THRESHOLD = "Score Sesuai Ketentuan"
 
 	// CREDIT ANALYST
-	BRANCHID_HO           = "999"
-	SOURCE_DECISION_CA    = "CRA"
-	CODE_CREDIT_COMMITTEE = "2743"
-	NEED_DECISION         = "NEED_DECISION"
-	SAVED_AS_DRAFT        = "SAVED_AS_DRAFT"
-	CANCEL_STATUS_SUCCESS = "Cancel Success"
-	RETURN_STATUS_SUCCESS = "Return Success"
-	REASON_RETURN_ORDER   = "Return Order"
+	BRANCHID_HO                = "999"
+	SOURCE_DECISION_CA         = "CRA"
+	CODE_CREDIT_COMMITTEE      = "2743"
+	NEED_DECISION              = "NEED_DECISION"
+	NEED_RECALCULATE           = "NRC"
+	CREDIT_ANALYSIS            = "CREDIT ANALYSIS"
+	CREDIT_COMMITEE            = "CREDIT COMMITEE"
+	SAVED_AS_DRAFT             = "SAVED_AS_DRAFT"
+	CANCEL_STATUS_SUCCESS      = "Cancel Success"
+	RETURN_STATUS_SUCCESS      = "Return Success"
+	RECALCULATE_STATUS_SUCCESS = "Recalculate Success"
+	REASON_RETURN_ORDER        = "Return Order"
+	REASON_RETURN_APPROVAL     = "Final Approval Return"
+	REASON_NEED_RECALCULATE    = "Submit Perubahan Pembiayaan"
 	// PRE SCREENING
 	CODE_PASS_PRESCREENING   = 9701
 	CODE_REJECT_PRESCREENING = 9702

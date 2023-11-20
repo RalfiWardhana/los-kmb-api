@@ -174,6 +174,7 @@ type ElaborateLTV struct {
 }
 
 type RespApprovalScheme struct {
+	Name         string
 	NextStep     string
 	IsFinal      bool
 	IsEscalation bool
@@ -808,9 +809,24 @@ type ReturnResponse struct {
 	Status     string `json:"status"`
 }
 
+type RecalculateResponse struct {
+	ProspectID string  `json:"prospect_id"`
+	DPAmount   float64 `json:"dp_amount"`
+	Status     string  `json:"status"`
+}
+
 type ApprovalResponse struct {
 	ProspectID string `json:"prospect_id"`
 	Decision   string `json:"decision"`
 	Reason     string `json:"reason"`
 	Note       string `json:"note"`
+}
+
+type SubmitRecalculateResponse struct {
+	Code       int         `json:"code"`
+	Message    string      `json:"message"`
+	Data       interface{} `json:"data"`
+	Errors     interface{} `json:"errors"`
+	RequestID  string      `json:"request_id"`
+	ServerTime string      `json:"timestamp"`
 }
