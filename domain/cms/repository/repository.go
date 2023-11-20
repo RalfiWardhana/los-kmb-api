@@ -1028,7 +1028,10 @@ func (r repoHandler) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 		ta.LatestInstallment,
 		ta2.NTFAkumulasi,
 		(CAST(ISNULL(ta2.InstallmentAmount, 0) AS NUMERIC(17,2)) +
-		CAST(ISNULL(tf.total_installment_amount_biro, 0) AS NUMERIC(17,2)) +
+		CASE 
+			WHEN ta.TotalDSR = ta.DSRFMF THEN 0
+			ELSE CAST(ISNULL(tf.total_installment_amount_biro, 0) AS NUMERIC(17,2))
+		END +
 		CAST(ISNULL(ta.InstallmentAmountFMF, 0) AS NUMERIC(17,2)) +
 		CAST(ISNULL(ta.InstallmentAmountSpouseFMF, 0) AS NUMERIC(17,2)) +
 		CAST(ISNULL(ta.InstallmentAmountOther, 0) AS NUMERIC(17,2)) +
@@ -1037,7 +1040,10 @@ func (r repoHandler) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 		(CAST(ISNULL(tce.MonthlyFixedIncome, 0) AS NUMERIC(17,2)) +
 		CAST(ISNULL(tce.MonthlyVariableIncome, 0) AS NUMERIC(17,2)) +
 		CAST(ISNULL(tce.SpouseIncome, 0) AS NUMERIC(17,2)) ) as TotalIncome,
-		ta.TotalDSR,
+		CASE 
+			WHEN ta.TotalDSR IS NULL THEN CAST(ISNULL(ta.DSRFMF, 0) AS NUMERIC(17,2)) + CAST(ISNULL(ta.DSRPBK, 0) AS NUMERIC(17,2))
+			ELSE ta.TotalDSR
+		END as TotalDSR,
 		ta.EkycSource,
 		ta.EkycSimiliarity,
 		ta.EkycReason,
