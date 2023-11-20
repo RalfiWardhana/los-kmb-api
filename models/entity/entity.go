@@ -371,12 +371,10 @@ func (c *DataInquiry) TableName() string {
 
 type AsliriConfig struct {
 	Data struct {
-		KMB struct {
-			AsliriActive bool `json:"asliri_service_active"`
-			AsliriPhoto  int  `json:"asliri_photo_threshold"`
-			AsliriName   int  `json:"asliri_name_threshold"`
-			AsliriPDOB   int  `json:"asliri_pdob_threshold"`
-		} `json:"kmb"`
+		AsliriActive bool `json:"asliri_service_active"`
+		AsliriPhoto  int  `json:"asliri_threshold_selfie_photo"`
+		AsliriName   int  `json:"asliri_threshold_name"`
+		AsliriPDOB   int  `json:"asliri_threshold_pdob"`
 	} `json:"data"`
 }
 
