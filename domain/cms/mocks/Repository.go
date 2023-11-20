@@ -556,13 +556,13 @@ func (_m *Repository) SavePrescreening(prescreening entity.TrxPrescreening, deta
 	return r0
 }
 
-// SubmitApproval provides a mock function with given fields: req, trxStatus, trxDetail, approval
-func (_m *Repository) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, approval response.RespApprovalScheme) error {
-	ret := _m.Called(req, trxStatus, trxDetail, approval)
+// SubmitApproval provides a mock function with given fields: req, trxStatus, trxDetail, trxRecalculate, approval
+func (_m *Repository) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, trxRecalculate entity.TrxRecalculate, approval response.RespApprovalScheme) error {
+	ret := _m.Called(req, trxStatus, trxDetail, trxRecalculate, approval)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(request.ReqSubmitApproval, entity.TrxStatus, entity.TrxDetail, response.RespApprovalScheme) error); ok {
-		r0 = rf(req, trxStatus, trxDetail, approval)
+	if rf, ok := ret.Get(0).(func(request.ReqSubmitApproval, entity.TrxStatus, entity.TrxDetail, entity.TrxRecalculate, response.RespApprovalScheme) error); ok {
+		r0 = rf(req, trxStatus, trxDetail, trxRecalculate, approval)
 	} else {
 		r0 = ret.Error(0)
 	}

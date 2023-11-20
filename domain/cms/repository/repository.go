@@ -1257,6 +1257,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
@@ -1315,6 +1316,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tst.reason,
 		tcd.decision as decision_ca,
 		tcd.created_by as decision_by_ca,
+		tr.additional_dp,
 		CASE
 		  WHEN tcd.decision='APR' THEN 'APPROVE'
 		  WHEN tcd.decision='REJ' THEN 'REJECT'
@@ -1392,19 +1394,19 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		ti.color,
 		chassis_number,
 		engine_number,
-		interest_rate,
-		Tenor AS InstallmentPeriod,
+		ta.interest_rate,
+		ta.Tenor AS InstallmentPeriod,
 		OTR,
-		DPAmount,
-		AF AS FinanceAmount,
+		ta.DPAmount,
+		ta.AF AS FinanceAmount,
 		interest_amount,
-		insurance_amount,
-		AdminFee,
-		provision_fee,
-		NTF,
-		NTFAkumulasi,
-		(NTF + interest_amount) AS Total,
-		InstallmentAmount AS MonthlyInstallment,
+		ta.insurance_amount,
+		ta.AdminFee,
+		ta.provision_fee,
+		ta.NTF,
+		ta.NTFAkumulasi,
+		(ta.NTF + ta.interest_amount) AS Total,
+		ta.InstallmentAmount AS MonthlyInstallment,
 		FirstInstallment,
 		pr.value AS ProfessionID,
 		jt.value AS JobType,
@@ -1463,6 +1465,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
 		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
 		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
@@ -2318,7 +2321,7 @@ func (r repoHandler) ProcessRecalculateOrder(prospectID string, trxStatus entity
 			return err
 		}
 
-		// trx_history_approval_scheme
+		// insert trx_history_approval_scheme
 		if err := tx.Create(&trxHistoryApproval).Error; err != nil {
 			return err
 		}
@@ -2811,10 +2814,11 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 	return
 }
 
-func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, approval response.RespApprovalScheme) (err error) {
+func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, trxRecalculate entity.TrxRecalculate, approval response.RespApprovalScheme) (err error) {
 
 	trxStatus.CreatedAt = time.Now()
 	trxDetail.CreatedAt = time.Now()
+	trxRecalculate.CreatedAt = time.Now()
 
 	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
@@ -2884,6 +2888,11 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			trxHistoryApproval.Note = constant.DECISION_RETURN
 			trxHistoryApproval.NextFinalApprovalFlag = 0
 			trxHistoryApproval.NextStep = constant.DB_DECISION_CREDIT_ANALYST
+
+			// insert trx_recalculate
+			if err := tx.Create(&trxRecalculate).Error; err != nil {
+				return err
+			}
 		}
 
 		// trx_history_approval_scheme
@@ -2891,7 +2900,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			return err
 		}
 
-		if approval.IsFinal && !approval.IsEscalation {
+		if approval.IsFinal && !approval.IsEscalation && req.Decision != constant.DECISION_RETURN {
 			trxFinalApproval := entity.TrxFinalApproval{
 				ProspectID: req.ProspectID,
 				Decision:   decision,

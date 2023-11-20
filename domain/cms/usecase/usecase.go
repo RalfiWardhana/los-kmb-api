@@ -688,6 +688,7 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 			CA: entity.DataCa{
 				ShowAction:         action,
 				ActionEditData:     inq.ActionEditData,
+				AdditionalDP:       inq.AdditionalDP,
 				StatusDecision:     statusDecision,
 				StatusReason:       inq.StatusReason,
 				CaDecision:         inq.CaDecision,
@@ -1716,6 +1717,7 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 		trxDetail                                     entity.TrxDetail
 		trxStatus                                     entity.TrxStatus
 		recentDP                                      entity.AFMobilePhone
+		trxRecalculate                                entity.TrxRecalculate
 		approvalScheme                                response.RespApprovalScheme
 		decision                                      string
 		decision_detail                               string
@@ -1743,7 +1745,7 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 
 	case constant.DECISION_RETURN:
 		decision = rtn
-		decision_detail = cpr
+		decision_detail = rtn
 	}
 
 	if req.Decision == constant.DECISION_RETURN {
@@ -1794,7 +1796,7 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 		trxDetail.NextStep = approvalScheme.NextStep
 	}
 
-	if approvalScheme.IsFinal && !req.NeedEscalation {
+	if approvalScheme.IsFinal && !req.NeedEscalation && req.Decision != constant.DECISION_RETURN {
 		trxStatus.Decision = decision
 		trxStatus.StatusProcess = constant.STATUS_FINAL
 		trxStatus.Activity = constant.ACTIVITY_STOP
@@ -1809,12 +1811,16 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 		trxStatus.Reason = "Returning Order"
 
 		trxDetail.NextStep = cra
-		trxDetail.RuleCode = constant.CODE_CREDIT_COMMITTEE
 		trxDetail.Info = constant.REASON_RETURN_APPROVAL
 		trxDetail.Reason = "Returning Order"
+
+		trxRecalculate = entity.TrxRecalculate{
+			ProspectID:   req.ProspectID,
+			AdditionalDP: req.DPAmount,
+		}
 	}
 
-	err = u.repository.SubmitApproval(req, trxStatus, trxDetail, approvalScheme)
+	err = u.repository.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error")
 		return

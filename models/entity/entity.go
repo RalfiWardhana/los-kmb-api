@@ -1373,23 +1373,24 @@ type TotalRow struct {
 }
 
 type InquiryCa struct {
-	ShowAction         bool   `gorm:"column:ShowAction"`
-	ActionDate         string `gorm:"column:ActionDate"`
-	ActionFormAkk      bool   `gorm:"column:ActionFormAkk"`
-	ActionEditData     bool   `gorm:"column:ActionEditData"`
-	Activity           string `gorm:"column:activity"`
-	SourceDecision     string `gorm:"column:source_decision"`
-	StatusDecision     string `gorm:"column:decision"`
-	StatusReason       string `gorm:"column:reason"`
-	CaDecision         string `gorm:"column:ca_decision"`
-	FinalApproval      string `gorm:"column:final_approval"`
-	CANote             string `gorm:"column:ca_note"`
-	ScsDate            string `gorm:"column:ScsDate"`
-	ScsScore           string `gorm:"column:ScsScore"`
-	ScsStatus          string `gorm:"column:ScsStatus"`
-	BiroCustomerResult string `gorm:"column:BiroCustomerResult"`
-	BiroSpouseResult   string `gorm:"column:BiroSpouseResult"`
-	IsLastApproval     bool   `gorm:"column:is_last_approval"`
+	ShowAction         bool    `gorm:"column:ShowAction"`
+	ActionDate         string  `gorm:"column:ActionDate"`
+	ActionFormAkk      bool    `gorm:"column:ActionFormAkk"`
+	ActionEditData     bool    `gorm:"column:ActionEditData"`
+	AdditionalDP       float64 `gorm:"column:additional_dp"`
+	Activity           string  `gorm:"column:activity"`
+	SourceDecision     string  `gorm:"column:source_decision"`
+	StatusDecision     string  `gorm:"column:decision"`
+	StatusReason       string  `gorm:"column:reason"`
+	CaDecision         string  `gorm:"column:ca_decision"`
+	FinalApproval      string  `gorm:"column:final_approval"`
+	CANote             string  `gorm:"column:ca_note"`
+	ScsDate            string  `gorm:"column:ScsDate"`
+	ScsScore           string  `gorm:"column:ScsScore"`
+	ScsStatus          string  `gorm:"column:ScsStatus"`
+	BiroCustomerResult string  `gorm:"column:BiroCustomerResult"`
+	BiroSpouseResult   string  `gorm:"column:BiroSpouseResult"`
+	IsLastApproval     bool    `gorm:"column:is_last_approval"`
 
 	DraftDecision   string    `gorm:"column:draft_decision"`
 	DraftSlikResult string    `gorm:"column:draft_slik_result"`
@@ -1518,18 +1519,19 @@ type InquiryDataCa struct {
 }
 
 type DataCa struct {
-	ShowAction         bool   `gorm:"column:ShowAction" json:"show_action"`
-	ActionEditData     bool   `gorm:"column:ActionEditData" json:"show_edit_data"`
-	StatusDecision     string `gorm:"column:decision" json:"status_decision"`
-	StatusReason       string `gorm:"column:reason" json:"status_reason"`
-	CaDecision         string `gorm:"column:ca_decision" json:"ca_decision"`
-	CaNote             string `gorm:"column:ca_note" json:"ca_note"`
-	ActionDate         string `gorm:"column:ActionDate" json:"action_date"`
-	ScsDate            string `gorm:"column:ScsDate" json:"scorepro_date"`
-	ScsScore           string `gorm:"column:ScsScore" json:"scorepro_score"`
-	ScsStatus          string `gorm:"column:ScsStatus" json:"scorepro_status"`
-	BiroCustomerResult string `gorm:"column:BiroCustomerResult" json:"biro_customer_result"`
-	BiroSpouseResult   string `gorm:"column:BiroSpouseResult" json:"biro_spouse_result"`
+	ShowAction         bool    `gorm:"column:ShowAction" json:"show_action"`
+	ActionEditData     bool    `gorm:"column:ActionEditData" json:"show_edit_data"`
+	AdditionalDP       float64 `gorm:"column:additional_dp" json:"additional_dp"`
+	StatusDecision     string  `gorm:"column:decision" json:"status_decision"`
+	StatusReason       string  `gorm:"column:reason" json:"status_reason"`
+	CaDecision         string  `gorm:"column:ca_decision" json:"ca_decision"`
+	CaNote             string  `gorm:"column:ca_note" json:"ca_note"`
+	ActionDate         string  `gorm:"column:ActionDate" json:"action_date"`
+	ScsDate            string  `gorm:"column:ScsDate" json:"scorepro_date"`
+	ScsScore           string  `gorm:"column:ScsScore" json:"scorepro_score"`
+	ScsStatus          string  `gorm:"column:ScsStatus" json:"scorepro_status"`
+	BiroCustomerResult string  `gorm:"column:BiroCustomerResult" json:"biro_customer_result"`
+	BiroSpouseResult   string  `gorm:"column:BiroSpouseResult" json:"biro_spouse_result"`
 }
 
 type TrxCaDecision struct {
@@ -1771,4 +1773,31 @@ type HistoryProcess struct {
 	Reason         string `gorm:"column:reason" json:"reason"`
 	CreatedAt      string `gorm:"column:created_at" json:"created_at"`
 	NextStep       string `gorm:"column:next_step" json:"-"`
+}
+
+type TrxRecalculate struct {
+	ProspectID          string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	ProductOfferingID   string    `gorm:"type:varchar(30);column:ProductOfferingID"`
+	ProductOfferingDesc string    `gorm:"column:product_offering_desc"`
+	Tenor               *int      `gorm:"column:Tenor"`
+	LoanAmount          float64   `gorm:"column:loan_amount"`
+	AF                  float64   `gorm:"column:AF"`
+	InstallmentAmount   float64   `gorm:"column:InstallmentAmount"`
+	DPAmount            float64   `gorm:"column:DPAmount"`
+	PercentDP           float64   `gorm:"column:percent_dp"`
+	AdminFee            float64   `gorm:"column:AdminFee"`
+	ProvisionFee        float64   `gorm:"column:provision_fee"`
+	FidusiaFee          float64   `gorm:"column:fidusia_fee"`
+	AssetInsuranceFee   float64   `gorm:"column:AssetInsuranceFee"`
+	LifeInsuranceFee    float64   `gorm:"column:LifeInsuranceFee"`
+	NTF                 float64   `gorm:"column:NTF"`
+	NTFAkumulasi        float64   `gorm:"column:NTFAkumulasi"`
+	InterestRate        float64   `gorm:"column:interest_rate"`
+	InsuranceAmount     float64   `gorm:"column:insurance_amount"`
+	AdditionalDP        float64   `gorm:"column:additional_dp"`
+	CreatedAt           time.Time `gorm:"column:created_at"`
+}
+
+func (c *TrxRecalculate) TableName() string {
+	return "trx_recalculate"
 }
