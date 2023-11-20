@@ -585,13 +585,15 @@ const (
 	CODE_CREDIT_COMMITTEE      = "2743"
 	NEED_DECISION              = "NEED_DECISION"
 	NEED_RECALCULATE           = "NRC"
+	CREDIT_ANALYSIS            = "CREDIT ANALYSIS"
+	CREDIT_COMMITEE            = "CREDIT COMMITEE"
 	SAVED_AS_DRAFT             = "SAVED_AS_DRAFT"
 	CANCEL_STATUS_SUCCESS      = "Cancel Success"
 	RETURN_STATUS_SUCCESS      = "Return Success"
 	RECALCULATE_STATUS_SUCCESS = "Recalculate Success"
 	REASON_RETURN_ORDER        = "Return Order"
 	REASON_RETURN_APPROVAL     = "Final Approval Return"
-	REASON_NEED_RECALCULATE    = "Submit Need Recalculation"
+	REASON_NEED_RECALCULATE    = "Submit Perubahan Pembiayaan"
 	// PRE SCREENING
 	CODE_PASS_PRESCREENING   = 9701
 	CODE_REJECT_PRESCREENING = 9702

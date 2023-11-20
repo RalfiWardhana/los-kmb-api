@@ -436,6 +436,7 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 			ActivityStatus string
 			NextStep       interface{}
 			SourceDecision string
+			Info           string
 		}{
 			constant.DECISION_REJECT: {
 				Code:           constant.CODE_REJECT_PRESCREENING,
@@ -446,6 +447,7 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 				DecisionDetail: constant.DB_DECISION_REJECT,
 				ActivityStatus: constant.ACTIVITY_STOP,
 				SourceDecision: constant.PRESCREENING,
+				Info:           constant.REASON_TIDAK_SESUAI,
 			},
 			constant.DECISION_APPROVE: {
 				Code:           constant.CODE_PASS_PRESCREENING,
@@ -457,6 +459,7 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 				ActivityStatus: constant.ACTIVITY_UNPROCESS,
 				SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
 				NextStep:       constant.SOURCE_DECISION_DUPCHECK,
+				Info:           constant.REASON_SESUAI,
 			},
 		}
 
@@ -465,13 +468,6 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 			err = errors.New(constant.ERROR_UPSTREAM + " - Decision tidak valid")
 			return
 		}
-
-		data.ProspectID = req.ProspectID
-		data.Code = decisionInfo.Code
-		data.Decision = decisionInfo.Decision
-		data.Reason = reason
-
-		info, _ := json.Marshal(data)
 
 		trxPrescreening := entity.TrxPrescreening{
 			ProspectID: req.ProspectID,
@@ -489,9 +485,9 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 			RuleCode:       decisionInfo.Code,
 			SourceDecision: constant.PRESCREENING,
 			NextStep:       decisionInfo.NextStep,
-			Info:           string(info),
+			Info:           decisionInfo.Info,
 			CreatedBy:      req.DecisionBy,
-			Reason:         string(info),
+			Reason:         reason,
 		}
 
 		if req.Decision == constant.DECISION_REJECT {
@@ -937,6 +933,7 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 			NextStep:       constant.DB_DECISION_BRANCH_MANAGER,
 			Info:           req.SlikResult,
 			CreatedBy:      req.CreatedBy,
+			Reason:         req.SlikResult,
 		}
 
 		nextFinal = 0
@@ -980,10 +977,10 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInquiry, pagination interface{}) (data []entity.InquiryDataSearch, rowTotal int, err error) {
 
 	var (
-		industry  []entity.SpIndustryTypeMaster
-		photos    []entity.DataPhoto
-		surveyor  []entity.TrxSurveyor
-		trxDetail []entity.TrxDetail
+		industry       []entity.SpIndustryTypeMaster
+		photos         []entity.DataPhoto
+		surveyor       []entity.TrxSurveyor
+		historyProcess []entity.HistoryProcess
 	)
 
 	// get inquiry pre screening
@@ -1064,21 +1061,28 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 		}
 
 		// get data history process
-		trxDetail, err = u.repository.GetHistoryProcess(inq.ProspectID)
+		historyProcess, err = u.repository.GetHistoryProcess(inq.ProspectID)
 
 		if err != nil {
 			return
 		}
 
-		var historyData []entity.TrxDetail
+		var (
+			historyData []entity.HistoryProcess
+			reason      string
+		)
 
-		if len(trxDetail) > 0 {
-			for _, detail := range trxDetail {
+		if len(historyProcess) > 0 {
+			for _, detail := range historyProcess {
 				if detail.SourceDecision != constant.SOURCE_DECISION_DSR || detail.NextStep != constant.SOURCE_DECISION_DUPCHECK {
-					detailEntry := entity.TrxDetail{
+					reason = detail.Reason
+					if detail.SourceDecision == constant.CREDIT_ANALYSIS || detail.SourceDecision == constant.CREDIT_COMMITEE {
+						reason = fmt.Sprintf("%s: %s", detail.Alias, detail.Reason)
+					}
+					detailEntry := entity.HistoryProcess{
 						SourceDecision: detail.SourceDecision,
 						Decision:       detail.Decision,
-						Reason:         detail.Reason,
+						Reason:         reason,
 						CreatedAt:      detail.CreatedAt,
 					}
 					historyData = append(historyData, detailEntry)
@@ -1087,7 +1091,7 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 		}
 
 		if len(historyData) < 1 {
-			historyData = []entity.TrxDetail{}
+			historyData = []entity.HistoryProcess{}
 		}
 
 		row := entity.InquiryDataSearch{
@@ -1367,8 +1371,8 @@ func (u usecase) RecalculateOrder(ctx context.Context, req request.ReqRecalculat
 	trxDetail = entity.TrxDetail{
 		ProspectID:     req.ProspectID,
 		StatusProcess:  constant.STATUS_ONPROCESS,
-		Activity:       constant.ACTIVITY_UNPROCESS,
-		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+		Activity:       constant.ACTIVITY_PROCESS,
+		Decision:       constant.DB_DECISION_PASS,
 		RuleCode:       constant.CODE_CREDIT_COMMITTEE,
 		SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
 		NextStep:       constant.NEED_RECALCULATE,
@@ -1802,13 +1806,12 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 	if req.Decision == constant.DECISION_RETURN {
 		trxStatus.SourceDecision = cra
 		trxStatus.RuleCode = constant.CODE_CREDIT_COMMITTEE
-		trxStatus.Reason = constant.REASON_RETURN_APPROVAL
+		trxStatus.Reason = "Returning Order"
 
 		trxDetail.NextStep = cra
-		trxDetail.Activity = unpr
 		trxDetail.RuleCode = constant.CODE_CREDIT_COMMITTEE
 		trxDetail.Info = constant.REASON_RETURN_APPROVAL
-		trxDetail.Reason = constant.REASON_RETURN_APPROVAL
+		trxDetail.Reason = "Returning Order"
 	}
 
 	err = u.repository.SubmitApproval(req, trxStatus, trxDetail, approvalScheme)

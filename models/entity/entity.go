@@ -1684,7 +1684,7 @@ type InquirySearch struct {
 
 type InquiryDataSearch struct {
 	Action         ActionSearch       `json:"action"`
-	HistoryProcess []TrxDetail        `json:"history_process"`
+	HistoryProcess []HistoryProcess   `json:"history_process"`
 	General        DataGeneral        `json:"general"`
 	Personal       CustomerPersonal   `json:"personal"`
 	Spouse         CustomerSpouse     `json:"spouse"`
@@ -1762,4 +1762,13 @@ type AFMobilePhone struct {
 	AFValue     float64 `gorm:"column:AF"`
 	DPAmount    float64 `gorm:"column:DPAmount"`
 	MobilePhone string  `gorm:"column:MobilePhone"`
+}
+
+type HistoryProcess struct {
+	SourceDecision string    `gorm:"column:source_decision"`
+	Alias          string    `gorm:"column:alias" json:"-"`
+	Decision       string    `gorm:"column:decision"`
+	Reason         string    `gorm:"column:reason"`
+	CreatedAt      time.Time `gorm:"column:created_at"`
+	NextStep       string    `gorm:"column:next_step" json:"-"`
 }

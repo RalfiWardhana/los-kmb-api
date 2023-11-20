@@ -1710,7 +1710,7 @@ func (r repoHandler) GetLimitApproval(ntf float64) (limit entity.MappingLimitApp
 	return
 }
 
-func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.TrxDetail, err error) {
+func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.HistoryProcess, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
@@ -1732,6 +1732,7 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.TrxDe
 			 WHEN td.source_decision = 'SCP' THEN 'SCOREPRO'
 			 WHEN td.source_decision = 'DSR' THEN 'DSR'
 			 WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
+			 WHEN td.source_decision = 'NRC' THEN 'RECALCULATE PROCESS'
 			 WHEN td.source_decision = 'CBM'
 			  OR td.source_decision = 'DRM'
 			  OR td.source_decision = 'GMO'
@@ -1741,9 +1742,20 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.TrxDe
 			 ELSE '-'
 			END AS source_decision,
 			CASE
+			 WHEN td.source_decision = 'CRA' THEN 'CA'
+			 WHEN td.source_decision = 'CBM' THEN 'BM'
+			 WHEN td.source_decision = 'DRM' THEN 'RM'
+			 WHEN td.source_decision = 'GMO' THEN 'GMO'
+			 WHEN td.source_decision = 'COM' THEN 'COM'
+			 WHEN td.source_decision = 'GMC' THEN 'GMC'
+			 WHEN td.source_decision = 'UCC' THEN 'UCC'
+			 ELSE td.source_decision
+			END AS alias,
+			CASE
 			 WHEN td.decision = 'PAS' THEN 'PASS'
 			 WHEN td.decision = 'REJ' THEN 'REJECT'
 			 WHEN td.decision = 'CAN' THEN 'CANCEL'
+			 WHEN td.decision = 'RTN' THEN 'RETURN'
 			 WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS'
 			 ELSE '-'
 			END AS decision,
@@ -1756,7 +1768,7 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.TrxDe
 		FROM
 			trx_details td WITH (nolock)
 			LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
-		WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC')
+		WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC')
 		AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`, prospectID).Scan(&detail).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {

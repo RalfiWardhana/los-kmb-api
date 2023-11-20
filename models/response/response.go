@@ -174,6 +174,7 @@ type ElaborateLTV struct {
 }
 
 type RespApprovalScheme struct {
+	Name         string
 	NextStep     string
 	IsFinal      bool
 	IsEscalation bool
