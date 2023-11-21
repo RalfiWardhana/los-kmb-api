@@ -1791,7 +1791,7 @@ type TrxRecalculate struct {
 	NTF                 float64   `gorm:"column:NTF"`
 	NTFAkumulasi        float64   `gorm:"column:NTFAkumulasi"`
 	InterestRate        float64   `gorm:"column:interest_rate"`
-	InsuranceAmount     float64   `gorm:"column:insurance_amount"`
+	InterestAmount      float64   `gorm:"column:interest_amount"`
 	AdditionalDP        float64   `gorm:"column:additional_dp"`
 	CreatedAt           time.Time `gorm:"column:created_at"`
 }

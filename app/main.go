@@ -231,7 +231,7 @@ func main() {
 	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
 	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
-	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, jsonResponse, accessToken, producer)
+	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, authorization, jsonResponse, accessToken, producer)
 
 	toolsDelivery.ToolsHandler(apiGroupv3, jsonResponse, accessToken)
 

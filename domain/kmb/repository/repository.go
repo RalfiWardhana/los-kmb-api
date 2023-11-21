@@ -1298,3 +1298,28 @@ func (r repoHandler) GetCurrentTrxWithRejectChassisNumber(chassisNumber string) 
 
 	return
 }
+
+func (r repoHandler) SaveRecalculate(trxRecalculate entity.TrxRecalculate) (err error) {
+
+	var logInfo interface{}
+	err = r.newKmbDB.Transaction(func(tx *gorm.DB) error {
+		result := tx.Model(&trxRecalculate).Where("ProspectID = ?", trxRecalculate.ProspectID).Updates(trxRecalculate)
+
+		if err = result.Error; err != nil {
+			return err
+		}
+
+		if result.RowsAffected == 0 {
+			// record not found...
+			err = errors.New(constant.RECORD_NOT_FOUND)
+			return err
+		}
+		return nil
+	})
+
+	if err != nil {
+		err = errors.New(fmt.Sprintf("%s - %s - %s", constant.ERROR_UPSTREAM, err.Error(), logInfo))
+	}
+
+	return
+}

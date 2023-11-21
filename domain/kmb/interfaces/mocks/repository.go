@@ -655,6 +655,20 @@ func (_m *Repository) SaveLogOrchestrator(header interface{}, _a1 interface{}, _
 	return r0
 }
 
+// SaveRecalculate provides a mock function with given fields: data
+func (_m *Repository) SaveRecalculate(data entity.TrxRecalculate) error {
+	ret := _m.Called(data)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(entity.TrxRecalculate) error); ok {
+		r0 = rf(data)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // SaveTransaction provides a mock function with given fields: countTrx, data, trxPrescreening, trxFMF, details, reason
 func (_m *Repository) SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) error {
 	ret := _m.Called(countTrx, data, trxPrescreening, trxFMF, details, reason)
