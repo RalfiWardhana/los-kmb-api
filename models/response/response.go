@@ -173,6 +173,10 @@ type ElaborateLTV struct {
 	Reason      string `json:"reason"`
 }
 
+type Recalculate struct {
+	ProspectID string `json:"prospect_id"`
+}
+
 type RespApprovalScheme struct {
 	Name         string
 	NextStep     string

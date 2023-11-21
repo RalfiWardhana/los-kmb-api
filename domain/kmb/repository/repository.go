@@ -1298,3 +1298,162 @@ func (r repoHandler) GetCurrentTrxWithRejectChassisNumber(chassisNumber string) 
 
 	return
 }
+
+func (r repoHandler) GetRecalculate(prospectID string) (getRecalculate entity.GetRecalculate, err error) {
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT ta.Tenor, ta.ProductOfferingID, ta.product_offering_desc, ta.NTF, ta.DPAmount, ta.percent_dp, ta.InstallmentAmount, ta.AdminFee, ta.AF,
+	fidusia_fee, ta.interest_rate, ta.interest_amount, ta.NTFAkumulasi, ta.loan_amount, ta.LifeInsuranceFee, ta.AssetInsuranceFee, ta.provision_fee, 
+	( CAST(ISNULL(ta2.InstallmentAmountFMF, 0) AS NUMERIC(17,2)) +
+	CAST(ISNULL(ta2.InstallmentAmountSpouseFMF, 0) AS NUMERIC(17,2)) +
+	CAST(ISNULL(ta2.InstallmentAmountOther, 0) AS NUMERIC(17,2)) +
+	CAST(ISNULL(ta2.InstallmentAmountOtherSpouse, 0) AS NUMERIC(17,2)) -
+	CAST(ISNULL(ta2.InstallmentTopup, 0) AS NUMERIC(17,2)) ) as TotalInstallmentFMF,
+	(CAST(ISNULL(tce.MonthlyFixedIncome, 0) AS NUMERIC(17,2)) +
+	CAST(ISNULL(tce.MonthlyVariableIncome, 0) AS NUMERIC(17,2)) +
+	CAST(ISNULL(tce.SpouseIncome, 0) AS NUMERIC(17,2)) ) as TotalIncome,
+	ta2.DSRFMF,ta2.DSRPBK,ta2.TotalDSR
+	FROM trx_apk ta WITH (nolock) 
+	LEFT JOIN trx_akkk ta2 WITH (nolock) ON ta2.ProspectID = ta.ProspectID
+	LEFT JOIN trx_customer_employment tce WITH (nolock) ON tce.ProspectID = ta.ProspectID 
+	WHERE ta.ProspectID = '%s'`, prospectID)).Scan(&getRecalculate).Error; err != nil {
+		return
+	}
+	return
+}
+
+func (r repoHandler) SaveRecalculate(beforeRecalculate entity.TrxRecalculate, afterRecalculate entity.TrxRecalculate) (err error) {
+
+	var logInfo interface{}
+	err = r.newKmbDB.Transaction(func(tx *gorm.DB) error {
+
+		// update trx_recalculate
+		logInfo = beforeRecalculate
+		result := tx.Model(&beforeRecalculate).Where("ProspectID = ?", beforeRecalculate.ProspectID).Updates(beforeRecalculate)
+
+		if err = result.Error; err != nil {
+			return err
+		}
+
+		if result.RowsAffected == 0 {
+			// record not found...
+			err = errors.New(constant.RECORD_NOT_FOUND)
+			return err
+		}
+
+		// update trx_apk
+		TrxApk := entity.TrxApk{
+			ProductOfferingID:   afterRecalculate.ProductOfferingID,
+			ProductOfferingDesc: afterRecalculate.ProductOfferingDesc,
+			Tenor:               afterRecalculate.Tenor,
+			LoanAmount:          afterRecalculate.LoanAmount,
+			AF:                  afterRecalculate.AF,
+			InstallmentAmount:   afterRecalculate.InstallmentAmount,
+			DPAmount:            afterRecalculate.DPAmount,
+			PercentDP:           afterRecalculate.PercentDP,
+			AdminFee:            afterRecalculate.AdminFee,
+			ProvisionFee:        afterRecalculate.ProvisionFee,
+			FidusiaFee:          afterRecalculate.FidusiaFee,
+			AssetInsuranceFee:   afterRecalculate.AssetInsuranceFee,
+			LifeInsuranceFee:    afterRecalculate.LifeInsuranceFee,
+			NTF:                 afterRecalculate.NTF,
+			NTFAkumulasi:        afterRecalculate.NTFAkumulasi,
+			InterestRate:        afterRecalculate.InterestRate,
+			InterestAmount:      afterRecalculate.InterestAmount,
+		}
+		logInfo = TrxApk
+		result = tx.Model(&entity.TrxApk{}).Where("ProspectID = ?", afterRecalculate.ProspectID).Updates(TrxApk)
+
+		if err = result.Error; err != nil {
+			return err
+		}
+
+		if result.RowsAffected == 0 {
+			// record not found...
+			err = errors.New(constant.RECORD_NOT_FOUND)
+			return err
+		}
+
+		// update trx_akkk
+		TrxAkkk := entity.TrxAkkk{
+			DSRFMF:   afterRecalculate.DSRFMF,
+			TotalDSR: afterRecalculate.TotalDSR,
+		}
+		logInfo = TrxAkkk
+		result = tx.Model(&entity.TrxAkkk{}).Where("ProspectID = ?", afterRecalculate.ProspectID).Updates(TrxAkkk)
+
+		if err = result.Error; err != nil {
+			return err
+		}
+
+		if result.RowsAffected == 0 {
+			// record not found...
+			err = errors.New(constant.RECORD_NOT_FOUND)
+			return err
+		}
+
+		// get limit
+		var limit entity.MappingLimitApprovalScheme
+		logInfo = limit
+		if err = tx.Raw("SELECT [alias] FROM m_limit_approval_scheme WITH (nolock) WHERE ? between coverage_ntf_start AND coverage_ntf_end", afterRecalculate.NTFAkumulasi).Scan(&limit).Error; err != nil {
+			return err
+		}
+
+		// update trx_ca_decision
+		TrxCaDecision := entity.TrxCaDecision{
+			FinalApproval: limit.Alias,
+		}
+		logInfo = TrxCaDecision
+		result = tx.Model(&entity.TrxCaDecision{}).Where("ProspectID = ?", afterRecalculate.ProspectID).Updates(TrxCaDecision)
+
+		if err = result.Error; err != nil {
+			return err
+		}
+
+		if result.RowsAffected == 0 {
+			// record not found...
+			err = errors.New(constant.RECORD_NOT_FOUND)
+			return err
+		}
+
+		// update trx_status
+		TrxStatus := entity.TrxStatus{
+			SourceDecision: limit.Alias,
+		}
+		logInfo = TrxStatus
+		result = tx.Model(&entity.TrxStatus{}).Where("ProspectID = ?", afterRecalculate.ProspectID).Updates(TrxStatus)
+
+		if err = result.Error; err != nil {
+			return err
+		}
+
+		if result.RowsAffected == 0 {
+			// record not found...
+			err = errors.New(constant.RECORD_NOT_FOUND)
+			return err
+		}
+
+		// update trx_history_approval_scheme
+		TrxHistoryApprovalScheme := entity.TrxHistoryApprovalScheme{
+			NextStep: limit.Alias,
+		}
+		logInfo = TrxHistoryApprovalScheme
+		result = tx.Model(&entity.TrxHistoryApprovalScheme{}).Where("ProspectID = ? AND decision = 'SDP'", afterRecalculate.ProspectID).Updates(TrxHistoryApprovalScheme)
+
+		if err = result.Error; err != nil {
+			return err
+		}
+
+		if result.RowsAffected == 0 {
+			// record not found...
+			err = errors.New(constant.RECORD_NOT_FOUND)
+			return err
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		err = errors.New(fmt.Sprintf("%s - %s - %s", constant.ERROR_UPSTREAM, err.Error(), logInfo))
+	}
+
+	return
+}

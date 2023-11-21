@@ -452,6 +452,27 @@ func (_m *Usecase) Prescreening(ctx context.Context, reqs request.Metrics, filte
 	return r0, r1, r2, r3
 }
 
+// Recalculate provides a mock function with given fields: ctx, req
+func (_m *Usecase) Recalculate(ctx context.Context, req request.Recalculate) (response.Recalculate, error) {
+	ret := _m.Called(ctx, req)
+
+	var r0 response.Recalculate
+	if rf, ok := ret.Get(0).(func(context.Context, request.Recalculate) response.Recalculate); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(response.Recalculate)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.Recalculate) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // RejectTenor36 provides a mock function with given fields: idNumber
 func (_m *Usecase) RejectTenor36(idNumber string) (response.UsecaseApi, error) {
 	ret := _m.Called(idNumber)

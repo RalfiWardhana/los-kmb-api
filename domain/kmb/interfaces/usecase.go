@@ -31,6 +31,7 @@ type Usecase interface {
 	ElaborateIncome(ctx context.Context, req request.Metrics, filtering entity.FilteringKMB, pefindoIDX response.PefindoIDX, spDupcheckMap response.SpDupcheckMap, responseScs response.IntegratorScorePro, accessToken string) (data response.UsecaseApi, err error)
 	TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment, totalInstallmentPBK float64, prospectID, customerSegment, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig) (data response.UsecaseApi, trxFMF response.TrxFMF, err error)
 	SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (resp response.Metrics, err error)
+	Recalculate(ctx context.Context, req request.Recalculate) (data response.Recalculate, err error)
 }
 
 type MultiUsecase interface {

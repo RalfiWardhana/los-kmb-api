@@ -3,34 +3,40 @@ package http
 import (
 	"los-kmb-api/domain/kmb/interfaces"
 	"los-kmb-api/middlewares"
+	"los-kmb-api/models/dto"
 	"los-kmb-api/models/request"
+	"los-kmb-api/shared/authorization"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/platformevent"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
 
 type handlerKMB struct {
-	metrics      interfaces.Metrics
-	multiUsecase interfaces.MultiUsecase
-	usecase      interfaces.Usecase
-	repository   interfaces.Repository
-	Json         common.JSON
-	producer     platformevent.PlatformEvent
+	metrics       interfaces.Metrics
+	multiUsecase  interfaces.MultiUsecase
+	usecase       interfaces.Usecase
+	repository    interfaces.Repository
+	authorization authorization.Authorization
+	Json          common.JSON
+	producer      platformevent.PlatformEvent
 }
 
-func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEvent) {
+func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, authorization authorization.Authorization, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEvent) {
 	handler := handlerKMB{
-		metrics:    metrics,
-		usecase:    usecase,
-		repository: repository,
-		Json:       json,
-		producer:   producer,
+		metrics:       metrics,
+		usecase:       usecase,
+		repository:    repository,
+		authorization: authorization,
+		Json:          json,
+		producer:      producer,
 	}
 	kmbroute.POST("/produce/journey", handler.ProduceJourney, middlewares.AccessMiddleware())
 	kmbroute.POST("/produce/journey-after-prescreening", handler.ProduceJourneyAfterPrescreening, middlewares.AccessMiddleware())
+	kmbroute.POST("/recalculate", handler.Recalculate, middlewares.AccessMiddleware())
 }
 
 // Produce Journey
@@ -83,4 +89,56 @@ func (c *handlerKMB) ProduceJourneyAfterPrescreening(ctx echo.Context) (err erro
 	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_AFTER_PRESCREENING, req.ProspectID, utils.StructToMap(req), 0)
 
 	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB - Please wait, your request is being processed", req, nil)
+}
+
+// Recalculate
+// @Description Recalculate
+// @Tags Recalculate
+// @Produce json
+// @Param body body request.Recalculate true "Body payload"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/recalculate [post]
+func (c *handlerKMB) Recalculate(ctx echo.Context) (err error) {
+	var (
+		req     request.Recalculate
+		resp    interface{}
+		ctxJson error
+	)
+
+	// Save Log Orchestrator
+	defer func() {
+		go c.repository.SaveLogOrchestrator(ctx.Request().Header, req, resp, "/api/v3/kmb/recalculate", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
+	}()
+
+	err = c.authorization.Authorization(dto.AuthModel{
+		ClientID:   ctx.Request().Header.Get(constant.HEADER_CLIENT_ID),
+		Credential: ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION),
+	}, time.Now().Local())
+
+	if err != nil {
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB RECALCULATE", req, err)
+		return ctxJson
+	}
+
+	if err := ctx.Bind(&req); err != nil {
+		ctxJson, resp = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB RECALCULATE", req, err)
+		return ctxJson
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB RECALCULATE", req, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.Recalculate(ctx.Request().Context(), req)
+
+	if err != nil {
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", req, err)
+		return ctxJson
+	}
+
+	ctxJson, resp = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE - Success", req, data)
+	return ctxJson
 }
