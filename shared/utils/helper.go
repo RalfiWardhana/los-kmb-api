@@ -405,26 +405,33 @@ func ApprovalScheme(req request.ReqSubmitApproval) (result response.RespApproval
 	limit := []entity.MappingLimitApprovalScheme{
 		{
 			Alias: "CBM",
+			Name:  "Branch Manager",
 		},
 		{
 			Alias: "DRM",
+			Name:  "Regional Manager",
 		},
 		{
 			Alias: "GMO",
+			Name:  "GM Bisnis Operational",
 		},
 		{
 			Alias: "COM",
+			Name:  "Credit Operation Manager",
 		},
 		{
 			Alias: "GMC",
+			Name:  "GM Credit",
 		},
 		{
 			Alias: "UCC",
+			Name:  "UCC",
 		},
 	}
 
 	for i, v := range limit {
 		if req.Alias == v.Alias {
+			result.Name = v.Name
 			// add next
 			if req.Alias != req.FinalApproval {
 				result.NextStep = limit[i+1].Alias
