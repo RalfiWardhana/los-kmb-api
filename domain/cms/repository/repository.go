@@ -1405,7 +1405,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		OTR,
 		ta.DPAmount,
 		ta.AF AS FinanceAmount,
-		interest_amount,
+		ta.interest_amount,
 		ta.insurance_amount,
 		ta.AdminFee,
 		ta.provision_fee,
