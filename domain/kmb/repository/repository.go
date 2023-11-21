@@ -1300,8 +1300,8 @@ func (r repoHandler) GetCurrentTrxWithRejectChassisNumber(chassisNumber string) 
 }
 
 func (r repoHandler) GetRecalculate(prospectID string) (getRecalculate entity.GetRecalculate, err error) {
-	if err = r.losDB.Raw(fmt.Sprintf(`SELECT ta.Tenor, ta.ProductOfferingID, ta.product_offering_desc, ta.NTF, ta.DPAmount, ta.percent_dp, ta.InstallmentAmount, ta.AdminFee, ta.AF,
-	fidusia_fee, ta.interest_rate, ta.interest_amount, ta.NTFAkumulasi, ta.loan_amount, ta.LifeInsuranceFee, ta.AssetInsuranceFee,
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT ta.Tenor, ta.ProductOfferingID, ta.product_offering_desc, ta.NTF, ta.DPAmount, ta.percent_dp, ta.InstallmentAmount, ta.AdminFee, ta.AF,
+	fidusia_fee, ta.interest_rate, ta.interest_amount, ta.NTFAkumulasi, ta.loan_amount, ta.LifeInsuranceFee, ta.AssetInsuranceFee, ta.provision_fee, 
 	( CAST(ISNULL(ta2.InstallmentAmountFMF, 0) AS NUMERIC(17,2)) +
 	CAST(ISNULL(ta2.InstallmentAmountSpouseFMF, 0) AS NUMERIC(17,2)) +
 	CAST(ISNULL(ta2.InstallmentAmountOther, 0) AS NUMERIC(17,2)) +
