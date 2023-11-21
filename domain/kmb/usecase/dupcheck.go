@@ -445,7 +445,7 @@ func (u usecase) CheckRejection(idNumber, prospectID string, configValue respons
 	}
 
 	if trxReject.RejectPMKDSR > 0 {
-		if (trxReject.RejectPMKDSR + trxReject.RejectNIK) > configValue.Data.AttemptPMKDSR {
+		if (trxReject.RejectPMKDSR + trxReject.RejectNIK) >= configValue.Data.AttemptPMKDSR {
 			//banned 30 hari
 			trxBannedPMKDSR = entity.TrxBannedPMKDSR{
 				ProspectID: prospectID,
@@ -459,7 +459,7 @@ func (u usecase) CheckRejection(idNumber, prospectID string, configValue respons
 		}
 	}
 
-	if trxReject.RejectNIK > configValue.Data.AttemptPMKDSR {
+	if trxReject.RejectNIK >= configValue.Data.AttemptPMKDSR {
 		data.Result = constant.DECISION_REJECT
 		data.Code = constant.CODE_PERNAH_REJECT_NIK
 		data.Reason = constant.REASON_PERNAH_REJECT_NIK
