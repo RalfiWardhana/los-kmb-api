@@ -527,6 +527,27 @@ func (_m *Repository) GetMoblast(customerID string) (entity.GetMoblast, error) {
 	return r0, r1
 }
 
+// GetRecalculate provides a mock function with given fields: prospectID
+func (_m *Repository) GetRecalculate(prospectID string) (entity.GetRecalculate, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 entity.GetRecalculate
+	if rf, ok := ret.Get(0).(func(string) entity.GetRecalculate); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.GetRecalculate)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetScoreGenerator provides a mock function with given fields: zipCode
 func (_m *Repository) GetScoreGenerator(zipCode string) (entity.ScoreGenerator, error) {
 	ret := _m.Called(zipCode)
@@ -655,13 +676,13 @@ func (_m *Repository) SaveLogOrchestrator(header interface{}, _a1 interface{}, _
 	return r0
 }
 
-// SaveRecalculate provides a mock function with given fields: data
-func (_m *Repository) SaveRecalculate(data entity.TrxRecalculate) error {
-	ret := _m.Called(data)
+// SaveRecalculate provides a mock function with given fields: beforeRecalculate, afterRecalculate
+func (_m *Repository) SaveRecalculate(beforeRecalculate entity.TrxRecalculate, afterRecalculate entity.TrxRecalculate) error {
+	ret := _m.Called(beforeRecalculate, afterRecalculate)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(entity.TrxRecalculate) error); ok {
-		r0 = rf(data)
+	if rf, ok := ret.Get(0).(func(entity.TrxRecalculate, entity.TrxRecalculate) error); ok {
+		r0 = rf(beforeRecalculate, afterRecalculate)
 	} else {
 		r0 = ret.Error(0)
 	}

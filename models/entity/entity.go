@@ -1793,9 +1793,38 @@ type TrxRecalculate struct {
 	InterestRate        float64   `gorm:"column:interest_rate"`
 	InterestAmount      float64   `gorm:"column:interest_amount"`
 	AdditionalDP        float64   `gorm:"column:additional_dp"`
+	DSRFMF              float64   `gorm:"column:DSRFMF"`
+	TotalDSR            float64   `gorm:"column:TotalDSR"`
 	CreatedAt           time.Time `gorm:"column:created_at"`
 }
 
 func (c *TrxRecalculate) TableName() string {
 	return "trx_recalculate"
+}
+
+type GetRecalculate struct {
+	ProspectID          string  `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	ProductOfferingID   string  `gorm:"type:varchar(30);column:ProductOfferingID"`
+	ProductOfferingDesc string  `gorm:"column:product_offering_desc"`
+	Tenor               *int    `gorm:"column:Tenor"`
+	LoanAmount          float64 `gorm:"column:loan_amount"`
+	AF                  float64 `gorm:"column:AF"`
+	InstallmentAmount   float64 `gorm:"column:InstallmentAmount"`
+	DPAmount            float64 `gorm:"column:DPAmount"`
+	PercentDP           float64 `gorm:"column:percent_dp"`
+	AdminFee            float64 `gorm:"column:AdminFee"`
+	ProvisionFee        float64 `gorm:"column:provision_fee"`
+	FidusiaFee          float64 `gorm:"column:fidusia_fee"`
+	AssetInsuranceFee   float64 `gorm:"column:AssetInsuranceFee"`
+	LifeInsuranceFee    float64 `gorm:"column:LifeInsuranceFee"`
+	NTF                 float64 `gorm:"column:NTF"`
+	NTFAkumulasi        float64 `gorm:"column:NTFAkumulasi"`
+	InterestRate        float64 `gorm:"column:interest_rate"`
+	InterestAmount      float64 `gorm:"column:interest_amount"`
+	AdditionalDP        float64 `gorm:"column:additional_dp"`
+	TotalInstallmentFMF float64 `gorm:"column:TotalInstallmentFMF"`
+	TotalIncome         float64 `gorm:"column:TotalIncome"`
+	DSRFMF              float64 `gorm:"column:DSRFMF"`
+	DSRPBK              float64 `gorm:"column:DSRPBK"`
+	TotalDSR            float64 `gorm:"column:TotalDSR"`
 }

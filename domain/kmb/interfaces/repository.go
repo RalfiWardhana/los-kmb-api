@@ -55,5 +55,6 @@ type Repository interface {
 	GetBannedChassisNumber(chassisNumber string) (data entity.TrxBannedChassisNumber, err error)
 	GetCurrentTrxWithRejectChassisNumber(chassisNumber string) (data []entity.RejectChassisNumber, err error)
 
-	SaveRecalculate(data entity.TrxRecalculate) (err error)
+	GetRecalculate(prospectID string) (getRecalculate entity.GetRecalculate, err error)
+	SaveRecalculate(beforeRecalculate entity.TrxRecalculate, afterRecalculate entity.TrxRecalculate) (err error)
 }
