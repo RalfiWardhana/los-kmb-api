@@ -508,6 +508,12 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 		if err != nil {
 			return
 		}
+
+		data.Code = decisionInfo.Code
+		data.ProspectID = req.ProspectID
+		data.Decision = decisionInfo.Decision
+		data.Reason = reason
+
 	} else {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dalam prescreening")
 		return
