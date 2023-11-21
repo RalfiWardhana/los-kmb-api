@@ -2291,7 +2291,7 @@ func TestGetHistoryApproval(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 
 		// Mock SQL query and result
-		mock.ExpectQuery(`SELECT thas.decision_by, thas.next_final_approval_flag, CASE WHEN thas.decision = 'APR' THEN 'Approve' WHEN thas.decision = 'REJ' THEN 'Reject' WHEN thas.decision = 'CAN' THEN 'Cancel' ELSE '-' END AS decision, CASE WHEN thas.need_escalation = 1 THEN 'Yes' ELSE 'No' END AS need_escalation, thas.source_decision, CASE WHEN thas.next_step<>'' THEN thas.next_step ELSE '-' END AS next_step, CASE WHEN thas.note<>'' THEN thas.note ELSE '-' END AS note, thas.created_at, CASE WHEN thas.source_decision = 'CRA' AND tcd.slik_result<>'' THEN tcd.slik_result ELSE '-' END AS slik_result FROM trx_history_approval_scheme thas WITH \(nolock\) LEFT JOIN trx_ca_decision tcd on thas.ProspectID = tcd.ProspectID WHERE thas.ProspectID = \? ORDER BY thas.created_at DESC`).WithArgs(prospectID).
+		mock.ExpectQuery(`SELECT thas.decision_by, thas.next_final_approval_flag, CASE WHEN thas.decision = 'APR' THEN 'Approve' WHEN thas.decision = 'REJ' THEN 'Reject' WHEN thas.decision = 'CAN' THEN 'Cancel' WHEN thas.decision = 'RTN' THEN 'Return' WHEN thas.decision = 'SDP' THEN 'Submit Perubahan Data Pembiayaan' ELSE '-' END AS decision, CASE WHEN thas.need_escalation = 1 THEN 'Yes' ELSE 'No' END AS need_escalation, thas.source_decision, CASE WHEN thas.next_step<>'' THEN thas.next_step ELSE '-' END AS next_step, CASE WHEN thas.note<>'' THEN thas.note ELSE '-' END AS note, thas.created_at, CASE WHEN thas.source_decision = 'CRA' AND tcd.slik_result<>'' AND thas.decision<>'SDP' THEN tcd.slik_result ELSE '-' END AS slik_result FROM trx_history_approval_scheme thas WITH \(nolock\) LEFT JOIN trx_ca_decision tcd on thas.ProspectID = tcd.ProspectID WHERE thas.ProspectID = \? ORDER BY thas.created_at DESC`).WithArgs(prospectID).
 			WillReturnRows(sqlmock.NewRows([]string{"decision", "decision_by", "next_final_approval_flag", "need_escalation", "source_decision", "next_step", "note", "created_at", "slik_result"}).
 				AddRow("APR", "User CA KMB", 1, "No", "CRA", "CBM", "Ok dari CA", time.Time{}, "Lancar"))
 
@@ -2313,7 +2313,7 @@ func TestGetHistoryApproval(t *testing.T) {
 	t.Run("record not found", func(t *testing.T) {
 
 		// Mock SQL query to simulate record not found
-		mock.ExpectQuery(`SELECT thas.decision_by, thas.next_final_approval_flag, CASE WHEN thas.decision = 'APR' THEN 'Approve' WHEN thas.decision = 'REJ' THEN 'Reject' WHEN thas.decision = 'CAN' THEN 'Cancel' ELSE '-' END AS decision, CASE WHEN thas.need_escalation = 1 THEN 'Yes' ELSE 'No' END AS need_escalation, thas.source_decision, CASE WHEN thas.next_step<>'' THEN thas.next_step ELSE '-' END AS next_step, CASE WHEN thas.note<>'' THEN thas.note ELSE '-' END AS note, thas.created_at, CASE WHEN thas.source_decision = 'CRA' AND tcd.slik_result<>'' THEN tcd.slik_result ELSE '-' END AS slik_result FROM trx_history_approval_scheme thas WITH \(nolock\) LEFT JOIN trx_ca_decision tcd on thas.ProspectID = tcd.ProspectID WHERE thas.ProspectID = \? ORDER BY thas.created_at DESC`).WithArgs(prospectID).
+		mock.ExpectQuery(`SELECT thas.decision_by, thas.next_final_approval_flag, CASE WHEN thas.decision = 'APR' THEN 'Approve' WHEN thas.decision = 'REJ' THEN 'Reject' WHEN thas.decision = 'CAN' THEN 'Cancel' WHEN thas.decision = 'RTN' THEN 'Return' WHEN thas.decision = 'SDP' THEN 'Submit Perubahan Data Pembiayaan' ELSE '-' END AS decision, CASE WHEN thas.need_escalation = 1 THEN 'Yes' ELSE 'No' END AS need_escalation, thas.source_decision, CASE WHEN thas.next_step<>'' THEN thas.next_step ELSE '-' END AS next_step, CASE WHEN thas.note<>'' THEN thas.note ELSE '-' END AS note, thas.created_at, CASE WHEN thas.source_decision = 'CRA' AND tcd.slik_result<>'' AND thas.decision<>'SDP' THEN tcd.slik_result ELSE '-' END AS slik_result FROM trx_history_approval_scheme thas WITH \(nolock\) LEFT JOIN trx_ca_decision tcd on thas.ProspectID = tcd.ProspectID WHERE thas.ProspectID = \? ORDER BY thas.created_at DESC`).WithArgs(prospectID).
 			WillReturnError(gorm.ErrRecordNotFound)
 
 		// Call the function
@@ -2477,21 +2477,21 @@ func TestGetHistoryProcess(t *testing.T) {
 
 	// Expected input and output
 	prospectID := "12345"
-	expectedData := []entity.TrxDetail{
+	expectedData := []entity.HistoryProcess{
 		{
 			Decision:       "PASS",
 			SourceDecision: "PRE SCREENING",
-			Info:           "Dokumen Sesuai",
-			CreatedAt:      time.Time{},
+			Reason:         "Dokumen Sesuai",
+			CreatedAt:      "",
 		},
 	}
 
 	t.Run("success", func(t *testing.T) {
 
 		// Mock SQL query and result
-		mock.ExpectQuery(regexp.QuoteMeta(`SELECT CASE WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING' WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING' WHEN td.source_decision = 'DCP' OR td.source_decision = 'ARI' OR td.source_decision = 'KTP' THEN 'EKYC' WHEN td.source_decision = 'PBK' THEN 'PEFINDO' WHEN td.source_decision = 'SCP' THEN 'SCOREPRO' WHEN td.source_decision = 'DSR' THEN 'DSR' WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS' WHEN td.source_decision = 'CBM' OR td.source_decision = 'DRM' OR td.source_decision = 'GMO' OR td.source_decision = 'COM' OR td.source_decision = 'GMC' OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE' ELSE '-' END AS source_decision, CASE WHEN td.decision = 'PAS' THEN 'PASS' WHEN td.decision = 'REJ' THEN 'REJECT' WHEN td.decision = 'CAN' THEN 'CANCEL' WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS' ELSE '-' END AS decision, CASE WHEN ap.reason IS NULL THEN td.reason ELSE ap.reason END AS reason, td.created_at, td.next_step FROM trx_details td WITH (nolock) LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC') AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
-			WillReturnRows(sqlmock.NewRows([]string{"source_decision", "decision", "info", "created_at"}).
-				AddRow("PRE SCREENING", "PASS", "Dokumen Sesuai", time.Time{}))
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT CASE WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING' WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING' WHEN td.source_decision = 'DCP' OR td.source_decision = 'ARI' OR td.source_decision = 'KTP' THEN 'EKYC' WHEN td.source_decision = 'PBK' THEN 'PEFINDO' WHEN td.source_decision = 'SCP' THEN 'SCOREPRO' WHEN td.source_decision = 'DSR' THEN 'DSR' WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS' WHEN td.source_decision = 'NRC' THEN 'RECALCULATE PROCESS' WHEN td.source_decision = 'CBM' OR td.source_decision = 'DRM' OR td.source_decision = 'GMO' OR td.source_decision = 'COM' OR td.source_decision = 'GMC' OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE' ELSE '-' END AS source_decision, CASE WHEN td.source_decision = 'CRA' THEN 'CA' WHEN td.source_decision = 'CBM' THEN 'BM' WHEN td.source_decision = 'DRM' THEN 'RM' WHEN td.source_decision = 'GMO' THEN 'GMO' WHEN td.source_decision = 'COM' THEN 'COM' WHEN td.source_decision = 'GMC' THEN 'GMC' WHEN td.source_decision = 'UCC' THEN 'UCC' ELSE td.source_decision END AS alias, CASE WHEN td.decision = 'PAS' THEN 'PASS' WHEN td.decision = 'REJ' THEN 'REJECT' WHEN td.decision = 'CAN' THEN 'CANCEL' WHEN td.decision = 'RTN' THEN 'RETURN' WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS' ELSE '-' END AS decision, CASE WHEN ap.reason IS NULL THEN td.reason ELSE ap.reason END AS reason, FORMAT(td.created_at,'yyyy-MM-dd HH:mm:ss') as created_at, td.next_step FROM trx_details td WITH (nolock) LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC') AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
+			WillReturnRows(sqlmock.NewRows([]string{"source_decision", "decision", "reason", "created_at"}).
+				AddRow("PRE SCREENING", "PASS", "Dokumen Sesuai", ""))
 
 		// Call the function
 		data, err := repo.GetHistoryProcess(prospectID)
@@ -2511,8 +2511,7 @@ func TestGetHistoryProcess(t *testing.T) {
 	t.Run("record not found", func(t *testing.T) {
 
 		// Mock SQL query to simulate record not found
-		mock.ExpectQuery(regexp.QuoteMeta(`SELECT CASE WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING' WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING' WHEN td.source_decision = 'DCP' OR td.source_decision = 'ARI' OR td.source_decision = 'KTP' THEN 'EKYC' WHEN td.source_decision = 'PBK' THEN 'PEFINDO' WHEN td.source_decision = 'SCP' THEN 'SCOREPRO' WHEN td.source_decision = 'DSR' THEN 'DSR' WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS' WHEN td.source_decision = 'CBM' OR td.source_decision = 'DRM' OR td.source_decision = 'GMO' OR td.source_decision = 'COM' OR td.source_decision = 'GMC' OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE' ELSE '-' END AS source_decision, CASE WHEN td.decision = 'PAS' THEN 'PASS' WHEN td.decision = 'REJ' THEN 'REJECT' WHEN td.decision = 'CAN' THEN 'CANCEL' WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS' ELSE '-' END AS decision, CASE WHEN ap.reason IS NULL THEN td.reason ELSE ap.reason END AS reason, td.created_at, td.next_step
-		FROM trx_details td WITH (nolock) LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC') AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT CASE WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING' WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING' WHEN td.source_decision = 'DCP' OR td.source_decision = 'ARI' OR td.source_decision = 'KTP' THEN 'EKYC' WHEN td.source_decision = 'PBK' THEN 'PEFINDO' WHEN td.source_decision = 'SCP' THEN 'SCOREPRO' WHEN td.source_decision = 'DSR' THEN 'DSR' WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS' WHEN td.source_decision = 'NRC' THEN 'RECALCULATE PROCESS' WHEN td.source_decision = 'CBM' OR td.source_decision = 'DRM' OR td.source_decision = 'GMO' OR td.source_decision = 'COM' OR td.source_decision = 'GMC' OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE' ELSE '-' END AS source_decision, CASE WHEN td.source_decision = 'CRA' THEN 'CA' WHEN td.source_decision = 'CBM' THEN 'BM' WHEN td.source_decision = 'DRM' THEN 'RM' WHEN td.source_decision = 'GMO' THEN 'GMO' WHEN td.source_decision = 'COM' THEN 'COM' WHEN td.source_decision = 'GMC' THEN 'GMC' WHEN td.source_decision = 'UCC' THEN 'UCC' ELSE td.source_decision END AS alias, CASE WHEN td.decision = 'PAS' THEN 'PASS' WHEN td.decision = 'REJ' THEN 'REJECT' WHEN td.decision = 'CAN' THEN 'CANCEL' WHEN td.decision = 'RTN' THEN 'RETURN' WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS' ELSE '-' END AS decision, CASE WHEN ap.reason IS NULL THEN td.reason ELSE ap.reason END AS reason, FORMAT(td.created_at,'yyyy-MM-dd HH:mm:ss') as created_at, td.next_step FROM trx_details td WITH (nolock) LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC') AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
 			WillReturnError(gorm.ErrRecordNotFound)
 
 		// Call the function
@@ -2622,68 +2621,7 @@ func TestGetInquiryCa(t *testing.T) {
 	expectedInquiry := []entity.InquiryCa{entity.InquiryCa{ShowAction: false, ActionDate: "", Activity: "", SourceDecision: "", StatusDecision: "", StatusReason: "", CaDecision: "", CANote: "", ScsDate: "", ScsScore: "", ScsStatus: "", BiroCustomerResult: "", BiroSpouseResult: "", DraftDecision: "", DraftSlikResult: "", DraftNote: "", DraftCreatedAt: time.Time{}, DraftCreatedBy: "", DraftDecisionBy: "", ProspectID: "EFM03406412522151347", BranchName: "BANDUNG", IncomingSource: "", CreatedAt: "", OrderAt: "", CustomerID: "", CustomerStatus: "", IDNumber: "", LegalName: "", BirthPlace: "", BirthDate: time.Time{}, SurgateMotherName: "", Gender: "", MobilePhone: "", Email: "", Education: "", MaritalStatus: "", NumOfDependence: 0, HomeStatus: "", StaySinceMonth: "", StaySinceYear: "", ExtCompanyPhone: (*string)(nil), SourceOtherIncome: (*string)(nil), SurveyResult: "", Supplier: "", ProductOfferingID: "", AssetType: "", AssetDescription: "", ManufacturingYear: "", Color: "", ChassisNumber: "", EngineNumber: "", InterestRate: 0, InstallmentPeriod: 0, OTR: 0, DPAmount: 0, FinanceAmount: 0, InterestAmount: 0, LifeInsuranceFee: 0, AssetInsuranceFee: 0, InsuranceAmount: 0, AdminFee: 0, ProvisionFee: 0, NTF: 0, NTFAkumulasi: 0, Total: 0, MonthlyInstallment: 0, FirstInstallment: "", ProfessionID: "", JobTypeID: "", JobPosition: "", CompanyName: "", IndustryTypeID: "", EmploymentSinceYear: "", EmploymentSinceMonth: "", MonthlyFixedIncome: 0, MonthlyVariableIncome: 0, SpouseIncome: 0, SpouseIDNumber: "", SpouseLegalName: "", SpouseCompanyName: "", SpouseCompanyPhone: "", SpouseMobilePhone: "", SpouseProfession: "", EmconName: "", Relationship: "", EmconMobilePhone: "", LegalAddress: "", LegalRTRW: "", LegalKelurahan: "", LegalKecamatan: "", LegalZipCode: "", LegalCity: "", ResidenceAddress: "", ResidenceRTRW: "", ResidenceKelurahan: "", ResidenceKecamatan: "", ResidenceZipCode: "", ResidenceCity: "", CompanyAddress: "", CompanyRTRW: "", CompanyKelurahan: "", CompanyKecamatan: "", CompanyZipCode: "", CompanyCity: "", CompanyAreaPhone: "", CompanyPhone: "", EmergencyAddress: "", EmergencyRTRW: "", EmergencyKelurahan: "", EmergencyKecamatan: "", EmergencyZipcode: "", EmergencyCity: "", EmergencyAreaPhone: "", EmergencyPhone: ""}}
 
 	// Mock SQL query and result
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT
-	COUNT(tt.ProspectID) AS totalRow
-	FROM
-	(
-			SELECT
-			cb.BranchID,
-			tm.ProspectID,
-			tm.lob,
-			tm.created_at,
-			tst.activity,
-			tst.source_decision,
-			tst.status_process,
-			tst.decision,
-			tcd.decision as decision_ca,
-			tcd.created_by as decision_by_ca,
-			tdd.created_by AS draft_created_by,
-			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
-	FROM
-	trx_master tm WITH (nolock)
-	INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
-	INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
-	INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
-	INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
-	INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
-	INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
-	INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
-	INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
-	INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
-	LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
-	LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-	LEFT JOIN (
-	  SELECT
-			ProspectID,
-			decision,
-			created_at,
-			created_by
-	  FROM
-			trx_ca_decision WITH (nolock)
-	) tcd ON tm.ProspectID = tcd.ProspectID
-	LEFT JOIN (
-			SELECT
-			  x.ProspectID,
-			  x.decision,
-			  x.slik_result,
-			  x.note,
-			  x.created_at,
-			  x.created_by,
-			  x.decision_by
-			FROM
-			  trx_draft_ca_decision x WITH (nolock)
-			WHERE
-			  x.created_at = (
-					SELECT
-					  max(created_at)
-					from
-					  trx_draft_ca_decision WITH (NOLOCK)
-					WHERE
-					  ProspectID = x.ProspectID
-			  )
-	) tdd ON tm.ProspectID = tdd.ProspectID
-	) AS tt WHERE tt.BranchID IN ('426','903') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'APR' AND tt.status_process='FIN' AND tt.source_decision<>'PSI'`)).
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT COUNT(tt.ProspectID) AS totalRow FROM ( SELECT cb.BranchID, tm.ProspectID, tm.lob, tm.created_at, tst.activity, tst.source_decision, tst.status_process, tst.decision, tcd.decision as decision_ca, tcd.created_by as decision_by_ca, tdd.created_by AS draft_created_by, scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber, scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName, CASE WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1 ELSE 0 END AS ActionEditData FROM trx_master tm WITH (nolock) INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID LEFT JOIN ( SELECT ProspectID, decision, created_at, created_by FROM trx_ca_decision WITH (nolock) ) tcd ON tm.ProspectID = tcd.ProspectID LEFT JOIN ( SELECT x.ProspectID, x.decision, x.slik_result, x.note, x.created_at, x.created_by, x.decision_by FROM trx_draft_ca_decision x WITH (nolock) WHERE x.created_at = ( SELECT max(created_at) from trx_draft_ca_decision WITH (NOLOCK) WHERE ProspectID = x.ProspectID ) ) tdd ON tm.ProspectID = tdd.ProspectID ) AS tt WHERE tt.BranchID IN ('426','903') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'APR' AND tt.status_process='FIN' AND tt.source_decision<>'PSI'`)).
 		WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 			AddRow("27"))
 
@@ -2702,6 +2640,7 @@ func TestGetInquiryCa(t *testing.T) {
 	tst.reason,
 	tcd.decision as decision_ca,
 	tcd.created_by as decision_by_ca,
+	tr.additional_dp,
 	CASE
 	  WHEN tcd.decision='APR' THEN 'APPROVE'
 	  WHEN tcd.decision='REJ' THEN 'REJECT'
@@ -2779,19 +2718,19 @@ func TestGetInquiryCa(t *testing.T) {
 	ti.color,
 	chassis_number,
 	engine_number,
-	interest_rate,
-	Tenor AS InstallmentPeriod,
+	ta.interest_rate,
+	ta.Tenor AS InstallmentPeriod,
 	OTR,
-	DPAmount,
-	AF AS FinanceAmount,
-	interest_amount,
-	insurance_amount,
-	AdminFee,
-	provision_fee,
-	NTF,
-	NTFAkumulasi,
-	(NTF + interest_amount) AS Total,
-	InstallmentAmount AS MonthlyInstallment,
+	ta.DPAmount,
+	ta.AF AS FinanceAmount,
+	ta.interest_amount,
+	ta.insurance_amount,
+	ta.AdminFee,
+	ta.provision_fee,
+	ta.NTF,
+	ta.NTFAkumulasi,
+	(ta.NTF + ta.interest_amount) AS Total,
+	ta.InstallmentAmount AS MonthlyInstallment,
 	FirstInstallment,
 	pr.value AS ProfessionID,
 	jt.value AS JobType,
@@ -2834,7 +2773,11 @@ func TestGetInquiryCa(t *testing.T) {
 	tak.ScsScore,
 	tak.ScsStatus,
 	tdb.BiroCustomerResult,
-	tdb.BiroSpouseResult
+	tdb.BiroSpouseResult,
+	CASE
+	 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+	 ELSE 0
+	END AS ActionEditData
 
   FROM
 	trx_master tm WITH (nolock)
@@ -2846,8 +2789,11 @@ func TestGetInquiryCa(t *testing.T) {
 	INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
 	INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 	INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+	LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 	LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 	LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+	LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+	LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
 	LEFT JOIN (
 	  SELECT
 		ProspectID,

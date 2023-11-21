@@ -2,7 +2,6 @@ package usecase
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	mocksCache "los-kmb-api/domain/cache/mocks"
 	"los-kmb-api/domain/cms/mocks"
@@ -161,11 +160,6 @@ func TestGetApprovalReason(t *testing.T) {
 }
 
 func TestReviewPrescreening(t *testing.T) {
-	// Persiapkan objek usecase dengan mock repository
-	// mockRepository := new(mocks.Repository)
-	// mockHttpClient := new(httpclient.MockHttpClient)
-	// var cache *bigcache.BigCache
-	// usecase := NewUsecase(mockRepository, mockHttpClient, cache)
 
 	var (
 		errSave      error
@@ -201,6 +195,7 @@ func TestReviewPrescreening(t *testing.T) {
 			ActivityStatus string
 			NextStep       interface{}
 			SourceDecision string
+			Info           string
 		}{
 			constant.DECISION_REJECT: {
 				Code:           constant.CODE_REJECT_PRESCREENING,
@@ -211,6 +206,7 @@ func TestReviewPrescreening(t *testing.T) {
 				DecisionDetail: constant.DB_DECISION_REJECT,
 				ActivityStatus: constant.ACTIVITY_STOP,
 				SourceDecision: constant.PRESCREENING,
+				Info:           constant.REASON_TIDAK_SESUAI,
 			},
 			constant.DECISION_APPROVE: {
 				Code:           constant.CODE_PASS_PRESCREENING,
@@ -222,6 +218,7 @@ func TestReviewPrescreening(t *testing.T) {
 				ActivityStatus: constant.ACTIVITY_UNPROCESS,
 				SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
 				NextStep:       constant.SOURCE_DECISION_DUPCHECK,
+				Info:           constant.REASON_SESUAI,
 			},
 		}
 
@@ -236,8 +233,6 @@ func TestReviewPrescreening(t *testing.T) {
 		data.Code = constant.CODE_PASS_PRESCREENING
 		data.Decision = constant.DB_DECISION_APR
 		data.Reason = "Valid reason"
-
-		info, _ := json.Marshal(data)
 
 		prescreening = entity.TrxPrescreening{
 			ProspectID: req.ProspectID,
@@ -254,9 +249,9 @@ func TestReviewPrescreening(t *testing.T) {
 			RuleCode:       decisionInfo.Code,
 			SourceDecision: constant.PRESCREENING,
 			NextStep:       decisionInfo.NextStep,
-			Info:           string(info),
+			Info:           decisionInfo.Info,
 			CreatedBy:      req.DecisionBy,
-			Reason:         string(info),
+			Reason:         reason,
 		}
 		if req.Decision == constant.DECISION_REJECT {
 			trxStatus.RuleCode = decisionInfo.Code
@@ -313,6 +308,7 @@ func TestReviewPrescreening(t *testing.T) {
 			ActivityStatus string
 			NextStep       interface{}
 			SourceDecision string
+			Info           string
 		}{
 			constant.DECISION_REJECT: {
 				Code:           constant.CODE_REJECT_PRESCREENING,
@@ -323,6 +319,7 @@ func TestReviewPrescreening(t *testing.T) {
 				DecisionDetail: constant.DB_DECISION_REJECT,
 				ActivityStatus: constant.ACTIVITY_STOP,
 				SourceDecision: constant.PRESCREENING,
+				Info:           constant.REASON_TIDAK_SESUAI,
 			},
 			constant.DECISION_APPROVE: {
 				Code:           constant.CODE_PASS_PRESCREENING,
@@ -334,6 +331,7 @@ func TestReviewPrescreening(t *testing.T) {
 				ActivityStatus: constant.ACTIVITY_UNPROCESS,
 				SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
 				NextStep:       constant.SOURCE_DECISION_DUPCHECK,
+				Info:           constant.REASON_SESUAI,
 			},
 		}
 
@@ -348,8 +346,6 @@ func TestReviewPrescreening(t *testing.T) {
 		data.Code = constant.CODE_REJECT_PRESCREENING
 		data.Decision = constant.DB_DECISION_REJECT
 		data.Reason = "Reject reason"
-
-		info, _ := json.Marshal(data)
 
 		prescreening = entity.TrxPrescreening{
 			ProspectID: req.ProspectID,
@@ -366,9 +362,9 @@ func TestReviewPrescreening(t *testing.T) {
 			RuleCode:       decisionInfo.Code,
 			SourceDecision: constant.PRESCREENING,
 			NextStep:       decisionInfo.NextStep,
-			Info:           string(info),
+			Info:           decisionInfo.Info,
 			CreatedBy:      req.DecisionBy,
-			Reason:         string(info),
+			Reason:         reason,
 		}
 		if req.Decision == constant.DECISION_REJECT {
 			trxStatus.RuleCode = decisionInfo.Code
@@ -1567,6 +1563,7 @@ func TestSubmitDecision(t *testing.T) {
 			NextStep:       constant.DB_DECISION_BRANCH_MANAGER,
 			Info:           req.SlikResult,
 			CreatedBy:      req.CreatedBy,
+			Reason:         req.SlikResult,
 		}
 
 		trxHistoryApproval = entity.TrxHistoryApprovalScheme{
@@ -1647,6 +1644,7 @@ func TestSubmitDecision(t *testing.T) {
 			NextStep:       constant.DB_DECISION_BRANCH_MANAGER,
 			Info:           req.SlikResult,
 			CreatedBy:      req.CreatedBy,
+			Reason:         req.SlikResult,
 		}
 
 		trxHistoryApproval = entity.TrxHistoryApprovalScheme{
@@ -1961,7 +1959,7 @@ func TestGetSearchInquiry(t *testing.T) {
 
 		mockRepository.On("GetSurveyorData", mock.Anything).Return([]entity.TrxSurveyor{}, nil).Once()
 
-		detail := []entity.TrxDetail{}
+		detail := []entity.HistoryProcess{}
 		errSurveyor := errors.New(constant.RECORD_NOT_FOUND)
 
 		mockRepository.On("GetHistoryProcess", mock.Anything).Return(detail, errors.New(constant.RECORD_NOT_FOUND)).Once()
@@ -2003,23 +2001,23 @@ func TestGetSearchInquiry(t *testing.T) {
 func TestUsecaseGetSearchInquiry(t *testing.T) {
 
 	testcases := []struct {
-		name      string
-		row       int
-		req       request.ReqSearchInquiry
-		data      []entity.InquiryDataSearch
-		inquiry   []entity.InquirySearch
-		photos    []entity.DataPhoto
-		surveyor  []entity.TrxSurveyor
-		trxDetail []entity.TrxDetail
-		errGet    error
-		errFinal  error
+		name           string
+		row            int
+		req            request.ReqSearchInquiry
+		data           []entity.InquiryDataSearch
+		inquiry        []entity.InquirySearch
+		photos         []entity.DataPhoto
+		surveyor       []entity.TrxSurveyor
+		historyProcess []entity.HistoryProcess
+		errGet         error
+		errFinal       error
 	}{
 		{
-			name:      "test success get ",
-			req:       request.ReqSearchInquiry{},
-			photos:    []entity.DataPhoto{},
-			surveyor:  []entity.TrxSurveyor{},
-			trxDetail: []entity.TrxDetail{},
+			name:           "test success get ",
+			req:            request.ReqSearchInquiry{},
+			photos:         []entity.DataPhoto{},
+			surveyor:       []entity.TrxSurveyor{},
+			historyProcess: []entity.HistoryProcess{},
 			inquiry: []entity.InquirySearch{
 				{
 					FinalStatus: constant.DB_DECISION_BRANCH_MANAGER,
@@ -2041,9 +2039,9 @@ func TestUsecaseGetSearchInquiry(t *testing.T) {
 					SurveyorName: "ujang",
 				},
 			},
-			trxDetail: []entity.TrxDetail{
+			historyProcess: []entity.HistoryProcess{
 				{
-					ProspectID: "PPID",
+					Decision: "PAS",
 				},
 			},
 			inquiry: []entity.InquirySearch{
@@ -2066,7 +2064,7 @@ func TestUsecaseGetSearchInquiry(t *testing.T) {
 			mockRepository.On("GetSpIndustryTypeMaster").Return(tc.inquiry, 1, tc.errGet).Once()
 			mockRepository.On("GetCustomerPhoto", mock.Anything).Return(tc.photos, nil).Once()
 			mockRepository.On("GetSurveyorData", mock.Anything).Return(tc.surveyor, nil).Once()
-			mockRepository.On("GetHistoryProcess", mock.Anything).Return(tc.trxDetail, nil).Once()
+			mockRepository.On("GetHistoryProcess", mock.Anything).Return(tc.historyProcess, nil).Once()
 
 			result, _, _ := usecase.GetSearchInquiry(context.Background(), tc.req, mock.Anything)
 			assert.Equal(t, 1, len(result))
@@ -2079,6 +2077,7 @@ func TestSubmitApproval(t *testing.T) {
 		errSave        error
 		trxStatus      entity.TrxStatus
 		trxDetail      entity.TrxDetail
+		trxRecalculate entity.TrxRecalculate
 		approvalScheme response.RespApprovalScheme
 		req            request.ReqSubmitApproval
 	)
@@ -2101,6 +2100,7 @@ func TestSubmitApproval(t *testing.T) {
 		}
 
 		approvalScheme = response.RespApprovalScheme{
+			Name:         "Branch Manager",
 			NextStep:     "DRM",
 			IsFinal:      false,
 			IsEscalation: false,
@@ -2129,7 +2129,7 @@ func TestSubmitApproval(t *testing.T) {
 			Reason:         req.Reason,
 		}
 
-		mockRepository.On("SubmitApproval", req, trxStatus, trxDetail, approvalScheme).Return(errSave).Once()
+		mockRepository.On("SubmitApproval", req, trxStatus, trxDetail, trxRecalculate, approvalScheme).Return(errSave).Once()
 
 		result, err := usecase.SubmitApproval(context.Background(), req)
 
@@ -2163,7 +2163,7 @@ func TestSubmitApproval(t *testing.T) {
 
 		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error")
 
-		mockRepository.On("SubmitApproval", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error")).Once()
+		mockRepository.On("SubmitApproval", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error")).Once()
 
 		_, err := usecase.SubmitApproval(context.Background(), req)
 
