@@ -136,22 +136,27 @@ func TestApprovalReason(t *testing.T) {
 
 	t.Run("record not found", func(t *testing.T) {
 		e := echo.New()
+		e.Validator = common.NewValidator()
 
-		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/reason?type=APR", nil)
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/reason?type=REJ&page=1", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
-
-		ctx := e.NewContext(req, rec)
+		reqID := utils.GenerateUUID()
+		c := e.NewContext(req, rec)
+		c.Set(constant.HeaderXRequestID, reqID)
 
 		mockResponse := []entity.ApprovalReason{}
-		statusCode := http.StatusNotFound
+		statusCode := http.StatusOK
+		mockUsecase.On("GetApprovalReason", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		// Call the handler
+		err := handler.ApprovalReason(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
 
-		mockUsecase.On("GetApprovalReason", mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
-		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-		err := handler.ApprovalReason(ctx)
-		assert.Nil(t, err)
 	})
 
 	t.Run("Error parameter approval reason", func(t *testing.T) {
@@ -185,6 +190,7 @@ func TestApprovalReason(t *testing.T) {
 		err := handler.ApprovalReason(ctx)
 		assert.Nil(t, err)
 	})
+
 }
 
 func TestPrescreeningInquiry(t *testing.T) {
@@ -291,10 +297,11 @@ func TestReviewPrescreening(t *testing.T) {
 		Json:       mockJson,
 	}
 	body := request.ReqReviewPrescreening{
-		ProspectID: "EFM03406412522151348",
-		Decision:   "APPROVE",
-		Reason:     "sesuai",
-		DecisionBy: "SYSTEM",
+		ProspectID:     "EFM03406412522151348",
+		Decision:       "APPROVE",
+		Reason:         "sesuai",
+		DecisionBy:     "abc123",
+		DecisionByName: "CA KMB",
 	}
 
 	t.Run("success review", func(t *testing.T) {
@@ -327,11 +334,11 @@ func TestReviewPrescreening(t *testing.T) {
 			Decision:   constant.DECISION_PASS,
 			Reason:     "OK",
 		}
-		mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything).Return(mockResponse, nil)
+		mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
 
 		mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
-		mockJson.On("EventSuccess", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{})
+		mockJson.On("EventSuccess", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{}).Once()
 
 		// Call the handler
 		err := handler.ReviewPrescreening(c)
@@ -451,20 +458,20 @@ func TestCaInquiry(t *testing.T) {
 		e.Validator = common.NewValidator()
 
 		// Create a request and recorder for testing
-		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/ca/inquiry?search=aa&page=1", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/ca/inquiry?search=aa&branch_id=426&multi_branch=0&user_id=abc123page=1", nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
 		mockUsecase.On("GetInquiryCa", mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryDataCa{}, 0, nil).Once()
 
-		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		// Call the handler
 		err := handler.CaInquiry(c)
@@ -474,7 +481,7 @@ func TestCaInquiry(t *testing.T) {
 	})
 
 	// Create an
-	t.Run("error not found", func(t *testing.T) {
+	t.Run("bind request error", func(t *testing.T) {
 		e := echo.New()
 
 		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/ca/inquiry", strings.NewReader("error"))
@@ -510,6 +517,31 @@ func TestCaInquiry(t *testing.T) {
 		assert.Nil(t, err)
 	})
 
+	t.Run("record not found", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/ca/inquiry?search=aa&branch_id=426&multi_branch=0&user_id=abc123page=1", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		reqID := utils.GenerateUUID()
+		c := e.NewContext(req, rec)
+		c.Set(constant.HeaderXRequestID, reqID)
+
+		mockResponse := []entity.InquiryDataCa{}
+		statusCode := http.StatusOK
+		mockUsecase.On("GetInquiryCa", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		// Call the handler
+		err := handler.CaInquiry(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+
+	})
+
 }
 
 func TestSearchInquiry(t *testing.T) {
@@ -527,20 +559,20 @@ func TestSearchInquiry(t *testing.T) {
 		e.Validator = common.NewValidator()
 
 		// Create a request and recorder for testing
-		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/search?user_id=1212&search=aa&page=1", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/search?user_id=1212&multi_branch=0&branch_id=426&search=aa&page=1", nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
 		mockUsecase.On("GetSearchInquiry", mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryDataSearch{}, 0, nil).Once()
 
-		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		// Call the handler
 		err := handler.SearchInquiry(c)
@@ -549,7 +581,7 @@ func TestSearchInquiry(t *testing.T) {
 		}
 	})
 
-	t.Run("error not found", func(t *testing.T) {
+	t.Run("bind request error", func(t *testing.T) {
 		e := echo.New()
 
 		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/search?user_id=1212&search=aa&page=2", strings.NewReader("error"))
@@ -589,6 +621,31 @@ func TestSearchInquiry(t *testing.T) {
 
 		err := handler.SearchInquiry(ctx)
 		assert.Nil(t, err)
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/search?user_id=1212&multi_branch=0&branch_id=426&search=aa&page=1", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		reqID := utils.GenerateUUID()
+		c := e.NewContext(req, rec)
+		c.Set(constant.HeaderXRequestID, reqID)
+
+		mockResponse := []entity.InquiryDataSearch{}
+		statusCode := http.StatusOK
+		mockUsecase.On("GetSearchInquiry", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		// Call the handler
+		err := handler.SearchInquiry(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+
 	})
 
 }
@@ -1036,20 +1093,20 @@ func TestApprovalInquiry(t *testing.T) {
 		e.Validator = common.NewValidator()
 
 		// Create a request and recorder for testing
-		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/inquiry?user_id=1212&search=aa&page=1", nil)
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/inquiry?alias=CBM&user_id=abc123&branch_id=426&multi_branch=0&search=aa&page=1", nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
 		mockUsecase.On("GetInquiryApproval", mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryDataApproval{}, 0, nil).Once()
 
-		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		// Call the handler
 		err := handler.ApprovalInquiry(c)
@@ -1058,26 +1115,43 @@ func TestApprovalInquiry(t *testing.T) {
 		}
 	})
 
-	t.Run("error not found", func(t *testing.T) {
+	t.Run("error bind request", func(t *testing.T) {
 		e := echo.New()
 
-		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/inquiry?user_id=1212&search=aa&page=2", strings.NewReader("error"))
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/approval/inquiry", strings.NewReader("error"))
 		rec := httptest.NewRecorder()
 
 		ctx := e.NewContext(req, rec)
 
-		mockResponse := []entity.InquiryDataApproval{}
-		statusCode := http.StatusOK
-		mockUsecase.On("GetInquiryApproval", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
-
-		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
 		err := handler.ApprovalInquiry(ctx)
 		assert.Nil(t, err)
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/inquiry?alias=CBM&user_id=abc123&branch_id=426&multi_branch=0&search=aa&page=1", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		reqID := utils.GenerateUUID()
+		c := e.NewContext(req, rec)
+		c.Set(constant.HeaderXRequestID, reqID)
+
+		mockResponse := []entity.InquiryDataApproval{}
+		statusCode := http.StatusOK
+		mockUsecase.On("GetInquiryApproval", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		// Call the handler
+		err := handler.ApprovalInquiry(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+
 	})
 
 	t.Run("bad request approval", func(t *testing.T) {
@@ -1189,5 +1263,164 @@ func TestSubmitApproval(t *testing.T) {
 		err := handler.SubmitApproval(ctx)
 		assert.Nil(t, err)
 
+	})
+}
+
+func TestRecalculateOrder(t *testing.T) {
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	mockJson := new(mocksJson.JSON)
+
+	// Create an instance of the handler
+	handler := &handlerCMS{
+		usecase:    mockUsecase,
+		repository: mockRepository,
+		Json:       mockJson,
+	}
+	body := request.ReqRecalculateOrder{
+		ProspectID: "EFM03406412522151348",
+		DPAmount:   200000,
+		CreatedBy:  "5XeZs9PCeiPcZGS6azt",
+		DecisionBy: "User CA - KMB",
+	}
+
+	t.Run("success recalculate", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+		var errData error
+
+		data, _ := json.Marshal(body)
+
+		reqID := utils.GenerateUUID()
+
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/ca/recalculate", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderXRequestID, reqID)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.Set(constant.HeaderXRequestID, reqID)
+
+		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		mockUsecase.On("RecalculateOrder", mock.Anything, mock.Anything, mock.Anything).Return(response.RecalculateResponse{}, errData).Once()
+
+		mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		// Call the handler
+		err := handler.RecalculateOrder(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
+	t.Run("error bind", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/ca/recalculate", strings.NewReader("error"))
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+		reqID := utils.GenerateUUID()
+		ctx.Set(constant.HeaderXRequestID, reqID)
+
+		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		err := handler.RecalculateOrder(ctx)
+		assert.Nil(t, err)
+	})
+
+	t.Run("error bad request", func(t *testing.T) {
+		body.ProspectID = "EFM0340641252215134812345"
+		data, _ := json.Marshal(body)
+
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/ca/recalculate", bytes.NewBuffer(data))
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+		reqID := utils.GenerateUUID()
+		ctx.Set(constant.HeaderXRequestID, reqID)
+		ctx.Request().Header.Add("content-type", "application/json")
+
+		mockResponse := response.RecalculateResponse{}
+		statusCode := http.StatusBadRequest
+
+		mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		mockUsecase.On("RecalculateOrder", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
+
+		err := handler.RecalculateOrder(ctx)
+		assert.Nil(t, err)
+
+	})
+}
+
+func TestGetAkkk(t *testing.T) {
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	mockJson := new(mocksJson.JSON)
+
+	handler := &handlerCMS{
+		usecase:    mockUsecase,
+		repository: mockRepository,
+		Json:       mockJson,
+	}
+	t.Run("success_get_akkk", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/akkk/", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.SetPath("/view/:prospect_id")
+		c.SetParamNames("prospect_id")
+		c.SetParamValues("abc123")
+
+		mockUsecase.On("GetAkkk", mock.Anything).Return(entity.Akkk{}, nil).Once()
+
+		mockJson.On("BadRequestErrorBindV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		// Call the handler
+		err := handler.GetAkkk(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
+	t.Run("error_bad_request_get_akkk", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/akkk/view/prospect_id", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockUsecase.On("GetAkkk", mock.Anything).Return(entity.Akkk{}, 0, nil).Once()
+
+		mockJson.On("BadRequestErrorBindV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		// Call the handler
+		err := handler.GetAkkk(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
 	})
 }
