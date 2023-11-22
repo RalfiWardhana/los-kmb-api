@@ -358,7 +358,7 @@ type Surveyor struct {
 type Transaction struct {
 	ProspectID        string `json:"prospect_id" validate:"prospect_id" example:"SAL042600001"`
 	BranchID          string `json:"branch_id" validate:"branch_id" example:"426"`
-	ApplicationSource string `json:"application_source" validate:"required" example:"H"`
+	ApplicationSource string `json:"application_source" validate:"required,max=10" example:"H"`
 	Channel           string `json:"channel" validate:"channel" example:"OFF"`
 	Lob               string `json:"lob" validate:"lob" example:"KMB"`
 	OrderAt           string `json:"order_at" validate:"required" example:"2021-07-15T11:44:05+07:00"`
