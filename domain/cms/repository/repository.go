@@ -2417,12 +2417,45 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 	// check has return order
 	var rowCheck entity.TotalRow
 
-	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT COUNT(tt.ProspectID) AS totalRow FROM (
-	  SELECT tm.ProspectID, cb.BranchID, rtn.next_step, scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber, scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName FROM trx_master tm WITH (nolock)
-	  INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
-	  INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
-	  LEFT JOIN trx_history_approval_scheme rtn WITH (nolock) ON rtn.ProspectID = tm.ProspectID AND rtn.decision = 'SDP')
-	  AS tt %s`, filter)).Scan(&rowCheck).Error; err != nil {
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.status_process,
+			tst.decision,
+			tcd.final_approval,
+			tcd.decision_by,
+			has.next_step,
+			has.decision AS approval_decision,
+			has.source_decision AS approval_source_decision,
+			tcd.decision as ca_decision,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+		FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID   	
+		LEFT JOIN (SELECT ProspectID, decision, source_decision, next_step FROM trx_history_approval_scheme sdp WITH (nolock) WHERE sdp.decision = 'SDP') has ON has.ProspectID = tm.ProspectID
+		LEFT JOIN trx_ca_decision tcd WITH (nolock) ON tm.ProspectID = tcd.ProspectID
+		) AS tt %s`, filter)).Scan(&rowCheck).Error; err != nil {
 		return
 	}
 
@@ -2522,6 +2555,10 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		  WHEN tcd.final_approval='%s' THEN 1
 		  ELSE 0
 		END AS is_last_approval,
+		CASE
+		  WHEN rtn.decision IS NOT NULL THEN 1
+		  ELSE 0
+		END AS HasReturn,
 		tcd.note AS ca_note,
 		CASE
 		  WHEN tst.status_process='FIN'
@@ -2658,6 +2695,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
 		LEFT JOIN trx_history_approval_scheme has WITH (nolock) ON has.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,

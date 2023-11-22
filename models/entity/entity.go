@@ -1389,6 +1389,7 @@ type InquiryCa struct {
 	BiroCustomerResult string  `gorm:"column:BiroCustomerResult"`
 	BiroSpouseResult   string  `gorm:"column:BiroSpouseResult"`
 	IsLastApproval     bool    `gorm:"column:is_last_approval"`
+	HasReturn          bool    `gorm:"column:HasReturn"`
 
 	DraftDecision   string    `gorm:"column:draft_decision"`
 	DraftSlikResult string    `gorm:"column:draft_slik_result"`
@@ -1740,6 +1741,7 @@ type DataApproval struct {
 	ShowAction         bool   `gorm:"column:ShowAction" json:"show_action"`
 	ActionFormAkk      bool   `gorm:"column:ActionFormAkk" json:"action_form_akk"`
 	IsLastApproval     bool   `gorm:"column:IsLastApproval" json:"is_last_approval"`
+	HasReturn          bool   `gorm:"column:HasReturn" json:"has_return"`
 	StatusDecision     string `gorm:"column:decision" json:"status_decision"`
 	StatusReason       string `gorm:"column:reason" json:"status_reason"`
 	FinalApproval      string `gorm:"column:final_approval" json:"final_approval"`
