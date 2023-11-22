@@ -1910,7 +1910,7 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			ContractStatus:     "0",
 			AF:                 apk.AF,
 			MobilePhone:        personal.MobilePhone,
-			CustomerIDKreditmu: constant.LOB_KMB,
+			CustomerIDKreditmu: constant.LOB_NEW_KMB,
 		}).Error; err != nil {
 			return err
 		}

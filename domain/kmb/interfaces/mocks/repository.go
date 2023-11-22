@@ -690,6 +690,20 @@ func (_m *Repository) SaveRecalculate(beforeRecalculate entity.TrxRecalculate, a
 	return r0
 }
 
+// SaveToStaging provides a mock function with given fields: prospectID
+func (_m *Repository) SaveToStaging(prospectID string) error {
+	ret := _m.Called(prospectID)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // SaveTransaction provides a mock function with given fields: countTrx, data, trxPrescreening, trxFMF, details, reason
 func (_m *Repository) SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) error {
 	ret := _m.Called(countTrx, data, trxPrescreening, trxFMF, details, reason)

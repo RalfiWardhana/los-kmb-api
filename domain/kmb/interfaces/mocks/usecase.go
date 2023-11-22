@@ -354,6 +354,27 @@ func (_m *Usecase) GetBase64Media(ctx context.Context, url string, customerID in
 	return r0, r1
 }
 
+// InsertStaging provides a mock function with given fields: prospectID
+func (_m *Usecase) InsertStaging(prospectID string) (response.InsertStaging, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 response.InsertStaging
+	if rf, ok := ret.Get(0).(func(string) response.InsertStaging); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(response.InsertStaging)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Ktp provides a mock function with given fields: ctx, req, cb_found, accessToken
 func (_m *Usecase) Ktp(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (response.Ekyc, error) {
 	ret := _m.Called(ctx, req, cb_found, accessToken)
