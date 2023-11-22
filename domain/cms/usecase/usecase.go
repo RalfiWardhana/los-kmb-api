@@ -1617,6 +1617,7 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 				ShowAction:         inq.ShowAction,
 				ActionFormAkk:      inq.ActionFormAkk,
 				IsLastApproval:     inq.IsLastApproval,
+				HasReturn:          inq.HasReturn,
 				StatusDecision:     statusDecision,
 				StatusReason:       inq.StatusReason,
 				FinalApproval:      inq.FinalApproval,

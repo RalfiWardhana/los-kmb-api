@@ -2549,6 +2549,10 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		  WHEN tcd.final_approval='%s' THEN 1
 		  ELSE 0
 		END AS is_last_approval,
+		CASE
+		  WHEN rtn.decision IS NOT NULL THEN 1
+		  ELSE 0
+		END AS HasReturn,
 		tcd.note AS ca_note,
 		CASE
 		  WHEN tst.status_process='FIN'
@@ -2685,6 +2689,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
 		LEFT JOIN trx_history_approval_scheme has WITH (nolock) ON has.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
