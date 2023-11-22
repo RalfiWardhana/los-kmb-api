@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"los-kmb-api/domain/kmb/interfaces"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/dto"
@@ -144,54 +145,35 @@ func (c *handlerKMB) Recalculate(ctx echo.Context) (err error) {
 	return ctxJson
 }
 
-// Recalculate
-// @Description Recalculate
-// @Tags Recalculate
+// Insert Staging
+// @Description Insert Staging
+// @Tags Insert Staging
 // @Produce json
-// @Param body body request.Recalculate true "Body payload"
+// @Param prospectID path string true "Prospect ID"
 // @Success 200 {object} response.ApiResponse{}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
-// @Router /api/v3/kmb/recalculate [post]
-func (c *handlerKMB) Recalculate(ctx echo.Context) (err error) {
+// @Router /api/v3/kmb/insert-staging/{prospectID} [post]
+func (c *handlerKMB) InsertStagingIndex(ctx echo.Context) (err error) {
 	var (
-		req     request.Recalculate
-		resp    interface{}
 		ctxJson error
 	)
 
-	// Save Log Orchestrator
-	defer func() {
-		go c.repository.SaveLogOrchestrator(ctx.Request().Header, req, resp, "/api/v3/kmb/recalculate", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
-	}()
+	prospectID := ctx.Param("prospect_id")
 
-	err = c.authorization.Authorization(dto.AuthModel{
-		ClientID:   ctx.Request().Header.Get(constant.HEADER_CLIENT_ID),
-		Credential: ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION),
-	}, time.Now().Local())
+	if prospectID == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID does not exist")
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Insert Staging", prospectID, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.InsertStaging(prospectID)
 
 	if err != nil {
-		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB RECALCULATE", req, err)
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Insert Staging", prospectID, err)
 		return ctxJson
 	}
 
-	if err := ctx.Bind(&req); err != nil {
-		ctxJson, resp = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB RECALCULATE", req, err)
-		return ctxJson
-	}
-
-	if err := ctx.Validate(&req); err != nil {
-		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB RECALCULATE", req, err)
-		return ctxJson
-	}
-
-	data, err := c.usecase.Recalculate(ctx.Request().Context(), req)
-
-	if err != nil {
-		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", req, err)
-		return ctxJson
-	}
-
-	ctxJson, resp = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE - Success", req, data)
+	ctxJson, _ = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Insert Staging Success", prospectID, data)
 	return ctxJson
 }
