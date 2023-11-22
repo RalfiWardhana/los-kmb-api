@@ -42,7 +42,7 @@ func NewRepository(core, confins, NewKmb, kpLos, KpLosLogs *gorm.DB) interfaces.
 
 func (r repoHandler) GetAFMobilePhone(prospectID string) (data entity.AFMobilePhone, err error) {
 
-	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT AF, SCP.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone, DPAmount FROM trx_apk apk WITH (nolock) INNER JOIN trx_customer_personal tcp WITH (nolock) ON apk.ProspectID = tcp.ProspectID WHERE apk.ProspectID = '%s'`, prospectID)).Scan(&data).Error; err != nil {
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT AF, SCP.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone, OTR, DPAmount FROM trx_apk apk WITH (nolock) INNER JOIN trx_customer_personal tcp WITH (nolock) ON apk.ProspectID = tcp.ProspectID WHERE apk.ProspectID = '%s'`, prospectID)).Scan(&data).Error; err != nil {
 		return
 	}
 
@@ -2413,6 +2413,22 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 	}
 
 	filter = filter + query
+
+	// check has return order
+	var rowCheck entity.TotalRow
+
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT COUNT(tt.ProspectID) AS totalRow FROM (
+	  SELECT tm.ProspectID, cb.BranchID, rtn.next_step, scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber, scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName FROM trx_master tm WITH (nolock)
+	  INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+	  INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+	  LEFT JOIN trx_history_approval_scheme rtn WITH (nolock) ON rtn.ProspectID = tm.ProspectID AND rtn.decision = 'SDP')
+	  AS tt %s`, filter)).Scan(&rowCheck).Error; err != nil {
+		return
+	}
+
+	if rowCheck.Total > 0 {
+		filter = filter + " AND tt.approval_decision = 'SDP'"
+	}
 
 	if pagination != nil {
 		page, _ := json.Marshal(pagination)

@@ -1802,6 +1802,12 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 			err = errors.New(constant.ERROR_BAD_REQUEST + " - Nilai DP harus lebih besar dari DP Awal")
 			return
 		}
+
+		// validate DP Amount should lower than recent OTR
+		if req.DPAmount > recentDP.OTR {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Nilai DP tidak boleh lebih dari OTR")
+			return
+		}
 	}
 
 	approvalScheme, err = utils.ApprovalScheme(req)

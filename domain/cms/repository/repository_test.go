@@ -1849,7 +1849,7 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 	})
 }
 
-func TestGetInquiryPrescreening_RecordNotFound(t *testing.T) {
+func TestGetInquiryPrescreeningRecordNotFound(t *testing.T) {
 	// Setup mock database connection
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -2201,12 +2201,36 @@ func TestSavePrescreening(t *testing.T) {
 		Reason:         "reject reason",
 	}
 
-	t.Run("success", func(t *testing.T) {
+	t.Run("success update", func(t *testing.T) {
 
 		mock.ExpectBegin()
 		query := `UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "source_decision" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`
 		queryRegex := regexp.QuoteMeta(query)
 		mock.ExpectExec(queryRegex).WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`INSERT INTO "trx_details" (.*)`).
+			WithArgs(detail...).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_prescreening" ("ProspectID","decision","reason","created_at","created_by","decision_by") VALUES (?,?,?,?,?,?)`)).
+			WithArgs(trxPrescreening.ProspectID, trxPrescreening.Decision, trxPrescreening.Reason, sqlmock.AnyArg(), trxPrescreening.CreatedBy, trxPrescreening.DecisionBy).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectCommit()
+
+		err := newDB.SavePrescreening(trxPrescreening, trxDetail, trxStatus)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
+	t.Run("success insert", func(t *testing.T) {
+
+		mock.ExpectBegin()
+		query := `UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "source_decision" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`
+		queryRegex := regexp.QuoteMeta(query)
+		mock.ExpectExec(queryRegex).WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
+			WillReturnResult(sqlmock.NewResult(0, 0))
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_status" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","created_at","reason") VALUES (?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxStatus.ProspectID, trxStatus.StatusProcess, trxStatus.Activity, trxStatus.Decision, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.NextStep, sqlmock.AnyArg(), trxStatus.Reason).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`INSERT INTO "trx_details" (.*)`).
 			WithArgs(detail...).
@@ -3664,4 +3688,496 @@ func TestGetApprovalReason(t *testing.T) {
 		}
 	})
 
+}
+
+func TestGetAFMobilePhone(t *testing.T) {
+	// Setup mock database connection
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	expected := entity.AFMobilePhone{
+		AFValue:     1000,
+		OTR:         10000,
+		DPAmount:    1000,
+		MobilePhone: "0896245242",
+	}
+
+	t.Run("success", func(t *testing.T) {
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT AF, SCP.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone, OTR, DPAmount FROM trx_apk apk WITH (nolock) INNER JOIN trx_customer_personal tcp WITH (nolock) ON apk.ProspectID = tcp.ProspectID WHERE apk.ProspectID = 'ppid'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"AF", "MobilePhone", "OTR", "DPAmount"}).
+				AddRow(1000, "0896245242", 10000, 1000))
+		// Call the function
+		data, err := repo.GetAFMobilePhone("ppid")
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expected, data, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		// Mock SQL query to simulate record not found
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT AF, SCP.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone, OTR, DPAmount FROM trx_apk apk WITH (nolock) INNER JOIN trx_customer_personal tcp WITH (nolock) ON apk.ProspectID = tcp.ProspectID WHERE apk.ProspectID = 'ppid'`)).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		// Call the function
+		_, err := repo.GetAFMobilePhone("ppid")
+
+		// Verify the error message
+		expectedErr := errors.New(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestGetRegionBranch(t *testing.T) {
+	// Setup mock database connection
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	expected := []entity.RegionBranch{
+		{
+			RegionName:   "WEST JAVA",
+			BranchMember: `["426","436","429","431","442","428","430"]`,
+		},
+	}
+
+	t.Run("success", func(t *testing.T) {
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock) INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN ( SELECT value FROM region_user ru WITH (nolock) cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',') WHERE ru.user_id = 'user_id' ) AND b.lob_id='125'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
+				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
+		// Call the function
+		data, err := repo.GetRegionBranch("user_id")
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expected, data, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		// Mock SQL query to simulate record not found
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock) INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN ( SELECT value FROM region_user ru WITH (nolock) cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',') WHERE ru.user_id = 'user_id' ) AND b.lob_id='125'`)).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		// Call the function
+		_, err := repo.GetRegionBranch("user_id")
+
+		// Verify the error message
+		expectedErr := errors.New(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestGetAkkk(t *testing.T) {
+	// Setup mock database connection
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	expected := entity.Akkk{
+		ProspectID: "ppid",
+	}
+
+	t.Run("success", func(t *testing.T) {
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT ts.ProspectID, 
+		ta2.FinancePurpose,
+		scp.dbo.DEC_B64('SEC',tcp.LegalName) as LegalName,
+		scp.dbo.DEC_B64('SEC',tcp.IDNumber) as IDNumber,  
+		tcp.PersonalNPWP,
+		scp.dbo.DEC_B64('SEC',tcp.SurgateMotherName) as SurgateMotherName,
+		tce.ProfessionID,
+		tcp.CustomerStatus,
+		ta.CustomerType,
+		tcp.Gender,
+		scp.dbo.DEC_B64('SEC',tcp.BirthPlace) as BirthPlace,
+		tcp.BirthDate,
+		tcp.Education,
+		scp.dbo.DEC_B64('SEC',tcp.MobilePhone) as MobilePhone,
+		scp.dbo.DEC_B64('SEC',tcp.Email) as Email,
+		tcs.LegalName as SpouseLegalName,
+		tcs.IDNumber as SpouseIDNumber,
+		tcs.SurgateMotherName as SpouseSurgateMotherName,
+		tcs.ProfessionID as SpouseProfessionID,
+		ta.SpouseType,
+		tcs.Gender as SpouseGender,
+		tcs.BirthPlace as SpouseBirthPlace,
+		tcs.BirthDate as SpouseBirthDate,
+		tcs.MobilePhone as SpouseMobilePhone,
+		tce2.VerificationWith,
+		tce2.Relationship as EmconRelationship,
+		tce2.EmconVerified,
+		tca.Address,
+		tce2.MobilePhone as EmconMobilePhone,
+		tce2.VerifyBy,
+		tce2.KnownCustomerAddress,
+		tcp.StaySinceYear,
+		tcp.StaySinceMonth,
+		tce2.KnownCustomerJob,
+		CASE tce.ProfessionID 
+			WHEN 'WRST' THEN 'WIRASWASTA'
+			WHEN 'PRO' THEN 'PROFESSIONAL'
+			WHEN 'KRYSW' THEN 'KARYAWAN SWASTA'
+			WHEN 'PNS' THEN 'PEGAWAI NEGERI SIPIL'
+			WHEN 'ANG' THEN 'ANGKATAN'
+			ELSE '-'
+		END as Job,
+		tce.EmploymentSinceYear,
+		tce.EmploymentSinceMonth,
+		tce.IndustryTypeID,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		CASE ti.bpkb_name
+			WHEN 'K' THEN 'NAMA SAMA'
+			WHEN 'P' THEN 'NAMA SAMA'
+			WHEN 'KK' THEN 'NAMA BEDA'
+			WHEN 'O' THEN 'NAMA BEDA'
+			ELSE '-'
+		END as BpkbName,
+		tdb.plafon as Plafond,
+		tdb.baki_debet_non_collateral as BakiDebet,
+		tdb.fasilitas_aktif as FasilitasAktif,
+		CASE
+			WHEN tdb.kualitas_kredit_terburuk <> NULL THEN CONCAT(tdb.kualitas_kredit_terburuk,' ',tdb.bulan_kualitas_terburuk)
+			ELSE NULL
+		END as ColTerburuk,
+		tdb.baki_debet_kualitas_terburuk as BakiDebetTerburuk,
+		CASE
+			WHEN tdb.kualitas_kredit_terakhir <> NULL THEN CONCAT(tdb.kualitas_kredit_terakhir,' ',tdb.bulan_kualitas_kredit_terakhir)
+			ELSE NULL
+		END as ColTerakhirAktif,
+		tdb2.plafon as SpousePlafond,
+		tdb2.baki_debet_non_collateral as SpouseBakiDebet,
+		tdb2.fasilitas_aktif as SpouseFasilitasAktif,
+		CASE
+			WHEN tdb2.kualitas_kredit_terburuk <> NULL THEN CONCAT(tdb2.kualitas_kredit_terburuk,' ',tdb2.bulan_kualitas_terburuk)
+			ELSE NULL
+		END as SpouseColTerburuk,
+		tdb2.baki_debet_kualitas_terburuk as SpouseBakiDebetTerburuk,
+		CASE
+			WHEN tdb2.kualitas_kredit_terakhir <> NULL THEN CONCAT(tdb2.kualitas_kredit_terakhir,' ',tdb2.bulan_kualitas_kredit_terakhir)
+			ELSE NULL
+		END as SpouseColTerakhirAktif,
+		ta.ScsScore,
+		ta.AgreementStatus,
+		ta.TotalAgreementAktif,
+		ta.MaxOVDAgreementAktif,
+		ta.LastMaxOVDAgreement,
+		tf.customer_segment,
+		ta.LatestInstallment,
+		ta2.NTFAkumulasi,
+		(CAST(ISNULL(ta2.InstallmentAmount, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(tf.total_installment_amount_biro, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(ta.InstallmentAmountFMF, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(ta.InstallmentAmountSpouseFMF, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(ta.InstallmentAmountOther, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(ta.InstallmentAmountOtherSpouse, 0) AS NUMERIC(17,2)) -
+		CAST(ISNULL(ta.InstallmentTopup, 0) AS NUMERIC(17,2)) ) as TotalInstallment,
+		(CAST(ISNULL(tce.MonthlyFixedIncome, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(tce.MonthlyVariableIncome, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(tce.SpouseIncome, 0) AS NUMERIC(17,2)) ) as TotalIncome,
+		ta.TotalDSR,
+		ta.EkycSource,
+		ta.EkycSimiliarity,
+		ta.EkycReason,
+		CASE tia.info 
+			WHEN '1' THEN 'APR'
+			ELSE 'REJ'
+		END cmo_decision,
+		tia.name as cmo_name,
+		tia.recom_date cmo_date,
+		tcd.decision as ca_decision,
+		tcd.note as ca_note,
+		tcd.decision_by as ca_name,
+		FORMAT(tcd.created_at,'yyyy-MM-dd') as ca_date,
+		cbm.decision as cbm_decision,
+		cbm.note as cbm_note,
+		cbm.decision_by as cbm_name,
+		FORMAT(cbm.created_at,'yyyy-MM-dd') as cbm_date,
+		drm.decision as drm_decision,
+		drm.note as drm_note,
+		drm.decision_by as drm_name,
+		FORMAT(drm.created_at,'yyyy-MM-dd') as drm_date,
+		gmo.decision as gmo_decision,
+		gmo.note as gmo_note,
+		gmo.decision_by as gmo_name,
+		FORMAT(gmo.created_at,'yyyy-MM-dd') as gmo_date
+		FROM trx_status ts WITH (nolock)
+		LEFT JOIN trx_customer_personal tcp WITH (nolock) ON ts.ProspectID = tcp.ProspectID 
+		LEFT JOIN trx_customer_employment tce WITH (nolock) ON ts.ProspectID = tce.ProspectID
+		LEFT JOIN trx_akkk ta WITH (nolock) ON ts.ProspectID = ta.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON ts.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_customer_emcon tce2 WITH (nolock) ON ts.ProspectID = tce2.ProspectID
+		LEFT OUTER JOIN ( 
+			SELECT scp.dbo.DEC_B64('SEC', Address) AS Address, ProspectID, Phone 
+			FROM trx_customer_address WITH (nolock)
+			WHERE Type = 'EMERGENCY' 
+		) AS tca ON ts.ProspectID = tca.ProspectID 
+		LEFT JOIN trx_item ti WITH (nolock) ON ts.ProspectID = ti.ProspectID
+		LEFT OUTER JOIN ( 
+			SELECT * FROM trx_detail_biro WITH (nolock)
+			WHERE subject = 'CUSTOMER' 
+		) AS tdb ON ts.ProspectID = tdb.prospect_id
+		LEFT JOIN trx_filtering tf WITH (nolock) ON ts.ProspectID = tf.prospect_id 
+		LEFT JOIN trx_apk ta2 WITH (nolock) ON ts.ProspectID = ta2.ProspectID
+		LEFT OUTER JOIN ( 
+			SELECT * FROM trx_detail_biro WITH (nolock)
+			WHERE subject = 'SPOUSE' 
+		) AS tdb2 ON ts.ProspectID = tdb2.prospect_id
+		LEFT JOIN trx_ca_decision tcd WITH (nolock) ON ts.ProspectID = tcd.ProspectID
+		LEFT JOIN trx_info_agent tia WITH (nolock) ON ts.ProspectID = tia.ProspectID
+		LEFT JOIN ( 
+			SELECT * FROM trx_history_approval_scheme thas1 WITH (nolock)
+			WHERE thas1.source_decision = 'CBM' AND thas1.created_at = (SELECT MAX(tha1.created_at) From trx_history_approval_scheme tha1 WHERE tha1.source_decision = thas1.source_decision AND tha1.ProspectID = thas1.ProspectID)
+		) AS cbm ON ts.ProspectID = cbm.ProspectID
+		LEFT JOIN ( 
+			SELECT * FROM trx_history_approval_scheme thas2 WITH (nolock)
+			WHERE thas2.source_decision = 'DRM' AND thas2.created_at = (SELECT MAX(tha2.created_at) From trx_history_approval_scheme tha2 WHERE tha2.source_decision = thas2.source_decision AND tha2.ProspectID = thas2.ProspectID)
+		) AS drm ON ts.ProspectID = drm.ProspectID
+		LEFT JOIN ( 
+			SELECT * FROM trx_history_approval_scheme thas3 WITH (nolock)
+			WHERE thas3.source_decision = 'GMO' AND thas3.created_at = (SELECT MAX(tha3.created_at) From trx_history_approval_scheme tha3 WHERE tha3.source_decision = thas3.source_decision AND tha3.ProspectID = thas3.ProspectID)
+		) AS gmo ON ts.ProspectID = gmo.ProspectID
+		WHERE ts.ProspectID = 'ppid'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID"}).
+				AddRow("ppid"))
+		// Call the function
+		data, err := repo.GetAkkk("ppid")
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expected, data, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("error", func(t *testing.T) {
+		// Mock SQL query to simulate record not found
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT ts.ProspectID, 
+		ta2.FinancePurpose,
+		scp.dbo.DEC_B64('SEC',tcp.LegalName) as LegalName,
+		scp.dbo.DEC_B64('SEC',tcp.IDNumber) as IDNumber,  
+		tcp.PersonalNPWP,
+		scp.dbo.DEC_B64('SEC',tcp.SurgateMotherName) as SurgateMotherName,
+		tce.ProfessionID,
+		tcp.CustomerStatus,
+		ta.CustomerType,
+		tcp.Gender,
+		scp.dbo.DEC_B64('SEC',tcp.BirthPlace) as BirthPlace,
+		tcp.BirthDate,
+		tcp.Education,
+		scp.dbo.DEC_B64('SEC',tcp.MobilePhone) as MobilePhone,
+		scp.dbo.DEC_B64('SEC',tcp.Email) as Email,
+		tcs.LegalName as SpouseLegalName,
+		tcs.IDNumber as SpouseIDNumber,
+		tcs.SurgateMotherName as SpouseSurgateMotherName,
+		tcs.ProfessionID as SpouseProfessionID,
+		ta.SpouseType,
+		tcs.Gender as SpouseGender,
+		tcs.BirthPlace as SpouseBirthPlace,
+		tcs.BirthDate as SpouseBirthDate,
+		tcs.MobilePhone as SpouseMobilePhone,
+		tce2.VerificationWith,
+		tce2.Relationship as EmconRelationship,
+		tce2.EmconVerified,
+		tca.Address,
+		tce2.MobilePhone as EmconMobilePhone,
+		tce2.VerifyBy,
+		tce2.KnownCustomerAddress,
+		tcp.StaySinceYear,
+		tcp.StaySinceMonth,
+		tce2.KnownCustomerJob,
+		CASE tce.ProfessionID 
+			WHEN 'WRST' THEN 'WIRASWASTA'
+			WHEN 'PRO' THEN 'PROFESSIONAL'
+			WHEN 'KRYSW' THEN 'KARYAWAN SWASTA'
+			WHEN 'PNS' THEN 'PEGAWAI NEGERI SIPIL'
+			WHEN 'ANG' THEN 'ANGKATAN'
+			ELSE '-'
+		END as Job,
+		tce.EmploymentSinceYear,
+		tce.EmploymentSinceMonth,
+		tce.IndustryTypeID,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		CASE ti.bpkb_name
+			WHEN 'K' THEN 'NAMA SAMA'
+			WHEN 'P' THEN 'NAMA SAMA'
+			WHEN 'KK' THEN 'NAMA BEDA'
+			WHEN 'O' THEN 'NAMA BEDA'
+			ELSE '-'
+		END as BpkbName,
+		tdb.plafon as Plafond,
+		tdb.baki_debet_non_collateral as BakiDebet,
+		tdb.fasilitas_aktif as FasilitasAktif,
+		CASE
+			WHEN tdb.kualitas_kredit_terburuk <> NULL THEN CONCAT(tdb.kualitas_kredit_terburuk,' ',tdb.bulan_kualitas_terburuk)
+			ELSE NULL
+		END as ColTerburuk,
+		tdb.baki_debet_kualitas_terburuk as BakiDebetTerburuk,
+		CASE
+			WHEN tdb.kualitas_kredit_terakhir <> NULL THEN CONCAT(tdb.kualitas_kredit_terakhir,' ',tdb.bulan_kualitas_kredit_terakhir)
+			ELSE NULL
+		END as ColTerakhirAktif,
+		tdb2.plafon as SpousePlafond,
+		tdb2.baki_debet_non_collateral as SpouseBakiDebet,
+		tdb2.fasilitas_aktif as SpouseFasilitasAktif,
+		CASE
+			WHEN tdb2.kualitas_kredit_terburuk <> NULL THEN CONCAT(tdb2.kualitas_kredit_terburuk,' ',tdb2.bulan_kualitas_terburuk)
+			ELSE NULL
+		END as SpouseColTerburuk,
+		tdb2.baki_debet_kualitas_terburuk as SpouseBakiDebetTerburuk,
+		CASE
+			WHEN tdb2.kualitas_kredit_terakhir <> NULL THEN CONCAT(tdb2.kualitas_kredit_terakhir,' ',tdb2.bulan_kualitas_kredit_terakhir)
+			ELSE NULL
+		END as SpouseColTerakhirAktif,
+		ta.ScsScore,
+		ta.AgreementStatus,
+		ta.TotalAgreementAktif,
+		ta.MaxOVDAgreementAktif,
+		ta.LastMaxOVDAgreement,
+		tf.customer_segment,
+		ta.LatestInstallment,
+		ta2.NTFAkumulasi,
+		(CAST(ISNULL(ta2.InstallmentAmount, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(tf.total_installment_amount_biro, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(ta.InstallmentAmountFMF, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(ta.InstallmentAmountSpouseFMF, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(ta.InstallmentAmountOther, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(ta.InstallmentAmountOtherSpouse, 0) AS NUMERIC(17,2)) -
+		CAST(ISNULL(ta.InstallmentTopup, 0) AS NUMERIC(17,2)) ) as TotalInstallment,
+		(CAST(ISNULL(tce.MonthlyFixedIncome, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(tce.MonthlyVariableIncome, 0) AS NUMERIC(17,2)) +
+		CAST(ISNULL(tce.SpouseIncome, 0) AS NUMERIC(17,2)) ) as TotalIncome,
+		ta.TotalDSR,
+		ta.EkycSource,
+		ta.EkycSimiliarity,
+		ta.EkycReason,
+		CASE tia.info 
+			WHEN '1' THEN 'APR'
+			ELSE 'REJ'
+		END cmo_decision,
+		tia.name as cmo_name,
+		tia.recom_date cmo_date,
+		tcd.decision as ca_decision,
+		tcd.note as ca_note,
+		tcd.decision_by as ca_name,
+		FORMAT(tcd.created_at,'yyyy-MM-dd') as ca_date,
+		cbm.decision as cbm_decision,
+		cbm.note as cbm_note,
+		cbm.decision_by as cbm_name,
+		FORMAT(cbm.created_at,'yyyy-MM-dd') as cbm_date,
+		drm.decision as drm_decision,
+		drm.note as drm_note,
+		drm.decision_by as drm_name,
+		FORMAT(drm.created_at,'yyyy-MM-dd') as drm_date,
+		gmo.decision as gmo_decision,
+		gmo.note as gmo_note,
+		gmo.decision_by as gmo_name,
+		FORMAT(gmo.created_at,'yyyy-MM-dd') as gmo_date
+		FROM trx_status ts WITH (nolock)
+		LEFT JOIN trx_customer_personal tcp WITH (nolock) ON ts.ProspectID = tcp.ProspectID 
+		LEFT JOIN trx_customer_employment tce WITH (nolock) ON ts.ProspectID = tce.ProspectID
+		LEFT JOIN trx_akkk ta WITH (nolock) ON ts.ProspectID = ta.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON ts.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_customer_emcon tce2 WITH (nolock) ON ts.ProspectID = tce2.ProspectID
+		LEFT OUTER JOIN ( 
+			SELECT scp.dbo.DEC_B64('SEC', Address) AS Address, ProspectID, Phone 
+			FROM trx_customer_address WITH (nolock)
+			WHERE Type = 'EMERGENCY' 
+		) AS tca ON ts.ProspectID = tca.ProspectID 
+		LEFT JOIN trx_item ti WITH (nolock) ON ts.ProspectID = ti.ProspectID
+		LEFT OUTER JOIN ( 
+			SELECT * FROM trx_detail_biro WITH (nolock)
+			WHERE subject = 'CUSTOMER' 
+		) AS tdb ON ts.ProspectID = tdb.prospect_id
+		LEFT JOIN trx_filtering tf WITH (nolock) ON ts.ProspectID = tf.prospect_id 
+		LEFT JOIN trx_apk ta2 WITH (nolock) ON ts.ProspectID = ta2.ProspectID
+		LEFT OUTER JOIN ( 
+			SELECT * FROM trx_detail_biro WITH (nolock)
+			WHERE subject = 'SPOUSE' 
+		) AS tdb2 ON ts.ProspectID = tdb2.prospect_id
+		LEFT JOIN trx_ca_decision tcd WITH (nolock) ON ts.ProspectID = tcd.ProspectID
+		LEFT JOIN trx_info_agent tia WITH (nolock) ON ts.ProspectID = tia.ProspectID
+		LEFT JOIN ( 
+			SELECT * FROM trx_history_approval_scheme thas1 WITH (nolock)
+			WHERE thas1.source_decision = 'CBM' AND thas1.created_at = (SELECT MAX(tha1.created_at) From trx_history_approval_scheme tha1 WHERE tha1.source_decision = thas1.source_decision AND tha1.ProspectID = thas1.ProspectID)
+		) AS cbm ON ts.ProspectID = cbm.ProspectID
+		LEFT JOIN ( 
+			SELECT * FROM trx_history_approval_scheme thas2 WITH (nolock)
+			WHERE thas2.source_decision = 'DRM' AND thas2.created_at = (SELECT MAX(tha2.created_at) From trx_history_approval_scheme tha2 WHERE tha2.source_decision = thas2.source_decision AND tha2.ProspectID = thas2.ProspectID)
+		) AS drm ON ts.ProspectID = drm.ProspectID
+		LEFT JOIN ( 
+			SELECT * FROM trx_history_approval_scheme thas3 WITH (nolock)
+			WHERE thas3.source_decision = 'GMO' AND thas3.created_at = (SELECT MAX(tha3.created_at) From trx_history_approval_scheme tha3 WHERE tha3.source_decision = thas3.source_decision AND tha3.ProspectID = thas3.ProspectID)
+		) AS gmo ON ts.ProspectID = gmo.ProspectID
+		WHERE ts.ProspectID = 'ppid'`)).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		// Call the function
+		_, err := repo.GetAkkk("ppid")
+
+		// Verify the error message
+		expectedErr := errors.New(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
 }

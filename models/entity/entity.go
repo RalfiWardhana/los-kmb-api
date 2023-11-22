@@ -1760,6 +1760,7 @@ type RegionBranch struct {
 
 type AFMobilePhone struct {
 	AFValue     float64 `gorm:"column:AF"`
+	OTR         float64 `gorm:"column:OTR"`
 	DPAmount    float64 `gorm:"column:DPAmount"`
 	MobilePhone string  `gorm:"column:MobilePhone"`
 }
