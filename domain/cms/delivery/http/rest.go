@@ -382,7 +382,7 @@ func (c *handlerCMS) SearchInquiry(ctx echo.Context) (err error) {
 // @Success 200 {object} response.ApiResponse{data=response.ReasonMessageRow}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
-// @Router /api/v3/kmb/akkk/view/{prospect_id} [get]
+// @Router /api/v3/kmb/cms/akkk/view/{prospect_id} [get]
 func (c *handlerCMS) GetAkkk(ctx echo.Context) (err error) {
 
 	var (
