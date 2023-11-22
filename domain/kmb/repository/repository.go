@@ -1472,23 +1472,23 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 		spouse     entity.CustomerSpouse
 	)
 
-	if newErr := r.losDB.Raw("SELECT * FROM trx_master WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&master).Error; newErr != nil {
+	if newErr := r.newKmbDB.Raw("SELECT * FROM trx_master WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&master).Error; newErr != nil {
 		return newErr
 	}
 
-	if newErr := r.losDB.Raw("SELECT * FROM trx_apk WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&apk).Error; newErr != nil {
+	if newErr := r.newKmbDB.Raw("SELECT * FROM trx_apk WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&apk).Error; newErr != nil {
 		return newErr
 	}
 
-	if newErr := r.losDB.Raw("SELECT * FROM trx_customer_address WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&addresses).Error; newErr != nil {
+	if newErr := r.newKmbDB.Raw("SELECT * FROM trx_customer_address WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&addresses).Error; newErr != nil {
 		return newErr
 	}
 
-	if newErr := r.losDB.Raw("SELECT * FROM trx_item WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&item).Error; newErr != nil {
+	if newErr := r.newKmbDB.Raw("SELECT * FROM trx_item WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&item).Error; newErr != nil {
 		return newErr
 	}
 
-	if newErr := r.losDB.Raw(`SELECT a.ProspectID, a.IDType, scp.dbo.DEC_B64('SEC', a.IDNumber) AS IDNumber, a.IDTypeIssuedDate,
+	if newErr := r.newKmbDB.Raw(`SELECT a.ProspectID, a.IDType, scp.dbo.DEC_B64('SEC', a.IDNumber) AS IDNumber, a.IDTypeIssuedDate,
 	a.ExpiredDate, scp.dbo.DEC_B64('SEC', a.LegalName) AS LegalName, scp.dbo.DEC_B64('SEC', a.FullName) AS FullName, scp.dbo.DEC_B64('SEC', a.BirthPlace) AS BirthPlace,
 	a.BirthDate, scp.dbo.DEC_B64('SEC', a.SurgateMotherName) AS SurgateMotherName, a.Gender, a.PersonalNPWP, scp.dbo.DEC_B64('SEC', a.MobilePhone) AS MobilePhone, 
 	scp.dbo.DEC_B64('SEC', a.Email) AS Email, a.HomeStatus, a.StaySinceYear, a.StaySinceMonth, a.Education, a.MaritalStatus, a.NumOfDependence, a.LivingCostAmount,
@@ -1496,22 +1496,22 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 		return newErr
 	}
 
-	if newErr := r.losDB.Raw("SELECT * FROM trx_customer_emcon WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&emcon).Error; newErr != nil {
+	if newErr := r.newKmbDB.Raw("SELECT * FROM trx_customer_emcon WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&emcon).Error; newErr != nil {
 		return newErr
 	}
 
-	if newErr := r.losDB.Raw("SELECT * FROM trx_customer_employment WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&employment).Error; newErr != nil {
+	if newErr := r.newKmbDB.Raw("SELECT * FROM trx_customer_employment WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&employment).Error; newErr != nil {
 		return newErr
 	}
 
 	if employment.ProfessionID == constant.PROFESSION_ID_WRST || employment.ProfessionID == constant.PROFESSION_ID_PRO {
-		if newErr := r.losDB.Raw("SELECT * FROM trx_customer_omset WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&omset).Error; newErr != nil {
+		if newErr := r.newKmbDB.Raw("SELECT * FROM trx_customer_omset WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&omset).Error; newErr != nil {
 			return newErr
 		}
 	}
 
 	if personal.MaritalStatus == constant.MARRIED {
-		if newErr := r.losDB.Raw("SELECT * FROM trx_customer_spouse WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&spouse).Error; newErr != nil {
+		if newErr := r.newKmbDB.Raw("SELECT * FROM trx_customer_spouse WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&spouse).Error; newErr != nil {
 			return newErr
 		}
 	}
@@ -1539,7 +1539,7 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 
 	var decrypted entity.Encrypted
 
-	if err := r.losDB.Raw(fmt.Sprintf(`SELECT scp.dbo.DEC_B64('SEC', '%s') AS ResidenceAddress, scp.dbo.DEC_B64('SEC','%s') AS LegalAddress,
+	if err := r.newKmbDB.Raw(fmt.Sprintf(`SELECT scp.dbo.DEC_B64('SEC', '%s') AS ResidenceAddress, scp.dbo.DEC_B64('SEC','%s') AS LegalAddress,
 		scp.dbo.DEC_B64('SEC', '%s') AS CompanyAddress, scp.dbo.DEC_B64('SEC', '%s') AS EmergencyAddress,
 		scp.dbo.DEC_B64('SEC', '%s') AS OwnerAddress, scp.dbo.DEC_B64('SEC','%s') AS MailingAddress,
 		scp.dbo.DEC_B64('SEC', '%s') AS LocationAddress`, residence.Address, legal.Address, company.Address,
@@ -1902,17 +1902,6 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			}).Error; err != nil {
 				return err
 			}
-		}
-
-		if err := r.losDB.Create(&entity.TrxAgreement{
-			ProspectID:         master.ProspectID,
-			CheckingStatus:     constant.ACTIVITY_UNPROCESS,
-			ContractStatus:     "0",
-			AF:                 apk.AF,
-			MobilePhone:        personal.MobilePhone,
-			CustomerIDKreditmu: constant.LOB_NEW_KMB,
-		}).Error; err != nil {
-			return err
 		}
 
 		return nil
