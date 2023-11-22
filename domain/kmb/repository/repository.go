@@ -1457,3 +1457,466 @@ func (r repoHandler) SaveRecalculate(beforeRecalculate entity.TrxRecalculate, af
 
 	return
 }
+
+func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
+
+	var (
+		master     entity.TrxMaster
+		addresses  []entity.CustomerAddress
+		apk        entity.TrxApk
+		item       entity.TrxItem
+		personal   entity.CustomerPersonal
+		emcon      entity.CustomerEmcon
+		employment entity.CustomerEmployment
+		omset      []entity.CustomerOmset
+		spouse     entity.CustomerSpouse
+	)
+
+	if newErr := r.losDB.Raw("SELECT * FROM trx_master WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&master).Error; newErr != nil {
+		return newErr
+	}
+
+	if newErr := r.losDB.Raw("SELECT * FROM trx_apk WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&apk).Error; newErr != nil {
+		return newErr
+	}
+
+	if newErr := r.losDB.Raw("SELECT * FROM trx_customer_address WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&addresses).Error; newErr != nil {
+		return newErr
+	}
+
+	if newErr := r.losDB.Raw("SELECT * FROM trx_item WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&item).Error; newErr != nil {
+		return newErr
+	}
+
+	if newErr := r.losDB.Raw(`SELECT a.ProspectID, a.IDType, scp.dbo.DEC_B64('SEC', a.IDNumber) AS IDNumber, a.IDTypeIssuedDate,
+	a.ExpiredDate, scp.dbo.DEC_B64('SEC', a.LegalName) AS LegalName, scp.dbo.DEC_B64('SEC', a.FullName) AS FullName, scp.dbo.DEC_B64('SEC', a.BirthPlace) AS BirthPlace,
+	a.BirthDate, scp.dbo.DEC_B64('SEC', a.SurgateMotherName) AS SurgateMotherName, a.Gender, a.PersonalNPWP, scp.dbo.DEC_B64('SEC', a.MobilePhone) AS MobilePhone, 
+	scp.dbo.DEC_B64('SEC', a.Email) AS Email, a.HomeStatus, a.StaySinceYear, a.StaySinceMonth, a.Education, a.MaritalStatus, a.NumOfDependence, a.LivingCostAmount,
+	a.Religion, a.AgreeToAcceptOtherOffering FROM trx_customer_personal a WITH (nolock) WHERE a.ProspectID = ?`, prospectID).Scan(&personal).Error; newErr != nil {
+		return newErr
+	}
+
+	if newErr := r.losDB.Raw("SELECT * FROM trx_customer_emcon WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&emcon).Error; newErr != nil {
+		return newErr
+	}
+
+	if newErr := r.losDB.Raw("SELECT * FROM trx_customer_employment WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&employment).Error; newErr != nil {
+		return newErr
+	}
+
+	if employment.ProfessionID == constant.PROFESSION_ID_WRST || employment.ProfessionID == constant.PROFESSION_ID_PRO {
+		if newErr := r.losDB.Raw("SELECT * FROM trx_customer_omset WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&omset).Error; newErr != nil {
+			return newErr
+		}
+	}
+
+	if personal.MaritalStatus == constant.MARRIED {
+		if newErr := r.losDB.Raw("SELECT * FROM trx_customer_spouse WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&spouse).Error; newErr != nil {
+			return newErr
+		}
+	}
+
+	var legal, emergency, residence, company, location, owner, mailing entity.CustomerAddress
+
+	for _, address := range addresses {
+		switch address.Type {
+		case "LEGAL":
+			legal = address
+		case "EMERGENCY":
+			emergency = address
+		case "RESIDENCE":
+			residence = address
+		case "COMPANY":
+			company = address
+		case "OWNER":
+			owner = address
+		case "MAILING":
+			mailing = address
+		case "LOCATION":
+			location = address
+		}
+	}
+
+	var decrypted entity.Encrypted
+
+	if err := r.losDB.Raw(fmt.Sprintf(`SELECT scp.dbo.DEC_B64('SEC', '%s') AS ResidenceAddress, scp.dbo.DEC_B64('SEC','%s') AS LegalAddress,
+		scp.dbo.DEC_B64('SEC', '%s') AS CompanyAddress, scp.dbo.DEC_B64('SEC', '%s') AS EmergencyAddress,
+		scp.dbo.DEC_B64('SEC', '%s') AS OwnerAddress, scp.dbo.DEC_B64('SEC','%s') AS MailingAddress,
+		scp.dbo.DEC_B64('SEC', '%s') AS LocationAddress`, residence.Address, legal.Address, company.Address,
+		emergency.Address, owner.Address, mailing.Address, mailing.Address)).Scan(&decrypted).Error; err != nil {
+		return err
+	}
+
+	var (
+		month1, month2, month3, year1, year2, year3 int
+		omset1, omset2, omset3                      float64
+	)
+
+	if employment.ProfessionID == constant.PROFESSION_ID_WRST || employment.ProfessionID == constant.PROFESSION_ID_PRO {
+		for i := 0; i < len(omset); i++ {
+			switch i {
+			case 0:
+				month1, _ = strconv.Atoi(omset[i].MonthlyOmsetMonth)
+				year1, _ = strconv.Atoi(omset[i].MonthlyOmsetYear)
+				omset1 = omset[i].MonthlyOmset
+			case 1:
+				month2, _ = strconv.Atoi(omset[i].MonthlyOmsetMonth)
+				year2, _ = strconv.Atoi(omset[i].MonthlyOmsetYear)
+				omset2 = omset[i].MonthlyOmset
+			case 2:
+				month3, _ = strconv.Atoi(omset[i].MonthlyOmsetMonth)
+				year3, _ = strconv.Atoi(omset[i].MonthlyOmsetYear)
+				omset3 = omset[i].MonthlyOmset
+			}
+		}
+	} else {
+		month1, _ = strconv.Atoi(time.Now().AddDate(0, -1, 0).Format("01"))
+		month2, _ = strconv.Atoi(time.Now().AddDate(0, -2, 0).Format("01"))
+		month3, _ = strconv.Atoi(time.Now().AddDate(0, -3, 0).Format("01"))
+		year1, _ = strconv.Atoi(time.Now().AddDate(0, -1, 0).Format("2006"))
+		year2, _ = strconv.Atoi(time.Now().AddDate(0, -2, 0).Format("2006"))
+		year3, _ = strconv.Atoi(time.Now().AddDate(0, -3, 0).Format("2006"))
+		omset1 = employment.MonthlyFixedIncome
+		omset2 = employment.MonthlyFixedIncome
+		omset3 = employment.MonthlyFixedIncome
+	}
+
+	newErr = r.stagingDB.Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Create(&entity.STG_MAIN{
+			BranchID:      master.BranchID,
+			ProspectID:    master.ProspectID,
+			IsRCA:         0,
+			IsPV:          0,
+			DataType:      personal.DataType,
+			CreatedDate:   time.Now(),
+			Status:        personal.Status,
+			ApplicationID: nil,
+			CustomerID:    nil,
+			UpdatedDate:   time.Now(),
+			UsrCrt:        constant.LOS_CREATED,
+			DtmCrt:        time.Now(),
+			DtmUpd:        time.Now(),
+		}).Error; err != nil {
+			return err
+		}
+
+		haveInsurance := "0"
+
+		if apk.LifeInsuranceFee > 0 {
+			haveInsurance = "1"
+		}
+
+		if err := tx.Create(&entity.STG_GEN_APP{
+			BranchID:            master.BranchID,
+			ProspectID:          master.ProspectID,
+			ProductID:           apk.ProductID,
+			ProductOfferingID:   apk.ProductOfferingID,
+			Tenor:               *apk.Tenor,
+			NumOfAssetUnit:      item.Qty,
+			POS:                 item.Pos,
+			WayOfPayment:        apk.WayOfPayment,
+			ApplicationSource:   master.ApplicationSource,
+			AgreementDate:       time.Now(),
+			InsAssetInsuredBy:   item.InsAssetInsuredBy,
+			InsAssetPaidBy:      apk.InsAssetPaidBy,
+			InsAssetPeriod:      apk.InsAssetPeriod,
+			IsLifeInsurance:     haveInsurance,
+			AOID:                apk.AoID,
+			MailingAddress:      decrypted.MailingAddress,
+			MailingRT:           mailing.Rt,
+			MailingRW:           mailing.Rw,
+			MailingKelurahan:    mailing.Kelurahan,
+			MailingKecamatan:    mailing.Kecamatan,
+			MailingCity:         mailing.City,
+			MailingZipCode:      mailing.ZipCode,
+			MailingAreaPhone1:   mailing.AreaPhone,
+			MailingPhone1:       mailing.Phone,
+			UsrCrt:              constant.LOS_CREATED,
+			DtmCrt:              time.Now(),
+			ApplicationPriority: constant.RG_PRIORITY,
+		}).Error; err != nil {
+			return err
+		}
+
+		manufacture, _ := strconv.Atoi(item.ManufactureYear)
+
+		if err := tx.Create(&entity.STG_GEN_ASD{
+			BranchID:          master.BranchID,
+			ProspectID:        master.ProspectID,
+			SuplierID:         item.SupplierID,
+			AssetCode:         item.AssetCode,
+			OTRPrice:          apk.OTR,
+			DPAmount:          apk.DPAmount,
+			ManufacturingYear: manufacture,
+			NoRangka:          item.ChassisNo,
+			NoMesin:           item.EngineNo,
+			UsedNew:           item.Condition,
+			AssetUsage:        item.AssetUsage,
+			CC:                item.Cc,
+			Color:             item.Color,
+			LicensePlate:      item.LicensePlate,
+			OwnerAsset:        item.OwnerAsset,
+			OwnerKTP:          item.OwnerKTP,
+			OwnerAddress:      decrypted.OwnerAddress,
+			OwnerRT:           owner.Rt,
+			OwnerRW:           owner.Rw,
+			OwnerKelurahan:    owner.Kelurahan,
+			OwnerKecamatan:    owner.Kecamatan,
+			OwnerCity:         owner.City,
+			OwnerZipCode:      owner.ZipCode,
+			LocationAddress:   decrypted.LocationAddress,
+			LocationKelurahan: location.Kelurahan,
+			LocationKecamatan: location.Kecamatan,
+			LocationCity:      location.City,
+			LocationZipCode:   location.ZipCode,
+			Region:            item.Region,
+			SalesmanID:        apk.SalesmanID,
+			UsrCrt:            constant.LOS_CREATED,
+			DtmCrt:            time.Now(),
+			PromoToCust:       0,
+			TaxDate:           item.TaxDate,
+			STNKExpiredDate:   item.STNKExpiredDate,
+		}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Create(&entity.STG_GEN_COM{
+			BranchID:              master.BranchID,
+			ProspectID:            master.ProspectID,
+			SupplierBankAccountID: apk.SupplierBankAccountID,
+			UsrCrt:                constant.LOS_CREATED,
+			DtmCrt:                time.Now(),
+		}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Create(&entity.STG_GEN_FIN{
+			BranchID:          master.BranchID,
+			ProspectID:        master.ProspectID,
+			FirstInstallment:  apk.FirstInstallment,
+			AdminFee:          apk.AdminFee,
+			OtherFee:          apk.OtherFee,
+			SurveyFee:         apk.SurveyFee,
+			FiduciaFee:        apk.FidusiaFee,
+			IsFiduciaCovered:  apk.IsFidusiaCovered,
+			ProvisionFee:      apk.ProvisionFee,
+			InstallmentAmount: apk.InstallmentAmount,
+			EffectiveRate:     apk.EffectiveRate,
+			CommisionSubsidy:  apk.CommisionSubsidi,
+			UsrCrt:            constant.LOS_CREATED,
+			DtmCrt:            time.Now(),
+		}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Create(&entity.STG_GEN_INS_H{
+			BranchID:                master.BranchID,
+			ProspectID:              master.ProspectID,
+			ApplicationType:         constant.NG_APPLICATION_TYPE,
+			AmountCoverage:          item.AssetInsuranceAmountCoverage,
+			InsAssetInsuredBy:       item.InsAssetInsuredBy,
+			InsuranceCoyBranchID:    item.InsuranceCoyBranchID,
+			PremiumAmountToCustomer: apk.AssetInsuranceFee,
+			CoverageType:            item.CoverageType,
+			UsrCrt:                  constant.LOS_CREATED,
+			DtmCrt:                  time.Now(),
+		}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Create(&entity.STG_GEN_INS_D{
+			BranchID:      master.BranchID,
+			ProspectID:    master.ProspectID,
+			InsSequenceNo: 1,
+			SRCC:          "0",
+			Flood:         "0",
+			EQVET:         "0",
+			CoverageType:  item.CoverageType,
+			UsrCrt:        constant.LOS_CREATED,
+			DtmCrt:        time.Now(),
+		}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Create(&entity.STG_GEN_LFI{
+			BranchID:                 master.BranchID,
+			ProspectID:               master.ProspectID,
+			LifeInsuranceCoyBranchID: apk.LifeInsuranceCoyBranchID,
+			AmountCoverage:           apk.LifeInsuranceAmountCoverage,
+			PremiumAmountToCustomer:  apk.LifeInsuranceFee,
+			PaymentMethod:            apk.PaymentMethod,
+			UsrCrt:                   constant.LOS_CREATED,
+			DtmCrt:                   time.Now(),
+		}).Error; err != nil {
+			return err
+		}
+
+		expiredDate := time.Now().AddDate(4, 0, 0)
+		if personal.ExpiredDate != nil {
+			expiredDate = personal.ExpiredDate.(time.Time)
+			if expiredDate.Unix() <= time.Now().Unix() {
+				expiredDate = time.Now().AddDate(4, 0, 0)
+			}
+		}
+		npwp := ""
+		if personal.PersonalNPWP != nil {
+			npwp = *personal.PersonalNPWP
+		}
+
+		if err := tx.Create(&entity.STG_CUST_H{
+			BranchID:             master.BranchID,
+			ProspectID:           master.ProspectID,
+			LegalName:            personal.LegalName,
+			FullName:             personal.FullName,
+			PersonalCustomerType: personal.PersonalCustomerType,
+			IDType:               personal.IDType,
+			IDNumber:             personal.IDNumber,
+			ExpiredDate:          expiredDate,
+			Gender:               personal.Gender,
+			BirthPlace:           personal.BirthPlace,
+			BirthDate:            personal.BirthDate,
+			PersonalNPWP:         npwp,
+			SurgateMotherName:    personal.SurgateMotherName,
+			UsrCrt:               constant.LOS_CREATED,
+			DtmCrt:               time.Now(),
+		}).Error; err != nil {
+			return err
+		}
+
+		issueDate := time.Now().AddDate(0, 0, 3)
+		if personal.IDTypeIssueDate != nil {
+			issueDate = personal.IDTypeIssueDate.(time.Time)
+			if issueDate.Unix() <= time.Now().Unix() {
+				issueDate = time.Now().AddDate(0, 0, 3)
+			}
+		}
+
+		stayMonth, _ := strconv.Atoi(personal.StaySinceMonth)
+		stayYear, _ := strconv.Atoi(personal.StaySinceYear)
+		employmentYear, _ := strconv.Atoi(employment.EmploymentSinceYear)
+
+		if err := tx.Create(&entity.STG_CUST_D{
+			BranchID:                         master.BranchID,
+			ProspectID:                       master.ProspectID,
+			IDTypeIssuedDate:                 issueDate,
+			Education:                        personal.Education,
+			Nationality:                      personal.Nationality,
+			WNACountry:                       personal.WNACountry,
+			HomeStatus:                       personal.HomeStatus,
+			HomeLocation:                     personal.HomeLocation,
+			StaySinceMonth:                   stayMonth,
+			StaySinceYear:                    stayYear,
+			Religion:                         personal.Religion,
+			MaritalStatus:                    personal.MaritalStatus,
+			NumOfDependence:                  personal.NumOfDependence,
+			MobilePhone:                      personal.MobilePhone,
+			Email:                            personal.Email,
+			CustomerGroup:                    personal.CustomerGroup,
+			KKNo:                             personal.KKNo,
+			LegalAddress:                     decrypted.LegalAddress,
+			LegalRT:                          legal.Rt,
+			LegalRW:                          legal.Rw,
+			LegalKelurahan:                   legal.Kelurahan,
+			LegalKecamatan:                   legal.Kecamatan,
+			LegalCity:                        legal.City,
+			LegalZipCode:                     legal.ZipCode,
+			LegalAreaPhone1:                  legal.AreaPhone,
+			LegalPhone1:                      legal.Phone,
+			ResidenceAddress:                 decrypted.ResidenceAddress,
+			ResidenceRT:                      residence.Rt,
+			ResidenceRW:                      residence.Rw,
+			ResidenceCity:                    residence.City,
+			ResidenceKelurahan:               residence.Kelurahan,
+			ResidenceKecamatan:               residence.Kecamatan,
+			ResidenceZipCode:                 residence.ZipCode,
+			ResidenceAreaPhone1:              residence.AreaPhone,
+			ResidencePhone1:                  residence.Phone,
+			EmergencyContactAddress:          decrypted.EmergencyAddress,
+			EmergencyContactRT:               emergency.Rt,
+			EmergencyContactRW:               emergency.Rw,
+			EmergencyContactKelurahan:        emergency.Kelurahan,
+			EmergencyContactKecamatan:        emergency.Kecamatan,
+			EmergencyContactCity:             emergency.City,
+			EmergencyContactZipCode:          emergency.ZipCode,
+			EmergencyContactHomePhoneArea1:   emergency.AreaPhone,
+			EmergencyContactHomePhone1:       emergency.Phone,
+			EmergencyContactOfficePhoneArea1: personal.EmergencyOfficeAreaPhone,
+			EmergencyContactOfficePhone1:     personal.EmergencyOfficePhone,
+			EmergencyContactMobilePhone:      emcon.MobilePhone,
+			EmergencyContactName:             emcon.Name,
+			EmergencyContactRelationship:     emcon.Relationship,
+			ProfessionID:                     employment.ProfessionID,
+			JobType:                          employment.JobType,
+			JobPosition:                      employment.JobPosition,
+			CompanyName:                      employment.CompanyName,
+			IndustryTypeID:                   employment.IndustryTypeID,
+			CompanyAddress:                   decrypted.CompanyAddress,
+			CompanyRT:                        company.Rt,
+			CompanyRW:                        company.Rw,
+			CompanyCity:                      company.City,
+			CompanyKelurahan:                 company.Kelurahan,
+			CompanyKecamatan:                 company.Kecamatan,
+			CompanyZipCode:                   company.ZipCode,
+			CompanyAreaPhone1:                company.AreaPhone,
+			CompanyPhone1:                    company.Phone,
+			EmploymentSinceYear:              employmentYear,
+			MonthlyFixedIncome:               employment.MonthlyFixedIncome,
+			MonthlyVariableIncome:            employment.MonthlyVariableIncome,
+			LivingCostAmount:                 personal.LivingCostAmount,
+			MonthlyOmset1Year:                year1,
+			MonthlyOmset1Month:               month1,
+			MonthlyOmset1Omset:               omset1,
+			MonthlyOmset2Year:                year2,
+			MonthlyOmset2Month:               month2,
+			MonthlyOmset2Omset:               omset2,
+			MonthlyOmset3Year:                year3,
+			MonthlyOmset3Month:               month3,
+			MonthlyOmset3Omset:               omset3,
+			Counterpart:                      personal.Counterpart,
+			DebtBusinessScale:                personal.DebtBusinessScale,
+			DebtGroup:                        personal.DebtGroup,
+			IsAffiliateWithPP:                personal.IsAffiliateWithPP,
+			AgreetoAcceptOtherOffering:       personal.AgreetoAcceptOtherOffering,
+			SpouseIncome:                     employment.SpouseIncome,
+			BankID:                           personal.BankID,
+			AccountNo:                        personal.AccountNo,
+			AccountName:                      personal.AccountName,
+			UsrCrt:                           constant.LOS_CREATED,
+			DtmCrt:                           time.Now(),
+		}).Error; err != nil {
+			return err
+		}
+
+		if personal.MaritalStatus == constant.MARRIED {
+			if err := tx.Create(&entity.STG_CUST_FAM{
+				BranchID:       master.BranchID,
+				ProspectID:     master.ProspectID,
+				SeqNo:          1,
+				Name:           spouse.LegalName,
+				IDNumber:       spouse.IDNumber,
+				BirthDate:      spouse.BirthDate,
+				FamilyRelation: constant.CODE_SPOUSE,
+				UsrCrt:         constant.LOS_CREATED,
+				DtmCrt:         time.Now(),
+			}).Error; err != nil {
+				return err
+			}
+		}
+
+		if err := r.losDB.Create(&entity.TrxAgreement{
+			ProspectID:         master.ProspectID,
+			CheckingStatus:     constant.ACTIVITY_UNPROCESS,
+			ContractStatus:     "0",
+			AF:                 apk.AF,
+			MobilePhone:        personal.MobilePhone,
+			CustomerIDKreditmu: constant.LOB_KMB,
+		}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return
+}
