@@ -480,7 +480,7 @@ type Apk struct {
 	AdminFee                    *float64 `json:"admin_fee" validate:"required,max=999999999" example:"1500000"`
 	InstallmentAmount           float64  `json:"installment_amount" validate:"required,max=999999999" example:"4181333"`
 	PercentDP                   *float64 `json:"down_payment_rate" validate:"required,max=99" example:"20.95"`
-	PremiumAmountToCustomer     float64  `json:"premium_amount_to_customer" validate:"required,max=999999999" example:"2184000"`
+	PremiumAmountToCustomer     float64  `json:"premium_amount_to_customer" validate:"min=0,max=999999999" example:"2184000"`
 	FidusiaFee                  *float64 `json:"fidusia_fee" validate:"max=999999999" example:"0"`
 	InterestRate                *float64 `json:"interest_rate" validate:"required,max=99" example:"2.2"`
 	InterestAmount              *float64 `json:"interest_amount" validate:"required,max=999999999" example:"66528000"`
@@ -530,7 +530,7 @@ type Item struct {
 	CoverageType                 string  `json:"coverage_type" validate:"required,max=10" example:"TLO"`
 	OwnerKTP                     string  `json:"owner_ktp" validate:"required,len=16,number" example:"3172024508XXX002"`
 	Brand                        string  `json:"brand" validate:"required,max=255" example:"TOYOTA"`
-	PremiumAmountToCustomer      float64 `json:"premium_amount_to_customer" validate:"required,max=999999999" example:"2184000"`
+	PremiumAmountToCustomer      float64 `json:"premium_amount_to_customer" validate:"min=0,max=999999999" example:"2184000"`
 }
 
 type Agent struct {
@@ -551,8 +551,8 @@ type Recalculate struct {
 	AdminFee                     float64 `json:"admin_fee" validate:"required,max=999999999" example:"1500000"`
 	InstallmentAmount            float64 `json:"installment_amount" validate:"required,max=999999999" example:"4181333"`
 	PercentDP                    float64 `json:"down_payment_rate" validate:"required,max=99" example:"20.95"`
-	LifePremiumAmountToCustomer  float64 `json:"life_premium_amount_to_customer" validate:"required,max=999999999" example:"2184000"`
-	AssetPremiumAmountToCustomer float64 `json:"asset_premium_amount_to_customer" validate:"required,max=999999999" example:"2184000"`
+	LifePremiumAmountToCustomer  float64 `json:"life_premium_amount_to_customer" validate:"min=0,max=999999999" example:"2184000"`
+	AssetPremiumAmountToCustomer float64 `json:"asset_premium_amount_to_customer" validate:"min=0,max=999999999" example:"2184000"`
 	FidusiaFee                   float64 `json:"fidusia_fee" validate:"max=999999999" example:"0"`
 	InterestRate                 float64 `json:"interest_rate" validate:"required,max=99" example:"2.2"`
 	InterestAmount               float64 `json:"interest_amount" validate:"required,max=999999999" example:"66528000"`
