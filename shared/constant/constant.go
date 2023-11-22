@@ -342,6 +342,7 @@ const (
 	ERROR_NOT_FOUND       = "data_not_found"
 
 	//PRE SCREENING
+	QUICK_APPROVE      = false
 	LIMIT_PRESCREENING = 0
 
 	//TENOR

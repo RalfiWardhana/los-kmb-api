@@ -113,7 +113,7 @@ func (u usecase) Prescreening(ctx context.Context, req request.Metrics, filterin
 	ntfAmount = req.Apk.NTF + (ntfOtherAmount + ntfOtherAmountSpouse) + ntfConfinsAmount.TotalOutstanding
 
 	// auto approve <= 20jt
-	if ntfAmount <= constant.LIMIT_PRESCREENING {
+	if constant.QUICK_APPROVE && ntfAmount <= constant.LIMIT_PRESCREENING {
 		trxPrescreening = entity.TrxPrescreening{
 			ProspectID: req.Transaction.ProspectID,
 			Decision:   constant.DB_DECISION_APR,
