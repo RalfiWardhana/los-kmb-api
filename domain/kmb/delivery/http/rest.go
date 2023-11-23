@@ -159,7 +159,7 @@ func (c *handlerKMB) InsertStagingIndex(ctx echo.Context) (err error) {
 		ctxJson error
 	)
 
-	prospectID := ctx.Param("prospect_id")
+	prospectID := ctx.Param("prospectID")
 
 	err = c.authorization.Authorization(dto.AuthModel{
 		ClientID:   ctx.Request().Header.Get(constant.HEADER_CLIENT_ID),
