@@ -2410,12 +2410,10 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s'", activity, constant.DB_DECISION_CREDIT_PROCESS, alias)
 		}
 	} else {
-		query = fmt.Sprintf(" AND tt.next_step = '%s'", alias)
+		query = fmt.Sprintf(" AND (tt.next_step = '%s' OR tt.approval_source_decision='%s')", alias, alias)
 	}
 
 	filter = filter + query
-
-	// check has return order
 
 	if pagination != nil {
 		page, _ := json.Marshal(pagination)
@@ -2466,14 +2464,20 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID   	
-		LEFT JOIN trx_history_approval_scheme has ON has.ProspectID = (
+		OUTER APPLY (
 			SELECT
-			  TOP 1 ProspectID
+			  TOP 1 *
 			FROM
-			  trx_history_approval_scheme
+			  trx_history_approval_scheme has
+			WHERE
+			  (
+				has.next_step = '%s'
+				OR has.source_decision = '%s'
+			  )
+			  AND tm.ProspectID = has.ProspectID
 			ORDER BY
-			  created_at DESC
-		)
+			  has.created_at DESC
+		  ) has
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -2484,7 +2488,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
-		) AS tt %s`, filter)).Scan(&row).Error; err != nil {
+		) AS tt %s`, alias, alias, filter)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -2655,14 +2659,20 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
-		LEFT JOIN trx_history_approval_scheme has ON has.ProspectID = (
+		OUTER APPLY (
 			SELECT
-			  TOP 1 ProspectID
+			  TOP 1 *
 			FROM
-			  trx_history_approval_scheme
+			  trx_history_approval_scheme has
+			WHERE
+			  (
+				has.next_step = '%s'
+				OR has.source_decision = '%s'
+			  )
+			  AND tm.ProspectID = has.ProspectID
 			ORDER BY
-			  created_at DESC
-		)
+			  has.created_at DESC
+		  ) has
 		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
 		LEFT JOIN (
 		  SELECT
@@ -2832,7 +2842,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt %s ORDER BY tt.created_at DESC %s`, alias, alias, filter, filterPaginate)).Scan(&data).Error; err != nil {
+	) AS tt %s ORDER BY tt.created_at DESC %s`, alias, alias, alias, alias, filter, filterPaginate)).Scan(&data).Error; err != nil {
 		return
 	}
 
