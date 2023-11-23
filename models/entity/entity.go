@@ -873,6 +873,28 @@ func (c *TrxAgreement) TableName() string {
 	return "trx_agreements"
 }
 
+type TrxWorker struct {
+	ProspectID      string      `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	Activity        string      `gorm:"type:varchar(10);column:activity"`
+	EndPointTarget  string      `gorm:"type:varchar(100);column:endpoint_target"`
+	EndPointMethod  string      `gorm:"type:varchar(10);column:endpoint_method"`
+	Payload         string      `gorm:"type:text;column:payload"`
+	Header          string      `gorm:"type:text;column:header"`
+	ResponseTimeout int         `gorm:"column:response_timeout"`
+	APIType         string      `gorm:"type:varchar(3);column:api_type"`
+	MaxRetry        int         `gorm:"max_retry"`
+	CountRetry      int         `gorm:"count_retry"`
+	CreatedAt       time.Time   `gorm:"column:created_at"`
+	Category        string      `gorm:"type:varchar(30);column:category"`
+	Action          string      `gorm:"type:varchar(50);column:action"`
+	StatusCode      string      `gorm:"type:varchar(4);column:status_code"`
+	Sequence        interface{} `gorm:"column:sequence"`
+}
+
+func (c *TrxWorker) TableName() string {
+	return "trx_worker"
+}
+
 type LogOrchestrator struct {
 	ID           string    `gorm:"type:varchar(50);column:id;primary_key:true"`
 	ProspectID   string    `gorm:"type:varchar(20);column:ProspectID"`

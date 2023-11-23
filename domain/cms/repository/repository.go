@@ -2945,10 +2945,10 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 					"Authorization": os.Getenv("AUTH_LOS"),
 				})
 
-			if newErr := tx.Create(&entity.TrxWorker{
+			if newErr := r.losDB.Create(&entity.TrxWorker{
 				ProspectID:      req.ProspectID,
 				Category:        "CONFINS",
-				Action:          "INSERT_STAGING_KMOB",
+				Action:          "INSERT_STAGING_KMB",
 				APIType:         "RAW",
 				EndPointTarget:  fmt.Sprintf("%s/%s", os.Getenv("INSERT_STAGING_URL"), req.ProspectID),
 				EndPointMethod:  constant.METHOD_POST,
