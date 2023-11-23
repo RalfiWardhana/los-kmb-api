@@ -2939,13 +2939,11 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			}
 
 			// worker insert staging
-			// callbackHeaderLos, _ := json.Marshal(
 			callbackHeaderLos, _ := json.Marshal(
 				map[string]string{
 					"X-Client-ID":   os.Getenv("CLIENT_LOS"),
 					"Authorization": os.Getenv("AUTH_LOS"),
 				})
-			// request.HeaderLOS{Authorization: os.Getenv("AUTH_LOS"), XClientID: os.Getenv("CLIENT_LOS")})
 
 			if newErr := tx.Create(&entity.TrxWorker{
 				ProspectID:      req.ProspectID,
