@@ -2316,6 +2316,13 @@ func (r repoHandler) ProcessRecalculateOrder(prospectID string, trxStatus entity
 			return err
 		}
 
+		// update trx_ca_decision
+		var ca entity.TrxCaDecision
+		ca.CreatedAt = time.Now()
+		if err := tx.Model(&ca).Where("ProspectID = ?", prospectID).Updates(ca).Error; err != nil {
+			return err
+		}
+
 		// insert trx_details
 		if err := tx.Create(&trxDetail).Error; err != nil {
 			return err
