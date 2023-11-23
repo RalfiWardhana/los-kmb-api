@@ -2965,6 +2965,29 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			if err := tx.Create(&trxAgreement).Error; err != nil {
 				return err
 			}
+
+			// worker insert staging
+			callbackHeaderLos, _ := json.Marshal(
+				map[string]string{
+					"X-Client-ID":   os.Getenv("CLIENT_LOS"),
+					"Authorization": os.Getenv("AUTH_LOS"),
+				})
+
+			if newErr := r.losDB.Create(&entity.TrxWorker{
+				ProspectID:      req.ProspectID,
+				Category:        "CONFINS",
+				Action:          "INSERT_STAGING_KMB",
+				APIType:         "RAW",
+				EndPointTarget:  fmt.Sprintf("%s/%s", os.Getenv("INSERT_STAGING_URL"), req.ProspectID),
+				EndPointMethod:  constant.METHOD_POST,
+				Header:          string(callbackHeaderLos),
+				ResponseTimeout: 30,
+				MaxRetry:        6,
+				CountRetry:      0,
+				Activity:        constant.ACTIVITY_UNPROCESS,
+			}).Error; newErr != nil {
+				return newErr
+			}
 		}
 
 		return nil

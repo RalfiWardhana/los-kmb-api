@@ -161,6 +161,16 @@ func (c *handlerKMB) InsertStagingIndex(ctx echo.Context) (err error) {
 
 	prospectID := ctx.Param("prospect_id")
 
+	err = c.authorization.Authorization(dto.AuthModel{
+		ClientID:   ctx.Request().Header.Get(constant.HEADER_CLIENT_ID),
+		Credential: ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION),
+	}, time.Now().Local())
+
+	if err != nil {
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Insert Staging", prospectID, err)
+		return ctxJson
+	}
+
 	if prospectID == "" {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID does not exist")
 		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Insert Staging", prospectID, err)
