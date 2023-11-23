@@ -1615,7 +1615,7 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			Tenor:               *apk.Tenor,
 			NumOfAssetUnit:      item.Qty,
 			POS:                 item.Pos,
-			WayOfPayment:        apk.PaymentMethod,
+			WayOfPayment:        apk.WayOfPayment,
 			ApplicationSource:   master.ApplicationSource,
 			AgreementDate:       time.Now(),
 			InsAssetInsuredBy:   item.InsAssetInsuredBy,
