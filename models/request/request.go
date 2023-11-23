@@ -396,7 +396,7 @@ type CustomerPersonal struct {
 	AccountNo                  string   `gorm:"column:AccountNo" validate:"omitempty,max=20" json:"account_no" example:"567XX021"`
 	AccountName                string   `gorm:"column:AccountName" validate:"omitempty,max=50,allowcharsname" json:"account_name" example:"JONATHAN"`
 	LivingCostAmount           *float64 `json:"living_cost_amount" validate:"required,max=999999999" example:"0"`
-	Counterpart                int      `json:"counterpart" validate:"required,max=9999" example:"169"`
+	Counterpart                *int     `json:"counterpart" validate:"required,max=9999" example:"169"`
 	DebtBusinessScale          string   `json:"debt_business_scale" validate:"required,max=10" example:"01"`
 	DebtGroup                  string   `json:"debt_group" validate:"required,max=10" example:"303"`
 	IsAffiliateWithPP          string   `json:"is_affiliate_with_pp" validate:"required,max=1" example:"N"`

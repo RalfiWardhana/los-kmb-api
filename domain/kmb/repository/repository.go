@@ -472,7 +472,7 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				BankID:                     data.CustomerPersonal.BankID,
 				AccountNo:                  data.CustomerPersonal.AccountNo,
 				AccountName:                data.CustomerPersonal.AccountName,
-				Counterpart:                data.CustomerPersonal.Counterpart,
+				Counterpart:                *data.CustomerPersonal.Counterpart,
 				DebtBusinessScale:          data.CustomerPersonal.DebtBusinessScale,
 				DebtGroup:                  data.CustomerPersonal.DebtGroup,
 				IsAffiliateWithPP:          data.CustomerPersonal.IsAffiliateWithPP,
