@@ -89,6 +89,10 @@ const (
 	ERRORS_E                         = "Failed Process Blacklist Confins"
 	REASON_E                         = "Failed Process Blacklist Confins"
 	SYSTEM_CREATED                   = "CREDIT DECISION ENGINE"
+	LOS_CREATED                      = "MiniLOS"
+	RG_PRIORITY                      = "RG"
+	NG_APPLICATION_TYPE              = "NG"
+	CODE_SPOUSE                      = "SP"
 
 	CMO_AGENT                  = "CMO"
 	CODE_CMO_RECOMMENDED       = "1410"

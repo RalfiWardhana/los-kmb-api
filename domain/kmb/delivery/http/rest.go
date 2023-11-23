@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"los-kmb-api/domain/kmb/interfaces"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/dto"
@@ -37,6 +38,7 @@ func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interf
 	kmbroute.POST("/produce/journey", handler.ProduceJourney, middlewares.AccessMiddleware())
 	kmbroute.POST("/produce/journey-after-prescreening", handler.ProduceJourneyAfterPrescreening, middlewares.AccessMiddleware())
 	kmbroute.POST("/recalculate", handler.Recalculate, middlewares.AccessMiddleware())
+	kmbroute.POST("/insert-staging/:prospectID", handler.InsertStagingIndex, middlewares.AccessMiddleware())
 }
 
 // Produce Journey
@@ -140,5 +142,38 @@ func (c *handlerKMB) Recalculate(ctx echo.Context) (err error) {
 	}
 
 	ctxJson, resp = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE - Success", req, data)
+	return ctxJson
+}
+
+// Insert Staging
+// @Description Insert Staging
+// @Tags Insert Staging
+// @Produce json
+// @Param prospectID path string true "Prospect ID"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/insert-staging/{prospectID} [post]
+func (c *handlerKMB) InsertStagingIndex(ctx echo.Context) (err error) {
+	var (
+		ctxJson error
+	)
+
+	prospectID := ctx.Param("prospect_id")
+
+	if prospectID == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID does not exist")
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Insert Staging", prospectID, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.InsertStaging(prospectID)
+
+	if err != nil {
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Insert Staging", prospectID, err)
+		return ctxJson
+	}
+
+	ctxJson, _ = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Insert Staging Success", prospectID, data)
 	return ctxJson
 }

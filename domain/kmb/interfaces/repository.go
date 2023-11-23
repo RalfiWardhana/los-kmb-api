@@ -57,4 +57,5 @@ type Repository interface {
 
 	GetRecalculate(prospectID string) (getRecalculate entity.GetRecalculate, err error)
 	SaveRecalculate(beforeRecalculate entity.TrxRecalculate, afterRecalculate entity.TrxRecalculate) (err error)
+	SaveToStaging(prospectID string) (err error)
 }
