@@ -463,7 +463,7 @@ type CustomerSpouse struct {
 	CompanyPhone      *string `json:"company_phone" validate:"max=30" example:"865542"`
 	CompanyName       *string `json:"company_name" validate:"max=50" example:"PT.BUMI KARYA"`
 	MobilePhone       string  `json:"mobile_phone" validate:"min=9,max=14" example:"08772012XXX0"`
-	ProfessionID      *string `json:"profession_id" validate:"profession" example:"KRYSW"`
+	ProfessionID      *string `json:"profession_id" example:"KRYSW"`
 }
 
 type Apk struct {
