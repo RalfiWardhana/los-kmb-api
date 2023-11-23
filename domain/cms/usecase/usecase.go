@@ -927,7 +927,7 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 			ProspectID:     req.ProspectID,
 			StatusProcess:  constant.STATUS_ONPROCESS,
 			Activity:       constant.ACTIVITY_UNPROCESS,
-			Decision:       decision,
+			Decision:       constant.DB_DECISION_CREDIT_PROCESS,
 			RuleCode:       constant.CODE_CBM,
 			SourceDecision: constant.DB_DECISION_BRANCH_MANAGER,
 			Reason:         req.SlikResult,
