@@ -192,7 +192,7 @@ func (c *handlerKMB) InsertStagingIndex(ctx echo.Context) (err error) {
 // @Description Sync Go-Live
 // @Tags Sync Go-Live
 // @Produce json
-// @Param body body request.Metrics true "Body payload"
+// @Param body body request.SyncGoLive true "Body payload"
 // @Success 200 {object} response.ApiResponse{}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
