@@ -435,7 +435,7 @@ func (c *response) EventBadRequestErrorValidation(ctx context.Context, accessTok
 
 	}
 	apiResponse = models.ApiResponse{
-		Message:    message,
+		Message:    message + " - Request Tidak Sesuai",
 		Errors:     errors,
 		Data:       nil,
 		ServerTime: utils.GenerateTimeNow(),
@@ -462,7 +462,7 @@ func (c *response) EventRequestErrorBindV3(ctx context.Context, accessToken, log
 	errors := handleUnmarshalError(err)
 
 	apiResponse = models.ApiResponse{
-		Message:    message,
+		Message:    message + " - Request Tidak Sesuai",
 		Errors:     errors,
 		Data:       nil,
 		ServerTime: utils.GenerateTimeNow(),

@@ -298,6 +298,7 @@ const (
 	KEY_PREFIX_SUBMIT_TO_LOS           = "submit_los_kmb"
 	KEY_PREFIX_AFTER_PRESCREENING      = "after_prescreening_los_kmb"
 	KEY_PREFIX_CALLBACK                = "callback_los_kmb"
+	KEY_PREFIX_CALLBACK_GOLIVE         = "callback_golive_kmb"
 
 	MAX_RETRY_PUBLISH = 3
 
