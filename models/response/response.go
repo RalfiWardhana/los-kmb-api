@@ -816,10 +816,12 @@ type RecalculateResponse struct {
 }
 
 type ApprovalResponse struct {
-	ProspectID string `json:"prospect_id"`
-	Decision   string `json:"decision"`
-	Reason     string `json:"reason"`
-	Note       string `json:"note"`
+	ProspectID     string `json:"prospect_id"`
+	Decision       string `json:"decision"`
+	Reason         string `json:"reason"`
+	Note           string `json:"note"`
+	IsFinal        bool   `json:"is_final"`
+	NeedEscalation bool   `json:"need_escalation"`
 }
 
 type SubmitRecalculateResponse struct {
