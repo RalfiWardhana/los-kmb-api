@@ -4,6 +4,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
@@ -7716,4 +7717,2724 @@ func TestGetAkkk(t *testing.T) {
 			t.Fatalf("There were unfulfilled expectations: %s", err)
 		}
 	})
+}
+
+func TestGetInquiryApproval(t *testing.T) {
+	// Setup mock database connection
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	expectedInquiry := []entity.InquiryCa{entity.InquiryCa{ShowAction: false, ActionDate: "", ActionFormAkk: false, ActionEditData: false, AdditionalDP: 0, Activity: "", SourceDecision: "", StatusDecision: "", StatusReason: "", CaDecision: "", FinalApproval: "", CANote: "", ScsDate: "", ScsScore: "", ScsStatus: "", BiroCustomerResult: "", BiroSpouseResult: "", IsLastApproval: false, HasReturn: false, DraftDecision: "", DraftSlikResult: "", DraftNote: "", DraftCreatedAt: time.Time{}, DraftCreatedBy: "", DraftDecisionBy: "", ProspectID: "EFM03406412522151347", BranchName: "BANDUNG", IncomingSource: "", CreatedAt: "", OrderAt: "", CustomerID: "", CustomerStatus: "", IDNumber: "", LegalName: "", BirthPlace: "", BirthDate: time.Time{}, SurgateMotherName: "", Gender: "", MobilePhone: "", Email: "", Education: "", MaritalStatus: "", NumOfDependence: 0, HomeStatus: "", StaySinceMonth: "", StaySinceYear: "", ExtCompanyPhone: (*string)(nil), SourceOtherIncome: (*string)(nil), SurveyResult: "", Supplier: "", ProductOfferingID: "", AssetType: "", AssetDescription: "", ManufacturingYear: "", Color: "", ChassisNumber: "", EngineNumber: "", InterestRate: 0, InstallmentPeriod: 0, OTR: 0, DPAmount: 0, FinanceAmount: 0, InterestAmount: 0, LifeInsuranceFee: 0, AssetInsuranceFee: 0, InsuranceAmount: 0, AdminFee: 0, ProvisionFee: 0, NTF: 0, NTFAkumulasi: 0, Total: 0, MonthlyInstallment: 0, FirstInstallment: "", ProfessionID: "", JobTypeID: "", JobPosition: "", CompanyName: "", IndustryTypeID: "", EmploymentSinceYear: "", EmploymentSinceMonth: "", MonthlyFixedIncome: 0, MonthlyVariableIncome: 0, SpouseIncome: 0, SpouseIDNumber: "", SpouseLegalName: "", SpouseCompanyName: "", SpouseCompanyPhone: "", SpouseMobilePhone: "", SpouseProfession: "", EmconName: "", Relationship: "", EmconMobilePhone: "", LegalAddress: "", LegalRTRW: "", LegalKelurahan: "", LegalKecamatan: "", LegalZipCode: "", LegalCity: "", ResidenceAddress: "", ResidenceRTRW: "", ResidenceKelurahan: "", ResidenceKecamatan: "", ResidenceZipCode: "", ResidenceCity: "", CompanyAddress: "", CompanyRTRW: "", CompanyKelurahan: "", CompanyKecamatan: "", CompanyZipCode: "", CompanyCity: "", CompanyAreaPhone: "", CompanyPhone: "", EmergencyAddress: "", EmergencyRTRW: "", EmergencyKelurahan: "", EmergencyKecamatan: "", EmergencyZipcode: "", EmergencyCity: "", EmergencyAreaPhone: "", EmergencyPhone: ""}}
+
+	t.Run("success with multi branch and without filter", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqInquiryApproval{
+			Search:      "aprospectid",
+			BranchID:    "426",
+			MultiBranch: "1",
+			UserID:      "abc123",
+			Alias:       "CBM",
+		}
+
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.status_process,
+			tst.decision,
+			tcd.final_approval,
+			tcd.decision_by,
+			has.next_step,
+			has.decision AS approval_decision,
+			has.source_decision AS approval_source_decision,
+			tcd.decision as ca_decision,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+		FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID   	
+		OUTER APPLY (
+			SELECT
+			  TOP 1 *
+			FROM
+			  trx_history_approval_scheme has
+			WHERE
+			  (
+				has.next_step = 'CBM'
+				OR has.source_decision = 'CBM'
+			  )
+			  AND tm.ProspectID = has.ProspectID
+			ORDER BY
+			  has.created_at DESC
+		  ) has
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			created_at,
+			final_approval,
+			decision_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND (tt.next_step = 'CBM' OR tt.approval_source_decision='CBM')`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		tt.*
+		FROM
+		(
+		SELECT
+		tm.ProspectID,
+		cb.BranchName,
+		cb.BranchID,
+		tst.activity,
+		tst.source_decision,
+		tst.status_process,
+		tst.decision,
+		tst.reason,
+		tcd.decision as ca_decision,
+		tcd.decision_by,
+		tcd.final_approval,
+		has.next_step,
+		has.decision AS approval_decision,
+		has.source_decision AS approval_source_decision,
+		CASE
+		  WHEN tcd.final_approval='CBM' THEN 1
+		  ELSE 0
+		END AS is_last_approval,
+		CASE
+		  WHEN rtn.decision IS NOT NULL THEN 1
+		  ELSE 0
+		END AS HasReturn,
+		tcd.note AS ca_note,
+		CASE
+		  WHEN tst.status_process='FIN'
+		  AND tst.activity='STOP' THEN 1
+		  ELSE 0
+		END AS ActionFormAkk,
+		CASE
+		  WHEN tcd.decision = 'CAN' THEN tcd.created_at 
+		  WHEN tcd.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+		  ELSE FORMAT(tst.created_at,'yyyy-MM-dd HH:mm:ss')
+		END AS ActionDate,
+		CASE
+		  WHEN (tfa.decision IS NULL)
+		  AND (tcd.decision <> 'CAN') 
+		  AND (tst.source_decision='CBM') THEN 1
+		  ELSE 0
+		END AS ShowAction,
+		CASE
+		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+		  ELSE 'NE'
+		END AS incoming_source,
+		tcp.CustomerID,
+		tcp.CustomerStatus,
+		tcp.SurveyResult,
+		tm.created_at,
+		tm.order_at,
+		tm.lob,
+		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+		scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+		tcp.BirthDate,
+		scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+		CASE
+		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
+		END AS 'Gender',
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
+		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+		edu.value AS Education,
+		mst.value AS MaritalStatus,
+		tcp.NumOfDependence,
+		hst.value AS HomeStatus,
+		mn.value AS StaySinceMonth,
+		tcp.StaySinceYear,
+		ta.ProductOfferingID,
+		ta.dealer,
+		ta.LifeInsuranceFee,
+		ta.AssetInsuranceFee,
+		'KMB MOTOR' AS AssetType,
+		ti.asset_description,
+		ti.manufacture_year,
+		ti.color,
+		chassis_number,
+		engine_number,
+		interest_rate,
+		Tenor AS InstallmentPeriod,
+		OTR,
+		DPAmount,
+		AF AS FinanceAmount,
+		interest_amount,
+		insurance_amount,
+		AdminFee,
+		provision_fee,
+		NTF,
+		NTFAkumulasi,
+		(NTF + interest_amount) AS Total,
+		InstallmentAmount AS MonthlyInstallment,
+		FirstInstallment,
+		pr.value AS ProfessionID,
+		jt.value AS JobType,
+		jb.value AS JobPosition,
+		mn2.value AS EmploymentSinceMonth,
+		tce.EmploymentSinceYear,
+		tce.CompanyName,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
+		tcp.ExtCompanyPhone,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		tcp.SourceOtherIncome,
+		tcs.FullName AS SpouseLegalName,
+		tcs.CompanyName AS SpouseCompanyName,
+		tcs.CompanyPhone AS SpouseCompanyPhone,
+		tcs.MobilePhone AS SpouseMobilePhone,
+		tcs.IDNumber AS SpouseIDNumber,
+		pr2.value AS SpouseProfession,
+		em.Name AS EmconName,
+		em.Relationship,
+		em.MobilePhone AS EmconMobilePhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
+		tce.IndustryTypeID,
+		FORMAT(tak.ScsDate,'dd-MM-yyyy') as ScsDate,
+		tak.ScsScore,
+		tak.ScsStatus,
+		tdb.BiroCustomerResult,
+		tdb.BiroSpouseResult
+
+	  FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		OUTER APPLY (
+			SELECT
+			  TOP 1 *
+			FROM
+			  trx_history_approval_scheme has
+			WHERE
+			  (
+				has.next_step = 'CBM'
+				OR has.source_decision = 'CBM'
+			  )
+			  AND tm.ProspectID = has.ProspectID
+			ORDER BY
+			  has.created_at DESC
+		  ) has
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			note,
+			created_at,
+			final_approval,
+			decision_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN (
+			SELECT prospect_id, 
+			MAX(Case [subject] When 'CUSTOMER' Then url_pdf_report End) BiroCustomerResult,
+			MAX(Case [subject] When 'SPOUSE' Then url_pdf_report End) BiroSpouseResult
+			FROM trx_detail_biro
+			GROUP BY prospect_id
+		) tdb ON tm.ProspectID = tdb.prospect_id 
+
+		INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
+
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'Education'
+		) edu ON tcp.Education = edu.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MaritalStatus'
+		) mst ON tcp.MaritalStatus = mst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'HomeStatus'
+		) hst ON tcp.HomeStatus = hst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn ON tcp.StaySinceMonth = mn.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr ON tce.ProfessionID = pr.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobType'
+		) jt ON tce.JobType = jt.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobPosition'
+		) jb ON tce.JobPosition = jb.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr2 ON tcs.ProfessionID = pr2.[key]
+	) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND (tt.next_step = 'CBM' OR tt.approval_source_decision='CBM') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
+
+		// Call the function
+		reason, _, err := repo.GetInquiryApproval(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success with multi branch and need decision", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqInquiryApproval{
+			Search:      "aprospectid",
+			BranchID:    "426",
+			MultiBranch: "1",
+			Filter:      "NEED_DECISION",
+			UserID:      "abc123",
+			Alias:       "CBM",
+		}
+
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.status_process,
+			tst.decision,
+			tcd.final_approval,
+			tcd.decision_by,
+			has.next_step,
+			has.decision AS approval_decision,
+			has.source_decision AS approval_source_decision,
+			tcd.decision as ca_decision,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+		FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID   	
+		OUTER APPLY (
+			SELECT
+			  TOP 1 *
+			FROM
+			  trx_history_approval_scheme has
+			WHERE
+			  (
+				has.next_step = 'CBM'
+				OR has.source_decision = 'CBM'
+			  )
+			  AND tm.ProspectID = has.ProspectID
+			ORDER BY
+			  has.created_at DESC
+		  ) has
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			created_at,
+			final_approval,
+			decision_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.activity= 'UNPR' AND tt.decision= 'CPR' AND tt.source_decision = 'CBM'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		tt.*
+		FROM
+		(
+		SELECT
+		tm.ProspectID,
+		cb.BranchName,
+		cb.BranchID,
+		tst.activity,
+		tst.source_decision,
+		tst.status_process,
+		tst.decision,
+		tst.reason,
+		tcd.decision as ca_decision,
+		tcd.decision_by,
+		tcd.final_approval,
+		has.next_step,
+		has.decision AS approval_decision,
+		has.source_decision AS approval_source_decision,
+		CASE
+		  WHEN tcd.final_approval='CBM' THEN 1
+		  ELSE 0
+		END AS is_last_approval,
+		CASE
+		  WHEN rtn.decision IS NOT NULL THEN 1
+		  ELSE 0
+		END AS HasReturn,
+		tcd.note AS ca_note,
+		CASE
+		  WHEN tst.status_process='FIN'
+		  AND tst.activity='STOP' THEN 1
+		  ELSE 0
+		END AS ActionFormAkk,
+		CASE
+		  WHEN tcd.decision = 'CAN' THEN tcd.created_at 
+		  WHEN tcd.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+		  ELSE FORMAT(tst.created_at,'yyyy-MM-dd HH:mm:ss')
+		END AS ActionDate,
+		CASE
+		  WHEN (tfa.decision IS NULL)
+		  AND (tcd.decision <> 'CAN') 
+		  AND (tst.source_decision='CBM') THEN 1
+		  ELSE 0
+		END AS ShowAction,
+		CASE
+		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+		  ELSE 'NE'
+		END AS incoming_source,
+		tcp.CustomerID,
+		tcp.CustomerStatus,
+		tcp.SurveyResult,
+		tm.created_at,
+		tm.order_at,
+		tm.lob,
+		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+		scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+		tcp.BirthDate,
+		scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+		CASE
+		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
+		END AS 'Gender',
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
+		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+		edu.value AS Education,
+		mst.value AS MaritalStatus,
+		tcp.NumOfDependence,
+		hst.value AS HomeStatus,
+		mn.value AS StaySinceMonth,
+		tcp.StaySinceYear,
+		ta.ProductOfferingID,
+		ta.dealer,
+		ta.LifeInsuranceFee,
+		ta.AssetInsuranceFee,
+		'KMB MOTOR' AS AssetType,
+		ti.asset_description,
+		ti.manufacture_year,
+		ti.color,
+		chassis_number,
+		engine_number,
+		interest_rate,
+		Tenor AS InstallmentPeriod,
+		OTR,
+		DPAmount,
+		AF AS FinanceAmount,
+		interest_amount,
+		insurance_amount,
+		AdminFee,
+		provision_fee,
+		NTF,
+		NTFAkumulasi,
+		(NTF + interest_amount) AS Total,
+		InstallmentAmount AS MonthlyInstallment,
+		FirstInstallment,
+		pr.value AS ProfessionID,
+		jt.value AS JobType,
+		jb.value AS JobPosition,
+		mn2.value AS EmploymentSinceMonth,
+		tce.EmploymentSinceYear,
+		tce.CompanyName,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
+		tcp.ExtCompanyPhone,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		tcp.SourceOtherIncome,
+		tcs.FullName AS SpouseLegalName,
+		tcs.CompanyName AS SpouseCompanyName,
+		tcs.CompanyPhone AS SpouseCompanyPhone,
+		tcs.MobilePhone AS SpouseMobilePhone,
+		tcs.IDNumber AS SpouseIDNumber,
+		pr2.value AS SpouseProfession,
+		em.Name AS EmconName,
+		em.Relationship,
+		em.MobilePhone AS EmconMobilePhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
+		tce.IndustryTypeID,
+		FORMAT(tak.ScsDate,'dd-MM-yyyy') as ScsDate,
+		tak.ScsScore,
+		tak.ScsStatus,
+		tdb.BiroCustomerResult,
+		tdb.BiroSpouseResult
+
+	  FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		OUTER APPLY (
+			SELECT
+			  TOP 1 *
+			FROM
+			  trx_history_approval_scheme has
+			WHERE
+			  (
+				has.next_step = 'CBM'
+				OR has.source_decision = 'CBM'
+			  )
+			  AND tm.ProspectID = has.ProspectID
+			ORDER BY
+			  has.created_at DESC
+		  ) has
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			note,
+			created_at,
+			final_approval,
+			decision_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN (
+			SELECT prospect_id, 
+			MAX(Case [subject] When 'CUSTOMER' Then url_pdf_report End) BiroCustomerResult,
+			MAX(Case [subject] When 'SPOUSE' Then url_pdf_report End) BiroSpouseResult
+			FROM trx_detail_biro
+			GROUP BY prospect_id
+		) tdb ON tm.ProspectID = tdb.prospect_id 
+
+		INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
+
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'Education'
+		) edu ON tcp.Education = edu.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MaritalStatus'
+		) mst ON tcp.MaritalStatus = mst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'HomeStatus'
+		) hst ON tcp.HomeStatus = hst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn ON tcp.StaySinceMonth = mn.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr ON tce.ProfessionID = pr.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobType'
+		) jt ON tce.JobType = jt.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobPosition'
+		) jb ON tce.JobPosition = jb.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr2 ON tcs.ProfessionID = pr2.[key]
+	) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.activity= 'UNPR' AND tt.decision= 'CPR' AND tt.source_decision = 'CBM' ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
+
+		// Call the function
+		reason, _, err := repo.GetInquiryApproval(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success without multi branch", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqInquiryApproval{
+			Search:      "aprospectid",
+			BranchID:    "426",
+			MultiBranch: "0",
+			Filter:      "REJECT",
+			UserID:      "db1f4044e1dc574",
+			Alias:       "CBM",
+		}
+
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.status_process,
+			tst.decision,
+			tcd.final_approval,
+			tcd.decision_by,
+			has.next_step,
+			has.decision AS approval_decision,
+			has.source_decision AS approval_source_decision,
+			tcd.decision as ca_decision,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+		FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID   	
+		OUTER APPLY (
+			SELECT
+			  TOP 1 *
+			FROM
+			  trx_history_approval_scheme has
+			WHERE
+			  (
+				has.next_step = 'CBM'
+				OR has.source_decision = 'CBM'
+			  )
+			  AND tm.ProspectID = has.ProspectID
+			ORDER BY
+			  has.created_at DESC
+		  ) has
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			created_at,
+			final_approval,
+			decision_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'REJ' AND tt.status_process='FIN' AND tt.approval_source_decision='CBM'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		tt.*
+		FROM
+		(
+		SELECT
+		tm.ProspectID,
+		cb.BranchName,
+		cb.BranchID,
+		tst.activity,
+		tst.source_decision,
+		tst.status_process,
+		tst.decision,
+		tst.reason,
+		tcd.decision as ca_decision,
+		tcd.decision_by,
+		tcd.final_approval,
+		has.next_step,
+		has.decision AS approval_decision,
+		has.source_decision AS approval_source_decision,
+		CASE
+		  WHEN tcd.final_approval='CBM' THEN 1
+		  ELSE 0
+		END AS is_last_approval,
+		CASE
+		  WHEN rtn.decision IS NOT NULL THEN 1
+		  ELSE 0
+		END AS HasReturn,
+		tcd.note AS ca_note,
+		CASE
+		  WHEN tst.status_process='FIN'
+		  AND tst.activity='STOP' THEN 1
+		  ELSE 0
+		END AS ActionFormAkk,
+		CASE
+		  WHEN tcd.decision = 'CAN' THEN tcd.created_at 
+		  WHEN tcd.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+		  ELSE FORMAT(tst.created_at,'yyyy-MM-dd HH:mm:ss')
+		END AS ActionDate,
+		CASE
+		  WHEN (tfa.decision IS NULL)
+		  AND (tcd.decision <> 'CAN') 
+		  AND (tst.source_decision='CBM') THEN 1
+		  ELSE 0
+		END AS ShowAction,
+		CASE
+		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+		  ELSE 'NE'
+		END AS incoming_source,
+		tcp.CustomerID,
+		tcp.CustomerStatus,
+		tcp.SurveyResult,
+		tm.created_at,
+		tm.order_at,
+		tm.lob,
+		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+		scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+		tcp.BirthDate,
+		scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+		CASE
+		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
+		END AS 'Gender',
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
+		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+		edu.value AS Education,
+		mst.value AS MaritalStatus,
+		tcp.NumOfDependence,
+		hst.value AS HomeStatus,
+		mn.value AS StaySinceMonth,
+		tcp.StaySinceYear,
+		ta.ProductOfferingID,
+		ta.dealer,
+		ta.LifeInsuranceFee,
+		ta.AssetInsuranceFee,
+		'KMB MOTOR' AS AssetType,
+		ti.asset_description,
+		ti.manufacture_year,
+		ti.color,
+		chassis_number,
+		engine_number,
+		interest_rate,
+		Tenor AS InstallmentPeriod,
+		OTR,
+		DPAmount,
+		AF AS FinanceAmount,
+		interest_amount,
+		insurance_amount,
+		AdminFee,
+		provision_fee,
+		NTF,
+		NTFAkumulasi,
+		(NTF + interest_amount) AS Total,
+		InstallmentAmount AS MonthlyInstallment,
+		FirstInstallment,
+		pr.value AS ProfessionID,
+		jt.value AS JobType,
+		jb.value AS JobPosition,
+		mn2.value AS EmploymentSinceMonth,
+		tce.EmploymentSinceYear,
+		tce.CompanyName,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
+		tcp.ExtCompanyPhone,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		tcp.SourceOtherIncome,
+		tcs.FullName AS SpouseLegalName,
+		tcs.CompanyName AS SpouseCompanyName,
+		tcs.CompanyPhone AS SpouseCompanyPhone,
+		tcs.MobilePhone AS SpouseMobilePhone,
+		tcs.IDNumber AS SpouseIDNumber,
+		pr2.value AS SpouseProfession,
+		em.Name AS EmconName,
+		em.Relationship,
+		em.MobilePhone AS EmconMobilePhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
+		tce.IndustryTypeID,
+		FORMAT(tak.ScsDate,'dd-MM-yyyy') as ScsDate,
+		tak.ScsScore,
+		tak.ScsStatus,
+		tdb.BiroCustomerResult,
+		tdb.BiroSpouseResult
+
+	  FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		OUTER APPLY (
+			SELECT
+			  TOP 1 *
+			FROM
+			  trx_history_approval_scheme has
+			WHERE
+			  (
+				has.next_step = 'CBM'
+				OR has.source_decision = 'CBM'
+			  )
+			  AND tm.ProspectID = has.ProspectID
+			ORDER BY
+			  has.created_at DESC
+		  ) has
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			note,
+			created_at,
+			final_approval,
+			decision_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN (
+			SELECT prospect_id, 
+			MAX(Case [subject] When 'CUSTOMER' Then url_pdf_report End) BiroCustomerResult,
+			MAX(Case [subject] When 'SPOUSE' Then url_pdf_report End) BiroSpouseResult
+			FROM trx_detail_biro
+			GROUP BY prospect_id
+		) tdb ON tm.ProspectID = tdb.prospect_id 
+
+		INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
+
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'Education'
+		) edu ON tcp.Education = edu.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MaritalStatus'
+		) mst ON tcp.MaritalStatus = mst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'HomeStatus'
+		) hst ON tcp.HomeStatus = hst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn ON tcp.StaySinceMonth = mn.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr ON tce.ProfessionID = pr.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobType'
+		) jt ON tce.JobType = jt.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobPosition'
+		) jb ON tce.JobPosition = jb.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr2 ON tcs.ProfessionID = pr2.[key]
+	) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'REJ' AND tt.status_process='FIN' AND tt.approval_source_decision='CBM' ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
+
+		// Call the function
+		reason, _, err := repo.GetInquiryApproval(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success with region west java", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqInquiryApproval{
+			Search:      "aprospectid",
+			BranchID:    "426",
+			MultiBranch: "1",
+			Filter:      "CANCEL",
+			UserID:      "db1f4044e1dc574",
+			Alias:       "CBM",
+		}
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
+		INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+		(	SELECT value 
+			FROM region_user ru WITH (nolock)
+			cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+			WHERE ru.user_id = 'db1f4044e1dc574' 
+		)
+		AND b.lob_id='125'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
+				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
+
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.status_process,
+			tst.decision,
+			tcd.final_approval,
+			tcd.decision_by,
+			has.next_step,
+			has.decision AS approval_decision,
+			has.source_decision AS approval_source_decision,
+			tcd.decision as ca_decision,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+		FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID   	
+		OUTER APPLY (
+			SELECT
+			  TOP 1 *
+			FROM
+			  trx_history_approval_scheme has
+			WHERE
+			  (
+				has.next_step = 'CBM'
+				OR has.source_decision = 'CBM'
+			  )
+			  AND tm.ProspectID = has.ProspectID
+			ORDER BY
+			  has.created_at DESC
+		  ) has
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			created_at,
+			final_approval,
+			decision_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'CAN' AND tt.status_process='FIN' AND tt.approval_source_decision='CBM'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		tt.*
+		FROM
+		(
+		SELECT
+		tm.ProspectID,
+		cb.BranchName,
+		cb.BranchID,
+		tst.activity,
+		tst.source_decision,
+		tst.status_process,
+		tst.decision,
+		tst.reason,
+		tcd.decision as ca_decision,
+		tcd.decision_by,
+		tcd.final_approval,
+		has.next_step,
+		has.decision AS approval_decision,
+		has.source_decision AS approval_source_decision,
+		CASE
+		  WHEN tcd.final_approval='CBM' THEN 1
+		  ELSE 0
+		END AS is_last_approval,
+		CASE
+		  WHEN rtn.decision IS NOT NULL THEN 1
+		  ELSE 0
+		END AS HasReturn,
+		tcd.note AS ca_note,
+		CASE
+		  WHEN tst.status_process='FIN'
+		  AND tst.activity='STOP' THEN 1
+		  ELSE 0
+		END AS ActionFormAkk,
+		CASE
+		  WHEN tcd.decision = 'CAN' THEN tcd.created_at 
+		  WHEN tcd.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+		  ELSE FORMAT(tst.created_at,'yyyy-MM-dd HH:mm:ss')
+		END AS ActionDate,
+		CASE
+		  WHEN (tfa.decision IS NULL)
+		  AND (tcd.decision <> 'CAN') 
+		  AND (tst.source_decision='CBM') THEN 1
+		  ELSE 0
+		END AS ShowAction,
+		CASE
+		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+		  ELSE 'NE'
+		END AS incoming_source,
+		tcp.CustomerID,
+		tcp.CustomerStatus,
+		tcp.SurveyResult,
+		tm.created_at,
+		tm.order_at,
+		tm.lob,
+		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+		scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+		tcp.BirthDate,
+		scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+		CASE
+		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
+		END AS 'Gender',
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
+		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+		edu.value AS Education,
+		mst.value AS MaritalStatus,
+		tcp.NumOfDependence,
+		hst.value AS HomeStatus,
+		mn.value AS StaySinceMonth,
+		tcp.StaySinceYear,
+		ta.ProductOfferingID,
+		ta.dealer,
+		ta.LifeInsuranceFee,
+		ta.AssetInsuranceFee,
+		'KMB MOTOR' AS AssetType,
+		ti.asset_description,
+		ti.manufacture_year,
+		ti.color,
+		chassis_number,
+		engine_number,
+		interest_rate,
+		Tenor AS InstallmentPeriod,
+		OTR,
+		DPAmount,
+		AF AS FinanceAmount,
+		interest_amount,
+		insurance_amount,
+		AdminFee,
+		provision_fee,
+		NTF,
+		NTFAkumulasi,
+		(NTF + interest_amount) AS Total,
+		InstallmentAmount AS MonthlyInstallment,
+		FirstInstallment,
+		pr.value AS ProfessionID,
+		jt.value AS JobType,
+		jb.value AS JobPosition,
+		mn2.value AS EmploymentSinceMonth,
+		tce.EmploymentSinceYear,
+		tce.CompanyName,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
+		tcp.ExtCompanyPhone,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		tcp.SourceOtherIncome,
+		tcs.FullName AS SpouseLegalName,
+		tcs.CompanyName AS SpouseCompanyName,
+		tcs.CompanyPhone AS SpouseCompanyPhone,
+		tcs.MobilePhone AS SpouseMobilePhone,
+		tcs.IDNumber AS SpouseIDNumber,
+		pr2.value AS SpouseProfession,
+		em.Name AS EmconName,
+		em.Relationship,
+		em.MobilePhone AS EmconMobilePhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
+		tce.IndustryTypeID,
+		FORMAT(tak.ScsDate,'dd-MM-yyyy') as ScsDate,
+		tak.ScsScore,
+		tak.ScsStatus,
+		tdb.BiroCustomerResult,
+		tdb.BiroSpouseResult
+
+	  FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		OUTER APPLY (
+			SELECT
+			  TOP 1 *
+			FROM
+			  trx_history_approval_scheme has
+			WHERE
+			  (
+				has.next_step = 'CBM'
+				OR has.source_decision = 'CBM'
+			  )
+			  AND tm.ProspectID = has.ProspectID
+			ORDER BY
+			  has.created_at DESC
+		  ) has
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			note,
+			created_at,
+			final_approval,
+			decision_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN (
+			SELECT prospect_id, 
+			MAX(Case [subject] When 'CUSTOMER' Then url_pdf_report End) BiroCustomerResult,
+			MAX(Case [subject] When 'SPOUSE' Then url_pdf_report End) BiroSpouseResult
+			FROM trx_detail_biro
+			GROUP BY prospect_id
+		) tdb ON tm.ProspectID = tdb.prospect_id 
+
+		INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
+
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'Education'
+		) edu ON tcp.Education = edu.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MaritalStatus'
+		) mst ON tcp.MaritalStatus = mst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'HomeStatus'
+		) hst ON tcp.HomeStatus = hst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn ON tcp.StaySinceMonth = mn.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr ON tce.ProfessionID = pr.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobType'
+		) jt ON tce.JobType = jt.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobPosition'
+		) jb ON tce.JobPosition = jb.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr2 ON tcs.ProfessionID = pr2.[key]
+	) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'CAN' AND tt.status_process='FIN' AND tt.approval_source_decision='CBM' ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
+
+		// Call the function
+		reason, _, err := repo.GetInquiryApproval(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success with region ALL", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqInquiryApproval{
+			Search:      "aprospectid",
+			BranchID:    "426",
+			MultiBranch: "1",
+			Filter:      "APPROVE",
+			UserID:      "abc123",
+			Alias:       "CBM",
+		}
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
+		INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+		(	SELECT value 
+			FROM region_user ru WITH (nolock)
+			cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+			WHERE ru.user_id = 'abc123' 
+		)
+		AND b.lob_id='125'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
+				AddRow("ALL", `["426","436","429","431","442","428","430"]`))
+
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.status_process,
+			tst.decision,
+			tcd.final_approval,
+			tcd.decision_by,
+			has.next_step,
+			has.decision AS approval_decision,
+			has.source_decision AS approval_source_decision,
+			tcd.decision as ca_decision,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+		FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID   	
+		OUTER APPLY (
+			SELECT
+			  TOP 1 *
+			FROM
+			  trx_history_approval_scheme has
+			WHERE
+			  (
+				has.next_step = 'CBM'
+				OR has.source_decision = 'CBM'
+			  )
+			  AND tm.ProspectID = has.ProspectID
+			ORDER BY
+			  has.created_at DESC
+		  ) has
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			created_at,
+			final_approval,
+			decision_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		) AS tt WHERE (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'APR' AND tt.status_process='FIN' AND tt.approval_source_decision='CBM'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		tt.*
+		FROM
+		(
+		SELECT
+		tm.ProspectID,
+		cb.BranchName,
+		cb.BranchID,
+		tst.activity,
+		tst.source_decision,
+		tst.status_process,
+		tst.decision,
+		tst.reason,
+		tcd.decision as ca_decision,
+		tcd.decision_by,
+		tcd.final_approval,
+		has.next_step,
+		has.decision AS approval_decision,
+		has.source_decision AS approval_source_decision,
+		CASE
+		  WHEN tcd.final_approval='CBM' THEN 1
+		  ELSE 0
+		END AS is_last_approval,
+		CASE
+		  WHEN rtn.decision IS NOT NULL THEN 1
+		  ELSE 0
+		END AS HasReturn,
+		tcd.note AS ca_note,
+		CASE
+		  WHEN tst.status_process='FIN'
+		  AND tst.activity='STOP' THEN 1
+		  ELSE 0
+		END AS ActionFormAkk,
+		CASE
+		  WHEN tcd.decision = 'CAN' THEN tcd.created_at 
+		  WHEN tcd.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+		  ELSE FORMAT(tst.created_at,'yyyy-MM-dd HH:mm:ss')
+		END AS ActionDate,
+		CASE
+		  WHEN (tfa.decision IS NULL)
+		  AND (tcd.decision <> 'CAN') 
+		  AND (tst.source_decision='CBM') THEN 1
+		  ELSE 0
+		END AS ShowAction,
+		CASE
+		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+		  ELSE 'NE'
+		END AS incoming_source,
+		tcp.CustomerID,
+		tcp.CustomerStatus,
+		tcp.SurveyResult,
+		tm.created_at,
+		tm.order_at,
+		tm.lob,
+		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+		scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+		tcp.BirthDate,
+		scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+		CASE
+		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
+		END AS 'Gender',
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
+		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+		edu.value AS Education,
+		mst.value AS MaritalStatus,
+		tcp.NumOfDependence,
+		hst.value AS HomeStatus,
+		mn.value AS StaySinceMonth,
+		tcp.StaySinceYear,
+		ta.ProductOfferingID,
+		ta.dealer,
+		ta.LifeInsuranceFee,
+		ta.AssetInsuranceFee,
+		'KMB MOTOR' AS AssetType,
+		ti.asset_description,
+		ti.manufacture_year,
+		ti.color,
+		chassis_number,
+		engine_number,
+		interest_rate,
+		Tenor AS InstallmentPeriod,
+		OTR,
+		DPAmount,
+		AF AS FinanceAmount,
+		interest_amount,
+		insurance_amount,
+		AdminFee,
+		provision_fee,
+		NTF,
+		NTFAkumulasi,
+		(NTF + interest_amount) AS Total,
+		InstallmentAmount AS MonthlyInstallment,
+		FirstInstallment,
+		pr.value AS ProfessionID,
+		jt.value AS JobType,
+		jb.value AS JobPosition,
+		mn2.value AS EmploymentSinceMonth,
+		tce.EmploymentSinceYear,
+		tce.CompanyName,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
+		tcp.ExtCompanyPhone,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		tcp.SourceOtherIncome,
+		tcs.FullName AS SpouseLegalName,
+		tcs.CompanyName AS SpouseCompanyName,
+		tcs.CompanyPhone AS SpouseCompanyPhone,
+		tcs.MobilePhone AS SpouseMobilePhone,
+		tcs.IDNumber AS SpouseIDNumber,
+		pr2.value AS SpouseProfession,
+		em.Name AS EmconName,
+		em.Relationship,
+		em.MobilePhone AS EmconMobilePhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
+		tce.IndustryTypeID,
+		FORMAT(tak.ScsDate,'dd-MM-yyyy') as ScsDate,
+		tak.ScsScore,
+		tak.ScsStatus,
+		tdb.BiroCustomerResult,
+		tdb.BiroSpouseResult
+
+	  FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		OUTER APPLY (
+			SELECT
+			  TOP 1 *
+			FROM
+			  trx_history_approval_scheme has
+			WHERE
+			  (
+				has.next_step = 'CBM'
+				OR has.source_decision = 'CBM'
+			  )
+			  AND tm.ProspectID = has.ProspectID
+			ORDER BY
+			  has.created_at DESC
+		  ) has
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			note,
+			created_at,
+			final_approval,
+			decision_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN (
+			SELECT prospect_id, 
+			MAX(Case [subject] When 'CUSTOMER' Then url_pdf_report End) BiroCustomerResult,
+			MAX(Case [subject] When 'SPOUSE' Then url_pdf_report End) BiroSpouseResult
+			FROM trx_detail_biro
+			GROUP BY prospect_id
+		) tdb ON tm.ProspectID = tdb.prospect_id 
+
+		INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
+
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'Education'
+		) edu ON tcp.Education = edu.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MaritalStatus'
+		) mst ON tcp.MaritalStatus = mst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'HomeStatus'
+		) hst ON tcp.HomeStatus = hst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn ON tcp.StaySinceMonth = mn.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr ON tce.ProfessionID = pr.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobType'
+		) jt ON tce.JobType = jt.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobPosition'
+		) jb ON tce.JobPosition = jb.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr2 ON tcs.ProfessionID = pr2.[key]
+	) AS tt WHERE (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'APR' AND tt.status_process='FIN' AND tt.approval_source_decision='CBM' ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
+
+		// Call the function
+		reason, _, err := repo.GetInquiryApproval(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestProcessRecalculateOrder(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	_ = gormDB
+
+	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	ppid := "TST001"
+
+	trxStatus := entity.TrxStatus{
+		ProspectID:     ppid,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_UNPROCESS,
+		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+		SourceDecision: constant.NEED_RECALCULATE,
+		Reason:         constant.REASON_NEED_RECALCULATE,
+	}
+
+	infoMap := map[string]float64{
+		"dp_amount": 1000.45,
+	}
+	info, _ := json.Marshal(infoMap)
+
+	trxDetail := entity.TrxDetail{
+		ProspectID:     ppid,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_PROCESS,
+		Decision:       constant.DB_DECISION_PASS,
+		RuleCode:       constant.CODE_CREDIT_COMMITTEE,
+		SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
+		NextStep:       constant.NEED_RECALCULATE,
+		Info:           string(info),
+		CreatedBy:      "abc123",
+		Reason:         constant.REASON_NEED_RECALCULATE,
+	}
+
+	trxHistoryApproval := entity.TrxHistoryApprovalScheme{
+		ProspectID:            ppid,
+		Decision:              constant.DB_DECISION_SDP,
+		Reason:                trxStatus.Reason,
+		Note:                  fmt.Sprintf("Nilai DP: %.0f", 1000.45),
+		CreatedBy:             "abc123",
+		DecisionBy:            "CBM KMB",
+		NeedEscalation:        0,
+		NextFinalApprovalFlag: 1,
+		SourceDecision:        trxDetail.SourceDecision,
+	}
+
+	t.Run("success update", func(t *testing.T) {
+
+		mock.ExpectBegin()
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "source_decision" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
+			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_ca_decision" SET "created_at" = ? WHERE (ProspectID = ?)`)).
+			WithArgs(sqlmock.AnyArg(), ppid).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","reason","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxDetail.ProspectID, trxDetail.StatusProcess, trxDetail.Activity, trxDetail.Decision, trxDetail.RuleCode, trxDetail.SourceDecision, trxDetail.NextStep, sqlmock.AnyArg(), trxDetail.Info, trxDetail.Reason, trxDetail.CreatedBy, sqlmock.AnyArg()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_history_approval_scheme" ("id","ProspectID","decision","reason","note","created_at","created_by","decision_by","need_escalation","next_final_approval_flag","source_decision","next_step") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(sqlmock.AnyArg(), trxHistoryApproval.ProspectID, trxHistoryApproval.Decision, trxHistoryApproval.Reason, trxHistoryApproval.Note, sqlmock.AnyArg(), trxHistoryApproval.CreatedBy, trxHistoryApproval.DecisionBy, trxHistoryApproval.NeedEscalation, trxHistoryApproval.NextFinalApprovalFlag, trxHistoryApproval.SourceDecision, trxHistoryApproval.NextStep).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectCommit()
+
+		err := newDB.ProcessRecalculateOrder(ppid, trxStatus, trxDetail, trxHistoryApproval)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+}
+
+func TestSubmitApproval(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	_ = gormDB
+
+	newDB := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	var (
+		decision        string
+		decision_detail string
+		trxRecalculate  entity.TrxRecalculate
+		approvalScheme  response.RespApprovalScheme
+	)
+	rej := constant.DB_DECISION_REJECT
+	apr := constant.DB_DECISION_APR
+	pas := constant.DB_DECISION_PASS
+	rtn := constant.DB_DECISION_RTN
+	cpr := constant.DB_DECISION_CREDIT_PROCESS
+	// cra := constant.DB_DECISION_CREDIT_ANALYST
+	onp := constant.STATUS_ONPROCESS
+	unpr := constant.ACTIVITY_UNPROCESS
+	prcd := constant.ACTIVITY_PROCESS
+
+	t.Run("success approve from cbm to drm", func(t *testing.T) {
+		req := request.ReqSubmitApproval{
+			ProspectID:    "ppid",
+			FinalApproval: "DRM",
+			Decision:      "APPROVE",
+			RuleCode:      "3741",
+			Alias:         "CBM",
+			Reason:        "Oke",
+			Note:          "lanjut ke drm",
+			CreatedBy:     "abc123",
+			DecisionBy:    "BM KMB",
+		}
+
+		switch req.Decision {
+		case constant.DECISION_REJECT:
+			decision = rej
+			decision_detail = rej
+
+		case constant.DECISION_APPROVE:
+			decision = apr
+			decision_detail = pas
+
+		case constant.DECISION_RETURN:
+			decision = rtn
+			decision_detail = rtn
+		}
+
+		approvalScheme, _ = utils.ApprovalScheme(req)
+
+		trxStatus := entity.TrxStatus{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  onp,
+			Activity:       unpr,
+			Decision:       cpr,
+			RuleCode:       req.RuleCode,
+			SourceDecision: approvalScheme.NextStep,
+			Reason:         req.Reason,
+		}
+
+		trxDetail := entity.TrxDetail{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  onp,
+			Activity:       prcd,
+			Decision:       decision_detail,
+			RuleCode:       req.RuleCode,
+			SourceDecision: req.Alias,
+			Info:           req.Reason,
+			CreatedBy:      req.CreatedBy,
+			Reason:         req.Reason,
+		}
+
+		trxHistoryApproval := entity.TrxHistoryApprovalScheme{
+			ProspectID:            req.ProspectID,
+			Decision:              decision,
+			Reason:                req.Reason,
+			Note:                  req.Note,
+			CreatedBy:             req.CreatedBy,
+			DecisionBy:            req.DecisionBy,
+			NextFinalApprovalFlag: 1,
+			NeedEscalation:        0,
+			SourceDecision:        trxDetail.SourceDecision,
+			NextStep:              approvalScheme.NextStep,
+		}
+
+		mock.ExpectBegin()
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "source_decision" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
+			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","reason","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxDetail.ProspectID, trxDetail.StatusProcess, trxDetail.Activity, trxDetail.Decision, trxDetail.RuleCode, trxDetail.SourceDecision, trxDetail.NextStep, sqlmock.AnyArg(), trxDetail.Info, trxDetail.Reason, trxDetail.CreatedBy, sqlmock.AnyArg()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_history_approval_scheme" ("id","ProspectID","decision","reason","note","created_at","created_by","decision_by","need_escalation","next_final_approval_flag","source_decision","next_step") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(sqlmock.AnyArg(), trxHistoryApproval.ProspectID, trxHistoryApproval.Decision, trxHistoryApproval.Reason, trxHistoryApproval.Note, sqlmock.AnyArg(), trxHistoryApproval.CreatedBy, trxHistoryApproval.DecisionBy, trxHistoryApproval.NeedEscalation, sqlmock.AnyArg(), trxHistoryApproval.SourceDecision, trxHistoryApproval.NextStep).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectCommit()
+
+		err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
+	t.Run("success submit rej cbm to drm escalation to gmo", func(t *testing.T) {
+		req := request.ReqSubmitApproval{
+			ProspectID:     "ppid",
+			FinalApproval:  "DRM",
+			Decision:       "REJECT",
+			NeedEscalation: true,
+			RuleCode:       "3747",
+			Alias:          "DRM",
+			Reason:         "Oke",
+			Note:           "eskalasi ke gmo",
+			CreatedBy:      "abc123",
+			DecisionBy:     "RM KMB",
+		}
+
+		switch req.Decision {
+		case constant.DECISION_REJECT:
+			decision = rej
+			decision_detail = rej
+
+		case constant.DECISION_APPROVE:
+			decision = apr
+			decision_detail = pas
+
+		case constant.DECISION_RETURN:
+			decision = rtn
+			decision_detail = rtn
+		}
+
+		approvalScheme, _ = utils.ApprovalScheme(req)
+
+		trxStatus := entity.TrxStatus{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  onp,
+			Activity:       unpr,
+			Decision:       cpr,
+			RuleCode:       req.RuleCode,
+			SourceDecision: approvalScheme.NextStep,
+			Reason:         req.Reason,
+		}
+
+		trxDetail := entity.TrxDetail{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  onp,
+			Activity:       prcd,
+			Decision:       decision_detail,
+			RuleCode:       req.RuleCode,
+			SourceDecision: req.Alias,
+			Info:           req.Reason,
+			CreatedBy:      req.CreatedBy,
+			Reason:         req.Reason,
+		}
+
+		trxHistoryApproval := entity.TrxHistoryApprovalScheme{
+			ProspectID:     req.ProspectID,
+			Decision:       decision,
+			Reason:         req.Reason,
+			Note:           req.Note,
+			CreatedBy:      req.CreatedBy,
+			DecisionBy:     req.DecisionBy,
+			SourceDecision: trxDetail.SourceDecision,
+			NextStep:       approvalScheme.NextStep,
+		}
+
+		trxCaDecision := entity.TrxCaDecision{
+			FinalApproval: approvalScheme.NextStep,
+		}
+
+		mock.ExpectBegin()
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "source_decision" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
+			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","reason","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxDetail.ProspectID, trxDetail.StatusProcess, trxDetail.Activity, trxDetail.Decision, trxDetail.RuleCode, trxDetail.SourceDecision, trxDetail.NextStep, sqlmock.AnyArg(), trxDetail.Info, trxDetail.Reason, trxDetail.CreatedBy, sqlmock.AnyArg()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_ca_decision" SET "final_approval" = ? WHERE (ProspectID = ?)`)).
+			WithArgs(trxCaDecision.FinalApproval, trxStatus.ProspectID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_history_approval_scheme" ("id","ProspectID","decision","reason","note","created_at","created_by","decision_by","need_escalation","next_final_approval_flag","source_decision","next_step") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(sqlmock.AnyArg(), trxHistoryApproval.ProspectID, trxHistoryApproval.Decision, trxHistoryApproval.Reason, trxHistoryApproval.Note, sqlmock.AnyArg(), trxHistoryApproval.CreatedBy, trxHistoryApproval.DecisionBy, sqlmock.AnyArg(), sqlmock.AnyArg(), trxHistoryApproval.SourceDecision, trxHistoryApproval.NextStep).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectCommit()
+
+		err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
+	t.Run("success submit return approval to ca", func(t *testing.T) {
+		req := request.ReqSubmitApproval{
+			ProspectID:     "ppid",
+			FinalApproval:  "GMO",
+			Decision:       "RETURN",
+			NeedEscalation: false,
+			RuleCode:       "3750",
+			Alias:          "GMO",
+			Reason:         "Final Approval Return",
+			Note:           "RETURN",
+			CreatedBy:      "abc123",
+			DecisionBy:     "GMO KMB",
+		}
+
+		switch req.Decision {
+		case constant.DECISION_REJECT:
+			decision = rej
+			decision_detail = rej
+
+		case constant.DECISION_APPROVE:
+			decision = apr
+			decision_detail = pas
+
+		case constant.DECISION_RETURN:
+			decision = rtn
+			decision_detail = rtn
+		}
+
+		approvalScheme, _ = utils.ApprovalScheme(req)
+
+		trxStatus := entity.TrxStatus{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  onp,
+			Activity:       unpr,
+			Decision:       cpr,
+			RuleCode:       req.RuleCode,
+			SourceDecision: approvalScheme.NextStep,
+			Reason:         req.Reason,
+		}
+
+		trxDetail := entity.TrxDetail{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  onp,
+			Activity:       prcd,
+			Decision:       decision_detail,
+			RuleCode:       req.RuleCode,
+			SourceDecision: req.Alias,
+			Info:           req.Reason,
+			CreatedBy:      req.CreatedBy,
+			Reason:         req.Reason,
+		}
+
+		trxHistoryApproval := entity.TrxHistoryApprovalScheme{
+			ProspectID:     req.ProspectID,
+			Decision:       decision,
+			Reason:         req.Reason,
+			Note:           req.Note,
+			CreatedBy:      req.CreatedBy,
+			DecisionBy:     req.DecisionBy,
+			SourceDecision: trxDetail.SourceDecision,
+			NextStep:       constant.DB_DECISION_CREDIT_ANALYST,
+		}
+
+		trxRecalculate := entity.TrxRecalculate{
+			ProspectID:   req.ProspectID,
+			AdditionalDP: req.DPAmount,
+		}
+
+		mock.ExpectBegin()
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
+			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","reason","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxDetail.ProspectID, trxDetail.StatusProcess, trxDetail.Activity, trxDetail.Decision, trxDetail.RuleCode, trxDetail.SourceDecision, trxDetail.NextStep, sqlmock.AnyArg(), trxDetail.Info, trxDetail.Reason, trxDetail.CreatedBy, sqlmock.AnyArg()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_recalculate" ("ProspectID","ProductOfferingID","product_offering_desc","Tenor","loan_amount","AF","InstallmentAmount","DPAmount","percent_dp","AdminFee","provision_fee","fidusia_fee","AssetInsuranceFee","LifeInsuranceFee","NTF","NTFAkumulasi","interest_rate","insurance_amount","additional_dp","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxRecalculate.ProspectID, trxRecalculate.ProductOfferingID, trxRecalculate.ProductOfferingDesc, trxRecalculate.Tenor, trxRecalculate.LoanAmount, trxRecalculate.AF, trxRecalculate.InstallmentAmount, trxRecalculate.DPAmount, trxRecalculate.PercentDP, trxRecalculate.AdminFee, trxRecalculate.ProvisionFee, trxRecalculate.FidusiaFee, trxRecalculate.AssetInsuranceFee, trxRecalculate.LifeInsuranceFee, trxRecalculate.NTF, trxRecalculate.NTFAkumulasi, trxRecalculate.InterestRate, trxRecalculate.InsuranceAmount, trxRecalculate.AdditionalDP, sqlmock.AnyArg()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_history_approval_scheme" ("id","ProspectID","decision","reason","note","created_at","created_by","decision_by","need_escalation","next_final_approval_flag","source_decision","next_step") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(sqlmock.AnyArg(), trxHistoryApproval.ProspectID, trxHistoryApproval.Decision, trxHistoryApproval.Reason, trxHistoryApproval.Note, sqlmock.AnyArg(), trxHistoryApproval.CreatedBy, trxHistoryApproval.DecisionBy, sqlmock.AnyArg(), sqlmock.AnyArg(), trxHistoryApproval.SourceDecision, trxHistoryApproval.NextStep).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectCommit()
+
+		err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
+	t.Run("success submit rej final approval", func(t *testing.T) {
+		req := request.ReqSubmitApproval{
+			ProspectID:     "ppid",
+			FinalApproval:  "GMO",
+			Decision:       "REJECT",
+			NeedEscalation: false,
+			RuleCode:       "3750",
+			Alias:          "GMO",
+			Reason:         "Oke",
+			Note:           "final di gmo",
+			CreatedBy:      "abc123",
+			DecisionBy:     "GMO KMB",
+		}
+
+		switch req.Decision {
+		case constant.DECISION_REJECT:
+			decision = rej
+			decision_detail = rej
+
+		case constant.DECISION_APPROVE:
+			decision = apr
+			decision_detail = pas
+
+		case constant.DECISION_RETURN:
+			decision = rtn
+			decision_detail = rtn
+		}
+
+		approvalScheme, _ = utils.ApprovalScheme(req)
+
+		trxStatus := entity.TrxStatus{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  onp,
+			Activity:       unpr,
+			Decision:       cpr,
+			RuleCode:       req.RuleCode,
+			SourceDecision: approvalScheme.NextStep,
+			Reason:         req.Reason,
+		}
+
+		trxDetail := entity.TrxDetail{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  onp,
+			Activity:       prcd,
+			Decision:       decision_detail,
+			RuleCode:       req.RuleCode,
+			SourceDecision: req.Alias,
+			Info:           req.Reason,
+			CreatedBy:      req.CreatedBy,
+			Reason:         req.Reason,
+		}
+
+		trxHistoryApproval := entity.TrxHistoryApprovalScheme{
+			ProspectID:     req.ProspectID,
+			Decision:       decision,
+			Reason:         req.Reason,
+			Note:           req.Note,
+			CreatedBy:      req.CreatedBy,
+			DecisionBy:     req.DecisionBy,
+			SourceDecision: trxDetail.SourceDecision,
+			NextStep:       approvalScheme.NextStep,
+		}
+
+		trxFinalApproval := entity.TrxFinalApproval{
+			ProspectID: req.ProspectID,
+			Decision:   decision,
+			Reason:     req.Reason,
+			Note:       req.Note,
+			CreatedBy:  req.CreatedBy,
+			DecisionBy: req.DecisionBy,
+		}
+
+		trxAgreement := entity.TrxAgreement{
+			ProspectID:     req.ProspectID,
+			CheckingStatus: constant.ACTIVITY_UNPROCESS,
+			ContractStatus: "0",
+			// AF:                 getAFPhone.AFValue,
+			// MobilePhone:        getAFPhone.MobilePhone,
+			CustomerIDKreditmu: constant.LOB_NEW_KMB,
+		}
+
+		mock.ExpectBegin()
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
+			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","reason","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxDetail.ProspectID, trxDetail.StatusProcess, trxDetail.Activity, trxDetail.Decision, trxDetail.RuleCode, trxDetail.SourceDecision, trxDetail.NextStep, sqlmock.AnyArg(), trxDetail.Info, trxDetail.Reason, trxDetail.CreatedBy, sqlmock.AnyArg()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_history_approval_scheme" ("id","ProspectID","decision","reason","note","created_at","created_by","decision_by","need_escalation","next_final_approval_flag","source_decision","next_step") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(sqlmock.AnyArg(), trxHistoryApproval.ProspectID, trxHistoryApproval.Decision, trxHistoryApproval.Reason, trxHistoryApproval.Note, sqlmock.AnyArg(), trxHistoryApproval.CreatedBy, trxHistoryApproval.DecisionBy, sqlmock.AnyArg(), sqlmock.AnyArg(), trxHistoryApproval.SourceDecision, trxHistoryApproval.NextStep).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_final_approval" ("ProspectID","decision","reason","note","created_at","created_by","decision_by") VALUES (?,?,?,?,?,?,?)`)).
+			WithArgs(trxFinalApproval.ProspectID, trxFinalApproval.Decision, trxFinalApproval.Reason, trxFinalApproval.Note, sqlmock.AnyArg(), trxFinalApproval.CreatedBy, trxFinalApproval.DecisionBy).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_agreements" ("ProspectID","BranchID","CustomerID","ApplicationID","AgreementNo","AgreementDate","NextInstallmentDate","MaturityDate","ContractStatus","NewApplicationDate","ApprovalDate","PurchaseOrderDate","GoLiveDate","ProductID","ProductOfferingID","TotalOTR","DownPayment","NTF","PayToDealerAmount","PayToDealerDate","checking_status","last_checking_at","created_at","updated_at","AF","MobilePhone","customer_id_kreditmu") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxAgreement.ProspectID, trxAgreement.BranchID, trxAgreement.CustomerID, trxAgreement.ApplicationID, trxAgreement.AgreementNo, trxAgreement.AgreementDate, trxAgreement.NextInstallmentDate, trxAgreement.MaturityDate, trxAgreement.ContractStatus, trxAgreement.NewApplicationDate, trxAgreement.ApprovalDate, trxAgreement.PurchaseOrderDate, trxAgreement.GoLiveDate, trxAgreement.ProductID, trxAgreement.ProductOfferingID, trxAgreement.TotalOTR, trxAgreement.DownPayment, trxAgreement.NTF, trxAgreement.PayToDealerAmount, trxAgreement.PayToDealerDate, trxAgreement.CheckingStatus, trxAgreement.LastCheckingAt, sqlmock.AnyArg(), sqlmock.AnyArg(), trxAgreement.AF, trxAgreement.MobilePhone, trxAgreement.CustomerIDKreditmu).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectCommit()
+
+		err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
 }
