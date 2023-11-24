@@ -1488,11 +1488,10 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 		return newErr
 	}
 
-	if newErr := r.newKmbDB.Raw(`SELECT a.ProspectID, a.IDType, scp.dbo.DEC_B64('SEC', a.IDNumber) AS IDNumber, a.IDTypeIssuedDate,
-	a.ExpiredDate, scp.dbo.DEC_B64('SEC', a.LegalName) AS LegalName, scp.dbo.DEC_B64('SEC', a.FullName) AS FullName, scp.dbo.DEC_B64('SEC', a.BirthPlace) AS BirthPlace,
-	a.BirthDate, scp.dbo.DEC_B64('SEC', a.SurgateMotherName) AS SurgateMotherName, a.Gender, a.PersonalNPWP, scp.dbo.DEC_B64('SEC', a.MobilePhone) AS MobilePhone, 
-	scp.dbo.DEC_B64('SEC', a.Email) AS Email, a.HomeStatus, a.StaySinceYear, a.StaySinceMonth, a.Education, a.MaritalStatus, a.NumOfDependence, a.LivingCostAmount,
-	a.Religion, a.AgreeToAcceptOtherOffering FROM trx_customer_personal a WITH (nolock) WHERE a.ProspectID = ?`, prospectID).Scan(&personal).Error; newErr != nil {
+	if newErr := r.newKmbDB.Raw(`SELECT scp.dbo.DEC_B64('SEC', a.IDNumber) AS IDNumber, scp.dbo.DEC_B64('SEC', a.LegalName) AS LegalName, 
+	scp.dbo.DEC_B64('SEC', a.FullName) AS FullName, scp.dbo.DEC_B64('SEC', a.BirthPlace) AS BirthPlace,
+	scp.dbo.DEC_B64('SEC', a.SurgateMotherName) AS SurgateMotherName, scp.dbo.DEC_B64('SEC', a.MobilePhone) AS MobilePhone, 
+	scp.dbo.DEC_B64('SEC', a.Email) AS Email, * FROM trx_customer_personal a WITH (nolock) WHERE a.ProspectID = ?`, prospectID).Scan(&personal).Error; newErr != nil {
 		return newErr
 	}
 
