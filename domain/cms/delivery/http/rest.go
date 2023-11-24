@@ -143,12 +143,12 @@ func (c *handlerCMS) ReviewPrescreening(ctx echo.Context) (err error) {
 
 	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, data)
 
-	if data.Decision == constant.DECISION_REJECT {
+	if data.Decision == constant.DB_DECISION_REJECT {
 		response := response.Metrics{
 			ProspectID:     data.ProspectID,
-			Decision:       data.Decision,
+			Decision:       req.Decision,
 			Code:           data.Code,
-			DecisionReason: data.Reason,
+			DecisionReason: string(data.Reason),
 		}
 		responseEvent := c.Json.EventSuccess(ctx.Request().Context(), accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, response)
 		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(responseEvent), 0)
