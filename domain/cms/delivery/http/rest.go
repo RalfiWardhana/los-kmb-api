@@ -141,8 +141,18 @@ func (c *handlerCMS) ReviewPrescreening(ctx echo.Context) (err error) {
 		return ctxJson
 	}
 
+	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, data)
+
 	if data.Decision == constant.DECISION_REJECT {
-		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(resp), 0)
+		response := response.Metrics{
+			ProspectID:     data.ProspectID,
+			Decision:       data.Decision,
+			Code:           data.Code,
+			DecisionReason: data.Reason,
+		}
+		responseEvent := c.Json.EventSuccess(ctx.Request().Context(), accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, response)
+		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(responseEvent), 0)
+
 	} else if data.Decision == constant.DB_DECISION_APR {
 		reqAfterPrescreening := request.AfterPrescreening{
 			ProspectID: req.ProspectID,
@@ -150,7 +160,6 @@ func (c *handlerCMS) ReviewPrescreening(ctx echo.Context) (err error) {
 		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_AFTER_PRESCREENING, req.ProspectID, utils.StructToMap(reqAfterPrescreening), 0)
 	}
 
-	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, data)
 	return ctxJson
 }
 
@@ -487,11 +496,20 @@ func (c *handlerCMS) CancelOrder(ctx echo.Context) (err error) {
 		return ctxJson
 	}
 
+	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Cancel Order", req, data)
+
 	if data.Status == constant.CANCEL_STATUS_SUCCESS {
-		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(resp), 0)
+		response := response.Metrics{
+			ProspectID:     data.ProspectID,
+			Code:           constant.CODE_CREDIT_COMMITTEE,
+			Decision:       constant.DECISION_CANCEL,
+			DecisionReason: string(data.Reason),
+		}
+		responseEvent := c.Json.EventSuccess(ctx.Request().Context(), accessToken, constant.NEW_KMB_LOG, "LOS - CA Cancel Order", req, response)
+
+		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(responseEvent), 0)
 	}
 
-	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Cancel Order", req, data)
 	return ctxJson
 }
 
@@ -507,40 +525,29 @@ func (c *handlerCMS) CancelOrder(ctx echo.Context) (err error) {
 func (c *handlerCMS) ReturnOrder(ctx echo.Context) (err error) {
 
 	var (
-		resp        interface{}
 		accessToken = middlewares.UserInfoData.AccessToken
 		req         request.ReqReturnOrder
 		ctxJson     error
 	)
 
-	// Save Log Orchestrator
-	defer func() {
-		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
-		go c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/ca/return", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
-	}()
-
 	if err := ctx.Bind(&req); err != nil {
-		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Return Order", err)
+		ctxJson, _ = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Return Order", err)
 		return ctxJson
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Return Order", req, err)
+		ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Return Order", req, err)
 		return ctxJson
 	}
 
 	data, err := c.usecase.ReturnOrder(ctx.Request().Context(), req)
 
 	if err != nil {
-		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Return Order", req, err)
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Return Order", req, err)
 		return ctxJson
 	}
 
-	if data.Status == constant.RETURN_STATUS_SUCCESS {
-		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(resp), 0)
-	}
-
-	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Return Order", req, data)
+	ctxJson, _ = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Return Order", req, data)
 	return ctxJson
 }
 
@@ -556,40 +563,29 @@ func (c *handlerCMS) ReturnOrder(ctx echo.Context) (err error) {
 func (c *handlerCMS) RecalculateOrder(ctx echo.Context) (err error) {
 
 	var (
-		resp        interface{}
 		accessToken = middlewares.UserInfoData.AccessToken
 		req         request.ReqRecalculateOrder
 		ctxJson     error
 	)
 
-	// Save Log Orchestrator
-	defer func() {
-		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
-		go c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/ca/recalculate", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
-	}()
-
 	if err := ctx.Bind(&req); err != nil {
-		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Recalculate Order", err)
+		ctxJson, _ = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Recalculate Order", err)
 		return ctxJson
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Recalculate Order", req, err)
+		ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Recalculate Order", req, err)
 		return ctxJson
 	}
 
 	data, err := c.usecase.RecalculateOrder(ctx.Request().Context(), req, accessToken)
 
 	if err != nil {
-		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Recalculate Order", req, err)
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Recalculate Order", req, err)
 		return ctxJson
 	}
 
-	if data.Status == constant.RECALCULATE_STATUS_SUCCESS {
-		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(resp), 0)
-	}
-
-	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Recalculate Order", req, data)
+	ctxJson, _ = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Recalculate Order", req, data)
 	return ctxJson
 }
 
@@ -708,27 +704,49 @@ func (c *handlerCMS) ApprovalReason(ctx echo.Context) (err error) {
 func (c *handlerCMS) SubmitApproval(ctx echo.Context) (err error) {
 
 	var (
+		resp        interface{}
 		accessToken = middlewares.UserInfoData.AccessToken
 		req         request.ReqSubmitApproval
+		ctxJson     error
 	)
 
+	// Save Log Orchestrator
+	defer func() {
+		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
+		go c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/approval/submit-approval", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
+	}()
+
 	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", err)
+		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", err)
+		return ctxJson
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", req, err)
+		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", req, err)
+		return ctxJson
 	}
 
 	data, err := c.usecase.SubmitApproval(ctx.Request().Context(), req)
 
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", req, err)
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", req, err)
+		return ctxJson
 	}
+
+	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", req, data)
 
 	if data.IsFinal && !data.NeedEscalation && data.Decision != constant.DECISION_RETURN {
-		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(data), 0)
+		response := response.Metrics{
+			ProspectID:     data.ProspectID,
+			Code:           req.RuleCode,
+			Decision:       req.Decision,
+			DecisionReason: string(data.Reason),
+		}
+
+		responseEvent := c.Json.EventSuccess(ctx.Request().Context(), accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", req, response)
+
+		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(responseEvent), 0)
 	}
 
-	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", req, data)
+	return ctxJson
 }
