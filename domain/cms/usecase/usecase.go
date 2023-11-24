@@ -1874,10 +1874,12 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 	}
 
 	data = response.ApprovalResponse{
-		ProspectID: req.ProspectID,
-		Decision:   req.Decision,
-		Reason:     req.Reason,
-		Note:       req.Note,
+		ProspectID:     req.ProspectID,
+		Decision:       req.Decision,
+		Reason:         req.Reason,
+		Note:           req.Note,
+		IsFinal:        approvalScheme.IsFinal,
+		NeedEscalation: approvalScheme.IsEscalation,
 	}
 
 	return

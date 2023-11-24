@@ -437,8 +437,10 @@ func TestGetInquiryPrescreening(t *testing.T) {
 
 	// Expected input and output
 	req := request.ReqInquiryPrescreening{
-		Search:   "aprospectid",
-		BranchID: "426,903",
+		Search:      "aprospectid",
+		BranchID:    "426",
+		MultiBranch: "1",
+		UserID:      "abc123",
 	}
 
 	expectedInquiry := []entity.InquiryPrescreening{{CmoRecommendation: 0, Activity: "", SourceDecision: "", Decision: "", Reason: "", DecisionBy: "", DecisionAt: "", ProspectID: "", BranchName: "", IncomingSource: "", CreatedAt: "", OrderAt: "", CustomerStatus: "", IDNumber: "", LegalName: "", BirthPlace: "", BirthDate: time.Time{}, SurgateMotherName: "", Gender: "", MobilePhone: "", Email: "", Education: "", MaritalStatus: "", NumOfDependence: 0, HomeStatus: "", StaySinceMonth: "", StaySinceYear: "", ExtCompanyPhone: (*string)(nil), SourceOtherIncome: (*string)(nil), Supplier: "", ProductOfferingID: "", AssetType: "", AssetDescription: "", ManufacturingYear: "", Color: "", ChassisNumber: "", EngineNumber: "", InterestRate: 0, InstallmentPeriod: 0, OTR: 0, DPAmount: 0, FinanceAmount: 0, InterestAmount: 0, LifeInsuranceFee: 0, AssetInsuranceFee: 0, InsuranceAmount: 0, AdminFee: 0, ProvisionFee: 0, NTF: 0, NTFAkumulasi: 0, Total: 0, MonthlyInstallment: 0, FirstInstallment: "", ProfessionID: "", JobTypeID: "", JobPosition: "", CompanyName: "", IndustryTypeID: "", EmploymentSinceYear: "", EmploymentSinceMonth: "", MonthlyFixedIncome: 0, MonthlyVariableIncome: 0, SpouseIncome: 0, SpouseIDNumber: "", SpouseLegalName: "", SpouseCompanyName: "", SpouseCompanyPhone: "", SpouseMobilePhone: "", SpouseProfession: "", EmconName: "", Relationship: "", EmconMobilePhone: "", LegalAddress: "", LegalRTRW: "", LegalKelurahan: "", LegalKecamatan: "", LegalZipCode: "", LegalCity: "", ResidenceAddress: "", ResidenceRTRW: "", ResidenceKelurahan: "", ResidenceKecamatan: "", ResidenceZipCode: "", ResidenceCity: "", CompanyAddress: "", CompanyRTRW: "", CompanyKelurahan: "", CompanyKecamatan: "", CompanyZipCode: "", CompanyCity: "", CompanyAreaPhone: "", CompanyPhone: "", EmergencyAddress: "", EmergencyRTRW: "", EmergencyKelurahan: "", EmergencyKecamatan: "", EmergencyZipcode: "", EmergencyCity: "", EmergencyAreaPhone: "", EmergencyPhone: ""}}
@@ -612,7 +614,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 		WHERE
 		group_name = 'ProfessionID'
 	) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt WHERE tt.BranchID IN ('426','903') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
+	) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
 		WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 			AddRow("27"))
 
@@ -883,7 +885,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 			app_config ap WITH (nolock)
 		  WHERE
 			group_name = 'ProfessionID'
-		) pr2 ON tcs.ProfessionID = pr2.[key] ) AS tt WHERE tt.BranchID IN ('426','903') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+		) pr2 ON tcs.ProfessionID = pr2.[key] ) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 		WillReturnRows(sqlmock.NewRows([]string{"Code", "ReasonID", "ReasonMessage"}).
 			AddRow("12", "11", "Akte Jual Beli Tidak Sesuai"))
 
@@ -902,7 +904,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 	}
 }
 
-func TestGetInquiryPrescreeningWithout(t *testing.T) {
+func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 	// Setup mock database connection
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -1383,12 +1385,25 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 		}
 	})
 
-	t.Run("with one param branch", func(t *testing.T) {
+	t.Run("with region west java", func(t *testing.T) {
 		// Expected input and output
 		req := request.ReqInquiryPrescreening{
-			Search:   "aprospectid",
-			BranchID: "426",
+			Search:      "aprospectid",
+			BranchID:    "426",
+			MultiBranch: "1",
+			UserID:      "abc123",
 		}
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
+		INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+		(	SELECT value 
+			FROM region_user ru WITH (nolock)
+			cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+			WHERE ru.user_id = 'abc123' 
+		)
+		AND b.lob_id='125'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
+				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
 		COUNT(tt.ProspectID) AS totalRow
@@ -1558,7 +1573,7 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 			WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-		) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
+		) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -1829,7 +1844,485 @@ func TestGetInquiryPrescreeningWithout(t *testing.T) {
 				app_config ap WITH (nolock)
 			  WHERE
 				group_name = 'ProfessionID'
-			) pr2 ON tcs.ProfessionID = pr2.[key] ) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			) pr2 ON tcs.ProfessionID = pr2.[key] ) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"Code", "ReasonID", "ReasonMessage"}).
+				AddRow("12", "11", "Akte Jual Beli Tidak Sesuai"))
+
+		// Call the function
+		reason, _, err := repo.GetInquiryPrescreening(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("with region ALL", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqInquiryPrescreening{
+			Search:      "aprospectid",
+			BranchID:    "426",
+			MultiBranch: "1",
+			UserID:      "abc123",
+		}
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
+		INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+		(	SELECT value 
+			FROM region_user ru WITH (nolock)
+			cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+			WHERE ru.user_id = 'abc123' 
+		)
+		AND b.lob_id='125'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
+				AddRow("ALL", `["426","436","429","431","442","428","430"]`))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.created_at,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+		FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN (
+			SELECT
+			ProspectID,
+			Address,
+			RT,
+			RW,
+			Kelurahan,
+			Kecamatan,
+			ZipCode,
+			City
+			FROM
+			trx_customer_address WITH (nolock)
+			WHERE
+			"Type" = 'LEGAL'
+		) cal ON tm.ProspectID = cal.ProspectID
+		INNER JOIN (
+			SELECT
+			ProspectID,
+			Address,
+			RT,
+			RW,
+			Kelurahan,
+			Kecamatan,
+			ZipCode,
+			City
+			FROM
+			trx_customer_address WITH (nolock)
+			WHERE
+			"Type" = 'RESIDENCE'
+		) car ON tm.ProspectID = car.ProspectID
+		INNER JOIN (
+			SELECT
+			ProspectID,
+			Address,
+			RT,
+			RW,
+			Kelurahan,
+			Kecamatan,
+			ZipCode,
+			City,
+			Phone,
+			AreaPhone
+			FROM
+			trx_customer_address WITH (nolock)
+			WHERE
+			"Type" = 'COMPANY'
+		) cac ON tm.ProspectID = cac.ProspectID
+		INNER JOIN (
+			SELECT
+			ProspectID,
+			Address,
+			RT,
+			RW,
+			Kelurahan,
+			Kecamatan,
+			ZipCode,
+			City,
+			Phone,
+			AreaPhone
+			FROM
+			trx_customer_address WITH (nolock)
+			WHERE
+			"Type" = 'EMERGENCY'
+		) cae ON tm.ProspectID = cae.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN (
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'Education'
+		) edu ON tcp.Education = edu.[key]
+		LEFT JOIN (
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'MaritalStatus'
+		) mst ON tcp.MaritalStatus = mst.[key]
+		LEFT JOIN (
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'HomeStatus'
+		) hst ON tcp.HomeStatus = hst.[key]
+		LEFT JOIN (
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'MonthName'
+		) mn ON tcp.StaySinceMonth = mn.[key]
+		LEFT JOIN (
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'ProfessionID'
+		) pr ON tce.ProfessionID = pr.[key]
+		LEFT JOIN (
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'JobType'
+		) jt ON tce.JobType = jt.[key]
+		LEFT JOIN (
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'JobPosition'
+		) jb ON tce.JobPosition = jb.[key]
+		LEFT JOIN (
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'MonthName'
+		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+		LEFT JOIN (
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'ProfessionID'
+		) pr2 ON tcs.ProfessionID = pr2.[key]
+		) AS tt WHERE (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
+				AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT tt.* FROM (
+			SELECT
+			tm.ProspectID,
+			cb.BranchName,
+			cb.BranchID,
+			tia.info AS CMORecommend,
+			tst.activity,
+			tst.source_decision,
+			tps.decision,
+			tps.reason,
+			tps.created_by AS DecisionBy,
+			tps.decision_by AS DecisionName,
+			tps.created_at AS DecisionAt,
+			CASE
+			  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+			  ELSE 'NE'
+			END AS incoming_source,
+			tf.customer_status,
+			tm.created_at,
+			tm.order_at,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+			scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+			tcp.BirthDate,
+			scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+			CASE
+			  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+			  WHEN tcp.Gender = 'F' THEN 'Perempuan'
+			END AS 'Gender',
+			scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+			CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+			cal.Kelurahan AS LegalKelurahan,
+			cal.Kecamatan AS LegalKecamatan,
+			cal.ZipCode AS LegalZipcode,
+			cal.City AS LegalCity,
+			scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+			scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+			edu.value AS Education,
+			mst.value AS MaritalStatus,
+			tcp.NumOfDependence,
+			scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+			CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+			car.Kelurahan AS ResidenceKelurahan,
+			car.Kecamatan AS ResidenceKecamatan,
+			car.ZipCode AS ResidenceZipcode,
+			car.City AS ResidenceCity,
+			hst.value AS HomeStatus,
+			mn.value AS StaySinceMonth,
+			tcp.StaySinceYear,
+			ta.ProductOfferingID,
+			ta.dealer,
+			ta.LifeInsuranceFee,
+			ta.AssetInsuranceFee,
+			'KMB MOTOR' AS AssetType,
+			ti.asset_description,
+			ti.manufacture_year,
+			ti.color,
+			chassis_number,
+			engine_number,
+			interest_rate,
+			Tenor AS InstallmentPeriod,
+			OTR,
+			DPAmount,
+			AF AS FinanceAmount,
+			interest_amount,
+			insurance_amount,
+			AdminFee,
+			provision_fee,
+			NTF,
+			NTFAkumulasi,
+			(NTF + interest_amount) AS Total,
+			InstallmentAmount AS MonthlyInstallment,
+			FirstInstallment,
+			pr.value AS ProfessionID,
+			jt.value AS JobType,
+			jb.value AS JobPosition,
+			mn2.value AS EmploymentSinceMonth,
+			tce.EmploymentSinceYear,
+			tce.CompanyName,
+			cac.AreaPhone AS CompanyAreaPhone,
+			cac.Phone AS CompanyPhone,
+			tcp.ExtCompanyPhone,
+			scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+			CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+			cac.Kelurahan AS CompanyKelurahan,
+			cac.Kecamatan AS CompanyKecamatan,
+			car.ZipCode AS CompanyZipcode,
+			car.City AS CompanyCity,
+			tce.MonthlyFixedIncome,
+			tce.MonthlyVariableIncome,
+			tce.SpouseIncome,
+			tcp.SourceOtherIncome,
+			tcs.FullName AS SpouseLegalName,
+			tcs.CompanyName AS SpouseCompanyName,
+			tcs.CompanyPhone AS SpouseCompanyPhone,
+			tcs.MobilePhone AS SpouseMobilePhone,
+			tcs.IDNumber AS SpouseIDNumber,
+			pr2.value AS SpouseProfession,
+			em.Name AS EmconName,
+			em.Relationship,
+			em.MobilePhone AS EmconMobilePhone,
+			scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+			CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+			cae.Kelurahan AS EmergencyKelurahan,
+			cae.Kecamatan AS EmergencyKecamatan,
+			cae.ZipCode AS EmergencyZipcode,
+			cae.City AS EmergencyCity,
+			cae.AreaPhone AS EmergencyAreaPhone,
+			cae.Phone AS EmergencyPhone,
+			tce.IndustryTypeID
+		  FROM
+			trx_master tm WITH (nolock)
+			INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+			INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+			INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+			INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+			INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+			INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+			INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+			INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+			INNER JOIN (
+			  SELECT
+				ProspectID,
+				Address,
+				RT,
+				RW,
+				Kelurahan,
+				Kecamatan,
+				ZipCode,
+				City
+			  FROM
+				trx_customer_address WITH (nolock)
+			  WHERE
+				"Type" = 'LEGAL'
+			) cal ON tm.ProspectID = cal.ProspectID
+			INNER JOIN (
+			  SELECT
+				ProspectID,
+				Address,
+				RT,
+				RW,
+				Kelurahan,
+				Kecamatan,
+				ZipCode,
+				City
+			  FROM
+				trx_customer_address WITH (nolock)
+			  WHERE
+				"Type" = 'RESIDENCE'
+			) car ON tm.ProspectID = car.ProspectID
+			INNER JOIN (
+			  SELECT
+				ProspectID,
+				Address,
+				RT,
+				RW,
+				Kelurahan,
+				Kecamatan,
+				ZipCode,
+				City,
+				Phone,
+				AreaPhone
+			  FROM
+				trx_customer_address WITH (nolock)
+			  WHERE
+				"Type" = 'COMPANY'
+			) cac ON tm.ProspectID = cac.ProspectID
+			INNER JOIN (
+			  SELECT
+				ProspectID,
+				Address,
+				RT,
+				RW,
+				Kelurahan,
+				Kecamatan,
+				ZipCode,
+				City,
+				Phone,
+				AreaPhone
+			  FROM
+				trx_customer_address WITH (nolock)
+			  WHERE
+				"Type" = 'EMERGENCY'
+			) cae ON tm.ProspectID = cae.ProspectID
+			INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+			LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+			LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+			LEFT JOIN (
+			  SELECT
+				[key],
+				value
+			  FROM
+				app_config ap WITH (nolock)
+			  WHERE
+				group_name = 'Education'
+			) edu ON tcp.Education = edu.[key]
+			LEFT JOIN (
+			  SELECT
+				[key],
+				value
+			  FROM
+				app_config ap WITH (nolock)
+			  WHERE
+				group_name = 'MaritalStatus'
+			) mst ON tcp.MaritalStatus = mst.[key]
+			LEFT JOIN (
+			  SELECT
+				[key],
+				value
+			  FROM
+				app_config ap WITH (nolock)
+			  WHERE
+				group_name = 'HomeStatus'
+			) hst ON tcp.HomeStatus = hst.[key]
+			LEFT JOIN (
+			  SELECT
+				[key],
+				value
+			  FROM
+				app_config ap WITH (nolock)
+			  WHERE
+				group_name = 'MonthName'
+			) mn ON tcp.StaySinceMonth = mn.[key]
+			LEFT JOIN (
+			  SELECT
+				[key],
+				value
+			  FROM
+				app_config ap WITH (nolock)
+			  WHERE
+				group_name = 'ProfessionID'
+			) pr ON tce.ProfessionID = pr.[key]
+			LEFT JOIN (
+			  SELECT
+				[key],
+				value
+			  FROM
+				app_config ap WITH (nolock)
+			  WHERE
+				group_name = 'JobType'
+			) jt ON tce.JobType = jt.[key]
+			LEFT JOIN (
+			  SELECT
+				[key],
+				value
+			  FROM
+				app_config ap WITH (nolock)
+			  WHERE
+				group_name = 'JobPosition'
+			) jb ON tce.JobPosition = jb.[key]
+			LEFT JOIN (
+			  SELECT
+				[key],
+				value
+			  FROM
+				app_config ap WITH (nolock)
+			  WHERE
+				group_name = 'MonthName'
+			) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+			LEFT JOIN (
+			  SELECT
+				[key],
+				value
+			  FROM
+				app_config ap WITH (nolock)
+			  WHERE
+				group_name = 'ProfessionID'
+			) pr2 ON tcs.ProfessionID = pr2.[key] ) AS tt WHERE (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"Code", "ReasonID", "ReasonMessage"}).
 				AddRow("12", "11", "Akte Jual Beli Tidak Sesuai"))
 
@@ -2634,394 +3127,2309 @@ func TestGetInquiryCa(t *testing.T) {
 	// Create a repository instance
 	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
-	// Expected input and output
-	req := request.ReqInquiryCa{
-		Search:   "aprospectid",
-		BranchID: "426,903",
-		Filter:   "APPROVE",
-		UserID:   "5XeZs9PCeiPcZGS6azt",
-	}
-
 	expectedInquiry := []entity.InquiryCa{entity.InquiryCa{ShowAction: false, ActionDate: "", Activity: "", SourceDecision: "", StatusDecision: "", StatusReason: "", CaDecision: "", CANote: "", ScsDate: "", ScsScore: "", ScsStatus: "", BiroCustomerResult: "", BiroSpouseResult: "", DraftDecision: "", DraftSlikResult: "", DraftNote: "", DraftCreatedAt: time.Time{}, DraftCreatedBy: "", DraftDecisionBy: "", ProspectID: "EFM03406412522151347", BranchName: "BANDUNG", IncomingSource: "", CreatedAt: "", OrderAt: "", CustomerID: "", CustomerStatus: "", IDNumber: "", LegalName: "", BirthPlace: "", BirthDate: time.Time{}, SurgateMotherName: "", Gender: "", MobilePhone: "", Email: "", Education: "", MaritalStatus: "", NumOfDependence: 0, HomeStatus: "", StaySinceMonth: "", StaySinceYear: "", ExtCompanyPhone: (*string)(nil), SourceOtherIncome: (*string)(nil), SurveyResult: "", Supplier: "", ProductOfferingID: "", AssetType: "", AssetDescription: "", ManufacturingYear: "", Color: "", ChassisNumber: "", EngineNumber: "", InterestRate: 0, InstallmentPeriod: 0, OTR: 0, DPAmount: 0, FinanceAmount: 0, InterestAmount: 0, LifeInsuranceFee: 0, AssetInsuranceFee: 0, InsuranceAmount: 0, AdminFee: 0, ProvisionFee: 0, NTF: 0, NTFAkumulasi: 0, Total: 0, MonthlyInstallment: 0, FirstInstallment: "", ProfessionID: "", JobTypeID: "", JobPosition: "", CompanyName: "", IndustryTypeID: "", EmploymentSinceYear: "", EmploymentSinceMonth: "", MonthlyFixedIncome: 0, MonthlyVariableIncome: 0, SpouseIncome: 0, SpouseIDNumber: "", SpouseLegalName: "", SpouseCompanyName: "", SpouseCompanyPhone: "", SpouseMobilePhone: "", SpouseProfession: "", EmconName: "", Relationship: "", EmconMobilePhone: "", LegalAddress: "", LegalRTRW: "", LegalKelurahan: "", LegalKecamatan: "", LegalZipCode: "", LegalCity: "", ResidenceAddress: "", ResidenceRTRW: "", ResidenceKelurahan: "", ResidenceKecamatan: "", ResidenceZipCode: "", ResidenceCity: "", CompanyAddress: "", CompanyRTRW: "", CompanyKelurahan: "", CompanyKecamatan: "", CompanyZipCode: "", CompanyCity: "", CompanyAreaPhone: "", CompanyPhone: "", EmergencyAddress: "", EmergencyRTRW: "", EmergencyKelurahan: "", EmergencyKecamatan: "", EmergencyZipcode: "", EmergencyCity: "", EmergencyAreaPhone: "", EmergencyPhone: ""}}
 
-	// Mock SQL query and result
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT COUNT(tt.ProspectID) AS totalRow FROM ( SELECT cb.BranchID, tm.ProspectID, tm.lob, tm.created_at, tst.activity, tst.source_decision, tst.status_process, tst.decision, tcd.decision as decision_ca, tcd.created_by as decision_by_ca, tdd.created_by AS draft_created_by, scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber, scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName, CASE WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1 ELSE 0 END AS ActionEditData FROM trx_master tm WITH (nolock) INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID LEFT JOIN ( SELECT ProspectID, decision, created_at, created_by FROM trx_ca_decision WITH (nolock) ) tcd ON tm.ProspectID = tcd.ProspectID LEFT JOIN ( SELECT x.ProspectID, x.decision, x.slik_result, x.note, x.created_at, x.created_by, x.decision_by FROM trx_draft_ca_decision x WITH (nolock) WHERE x.created_at = ( SELECT max(created_at) from trx_draft_ca_decision WITH (NOLOCK) WHERE ProspectID = x.ProspectID ) ) tdd ON tm.ProspectID = tdd.ProspectID ) AS tt WHERE tt.BranchID IN ('426','903') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'APR' AND tt.status_process='FIN' AND tt.source_decision<>'PSI'`)).
-		WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
-			AddRow("27"))
+	t.Run("success with multi branch and need decision", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqInquiryCa{
+			Search:      "aprospectid",
+			BranchID:    "426",
+			MultiBranch: "1",
+			Filter:      "NEED_DECISION",
+			UserID:      "abc123",
+		}
 
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT
-	tt.*
-	FROM
-	(
-	SELECT
-	tm.ProspectID,
-	cb.BranchName,
-	cb.BranchID,
-	tst.activity,
-	tst.source_decision,
-	tst.status_process,
-	tst.decision,
-	tst.reason,
-	tcd.decision as decision_ca,
-	tcd.created_by as decision_by_ca,
-	tr.additional_dp,
-	CASE
-	  WHEN tcd.decision='APR' THEN 'APPROVE'
-	  WHEN tcd.decision='REJ' THEN 'REJECT'
-	  WHEN tcd.decision='CAN' THEN 'CANCEL'
-	  ELSE tcd.decision
-	END AS ca_decision,
-	tcd.note AS ca_note,
-	CASE
-	  WHEN tcd.created_at IS NOT NULL
-	  AND tfa.created_at IS NULL THEN FORMAT(tcd.created_at,'yyyy-MM-dd HH:mm:ss')
-	  WHEN tfa.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
-	  ELSE NULL
-	END AS ActionDate,
-	CASE
-	  WHEN tst.decision = 'CPR'
-	  AND tst.source_decision = 'CRA'
-	  AND tst.activity = 'UNPR'
-	  AND tcd.decision IS NULL THEN 1
-	  ELSE 0
-	END AS ShowAction,
-	CASE
-	  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
-	  ELSE 'NE'
-	END AS incoming_source,
-	
-	tdd.decision AS draft_decision,
-	tdd.slik_result AS draft_slik_result,
-	tdd.note AS draft_note,
-	tdd.created_at AS draft_created_at,
-	tdd.created_by AS draft_created_by,
-	tdd.decision_by AS draft_decision_by,
-
-	tcp.CustomerID,
-	tcp.CustomerStatus,
-	tcp.SurveyResult,
-	tm.created_at,
-	tm.order_at,
-	tm.lob,
-	scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-	scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
-	scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
-	tcp.BirthDate,
-	scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
-	CASE
-	  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
-	  WHEN tcp.Gender = 'F' THEN 'Perempuan'
-	END AS 'Gender',
-	scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
-	CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
-	cal.Kelurahan AS LegalKelurahan,
-	cal.Kecamatan AS LegalKecamatan,
-	cal.ZipCode AS LegalZipcode,
-	cal.City AS LegalCity,
-	scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
-	CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
-	car.Kelurahan AS ResidenceKelurahan,
-	car.Kecamatan AS ResidenceKecamatan,
-	car.ZipCode AS ResidenceZipcode,
-	car.City AS ResidenceCity,
-	scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
-	scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
-	edu.value AS Education,
-	mst.value AS MaritalStatus,
-	tcp.NumOfDependence,
-	hst.value AS HomeStatus,
-	mn.value AS StaySinceMonth,
-	tcp.StaySinceYear,
-	ta.ProductOfferingID,
-	ta.dealer,
-	ta.LifeInsuranceFee,
-	ta.AssetInsuranceFee,
-	'KMB MOTOR' AS AssetType,
-	ti.asset_description,
-	ti.manufacture_year,
-	ti.color,
-	chassis_number,
-	engine_number,
-	ta.interest_rate,
-	ta.Tenor AS InstallmentPeriod,
-	OTR,
-	ta.DPAmount,
-	ta.AF AS FinanceAmount,
-	ta.interest_amount,
-	ta.insurance_amount,
-	ta.AdminFee,
-	ta.provision_fee,
-	ta.NTF,
-	ta.NTFAkumulasi,
-	(ta.NTF + ta.interest_amount) AS Total,
-	ta.InstallmentAmount AS MonthlyInstallment,
-	FirstInstallment,
-	pr.value AS ProfessionID,
-	jt.value AS JobType,
-	jb.value AS JobPosition,
-	mn2.value AS EmploymentSinceMonth,
-	tce.EmploymentSinceYear,
-	tce.CompanyName,
-	cac.AreaPhone AS CompanyAreaPhone,
-	cac.Phone AS CompanyPhone,
-	tcp.ExtCompanyPhone,
-	scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
-	CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
-	cac.Kelurahan AS CompanyKelurahan,
-	cac.Kecamatan AS CompanyKecamatan,
-	car.ZipCode AS CompanyZipcode,
-	car.City AS CompanyCity,
-	tce.MonthlyFixedIncome,
-	tce.MonthlyVariableIncome,
-	tce.SpouseIncome,
-	tcp.SourceOtherIncome,
-	tcs.FullName AS SpouseLegalName,
-	tcs.CompanyName AS SpouseCompanyName,
-	tcs.CompanyPhone AS SpouseCompanyPhone,
-	tcs.MobilePhone AS SpouseMobilePhone,
-	tcs.IDNumber AS SpouseIDNumber,
-	pr2.value AS SpouseProfession,
-	em.Name AS EmconName,
-	em.Relationship,
-	em.MobilePhone AS EmconMobilePhone,
-	scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
-	CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
-	cae.Kelurahan AS EmergencyKelurahan,
-	cae.Kecamatan AS EmergencyKecamatan,
-	cae.ZipCode AS EmergencyZipcode,
-	cae.City AS EmergencyCity,
-	cae.AreaPhone AS EmergencyAreaPhone,
-	cae.Phone AS EmergencyPhone,
-	tce.IndustryTypeID,
-	FORMAT(tak.ScsDate,'dd-MM-yyyy') as ScsDate,
-	tak.ScsScore,
-	tak.ScsStatus,
-	tdb.BiroCustomerResult,
-	tdb.BiroSpouseResult,
-	CASE
-	 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
-	 ELSE 0
-	END AS ActionEditData
-
-  FROM
-	trx_master tm WITH (nolock)
-	INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
-	INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
-	INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
-	INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
-	INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
-	INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
-	INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
-	INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
-	LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
-	LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-	LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
-	LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
-	LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
-	LEFT JOIN (
-	  SELECT
-		ProspectID,
-		decision,
-		note,
-		created_at,
-		created_by
-	  FROM
-		trx_ca_decision WITH (nolock)
-	) tcd ON tm.ProspectID = tcd.ProspectID
-	LEFT JOIN (
-		SELECT prospect_id, 
-		MAX(Case [subject] When 'CUSTOMER' Then url_pdf_report End) BiroCustomerResult,
-		MAX(Case [subject] When 'SPOUSE' Then url_pdf_report End) BiroSpouseResult
-		FROM trx_detail_biro
-		GROUP BY prospect_id
-	) tdb ON tm.ProspectID = tdb.prospect_id 
-
-	INNER JOIN (
-		SELECT
-		  ProspectID,
-		  Address,
-		  RT,
-		  RW,
-		  Kelurahan,
-		  Kecamatan,
-		  ZipCode,
-		  City
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		COUNT(tt.ProspectID) AS totalRow
 		FROM
-		  trx_customer_address WITH (nolock)
-		WHERE
-		  "Type" = 'LEGAL'
-	  ) cal ON tm.ProspectID = cal.ProspectID
-	  INNER JOIN (
-		SELECT
-		  ProspectID,
-		  Address,
-		  RT,
-		  RW,
-		  Kelurahan,
-		  Kecamatan,
-		  ZipCode,
-		  City
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.status_process,
+			tst.decision,
+			tcd.decision as decision_ca,
+			tcd.created_by as decision_by_ca,
+			tdd.created_by AS draft_created_by,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+			CASE
+			 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+			 ELSE 0
+			END AS ActionEditData
 		FROM
-		  trx_customer_address WITH (nolock)
-		WHERE
-		  "Type" = 'RESIDENCE'
-	  ) car ON tm.ProspectID = car.ProspectID
-	  INNER JOIN (
-		SELECT
-		  ProspectID,
-		  Address,
-		  RT,
-		  RW,
-		  Kelurahan,
-		  Kecamatan,
-		  ZipCode,
-		  City,
-		  Phone,
-		  AreaPhone
-		FROM
-		  trx_customer_address WITH (nolock)
-		WHERE
-		  "Type" = 'COMPANY'
-	  ) cac ON tm.ProspectID = cac.ProspectID
-	  INNER JOIN (
-		SELECT
-		  ProspectID,
-		  Address,
-		  RT,
-		  RW,
-		  Kelurahan,
-		  Kecamatan,
-		  ZipCode,
-		  City,
-		  Phone,
-		  AreaPhone
-		FROM
-		  trx_customer_address WITH (nolock)
-		WHERE
-		  "Type" = 'EMERGENCY'
-	  ) cae ON tm.ProspectID = cae.ProspectID
-
-	INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
-	LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
-	LEFT JOIN (
-	  SELECT
-		[key],
-		value
-	  FROM
-		app_config ap WITH (nolock)
-	  WHERE
-		group_name = 'Education'
-	) edu ON tcp.Education = edu.[key]
-	LEFT JOIN (
-	  SELECT
-		[key],
-		value
-	  FROM
-		app_config ap WITH (nolock)
-	  WHERE
-		group_name = 'MaritalStatus'
-	) mst ON tcp.MaritalStatus = mst.[key]
-	LEFT JOIN (
-	  SELECT
-		[key],
-		value
-	  FROM
-		app_config ap WITH (nolock)
-	  WHERE
-		group_name = 'HomeStatus'
-	) hst ON tcp.HomeStatus = hst.[key]
-	LEFT JOIN (
-	  SELECT
-		[key],
-		value
-	  FROM
-		app_config ap WITH (nolock)
-	  WHERE
-		group_name = 'MonthName'
-	) mn ON tcp.StaySinceMonth = mn.[key]
-	LEFT JOIN (
-	  SELECT
-		[key],
-		value
-	  FROM
-		app_config ap WITH (nolock)
-	  WHERE
-		group_name = 'ProfessionID'
-	) pr ON tce.ProfessionID = pr.[key]
-	LEFT JOIN (
-	  SELECT
-		[key],
-		value
-	  FROM
-		app_config ap WITH (nolock)
-	  WHERE
-		group_name = 'JobType'
-	) jt ON tce.JobType = jt.[key]
-	LEFT JOIN (
-	  SELECT
-		[key],
-		value
-	  FROM
-		app_config ap WITH (nolock)
-	  WHERE
-		group_name = 'JobPosition'
-	) jb ON tce.JobPosition = jb.[key]
-	LEFT JOIN (
-	  SELECT
-		[key],
-		value
-	  FROM
-		app_config ap WITH (nolock)
-	  WHERE
-		group_name = 'MonthName'
-	) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
-	LEFT JOIN (
-	  SELECT
-		[key],
-		value
-	  FROM
-		app_config ap WITH (nolock)
-	  WHERE
-		group_name = 'ProfessionID'
-	) pr2 ON tcs.ProfessionID = pr2.[key]
-	LEFT JOIN (
-	  SELECT
-		x.ProspectID,
-		x.decision,
-		x.slik_result,
-		x.note,
-		x.created_at,
-		x.created_by,
-		x.decision_by
-	  FROM
-		trx_draft_ca_decision x WITH (nolock)
-	  WHERE
-		x.created_at = (
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
+		LEFT JOIN (
 		  SELECT
-			max(created_at)
-		  from
-			trx_draft_ca_decision WITH (NOLOCK)
+			ProspectID,
+			decision,
+			created_at,
+			created_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN (
+			SELECT
+			  x.ProspectID,
+			  x.decision,
+			  x.slik_result,
+			  x.note,
+			  x.created_at,
+			  x.created_by,
+			  x.decision_by
+			FROM
+			  trx_draft_ca_decision x WITH (nolock)
+			WHERE
+			  x.created_at = (
+				SELECT
+				  max(created_at)
+				from
+				  trx_draft_ca_decision WITH (NOLOCK)
+				WHERE
+				  ProspectID = x.ProspectID
+			  )
+		) tdd ON tm.ProspectID = tdd.ProspectID
+		) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.activity= 'UNPR' AND tt.decision= 'CPR' AND tt.source_decision = 'CRA' AND (tt.decision_ca IS NULL OR tt.ActionEditData=1) AND tt.source_decision<>'PSI'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		tt.*
+		FROM
+		(
+		SELECT
+		tm.ProspectID,
+		cb.BranchName,
+		cb.BranchID,
+		tst.activity,
+		tst.source_decision,
+		tst.status_process,
+		tst.decision,
+		tst.reason,
+		tcd.decision as decision_ca,
+		tcd.created_by as decision_by_ca,
+		tr.additional_dp,
+		CASE
+		  WHEN tcd.decision='APR' THEN 'APPROVE'
+		  WHEN tcd.decision='REJ' THEN 'REJECT'
+		  WHEN tcd.decision='CAN' THEN 'CANCEL'
+		  ELSE tcd.decision
+		END AS ca_decision,
+		tcd.note AS ca_note,
+		CASE
+		  WHEN tcd.created_at IS NOT NULL
+		  AND tfa.created_at IS NULL THEN FORMAT(tcd.created_at,'yyyy-MM-dd HH:mm:ss')
+		  WHEN tfa.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+		  ELSE NULL
+		END AS ActionDate,
+		CASE
+		  WHEN tst.decision = 'CPR'
+		  AND tst.source_decision = 'CRA'
+		  AND tst.activity = 'UNPR'
+		  AND tcd.decision IS NULL THEN 1
+		  ELSE 0
+		END AS ShowAction,
+		CASE
+		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+		  ELSE 'NE'
+		END AS incoming_source,
+		
+		tdd.decision AS draft_decision,
+		tdd.slik_result AS draft_slik_result,
+		tdd.note AS draft_note,
+		tdd.created_at AS draft_created_at,
+		tdd.created_by AS draft_created_by,
+		tdd.decision_by AS draft_decision_by,
+
+		tcp.CustomerID,
+		tcp.CustomerStatus,
+		tcp.SurveyResult,
+		tm.created_at,
+		tm.order_at,
+		tm.lob,
+		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+		scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+		tcp.BirthDate,
+		scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+		CASE
+		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
+		END AS 'Gender',
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
+		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+		edu.value AS Education,
+		mst.value AS MaritalStatus,
+		tcp.NumOfDependence,
+		hst.value AS HomeStatus,
+		mn.value AS StaySinceMonth,
+		tcp.StaySinceYear,
+		ta.ProductOfferingID,
+		ta.dealer,
+		ta.LifeInsuranceFee,
+		ta.AssetInsuranceFee,
+		'KMB MOTOR' AS AssetType,
+		ti.asset_description,
+		ti.manufacture_year,
+		ti.color,
+		chassis_number,
+		engine_number,
+		ta.interest_rate,
+		ta.Tenor AS InstallmentPeriod,
+		OTR,
+		ta.DPAmount,
+		ta.AF AS FinanceAmount,
+		ta.interest_amount,
+		ta.insurance_amount,
+		ta.AdminFee,
+		ta.provision_fee,
+		ta.NTF,
+		ta.NTFAkumulasi,
+		(ta.NTF + ta.interest_amount) AS Total,
+		ta.InstallmentAmount AS MonthlyInstallment,
+		FirstInstallment,
+		pr.value AS ProfessionID,
+		jt.value AS JobType,
+		jb.value AS JobPosition,
+		mn2.value AS EmploymentSinceMonth,
+		tce.EmploymentSinceYear,
+		tce.CompanyName,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
+		tcp.ExtCompanyPhone,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		tcp.SourceOtherIncome,
+		tcs.FullName AS SpouseLegalName,
+		tcs.CompanyName AS SpouseCompanyName,
+		tcs.CompanyPhone AS SpouseCompanyPhone,
+		tcs.MobilePhone AS SpouseMobilePhone,
+		tcs.IDNumber AS SpouseIDNumber,
+		pr2.value AS SpouseProfession,
+		em.Name AS EmconName,
+		em.Relationship,
+		em.MobilePhone AS EmconMobilePhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
+		tce.IndustryTypeID,
+		FORMAT(tak.ScsDate,'dd-MM-yyyy') as ScsDate,
+		tak.ScsScore,
+		tak.ScsStatus,
+		tdb.BiroCustomerResult,
+		tdb.BiroSpouseResult,
+		CASE
+		 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+		 ELSE 0
+		END AS ActionEditData
+
+	  FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			note,
+			created_at,
+			created_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN (
+			SELECT prospect_id, 
+			MAX(Case [subject] When 'CUSTOMER' Then url_pdf_report End) BiroCustomerResult,
+			MAX(Case [subject] When 'SPOUSE' Then url_pdf_report End) BiroSpouseResult
+			FROM trx_detail_biro
+			GROUP BY prospect_id
+		) tdb ON tm.ProspectID = tdb.prospect_id 
+
+		INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
+
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
 		  WHERE
-			ProspectID = x.ProspectID
+			group_name = 'Education'
+		) edu ON tcp.Education = edu.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MaritalStatus'
+		) mst ON tcp.MaritalStatus = mst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'HomeStatus'
+		) hst ON tcp.HomeStatus = hst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn ON tcp.StaySinceMonth = mn.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr ON tce.ProfessionID = pr.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobType'
+		) jt ON tce.JobType = jt.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobPosition'
+		) jb ON tce.JobPosition = jb.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr2 ON tcs.ProfessionID = pr2.[key]
+		LEFT JOIN (
+		  SELECT
+			x.ProspectID,
+			x.decision,
+			x.slik_result,
+			x.note,
+			x.created_at,
+			x.created_by,
+			x.decision_by
+		  FROM
+			trx_draft_ca_decision x WITH (nolock)
+		  WHERE
+			x.created_at = (
+			  SELECT
+				max(created_at)
+			  from
+				trx_draft_ca_decision WITH (NOLOCK)
+			  WHERE
+				ProspectID = x.ProspectID
+			)
+		) tdd ON tm.ProspectID = tdd.ProspectID
+	) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.activity= 'UNPR' AND tt.decision= 'CPR' AND tt.source_decision = 'CRA' AND (tt.decision_ca IS NULL OR tt.ActionEditData=1) AND tt.source_decision<>'PSI' ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
+
+		// Call the function
+		reason, _, err := repo.GetInquiryCa(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success with multi branch and saved as draft", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqInquiryCa{
+			Search:      "aprospectid",
+			BranchID:    "426",
+			MultiBranch: "1",
+			Filter:      "SAVED_AS_DRAFT",
+			UserID:      "abc123",
+		}
+
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.status_process,
+			tst.decision,
+			tcd.decision as decision_ca,
+			tcd.created_by as decision_by_ca,
+			tdd.created_by AS draft_created_by,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+			CASE
+			 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+			 ELSE 0
+			END AS ActionEditData
+		FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			created_at,
+			created_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN (
+			SELECT
+			  x.ProspectID,
+			  x.decision,
+			  x.slik_result,
+			  x.note,
+			  x.created_at,
+			  x.created_by,
+			  x.decision_by
+			FROM
+			  trx_draft_ca_decision x WITH (nolock)
+			WHERE
+			  x.created_at = (
+				SELECT
+				  max(created_at)
+				from
+				  trx_draft_ca_decision WITH (NOLOCK)
+				WHERE
+				  ProspectID = x.ProspectID
+			  )
+		) tdd ON tm.ProspectID = tdd.ProspectID
+		) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.draft_created_by= 'abc123'  AND tt.source_decision<>'PSI'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		tt.*
+		FROM
+		(
+		SELECT
+		tm.ProspectID,
+		cb.BranchName,
+		cb.BranchID,
+		tst.activity,
+		tst.source_decision,
+		tst.status_process,
+		tst.decision,
+		tst.reason,
+		tcd.decision as decision_ca,
+		tcd.created_by as decision_by_ca,
+		tr.additional_dp,
+		CASE
+		  WHEN tcd.decision='APR' THEN 'APPROVE'
+		  WHEN tcd.decision='REJ' THEN 'REJECT'
+		  WHEN tcd.decision='CAN' THEN 'CANCEL'
+		  ELSE tcd.decision
+		END AS ca_decision,
+		tcd.note AS ca_note,
+		CASE
+		  WHEN tcd.created_at IS NOT NULL
+		  AND tfa.created_at IS NULL THEN FORMAT(tcd.created_at,'yyyy-MM-dd HH:mm:ss')
+		  WHEN tfa.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+		  ELSE NULL
+		END AS ActionDate,
+		CASE
+		  WHEN tst.decision = 'CPR'
+		  AND tst.source_decision = 'CRA'
+		  AND tst.activity = 'UNPR'
+		  AND tcd.decision IS NULL THEN 1
+		  ELSE 0
+		END AS ShowAction,
+		CASE
+		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+		  ELSE 'NE'
+		END AS incoming_source,
+		
+		tdd.decision AS draft_decision,
+		tdd.slik_result AS draft_slik_result,
+		tdd.note AS draft_note,
+		tdd.created_at AS draft_created_at,
+		tdd.created_by AS draft_created_by,
+		tdd.decision_by AS draft_decision_by,
+
+		tcp.CustomerID,
+		tcp.CustomerStatus,
+		tcp.SurveyResult,
+		tm.created_at,
+		tm.order_at,
+		tm.lob,
+		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+		scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+		tcp.BirthDate,
+		scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+		CASE
+		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
+		END AS 'Gender',
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
+		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+		edu.value AS Education,
+		mst.value AS MaritalStatus,
+		tcp.NumOfDependence,
+		hst.value AS HomeStatus,
+		mn.value AS StaySinceMonth,
+		tcp.StaySinceYear,
+		ta.ProductOfferingID,
+		ta.dealer,
+		ta.LifeInsuranceFee,
+		ta.AssetInsuranceFee,
+		'KMB MOTOR' AS AssetType,
+		ti.asset_description,
+		ti.manufacture_year,
+		ti.color,
+		chassis_number,
+		engine_number,
+		ta.interest_rate,
+		ta.Tenor AS InstallmentPeriod,
+		OTR,
+		ta.DPAmount,
+		ta.AF AS FinanceAmount,
+		ta.interest_amount,
+		ta.insurance_amount,
+		ta.AdminFee,
+		ta.provision_fee,
+		ta.NTF,
+		ta.NTFAkumulasi,
+		(ta.NTF + ta.interest_amount) AS Total,
+		ta.InstallmentAmount AS MonthlyInstallment,
+		FirstInstallment,
+		pr.value AS ProfessionID,
+		jt.value AS JobType,
+		jb.value AS JobPosition,
+		mn2.value AS EmploymentSinceMonth,
+		tce.EmploymentSinceYear,
+		tce.CompanyName,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
+		tcp.ExtCompanyPhone,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		tcp.SourceOtherIncome,
+		tcs.FullName AS SpouseLegalName,
+		tcs.CompanyName AS SpouseCompanyName,
+		tcs.CompanyPhone AS SpouseCompanyPhone,
+		tcs.MobilePhone AS SpouseMobilePhone,
+		tcs.IDNumber AS SpouseIDNumber,
+		pr2.value AS SpouseProfession,
+		em.Name AS EmconName,
+		em.Relationship,
+		em.MobilePhone AS EmconMobilePhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
+		tce.IndustryTypeID,
+		FORMAT(tak.ScsDate,'dd-MM-yyyy') as ScsDate,
+		tak.ScsScore,
+		tak.ScsStatus,
+		tdb.BiroCustomerResult,
+		tdb.BiroSpouseResult,
+		CASE
+		 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+		 ELSE 0
+		END AS ActionEditData
+
+	  FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			note,
+			created_at,
+			created_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN (
+			SELECT prospect_id, 
+			MAX(Case [subject] When 'CUSTOMER' Then url_pdf_report End) BiroCustomerResult,
+			MAX(Case [subject] When 'SPOUSE' Then url_pdf_report End) BiroSpouseResult
+			FROM trx_detail_biro
+			GROUP BY prospect_id
+		) tdb ON tm.ProspectID = tdb.prospect_id 
+
+		INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
+
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'Education'
+		) edu ON tcp.Education = edu.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MaritalStatus'
+		) mst ON tcp.MaritalStatus = mst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'HomeStatus'
+		) hst ON tcp.HomeStatus = hst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn ON tcp.StaySinceMonth = mn.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr ON tce.ProfessionID = pr.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobType'
+		) jt ON tce.JobType = jt.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobPosition'
+		) jb ON tce.JobPosition = jb.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr2 ON tcs.ProfessionID = pr2.[key]
+		LEFT JOIN (
+		  SELECT
+			x.ProspectID,
+			x.decision,
+			x.slik_result,
+			x.note,
+			x.created_at,
+			x.created_by,
+			x.decision_by
+		  FROM
+			trx_draft_ca_decision x WITH (nolock)
+		  WHERE
+			x.created_at = (
+			  SELECT
+				max(created_at)
+			  from
+				trx_draft_ca_decision WITH (NOLOCK)
+			  WHERE
+				ProspectID = x.ProspectID
+			)
+		) tdd ON tm.ProspectID = tdd.ProspectID
+	) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.draft_created_by= 'abc123'  AND tt.source_decision<>'PSI' ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
+
+		// Call the function
+		reason, _, err := repo.GetInquiryCa(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success without multi branch", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqInquiryCa{
+			Search:      "aprospectid",
+			BranchID:    "426",
+			MultiBranch: "0",
+			Filter:      "REJECT",
+			UserID:      "db1f4044e1dc574",
+		}
+
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.status_process,
+			tst.decision,
+			tcd.decision as decision_ca,
+			tcd.created_by as decision_by_ca,
+			tdd.created_by AS draft_created_by,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+			CASE
+			 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+			 ELSE 0
+			END AS ActionEditData
+		FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			created_at,
+			created_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN (
+			SELECT
+			  x.ProspectID,
+			  x.decision,
+			  x.slik_result,
+			  x.note,
+			  x.created_at,
+			  x.created_by,
+			  x.decision_by
+			FROM
+			  trx_draft_ca_decision x WITH (nolock)
+			WHERE
+			  x.created_at = (
+				SELECT
+				  max(created_at)
+				from
+				  trx_draft_ca_decision WITH (NOLOCK)
+				WHERE
+				  ProspectID = x.ProspectID
+			  )
+		) tdd ON tm.ProspectID = tdd.ProspectID
+		) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'REJ' AND tt.status_process='FIN' AND tt.source_decision<>'PSI'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		tt.*
+		FROM
+		(
+		SELECT
+		tm.ProspectID,
+		cb.BranchName,
+		cb.BranchID,
+		tst.activity,
+		tst.source_decision,
+		tst.status_process,
+		tst.decision,
+		tst.reason,
+		tcd.decision as decision_ca,
+		tcd.created_by as decision_by_ca,
+		tr.additional_dp,
+		CASE
+		  WHEN tcd.decision='APR' THEN 'APPROVE'
+		  WHEN tcd.decision='REJ' THEN 'REJECT'
+		  WHEN tcd.decision='CAN' THEN 'CANCEL'
+		  ELSE tcd.decision
+		END AS ca_decision,
+		tcd.note AS ca_note,
+		CASE
+		  WHEN tcd.created_at IS NOT NULL
+		  AND tfa.created_at IS NULL THEN FORMAT(tcd.created_at,'yyyy-MM-dd HH:mm:ss')
+		  WHEN tfa.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+		  ELSE NULL
+		END AS ActionDate,
+		CASE
+		  WHEN tst.decision = 'CPR'
+		  AND tst.source_decision = 'CRA'
+		  AND tst.activity = 'UNPR'
+		  AND tcd.decision IS NULL THEN 1
+		  ELSE 0
+		END AS ShowAction,
+		CASE
+		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+		  ELSE 'NE'
+		END AS incoming_source,
+		
+		tdd.decision AS draft_decision,
+		tdd.slik_result AS draft_slik_result,
+		tdd.note AS draft_note,
+		tdd.created_at AS draft_created_at,
+		tdd.created_by AS draft_created_by,
+		tdd.decision_by AS draft_decision_by,
+
+		tcp.CustomerID,
+		tcp.CustomerStatus,
+		tcp.SurveyResult,
+		tm.created_at,
+		tm.order_at,
+		tm.lob,
+		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+		scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+		tcp.BirthDate,
+		scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+		CASE
+		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
+		END AS 'Gender',
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
+		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+		edu.value AS Education,
+		mst.value AS MaritalStatus,
+		tcp.NumOfDependence,
+		hst.value AS HomeStatus,
+		mn.value AS StaySinceMonth,
+		tcp.StaySinceYear,
+		ta.ProductOfferingID,
+		ta.dealer,
+		ta.LifeInsuranceFee,
+		ta.AssetInsuranceFee,
+		'KMB MOTOR' AS AssetType,
+		ti.asset_description,
+		ti.manufacture_year,
+		ti.color,
+		chassis_number,
+		engine_number,
+		ta.interest_rate,
+		ta.Tenor AS InstallmentPeriod,
+		OTR,
+		ta.DPAmount,
+		ta.AF AS FinanceAmount,
+		ta.interest_amount,
+		ta.insurance_amount,
+		ta.AdminFee,
+		ta.provision_fee,
+		ta.NTF,
+		ta.NTFAkumulasi,
+		(ta.NTF + ta.interest_amount) AS Total,
+		ta.InstallmentAmount AS MonthlyInstallment,
+		FirstInstallment,
+		pr.value AS ProfessionID,
+		jt.value AS JobType,
+		jb.value AS JobPosition,
+		mn2.value AS EmploymentSinceMonth,
+		tce.EmploymentSinceYear,
+		tce.CompanyName,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
+		tcp.ExtCompanyPhone,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		tcp.SourceOtherIncome,
+		tcs.FullName AS SpouseLegalName,
+		tcs.CompanyName AS SpouseCompanyName,
+		tcs.CompanyPhone AS SpouseCompanyPhone,
+		tcs.MobilePhone AS SpouseMobilePhone,
+		tcs.IDNumber AS SpouseIDNumber,
+		pr2.value AS SpouseProfession,
+		em.Name AS EmconName,
+		em.Relationship,
+		em.MobilePhone AS EmconMobilePhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
+		tce.IndustryTypeID,
+		FORMAT(tak.ScsDate,'dd-MM-yyyy') as ScsDate,
+		tak.ScsScore,
+		tak.ScsStatus,
+		tdb.BiroCustomerResult,
+		tdb.BiroSpouseResult,
+		CASE
+		 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+		 ELSE 0
+		END AS ActionEditData
+
+	  FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			note,
+			created_at,
+			created_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN (
+			SELECT prospect_id, 
+			MAX(Case [subject] When 'CUSTOMER' Then url_pdf_report End) BiroCustomerResult,
+			MAX(Case [subject] When 'SPOUSE' Then url_pdf_report End) BiroSpouseResult
+			FROM trx_detail_biro
+			GROUP BY prospect_id
+		) tdb ON tm.ProspectID = tdb.prospect_id 
+
+		INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
+
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'Education'
+		) edu ON tcp.Education = edu.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MaritalStatus'
+		) mst ON tcp.MaritalStatus = mst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'HomeStatus'
+		) hst ON tcp.HomeStatus = hst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn ON tcp.StaySinceMonth = mn.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr ON tce.ProfessionID = pr.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobType'
+		) jt ON tce.JobType = jt.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobPosition'
+		) jb ON tce.JobPosition = jb.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr2 ON tcs.ProfessionID = pr2.[key]
+		LEFT JOIN (
+		  SELECT
+			x.ProspectID,
+			x.decision,
+			x.slik_result,
+			x.note,
+			x.created_at,
+			x.created_by,
+			x.decision_by
+		  FROM
+			trx_draft_ca_decision x WITH (nolock)
+		  WHERE
+			x.created_at = (
+			  SELECT
+				max(created_at)
+			  from
+				trx_draft_ca_decision WITH (NOLOCK)
+			  WHERE
+				ProspectID = x.ProspectID
+			)
+		) tdd ON tm.ProspectID = tdd.ProspectID
+	) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'REJ' AND tt.status_process='FIN' AND tt.source_decision<>'PSI' ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
+
+		// Call the function
+		reason, _, err := repo.GetInquiryCa(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success with region west java", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqInquiryCa{
+			Search:      "aprospectid",
+			BranchID:    "426",
+			MultiBranch: "1",
+			Filter:      "CANCEL",
+			UserID:      "db1f4044e1dc574",
+		}
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
+		INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+		(	SELECT value 
+			FROM region_user ru WITH (nolock)
+			cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+			WHERE ru.user_id = 'db1f4044e1dc574' 
 		)
-	) tdd ON tm.ProspectID = tdd.ProspectID
-) AS tt WHERE tt.BranchID IN ('426','903') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'APR' AND tt.status_process='FIN' AND tt.source_decision<>'PSI' ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
-		WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
-			AddRow("EFM03406412522151347", "BANDUNG", "426"))
+		AND b.lob_id='125'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
+				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
-	// Call the function
-	reason, _, err := repo.GetInquiryCa(req, 1)
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.status_process,
+			tst.decision,
+			tcd.decision as decision_ca,
+			tcd.created_by as decision_by_ca,
+			tdd.created_by AS draft_created_by,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+			CASE
+			WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+			ELSE 0
+			END AS ActionEditData
+		FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
+		LEFT JOIN (
+		SELECT
+			ProspectID,
+			decision,
+			created_at,
+			created_by
+		FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN (
+			SELECT
+			x.ProspectID,
+			x.decision,
+			x.slik_result,
+			x.note,
+			x.created_at,
+			x.created_by,
+			x.decision_by
+			FROM
+			trx_draft_ca_decision x WITH (nolock)
+			WHERE
+			x.created_at = (
+				SELECT
+				max(created_at)
+				from
+				trx_draft_ca_decision WITH (NOLOCK)
+				WHERE
+				ProspectID = x.ProspectID
+			)
+		) tdd ON tm.ProspectID = tdd.ProspectID
+		) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'CAN' AND tt.status_process='FIN' AND tt.source_decision<>'PSI'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
-	// Verify the result
-	if err != nil {
-		t.Fatalf("Expected no error, but got: %v", err)
-	}
-	assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+				tt.*
+				FROM
+				(
+				SELECT
+				tm.ProspectID,
+				cb.BranchName,
+				cb.BranchID,
+				tst.activity,
+				tst.source_decision,
+				tst.status_process,
+				tst.decision,
+				tst.reason,
+				tcd.decision as decision_ca,
+				tcd.created_by as decision_by_ca,
+				tr.additional_dp,
+				CASE
+				WHEN tcd.decision='APR' THEN 'APPROVE'
+				WHEN tcd.decision='REJ' THEN 'REJECT'
+				WHEN tcd.decision='CAN' THEN 'CANCEL'
+				ELSE tcd.decision
+				END AS ca_decision,
+				tcd.note AS ca_note,
+				CASE
+				WHEN tcd.created_at IS NOT NULL
+				AND tfa.created_at IS NULL THEN FORMAT(tcd.created_at,'yyyy-MM-dd HH:mm:ss')
+				WHEN tfa.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+				ELSE NULL
+				END AS ActionDate,
+				CASE
+				WHEN tst.decision = 'CPR'
+				AND tst.source_decision = 'CRA'
+				AND tst.activity = 'UNPR'
+				AND tcd.decision IS NULL THEN 1
+				ELSE 0
+				END AS ShowAction,
+				CASE
+				WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+				ELSE 'NE'
+				END AS incoming_source,
+				
+				tdd.decision AS draft_decision,
+				tdd.slik_result AS draft_slik_result,
+				tdd.note AS draft_note,
+				tdd.created_at AS draft_created_at,
+				tdd.created_by AS draft_created_by,
+				tdd.decision_by AS draft_decision_by,
 
-	// Ensure all expectations were met
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("There were unfulfilled expectations: %s", err)
-	}
+				tcp.CustomerID,
+				tcp.CustomerStatus,
+				tcp.SurveyResult,
+				tm.created_at,
+				tm.order_at,
+				tm.lob,
+				scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+				scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+				scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+				tcp.BirthDate,
+				scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+				CASE
+				WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+				WHEN tcp.Gender = 'F' THEN 'Perempuan'
+				END AS 'Gender',
+				scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+				CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+				cal.Kelurahan AS LegalKelurahan,
+				cal.Kecamatan AS LegalKecamatan,
+				cal.ZipCode AS LegalZipcode,
+				cal.City AS LegalCity,
+				scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+				CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+				car.Kelurahan AS ResidenceKelurahan,
+				car.Kecamatan AS ResidenceKecamatan,
+				car.ZipCode AS ResidenceZipcode,
+				car.City AS ResidenceCity,
+				scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+				scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+				edu.value AS Education,
+				mst.value AS MaritalStatus,
+				tcp.NumOfDependence,
+				hst.value AS HomeStatus,
+				mn.value AS StaySinceMonth,
+				tcp.StaySinceYear,
+				ta.ProductOfferingID,
+				ta.dealer,
+				ta.LifeInsuranceFee,
+				ta.AssetInsuranceFee,
+				'KMB MOTOR' AS AssetType,
+				ti.asset_description,
+				ti.manufacture_year,
+				ti.color,
+				chassis_number,
+				engine_number,
+				ta.interest_rate,
+				ta.Tenor AS InstallmentPeriod,
+				OTR,
+				ta.DPAmount,
+				ta.AF AS FinanceAmount,
+				ta.interest_amount,
+				ta.insurance_amount,
+				ta.AdminFee,
+				ta.provision_fee,
+				ta.NTF,
+				ta.NTFAkumulasi,
+				(ta.NTF + ta.interest_amount) AS Total,
+				ta.InstallmentAmount AS MonthlyInstallment,
+				FirstInstallment,
+				pr.value AS ProfessionID,
+				jt.value AS JobType,
+				jb.value AS JobPosition,
+				mn2.value AS EmploymentSinceMonth,
+				tce.EmploymentSinceYear,
+				tce.CompanyName,
+				cac.AreaPhone AS CompanyAreaPhone,
+				cac.Phone AS CompanyPhone,
+				tcp.ExtCompanyPhone,
+				scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+				CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+				cac.Kelurahan AS CompanyKelurahan,
+				cac.Kecamatan AS CompanyKecamatan,
+				car.ZipCode AS CompanyZipcode,
+				car.City AS CompanyCity,
+				tce.MonthlyFixedIncome,
+				tce.MonthlyVariableIncome,
+				tce.SpouseIncome,
+				tcp.SourceOtherIncome,
+				tcs.FullName AS SpouseLegalName,
+				tcs.CompanyName AS SpouseCompanyName,
+				tcs.CompanyPhone AS SpouseCompanyPhone,
+				tcs.MobilePhone AS SpouseMobilePhone,
+				tcs.IDNumber AS SpouseIDNumber,
+				pr2.value AS SpouseProfession,
+				em.Name AS EmconName,
+				em.Relationship,
+				em.MobilePhone AS EmconMobilePhone,
+				scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+				CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+				cae.Kelurahan AS EmergencyKelurahan,
+				cae.Kecamatan AS EmergencyKecamatan,
+				cae.ZipCode AS EmergencyZipcode,
+				cae.City AS EmergencyCity,
+				cae.AreaPhone AS EmergencyAreaPhone,
+				cae.Phone AS EmergencyPhone,
+				tce.IndustryTypeID,
+				FORMAT(tak.ScsDate,'dd-MM-yyyy') as ScsDate,
+				tak.ScsScore,
+				tak.ScsStatus,
+				tdb.BiroCustomerResult,
+				tdb.BiroSpouseResult,
+				CASE
+				WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+				ELSE 0
+				END AS ActionEditData
+
+			FROM
+				trx_master tm WITH (nolock)
+				INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+				INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+				INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+				INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+				INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+				INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+				INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+				INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+				LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
+				LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+				LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+				LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+				LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
+				LEFT JOIN (
+				SELECT
+					ProspectID,
+					decision,
+					note,
+					created_at,
+					created_by
+				FROM
+					trx_ca_decision WITH (nolock)
+				) tcd ON tm.ProspectID = tcd.ProspectID
+				LEFT JOIN (
+					SELECT prospect_id, 
+					MAX(Case [subject] When 'CUSTOMER' Then url_pdf_report End) BiroCustomerResult,
+					MAX(Case [subject] When 'SPOUSE' Then url_pdf_report End) BiroSpouseResult
+					FROM trx_detail_biro
+					GROUP BY prospect_id
+				) tdb ON tm.ProspectID = tdb.prospect_id 
+
+				INNER JOIN (
+					SELECT
+					ProspectID,
+					Address,
+					RT,
+					RW,
+					Kelurahan,
+					Kecamatan,
+					ZipCode,
+					City
+					FROM
+					trx_customer_address WITH (nolock)
+					WHERE
+					"Type" = 'LEGAL'
+				) cal ON tm.ProspectID = cal.ProspectID
+				INNER JOIN (
+					SELECT
+					ProspectID,
+					Address,
+					RT,
+					RW,
+					Kelurahan,
+					Kecamatan,
+					ZipCode,
+					City
+					FROM
+					trx_customer_address WITH (nolock)
+					WHERE
+					"Type" = 'RESIDENCE'
+				) car ON tm.ProspectID = car.ProspectID
+				INNER JOIN (
+					SELECT
+					ProspectID,
+					Address,
+					RT,
+					RW,
+					Kelurahan,
+					Kecamatan,
+					ZipCode,
+					City,
+					Phone,
+					AreaPhone
+					FROM
+					trx_customer_address WITH (nolock)
+					WHERE
+					"Type" = 'COMPANY'
+				) cac ON tm.ProspectID = cac.ProspectID
+				INNER JOIN (
+					SELECT
+					ProspectID,
+					Address,
+					RT,
+					RW,
+					Kelurahan,
+					Kecamatan,
+					ZipCode,
+					City,
+					Phone,
+					AreaPhone
+					FROM
+					trx_customer_address WITH (nolock)
+					WHERE
+					"Type" = 'EMERGENCY'
+				) cae ON tm.ProspectID = cae.ProspectID
+
+				INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+				LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+				LEFT JOIN (
+				SELECT
+					[key],
+					value
+				FROM
+					app_config ap WITH (nolock)
+				WHERE
+					group_name = 'Education'
+				) edu ON tcp.Education = edu.[key]
+				LEFT JOIN (
+				SELECT
+					[key],
+					value
+				FROM
+					app_config ap WITH (nolock)
+				WHERE
+					group_name = 'MaritalStatus'
+				) mst ON tcp.MaritalStatus = mst.[key]
+				LEFT JOIN (
+				SELECT
+					[key],
+					value
+				FROM
+					app_config ap WITH (nolock)
+				WHERE
+					group_name = 'HomeStatus'
+				) hst ON tcp.HomeStatus = hst.[key]
+				LEFT JOIN (
+				SELECT
+					[key],
+					value
+				FROM
+					app_config ap WITH (nolock)
+				WHERE
+					group_name = 'MonthName'
+				) mn ON tcp.StaySinceMonth = mn.[key]
+				LEFT JOIN (
+				SELECT
+					[key],
+					value
+				FROM
+					app_config ap WITH (nolock)
+				WHERE
+					group_name = 'ProfessionID'
+				) pr ON tce.ProfessionID = pr.[key]
+				LEFT JOIN (
+				SELECT
+					[key],
+					value
+				FROM
+					app_config ap WITH (nolock)
+				WHERE
+					group_name = 'JobType'
+				) jt ON tce.JobType = jt.[key]
+				LEFT JOIN (
+				SELECT
+					[key],
+					value
+				FROM
+					app_config ap WITH (nolock)
+				WHERE
+					group_name = 'JobPosition'
+				) jb ON tce.JobPosition = jb.[key]
+				LEFT JOIN (
+				SELECT
+					[key],
+					value
+				FROM
+					app_config ap WITH (nolock)
+				WHERE
+					group_name = 'MonthName'
+				) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+				LEFT JOIN (
+				SELECT
+					[key],
+					value
+				FROM
+					app_config ap WITH (nolock)
+				WHERE
+					group_name = 'ProfessionID'
+				) pr2 ON tcs.ProfessionID = pr2.[key]
+				LEFT JOIN (
+				SELECT
+					x.ProspectID,
+					x.decision,
+					x.slik_result,
+					x.note,
+					x.created_at,
+					x.created_by,
+					x.decision_by
+				FROM
+					trx_draft_ca_decision x WITH (nolock)
+				WHERE
+					x.created_at = (
+					SELECT
+						max(created_at)
+					from
+						trx_draft_ca_decision WITH (NOLOCK)
+					WHERE
+						ProspectID = x.ProspectID
+					)
+				) tdd ON tm.ProspectID = tdd.ProspectID
+			) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'CAN' AND tt.status_process='FIN' AND tt.source_decision<>'PSI' ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
+
+		// Call the function
+		reason, _, err := repo.GetInquiryCa(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success with region ALL", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqInquiryCa{
+			Search:      "aprospectid",
+			BranchID:    "426",
+			MultiBranch: "1",
+			Filter:      "APPROVE",
+			UserID:      "abc123",
+		}
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
+		INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+		(	SELECT value 
+			FROM region_user ru WITH (nolock)
+			cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+			WHERE ru.user_id = 'abc123' 
+		)
+		AND b.lob_id='125'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
+				AddRow("ALL", `["426","436","429","431","442","428","430"]`))
+
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.status_process,
+			tst.decision,
+			tcd.decision as decision_ca,
+			tcd.created_by as decision_by_ca,
+			tdd.created_by AS draft_created_by,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+			CASE
+			 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+			 ELSE 0
+			END AS ActionEditData
+		FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			created_at,
+			created_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN (
+			SELECT
+			  x.ProspectID,
+			  x.decision,
+			  x.slik_result,
+			  x.note,
+			  x.created_at,
+			  x.created_by,
+			  x.decision_by
+			FROM
+			  trx_draft_ca_decision x WITH (nolock)
+			WHERE
+			  x.created_at = (
+				SELECT
+				  max(created_at)
+				from
+				  trx_draft_ca_decision WITH (NOLOCK)
+				WHERE
+				  ProspectID = x.ProspectID
+			  )
+		) tdd ON tm.ProspectID = tdd.ProspectID
+		) AS tt WHERE (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'APR' AND tt.status_process='FIN' AND tt.source_decision<>'PSI'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		tt.*
+		FROM
+		(
+		SELECT
+		tm.ProspectID,
+		cb.BranchName,
+		cb.BranchID,
+		tst.activity,
+		tst.source_decision,
+		tst.status_process,
+		tst.decision,
+		tst.reason,
+		tcd.decision as decision_ca,
+		tcd.created_by as decision_by_ca,
+		tr.additional_dp,
+		CASE
+		  WHEN tcd.decision='APR' THEN 'APPROVE'
+		  WHEN tcd.decision='REJ' THEN 'REJECT'
+		  WHEN tcd.decision='CAN' THEN 'CANCEL'
+		  ELSE tcd.decision
+		END AS ca_decision,
+		tcd.note AS ca_note,
+		CASE
+		  WHEN tcd.created_at IS NOT NULL
+		  AND tfa.created_at IS NULL THEN FORMAT(tcd.created_at,'yyyy-MM-dd HH:mm:ss')
+		  WHEN tfa.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+		  ELSE NULL
+		END AS ActionDate,
+		CASE
+		  WHEN tst.decision = 'CPR'
+		  AND tst.source_decision = 'CRA'
+		  AND tst.activity = 'UNPR'
+		  AND tcd.decision IS NULL THEN 1
+		  ELSE 0
+		END AS ShowAction,
+		CASE
+		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+		  ELSE 'NE'
+		END AS incoming_source,
+		
+		tdd.decision AS draft_decision,
+		tdd.slik_result AS draft_slik_result,
+		tdd.note AS draft_note,
+		tdd.created_at AS draft_created_at,
+		tdd.created_by AS draft_created_by,
+		tdd.decision_by AS draft_decision_by,
+
+		tcp.CustomerID,
+		tcp.CustomerStatus,
+		tcp.SurveyResult,
+		tm.created_at,
+		tm.order_at,
+		tm.lob,
+		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+		scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+		tcp.BirthDate,
+		scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+		CASE
+		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
+		END AS 'Gender',
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
+		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+		edu.value AS Education,
+		mst.value AS MaritalStatus,
+		tcp.NumOfDependence,
+		hst.value AS HomeStatus,
+		mn.value AS StaySinceMonth,
+		tcp.StaySinceYear,
+		ta.ProductOfferingID,
+		ta.dealer,
+		ta.LifeInsuranceFee,
+		ta.AssetInsuranceFee,
+		'KMB MOTOR' AS AssetType,
+		ti.asset_description,
+		ti.manufacture_year,
+		ti.color,
+		chassis_number,
+		engine_number,
+		ta.interest_rate,
+		ta.Tenor AS InstallmentPeriod,
+		OTR,
+		ta.DPAmount,
+		ta.AF AS FinanceAmount,
+		ta.interest_amount,
+		ta.insurance_amount,
+		ta.AdminFee,
+		ta.provision_fee,
+		ta.NTF,
+		ta.NTFAkumulasi,
+		(ta.NTF + ta.interest_amount) AS Total,
+		ta.InstallmentAmount AS MonthlyInstallment,
+		FirstInstallment,
+		pr.value AS ProfessionID,
+		jt.value AS JobType,
+		jb.value AS JobPosition,
+		mn2.value AS EmploymentSinceMonth,
+		tce.EmploymentSinceYear,
+		tce.CompanyName,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
+		tcp.ExtCompanyPhone,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		tcp.SourceOtherIncome,
+		tcs.FullName AS SpouseLegalName,
+		tcs.CompanyName AS SpouseCompanyName,
+		tcs.CompanyPhone AS SpouseCompanyPhone,
+		tcs.MobilePhone AS SpouseMobilePhone,
+		tcs.IDNumber AS SpouseIDNumber,
+		pr2.value AS SpouseProfession,
+		em.Name AS EmconName,
+		em.Relationship,
+		em.MobilePhone AS EmconMobilePhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
+		tce.IndustryTypeID,
+		FORMAT(tak.ScsDate,'dd-MM-yyyy') as ScsDate,
+		tak.ScsScore,
+		tak.ScsStatus,
+		tdb.BiroCustomerResult,
+		tdb.BiroSpouseResult,
+		CASE
+		 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+		 ELSE 0
+		END AS ActionEditData
+
+	  FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			note,
+			created_at,
+			created_by
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN (
+			SELECT prospect_id, 
+			MAX(Case [subject] When 'CUSTOMER' Then url_pdf_report End) BiroCustomerResult,
+			MAX(Case [subject] When 'SPOUSE' Then url_pdf_report End) BiroSpouseResult
+			FROM trx_detail_biro
+			GROUP BY prospect_id
+		) tdb ON tm.ProspectID = tdb.prospect_id 
+
+		INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
+
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'Education'
+		) edu ON tcp.Education = edu.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MaritalStatus'
+		) mst ON tcp.MaritalStatus = mst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'HomeStatus'
+		) hst ON tcp.HomeStatus = hst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn ON tcp.StaySinceMonth = mn.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr ON tce.ProfessionID = pr.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobType'
+		) jt ON tce.JobType = jt.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobPosition'
+		) jb ON tce.JobPosition = jb.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr2 ON tcs.ProfessionID = pr2.[key]
+		LEFT JOIN (
+		  SELECT
+			x.ProspectID,
+			x.decision,
+			x.slik_result,
+			x.note,
+			x.created_at,
+			x.created_by,
+			x.decision_by
+		  FROM
+			trx_draft_ca_decision x WITH (nolock)
+		  WHERE
+			x.created_at = (
+			  SELECT
+				max(created_at)
+			  from
+				trx_draft_ca_decision WITH (NOLOCK)
+			  WHERE
+				ProspectID = x.ProspectID
+			)
+		) tdd ON tm.ProspectID = tdd.ProspectID
+	) AS tt WHERE (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') AND tt.decision = 'APR' AND tt.status_process='FIN' AND tt.source_decision<>'PSI' ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
+
+		// Call the function
+		reason, _, err := repo.GetInquiryCa(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
 }
 
 func TestSaveDraftData(t *testing.T) {
@@ -3254,16 +5662,30 @@ func TestGetInquirySearch(t *testing.T) {
 	// Create a repository instance
 	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
 
-	// Expected input and output
-	req := request.ReqSearchInquiry{
-		UserID: "5XeZs9PCeiPcZGS6azt",
-		Search: "aprospectid",
-	}
-
 	expectedInquiry := []entity.InquirySearch{entity.InquirySearch{ProspectID: "EFM03406412522151347", BranchName: "BANDUNG", IncomingSource: "", CreatedAt: "", OrderAt: "", CustomerID: "", CustomerStatus: "", IDNumber: "", LegalName: "", BirthPlace: "", BirthDate: time.Time{}, SurgateMotherName: "", Gender: "", MobilePhone: "", Email: "", Education: "", MaritalStatus: "", NumOfDependence: 0, HomeStatus: "", StaySinceMonth: "", StaySinceYear: "", ExtCompanyPhone: (*string)(nil), SourceOtherIncome: (*string)(nil), Supplier: "", ProductOfferingID: "", AssetType: "", AssetDescription: "", ManufacturingYear: "", Color: "", ChassisNumber: "", EngineNumber: "", InterestRate: 0, InstallmentPeriod: 0, OTR: 0, DPAmount: 0, FinanceAmount: 0, InterestAmount: 0, LifeInsuranceFee: 0, AssetInsuranceFee: 0, InsuranceAmount: 0, AdminFee: 0, ProvisionFee: 0, NTF: 0, NTFAkumulasi: 0, Total: 0, MonthlyInstallment: 0, FirstInstallment: "", ProfessionID: "", JobTypeID: "", JobPosition: "", CompanyName: "", IndustryTypeID: "", EmploymentSinceYear: "", EmploymentSinceMonth: "", MonthlyFixedIncome: 0, MonthlyVariableIncome: 0, SpouseIncome: 0, SpouseIDNumber: "", SpouseLegalName: "", SpouseCompanyName: "", SpouseCompanyPhone: "", SpouseMobilePhone: "", SpouseProfession: "", EmconName: "", Relationship: "", EmconMobilePhone: "", LegalAddress: "", LegalRTRW: "", LegalKelurahan: "", LegalKecamatan: "", LegalZipCode: "", LegalCity: "", ResidenceAddress: "", ResidenceRTRW: "", ResidenceKelurahan: "", ResidenceKecamatan: "", ResidenceZipCode: "", ResidenceCity: "", CompanyAddress: "", CompanyRTRW: "", CompanyKelurahan: "", CompanyKecamatan: "", CompanyZipCode: "", CompanyCity: "", CompanyAreaPhone: "", CompanyPhone: "", EmergencyAddress: "", EmergencyRTRW: "", EmergencyKelurahan: "", EmergencyKecamatan: "", EmergencyZipcode: "", EmergencyCity: "", EmergencyAreaPhone: "", EmergencyPhone: ""}}
 
-	// Mock SQL query and result
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+	t.Run("success with region all", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqSearchInquiry{
+			BranchID:    "426",
+			MultiBranch: "1",
+			UserID:      "abc123",
+			Search:      "aprospectid",
+		}
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
+		INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+		(	SELECT value 
+			FROM region_user ru WITH (nolock)
+			cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+			WHERE ru.user_id = 'abc123' 
+		)
+		AND b.lob_id='125'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
+				AddRow("ALL", `["426","436","429","431","442","428","430"]`))
+
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
 	COUNT(tt.ProspectID) AS totalRow
 	FROM
 	(
@@ -3292,10 +5714,10 @@ func TestGetInquirySearch(t *testing.T) {
 	LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 	LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 	) AS tt WHERE (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
-		WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
-			AddRow("27"))
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
+				AddRow("27"))
 
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
 	tt.*
 	FROM
 	(
@@ -3602,22 +6024,1136 @@ FROM
 			group_name = 'ProfessionID'
 	) pr2 ON tcs.ProfessionID = pr2.[key]
 ) AS tt WHERE (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
-		WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
-			AddRow("EFM03406412522151347", "BANDUNG", "426"))
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
+				AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
-	// Call the function
-	reason, _, err := repo.GetInquirySearch(req, 1)
+		// Call the function
+		reason, _, err := repo.GetInquirySearch(req, 1)
 
-	// Verify the result
-	if err != nil {
-		t.Fatalf("Expected no error, but got: %v", err)
-	}
-	assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
 
-	// Ensure all expectations were met
-	if err := mock.ExpectationsWereMet(); err != nil {
-		t.Fatalf("There were unfulfilled expectations: %s", err)
-	}
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success with region west java", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqSearchInquiry{
+			BranchID:    "426",
+			MultiBranch: "1",
+			UserID:      "abc123",
+			Search:      "aprospectid",
+		}
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
+		INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+		(	SELECT value 
+			FROM region_user ru WITH (nolock)
+			cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+			WHERE ru.user_id = 'abc123' 
+		)
+		AND b.lob_id='125'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
+				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
+
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.decision,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+		FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
+				AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		tt.*
+		FROM
+		(
+		SELECT
+		tm.ProspectID,
+		cb.BranchName,
+		cb.BranchID,
+		tst.activity,
+		tst.source_decision,
+		tst.decision,
+		CASE
+		  WHEN tst.status_process='FIN' AND tst.decision='APR' THEN 'Approve'
+		  WHEN tst.status_process='FIN' AND tst.decision='REJ' THEN 'Reject'
+		  WHEN tst.status_process='FIN' AND tst.decision='CAN' THEN 'Cancel'
+		  ELSE '-'
+		END AS FinalStatus,
+		CASE
+		  WHEN tps.ProspectID IS NOT NULL
+		  AND tcd.decision IS NULL THEN 1
+		  ELSE 0
+		END AS ActionReturn,
+		CASE
+		  WHEN tst.status_process='FIN'
+		  AND tst.activity='STOP'
+		  AND tst.decision='REJ' OR tst.decision='CAN' THEN 0
+		  ELSE 1
+		END AS ActionCancel,
+		CASE
+		  WHEN tst.status_process='FIN'
+		  AND tst.activity='STOP' THEN 1
+		  ELSE 0
+		END AS ActionFormAkk,
+		CASE
+		  WHEN tst.decision = 'CPR'
+		  AND tst.source_decision = 'CRA'
+		  AND tst.activity = 'UNPR'
+		  AND tcd.decision IS NULL THEN 1
+		  ELSE 0
+		END AS ShowAction,
+		CASE
+		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+		  ELSE 'NE'
+		END AS incoming_source,
+		tcp.CustomerID,
+		tcp.CustomerStatus,
+		tm.created_at,
+		tm.order_at,
+		tm.lob,
+		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+		scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+		tcp.BirthDate,
+		scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+		CASE
+		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
+		END AS 'Gender',
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
+		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+		edu.value AS Education,
+		mst.value AS MaritalStatus,
+		hst.value AS HomeStatus,
+		mn.value AS StaySinceMonth,
+		tcp.StaySinceYear,
+		ta.ProductOfferingID,
+		ta.dealer,
+		ta.LifeInsuranceFee,
+		ta.AssetInsuranceFee,
+		'KMB MOTOR' AS AssetType,
+		ti.asset_description,
+		ti.manufacture_year,
+		ti.color,
+		chassis_number,
+		engine_number,
+		interest_rate,
+		Tenor AS InstallmentPeriod,
+		OTR,
+		DPAmount,
+		AF AS FinanceAmount,
+		interest_amount,
+		insurance_amount,
+		AdminFee,
+		provision_fee,
+		NTF,
+		NTFAkumulasi,
+		(NTF + interest_amount) AS Total,
+		InstallmentAmount AS MonthlyInstallment,
+		FirstInstallment,
+		pr.value AS ProfessionID,
+		jt.value AS JobType,
+		jb.value AS JobPosition,
+		mn2.value AS EmploymentSinceMonth,
+		tce.EmploymentSinceYear,
+		tce.CompanyName,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
+		tcp.ExtCompanyPhone,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		tcp.SourceOtherIncome,
+		tcs.FullName AS SpouseLegalName,
+		tcs.CompanyName AS SpouseCompanyName,
+		tcs.CompanyPhone AS SpouseCompanyPhone,
+		tcs.MobilePhone AS SpouseMobilePhone,
+		tcs.IDNumber AS SpouseIDNumber,
+		pr2.value AS SpouseProfession,
+		em.Name AS EmconName,
+		em.Relationship,
+		em.MobilePhone AS EmconMobilePhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
+		tce.IndustryTypeID
+	  FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			created_at
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+
+		INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'Education'
+		) edu ON tcp.Education = edu.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MaritalStatus'
+		) mst ON tcp.MaritalStatus = mst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'HomeStatus'
+		) hst ON tcp.HomeStatus = hst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn ON tcp.StaySinceMonth = mn.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr ON tce.ProfessionID = pr.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobType'
+		) jt ON tce.JobType = jt.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobPosition'
+		) jb ON tce.JobPosition = jb.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr2 ON tcs.ProfessionID = pr2.[key]
+	) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
+				AddRow("EFM03406412522151347", "BANDUNG", "426"))
+
+		// Call the function
+		reason, _, err := repo.GetInquirySearch(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success with region null", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqSearchInquiry{
+			BranchID:    "426",
+			MultiBranch: "1",
+			UserID:      "abc123",
+			Search:      "aprospectid",
+		}
+
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.decision,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+		FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
+				AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		tt.*
+		FROM
+		(
+		SELECT
+		tm.ProspectID,
+		cb.BranchName,
+		cb.BranchID,
+		tst.activity,
+		tst.source_decision,
+		tst.decision,
+		CASE
+		  WHEN tst.status_process='FIN' AND tst.decision='APR' THEN 'Approve'
+		  WHEN tst.status_process='FIN' AND tst.decision='REJ' THEN 'Reject'
+		  WHEN tst.status_process='FIN' AND tst.decision='CAN' THEN 'Cancel'
+		  ELSE '-'
+		END AS FinalStatus,
+		CASE
+		  WHEN tps.ProspectID IS NOT NULL
+		  AND tcd.decision IS NULL THEN 1
+		  ELSE 0
+		END AS ActionReturn,
+		CASE
+		  WHEN tst.status_process='FIN'
+		  AND tst.activity='STOP'
+		  AND tst.decision='REJ' OR tst.decision='CAN' THEN 0
+		  ELSE 1
+		END AS ActionCancel,
+		CASE
+		  WHEN tst.status_process='FIN'
+		  AND tst.activity='STOP' THEN 1
+		  ELSE 0
+		END AS ActionFormAkk,
+		CASE
+		  WHEN tst.decision = 'CPR'
+		  AND tst.source_decision = 'CRA'
+		  AND tst.activity = 'UNPR'
+		  AND tcd.decision IS NULL THEN 1
+		  ELSE 0
+		END AS ShowAction,
+		CASE
+		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+		  ELSE 'NE'
+		END AS incoming_source,
+		tcp.CustomerID,
+		tcp.CustomerStatus,
+		tm.created_at,
+		tm.order_at,
+		tm.lob,
+		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+		scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+		tcp.BirthDate,
+		scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+		CASE
+		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
+		END AS 'Gender',
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
+		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+		edu.value AS Education,
+		mst.value AS MaritalStatus,
+		hst.value AS HomeStatus,
+		mn.value AS StaySinceMonth,
+		tcp.StaySinceYear,
+		ta.ProductOfferingID,
+		ta.dealer,
+		ta.LifeInsuranceFee,
+		ta.AssetInsuranceFee,
+		'KMB MOTOR' AS AssetType,
+		ti.asset_description,
+		ti.manufacture_year,
+		ti.color,
+		chassis_number,
+		engine_number,
+		interest_rate,
+		Tenor AS InstallmentPeriod,
+		OTR,
+		DPAmount,
+		AF AS FinanceAmount,
+		interest_amount,
+		insurance_amount,
+		AdminFee,
+		provision_fee,
+		NTF,
+		NTFAkumulasi,
+		(NTF + interest_amount) AS Total,
+		InstallmentAmount AS MonthlyInstallment,
+		FirstInstallment,
+		pr.value AS ProfessionID,
+		jt.value AS JobType,
+		jb.value AS JobPosition,
+		mn2.value AS EmploymentSinceMonth,
+		tce.EmploymentSinceYear,
+		tce.CompanyName,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
+		tcp.ExtCompanyPhone,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		tcp.SourceOtherIncome,
+		tcs.FullName AS SpouseLegalName,
+		tcs.CompanyName AS SpouseCompanyName,
+		tcs.CompanyPhone AS SpouseCompanyPhone,
+		tcs.MobilePhone AS SpouseMobilePhone,
+		tcs.IDNumber AS SpouseIDNumber,
+		pr2.value AS SpouseProfession,
+		em.Name AS EmconName,
+		em.Relationship,
+		em.MobilePhone AS EmconMobilePhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
+		tce.IndustryTypeID
+	  FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			created_at
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+
+		INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'Education'
+		) edu ON tcp.Education = edu.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MaritalStatus'
+		) mst ON tcp.MaritalStatus = mst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'HomeStatus'
+		) hst ON tcp.HomeStatus = hst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn ON tcp.StaySinceMonth = mn.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr ON tce.ProfessionID = pr.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobType'
+		) jt ON tce.JobType = jt.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobPosition'
+		) jb ON tce.JobPosition = jb.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr2 ON tcs.ProfessionID = pr2.[key]
+	) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
+				AddRow("EFM03406412522151347", "BANDUNG", "426"))
+
+		// Call the function
+		reason, _, err := repo.GetInquirySearch(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success without multi branch", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqSearchInquiry{
+			BranchID:    "426",
+			MultiBranch: "0",
+			UserID:      "abc123",
+			Search:      "aprospectid",
+		}
+
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.lob,
+			tm.created_at,
+			tst.activity,
+			tst.source_decision,
+			tst.decision,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+		FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') `)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
+				AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		tt.*
+		FROM
+		(
+		SELECT
+		tm.ProspectID,
+		cb.BranchName,
+		cb.BranchID,
+		tst.activity,
+		tst.source_decision,
+		tst.decision,
+		CASE
+		  WHEN tst.status_process='FIN' AND tst.decision='APR' THEN 'Approve'
+		  WHEN tst.status_process='FIN' AND tst.decision='REJ' THEN 'Reject'
+		  WHEN tst.status_process='FIN' AND tst.decision='CAN' THEN 'Cancel'
+		  ELSE '-'
+		END AS FinalStatus,
+		CASE
+		  WHEN tps.ProspectID IS NOT NULL
+		  AND tcd.decision IS NULL THEN 1
+		  ELSE 0
+		END AS ActionReturn,
+		CASE
+		  WHEN tst.status_process='FIN'
+		  AND tst.activity='STOP'
+		  AND tst.decision='REJ' OR tst.decision='CAN' THEN 0
+		  ELSE 1
+		END AS ActionCancel,
+		CASE
+		  WHEN tst.status_process='FIN'
+		  AND tst.activity='STOP' THEN 1
+		  ELSE 0
+		END AS ActionFormAkk,
+		CASE
+		  WHEN tst.decision = 'CPR'
+		  AND tst.source_decision = 'CRA'
+		  AND tst.activity = 'UNPR'
+		  AND tcd.decision IS NULL THEN 1
+		  ELSE 0
+		END AS ShowAction,
+		CASE
+		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+		  ELSE 'NE'
+		END AS incoming_source,
+		tcp.CustomerID,
+		tcp.CustomerStatus,
+		tm.created_at,
+		tm.order_at,
+		tm.lob,
+		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+		scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+		tcp.BirthDate,
+		scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+		CASE
+		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
+		END AS 'Gender',
+		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+		cal.Kelurahan AS LegalKelurahan,
+		cal.Kecamatan AS LegalKecamatan,
+		cal.ZipCode AS LegalZipcode,
+		cal.City AS LegalCity,
+		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+		car.Kelurahan AS ResidenceKelurahan,
+		car.Kecamatan AS ResidenceKecamatan,
+		car.ZipCode AS ResidenceZipcode,
+		car.City AS ResidenceCity,
+		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+		edu.value AS Education,
+		mst.value AS MaritalStatus,
+		hst.value AS HomeStatus,
+		mn.value AS StaySinceMonth,
+		tcp.StaySinceYear,
+		ta.ProductOfferingID,
+		ta.dealer,
+		ta.LifeInsuranceFee,
+		ta.AssetInsuranceFee,
+		'KMB MOTOR' AS AssetType,
+		ti.asset_description,
+		ti.manufacture_year,
+		ti.color,
+		chassis_number,
+		engine_number,
+		interest_rate,
+		Tenor AS InstallmentPeriod,
+		OTR,
+		DPAmount,
+		AF AS FinanceAmount,
+		interest_amount,
+		insurance_amount,
+		AdminFee,
+		provision_fee,
+		NTF,
+		NTFAkumulasi,
+		(NTF + interest_amount) AS Total,
+		InstallmentAmount AS MonthlyInstallment,
+		FirstInstallment,
+		pr.value AS ProfessionID,
+		jt.value AS JobType,
+		jb.value AS JobPosition,
+		mn2.value AS EmploymentSinceMonth,
+		tce.EmploymentSinceYear,
+		tce.CompanyName,
+		cac.AreaPhone AS CompanyAreaPhone,
+		cac.Phone AS CompanyPhone,
+		tcp.ExtCompanyPhone,
+		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+		cac.Kelurahan AS CompanyKelurahan,
+		cac.Kecamatan AS CompanyKecamatan,
+		car.ZipCode AS CompanyZipcode,
+		car.City AS CompanyCity,
+		tce.MonthlyFixedIncome,
+		tce.MonthlyVariableIncome,
+		tce.SpouseIncome,
+		tcp.SourceOtherIncome,
+		tcs.FullName AS SpouseLegalName,
+		tcs.CompanyName AS SpouseCompanyName,
+		tcs.CompanyPhone AS SpouseCompanyPhone,
+		tcs.MobilePhone AS SpouseMobilePhone,
+		tcs.IDNumber AS SpouseIDNumber,
+		pr2.value AS SpouseProfession,
+		em.Name AS EmconName,
+		em.Relationship,
+		em.MobilePhone AS EmconMobilePhone,
+	    scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+		cae.Kelurahan AS EmergencyKelurahan,
+		cae.Kecamatan AS EmergencyKecamatan,
+		cae.ZipCode AS EmergencyZipcode,
+		cae.City AS EmergencyCity,
+		cae.AreaPhone AS EmergencyAreaPhone,
+		cae.Phone AS EmergencyPhone,
+		tce.IndustryTypeID
+	  FROM
+		trx_master tm WITH (nolock)
+		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN (
+		  SELECT
+			ProspectID,
+			decision,
+			created_at
+		  FROM
+			trx_ca_decision WITH (nolock)
+		) tcd ON tm.ProspectID = tcd.ProspectID
+
+		INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'LEGAL'
+		  ) cal ON tm.ProspectID = cal.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'RESIDENCE'
+		  ) car ON tm.ProspectID = car.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'COMPANY'
+		  ) cac ON tm.ProspectID = cac.ProspectID
+		  INNER JOIN (
+			SELECT
+			  ProspectID,
+			  Address,
+			  RT,
+			  RW,
+			  Kelurahan,
+			  Kecamatan,
+			  ZipCode,
+			  City,
+			  Phone,
+			  AreaPhone
+			FROM
+			  trx_customer_address WITH (nolock)
+			WHERE
+			  "Type" = 'EMERGENCY'
+		  ) cae ON tm.ProspectID = cae.ProspectID
+		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'Education'
+		) edu ON tcp.Education = edu.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MaritalStatus'
+		) mst ON tcp.MaritalStatus = mst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'HomeStatus'
+		) hst ON tcp.HomeStatus = hst.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn ON tcp.StaySinceMonth = mn.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr ON tce.ProfessionID = pr.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobType'
+		) jt ON tce.JobType = jt.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'JobPosition'
+		) jb ON tce.JobPosition = jb.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'MonthName'
+		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+		LEFT JOIN (
+		  SELECT
+			[key],
+			value
+		  FROM
+			app_config ap WITH (nolock)
+		  WHERE
+			group_name = 'ProfessionID'
+		) pr2 ON tcs.ProfessionID = pr2.[key]
+	) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
+				AddRow("EFM03406412522151347", "BANDUNG", "426"))
+
+		// Call the function
+		reason, _, err := repo.GetInquirySearch(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
 }
 
 func TestGetApprovalReason(t *testing.T) {

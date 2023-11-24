@@ -2,7 +2,9 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	mocksCache "los-kmb-api/domain/cache/mocks"
 	"los-kmb-api/domain/cms/mocks"
 	"los-kmb-api/models/entity"
@@ -10,9 +12,14 @@ import (
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
+	"os"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/allegro/bigcache/v3"
+	"github.com/go-resty/resty/v2"
+	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -1491,14 +1498,15 @@ func TestCancelOrder(t *testing.T) {
 		var cache *bigcache.BigCache
 		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
 
-		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Process Cancel Order error")
+		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dapat dicancel")
 
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(entity.TrxStatus{
 			Activity:       constant.ACTIVITY_STOP,
 			SourceDecision: constant.DB_DECISION_REJECT,
+			Decision:       constant.DB_DECISION_REJECT,
 		}, errSave).Once()
 
-		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_UPSTREAM + " - Process Cancel Order error")).Once()
+		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dapat dicancel")).Once()
 
 		_, err := usecase.CancelOrder(context.Background(), req)
 
@@ -1547,7 +1555,7 @@ func TestSubmitDecision(t *testing.T) {
 			ProspectID:     req.ProspectID,
 			StatusProcess:  constant.STATUS_ONPROCESS,
 			Activity:       constant.ACTIVITY_UNPROCESS,
-			Decision:       constant.DB_DECISION_APR,
+			Decision:       constant.DB_DECISION_CREDIT_PROCESS,
 			RuleCode:       constant.CODE_CBM,
 			SourceDecision: constant.DB_DECISION_BRANCH_MANAGER,
 			Reason:         req.SlikResult,
@@ -1628,7 +1636,7 @@ func TestSubmitDecision(t *testing.T) {
 			ProspectID:     req.ProspectID,
 			StatusProcess:  constant.STATUS_ONPROCESS,
 			Activity:       constant.ACTIVITY_UNPROCESS,
-			Decision:       constant.DB_DECISION_REJECT,
+			Decision:       constant.DB_DECISION_CREDIT_PROCESS,
 			RuleCode:       constant.CODE_CBM,
 			SourceDecision: constant.DB_DECISION_BRANCH_MANAGER,
 			Reason:         req.SlikResult,
@@ -2074,12 +2082,12 @@ func TestUsecaseGetSearchInquiry(t *testing.T) {
 
 func TestSubmitApproval(t *testing.T) {
 	var (
-		errSave        error
-		trxStatus      entity.TrxStatus
-		trxDetail      entity.TrxDetail
-		trxRecalculate entity.TrxRecalculate
-		approvalScheme response.RespApprovalScheme
-		req            request.ReqSubmitApproval
+		errSave error
+		// trxStatus      entity.TrxStatus
+		// trxDetail      entity.TrxDetail
+		// trxRecalculate entity.TrxRecalculate
+		// approvalScheme response.RespApprovalScheme
+		// req            request.ReqSubmitApproval
 	)
 
 	t.Run("ValidSubmitApprovalCaseApprove", func(t *testing.T) {
@@ -2087,7 +2095,7 @@ func TestSubmitApproval(t *testing.T) {
 		mockHttpClient := new(httpclient.MockHttpClient)
 		var cache *bigcache.BigCache
 		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
-		req = request.ReqSubmitApproval{
+		req := request.ReqSubmitApproval{
 			ProspectID:    "TST-DEV",
 			FinalApproval: "GMC",
 			Decision:      constant.DECISION_APPROVE,
@@ -2099,14 +2107,14 @@ func TestSubmitApproval(t *testing.T) {
 			DecisionBy:    "User123",
 		}
 
-		approvalScheme = response.RespApprovalScheme{
+		approvalScheme := response.RespApprovalScheme{
 			Name:         "Branch Manager",
 			NextStep:     "DRM",
 			IsFinal:      false,
 			IsEscalation: false,
 		}
 
-		trxStatus = entity.TrxStatus{
+		trxStatus := entity.TrxStatus{
 			ProspectID:     req.ProspectID,
 			StatusProcess:  constant.STATUS_ONPROCESS,
 			Activity:       constant.ACTIVITY_UNPROCESS,
@@ -2116,7 +2124,7 @@ func TestSubmitApproval(t *testing.T) {
 			Reason:         req.Reason,
 		}
 
-		trxDetail = entity.TrxDetail{
+		trxDetail := entity.TrxDetail{
 			ProspectID:     req.ProspectID,
 			StatusProcess:  constant.STATUS_ONPROCESS,
 			Activity:       constant.ACTIVITY_PROCESS,
@@ -2129,7 +2137,7 @@ func TestSubmitApproval(t *testing.T) {
 			Reason:         req.Reason,
 		}
 
-		mockRepository.On("SubmitApproval", req, trxStatus, trxDetail, trxRecalculate, approvalScheme).Return(errSave).Once()
+		mockRepository.On("SubmitApproval", req, trxStatus, trxDetail, entity.TrxRecalculate{}, approvalScheme).Return(errSave).Once()
 
 		result, err := usecase.SubmitApproval(context.Background(), req)
 
@@ -2170,4 +2178,310 @@ func TestSubmitApproval(t *testing.T) {
 		// Verifikasi bahwa error yang diharapkan terjadi
 		require.Equal(t, errFinal, err)
 	})
+}
+
+func TestRecalculateOrder(t *testing.T) {
+	var (
+		errSave            error
+		trxStatus          entity.TrxStatus
+		trxDetail          entity.TrxDetail
+		trxHistoryApproval entity.TrxHistoryApprovalScheme
+	)
+
+	req := request.ReqRecalculateOrder{
+		ProspectID: "TST-DEV",
+		DPAmount:   123456.55,
+		CreatedBy:  "agsa6srt",
+		DecisionBy: "User123",
+	}
+
+	trxStatus = entity.TrxStatus{
+		ProspectID:     req.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_UNPROCESS,
+		Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+		SourceDecision: constant.NEED_RECALCULATE,
+		Reason:         constant.REASON_NEED_RECALCULATE,
+	}
+
+	infoMap := map[string]float64{
+		"dp_amount": req.DPAmount,
+	}
+	info, _ := json.Marshal(infoMap)
+
+	trxDetail = entity.TrxDetail{
+		ProspectID:     req.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_PROCESS,
+		Decision:       constant.DB_DECISION_PASS,
+		RuleCode:       constant.CODE_CREDIT_COMMITTEE,
+		SourceDecision: constant.DB_DECISION_CREDIT_ANALYST,
+		NextStep:       constant.NEED_RECALCULATE,
+		Info:           string(info),
+		CreatedBy:      req.CreatedBy,
+		Reason:         constant.REASON_NEED_RECALCULATE,
+	}
+
+	trxHistoryApproval = entity.TrxHistoryApprovalScheme{
+		ProspectID:            req.ProspectID,
+		Decision:              constant.DB_DECISION_SDP,
+		Reason:                trxStatus.Reason,
+		Note:                  fmt.Sprintf("Nilai DP: %.0f", req.DPAmount),
+		CreatedBy:             req.CreatedBy,
+		DecisionBy:            req.DecisionBy,
+		NeedEscalation:        0,
+		NextFinalApprovalFlag: 1,
+		SourceDecision:        trxDetail.SourceDecision,
+	}
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	accessToken := "token"
+	ctx := context.Background()
+
+	t.Run("error_timeout", func(t *testing.T) {
+		mockRepository := new(mocks.Repository)
+		mockHttpClient := new(httpclient.MockHttpClient)
+		var cache *bigcache.BigCache
+		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+
+		responseCode := 504
+		errMsg := errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Submit Recalculate to Sally Timeout")
+
+		rst := resty.New()
+		httpmock.ActivateNonDefault(rst.GetClient())
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("SUBMIT_RECALCULATE_SALLY"), httpmock.NewStringResponder(responseCode, errMsg.Error()))
+		resp, _ := rst.R().Post(os.Getenv("SUBMIT_RECALCULATE_SALLY"))
+
+		mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("SUBMIT_RECALCULATE_SALLY"), mock.Anything, mock.Anything, constant.METHOD_POST, false, 0, timeout, req.ProspectID, accessToken).Return(resp, errMsg).Once()
+
+		mockRepository.On("ProcessRecalculateOrder", req.ProspectID, trxStatus, trxDetail, trxHistoryApproval).Return(nil).Once()
+
+		_, err := usecase.RecalculateOrder(context.Background(), req, mock.Anything)
+
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("error_500", func(t *testing.T) {
+		mockRepository := new(mocks.Repository)
+		mockHttpClient := new(httpclient.MockHttpClient)
+		var cache *bigcache.BigCache
+		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+
+		responseCode := 500
+		errMsg := errors.New(constant.ERROR_UPSTREAM + " - Submit Recalculate to Sally Error")
+
+		rst := resty.New()
+		httpmock.ActivateNonDefault(rst.GetClient())
+		defer httpmock.DeactivateAndReset()
+
+		httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("SUBMIT_RECALCULATE_SALLY"), httpmock.NewStringResponder(responseCode, errMsg.Error()))
+		resp, _ := rst.R().Post(os.Getenv("SUBMIT_RECALCULATE_SALLY"))
+
+		mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("SUBMIT_RECALCULATE_SALLY"), mock.Anything, mock.Anything, constant.METHOD_POST, false, 0, timeout, req.ProspectID, accessToken).Return(resp, errMsg).Once()
+
+		mockRepository.On("ProcessRecalculateOrder", req.ProspectID, trxStatus, trxDetail, trxHistoryApproval).Return(nil).Once()
+
+		_, err := usecase.RecalculateOrder(context.Background(), req, mock.Anything)
+
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("bad_request", func(t *testing.T) {
+		mockRepository := new(mocks.Repository)
+		mockHttpClient := new(httpclient.MockHttpClient)
+		var cache *bigcache.BigCache
+		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+
+		responseCode := 200
+
+		rst := resty.New()
+		httpmock.ActivateNonDefault(rst.GetClient())
+		defer httpmock.DeactivateAndReset()
+
+		errMsg := errors.New(constant.ERROR_BAD_REQUEST + " - Submit Recalculate to Sally Error")
+
+		responseData := `
+			"code":200,
+			"message": "operasi berhasil dieksekusi.",
+			"data": null,
+			"errors":null,
+			"request_id":"6186be53-2d5e-42d9-becf-abb98a9306d0",
+			"timestamp":"2022-11-21 15:39:33"
+		 }`
+		httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("SUBMIT_RECALCULATE_SALLY"), httpmock.NewStringResponder(responseCode, responseData))
+		resp, _ := rst.R().Post(os.Getenv("SUBMIT_RECALCULATE_SALLY"))
+
+		mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("SUBMIT_RECALCULATE_SALLY"), mock.Anything, mock.Anything, constant.METHOD_POST, false, 0, timeout, req.ProspectID, accessToken).Return(resp, nil).Once()
+
+		mockRepository.On("ProcessRecalculateOrder", req.ProspectID, trxStatus, trxDetail, trxHistoryApproval).Return(nil).Once()
+
+		_, err := usecase.RecalculateOrder(context.Background(), req, mock.Anything)
+		assert.Equal(t, errMsg, err)
+	})
+
+	t.Run("success_200_err_save_process", func(t *testing.T) {
+		mockRepository := new(mocks.Repository)
+		mockHttpClient := new(httpclient.MockHttpClient)
+		var cache *bigcache.BigCache
+		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+
+		responseCode := 200
+
+		rst := resty.New()
+		httpmock.ActivateNonDefault(rst.GetClient())
+		defer httpmock.DeactivateAndReset()
+
+		responseData := `{
+			"code":200,
+			"message": "operasi berhasil dieksekusi.",
+			"data": null,
+			"errors":null,
+			"request_id":"6186be53-2d5e-42d9-becf-abb98a9306d0",
+			"timestamp":"2022-11-21 15:39:33"
+		 }`
+		httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("SUBMIT_RECALCULATE_SALLY"), httpmock.NewStringResponder(responseCode, responseData))
+		resp, _ := rst.R().Post(os.Getenv("SUBMIT_RECALCULATE_SALLY"))
+
+		mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("SUBMIT_RECALCULATE_SALLY"), mock.Anything, mock.Anything, constant.METHOD_POST, false, 0, timeout, req.ProspectID, accessToken).Return(resp, nil).Once()
+
+		errSave = errors.New(constant.ERROR_UPSTREAM + " - Process Recalculate Order error")
+
+		mockRepository.On("ProcessRecalculateOrder", req.ProspectID, trxStatus, trxDetail, trxHistoryApproval).Return(errSave).Once()
+
+		_, err := usecase.RecalculateOrder(context.Background(), req, mock.Anything)
+		assert.Equal(t, errSave, err)
+	})
+
+	t.Run("success_200", func(t *testing.T) {
+		mockRepository := new(mocks.Repository)
+		mockHttpClient := new(httpclient.MockHttpClient)
+		var cache *bigcache.BigCache
+		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+
+		responseCode := 200
+
+		rst := resty.New()
+		httpmock.ActivateNonDefault(rst.GetClient())
+		defer httpmock.DeactivateAndReset()
+
+		responseData := `{
+			"code":200,
+			"message": "operasi berhasil dieksekusi.",
+			"data": null,
+			"errors":null,
+			"request_id":"6186be53-2d5e-42d9-becf-abb98a9306d0",
+			"timestamp":"2022-11-21 15:39:33"
+		 }`
+		httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("SUBMIT_RECALCULATE_SALLY"), httpmock.NewStringResponder(responseCode, responseData))
+		resp, _ := rst.R().Post(os.Getenv("SUBMIT_RECALCULATE_SALLY"))
+
+		mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("SUBMIT_RECALCULATE_SALLY"), mock.Anything, mock.Anything, constant.METHOD_POST, false, 0, timeout, req.ProspectID, accessToken).Return(resp, nil).Once()
+
+		mockRepository.On("ProcessRecalculateOrder", req.ProspectID, trxStatus, trxDetail, trxHistoryApproval).Return(nil).Once()
+
+		result, err := usecase.RecalculateOrder(context.Background(), req, mock.Anything)
+		fmt.Println(result)
+		if err != nil {
+			t.Errorf("Expected no error, but got: %v", err)
+		}
+
+		// Verifikasi bahwa data yang dikembalikan sesuai dengan ekspektasi
+		// Anda dapat menambahkan lebih banyak asserstion sesuai kebutuhan
+		assert.Equal(t, constant.RECALCULATE_STATUS_SUCCESS, result.Status)
+	})
+
+}
+
+func TestGetInquiryApproval(t *testing.T) {
+
+	testcases := []struct {
+		name           string
+		rowInquiry     int
+		industryType   []byte
+		req            request.ReqInquiryApproval
+		data           []entity.InquiryDataApproval
+		industry       []entity.SpIndustryTypeMaster
+		inquiry        []entity.InquiryCa
+		photos         []entity.DataPhoto
+		surveyor       []entity.TrxSurveyor
+		histories      []entity.HistoryApproval
+		internalRecord []entity.TrxInternalRecord
+		errGet         error
+		errFinal       error
+	}{
+		{
+			name:           "test empty data",
+			req:            request.ReqInquiryApproval{},
+			industry:       []entity.SpIndustryTypeMaster{},
+			photos:         []entity.DataPhoto{},
+			surveyor:       []entity.TrxSurveyor{},
+			histories:      []entity.HistoryApproval{},
+			internalRecord: []entity.TrxInternalRecord{},
+			inquiry:        []entity.InquiryCa{},
+			data:           []entity.InquiryDataApproval{},
+			errGet:         errors.New(constant.ERROR_UPSTREAM + " - Get Inquiry Approval"),
+			errFinal:       errors.New(constant.ERROR_UPSTREAM + " - Get Inquiry Approval"),
+			rowInquiry:     0,
+		},
+		{
+			name: "test success get inquiry",
+			req:  request.ReqInquiryApproval{},
+			// industryType:   nil,
+			industry: []entity.SpIndustryTypeMaster{},
+			photos: []entity.DataPhoto{
+				{
+					PhotoID: "xxx",
+					Url:     "xxx",
+				},
+			},
+			surveyor: []entity.TrxSurveyor{
+				{
+					SurveyorName: "abcde",
+					Status:       constant.DECISION_APPROVE,
+				},
+			},
+			histories: []entity.HistoryApproval{
+				{
+					Decision: constant.DB_DECISION_APR,
+				},
+			},
+			internalRecord: []entity.TrxInternalRecord{
+				{
+					ProspectID: "xxxx",
+				},
+			},
+			inquiry: []entity.InquiryCa{
+				{
+					Activity:       constant.ACTIVITY_UNPROCESS,
+					SourceDecision: constant.PRESCREENING,
+				},
+			},
+			data:       []entity.InquiryDataApproval{entity.InquiryDataApproval{CA: entity.DataApproval{ShowAction: false, ActionFormAkk: false, IsLastApproval: false, HasReturn: false, StatusDecision: "", StatusReason: "", FinalApproval: "", CaDecision: "", CaNote: "", ActionDate: "", ScsDate: "", ScsScore: "", ScsStatus: "", BiroCustomerResult: "", BiroSpouseResult: ""}, InternalRecord: []entity.TrxInternalRecord{entity.TrxInternalRecord{ProspectID: "", CustomerID: "", ApplicationID: "", ProductType: "", AgreementDate: time.Time{}, AssetCode: "", Tenor: 0, OutstandingPrincipal: 0, InstallmentAmount: 0, ContractStatus: "", CurrentCondition: "", CreatedAt: time.Time{}}}, Approval: []entity.HistoryApproval{entity.HistoryApproval{Decision: "APR", Note: "", CreatedAt: time.Time{}, DecisionBy: "", NeedEscalation: interface{}(nil), NextFinalApprovalFlag: 0, SourceDecision: "", NextStep: "", SlikResult: ""}}, General: entity.DataGeneral{ProspectID: "", BranchName: "", IncomingSource: "", CreatedAt: "", OrderAt: ""}, Personal: entity.CustomerPersonal{ProspectID: "", IDType: "", IDNumber: "", IDTypeIssueDate: interface{}(nil), ExpiredDate: interface{}(nil), LegalName: "", FullName: "", BirthPlace: "", BirthDate: time.Time{}, SurgateMotherName: "", Gender: "", PersonalNPWP: (*string)(nil), MobilePhone: "", Email: "", HomeStatus: "", StaySinceYear: "", StaySinceMonth: "", Education: "", MaritalStatus: "", NumOfDependence: 0, LivingCostAmount: 0, Religion: "", CreatedAt: time.Time{}, ExtCompanyPhone: (*string)(nil), SourceOtherIncome: (*string)(nil), JobStatus: "", EmergencyOfficeAreaPhone: "", EmergencyOfficePhone: "", PersonalCustomerType: "", Nationality: "", WNACountry: "", HomeLocation: "", CustomerGroup: "", KKNo: "", BankID: "", AccountNo: "", AccountName: "", Counterpart: 0, DebtBusinessScale: "", DebtGroup: "", IsAffiliateWithPP: "", AgreetoAcceptOtherOffering: 0, DataType: "", Status: "", IsPV: (*int)(nil), IsRCA: (*int)(nil), CustomerID: "", CustomerStatus: "", SurveyResult: "", RentFinishDate: (*string)(nil)}, Spouse: entity.CustomerSpouse{ProspectID: "", IDNumber: "", FullName: "", LegalName: "", BirthPlace: "", BirthDate: time.Time{}, SurgateMotherName: "", Gender: "", CompanyPhone: "", CompanyName: "", MobilePhone: "", ProfessionID: "", CreatedAt: time.Time{}}, Employment: entity.CustomerEmployment{ProspectID: "", ProfessionID: "", JobType: "", JobPosition: "", CompanyName: "", IndustryTypeID: "SuccessRetrieve", EmploymentSinceYear: "", EmploymentSinceMonth: "", MonthlyFixedIncome: 0, MonthlyVariableIncome: 0, SpouseIncome: 0, CreatedAt: time.Time{}}, ItemApk: entity.DataItemApk{Supplier: "", ProductOfferingID: "", AssetDescription: "", AssetType: "", ManufacturingYear: "", Color: "", ChassisNumber: "", EngineNumber: "", InterestRate: 0, Tenor: 0, OTR: 0, DPAmount: 0, AF: 0, InterestAmount: 0, LifeInsuranceFee: 0, AssetInsuranceFee: 0, InsuranceAmount: 0, AdminFee: 0, ProvisionFee: 0, NTF: 0, NTFAkumulasi: 0, NTFPlusInterestAmount: 0, InstallmentAmount: 0, FirstInstallment: ""}, Surveyor: []entity.TrxSurveyor{entity.TrxSurveyor{ProspectID: "", Destination: "", RequestDate: time.Time{}, RequestInfo: (*string)(nil), AssignDate: time.Time{}, SurveyorName: "abcde", ResultDate: time.Time{}, Status: "APPROVE", SurveyorNote: (*string)(nil), CreatedAt: time.Time{}}}, Emcon: entity.CustomerEmcon{ProspectID: "", Name: "", Relationship: "", MobilePhone: "", CreatedAt: time.Time{}, EmconVerified: "", VerifyBy: "", KnownCustomerJob: "", KnownCustomerAddress: "", VerificationWith: ""}, Address: entity.DataAddress{LegalAddress: "", LegalRTRW: "", LegalKelurahan: "", LegalKecamatan: "", LegalZipCode: "", LegalCity: "", ResidenceAddress: "", ResidenceRTRW: "", ResidenceKelurahan: "", ResidenceKecamatan: "", ResidenceZipCode: "", ResidenceCity: "", CompanyAddress: "", CompanyRTRW: "", CompanyKelurahan: "", CompanyKecamatan: "", CompanyZipCode: "", CompanyCity: "", CompanyAreaPhone: "", CompanyPhone: "", EmergencyAddress: "", EmergencyRTRW: "", EmergencyKelurahan: "", EmergencyKecamatan: "", EmergencyZipcode: "", EmergencyCity: "", EmergencyAreaPhone: "", EmergencyPhone: ""}, Photo: []entity.DataPhoto{entity.DataPhoto{PhotoID: "xxx", Label: "", Url: "xxx"}}}},
+			rowInquiry: 1,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+			mocksCache := &mocksCache.Repository{}
+			usecase := NewUsecase(mockRepository, mockHttpClient, mocksCache)
+			mocksCache.On("Get", mock.Anything).Return([]byte("SuccessRetrieve"), nil)
+			mockRepository.On("GetInquiryApproval", tc.req, 1).Return(tc.inquiry, tc.rowInquiry, tc.errGet).Once()
+			mockRepository.On("GetSpIndustryTypeMaster").Return(tc.industry, tc.errGet).Once()
+			mockRepository.On("GetCustomerPhoto", mock.Anything).Return(tc.photos, nil).Once()
+			mockRepository.On("GetSurveyorData", mock.Anything).Return(tc.surveyor, nil).Once()
+			mockRepository.On("GetHistoryApproval", mock.Anything).Return(tc.histories, nil).Once()
+			mockRepository.On("GetInternalRecord", mock.Anything).Return(tc.internalRecord, nil).Once()
+
+			result, rowTotal, err := usecase.GetInquiryApproval(context.Background(), tc.req, mock.Anything)
+			assert.Equal(t, tc.errFinal, err)
+			assert.Equal(t, tc.rowInquiry, rowTotal)
+			assert.Equal(t, tc.data, result)
+		})
+	}
 }

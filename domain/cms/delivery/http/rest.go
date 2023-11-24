@@ -726,5 +726,9 @@ func (c *handlerCMS) SubmitApproval(ctx echo.Context) (err error) {
 		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", req, err)
 	}
 
+	if data.IsFinal && !data.NeedEscalation && data.Decision != constant.DECISION_RETURN {
+		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(data), 0)
+	}
+
 	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", req, data)
 }
