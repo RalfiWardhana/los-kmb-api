@@ -1206,19 +1206,26 @@ func TestSubmitApproval(t *testing.T) {
 
 		data, _ := json.Marshal(body)
 
+		reqID := utils.GenerateUUID()
+
 		// Create a request and recorder for testing
 		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/approval/submit-approval", strings.NewReader(string(data)))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderXRequestID, reqID)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
-		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+		c.Set(constant.HeaderXRequestID, reqID)
 
-		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
 		mockUsecase.On("SubmitApproval", mock.Anything, mock.Anything).Return(response.ApprovalResponse{}, errData).Once()
 
-		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+		mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
 		// Call the handler
 		err := handler.SubmitApproval(c)
@@ -1234,8 +1241,12 @@ func TestSubmitApproval(t *testing.T) {
 		rec := httptest.NewRecorder()
 
 		ctx := e.NewContext(req, rec)
+		reqID := utils.GenerateUUID()
+		ctx.Set(constant.HeaderXRequestID, reqID)
 
-		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
 		err := handler.SubmitApproval(ctx)
 		assert.Nil(t, err)
@@ -1250,13 +1261,17 @@ func TestSubmitApproval(t *testing.T) {
 		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/approval/submit-approval", bytes.NewBuffer(data))
 		rec := httptest.NewRecorder()
 
+		reqID := utils.GenerateUUID()
 		ctx := e.NewContext(req, rec)
 		ctx.Request().Header.Add("content-type", "application/json")
+		ctx.Set(constant.HeaderXRequestID, reqID)
+
+		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 		mockResponse := response.ApprovalResponse{}
 		statusCode := http.StatusBadRequest
 
-		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+		mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
 		mockUsecase.On("SubmitApproval", mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
 
@@ -1302,8 +1317,6 @@ func TestRecalculateOrder(t *testing.T) {
 
 		c.Set(constant.HeaderXRequestID, reqID)
 
-		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
-
 		mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
 		mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
@@ -1329,8 +1342,6 @@ func TestRecalculateOrder(t *testing.T) {
 		reqID := utils.GenerateUUID()
 		ctx.Set(constant.HeaderXRequestID, reqID)
 
-		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
 		mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
 		err := handler.RecalculateOrder(ctx)
@@ -1355,8 +1366,6 @@ func TestRecalculateOrder(t *testing.T) {
 		statusCode := http.StatusBadRequest
 
 		mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
-
-		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		mockUsecase.On("RecalculateOrder", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
 
