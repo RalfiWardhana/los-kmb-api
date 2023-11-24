@@ -39,6 +39,7 @@ func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interf
 	kmbroute.POST("/produce/journey-after-prescreening", handler.ProduceJourneyAfterPrescreening, middlewares.AccessMiddleware())
 	kmbroute.POST("/recalculate", handler.Recalculate, middlewares.AccessMiddleware())
 	kmbroute.POST("/insert-staging/:prospectID", handler.InsertStagingIndex, middlewares.AccessMiddleware())
+	kmbroute.POST("/go-live", handler.GoLive, middlewares.AccessMiddleware())
 }
 
 // Produce Journey
