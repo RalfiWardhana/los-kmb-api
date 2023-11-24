@@ -2997,6 +2997,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 					CountRetry:      0,
 					Activity:        constant.ACTIVITY_UNPROCESS,
 				}).Error; newErr != nil {
+					tx.Rollback()
 					return newErr
 				}
 
