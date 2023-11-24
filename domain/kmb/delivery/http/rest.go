@@ -187,3 +187,47 @@ func (c *handlerKMB) InsertStagingIndex(ctx echo.Context) (err error) {
 	ctxJson, _ = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Insert Staging Success", prospectID, data)
 	return ctxJson
 }
+
+// Produce Sync Go-Live
+// @Description Sync Go-Live
+// @Tags Sync Go-Live
+// @Produce json
+// @Param body body request.Metrics true "Body payload"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/go-live [post]
+func (c *handlerKMB) GoLive(ctx echo.Context) (err error) {
+
+	var (
+		req     request.SyncGoLive
+		resp    interface{}
+		ctxJson error
+	)
+
+	// Save Log Orchestrator
+	defer func() {
+		go c.repository.SaveLogOrchestrator(ctx.Request().Header, req, resp, "/api/v3/kmb/go-live", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
+	}()
+
+	err = c.authorization.Authorization(dto.AuthModel{
+		ClientID:   ctx.Request().Header.Get(constant.HEADER_CLIENT_ID),
+		Credential: ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION),
+	}, time.Now().Local())
+
+	if err != nil {
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Sync Go-Live", req.ProspectID, err)
+		return ctxJson
+	}
+
+	if err := ctx.Bind(&req); err != nil {
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Sync Go-Live", req, err)
+		return ctxJson
+	}
+
+	ctxJson, resp = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Sync Go-Live", req, req)
+
+	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK_GOLIVE, req.ProspectID, utils.StructToMap(resp), 0)
+
+	return ctxJson
+}
