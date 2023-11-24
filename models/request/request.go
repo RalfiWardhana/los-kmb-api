@@ -317,6 +317,17 @@ type DsrSpouse struct {
 	BirthDate  string `json:"birth_date"`
 }
 
+type SyncGoLive struct {
+	ProspectID           string  `json:"prospect_id"`
+	AgreementNo          string  `json:"agreement_no"`
+	ApplicationID        string  `json:"application_id"`
+	FinalDisbursedAmount float64 `json:"final_disbursed_amount"`
+	GoLiveStatus         string  `json:"go_live_status"`
+	GoLiveDate           string  `json:"go_live_date"`
+	PayToAgentAmount     float64 `json:"pay_to_agent_amount"`
+	PayToAgentDate       float64 `json:"pay_to_agent_date"`
+}
+
 type AfterPrescreening struct {
 	ProspectID string `json:"prospect_id" validate:"required,max=20" example:"SAL042600001"`
 }
