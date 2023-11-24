@@ -325,7 +325,7 @@ type SyncGoLive struct {
 	GoLiveStatus         string  `json:"go_live_status"`
 	GoLiveDate           string  `json:"go_live_date"`
 	PayToAgentAmount     float64 `json:"pay_to_agent_amount"`
-	PayToAgentDate       float64 `json:"pay_to_agent_date"`
+	PayToAgentDate       string  `json:"pay_to_agent_date"`
 }
 
 type AfterPrescreening struct {
