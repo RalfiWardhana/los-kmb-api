@@ -7452,7 +7452,10 @@ func TestGetAkkk(t *testing.T) {
 		ta.LatestInstallment,
 		ta2.NTFAkumulasi,
 		(CAST(ISNULL(ta2.InstallmentAmount, 0) AS NUMERIC(17,2)) +
-		CAST(ISNULL(tf.total_installment_amount_biro, 0) AS NUMERIC(17,2)) +
+		CASE 
+			WHEN ta.TotalDSR = ta.DSRFMF THEN 0
+			ELSE CAST(ISNULL(tf.total_installment_amount_biro, 0) AS NUMERIC(17,2))
+		END +
 		CAST(ISNULL(ta.InstallmentAmountFMF, 0) AS NUMERIC(17,2)) +
 		CAST(ISNULL(ta.InstallmentAmountSpouseFMF, 0) AS NUMERIC(17,2)) +
 		CAST(ISNULL(ta.InstallmentAmountOther, 0) AS NUMERIC(17,2)) +
@@ -7461,7 +7464,10 @@ func TestGetAkkk(t *testing.T) {
 		(CAST(ISNULL(tce.MonthlyFixedIncome, 0) AS NUMERIC(17,2)) +
 		CAST(ISNULL(tce.MonthlyVariableIncome, 0) AS NUMERIC(17,2)) +
 		CAST(ISNULL(tce.SpouseIncome, 0) AS NUMERIC(17,2)) ) as TotalIncome,
-		ta.TotalDSR,
+		CASE 
+			WHEN ta.TotalDSR IS NULL THEN CAST(ISNULL(ta.DSRFMF, 0) AS NUMERIC(17,2)) + CAST(ISNULL(ta.DSRPBK, 0) AS NUMERIC(17,2))
+			ELSE ta.TotalDSR
+		END as TotalDSR,
 		ta.EkycSource,
 		ta.EkycSimiliarity,
 		ta.EkycReason,
@@ -7631,7 +7637,10 @@ func TestGetAkkk(t *testing.T) {
 		ta.LatestInstallment,
 		ta2.NTFAkumulasi,
 		(CAST(ISNULL(ta2.InstallmentAmount, 0) AS NUMERIC(17,2)) +
-		CAST(ISNULL(tf.total_installment_amount_biro, 0) AS NUMERIC(17,2)) +
+		CASE 
+			WHEN ta.TotalDSR = ta.DSRFMF THEN 0
+			ELSE CAST(ISNULL(tf.total_installment_amount_biro, 0) AS NUMERIC(17,2))
+		END +
 		CAST(ISNULL(ta.InstallmentAmountFMF, 0) AS NUMERIC(17,2)) +
 		CAST(ISNULL(ta.InstallmentAmountSpouseFMF, 0) AS NUMERIC(17,2)) +
 		CAST(ISNULL(ta.InstallmentAmountOther, 0) AS NUMERIC(17,2)) +
@@ -7640,7 +7649,10 @@ func TestGetAkkk(t *testing.T) {
 		(CAST(ISNULL(tce.MonthlyFixedIncome, 0) AS NUMERIC(17,2)) +
 		CAST(ISNULL(tce.MonthlyVariableIncome, 0) AS NUMERIC(17,2)) +
 		CAST(ISNULL(tce.SpouseIncome, 0) AS NUMERIC(17,2)) ) as TotalIncome,
-		ta.TotalDSR,
+		CASE 
+			WHEN ta.TotalDSR IS NULL THEN CAST(ISNULL(ta.DSRFMF, 0) AS NUMERIC(17,2)) + CAST(ISNULL(ta.DSRPBK, 0) AS NUMERIC(17,2))
+			ELSE ta.TotalDSR
+		END as TotalDSR,
 		ta.EkycSource,
 		ta.EkycSimiliarity,
 		ta.EkycReason,
@@ -10030,7 +10042,9 @@ func TestProcessRecalculateOrder(t *testing.T) {
 
 func TestSubmitApproval(t *testing.T) {
 	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
-
+	os.Setenv("CLIENT_LOS", "2ck21b02")
+	os.Setenv("AUTH_LOS", "xYtKHAWHn2sZLm1IbXXu")
+	os.Setenv("INSERT_STAGING_URL", "http://10.9.100.131/los-kmb-api/api/v3/kmb/insert-staging")
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
 
@@ -10052,7 +10066,7 @@ func TestSubmitApproval(t *testing.T) {
 	pas := constant.DB_DECISION_PASS
 	rtn := constant.DB_DECISION_RTN
 	cpr := constant.DB_DECISION_CREDIT_PROCESS
-	// cra := constant.DB_DECISION_CREDIT_ANALYST
+	cra := constant.DB_DECISION_CREDIT_ANALYST
 	onp := constant.STATUS_ONPROCESS
 	unpr := constant.ACTIVITY_UNPROCESS
 	prcd := constant.ACTIVITY_PROCESS
@@ -10294,7 +10308,7 @@ func TestSubmitApproval(t *testing.T) {
 			CreatedBy:      req.CreatedBy,
 			DecisionBy:     req.DecisionBy,
 			SourceDecision: trxDetail.SourceDecision,
-			NextStep:       constant.DB_DECISION_CREDIT_ANALYST,
+			NextStep:       cra,
 		}
 
 		trxRecalculate := entity.TrxRecalculate{
@@ -10311,8 +10325,8 @@ func TestSubmitApproval(t *testing.T) {
 			WithArgs(trxDetail.ProspectID, trxDetail.StatusProcess, trxDetail.Activity, trxDetail.Decision, trxDetail.RuleCode, trxDetail.SourceDecision, trxDetail.NextStep, sqlmock.AnyArg(), trxDetail.Info, trxDetail.Reason, trxDetail.CreatedBy, sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_recalculate" ("ProspectID","ProductOfferingID","product_offering_desc","Tenor","loan_amount","AF","InstallmentAmount","DPAmount","percent_dp","AdminFee","provision_fee","fidusia_fee","AssetInsuranceFee","LifeInsuranceFee","NTF","NTFAkumulasi","interest_rate","insurance_amount","additional_dp","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
-			WithArgs(trxRecalculate.ProspectID, trxRecalculate.ProductOfferingID, trxRecalculate.ProductOfferingDesc, trxRecalculate.Tenor, trxRecalculate.LoanAmount, trxRecalculate.AF, trxRecalculate.InstallmentAmount, trxRecalculate.DPAmount, trxRecalculate.PercentDP, trxRecalculate.AdminFee, trxRecalculate.ProvisionFee, trxRecalculate.FidusiaFee, trxRecalculate.AssetInsuranceFee, trxRecalculate.LifeInsuranceFee, trxRecalculate.NTF, trxRecalculate.NTFAkumulasi, trxRecalculate.InterestRate, trxRecalculate.InsuranceAmount, trxRecalculate.AdditionalDP, sqlmock.AnyArg()).
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_recalculate" ("ProspectID","ProductOfferingID","product_offering_desc","Tenor","loan_amount","AF","InstallmentAmount","DPAmount","percent_dp","AdminFee","provision_fee","fidusia_fee","AssetInsuranceFee","LifeInsuranceFee","NTF","NTFAkumulasi","interest_rate","interest_amount","additional_dp","DSRFMF","TotalDSR","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxRecalculate.ProspectID, trxRecalculate.ProductOfferingID, trxRecalculate.ProductOfferingDesc, trxRecalculate.Tenor, trxRecalculate.LoanAmount, trxRecalculate.AF, trxRecalculate.InstallmentAmount, trxRecalculate.DPAmount, trxRecalculate.PercentDP, trxRecalculate.AdminFee, trxRecalculate.ProvisionFee, trxRecalculate.FidusiaFee, trxRecalculate.AssetInsuranceFee, trxRecalculate.LifeInsuranceFee, trxRecalculate.NTF, trxRecalculate.NTFAkumulasi, trxRecalculate.InterestRate, trxRecalculate.InterestAmount, trxRecalculate.AdditionalDP, trxRecalculate.DSRFMF, trxRecalculate.TotalDSR, sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_history_approval_scheme" ("id","ProspectID","decision","reason","note","created_at","created_by","decision_by","need_escalation","next_final_approval_flag","source_decision","next_step") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
@@ -10328,6 +10342,10 @@ func TestSubmitApproval(t *testing.T) {
 	})
 
 	t.Run("success submit rej final approval", func(t *testing.T) {
+		os.Setenv("CLIENT_LOS", "2ck21b02")
+		os.Setenv("AUTH_LOS", "xYtKHAWHn2sZLm1IbXXu")
+		os.Setenv("INSERT_STAGING_URL", "http://10.9.100.131/los-kmb-api/api/v3/kmb/insert-staging")
+
 		req := request.ReqSubmitApproval{
 			ProspectID:     "ppid",
 			FinalApproval:  "GMO",
@@ -10399,12 +10417,16 @@ func TestSubmitApproval(t *testing.T) {
 			DecisionBy: req.DecisionBy,
 		}
 
+		getAFPhone := entity.AFMobilePhone{
+			AFValue:     1000,
+			MobilePhone: "08989898",
+		}
 		trxAgreement := entity.TrxAgreement{
-			ProspectID:     req.ProspectID,
-			CheckingStatus: constant.ACTIVITY_UNPROCESS,
-			ContractStatus: "0",
-			// AF:                 getAFPhone.AFValue,
-			// MobilePhone:        getAFPhone.MobilePhone,
+			ProspectID:         req.ProspectID,
+			CheckingStatus:     constant.ACTIVITY_UNPROCESS,
+			ContractStatus:     "0",
+			AF:                 getAFPhone.AFValue,
+			MobilePhone:        getAFPhone.MobilePhone,
 			CustomerIDKreditmu: constant.LOB_NEW_KMB,
 		}
 
@@ -10425,10 +10447,20 @@ func TestSubmitApproval(t *testing.T) {
 			WithArgs(trxFinalApproval.ProspectID, trxFinalApproval.Decision, trxFinalApproval.Reason, trxFinalApproval.Note, sqlmock.AnyArg(), trxFinalApproval.CreatedBy, trxFinalApproval.DecisionBy).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT AF, SCP.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone, OTR, DPAmount FROM trx_apk apk WITH (nolock) INNER JOIN trx_customer_personal tcp WITH (nolock) ON apk.ProspectID = tcp.ProspectID WHERE apk.ProspectID =`)).
+			WillReturnRows(sqlmock.NewRows([]string{"AF", "MobilePhone", "OTR", "DPAmount"}).
+				AddRow(1000, "08989898", 10000, 1000))
+
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_agreements" ("ProspectID","BranchID","CustomerID","ApplicationID","AgreementNo","AgreementDate","NextInstallmentDate","MaturityDate","ContractStatus","NewApplicationDate","ApprovalDate","PurchaseOrderDate","GoLiveDate","ProductID","ProductOfferingID","TotalOTR","DownPayment","NTF","PayToDealerAmount","PayToDealerDate","checking_status","last_checking_at","created_at","updated_at","AF","MobilePhone","customer_id_kreditmu") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
 			WithArgs(trxAgreement.ProspectID, trxAgreement.BranchID, trxAgreement.CustomerID, trxAgreement.ApplicationID, trxAgreement.AgreementNo, trxAgreement.AgreementDate, trxAgreement.NextInstallmentDate, trxAgreement.MaturityDate, trxAgreement.ContractStatus, trxAgreement.NewApplicationDate, trxAgreement.ApprovalDate, trxAgreement.PurchaseOrderDate, trxAgreement.GoLiveDate, trxAgreement.ProductID, trxAgreement.ProductOfferingID, trxAgreement.TotalOTR, trxAgreement.DownPayment, trxAgreement.NTF, trxAgreement.PayToDealerAmount, trxAgreement.PayToDealerDate, trxAgreement.CheckingStatus, trxAgreement.LastCheckingAt, sqlmock.AnyArg(), sqlmock.AnyArg(), trxAgreement.AF, trxAgreement.MobilePhone, trxAgreement.CustomerIDKreditmu).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
+		mock.ExpectBegin()
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_worker" ("ProspectID","activity","endpoint_target","endpoint_method","payload","header","response_timeout","api_type","max_retry","count_retry","created_at","category","action","status_code","sequence") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs("ppid", "UNPR", "http://10.9.100.131/los-kmb-api/api/v3/kmb/insert-staging/ppid", "POST", sqlmock.AnyArg(), sqlmock.AnyArg(), 30, "RAW", 6, 0, sqlmock.AnyArg(), "CONFINS", "INSERT_STAGING_KMB", sqlmock.AnyArg(), sqlmock.AnyArg()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectCommit()
 		mock.ExpectCommit()
 
 		err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)

@@ -2864,7 +2864,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 	trxDetail.CreatedAt = time.Now()
 	trxRecalculate.CreatedAt = time.Now()
 
-	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
+	r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
 		// trx_status
 		if err := tx.Model(&trxStatus).Where("ProspectID = ?", trxStatus.ProspectID).Updates(trxStatus).Error; err != nil {
@@ -2976,30 +2976,36 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 				return err
 			}
 
-			// worker insert staging
-			callbackHeaderLos, _ := json.Marshal(
-				map[string]string{
-					"X-Client-ID":   os.Getenv("CLIENT_LOS"),
-					"Authorization": os.Getenv("AUTH_LOS"),
-				})
+			r.losDB.Transaction(func(tx2 *gorm.DB) error {
+				// worker insert staging
+				callbackHeaderLos, _ := json.Marshal(
+					map[string]string{
+						"X-Client-ID":   os.Getenv("CLIENT_LOS"),
+						"Authorization": os.Getenv("AUTH_LOS"),
+					})
 
-			if newErr := r.losDB.Create(&entity.TrxWorker{
-				ProspectID:      req.ProspectID,
-				Category:        "CONFINS",
-				Action:          "INSERT_STAGING_KMB",
-				APIType:         "RAW",
-				EndPointTarget:  fmt.Sprintf("%s/%s", os.Getenv("INSERT_STAGING_URL"), req.ProspectID),
-				EndPointMethod:  constant.METHOD_POST,
-				Header:          string(callbackHeaderLos),
-				ResponseTimeout: 30,
-				MaxRetry:        6,
-				CountRetry:      0,
-				Activity:        constant.ACTIVITY_UNPROCESS,
-			}).Error; newErr != nil {
-				return newErr
-			}
+				if newErr := tx2.Create(&entity.TrxWorker{
+					ProspectID:      req.ProspectID,
+					Category:        "CONFINS",
+					Action:          "INSERT_STAGING_KMB",
+					APIType:         "RAW",
+					EndPointTarget:  fmt.Sprintf("%s/%s", os.Getenv("INSERT_STAGING_URL"), req.ProspectID),
+					EndPointMethod:  constant.METHOD_POST,
+					Header:          string(callbackHeaderLos),
+					ResponseTimeout: 30,
+					MaxRetry:        6,
+					CountRetry:      0,
+					Activity:        constant.ACTIVITY_UNPROCESS,
+				}).Error; newErr != nil {
+					return newErr
+				}
+
+				return nil
+			})
 		}
 
 		return nil
 	})
+
+	return
 }
