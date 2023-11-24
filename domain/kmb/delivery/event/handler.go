@@ -184,15 +184,10 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 		// save req journey
 		_ = h.repository.SaveTrxJourney(req.Transaction.ProspectID, reqEncrypted)
 
-		// convert to struct
-		result, _ := resp.(response.Metrics)
-
 		resp = h.Json.EventSuccess(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, resp)
 
-		// callback
-		if result.Decision == constant.DECISION_APPROVE || result.Decision == constant.DECISION_REJECT || result.Decision == constant.DECISION_CANCEL {
-			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
-		}
+		// callback all status
+		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
 	}
 
 	return nil
