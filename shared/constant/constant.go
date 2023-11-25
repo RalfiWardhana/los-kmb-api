@@ -60,7 +60,7 @@ const (
 	DB_DECISION_CREDIT_ANALYST       = "CRA"
 	DB_DECISION_BRANCH_MANAGER       = "CBM"
 	JSON_DECISION_PASS               = "PASS"
-	JSON_DECISION_REJECT             = "REJECTED"
+	JSON_DECISION_REJECT             = "REJECT"
 	JSON_DECISION_CREDIT_PROCESS     = "CREDIT_PROCESS"
 	RECORD_NOT_FOUND                 = "record not found"
 	NEW                              = "NEW"

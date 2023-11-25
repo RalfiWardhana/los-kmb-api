@@ -211,8 +211,8 @@ type ConfigPMK struct {
 }
 
 type DataPMK struct {
-	MinAgeMarried    int  `json:"min_age_married"`
-	MinAgeSingle     int  `json:"min_age_single"`
+	MinAgeMarried    int  `json:"min_age_marital_status_m"`
+	MinAgeSingle     int  `json:"min_age_marital_status_s"`
 	MaritalChecking  bool `json:"marital_checking"`
 	MaxAgeLimit      int  `json:"max_age_limit"`
 	LengthOfBusiness int  `json:"length_of_business"`
