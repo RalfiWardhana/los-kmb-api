@@ -559,15 +559,15 @@ type Recalculate struct {
 	DPAmount                     float64 `json:"down_payment_amount" validate:"required,max=999999999" example:"22000000"`
 	NTF                          float64 `json:"ntf" validate:"required,max=999999999" example:"150528000"`
 	AF                           float64 `json:"af" validate:"required,max=999999999" example:"84000000"`
-	AdminFee                     float64 `json:"admin_fee" validate:"required,max=999999999" example:"1500000"`
+	AdminFee                     float64 `json:"admin_fee" validate:"max=999999999" example:"1500000"`
 	InstallmentAmount            float64 `json:"installment_amount" validate:"required,max=999999999" example:"4181333"`
 	PercentDP                    float64 `json:"down_payment_rate" validate:"required,max=99" example:"20.95"`
 	LifePremiumAmountToCustomer  float64 `json:"life_premium_amount_to_customer" validate:"min=0,max=999999999" example:"2184000"`
 	AssetPremiumAmountToCustomer float64 `json:"asset_premium_amount_to_customer" validate:"min=0,max=999999999" example:"2184000"`
 	FidusiaFee                   float64 `json:"fidusia_fee" validate:"max=999999999" example:"0"`
-	InterestRate                 float64 `json:"interest_rate" validate:"required,max=99" example:"2.2"`
-	InterestAmount               float64 `json:"interest_amount" validate:"required,max=999999999" example:"66528000"`
-	ProvisionFee                 float64 `json:"provision_fee" validate:"required,max=999999999" example:"2475000"`
+	InterestRate                 float64 `json:"interest_rate" validate:"max=99" example:"2.2"`
+	InterestAmount               float64 `json:"interest_amount" validate:"max=999999999" example:"66528000"`
+	ProvisionFee                 float64 `json:"provision_fee" validate:"max=999999999" example:"2475000"`
 	LoanAmount                   float64 `json:"loan_amount" validate:"max=999999999" example:"105000000"`
 }
 

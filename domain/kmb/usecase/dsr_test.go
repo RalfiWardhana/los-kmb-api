@@ -331,6 +331,10 @@ func TestDsrCheck(t *testing.T) {
 }
 
 func TestTotalDsrFmfPbk(t *testing.T) {
+
+	ctx := context.Background()
+	os.Setenv("LASTEST_PAID_INSTALLMENT_URL", "http://10.9.100.231/los-int-dupcheck-v2/api/v2/mdm/installment/")
+
 	testcases := []struct {
 		name                                             string
 		totalIncome, newInstallment, totalInstallmentPBK float64
@@ -435,6 +439,68 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			"rrd_date": "" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
 		},
 		{
+			name:                "TotalDsrFmfPbk ro prime < installmentThreshold",
+			totalIncome:         6000000,
+			newInstallment:      200000,
+			totalInstallmentPBK: 30000,
+			prospectID:          "TEST1",
+			customerSegment:     constant.RO_AO_PRIME,
+			accessToken:         "token",
+			configValue: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			SpDupcheckMap: response.SpDupcheckMap{
+				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
+				Dsr:            30,
+				CustomerID:     "123456",
+			},
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_TOTAL_DSRLTE35,
+				Reason:         "RO PRIME - DSR <= 35",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+			},
+			trxFMF: response.TrxFMF{
+				DSRPBK:                  float64(0.5),
+				TotalDSR:                float64(30),
+				LatestInstallmentAmount: 10000,
+				InstallmentThreshold:    15000,
+			},
+			codeLatestInstallment: 200,
+			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
+			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 10000, "contract_status": "", "outstanding_principal": 0, 
+			"rrd_date": "" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
+		},
+		{
+			name:                "TotalDsrFmfPbk ro priority",
+			totalIncome:         6000000,
+			newInstallment:      200000,
+			totalInstallmentPBK: 30000,
+			prospectID:          "TEST1",
+			customerSegment:     constant.RO_AO_PRIORITY,
+			accessToken:         "token",
+			configValue: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			SpDupcheckMap: response.SpDupcheckMap{
+				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
+				Dsr:            30,
+				CustomerID:     "123456",
+			},
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_TOTAL_DSRLTE35,
+				Reason:         "RO PRIORITY - DSR <= 35",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+			},
+			trxFMF: response.TrxFMF{
+				DSRPBK:   float64(0.5),
+				TotalDSR: float64(30),
+			},
+		},
+		{
 			name:                "TotalDsrFmfPbk ao top up prime",
 			totalIncome:         6000000,
 			newInstallment:      200000,
@@ -470,6 +536,128 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			"rrd_date": "" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
 		},
 		{
+			name:                "TotalDsrFmfPbk ao top up prime < installmentThreshold",
+			totalIncome:         6000000,
+			newInstallment:      200000,
+			totalInstallmentPBK: 30000,
+			prospectID:          "TEST1",
+			customerSegment:     constant.RO_AO_PRIME,
+			accessToken:         "token",
+			configValue: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			SpDupcheckMap: response.SpDupcheckMap{
+				StatusKonsumen:   constant.STATUS_KONSUMEN_AO,
+				Dsr:              30,
+				CustomerID:       "123456",
+				InstallmentTopup: 100000,
+			},
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_TOTAL_DSRLTE35,
+				Reason:         "AO PRIME Top Up - DSR <= 35",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+			},
+			trxFMF: response.TrxFMF{
+				DSRPBK:                  float64(0.5),
+				TotalDSR:                float64(30),
+				LatestInstallmentAmount: 100000,
+				InstallmentThreshold:    150000,
+			},
+			codeLatestInstallment: 200,
+			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
+			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 100000, "contract_status": "", "outstanding_principal": 0, 
+			"rrd_date": "" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
+		},
+		{
+			name:                "TotalDsrFmfPbk ao prime NumberOfPaidInstallment >= 6",
+			totalIncome:         6000000,
+			newInstallment:      200000,
+			totalInstallmentPBK: 30000,
+			prospectID:          "TEST1",
+			customerSegment:     constant.RO_AO_PRIME,
+			accessToken:         "token",
+			configValue: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			SpDupcheckMap: response.SpDupcheckMap{
+				StatusKonsumen:          constant.STATUS_KONSUMEN_AO,
+				Dsr:                     30,
+				CustomerID:              "123456",
+				NumberOfPaidInstallment: 7,
+			},
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_TOTAL_DSRLTE35,
+				Reason:         "AO PRIME - DSR <= 35",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+			},
+			trxFMF: response.TrxFMF{
+				DSRPBK:   float64(0.5),
+				TotalDSR: float64(30),
+			},
+		},
+		{
+			name:                "TotalDsrFmfPbk ao top up priority < installmentThreshold",
+			totalIncome:         6000000,
+			newInstallment:      200000,
+			totalInstallmentPBK: 30000,
+			prospectID:          "TEST1",
+			customerSegment:     constant.RO_AO_PRIORITY,
+			accessToken:         "token",
+			configValue: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			SpDupcheckMap: response.SpDupcheckMap{
+				StatusKonsumen:   constant.STATUS_KONSUMEN_AO,
+				Dsr:              30,
+				CustomerID:       "123456",
+				InstallmentTopup: 100000,
+			},
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_TOTAL_DSRLTE35,
+				Reason:         "AO PRIORITY Top Up - DSR <= 35",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+			},
+			trxFMF: response.TrxFMF{
+				DSRPBK:   float64(0.5),
+				TotalDSR: float64(30),
+			},
+		},
+		{
+			name:                "TotalDsrFmfPbk ao priority NumberOfPaidInstallment >= 6",
+			totalIncome:         6000000,
+			newInstallment:      200000,
+			totalInstallmentPBK: 30000,
+			prospectID:          "TEST1",
+			customerSegment:     constant.RO_AO_PRIORITY,
+			accessToken:         "token",
+			configValue: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			SpDupcheckMap: response.SpDupcheckMap{
+				StatusKonsumen:          constant.STATUS_KONSUMEN_AO,
+				Dsr:                     30,
+				CustomerID:              "123456",
+				NumberOfPaidInstallment: 7,
+			},
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_TOTAL_DSRLTE35,
+				Reason:         "AO PRIORITY - DSR <= 35",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+			},
+			trxFMF: response.TrxFMF{
+				DSRPBK:   float64(0.5),
+				TotalDSR: float64(30),
+			},
+		},
+		{
 			name:                "TotalDsrFmfPbk ro prime err",
 			totalIncome:         6000000,
 			newInstallment:      200000,
@@ -497,12 +685,62 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			errLatestInstallment: errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout"),
 			errResult:            errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout"),
 		},
+		{
+			name:                "TotalDsrFmfPbk ro prime err 500",
+			totalIncome:         6000000,
+			newInstallment:      200000,
+			totalInstallmentPBK: 30000,
+			prospectID:          "TEST1",
+			customerSegment:     constant.RO_AO_PRIME,
+			accessToken:         "token",
+			configValue: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			SpDupcheckMap: response.SpDupcheckMap{
+				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
+				Dsr:            30,
+				CustomerID:     "123456",
+			},
+			trxFMF: response.TrxFMF{
+				DSRPBK:   float64(0.5),
+				TotalDSR: float64(30.5),
+			},
+			codeLatestInstallment: 500,
+			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
+			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 1000000, "contract_status": "", "outstanding_principal": 0, 
+			"rrd_date": "" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - Call LatestPaidInstallmentData Error"),
+		},
+		{
+			name:                "TotalDsrFmfPbk ro prime err unmarshal",
+			totalIncome:         6000000,
+			newInstallment:      200000,
+			totalInstallmentPBK: 30000,
+			prospectID:          "TEST1",
+			customerSegment:     constant.RO_AO_PRIME,
+			accessToken:         "token",
+			configValue: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			SpDupcheckMap: response.SpDupcheckMap{
+				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
+				Dsr:            30,
+				CustomerID:     "123456",
+			},
+			trxFMF: response.TrxFMF{
+				DSRPBK:   float64(0.5),
+				TotalDSR: float64(30.5),
+			},
+			codeLatestInstallment: 200,
+			bodyLatestInstallment: `response body unmarshal error`,
+			errResult:             errors.New(constant.ERROR_UPSTREAM + " - Unmarshal LatestPaidInstallmentData Error"),
+		},
 	}
 
-	os.Setenv("LASTEST_PAID_INSTALLMENT_URL", "http://10.9.100.231/los-int-dupcheck-v2/api/v2/mdm/installment/")
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := context.Background()
 
 			var configValue response.DupcheckConfig
 			json.Unmarshal([]byte(tc.configValue.Value), &configValue)
