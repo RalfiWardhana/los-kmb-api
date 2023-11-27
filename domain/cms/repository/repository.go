@@ -1001,24 +1001,24 @@ func (r repoHandler) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 		tdb.baki_debet_non_collateral as BakiDebet,
 		tdb.fasilitas_aktif as FasilitasAktif,
 		CASE
-			WHEN tdb.kualitas_kredit_terburuk <> NULL THEN CONCAT(tdb.kualitas_kredit_terburuk,' ',tdb.bulan_kualitas_terburuk)
+			WHEN tdb.kualitas_kredit_terburuk IS NOT NULL THEN CONCAT(tdb.kualitas_kredit_terburuk,' ',tdb.bulan_kualitas_terburuk)
 			ELSE NULL
 		END as ColTerburuk,
 		tdb.baki_debet_kualitas_terburuk as BakiDebetTerburuk,
 		CASE
-			WHEN tdb.kualitas_kredit_terakhir <> NULL THEN CONCAT(tdb.kualitas_kredit_terakhir,' ',tdb.bulan_kualitas_kredit_terakhir)
+			WHEN tdb.kualitas_kredit_terakhir IS NOT NULL THEN CONCAT(tdb.kualitas_kredit_terakhir,' ',tdb.bulan_kualitas_kredit_terakhir)
 			ELSE NULL
 		END as ColTerakhirAktif,
 		tdb2.plafon as SpousePlafond,
 		tdb2.baki_debet_non_collateral as SpouseBakiDebet,
 		tdb2.fasilitas_aktif as SpouseFasilitasAktif,
 		CASE
-			WHEN tdb2.kualitas_kredit_terburuk <> NULL THEN CONCAT(tdb2.kualitas_kredit_terburuk,' ',tdb2.bulan_kualitas_terburuk)
+			WHEN tdb2.kualitas_kredit_terburuk IS NOT NULL THEN CONCAT(tdb2.kualitas_kredit_terburuk,' ',tdb2.bulan_kualitas_terburuk)
 			ELSE NULL
 		END as SpouseColTerburuk,
 		tdb2.baki_debet_kualitas_terburuk as SpouseBakiDebetTerburuk,
 		CASE
-			WHEN tdb2.kualitas_kredit_terakhir <> NULL THEN CONCAT(tdb2.kualitas_kredit_terakhir,' ',tdb2.bulan_kualitas_kredit_terakhir)
+			WHEN tdb2.kualitas_kredit_terakhir IS NOT NULL THEN CONCAT(tdb2.kualitas_kredit_terakhir,' ',tdb2.bulan_kualitas_kredit_terakhir)
 			ELSE NULL
 		END as SpouseColTerakhirAktif,
 		ta.ScsScore,
