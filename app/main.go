@@ -50,6 +50,7 @@ import (
 
 	"github.com/KB-FMF/platform-library/event"
 	"github.com/allegro/bigcache/v3"
+	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/newrelic/go-agent/v3/integrations/nrecho-v4"
@@ -112,10 +113,7 @@ func main() {
 	constant.TOPIC_SUBMISSION = os.Getenv("TOPIC_SUBMISSION")
 	constant.TOPIC_SUBMISSION_LOS = os.Getenv("TOPIC_SUBMISSION_LOS")
 
-	minilosWG, err := database.OpenMinilosWG()
-	if err != nil {
-		panic(fmt.Sprintf("Failed to open database connection: %s", err))
-	}
+	var minilosWG *gorm.DB
 
 	minilosKMB, err := database.OpenMinilosKMB()
 	if err != nil {
