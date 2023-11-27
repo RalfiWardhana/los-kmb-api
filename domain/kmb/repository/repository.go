@@ -786,13 +786,15 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 			// internal record
 			if len(trxFMF.AgreementCONFINS) > 0 {
 				for _, agr := range trxFMF.AgreementCONFINS {
+					dateStr := agr.AgreementDate
+					agreementDate, _ := time.Parse("2006/01/02", dateStr)
 					if agr.ApplicationID != "" {
 						internalRecord := entity.TrxInternalRecord{
 							ProspectID:           data.Transaction.ProspectID,
 							CustomerID:           trxFMF.DupcheckData.CustomerID.(string),
 							ApplicationID:        agr.ApplicationID,
 							ProductType:          agr.ProductType,
-							AgreementDate:        agr.AgreementDate,
+							AgreementDate:        agreementDate,
 							AssetCode:            agr.AssetCode,
 							Tenor:                agr.Tenor,
 							OutstandingPrincipal: agr.OutstandingPrincipal,
