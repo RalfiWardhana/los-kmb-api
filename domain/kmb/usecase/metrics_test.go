@@ -23,6 +23,7 @@ import (
 
 func TestMetrics(t *testing.T) {
 	os.Setenv("BIRO_VALID_DAYS", "4")
+	os.Setenv("INTERNAL_RECORD_URL", "http://localhost/")
 	MonthlyVariableIncome := float64(10000000)
 	SpouseIncome := float64(0)
 	ctx := context.Background()
@@ -712,7 +713,7 @@ func TestMetrics(t *testing.T) {
 			errInternalRecord: errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get Interal Record Error"),
 		},
 		{
-			name: "test metrics dupcheck err ",
+			name: "test metrics dupcheck err save ",
 			reqMetrics: request.Metrics{
 				Transaction: request.Transaction{
 					ProspectID: "TEST1",
@@ -811,7 +812,31 @@ func TestMetrics(t *testing.T) {
 					CustomerID: "123456",
 				},
 				DSRFMF: float64(0),
+				AgreementCONFINS: []response.AgreementCONFINS{
+					{
+						ApplicationID:     "426A202212124023",
+						ProductType:       "WG",
+						AgreementDate:     "12/20/2022",
+						AssetCode:         "APPLE.HP/SMARTPHONES.HPIPHONE6S32",
+						Tenor:             12,
+						InstallmentAmount: 371000,
+						ContractStatus:    "EXP",
+						CurrentCondition:  "Current",
+					},
+					{
+						ApplicationID:     "426A202306124184",
+						ProductType:       "WG",
+						AgreementDate:     "06/20/2023",
+						AssetCode:         "OPPO.HP/SMARTPHONES.PHABLETF56GB",
+						Tenor:             11,
+						InstallmentAmount: 161000,
+						ContractStatus:    "LIV",
+						CurrentCondition:  "Current",
+					},
+				},
 			},
+			codeInternalRecord: 200,
+			bodyInternalRecord: `{"messages":"LOS-ListAgreements","errors":null,"data":[{"application_id":"426A202212124023","product_type":"WG","agreement_date":"12/20/2022","asset_code":"APPLE.HP/SMARTPHONES.HPIPHONE6S32","period":12,"outstanding_principal":0,"installment_amount":371000,"contract_status":"EXP","current_condition":"Current"},{"application_id":"426A202306124184","product_type":"WG","agreement_date":"06/20/2023","asset_code":"OPPO.HP/SMARTPHONES.PHABLETF56GB","period":11,"outstanding_principal":0,"installment_amount":161000,"contract_status":"LIV","current_condition":"Current"}],"server_time":"2023-11-27T17:00:19+07:00","request_id":"db8b5f93-242d-4b9b-9932-0c8e99bcac00"}`,
 			resultMetrics:      response.Metrics{},
 			err:                errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - metricsDupcheck Error"),
 			errSaveTransaction: errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - metricsDupcheck Error"),
@@ -905,6 +930,8 @@ func TestMetrics(t *testing.T) {
 			dupcheckData: response.SpDupcheckMap{
 				CustomerID: "123456",
 			},
+			codeInternalRecord: 200,
+			bodyInternalRecord: `{"messages":"LOS-ListAgreements","errors":null,"data":[{"application_id":"426A202212124023","product_type":"WG","agreement_date":"12/20/2022","asset_code":"APPLE.HP/SMARTPHONES.HPIPHONE6S32","period":12,"outstanding_principal":0,"installment_amount":371000,"contract_status":"EXP","current_condition":"Current"},{"application_id":"426A202306124184","product_type":"WG","agreement_date":"06/20/2023","asset_code":"OPPO.HP/SMARTPHONES.PHABLETF56GB","period":11,"outstanding_principal":0,"installment_amount":161000,"contract_status":"LIV","current_condition":"Current"}],"server_time":"2023-11-27T17:00:19+07:00","request_id":"db8b5f93-242d-4b9b-9932-0c8e99bcac00"}`,
 			metricsDupcheck: response.UsecaseApi{
 				Code:           "123",
 				Result:         constant.DECISION_REJECT,
@@ -916,6 +943,28 @@ func TestMetrics(t *testing.T) {
 					CustomerID: "123456",
 				},
 				DSRFMF: float64(0),
+				AgreementCONFINS: []response.AgreementCONFINS{
+					{
+						ApplicationID:     "426A202212124023",
+						ProductType:       "WG",
+						AgreementDate:     "12/20/2022",
+						AssetCode:         "APPLE.HP/SMARTPHONES.HPIPHONE6S32",
+						Tenor:             12,
+						InstallmentAmount: 371000,
+						ContractStatus:    "EXP",
+						CurrentCondition:  "Current",
+					},
+					{
+						ApplicationID:     "426A202306124184",
+						ProductType:       "WG",
+						AgreementDate:     "06/20/2023",
+						AssetCode:         "OPPO.HP/SMARTPHONES.PHABLETF56GB",
+						Tenor:             11,
+						InstallmentAmount: 161000,
+						ContractStatus:    "LIV",
+						CurrentCondition:  "Current",
+					},
+				},
 			},
 			resultMetrics: response.Metrics{},
 		},
@@ -945,8 +994,7 @@ func TestMetrics(t *testing.T) {
 			defer httpmock.DeactivateAndReset()
 
 			if tc.dupcheckData.CustomerID != nil {
-				os.Setenv("INTERNAL_RECORD_URL", "http://localhost/")
-				httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("INTERNAL_RECORD_URL"), httpmock.NewStringResponder(tc.codeInternalRecord, tc.bodyInternalRecord))
+				httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("INTERNAL_RECORD_URL"), httpmock.NewStringResponder(tc.codeInternalRecord, tc.bodyInternalRecord))
 				resp, _ := rst.R().Get(os.Getenv("INTERNAL_RECORD_URL"))
 
 				mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("INTERNAL_RECORD_URL")+tc.dupcheckData.CustomerID.(string), mock.Anything, map[string]string{}, constant.METHOD_GET, true, 3, 60, tc.reqMetrics.Transaction.ProspectID, "token").Return(resp, tc.errInternalRecord).Once()
