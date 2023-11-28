@@ -137,10 +137,10 @@ func TestGetSurveyorData(t *testing.T) {
 		{
 			ProspectID:   prospectID,
 			Destination:  "HOME",
-			RequestDate:  time.Now(),
-			AssignDate:   time.Now(),
+			RequestDate:  time.Time{},
+			AssignDate:   time.Time{},
 			SurveyorName: "RONY ACHMAD MOQAROBIN",
-			ResultDate:   time.Now(),
+			ResultDate:   time.Time{},
 			Status:       "APPROVE",
 			SurveyorNote: nil,
 		},
@@ -151,7 +151,7 @@ func TestGetSurveyorData(t *testing.T) {
 
 	mock.ExpectQuery(`SELECT destination, request_date, assign_date, surveyor_name, result_date, status, surveyor_note FROM trx_surveyor WITH \(nolock\) WHERE ProspectID = \?`).WithArgs(prospectID).
 		WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "destination", "request_date", "assign_date", "surveyor_name", "result_date", "status", "surveyor_note"}).
-			AddRow("12345", "HOME", time.Now(), time.Now(), "RONY ACHMAD MOQAROBIN", time.Now(), "APPROVE", nil))
+			AddRow("12345", "HOME", time.Time{}, time.Time{}, "RONY ACHMAD MOQAROBIN", time.Time{}, "APPROVE", nil))
 	mock.ExpectCommit()
 
 	// Call the function
@@ -3318,6 +3318,8 @@ func TestGetInquiryCa(t *testing.T) {
 			UserID:      "abc123",
 		}
 
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock) INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN ( SELECT value FROM region_user ru WITH (nolock) cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',') WHERE ru.user_id = 'abc123' ) AND b.lob_id='125'`)).WillReturnError(gorm.ErrRecordNotFound)
+
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
 		COUNT(tt.ProspectID) AS totalRow
@@ -3773,6 +3775,8 @@ func TestGetInquiryCa(t *testing.T) {
 			Filter:      "SAVED_AS_DRAFT",
 			UserID:      "abc123",
 		}
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock) INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN ( SELECT value FROM region_user ru WITH (nolock) cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',') WHERE ru.user_id = 'abc123' ) AND b.lob_id='125'`)).WillReturnError(gorm.ErrRecordNotFound)
 
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
@@ -7950,6 +7954,8 @@ func TestGetInquiryApproval(t *testing.T) {
 			Alias:       "CBM",
 		}
 
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock) INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN ( SELECT value FROM region_user ru WITH (nolock) cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',') WHERE ru.user_id = 'abc123' ) AND b.lob_id='125'`)).WillReturnError(gorm.ErrRecordNotFound)
+
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
 		COUNT(tt.ProspectID) AS totalRow
@@ -8387,6 +8393,8 @@ func TestGetInquiryApproval(t *testing.T) {
 			UserID:      "abc123",
 			Alias:       "CBM",
 		}
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock) INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN ( SELECT value FROM region_user ru WITH (nolock) cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',') WHERE ru.user_id = 'abc123' ) AND b.lob_id='125'`)).WillReturnError(gorm.ErrRecordNotFound)
 
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT

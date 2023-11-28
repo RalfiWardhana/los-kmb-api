@@ -284,6 +284,8 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 			decision = "Tidak Sesuai"
 		}
 
+		birthDate := inq.BirthDate.Format("02-01-2006")
+
 		row := entity.InquiryData{
 			Prescreening: entity.DataPrescreening{
 				CmoRecommendation: cmoRecommendation,
@@ -301,12 +303,12 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				CreatedAt:      inq.CreatedAt,
 				OrderAt:        inq.OrderAt,
 			},
-			Personal: entity.CustomerPersonal{
+			Personal: entity.DataPersonal{
 				IDNumber:          inq.IDNumber,
 				LegalName:         inq.LegalName,
 				CustomerStatus:    inq.CustomerStatus,
 				BirthPlace:        inq.BirthPlace,
-				BirthDate:         inq.BirthDate,
+				BirthDate:         birthDate,
 				SurgateMotherName: inq.SurgateMotherName,
 				Gender:            inq.Gender,
 				MobilePhone:       inq.MobilePhone,
@@ -693,6 +695,8 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 			action = false
 		}
 
+		birthDate := inq.BirthDate.Format("02-01-2006")
+
 		row := entity.InquiryDataCa{
 			CA: entity.DataCa{
 				ShowAction:         action,
@@ -723,13 +727,13 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 				CreatedAt:      inq.CreatedAt,
 				OrderAt:        inq.OrderAt,
 			},
-			Personal: entity.CustomerPersonal{
+			Personal: entity.DataPersonal{
 				IDNumber:          inq.IDNumber,
 				LegalName:         inq.LegalName,
 				CustomerID:        inq.CustomerID,
 				CustomerStatus:    inq.CustomerStatus,
 				BirthPlace:        inq.BirthPlace,
-				BirthDate:         inq.BirthDate,
+				BirthDate:         birthDate,
 				SurgateMotherName: inq.SurgateMotherName,
 				Gender:            inq.Gender,
 				MobilePhone:       inq.MobilePhone,
@@ -1104,6 +1108,8 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 			historyData = []entity.HistoryProcess{}
 		}
 
+		birthDate := inq.BirthDate.Format("02-01-2006")
+
 		row := entity.InquiryDataSearch{
 			Action: entity.ActionSearch{
 				FinalStatus:   inq.FinalStatus,
@@ -1119,13 +1125,13 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 				CreatedAt:      inq.CreatedAt,
 				OrderAt:        inq.OrderAt,
 			},
-			Personal: entity.CustomerPersonal{
+			Personal: entity.DataPersonal{
 				IDNumber:          inq.IDNumber,
 				LegalName:         inq.LegalName,
 				CustomerID:        inq.CustomerID,
 				CustomerStatus:    inq.CustomerStatus,
 				BirthPlace:        inq.BirthPlace,
-				BirthDate:         inq.BirthDate,
+				BirthDate:         birthDate,
 				SurgateMotherName: inq.SurgateMotherName,
 				Gender:            inq.Gender,
 				MobilePhone:       inq.MobilePhone,
@@ -1612,6 +1618,8 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 			statusDecision = constant.DECISION_CANCEL
 		}
 
+		birthDate := inq.BirthDate.Format("02-01-2006")
+
 		row := entity.InquiryDataApproval{
 			CA: entity.DataApproval{
 				ShowAction:         inq.ShowAction,
@@ -1639,13 +1647,13 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 				CreatedAt:      inq.CreatedAt,
 				OrderAt:        inq.OrderAt,
 			},
-			Personal: entity.CustomerPersonal{
+			Personal: entity.DataPersonal{
 				IDNumber:          inq.IDNumber,
 				LegalName:         inq.LegalName,
 				CustomerID:        inq.CustomerID,
 				CustomerStatus:    inq.CustomerStatus,
 				BirthPlace:        inq.BirthPlace,
-				BirthDate:         inq.BirthDate,
+				BirthDate:         birthDate,
 				SurgateMotherName: inq.SurgateMotherName,
 				Gender:            inq.Gender,
 				MobilePhone:       inq.MobilePhone,
