@@ -333,27 +333,6 @@ func (_m *Usecase) ElaborateScheme(req request.Metrics) (response.UsecaseApi, er
 	return r0, r1
 }
 
-// GetBase64Media provides a mock function with given fields: ctx, url, customerID, accessToken
-func (_m *Usecase) GetBase64Media(ctx context.Context, url string, customerID int, accessToken string) (string, error) {
-	ret := _m.Called(ctx, url, customerID, accessToken)
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func(context.Context, string, int, string) string); ok {
-		r0 = rf(ctx, url, customerID, accessToken)
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string, int, string) error); ok {
-		r1 = rf(ctx, url, customerID, accessToken)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // InsertStaging provides a mock function with given fields: prospectID
 func (_m *Usecase) InsertStaging(prospectID string) (response.InsertStaging, error) {
 	ret := _m.Called(prospectID)

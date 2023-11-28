@@ -21,7 +21,6 @@ type Usecase interface {
 	CustomerKMB(spDupcheck response.SpDupCekCustomerByID) (statusKonsumen string, err error)
 	PMK(branchID string, statusKonsumen string, income float64, homeStatus, professionID, empYear, empMonth, stayYear, stayMonth, birthDate string, tenor int, maritalStatus string) (data response.UsecaseApi, err error)
 	DsrCheck(ctx context.Context, req request.DupcheckApi, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, accessToken string, configValue response.DupcheckConfig) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error)
-	GetBase64Media(ctx context.Context, url string, customerID int, accessToken string) (base64Image string, err error)
 	Dukcapil(ctx context.Context, req request.Metrics, accessToken string) (data response.Ekyc, err error)
 	Asliri(ctx context.Context, req request.Metrics, accessToken string) (data response.Ekyc, err error)
 	Ktp(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (data response.Ekyc, err error)

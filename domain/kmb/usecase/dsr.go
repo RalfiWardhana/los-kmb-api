@@ -256,17 +256,13 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 			resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+SpDupcheckMap.CustomerID.(string)+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
 
 			if err != nil {
-				if err != nil {
-					err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout")
-					return
-				}
+				err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout")
+				return
 			}
 
 			if resp.StatusCode() != 200 {
-				if err != nil {
-					err = errors.New(constant.ERROR_UPSTREAM + " - Call LatestPaidInstallmentData Error")
-					return
-				}
+				err = errors.New(constant.ERROR_UPSTREAM + " - Call LatestPaidInstallmentData Error")
+				return
 			}
 
 			err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &respLatestPaidInstallment)

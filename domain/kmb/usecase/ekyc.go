@@ -394,10 +394,14 @@ func (u usecase) Ktp(ctx context.Context, req request.Metrics, cbFound bool, acc
 
 	if data.Result == constant.DECISION_REJECT {
 		if strings.Contains(os.Getenv("NAMA_SAMA"), req.Item.BPKBName) {
-			data.Result = constant.DECISION_APPROVE
+			data.Result = constant.DECISION_PASS
+			data.Code = "2600"
+			data.Reason = "eKYC Sesuai - No KTP Valid"
 		}
 		if cbFound {
-			data.Result = constant.DECISION_APPROVE
+			data.Result = constant.DECISION_PASS
+			data.Code = "2600"
+			data.Reason = "eKYC Sesuai - No KTP Valid"
 		}
 	}
 

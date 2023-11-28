@@ -1001,24 +1001,24 @@ func (r repoHandler) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 		tdb.baki_debet_non_collateral as BakiDebet,
 		tdb.fasilitas_aktif as FasilitasAktif,
 		CASE
-			WHEN tdb.kualitas_kredit_terburuk <> NULL THEN CONCAT(tdb.kualitas_kredit_terburuk,' ',tdb.bulan_kualitas_terburuk)
+			WHEN tdb.kualitas_kredit_terburuk IS NOT NULL THEN CONCAT(tdb.kualitas_kredit_terburuk,' ',tdb.bulan_kualitas_terburuk)
 			ELSE NULL
 		END as ColTerburuk,
 		tdb.baki_debet_kualitas_terburuk as BakiDebetTerburuk,
 		CASE
-			WHEN tdb.kualitas_kredit_terakhir <> NULL THEN CONCAT(tdb.kualitas_kredit_terakhir,' ',tdb.bulan_kualitas_kredit_terakhir)
+			WHEN tdb.kualitas_kredit_terakhir IS NOT NULL THEN CONCAT(tdb.kualitas_kredit_terakhir,' ',tdb.bulan_kualitas_kredit_terakhir)
 			ELSE NULL
 		END as ColTerakhirAktif,
 		tdb2.plafon as SpousePlafond,
 		tdb2.baki_debet_non_collateral as SpouseBakiDebet,
 		tdb2.fasilitas_aktif as SpouseFasilitasAktif,
 		CASE
-			WHEN tdb2.kualitas_kredit_terburuk <> NULL THEN CONCAT(tdb2.kualitas_kredit_terburuk,' ',tdb2.bulan_kualitas_terburuk)
+			WHEN tdb2.kualitas_kredit_terburuk IS NOT NULL THEN CONCAT(tdb2.kualitas_kredit_terburuk,' ',tdb2.bulan_kualitas_terburuk)
 			ELSE NULL
 		END as SpouseColTerburuk,
 		tdb2.baki_debet_kualitas_terburuk as SpouseBakiDebetTerburuk,
 		CASE
-			WHEN tdb2.kualitas_kredit_terakhir <> NULL THEN CONCAT(tdb2.kualitas_kredit_terakhir,' ',tdb2.bulan_kualitas_kredit_terakhir)
+			WHEN tdb2.kualitas_kredit_terakhir IS NOT NULL THEN CONCAT(tdb2.kualitas_kredit_terakhir,' ',tdb2.bulan_kualitas_kredit_terakhir)
 			ELSE NULL
 		END as SpouseColTerakhirAktif,
 		ta.ScsScore,
@@ -1733,6 +1733,7 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.Histo
 	if err = r.NewKmb.Raw(`SELECT
 			CASE
 			 WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING'
+			 WHEN td.source_decision IN ('TNR','PRJ','NIK','NKA','BLK','PMK') THEN 'DUPLICATION CHECKING'
 			 WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING'
 			 WHEN td.source_decision = 'DCP'
 			 OR td.source_decision = 'ARI'
@@ -1740,6 +1741,7 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.Histo
 			 WHEN td.source_decision = 'PBK' THEN 'PEFINDO'
 			 WHEN td.source_decision = 'SCP' THEN 'SCOREPRO'
 			 WHEN td.source_decision = 'DSR' THEN 'DSR'
+			 WHEN td.source_decision = 'LTV' THEN 'LTV'
 			 WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
 			 WHEN td.source_decision = 'NRC' THEN 'RECALCULATE PROCESS'
 			 WHEN td.source_decision = 'CBM'
@@ -1777,7 +1779,8 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.Histo
 		FROM
 			trx_details td WITH (nolock)
 			LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
-		WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC')
+		WHERE td.ProspectID = ? AND (td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC') OR 
+		(td.source_decision IN('TNR','PRJ','NIK','NKA','BLK','PMK','LTV') AND td.decision = 'REJ'))
 		AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`, prospectID).Scan(&detail).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {

@@ -3072,7 +3072,58 @@ func TestGetHistoryProcess(t *testing.T) {
 		mock.ExpectBegin()
 
 		// Mock SQL query and result
-		mock.ExpectQuery(regexp.QuoteMeta(`SELECT CASE WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING' WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING' WHEN td.source_decision = 'DCP' OR td.source_decision = 'ARI' OR td.source_decision = 'KTP' THEN 'EKYC' WHEN td.source_decision = 'PBK' THEN 'PEFINDO' WHEN td.source_decision = 'SCP' THEN 'SCOREPRO' WHEN td.source_decision = 'DSR' THEN 'DSR' WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS' WHEN td.source_decision = 'NRC' THEN 'RECALCULATE PROCESS' WHEN td.source_decision = 'CBM' OR td.source_decision = 'DRM' OR td.source_decision = 'GMO' OR td.source_decision = 'COM' OR td.source_decision = 'GMC' OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE' ELSE '-' END AS source_decision, CASE WHEN td.source_decision = 'CRA' THEN 'CA' WHEN td.source_decision = 'CBM' THEN 'BM' WHEN td.source_decision = 'DRM' THEN 'RM' WHEN td.source_decision = 'GMO' THEN 'GMO' WHEN td.source_decision = 'COM' THEN 'COM' WHEN td.source_decision = 'GMC' THEN 'GMC' WHEN td.source_decision = 'UCC' THEN 'UCC' ELSE td.source_decision END AS alias, CASE WHEN td.decision = 'PAS' THEN 'PASS' WHEN td.decision = 'REJ' THEN 'REJECT' WHEN td.decision = 'CAN' THEN 'CANCEL' WHEN td.decision = 'RTN' THEN 'RETURN' WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS' ELSE '-' END AS decision, CASE WHEN ap.reason IS NULL THEN td.reason ELSE ap.reason END AS reason, FORMAT(td.created_at,'yyyy-MM-dd HH:mm:ss') as created_at, td.next_step FROM trx_details td WITH (nolock) LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC') AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		CASE
+			WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING'
+			WHEN td.source_decision IN ('TNR','PRJ','NIK','NKA','BLK','PMK') THEN 'DUPLICATION CHECKING'
+			WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING'
+			WHEN td.source_decision = 'DCP'
+			OR td.source_decision = 'ARI'
+			OR td.source_decision = 'KTP' THEN 'EKYC'
+			WHEN td.source_decision = 'PBK' THEN 'PEFINDO'
+			WHEN td.source_decision = 'SCP' THEN 'SCOREPRO'
+			WHEN td.source_decision = 'DSR' THEN 'DSR'
+			WHEN td.source_decision = 'LTV' THEN 'LTV'
+			WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
+			WHEN td.source_decision = 'NRC' THEN 'RECALCULATE PROCESS'
+			WHEN td.source_decision = 'CBM'
+			OR td.source_decision = 'DRM'
+			OR td.source_decision = 'GMO'
+			OR td.source_decision = 'COM'
+			OR td.source_decision = 'GMC'
+			OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE'
+			ELSE '-'
+			END AS source_decision,
+			CASE
+			WHEN td.source_decision = 'CRA' THEN 'CA'
+			WHEN td.source_decision = 'CBM' THEN 'BM'
+			WHEN td.source_decision = 'DRM' THEN 'RM'
+			WHEN td.source_decision = 'GMO' THEN 'GMO'
+			WHEN td.source_decision = 'COM' THEN 'COM'
+			WHEN td.source_decision = 'GMC' THEN 'GMC'
+			WHEN td.source_decision = 'UCC' THEN 'UCC'
+			ELSE td.source_decision
+			END AS alias,
+			CASE
+			WHEN td.decision = 'PAS' THEN 'PASS'
+			WHEN td.decision = 'REJ' THEN 'REJECT'
+			WHEN td.decision = 'CAN' THEN 'CANCEL'
+			WHEN td.decision = 'RTN' THEN 'RETURN'
+			WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS'
+			ELSE '-'
+			END AS decision,
+			CASE
+			WHEN ap.reason IS NULL THEN td.reason 
+			ELSE ap.reason 
+			END AS reason,
+			FORMAT(td.created_at,'yyyy-MM-dd HH:mm:ss') as created_at,
+			td.next_step
+		FROM
+			trx_details td WITH (nolock)
+			LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
+		WHERE td.ProspectID = ? AND (td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC') OR 
+		(td.source_decision IN('TNR','PRJ','NIK','NKA','BLK','PMK','LTV') AND td.decision = 'REJ'))
+		AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
 			WillReturnRows(sqlmock.NewRows([]string{"source_decision", "decision", "reason", "created_at"}).
 				AddRow("PRE SCREENING", "PASS", "Dokumen Sesuai", ""))
 		mock.ExpectCommit()
@@ -3097,7 +3148,58 @@ func TestGetHistoryProcess(t *testing.T) {
 		mock.ExpectBegin()
 
 		// Mock SQL query to simulate record not found
-		mock.ExpectQuery(regexp.QuoteMeta(`SELECT CASE WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING' WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING' WHEN td.source_decision = 'DCP' OR td.source_decision = 'ARI' OR td.source_decision = 'KTP' THEN 'EKYC' WHEN td.source_decision = 'PBK' THEN 'PEFINDO' WHEN td.source_decision = 'SCP' THEN 'SCOREPRO' WHEN td.source_decision = 'DSR' THEN 'DSR' WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS' WHEN td.source_decision = 'NRC' THEN 'RECALCULATE PROCESS' WHEN td.source_decision = 'CBM' OR td.source_decision = 'DRM' OR td.source_decision = 'GMO' OR td.source_decision = 'COM' OR td.source_decision = 'GMC' OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE' ELSE '-' END AS source_decision, CASE WHEN td.source_decision = 'CRA' THEN 'CA' WHEN td.source_decision = 'CBM' THEN 'BM' WHEN td.source_decision = 'DRM' THEN 'RM' WHEN td.source_decision = 'GMO' THEN 'GMO' WHEN td.source_decision = 'COM' THEN 'COM' WHEN td.source_decision = 'GMC' THEN 'GMC' WHEN td.source_decision = 'UCC' THEN 'UCC' ELSE td.source_decision END AS alias, CASE WHEN td.decision = 'PAS' THEN 'PASS' WHEN td.decision = 'REJ' THEN 'REJECT' WHEN td.decision = 'CAN' THEN 'CANCEL' WHEN td.decision = 'RTN' THEN 'RETURN' WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS' ELSE '-' END AS decision, CASE WHEN ap.reason IS NULL THEN td.reason ELSE ap.reason END AS reason, FORMAT(td.created_at,'yyyy-MM-dd HH:mm:ss') as created_at, td.next_step FROM trx_details td WITH (nolock) LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC') AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		CASE
+			WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING'
+			WHEN td.source_decision IN ('TNR','PRJ','NIK','NKA','BLK','PMK') THEN 'DUPLICATION CHECKING'
+			WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING'
+			WHEN td.source_decision = 'DCP'
+			OR td.source_decision = 'ARI'
+			OR td.source_decision = 'KTP' THEN 'EKYC'
+			WHEN td.source_decision = 'PBK' THEN 'PEFINDO'
+			WHEN td.source_decision = 'SCP' THEN 'SCOREPRO'
+			WHEN td.source_decision = 'DSR' THEN 'DSR'
+			WHEN td.source_decision = 'LTV' THEN 'LTV'
+			WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
+			WHEN td.source_decision = 'NRC' THEN 'RECALCULATE PROCESS'
+			WHEN td.source_decision = 'CBM'
+			OR td.source_decision = 'DRM'
+			OR td.source_decision = 'GMO'
+			OR td.source_decision = 'COM'
+			OR td.source_decision = 'GMC'
+			OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE'
+			ELSE '-'
+			END AS source_decision,
+			CASE
+			WHEN td.source_decision = 'CRA' THEN 'CA'
+			WHEN td.source_decision = 'CBM' THEN 'BM'
+			WHEN td.source_decision = 'DRM' THEN 'RM'
+			WHEN td.source_decision = 'GMO' THEN 'GMO'
+			WHEN td.source_decision = 'COM' THEN 'COM'
+			WHEN td.source_decision = 'GMC' THEN 'GMC'
+			WHEN td.source_decision = 'UCC' THEN 'UCC'
+			ELSE td.source_decision
+			END AS alias,
+			CASE
+			WHEN td.decision = 'PAS' THEN 'PASS'
+			WHEN td.decision = 'REJ' THEN 'REJECT'
+			WHEN td.decision = 'CAN' THEN 'CANCEL'
+			WHEN td.decision = 'RTN' THEN 'RETURN'
+			WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS'
+			ELSE '-'
+			END AS decision,
+			CASE
+			WHEN ap.reason IS NULL THEN td.reason 
+			ELSE ap.reason 
+			END AS reason,
+			FORMAT(td.created_at,'yyyy-MM-dd HH:mm:ss') as created_at,
+			td.next_step
+		FROM
+			trx_details td WITH (nolock)
+			LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
+		WHERE td.ProspectID = ? AND (td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC') OR 
+		(td.source_decision IN('TNR','PRJ','NIK','NKA','BLK','PMK','LTV') AND td.decision = 'REJ'))
+		AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
 			WillReturnError(gorm.ErrRecordNotFound)
 		mock.ExpectCommit()
 
