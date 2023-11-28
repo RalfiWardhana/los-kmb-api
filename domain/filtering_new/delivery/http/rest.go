@@ -17,11 +17,11 @@ type handlerKmbFiltering struct {
 	usecase      interfaces.Usecase
 	repository   interfaces.Repository
 	Json         common.JSON
-	producer     platformevent.PlatformEvent
+	producer     platformevent.PlatformEventInterface
 }
 
 func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware,
-	producer platformevent.PlatformEvent) {
+	producer platformevent.PlatformEventInterface) {
 	handler := handlerKmbFiltering{
 		multiusecase: multiUsecase,
 		usecase:      usecase,
