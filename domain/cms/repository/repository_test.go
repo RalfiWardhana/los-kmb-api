@@ -41,6 +41,7 @@ func structToSlice(data interface{}) []driver.Value {
 }
 
 func TestGetCustomerPhoto(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 	// Setup mock database connection
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -57,10 +58,13 @@ func TestGetCustomerPhoto(t *testing.T) {
 	prospectID := "12345"
 	expectedPhoto := []entity.DataPhoto{{PhotoID: "1", Label: "KTP", Url: "http://example.com/photo1.jpg"}}
 
+	mock.ExpectBegin()
+
 	// Mock SQL query and result
 	mock.ExpectQuery(`SELECT tcp.photo_id, CASE WHEN lpi.Name IS NULL THEN 'LAINNYA' ELSE lpi.Name END AS label, tcp.url FROM trx_customer_photo tcp WITH \(nolock\) LEFT JOIN m_label_photo_inquiry lpi ON lpi.LabelPhotoID = tcp.photo_id WHERE ProspectID = \?`).WithArgs(prospectID).
 		WillReturnRows(sqlmock.NewRows([]string{"photo_id", "label", "url"}).
 			AddRow(1, "KTP", "http://example.com/photo1.jpg"))
+	mock.ExpectCommit()
 
 	// Call the function
 	photo, err := repo.GetCustomerPhoto(prospectID)
@@ -78,6 +82,7 @@ func TestGetCustomerPhoto(t *testing.T) {
 }
 
 func TestGetCustomerPhoto_RecordNotFound(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 	// Setup mock database connection
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -92,10 +97,12 @@ func TestGetCustomerPhoto_RecordNotFound(t *testing.T) {
 
 	// Expected input and output
 	prospectID := "12345"
+	mock.ExpectBegin()
 
 	// Mock SQL query to simulate record not found
 	mock.ExpectQuery(`SELECT tcp.photo_id, CASE WHEN lpi.Name IS NULL THEN 'LAINNYA' ELSE lpi.Name END AS label, tcp.url FROM trx_customer_photo tcp WITH \(nolock\) LEFT JOIN m_label_photo_inquiry lpi ON lpi.LabelPhotoID = tcp.photo_id WHERE ProspectID = \?`).WithArgs(prospectID).
 		WillReturnError(gorm.ErrRecordNotFound)
+	mock.ExpectCommit()
 
 	// Call the function
 	_, err := repo.GetCustomerPhoto(prospectID)
@@ -111,6 +118,7 @@ func TestGetCustomerPhoto_RecordNotFound(t *testing.T) {
 }
 
 func TestGetSurveyorData(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 	// Setup mock database connection
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -139,9 +147,12 @@ func TestGetSurveyorData(t *testing.T) {
 	}
 
 	// Mock SQL query and result
+	mock.ExpectBegin()
+
 	mock.ExpectQuery(`SELECT destination, request_date, assign_date, surveyor_name, result_date, status, surveyor_note FROM trx_surveyor WITH \(nolock\) WHERE ProspectID = \?`).WithArgs(prospectID).
 		WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "destination", "request_date", "assign_date", "surveyor_name", "result_date", "status", "surveyor_note"}).
 			AddRow("12345", "HOME", time.Now(), time.Now(), "RONY ACHMAD MOQAROBIN", time.Now(), "APPROVE", nil))
+	mock.ExpectCommit()
 
 	// Call the function
 	photo, err := repo.GetSurveyorData(prospectID)
@@ -159,6 +170,7 @@ func TestGetSurveyorData(t *testing.T) {
 }
 
 func TestGetSurveyorData_RecordNotFound(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 	// Setup mock database connection
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -173,10 +185,12 @@ func TestGetSurveyorData_RecordNotFound(t *testing.T) {
 
 	// Expected input and output
 	prospectID := "12345"
+	mock.ExpectBegin()
 
 	// Mock SQL query to simulate record not found
 	mock.ExpectQuery(`SELECT destination, request_date, assign_date, surveyor_name, result_date, status, surveyor_note FROM trx_surveyor WITH \(nolock\) WHERE ProspectID = \?`).WithArgs(prospectID).
 		WillReturnError(gorm.ErrRecordNotFound)
+	mock.ExpectCommit()
 
 	// Call the function
 	_, err := repo.GetSurveyorData(prospectID)
@@ -192,6 +206,7 @@ func TestGetSurveyorData_RecordNotFound(t *testing.T) {
 }
 
 func TestGetStatusPrescreening(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 	// Setup mock database connection
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -211,10 +226,13 @@ func TestGetStatusPrescreening(t *testing.T) {
 		SourceDecision: constant.PRESCREENING,
 	}
 
+	mock.ExpectBegin()
+
 	// Mock SQL query and result
 	mock.ExpectQuery(`SELECT activity, decision, source_decision FROM trx_status WITH \(nolock\) WHERE ProspectID = \?`).WithArgs(prospectID).
 		WillReturnRows(sqlmock.NewRows([]string{"activity", "source_decision"}).
 			AddRow(constant.ACTIVITY_UNPROCESS, constant.PRESCREENING))
+	mock.ExpectCommit()
 
 	// Call the function
 	photo, err := repo.GetTrxStatus(prospectID)
@@ -233,6 +251,7 @@ func TestGetStatusPrescreening(t *testing.T) {
 
 func TestGetStatusPrescreening_RecordNotFound(t *testing.T) {
 	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
 
@@ -247,9 +266,12 @@ func TestGetStatusPrescreening_RecordNotFound(t *testing.T) {
 	// Expected input and output
 	prospectID := "12345"
 
+	mock.ExpectBegin()
+
 	// Mock SQL query to simulate record not found
 	mock.ExpectQuery(`SELECT activity, decision, source_decision FROM trx_status WITH \(nolock\) WHERE ProspectID = \?`).WithArgs(prospectID).
 		WillReturnError(gorm.ErrRecordNotFound)
+	mock.ExpectCommit()
 
 	// Call the function
 	_, err := repo.GetTrxStatus(prospectID)
@@ -266,6 +288,7 @@ func TestGetStatusPrescreening_RecordNotFound(t *testing.T) {
 
 func TestGetReasonPrescreening(t *testing.T) {
 	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
 
@@ -291,13 +314,16 @@ func TestGetReasonPrescreening(t *testing.T) {
 	}
 
 	// Mock SQL query and result
+
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT COUNT(tt.ReasonID) AS totalRow FROM (SELECT ReasonID FROM m_reason_message WITH (nolock)) AS tt WHERE ReasonID NOT IN ('99','100','101','102')`)).
 		WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 			AddRow("27"))
 
+	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT tt.* FROM (SELECT Code, ReasonID, ReasonMessage FROM m_reason_message WITH (nolock)) AS tt WHERE ReasonID NOT IN ('99','100','101','102') ORDER BY tt.ReasonID asc OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 		WillReturnRows(sqlmock.NewRows([]string{"Code", "ReasonID", "ReasonMessage"}).
 			AddRow("12", "11", "Akte Jual Beli Tidak Sesuai"))
+	mock.ExpectCommit()
 
 	// Call the function
 	reason, _, err := repo.GetReasonPrescreening(req, 1)
@@ -315,6 +341,7 @@ func TestGetReasonPrescreening(t *testing.T) {
 }
 
 func TestGetReasonPrescreening_RecordNotFound(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 	// Setup mock database connection
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -331,10 +358,12 @@ func TestGetReasonPrescreening_RecordNotFound(t *testing.T) {
 	req := request.ReqReasonPrescreening{
 		ReasonID: "99,100,101,102",
 	}
+	mock.ExpectBegin()
 
 	// Mock SQL query to simulate record not found
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT tt.* FROM (SELECT Code, ReasonID, ReasonMessage FROM m_reason_message WITH (nolock)) AS tt WHERE ReasonID NOT IN ('99','100','101','102') ORDER BY tt.ReasonID asc`)).
 		WillReturnError(gorm.ErrRecordNotFound)
+	mock.ExpectCommit()
 
 	// Call the function
 	_, _, err := repo.GetReasonPrescreening(req, nil)
@@ -447,16 +476,28 @@ func TestGetInquiryPrescreening(t *testing.T) {
 	expectedInquiry := []entity.InquiryPrescreening{{CmoRecommendation: 0, Activity: "", SourceDecision: "", Decision: "", Reason: "", DecisionBy: "", DecisionAt: "", ProspectID: "", BranchName: "", IncomingSource: "", CreatedAt: "", OrderAt: "", CustomerStatus: "", IDNumber: "", LegalName: "", BirthPlace: "", BirthDate: time.Time{}, SurgateMotherName: "", Gender: "", MobilePhone: "", Email: "", Education: "", MaritalStatus: "", NumOfDependence: 0, HomeStatus: "", StaySinceMonth: "", StaySinceYear: "", ExtCompanyPhone: (*string)(nil), SourceOtherIncome: (*string)(nil), Supplier: "", ProductOfferingID: "", AssetType: "", AssetDescription: "", ManufacturingYear: "", Color: "", ChassisNumber: "", EngineNumber: "", InterestRate: 0, InstallmentPeriod: 0, OTR: 0, DPAmount: 0, FinanceAmount: 0, InterestAmount: 0, LifeInsuranceFee: 0, AssetInsuranceFee: 0, InsuranceAmount: 0, AdminFee: 0, ProvisionFee: 0, NTF: 0, NTFAkumulasi: 0, Total: 0, MonthlyInstallment: 0, FirstInstallment: "", ProfessionID: "", JobTypeID: "", JobPosition: "", CompanyName: "", IndustryTypeID: "", EmploymentSinceYear: "", EmploymentSinceMonth: "", MonthlyFixedIncome: 0, MonthlyVariableIncome: 0, SpouseIncome: 0, SpouseIDNumber: "", SpouseLegalName: "", SpouseCompanyName: "", SpouseCompanyPhone: "", SpouseMobilePhone: "", SpouseProfession: "", EmconName: "", Relationship: "", EmconMobilePhone: "", LegalAddress: "", LegalRTRW: "", LegalKelurahan: "", LegalKecamatan: "", LegalZipCode: "", LegalCity: "", ResidenceAddress: "", ResidenceRTRW: "", ResidenceKelurahan: "", ResidenceKecamatan: "", ResidenceZipCode: "", ResidenceCity: "", CompanyAddress: "", CompanyRTRW: "", CompanyKelurahan: "", CompanyKecamatan: "", CompanyZipCode: "", CompanyCity: "", CompanyAreaPhone: "", CompanyPhone: "", EmergencyAddress: "", EmergencyRTRW: "", EmergencyKelurahan: "", EmergencyKecamatan: "", EmergencyZipcode: "", EmergencyCity: "", EmergencyAreaPhone: "", EmergencyPhone: ""}}
 
 	// Mock SQL query and result
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
+		INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+		(	SELECT value 
+			FROM region_user ru WITH (nolock)
+			cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+			WHERE ru.user_id = 'abc123' 
+		)
+		AND b.lob_id='125'`)).
+		WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
+			AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
+
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT
 	COUNT(tt.ProspectID) AS totalRow
 	FROM
 	(
-		SELECT
-		cb.BranchID,
-		tm.ProspectID,
-		tm.created_at,
-		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+			SELECT
+			cb.BranchID,
+			tm.ProspectID,
+			tm.created_at,
+			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
 	FROM
 	trx_master tm WITH (nolock)
 	INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -468,425 +509,425 @@ func TestGetInquiryPrescreening(t *testing.T) {
 	INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 	INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 	INNER JOIN (
-		SELECT
-		ProspectID,
-		Address,
-		RT,
-		RW,
-		Kelurahan,
-		Kecamatan,
-		ZipCode,
-		City
-		FROM
-		trx_customer_address WITH (nolock)
-		WHERE
-		"Type" = 'LEGAL'
+			SELECT
+			ProspectID,
+			Address,
+			RT,
+			RW,
+			Kelurahan,
+			Kecamatan,
+			ZipCode,
+			City
+			FROM
+			trx_customer_address WITH (nolock)
+			WHERE
+			"Type" = 'LEGAL'
 	) cal ON tm.ProspectID = cal.ProspectID
 	INNER JOIN (
-		SELECT
-		ProspectID,
-		Address,
-		RT,
-		RW,
-		Kelurahan,
-		Kecamatan,
-		ZipCode,
-		City
-		FROM
-		trx_customer_address WITH (nolock)
-		WHERE
-		"Type" = 'RESIDENCE'
+			SELECT
+			ProspectID,
+			Address,
+			RT,
+			RW,
+			Kelurahan,
+			Kecamatan,
+			ZipCode,
+			City
+			FROM
+			trx_customer_address WITH (nolock)
+			WHERE
+			"Type" = 'RESIDENCE'
 	) car ON tm.ProspectID = car.ProspectID
 	INNER JOIN (
-		SELECT
-		ProspectID,
-		Address,
-		RT,
-		RW,
-		Kelurahan,
-		Kecamatan,
-		ZipCode,
-		City,
-		Phone,
-		AreaPhone
-		FROM
-		trx_customer_address WITH (nolock)
-		WHERE
-		"Type" = 'COMPANY'
+			SELECT
+			ProspectID,
+			Address,
+			RT,
+			RW,
+			Kelurahan,
+			Kecamatan,
+			ZipCode,
+			City,
+			Phone,
+			AreaPhone
+			FROM
+			trx_customer_address WITH (nolock)
+			WHERE
+			"Type" = 'COMPANY'
 	) cac ON tm.ProspectID = cac.ProspectID
 	INNER JOIN (
-		SELECT
-		ProspectID,
-		Address,
-		RT,
-		RW,
-		Kelurahan,
-		Kecamatan,
-		ZipCode,
-		City,
-		Phone,
-		AreaPhone
-		FROM
-		trx_customer_address WITH (nolock)
-		WHERE
-		"Type" = 'EMERGENCY'
+			SELECT
+			ProspectID,
+			Address,
+			RT,
+			RW,
+			Kelurahan,
+			Kecamatan,
+			ZipCode,
+			City,
+			Phone,
+			AreaPhone
+			FROM
+			trx_customer_address WITH (nolock)
+			WHERE
+			"Type" = 'EMERGENCY'
 	) cae ON tm.ProspectID = cae.ProspectID
 	INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 	LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 	LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 	LEFT JOIN (
-		SELECT
-		[key],
-		value
-		FROM
-		app_config ap WITH (nolock)
-		WHERE
-		group_name = 'Education'
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'Education'
 	) edu ON tcp.Education = edu.[key]
 	LEFT JOIN (
-		SELECT
-		[key],
-		value
-		FROM
-		app_config ap WITH (nolock)
-		WHERE
-		group_name = 'MaritalStatus'
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'MaritalStatus'
 	) mst ON tcp.MaritalStatus = mst.[key]
 	LEFT JOIN (
-		SELECT
-		[key],
-		value
-		FROM
-		app_config ap WITH (nolock)
-		WHERE
-		group_name = 'HomeStatus'
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'HomeStatus'
 	) hst ON tcp.HomeStatus = hst.[key]
 	LEFT JOIN (
-		SELECT
-		[key],
-		value
-		FROM
-		app_config ap WITH (nolock)
-		WHERE
-		group_name = 'MonthName'
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'MonthName'
 	) mn ON tcp.StaySinceMonth = mn.[key]
 	LEFT JOIN (
-		SELECT
-		[key],
-		value
-		FROM
-		app_config ap WITH (nolock)
-		WHERE
-		group_name = 'ProfessionID'
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'ProfessionID'
 	) pr ON tce.ProfessionID = pr.[key]
 	LEFT JOIN (
-		SELECT
-		[key],
-		value
-		FROM
-		app_config ap WITH (nolock)
-		WHERE
-		group_name = 'JobType'
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'JobType'
 	) jt ON tce.JobType = jt.[key]
 	LEFT JOIN (
-		SELECT
-		[key],
-		value
-		FROM
-		app_config ap WITH (nolock)
-		WHERE
-		group_name = 'JobPosition'
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'JobPosition'
 	) jb ON tce.JobPosition = jb.[key]
 	LEFT JOIN (
-		SELECT
-		[key],
-		value
-		FROM
-		app_config ap WITH (nolock)
-		WHERE
-		group_name = 'MonthName'
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'MonthName'
 	) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
 	LEFT JOIN (
-		SELECT
-		[key],
-		value
-		FROM
-		app_config ap WITH (nolock)
-		WHERE
-		group_name = 'ProfessionID'
+			SELECT
+			[key],
+			value
+			FROM
+			app_config ap WITH (nolock)
+			WHERE
+			group_name = 'ProfessionID'
 	) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
+	) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
 		WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 			AddRow("27"))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT tt.* FROM (
-		SELECT
-		tm.ProspectID,
-		cb.BranchName,
-		cb.BranchID,
-		tia.info AS CMORecommend,
-		tst.activity,
-		tst.source_decision,
-		tps.decision,
-		tps.reason,
-		tps.created_by AS DecisionBy,
-		tps.decision_by AS DecisionName,
-		tps.created_at AS DecisionAt,
-		CASE
-		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
-		  ELSE 'NE'
-		END AS incoming_source,
-		tf.customer_status,
-		tm.created_at,
-		tm.order_at,
-		scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-		scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
-		scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
-		tcp.BirthDate,
-		scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
-		CASE
-		  WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
-		  WHEN tcp.Gender = 'F' THEN 'Perempuan'
-		END AS 'Gender',
-		scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
-		CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
-		cal.Kelurahan AS LegalKelurahan,
-		cal.Kecamatan AS LegalKecamatan,
-		cal.ZipCode AS LegalZipcode,
-		cal.City AS LegalCity,
-		scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
-		scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
-		edu.value AS Education,
-		mst.value AS MaritalStatus,
-		tcp.NumOfDependence,
-		scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
-		CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
-		car.Kelurahan AS ResidenceKelurahan,
-		car.Kecamatan AS ResidenceKecamatan,
-		car.ZipCode AS ResidenceZipcode,
-		car.City AS ResidenceCity,
-		hst.value AS HomeStatus,
-		mn.value AS StaySinceMonth,
-		tcp.StaySinceYear,
-		ta.ProductOfferingID,
-		ta.dealer,
-		ta.LifeInsuranceFee,
-		ta.AssetInsuranceFee,
-		'KMB MOTOR' AS AssetType,
-		ti.asset_description,
-		ti.manufacture_year,
-		ti.color,
-		chassis_number,
-		engine_number,
-		interest_rate,
-		Tenor AS InstallmentPeriod,
-		OTR,
-		DPAmount,
-		AF AS FinanceAmount,
-		interest_amount,
-		insurance_amount,
-		AdminFee,
-		provision_fee,
-		NTF,
-		NTFAkumulasi,
-		(NTF + interest_amount) AS Total,
-		InstallmentAmount AS MonthlyInstallment,
-		FirstInstallment,
-		pr.value AS ProfessionID,
-		jt.value AS JobType,
-		jb.value AS JobPosition,
-		mn2.value AS EmploymentSinceMonth,
-		tce.EmploymentSinceYear,
-		tce.CompanyName,
-		cac.AreaPhone AS CompanyAreaPhone,
-		cac.Phone AS CompanyPhone,
-		tcp.ExtCompanyPhone,
-		scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
-		CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
-		cac.Kelurahan AS CompanyKelurahan,
-		cac.Kecamatan AS CompanyKecamatan,
-		car.ZipCode AS CompanyZipcode,
-		car.City AS CompanyCity,
-		tce.MonthlyFixedIncome,
-		tce.MonthlyVariableIncome,
-		tce.SpouseIncome,
-		tcp.SourceOtherIncome,
-		tcs.FullName AS SpouseLegalName,
-		tcs.CompanyName AS SpouseCompanyName,
-		tcs.CompanyPhone AS SpouseCompanyPhone,
-		tcs.MobilePhone AS SpouseMobilePhone,
-		tcs.IDNumber AS SpouseIDNumber,
-		pr2.value AS SpouseProfession,
-		em.Name AS EmconName,
-		em.Relationship,
-		em.MobilePhone AS EmconMobilePhone,
-		scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
-		CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
-		cae.Kelurahan AS EmergencyKelurahan,
-		cae.Kecamatan AS EmergencyKecamatan,
-		cae.ZipCode AS EmergencyZipcode,
-		cae.City AS EmergencyCity,
-		cae.AreaPhone AS EmergencyAreaPhone,
-		cae.Phone AS EmergencyPhone,
-		tce.IndustryTypeID
-	  FROM
-		trx_master tm WITH (nolock)
-		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
-		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
-		INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
-		INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
-		INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
-		INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
-		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
-		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
-		INNER JOIN (
-		  SELECT
-			ProspectID,
-			Address,
-			RT,
-			RW,
-			Kelurahan,
-			Kecamatan,
-			ZipCode,
-			City
-		  FROM
-			trx_customer_address WITH (nolock)
-		  WHERE
-			"Type" = 'LEGAL'
-		) cal ON tm.ProspectID = cal.ProspectID
-		INNER JOIN (
-		  SELECT
-			ProspectID,
-			Address,
-			RT,
-			RW,
-			Kelurahan,
-			Kecamatan,
-			ZipCode,
-			City
-		  FROM
-			trx_customer_address WITH (nolock)
-		  WHERE
-			"Type" = 'RESIDENCE'
-		) car ON tm.ProspectID = car.ProspectID
-		INNER JOIN (
-		  SELECT
-			ProspectID,
-			Address,
-			RT,
-			RW,
-			Kelurahan,
-			Kecamatan,
-			ZipCode,
-			City,
-			Phone,
-			AreaPhone
-		  FROM
-			trx_customer_address WITH (nolock)
-		  WHERE
-			"Type" = 'COMPANY'
-		) cac ON tm.ProspectID = cac.ProspectID
-		INNER JOIN (
-		  SELECT
-			ProspectID,
-			Address,
-			RT,
-			RW,
-			Kelurahan,
-			Kecamatan,
-			ZipCode,
-			City,
-			Phone,
-			AreaPhone
-		  FROM
-			trx_customer_address WITH (nolock)
-		  WHERE
-			"Type" = 'EMERGENCY'
-		) cae ON tm.ProspectID = cae.ProspectID
-		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
-		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
-		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
-		LEFT JOIN (
-		  SELECT
-			[key],
-			value
-		  FROM
-			app_config ap WITH (nolock)
-		  WHERE
-			group_name = 'Education'
-		) edu ON tcp.Education = edu.[key]
-		LEFT JOIN (
-		  SELECT
-			[key],
-			value
-		  FROM
-			app_config ap WITH (nolock)
-		  WHERE
-			group_name = 'MaritalStatus'
-		) mst ON tcp.MaritalStatus = mst.[key]
-		LEFT JOIN (
-		  SELECT
-			[key],
-			value
-		  FROM
-			app_config ap WITH (nolock)
-		  WHERE
-			group_name = 'HomeStatus'
-		) hst ON tcp.HomeStatus = hst.[key]
-		LEFT JOIN (
-		  SELECT
-			[key],
-			value
-		  FROM
-			app_config ap WITH (nolock)
-		  WHERE
-			group_name = 'MonthName'
-		) mn ON tcp.StaySinceMonth = mn.[key]
-		LEFT JOIN (
-		  SELECT
-			[key],
-			value
-		  FROM
-			app_config ap WITH (nolock)
-		  WHERE
-			group_name = 'ProfessionID'
-		) pr ON tce.ProfessionID = pr.[key]
-		LEFT JOIN (
-		  SELECT
-			[key],
-			value
-		  FROM
-			app_config ap WITH (nolock)
-		  WHERE
-			group_name = 'JobType'
-		) jt ON tce.JobType = jt.[key]
-		LEFT JOIN (
-		  SELECT
-			[key],
-			value
-		  FROM
-			app_config ap WITH (nolock)
-		  WHERE
-			group_name = 'JobPosition'
-		) jb ON tce.JobPosition = jb.[key]
-		LEFT JOIN (
-		  SELECT
-			[key],
-			value
-		  FROM
-			app_config ap WITH (nolock)
-		  WHERE
-			group_name = 'MonthName'
-		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
-		LEFT JOIN (
-		  SELECT
-			[key],
-			value
-		  FROM
-			app_config ap WITH (nolock)
-		  WHERE
-			group_name = 'ProfessionID'
-		) pr2 ON tcs.ProfessionID = pr2.[key] ) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+        SELECT
+        tm.ProspectID,
+        cb.BranchName,
+        cb.BranchID,
+        tia.info AS CMORecommend,
+        tst.activity,
+        tst.source_decision,
+        tps.decision,
+        tps.reason,
+        tps.created_by AS DecisionBy,
+        tps.decision_by AS DecisionName,
+        tps.created_at AS DecisionAt,
+        CASE
+          WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
+          ELSE 'NE'
+        END AS incoming_source,
+        tf.customer_status,
+        tm.created_at,
+        tm.order_at,
+        scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+        scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+        scp.dbo.DEC_B64('SEC', tcp.BirthPlace) AS BirthPlace,
+        tcp.BirthDate,
+        scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+        CASE
+          WHEN tcp.Gender = 'M' THEN 'Laki-Laki'
+          WHEN tcp.Gender = 'F' THEN 'Perempuan'
+        END AS 'Gender',
+        scp.dbo.DEC_B64('SEC', cal.Address) AS LegalAddress,
+        CONCAT(cal.RT, '/', cal.RW) AS LegalRTRW,
+        cal.Kelurahan AS LegalKelurahan,
+        cal.Kecamatan AS LegalKecamatan,
+        cal.ZipCode AS LegalZipcode,
+        cal.City AS LegalCity,
+        scp.dbo.DEC_B64('SEC', tcp.MobilePhone) AS MobilePhone,
+        scp.dbo.DEC_B64('SEC', tcp.Email) AS Email,
+        edu.value AS Education,
+        mst.value AS MaritalStatus,
+        tcp.NumOfDependence,
+        scp.dbo.DEC_B64('SEC', car.Address) AS ResidenceAddress,
+        CONCAT(car.RT, '/', cal.RW) AS ResidenceRTRW,
+        car.Kelurahan AS ResidenceKelurahan,
+        car.Kecamatan AS ResidenceKecamatan,
+        car.ZipCode AS ResidenceZipcode,
+        car.City AS ResidenceCity,
+        hst.value AS HomeStatus,
+        mn.value AS StaySinceMonth,
+        tcp.StaySinceYear,
+        ta.ProductOfferingID,
+        ta.dealer,
+        ta.LifeInsuranceFee,
+        ta.AssetInsuranceFee,
+        'KMB MOTOR' AS AssetType,
+        ti.asset_description,
+        ti.manufacture_year,
+        ti.color,
+        chassis_number,
+        engine_number,
+        interest_rate,
+        Tenor AS InstallmentPeriod,
+        OTR,
+        DPAmount,
+        AF AS FinanceAmount,
+        interest_amount,
+        insurance_amount,
+        AdminFee,
+        provision_fee,
+        NTF,
+        NTFAkumulasi,
+        (NTF + interest_amount) AS Total,
+        InstallmentAmount AS MonthlyInstallment,
+        FirstInstallment,
+        pr.value AS ProfessionID,
+        jt.value AS JobType,
+        jb.value AS JobPosition,
+        mn2.value AS EmploymentSinceMonth,
+        tce.EmploymentSinceYear,
+        tce.CompanyName,
+        cac.AreaPhone AS CompanyAreaPhone,
+        cac.Phone AS CompanyPhone,
+        tcp.ExtCompanyPhone,
+        scp.dbo.DEC_B64('SEC', cac.Address) AS CompanyAddress,
+        CONCAT(cac.RT, '/', cac.RW) AS CompanyRTRW,
+        cac.Kelurahan AS CompanyKelurahan,
+        cac.Kecamatan AS CompanyKecamatan,
+        car.ZipCode AS CompanyZipcode,
+        car.City AS CompanyCity,
+        tce.MonthlyFixedIncome,
+        tce.MonthlyVariableIncome,
+        tce.SpouseIncome,
+        tcp.SourceOtherIncome,
+        tcs.FullName AS SpouseLegalName,
+        tcs.CompanyName AS SpouseCompanyName,
+        tcs.CompanyPhone AS SpouseCompanyPhone,
+        tcs.MobilePhone AS SpouseMobilePhone,
+        tcs.IDNumber AS SpouseIDNumber,
+        pr2.value AS SpouseProfession,
+        em.Name AS EmconName,
+        em.Relationship,
+        em.MobilePhone AS EmconMobilePhone,
+        scp.dbo.DEC_B64('SEC', cae.Address) AS EmergencyAddress,
+        CONCAT(cae.RT, '/', cae.RW) AS EmergencyRTRW,
+        cae.Kelurahan AS EmergencyKelurahan,
+        cae.Kecamatan AS EmergencyKecamatan,
+        cae.ZipCode AS EmergencyZipcode,
+        cae.City AS EmergencyCity,
+        cae.AreaPhone AS EmergencyAreaPhone,
+        cae.Phone AS EmergencyPhone,
+        tce.IndustryTypeID
+  FROM
+        trx_master tm WITH (nolock)
+        INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+        INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+        INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+        INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+        INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+        INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+        INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+        INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+        INNER JOIN (
+          SELECT
+                ProspectID,
+                Address,
+                RT,
+                RW,
+                Kelurahan,
+                Kecamatan,
+                ZipCode,
+                City
+          FROM
+                trx_customer_address WITH (nolock)
+          WHERE
+                "Type" = 'LEGAL'
+        ) cal ON tm.ProspectID = cal.ProspectID
+        INNER JOIN (
+          SELECT
+                ProspectID,
+                Address,
+                RT,
+                RW,
+                Kelurahan,
+                Kecamatan,
+                ZipCode,
+                City
+          FROM
+                trx_customer_address WITH (nolock)
+          WHERE
+                "Type" = 'RESIDENCE'
+        ) car ON tm.ProspectID = car.ProspectID
+        INNER JOIN (
+          SELECT
+                ProspectID,
+                Address,
+                RT,
+                RW,
+                Kelurahan,
+                Kecamatan,
+                ZipCode,
+                City,
+                Phone,
+                AreaPhone
+          FROM
+                trx_customer_address WITH (nolock)
+          WHERE
+                "Type" = 'COMPANY'
+        ) cac ON tm.ProspectID = cac.ProspectID
+        INNER JOIN (
+          SELECT
+                ProspectID,
+                Address,
+                RT,
+                RW,
+                Kelurahan,
+                Kecamatan,
+                ZipCode,
+                City,
+                Phone,
+                AreaPhone
+          FROM
+                trx_customer_address WITH (nolock)
+          WHERE
+                "Type" = 'EMERGENCY'
+        ) cae ON tm.ProspectID = cae.ProspectID
+        INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+        LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+        LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+        LEFT JOIN (
+          SELECT
+                [key],
+                value
+          FROM
+                app_config ap WITH (nolock)
+          WHERE
+                group_name = 'Education'
+        ) edu ON tcp.Education = edu.[key]
+        LEFT JOIN (
+          SELECT
+                [key],
+                value
+          FROM
+                app_config ap WITH (nolock)
+          WHERE
+                group_name = 'MaritalStatus'
+        ) mst ON tcp.MaritalStatus = mst.[key]
+        LEFT JOIN (
+          SELECT
+                [key],
+                value
+          FROM
+                app_config ap WITH (nolock)
+          WHERE
+                group_name = 'HomeStatus'
+        ) hst ON tcp.HomeStatus = hst.[key]
+        LEFT JOIN (
+          SELECT
+                [key],
+                value
+          FROM
+                app_config ap WITH (nolock)
+          WHERE
+                group_name = 'MonthName'
+        ) mn ON tcp.StaySinceMonth = mn.[key]
+        LEFT JOIN (
+          SELECT
+                [key],
+                value
+          FROM
+                app_config ap WITH (nolock)
+          WHERE
+                group_name = 'ProfessionID'
+        ) pr ON tce.ProfessionID = pr.[key]
+        LEFT JOIN (
+          SELECT
+                [key],
+                value
+          FROM
+                app_config ap WITH (nolock)
+          WHERE
+                group_name = 'JobType'
+        ) jt ON tce.JobType = jt.[key]
+        LEFT JOIN (
+          SELECT
+                [key],
+                value
+          FROM
+                app_config ap WITH (nolock)
+          WHERE
+                group_name = 'JobPosition'
+        ) jb ON tce.JobPosition = jb.[key]
+        LEFT JOIN (
+          SELECT
+                [key],
+                value
+          FROM
+                app_config ap WITH (nolock)
+          WHERE
+                group_name = 'MonthName'
+        ) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+        LEFT JOIN (
+          SELECT
+                [key],
+                value
+          FROM
+                app_config ap WITH (nolock)
+          WHERE
+                group_name = 'ProfessionID'
+        ) pr2 ON tcs.ProfessionID = pr2.[key] ) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 		WillReturnRows(sqlmock.NewRows([]string{"Code", "ReasonID", "ReasonMessage"}).
 			AddRow("12", "11", "Akte Jual Beli Tidak Sesuai"))
 
@@ -2779,6 +2820,7 @@ func TestSaveLogOrchestrator(t *testing.T) {
 
 func TestGetHistoryApproval(t *testing.T) {
 	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
 
@@ -2809,9 +2851,12 @@ func TestGetHistoryApproval(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 
 		// Mock SQL query and result
+		mock.ExpectBegin()
+
 		mock.ExpectQuery(`SELECT thas.decision_by, thas.next_final_approval_flag, CASE WHEN thas.decision = 'APR' THEN 'Approve' WHEN thas.decision = 'REJ' THEN 'Reject' WHEN thas.decision = 'CAN' THEN 'Cancel' WHEN thas.decision = 'RTN' THEN 'Return' WHEN thas.decision = 'SDP' THEN 'Submit Perubahan Data Pembiayaan' ELSE '-' END AS decision, CASE WHEN thas.need_escalation = 1 THEN 'Yes' ELSE 'No' END AS need_escalation, thas.source_decision, CASE WHEN thas.next_step<>'' THEN thas.next_step ELSE '-' END AS next_step, CASE WHEN thas.note<>'' THEN thas.note ELSE '-' END AS note, thas.created_at, CASE WHEN thas.source_decision = 'CRA' AND tcd.slik_result<>'' AND thas.decision<>'SDP' THEN tcd.slik_result ELSE '-' END AS slik_result FROM trx_history_approval_scheme thas WITH \(nolock\) LEFT JOIN trx_ca_decision tcd on thas.ProspectID = tcd.ProspectID WHERE thas.ProspectID = \? ORDER BY thas.created_at DESC`).WithArgs(prospectID).
 			WillReturnRows(sqlmock.NewRows([]string{"decision", "decision_by", "next_final_approval_flag", "need_escalation", "source_decision", "next_step", "note", "created_at", "slik_result"}).
 				AddRow("APR", "User CA KMB", 1, "No", "CRA", "CBM", "Ok dari CA", time.Time{}, "Lancar"))
+		mock.ExpectCommit()
 
 		// Call the function
 		data, err := repo.GetHistoryApproval(prospectID)
@@ -2831,8 +2876,11 @@ func TestGetHistoryApproval(t *testing.T) {
 	t.Run("record not found", func(t *testing.T) {
 
 		// Mock SQL query to simulate record not found
+		mock.ExpectBegin()
+
 		mock.ExpectQuery(`SELECT thas.decision_by, thas.next_final_approval_flag, CASE WHEN thas.decision = 'APR' THEN 'Approve' WHEN thas.decision = 'REJ' THEN 'Reject' WHEN thas.decision = 'CAN' THEN 'Cancel' WHEN thas.decision = 'RTN' THEN 'Return' WHEN thas.decision = 'SDP' THEN 'Submit Perubahan Data Pembiayaan' ELSE '-' END AS decision, CASE WHEN thas.need_escalation = 1 THEN 'Yes' ELSE 'No' END AS need_escalation, thas.source_decision, CASE WHEN thas.next_step<>'' THEN thas.next_step ELSE '-' END AS next_step, CASE WHEN thas.note<>'' THEN thas.note ELSE '-' END AS note, thas.created_at, CASE WHEN thas.source_decision = 'CRA' AND tcd.slik_result<>'' AND thas.decision<>'SDP' THEN tcd.slik_result ELSE '-' END AS slik_result FROM trx_history_approval_scheme thas WITH \(nolock\) LEFT JOIN trx_ca_decision tcd on thas.ProspectID = tcd.ProspectID WHERE thas.ProspectID = \? ORDER BY thas.created_at DESC`).WithArgs(prospectID).
 			WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectCommit()
 
 		// Call the function
 		_, err := repo.GetHistoryApproval(prospectID)
@@ -2850,6 +2898,7 @@ func TestGetHistoryApproval(t *testing.T) {
 
 func TestGetInternalRecord(t *testing.T) {
 	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
 
@@ -2880,9 +2929,12 @@ func TestGetInternalRecord(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 
 		// Mock SQL query and result
+		mock.ExpectBegin()
+
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM trx_internal_record WITH (nolock) WHERE ProspectID = ? ORDER BY created_at DESC`)).WithArgs(prospectID).
 			WillReturnRows(sqlmock.NewRows([]string{"ApplicationID", "ProductType", "AgreementDate", "AssetCode", "Tenor", "OutstandingPrincipal", "InstallmentAmount", "ContractStatus", "CurrentCondition"}).
 				AddRow("426A202201124155", "KMB", time.Time{}, "K-YMH.MOTOR.NMAX (B6H A/T)", 26, 0, 1866000, "LIV", "OVD 204 hari"))
+		mock.ExpectCommit()
 
 		// Call the function
 		data, err := repo.GetInternalRecord(prospectID)
@@ -2902,8 +2954,11 @@ func TestGetInternalRecord(t *testing.T) {
 	t.Run("record not found", func(t *testing.T) {
 
 		// Mock SQL query to simulate record not found
+		mock.ExpectBegin()
+
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM trx_internal_record WITH (nolock) WHERE ProspectID = ? ORDER BY created_at DESC`)).WithArgs(prospectID).
 			WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectCommit()
 
 		// Call the function
 		_, err := repo.GetInternalRecord(prospectID)
@@ -2921,6 +2976,7 @@ func TestGetInternalRecord(t *testing.T) {
 
 func TestGetLimitApproval(t *testing.T) {
 	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
 
@@ -2941,9 +2997,12 @@ func TestGetLimitApproval(t *testing.T) {
 	t.Run("success", func(t *testing.T) {
 
 		// Mock SQL query and result
+		mock.ExpectBegin()
+
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT [alias] FROM m_limit_approval_scheme WITH (nolock) WHERE ? between coverage_ntf_start AND coverage_ntf_end`)).WithArgs(ntf).
 			WillReturnRows(sqlmock.NewRows([]string{"alias"}).
 				AddRow("CBM"))
+		mock.ExpectCommit()
 
 		// Call the function
 		data, err := repo.GetLimitApproval(ntf)
@@ -2963,8 +3022,11 @@ func TestGetLimitApproval(t *testing.T) {
 	t.Run("record not found", func(t *testing.T) {
 
 		// Mock SQL query to simulate record not found
+		mock.ExpectBegin()
+
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT [alias] FROM m_limit_approval_scheme WITH (nolock) WHERE ? between coverage_ntf_start AND coverage_ntf_end`)).WithArgs(ntf).
 			WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectCommit()
 
 		// Call the function
 		_, err := repo.GetLimitApproval(ntf)
@@ -2982,6 +3044,7 @@ func TestGetLimitApproval(t *testing.T) {
 
 func TestGetHistoryProcess(t *testing.T) {
 	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
 
@@ -3006,10 +3069,13 @@ func TestGetHistoryProcess(t *testing.T) {
 
 	t.Run("success", func(t *testing.T) {
 
+		mock.ExpectBegin()
+
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT CASE WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING' WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING' WHEN td.source_decision = 'DCP' OR td.source_decision = 'ARI' OR td.source_decision = 'KTP' THEN 'EKYC' WHEN td.source_decision = 'PBK' THEN 'PEFINDO' WHEN td.source_decision = 'SCP' THEN 'SCOREPRO' WHEN td.source_decision = 'DSR' THEN 'DSR' WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS' WHEN td.source_decision = 'NRC' THEN 'RECALCULATE PROCESS' WHEN td.source_decision = 'CBM' OR td.source_decision = 'DRM' OR td.source_decision = 'GMO' OR td.source_decision = 'COM' OR td.source_decision = 'GMC' OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE' ELSE '-' END AS source_decision, CASE WHEN td.source_decision = 'CRA' THEN 'CA' WHEN td.source_decision = 'CBM' THEN 'BM' WHEN td.source_decision = 'DRM' THEN 'RM' WHEN td.source_decision = 'GMO' THEN 'GMO' WHEN td.source_decision = 'COM' THEN 'COM' WHEN td.source_decision = 'GMC' THEN 'GMC' WHEN td.source_decision = 'UCC' THEN 'UCC' ELSE td.source_decision END AS alias, CASE WHEN td.decision = 'PAS' THEN 'PASS' WHEN td.decision = 'REJ' THEN 'REJECT' WHEN td.decision = 'CAN' THEN 'CANCEL' WHEN td.decision = 'RTN' THEN 'RETURN' WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS' ELSE '-' END AS decision, CASE WHEN ap.reason IS NULL THEN td.reason ELSE ap.reason END AS reason, FORMAT(td.created_at,'yyyy-MM-dd HH:mm:ss') as created_at, td.next_step FROM trx_details td WITH (nolock) LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC') AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
 			WillReturnRows(sqlmock.NewRows([]string{"source_decision", "decision", "reason", "created_at"}).
 				AddRow("PRE SCREENING", "PASS", "Dokumen Sesuai", ""))
+		mock.ExpectCommit()
 
 		// Call the function
 		data, err := repo.GetHistoryProcess(prospectID)
@@ -3028,9 +3094,12 @@ func TestGetHistoryProcess(t *testing.T) {
 
 	t.Run("record not found", func(t *testing.T) {
 
+		mock.ExpectBegin()
+
 		// Mock SQL query to simulate record not found
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT CASE WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING' WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING' WHEN td.source_decision = 'DCP' OR td.source_decision = 'ARI' OR td.source_decision = 'KTP' THEN 'EKYC' WHEN td.source_decision = 'PBK' THEN 'PEFINDO' WHEN td.source_decision = 'SCP' THEN 'SCOREPRO' WHEN td.source_decision = 'DSR' THEN 'DSR' WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS' WHEN td.source_decision = 'NRC' THEN 'RECALCULATE PROCESS' WHEN td.source_decision = 'CBM' OR td.source_decision = 'DRM' OR td.source_decision = 'GMO' OR td.source_decision = 'COM' OR td.source_decision = 'GMC' OR td.source_decision = 'UCC' THEN 'CREDIT COMMITEE' ELSE '-' END AS source_decision, CASE WHEN td.source_decision = 'CRA' THEN 'CA' WHEN td.source_decision = 'CBM' THEN 'BM' WHEN td.source_decision = 'DRM' THEN 'RM' WHEN td.source_decision = 'GMO' THEN 'GMO' WHEN td.source_decision = 'COM' THEN 'COM' WHEN td.source_decision = 'GMC' THEN 'GMC' WHEN td.source_decision = 'UCC' THEN 'UCC' ELSE td.source_decision END AS alias, CASE WHEN td.decision = 'PAS' THEN 'PASS' WHEN td.decision = 'REJ' THEN 'REJECT' WHEN td.decision = 'CAN' THEN 'CANCEL' WHEN td.decision = 'RTN' THEN 'RETURN' WHEN td.decision = 'CPR' THEN 'CREDIT PROCESS' ELSE '-' END AS decision, CASE WHEN ap.reason IS NULL THEN td.reason ELSE ap.reason END AS reason, FORMAT(td.created_at,'yyyy-MM-dd HH:mm:ss') as created_at, td.next_step FROM trx_details td WITH (nolock) LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code WHERE td.ProspectID = ? AND td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC') AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
 			WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectCommit()
 
 		// Call the function
 		_, err := repo.GetHistoryProcess(prospectID)
@@ -3048,6 +3117,7 @@ func TestGetHistoryProcess(t *testing.T) {
 
 func TestGetCancelReason(t *testing.T) {
 	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
 
@@ -3076,9 +3146,12 @@ func TestGetCancelReason(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("8"))
 
+		mock.ExpectBegin()
+
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM m_cancel_reason with (nolock) WHERE show = '1' ORDER BY id_cancel_reason ASC`)).
 			WillReturnRows(sqlmock.NewRows([]string{"id_cancel_reason", "reason", "show"}).
 				AddRow("1", "Ganti Program Marketing", "1"))
+		mock.ExpectCommit()
 
 		// Call the function
 		reason, _, err := repo.GetCancelReason(1)
@@ -3097,8 +3170,11 @@ func TestGetCancelReason(t *testing.T) {
 
 	t.Run("success not found", func(t *testing.T) {
 		// Mock SQL query to simulate record not found
+		mock.ExpectBegin()
+
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM m_cancel_reason with (nolock) WHERE show = '1' ORDER BY id_cancel_reason ASC`)).
 			WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectCommit()
 
 		// Call the function
 		_, _, err := repo.GetCancelReason(nil)
@@ -5687,34 +5763,34 @@ func TestGetInquirySearch(t *testing.T) {
 
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
-	COUNT(tt.ProspectID) AS totalRow
-	FROM
-	(
-			SELECT
-			cb.BranchID,
-			tm.ProspectID,
-			tm.lob,
-			tm.created_at,
-			tst.activity,
-			tst.source_decision,
-			tst.decision,
-			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
-	FROM
-	trx_master tm WITH (nolock)
-	INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
-	INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
-	INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
-	INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
-	INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
-	INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
-	INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
-	INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
-	INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
-	LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
-	LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
-	LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-	) AS tt WHERE (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
+			COUNT(tt.ProspectID) AS totalRow
+			FROM
+			(
+					SELECT
+					cb.BranchID,
+					tm.ProspectID,
+					tm.lob,
+					tm.created_at,
+					tst.activity,
+					tst.source_decision,
+					tst.decision,
+					scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+					scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+			FROM
+			trx_master tm WITH (nolock)
+			INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
+			INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+			INNER JOIN trx_customer_personal tcp (nolock) ON tm.ProspectID = tcp.ProspectID
+			INNER JOIN trx_apk ta WITH (nolock) ON tm.ProspectID = ta.ProspectID
+			INNER JOIN trx_item ti WITH (nolock) ON tm.ProspectID = ti.ProspectID
+			INNER JOIN trx_customer_employment tce WITH (nolock) ON tm.ProspectID = tce.ProspectID
+			INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+			INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+			INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
+			LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
+			LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+			LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+			) AS tt WHERE (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -6429,6 +6505,16 @@ FROM
 			UserID:      "abc123",
 			Search:      "aprospectid",
 		}
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
+		INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+		(	SELECT value 
+			FROM region_user ru WITH (nolock)
+			cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+			WHERE ru.user_id = 'abc123' 
+		)
+		AND b.lob_id='125'`)).
+			WillReturnError(gorm.ErrRecordNotFound)
 
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
@@ -7159,6 +7245,7 @@ FROM
 
 func TestGetApprovalReason(t *testing.T) {
 	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
 
@@ -7187,10 +7274,12 @@ func TestGetApprovalReason(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT COUNT(tt.id) AS totalRow FROM (SELECT CONCAT(ReasonID, '|', Type, '|', Description) AS 'id', Description AS 'value', [Type] FROM tblApprovalReason WHERE IsActive = 'True' AND [Type] = 'APR') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("8"))
+		mock.ExpectBegin()
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT CONCAT(ReasonID, '|', Type, '|', Description) AS 'id', Description AS 'value', [Type] FROM tblApprovalReason WHERE IsActive = 'True'  AND [Type] = 'APR' ORDER BY ReasonID ASC`)).
 			WillReturnRows(sqlmock.NewRows([]string{"id", "value", "Type"}).
 				AddRow("1|APR|Oke", "Oke", "APR"))
+		mock.ExpectCommit()
 
 		// Call the function
 		reason, _, err := repo.GetApprovalReason(req, 1)
@@ -7209,8 +7298,11 @@ func TestGetApprovalReason(t *testing.T) {
 
 	t.Run("success not found", func(t *testing.T) {
 		// Mock SQL query to simulate record not found
+		mock.ExpectBegin()
+
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT CONCAT(ReasonID, '|', Type, '|', Description) AS 'id', Description AS 'value', [Type] FROM tblApprovalReason WHERE IsActive = 'True'  AND [Type] = 'APR' ORDER BY ReasonID ASC`)).
 			WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectCommit()
 
 		// Call the function
 		_, _, err := repo.GetApprovalReason(req, nil)
@@ -7423,24 +7515,24 @@ func TestGetAkkk(t *testing.T) {
 		tdb.baki_debet_non_collateral as BakiDebet,
 		tdb.fasilitas_aktif as FasilitasAktif,
 		CASE
-			WHEN tdb.kualitas_kredit_terburuk <> NULL THEN CONCAT(tdb.kualitas_kredit_terburuk,' ',tdb.bulan_kualitas_terburuk)
+			WHEN tdb.kualitas_kredit_terburuk IS NOT NULL THEN CONCAT(tdb.kualitas_kredit_terburuk,' ',tdb.bulan_kualitas_terburuk)
 			ELSE NULL
 		END as ColTerburuk,
 		tdb.baki_debet_kualitas_terburuk as BakiDebetTerburuk,
 		CASE
-			WHEN tdb.kualitas_kredit_terakhir <> NULL THEN CONCAT(tdb.kualitas_kredit_terakhir,' ',tdb.bulan_kualitas_kredit_terakhir)
+			WHEN tdb.kualitas_kredit_terakhir IS NOT NULL THEN CONCAT(tdb.kualitas_kredit_terakhir,' ',tdb.bulan_kualitas_kredit_terakhir)
 			ELSE NULL
 		END as ColTerakhirAktif,
 		tdb2.plafon as SpousePlafond,
 		tdb2.baki_debet_non_collateral as SpouseBakiDebet,
 		tdb2.fasilitas_aktif as SpouseFasilitasAktif,
 		CASE
-			WHEN tdb2.kualitas_kredit_terburuk <> NULL THEN CONCAT(tdb2.kualitas_kredit_terburuk,' ',tdb2.bulan_kualitas_terburuk)
+			WHEN tdb2.kualitas_kredit_terburuk IS NOT NULL THEN CONCAT(tdb2.kualitas_kredit_terburuk,' ',tdb2.bulan_kualitas_terburuk)
 			ELSE NULL
 		END as SpouseColTerburuk,
 		tdb2.baki_debet_kualitas_terburuk as SpouseBakiDebetTerburuk,
 		CASE
-			WHEN tdb2.kualitas_kredit_terakhir <> NULL THEN CONCAT(tdb2.kualitas_kredit_terakhir,' ',tdb2.bulan_kualitas_kredit_terakhir)
+			WHEN tdb2.kualitas_kredit_terakhir IS NOT NULL THEN CONCAT(tdb2.kualitas_kredit_terakhir,' ',tdb2.bulan_kualitas_kredit_terakhir)
 			ELSE NULL
 		END as SpouseColTerakhirAktif,
 		ta.ScsScore,
@@ -7608,24 +7700,24 @@ func TestGetAkkk(t *testing.T) {
 		tdb.baki_debet_non_collateral as BakiDebet,
 		tdb.fasilitas_aktif as FasilitasAktif,
 		CASE
-			WHEN tdb.kualitas_kredit_terburuk <> NULL THEN CONCAT(tdb.kualitas_kredit_terburuk,' ',tdb.bulan_kualitas_terburuk)
+			WHEN tdb.kualitas_kredit_terburuk IS NOT NULL THEN CONCAT(tdb.kualitas_kredit_terburuk,' ',tdb.bulan_kualitas_terburuk)
 			ELSE NULL
 		END as ColTerburuk,
 		tdb.baki_debet_kualitas_terburuk as BakiDebetTerburuk,
 		CASE
-			WHEN tdb.kualitas_kredit_terakhir <> NULL THEN CONCAT(tdb.kualitas_kredit_terakhir,' ',tdb.bulan_kualitas_kredit_terakhir)
+			WHEN tdb.kualitas_kredit_terakhir IS NOT NULL THEN CONCAT(tdb.kualitas_kredit_terakhir,' ',tdb.bulan_kualitas_kredit_terakhir)
 			ELSE NULL
 		END as ColTerakhirAktif,
 		tdb2.plafon as SpousePlafond,
 		tdb2.baki_debet_non_collateral as SpouseBakiDebet,
 		tdb2.fasilitas_aktif as SpouseFasilitasAktif,
 		CASE
-			WHEN tdb2.kualitas_kredit_terburuk <> NULL THEN CONCAT(tdb2.kualitas_kredit_terburuk,' ',tdb2.bulan_kualitas_terburuk)
+			WHEN tdb2.kualitas_kredit_terburuk IS NOT NULL THEN CONCAT(tdb2.kualitas_kredit_terburuk,' ',tdb2.bulan_kualitas_terburuk)
 			ELSE NULL
 		END as SpouseColTerburuk,
 		tdb2.baki_debet_kualitas_terburuk as SpouseBakiDebetTerburuk,
 		CASE
-			WHEN tdb2.kualitas_kredit_terakhir <> NULL THEN CONCAT(tdb2.kualitas_kredit_terakhir,' ',tdb2.bulan_kualitas_kredit_terakhir)
+			WHEN tdb2.kualitas_kredit_terakhir IS NOT NULL THEN CONCAT(tdb2.kualitas_kredit_terakhir,' ',tdb2.bulan_kualitas_kredit_terakhir)
 			ELSE NULL
 		END as SpouseColTerakhirAktif,
 		ta.ScsScore,
