@@ -1296,7 +1296,7 @@ func (c *CancelReason) TableName() string {
 type InquiryData struct {
 	Prescreening DataPrescreening   `json:"prescreening"`
 	General      DataGeneral        `json:"general"`
-	Personal     CustomerPersonal   `json:"personal"`
+	Personal     DataPersonal       `json:"personal"`
 	Spouse       CustomerSpouse     `json:"spouse"`
 	Employment   CustomerEmployment `json:"employment"`
 	ItemApk      DataItemApk        `json:"item_apk"`
@@ -1529,7 +1529,7 @@ type InquiryDataCa struct {
 	Approval       []HistoryApproval   `json:"approval"`
 	Draft          TrxDraftCaDecision  `json:"draft"`
 	General        DataGeneral         `json:"general"`
-	Personal       CustomerPersonal    `json:"personal"`
+	Personal       DataPersonal        `json:"personal"`
 	Spouse         CustomerSpouse      `json:"spouse"`
 	Employment     CustomerEmployment  `json:"employment"`
 	ItemApk        DataItemApk         `json:"item_apk"`
@@ -1709,7 +1709,7 @@ type InquiryDataSearch struct {
 	Action         ActionSearch       `json:"action"`
 	HistoryProcess []HistoryProcess   `json:"history_process"`
 	General        DataGeneral        `json:"general"`
-	Personal       CustomerPersonal   `json:"personal"`
+	Personal       DataPersonal       `json:"personal"`
 	Spouse         CustomerSpouse     `json:"spouse"`
 	Employment     CustomerEmployment `json:"employment"`
 	ItemApk        DataItemApk        `json:"item_apk"`
@@ -1717,6 +1717,28 @@ type InquiryDataSearch struct {
 	Emcon          CustomerEmcon      `json:"emcon"`
 	Address        DataAddress        `json:"address"`
 	Photo          []DataPhoto        `json:"photo"`
+}
+
+type DataPersonal struct {
+	IDNumber          string      `gorm:"type:varchar(100);column:IDNumber" json:"id_number"`
+	LegalName         string      `gorm:"type:varchar(100);column:LegalName" json:"legal_name"`
+	BirthPlace        string      `gorm:"type:varchar(100);column:BirthPlace" json:"birth_place"`
+	BirthDate         interface{} `gorm:"column:BirthDate" json:"birth_date"`
+	SurgateMotherName string      `gorm:"type:varchar(100);column:SurgateMotherName" json:"surgate_mother_name"`
+	Gender            string      `gorm:"type:varchar(10);column:Gender" json:"gender"`
+	MobilePhone       string      `gorm:"type:varchar(14);column:MobilePhone" json:"mobile_phone"`
+	Email             string      `gorm:"type:varchar(100);column:Email" json:"email"`
+	HomeStatus        string      `gorm:"type:varchar(20);column:HomeStatus" json:"home_status"`
+	StaySinceYear     string      `gorm:"type:varchar(10);column:StaySinceYear" json:"stay_since_year"`
+	StaySinceMonth    string      `gorm:"type:varchar(10);column:StaySinceMonth" json:"stay_since_month"`
+	Education         string      `gorm:"type:varchar(50);column:Education" json:"education"`
+	MaritalStatus     string      `gorm:"type:varchar(10);column:MaritalStatus" json:"marital_status"`
+	NumOfDependence   int         `gorm:"column:NumOfDependence" json:"num_of_dependence"`
+	ExtCompanyPhone   *string     `gorm:"type:varchar(4);column:ExtCompanyPhone" json:"ext_company_phone"`
+	SourceOtherIncome *string     `gorm:"type:varchar(30);column:SourceOtherIncome" json:"source_other_income"`
+	CustomerID        string      `gorm:"type:varchar(20);column:CustomerID" json:"customer_id"`
+	CustomerStatus    string      `gorm:"type:varchar(10);column:CustomerStatus" json:"customer_status"`
+	SurveyResult      interface{} `gorm:"type:varchar(255);column:SurveyResult" json:"survey_result"`
 }
 
 type ActionSearch struct {
@@ -1749,7 +1771,7 @@ type InquiryDataApproval struct {
 	InternalRecord []TrxInternalRecord `json:"internal_record"`
 	Approval       []HistoryApproval   `json:"approval"`
 	General        DataGeneral         `json:"general"`
-	Personal       CustomerPersonal    `json:"personal"`
+	Personal       DataPersonal        `json:"personal"`
 	Spouse         CustomerSpouse      `json:"spouse"`
 	Employment     CustomerEmployment  `json:"employment"`
 	ItemApk        DataItemApk         `json:"item_apk"`
