@@ -28,6 +28,11 @@ func LoadEnv() {
 	}
 }
 
+func SetupTimezone() {
+	location, _ := time.LoadLocation("Asia/Jakarta")
+	time.Local = location
+}
+
 func NewConfiguration(appEnv string) {
 
 	if strings.ToLower(appEnv) != "prod" && strings.ToLower(appEnv) != "production" {
@@ -119,6 +124,17 @@ func SetCustomLog(keyConfig string, isError bool, data map[string]interface{}, m
 	}
 }
 
+func GetMinilosWgDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("MINILOS_WG_DB_USERNAME"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("MINILOS_WG_DB_PASSWORD"))
+	host, _ := utils.DecryptCredential(os.Getenv("MINILOS_WG_DB_HOST"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("MINILOS_WG_DB_PORT"))
+	port, _ := strconv.Atoi(strPort)
+	database, _ := utils.DecryptCredential(os.Getenv("MINILOS_WG_DB_DATABASE"))
+
+	return user, pwd, host, port, database
+}
+
 func GetMinilosKmbDB() (string, string, string, int, string) {
 	user, _ := utils.DecryptCredential(os.Getenv("MINILOS_KMB_DB_USERNAME"))
 	pwd, _ := utils.DecryptCredential(os.Getenv("MINILOS_KMB_DB_PASSWORD"))
@@ -148,6 +164,61 @@ func GetKpLosLogDB() (string, string, string, int, string) {
 	strPort, _ := utils.DecryptCredential(os.Getenv("KP_LOS_LOG_DB_PORT"))
 	port, _ := strconv.Atoi(strPort)
 	database, _ := utils.DecryptCredential(os.Getenv("KP_LOS_LOG_DB_DATABASE"))
+
+	return user, pwd, host, port, database
+}
+
+func GetNewKmbDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("NEW_KMB_DB_USERNAME"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("NEW_KMB_DB_PASSWORD"))
+	host, _ := utils.DecryptCredential(os.Getenv("NEW_KMB_DB_HOST"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("NEW_KMB_DB_PORT"))
+	port, _ := strconv.Atoi(strPort)
+	database, _ := utils.DecryptCredential(os.Getenv("NEW_KMB_DB_DATABASE"))
+
+	return user, pwd, host, port, database
+}
+
+func GetCoreDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_USERNAME"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_PASSWORD"))
+	host, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_HOST"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_PORT"))
+	port, _ := strconv.Atoi(strPort)
+	database, _ := utils.DecryptCredential(os.Getenv("CORE_DB_DATABASE"))
+
+	return user, pwd, host, port, database
+}
+
+func GetConfinsDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_USERNAME"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_PASSWORD"))
+	host, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_HOST"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_PORT"))
+	port, _ := strconv.Atoi(strPort)
+	database, _ := utils.DecryptCredential(os.Getenv("CONFINS_DB_DATABASE"))
+
+	return user, pwd, host, port, database
+}
+
+func GetStagingDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("STAGING_DB_USERNAME"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("STAGING_DB_PASSWORD"))
+	host, _ := utils.DecryptCredential(os.Getenv("STAGING_DB_HOST"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("STAGING_DB_PORT"))
+	port, _ := strconv.Atoi(strPort)
+	database, _ := utils.DecryptCredential(os.Getenv("STAGING_DB_DATABASE"))
+
+	return user, pwd, host, port, database
+}
+
+func GetScoreProDB() (string, string, string, int, string) {
+	user, _ := utils.DecryptCredential(os.Getenv("DB_SCOREPRO_USERNAME"))
+	strPort, _ := utils.DecryptCredential(os.Getenv("DB_SCOREPRO_PORT"))
+	port, _ := strconv.Atoi(strPort)
+	host, _ := utils.DecryptCredential(os.Getenv("DB_SCOREPRO_HOST"))
+	pwd, _ := utils.DecryptCredential(os.Getenv("DB_SCOREPRO_PASSWORD"))
+	database, _ := utils.DecryptCredential(os.Getenv("DB_SCOREPRO_DATABASE"))
 
 	return user, pwd, host, port, database
 }

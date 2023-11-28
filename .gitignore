@@ -1,3 +1,4 @@
+.air.toml
 .vscode
 .idea
 *.exe
@@ -21,8 +22,10 @@ conf
 # Log
 logs/*.log
 
-# Automation testing
-.github/workflows/go.yml
+# unit test results
+unit_test
+unit_test*
+*.out
 
-# folder buat nyimpen backup query perubahan db
-#database
+# conf
+sql

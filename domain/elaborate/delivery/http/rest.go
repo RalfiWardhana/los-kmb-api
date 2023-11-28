@@ -29,13 +29,13 @@ func ElaborateHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase
 
 // KmbElaborate Tools godoc
 // @Description KmbElaborate
-// @Tags Tools
+// @Tags Filtering
 // @Produce json
 // @Param body body request.BodyRequestElaborate true "Body payload"
 // @Success 200 {object} response.ApiResponse{data=response.ElaborateResult}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
-// @Router /elaborate [post]
+// @Router /api/v2/kmb/elaborate [post]
 func (c *handlerKmbElaborate) Elaborate(ctx echo.Context) (err error) {
 
 	var req request.BodyRequestElaborate

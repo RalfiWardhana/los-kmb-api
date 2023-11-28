@@ -23,20 +23,19 @@ var doc = `{
             "url": "https://kreditplus.com",
             "email": "support@kreditplus.com"
         },
-        "license": {},
         "version": "{{.Version}}"
     },
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/elaborate": {
+        "/api/v2/kmb/elaborate": {
             "post": {
                 "description": "KmbElaborate",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Tools"
+                    "Filtering"
                 ],
                 "parameters": [
                     {
@@ -95,14 +94,14 @@ var doc = `{
                 }
             }
         },
-        "/filtering": {
+        "/api/v2/kmb/filtering": {
             "post": {
                 "description": "KmbFiltering",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Tools"
+                    "Filtering"
                 ],
                 "parameters": [
                     {
@@ -160,9 +159,801 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/api/v3/kmb/cms/prescreening/inquiry": {
+            "get": {
+                "description": "Api Prescreening",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Prescreening"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "search",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "branch_id",
+                        "name": "branch_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.InquiryRow"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/cms/prescreening/list-reason": {
+            "get": {
+                "description": "Api Prescreening",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Prescreening"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "reason_id",
+                        "name": "reason_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.ReasonMessageRow"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/cms/prescreening/review": {
+            "post": {
+                "description": "Api Prescreening",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Prescreening"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReqReviewPrescreening"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.ReviewPrescreening"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/elaborate": {
+            "post": {
+                "description": "ElaborateLTV",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Filtering"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ElaborateLTV"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.ElaborateLTV"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/encrypt-decrypt": {
+            "post": {
+                "description": "Encrypt Decrypt",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tools"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.RequestEncryption"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/produce/filtering": {
+            "post": {
+                "description": "Produce Filtering via REST API",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Filtering"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.Filtering"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/produce/journey": {
+            "post": {
+                "description": "Submit to LOS",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Submit to LOS"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.Metrics"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/produce/journey-after-prescreening": {
+            "post": {
+                "description": "Journey After Prescreening",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Submit to LOS"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.AfterPrescreening"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "http.RequestEncryption": {
+            "type": "object",
+            "properties": {
+                "decrypt": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "6gs+t7lBQTYM5SPuqJTNonWLjvmmmc9FaWIj"
+                    ]
+                },
+                "encrypt": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "hello world"
+                    ]
+                }
+            }
+        },
+        "request.Address": {
+            "type": "object",
+            "required": [
+                "address",
+                "city",
+                "kecamatan",
+                "kelurahan",
+                "phone",
+                "zip_code"
+            ],
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "JL.PEGANGSAAN 1"
+                },
+                "area_phone": {
+                    "type": "string",
+                    "example": "021"
+                },
+                "city": {
+                    "type": "string",
+                    "example": "JAKARTA SELATAN"
+                },
+                "kecamatan": {
+                    "type": "string",
+                    "example": "MAMPANG PRAPATAN"
+                },
+                "kelurahan": {
+                    "type": "string",
+                    "example": "TEGAL PARANG"
+                },
+                "phone": {
+                    "type": "string",
+                    "example": "84522"
+                },
+                "rt": {
+                    "type": "string",
+                    "example": "008"
+                },
+                "rw": {
+                    "type": "string",
+                    "example": "017"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "RESIDENCE"
+                },
+                "zip_code": {
+                    "type": "string",
+                    "example": "12790"
+                }
+            }
+        },
+        "request.AfterPrescreening": {
+            "type": "object",
+            "required": [
+                "prospect_id"
+            ],
+            "properties": {
+                "prospect_id": {
+                    "type": "string",
+                    "example": "SAL042600001"
+                }
+            }
+        },
+        "request.Agent": {
+            "type": "object",
+            "required": [
+                "cmo_name",
+                "cmo_nik",
+                "recom_date"
+            ],
+            "properties": {
+                "cmo_name": {
+                    "type": "string",
+                    "example": "SETO MULYA"
+                },
+                "cmo_nik": {
+                    "type": "string",
+                    "example": "93510"
+                },
+                "cmo_recom": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "recom_date": {
+                    "type": "string",
+                    "example": "2021-07-15"
+                }
+            }
+        },
+        "request.Apk": {
+            "type": "object",
+            "required": [
+                "admin_fee",
+                "af",
+                "aoid",
+                "down_payment_amount",
+                "down_payment_rate",
+                "effective_rate",
+                "finance_purpose",
+                "first_installment",
+                "ins_asset_paid_by",
+                "ins_asset_period",
+                "installment_amount",
+                "insurance_amount",
+                "interest_amount",
+                "interest_rate",
+                "is_fidusia_covered",
+                "ntf",
+                "otr",
+                "payment_method",
+                "premium_amount_to_customer",
+                "product_id",
+                "product_offering_id",
+                "provision_fee",
+                "salesman_id",
+                "supplier_bank_account_id",
+                "survey_fee",
+                "tenor",
+                "way_of_payment"
+            ],
+            "properties": {
+                "admin_fee": {
+                    "type": "number",
+                    "example": 1500000
+                },
+                "af": {
+                    "type": "number",
+                    "example": 84000000
+                },
+                "aoid": {
+                    "type": "string",
+                    "example": "81088"
+                },
+                "commision_subsidi": {
+                    "type": "number",
+                    "example": 0
+                },
+                "dealer": {
+                    "type": "string"
+                },
+                "down_payment_amount": {
+                    "type": "number",
+                    "example": 22000000
+                },
+                "down_payment_rate": {
+                    "type": "number",
+                    "example": 20.95
+                },
+                "effective_rate": {
+                    "type": "number",
+                    "example": 26.4
+                },
+                "fidusia_fee": {
+                    "type": "number",
+                    "example": 0
+                },
+                "finance_purpose": {
+                    "type": "string"
+                },
+                "first_installment": {
+                    "type": "string",
+                    "example": "AR"
+                },
+                "ins_asset_paid_by": {
+                    "type": "string",
+                    "example": "CU"
+                },
+                "ins_asset_period": {
+                    "type": "string",
+                    "example": "FT"
+                },
+                "installment_amount": {
+                    "type": "number",
+                    "example": 4181333
+                },
+                "insurance_amount": {
+                    "type": "number",
+                    "example": 3150000
+                },
+                "interest_amount": {
+                    "type": "number",
+                    "example": 66528000
+                },
+                "interest_rate": {
+                    "type": "number",
+                    "example": 2.2
+                },
+                "is_fidusia_covered": {
+                    "type": "string",
+                    "example": "Y"
+                },
+                "life_insurance_amount_coverage": {
+                    "type": "number",
+                    "example": 105000000
+                },
+                "life_insurance_coy_branch_id": {
+                    "type": "string",
+                    "example": "426"
+                },
+                "loan_amount": {
+                    "type": "number",
+                    "example": 105000000
+                },
+                "ntf": {
+                    "type": "number",
+                    "example": 150528000
+                },
+                "other_fee": {
+                    "type": "number",
+                    "example": 0
+                },
+                "otr": {
+                    "type": "number",
+                    "example": 105000000
+                },
+                "payment_method": {
+                    "type": "string",
+                    "example": "CR"
+                },
+                "premium_amount_to_customer": {
+                    "type": "number",
+                    "example": 2184000
+                },
+                "product_id": {
+                    "type": "string",
+                    "example": "1SNLMK"
+                },
+                "product_offering_desc": {
+                    "type": "string"
+                },
+                "product_offering_id": {
+                    "type": "string",
+                    "example": "NLMKKAPSEP"
+                },
+                "provision_fee": {
+                    "type": "number",
+                    "example": 2475000
+                },
+                "salesman_id": {
+                    "type": "string",
+                    "example": "81088"
+                },
+                "supplier_bank_account_id": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "survey_fee": {
+                    "type": "number",
+                    "example": 0
+                },
+                "tenor": {
+                    "type": "integer",
+                    "example": 36
+                },
+                "way_of_payment": {
+                    "type": "string",
+                    "example": "Payment Point"
+                }
+            }
+        },
         "request.BodyRequestElaborate": {
             "type": "object",
             "required": [
@@ -174,8 +965,386 @@ var doc = `{
                     "type": "string"
                 },
                 "data": {
-                    "type": "object",
                     "$ref": "#/definitions/request.DataElaborate"
+                }
+            }
+        },
+        "request.CustomerEmcon": {
+            "type": "object",
+            "required": [
+                "application_emcon_sesuai",
+                "emergency_phone_office",
+                "known_customer_address",
+                "known_customer_job",
+                "verification_with",
+                "verify_by"
+            ],
+            "properties": {
+                "application_emcon_sesuai": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "emergency_area_phone_office": {
+                    "type": "string",
+                    "example": "021"
+                },
+                "emergency_phone_office": {
+                    "type": "string",
+                    "example": "567892"
+                },
+                "known_customer_address": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "known_customer_job": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "mobile_phone": {
+                    "type": "string",
+                    "example": "0856789XXX1"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "MULYADI"
+                },
+                "relationship": {
+                    "type": "string",
+                    "example": "FM"
+                },
+                "verification_with": {
+                    "type": "string",
+                    "example": "JONO"
+                },
+                "verify_by": {
+                    "type": "string",
+                    "example": "PHONE"
+                }
+            }
+        },
+        "request.CustomerEmployment": {
+            "type": "object",
+            "required": [
+                "company_name",
+                "industry_type_id",
+                "job_position",
+                "job_type",
+                "monthly_variable_income",
+                "spouse_income"
+            ],
+            "properties": {
+                "company_name": {
+                    "type": "string",
+                    "example": "PT.KIMIA FARMA"
+                },
+                "company_phone_ext": {
+                    "type": "string",
+                    "example": "442"
+                },
+                "employment_since_month": {
+                    "type": "string",
+                    "example": "02"
+                },
+                "employment_since_year": {
+                    "type": "string",
+                    "example": "2020"
+                },
+                "industry_type_id": {
+                    "type": "string",
+                    "example": "9990"
+                },
+                "job_position": {
+                    "type": "string",
+                    "example": "S"
+                },
+                "job_type": {
+                    "type": "string",
+                    "example": "008"
+                },
+                "monthly_fixed_income": {
+                    "type": "number",
+                    "example": 5000000
+                },
+                "monthly_variable_income": {
+                    "type": "number",
+                    "example": 3000000
+                },
+                "profession_id": {
+                    "type": "string",
+                    "example": "WRST"
+                },
+                "source_other_income": {
+                    "type": "string",
+                    "example": "TOKO MAKMUR"
+                },
+                "spouse_income": {
+                    "type": "number",
+                    "example": 6000000
+                }
+            }
+        },
+        "request.CustomerOmset": {
+            "type": "object",
+            "properties": {
+                "monthly_omset": {
+                    "type": "number",
+                    "example": 5000000
+                },
+                "monthly_omset_month": {
+                    "type": "string",
+                    "example": "01"
+                },
+                "monthly_omset_year": {
+                    "type": "string",
+                    "example": "2021"
+                }
+            }
+        },
+        "request.CustomerPersonal": {
+            "type": "object",
+            "required": [
+                "agree_to_accept_other_offering",
+                "counterpart",
+                "customer_group",
+                "data_type",
+                "debt_business_scale",
+                "debt_group",
+                "full_name",
+                "home_location",
+                "id_number",
+                "is_affiliate_with_pp",
+                "kk_no",
+                "legal_name",
+                "living_cost_amount",
+                "nationality",
+                "num_of_dependence",
+                "personal_customer_type",
+                "religion",
+                "status",
+                "surgate_mother_name",
+                "wna_country"
+            ],
+            "properties": {
+                "account_name": {
+                    "type": "string",
+                    "example": "JONATHAN"
+                },
+                "account_no": {
+                    "type": "string",
+                    "example": "567XX021"
+                },
+                "agree_to_accept_other_offering": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "bank_id": {
+                    "type": "string",
+                    "example": "BCA"
+                },
+                "birth_date": {
+                    "type": "string",
+                    "example": "1991-01-12"
+                },
+                "birth_place": {
+                    "type": "string",
+                    "example": "JAKARTA"
+                },
+                "counterpart": {
+                    "type": "integer",
+                    "example": 169
+                },
+                "customer_group": {
+                    "type": "string",
+                    "example": "2"
+                },
+                "data_type": {
+                    "type": "string",
+                    "example": "G"
+                },
+                "debt_business_scale": {
+                    "type": "string",
+                    "example": "01"
+                },
+                "debt_group": {
+                    "type": "string",
+                    "example": "303"
+                },
+                "education": {
+                    "type": "string",
+                    "example": "S1"
+                },
+                "email": {
+                    "type": "string",
+                    "example": "jonathaxx@gmail.com"
+                },
+                "expired_date": {
+                    "type": "string",
+                    "example": "2021-07-29"
+                },
+                "full_name": {
+                    "type": "string",
+                    "example": "ENCRYPTED"
+                },
+                "gender": {
+                    "type": "string",
+                    "example": "M"
+                },
+                "home_location": {
+                    "type": "string",
+                    "example": "N"
+                },
+                "home_status": {
+                    "type": "string",
+                    "example": "KL"
+                },
+                "id_number": {
+                    "type": "string",
+                    "example": "ENCRYPTED"
+                },
+                "id_type": {
+                    "type": "string",
+                    "example": "KTP"
+                },
+                "id_type_isssue_date": {
+                    "type": "string",
+                    "example": "2021-07-29"
+                },
+                "is_affiliate_with_pp": {
+                    "type": "string",
+                    "example": "N"
+                },
+                "kk_no": {
+                    "type": "string",
+                    "example": "97846094XXX34346"
+                },
+                "legal_name": {
+                    "type": "string",
+                    "example": "ENCRYPTED"
+                },
+                "living_cost_amount": {
+                    "type": "number",
+                    "example": 0
+                },
+                "marital_status": {
+                    "type": "string",
+                    "example": "M"
+                },
+                "mobile_phone": {
+                    "type": "string",
+                    "example": "085689XXX01"
+                },
+                "nationality": {
+                    "type": "string",
+                    "example": "WNI"
+                },
+                "npwp": {
+                    "type": "string",
+                    "example": "994646808XXX895"
+                },
+                "num_of_dependence": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "personal_customer_type": {
+                    "type": "string",
+                    "example": "M"
+                },
+                "religion": {
+                    "type": "string",
+                    "example": "1"
+                },
+                "rent_finish_date": {
+                    "type": "string",
+                    "example": "2021-07-29"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "F"
+                },
+                "stay_since_month": {
+                    "type": "string",
+                    "example": "03"
+                },
+                "stay_since_year": {
+                    "type": "string",
+                    "example": "2018"
+                },
+                "surgate_mother_name": {
+                    "type": "string",
+                    "example": "ENCRYPTED"
+                },
+                "wna_country": {
+                    "type": "string",
+                    "example": "-"
+                }
+            }
+        },
+        "request.CustomerPhoto": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "KTP"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "https://dev-media.kreditplus.com/media/reference/20000/KPM-3677/ktp_EFM-3677.jpg"
+                }
+            }
+        },
+        "request.CustomerSpouse": {
+            "type": "object",
+            "required": [
+                "birth_place",
+                "full_name",
+                "id_number",
+                "legal_name",
+                "surgate_mother_name"
+            ],
+            "properties": {
+                "birth_date": {
+                    "type": "string",
+                    "example": "1991-01-29"
+                },
+                "birth_place": {
+                    "type": "string",
+                    "example": "JAKARTA"
+                },
+                "company_name": {
+                    "type": "string",
+                    "example": "PT.BUMI KARYA"
+                },
+                "company_phone": {
+                    "type": "string",
+                    "example": "865542"
+                },
+                "full_name": {
+                    "type": "string",
+                    "example": "SUSI BUNGA"
+                },
+                "gender": {
+                    "type": "string",
+                    "example": "F"
+                },
+                "id_number": {
+                    "type": "string",
+                    "example": "177105550374XX01"
+                },
+                "legal_name": {
+                    "type": "string",
+                    "example": "SUSI BUNGA"
+                },
+                "mobile_phone": {
+                    "type": "string",
+                    "example": "08772012XXX0"
+                },
+                "profession_id": {
+                    "type": "string",
+                    "example": "KRYSW"
+                },
+                "surgate_mother_name": {
+                    "type": "string",
+                    "example": "TUTI"
                 }
             }
         },
@@ -230,7 +1399,6 @@ var doc = `{
                     "type": "string"
                 },
                 "Spouse": {
-                    "type": "object",
                     "$ref": "#/definitions/request.Spouse"
                 },
                 "SurgateMotherName": {
@@ -283,7 +1451,76 @@ var doc = `{
                     "type": "integer"
                 },
                 "TotalBakiDebet": {
-                    "type": "number"
+                    "type": "object"
+                }
+            }
+        },
+        "request.ElaborateLTV": {
+            "type": "object",
+            "required": [
+                "manufacturing_year",
+                "prospect_id",
+                "tenor"
+            ],
+            "properties": {
+                "manufacturing_year": {
+                    "type": "string"
+                },
+                "prospect_id": {
+                    "type": "string"
+                },
+                "tenor": {
+                    "type": "integer"
+                }
+            }
+        },
+        "request.Filtering": {
+            "type": "object",
+            "required": [
+                "birth_date",
+                "bpkb_name",
+                "branch_id",
+                "gender",
+                "id_number",
+                "legal_name",
+                "prospect_id",
+                "surgate_mother_name"
+            ],
+            "properties": {
+                "birth_date": {
+                    "type": "string",
+                    "example": "YYYY-MM-DD"
+                },
+                "bpkb_name": {
+                    "type": "string",
+                    "example": "K"
+                },
+                "branch_id": {
+                    "type": "string",
+                    "example": "426"
+                },
+                "gender": {
+                    "type": "string",
+                    "example": "M"
+                },
+                "id_number": {
+                    "type": "string",
+                    "example": "ENCRYPTED NIK"
+                },
+                "legal_name": {
+                    "type": "string",
+                    "example": "ENCRYPTED LEGAL NAME"
+                },
+                "prospect_id": {
+                    "type": "string",
+                    "example": "SAL042600001"
+                },
+                "spouse": {
+                    "$ref": "#/definitions/request.FilteringSpouse"
+                },
+                "surgate_mother_name": {
+                    "type": "string",
+                    "example": "ENCRYPTED SURGATE MOTHER NAME"
                 }
             }
         },
@@ -298,8 +1535,266 @@ var doc = `{
                     "type": "string"
                 },
                 "data": {
-                    "type": "object",
                     "$ref": "#/definitions/request.Data"
+                }
+            }
+        },
+        "request.FilteringSpouse": {
+            "type": "object",
+            "required": [
+                "spouse_birth_date",
+                "spouse_gender",
+                "spouse_id_number",
+                "spouse_legal_name",
+                "spouse_surgate_mother_name"
+            ],
+            "properties": {
+                "spouse_birth_date": {
+                    "type": "string",
+                    "example": "YYYY-MM-DD"
+                },
+                "spouse_gender": {
+                    "type": "string",
+                    "example": "F"
+                },
+                "spouse_id_number": {
+                    "type": "string",
+                    "example": "ENCRYPTED NIK"
+                },
+                "spouse_legal_name": {
+                    "type": "string",
+                    "example": "ENCRYPTED LEGAL NAME"
+                },
+                "spouse_surgate_mother_name": {
+                    "type": "string",
+                    "example": "ENCRYPTED SURGATE MOTHER NAME"
+                }
+            }
+        },
+        "request.Item": {
+            "type": "object",
+            "required": [
+                "asset_code",
+                "asset_description",
+                "asset_insurance_amount_coverage",
+                "asset_usage",
+                "bpkb_name",
+                "brand",
+                "category_id",
+                "cc",
+                "chassis_number",
+                "color",
+                "condition",
+                "coverage_type",
+                "engine_number",
+                "ins_asset_insured_by",
+                "insurance_coy_branch_id",
+                "license_plate",
+                "owner_asset",
+                "owner_ktp",
+                "pos",
+                "premium_amount_to_customer",
+                "qty",
+                "region",
+                "stnk_expired_date",
+                "supplier_id",
+                "tax_date"
+            ],
+            "properties": {
+                "asset_code": {
+                    "type": "string",
+                    "example": "SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"
+                },
+                "asset_description": {
+                    "type": "string",
+                    "example": "SUZUKI.KMOBIL.GRAND VITARA.JLX 2,0 AT"
+                },
+                "asset_insurance_amount_coverage": {
+                    "type": "number",
+                    "example": 105000000
+                },
+                "asset_usage": {
+                    "type": "string",
+                    "example": "N"
+                },
+                "bpkb_name": {
+                    "type": "string",
+                    "example": "K"
+                },
+                "brand": {
+                    "type": "string",
+                    "example": "TOYOTA"
+                },
+                "category_id": {
+                    "type": "string",
+                    "example": "SEDAN"
+                },
+                "cc": {
+                    "type": "string",
+                    "example": "1500"
+                },
+                "chassis_number": {
+                    "type": "string",
+                    "example": "MHKV1AA2JBK107322"
+                },
+                "color": {
+                    "type": "string",
+                    "example": "HITAM"
+                },
+                "condition": {
+                    "type": "string",
+                    "example": "U"
+                },
+                "coverage_type": {
+                    "type": "string",
+                    "example": "TLO"
+                },
+                "engine_number": {
+                    "type": "string",
+                    "example": "73218JAJK"
+                },
+                "ins_asset_insured_by": {
+                    "type": "string",
+                    "example": "CO"
+                },
+                "insurance_coy_branch_id": {
+                    "type": "string",
+                    "example": "426"
+                },
+                "license_plate": {
+                    "type": "string",
+                    "example": "3006TBJ"
+                },
+                "manufacture_year": {
+                    "type": "string",
+                    "example": "2020"
+                },
+                "owner_asset": {
+                    "type": "string",
+                    "example": "JONATHAN"
+                },
+                "owner_ktp": {
+                    "type": "string",
+                    "example": "3172024508XXX002"
+                },
+                "pos": {
+                    "type": "string",
+                    "example": "426"
+                },
+                "premium_amount_to_customer": {
+                    "type": "number",
+                    "example": 2184000
+                },
+                "qty": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "region": {
+                    "type": "string",
+                    "example": "0"
+                },
+                "stnk_expired_date": {
+                    "type": "string",
+                    "example": "2025-03-20"
+                },
+                "supplier_id": {
+                    "type": "string",
+                    "example": "42600342"
+                },
+                "tax_date": {
+                    "type": "string",
+                    "example": "2022-03-02"
+                }
+            }
+        },
+        "request.Metrics": {
+            "type": "object",
+            "required": [
+                "agent",
+                "apk",
+                "customer_emcon",
+                "customer_employment",
+                "customer_personal",
+                "item",
+                "surveyor",
+                "transaction"
+            ],
+            "properties": {
+                "address": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.Address"
+                    }
+                },
+                "agent": {
+                    "$ref": "#/definitions/request.Agent"
+                },
+                "apk": {
+                    "$ref": "#/definitions/request.Apk"
+                },
+                "customer_emcon": {
+                    "$ref": "#/definitions/request.CustomerEmcon"
+                },
+                "customer_employment": {
+                    "$ref": "#/definitions/request.CustomerEmployment"
+                },
+                "customer_omset": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.CustomerOmset"
+                    }
+                },
+                "customer_personal": {
+                    "$ref": "#/definitions/request.CustomerPersonal"
+                },
+                "customer_photo": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.CustomerPhoto"
+                    }
+                },
+                "customer_spouse": {
+                    "$ref": "#/definitions/request.CustomerSpouse"
+                },
+                "item": {
+                    "$ref": "#/definitions/request.Item"
+                },
+                "surveyor": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/request.Surveyor"
+                    }
+                },
+                "transaction": {
+                    "$ref": "#/definitions/request.Transaction"
+                }
+            }
+        },
+        "request.ReqReviewPrescreening": {
+            "type": "object",
+            "required": [
+                "decision",
+                "decision_by",
+                "decision_by_name",
+                "prospect_id"
+            ],
+            "properties": {
+                "decision": {
+                    "type": "string",
+                    "example": "APPROVE,REJECT"
+                },
+                "decision_by": {
+                    "type": "string"
+                },
+                "decision_by_name": {
+                    "type": "string"
+                },
+                "prospect_id": {
+                    "type": "string",
+                    "example": "TEST-DEV"
+                },
+                "reason": {
+                    "type": "string"
                 }
             }
         },
@@ -334,6 +1829,81 @@ var doc = `{
                 }
             }
         },
+        "request.Surveyor": {
+            "type": "object",
+            "required": [
+                "assign_date",
+                "destination",
+                "request_date",
+                "result_date",
+                "surveyor_name",
+                "surveyor_status"
+            ],
+            "properties": {
+                "assign_date": {
+                    "type": "string",
+                    "example": "2021-07-29"
+                },
+                "destination": {
+                    "type": "string",
+                    "example": "HOME"
+                },
+                "request_date": {
+                    "type": "string",
+                    "example": "2021-07-29"
+                },
+                "result_date": {
+                    "type": "string",
+                    "example": "2021-07-29"
+                },
+                "surveyor_name": {
+                    "type": "string",
+                    "example": "TOTO SURYA"
+                },
+                "surveyor_status": {
+                    "type": "string",
+                    "example": "APPROVE"
+                }
+            }
+        },
+        "request.Transaction": {
+            "type": "object",
+            "required": [
+                "application_source",
+                "order_at",
+                "prospect_id"
+            ],
+            "properties": {
+                "application_source": {
+                    "type": "string",
+                    "example": "H"
+                },
+                "branch_id": {
+                    "type": "string",
+                    "example": "426"
+                },
+                "channel": {
+                    "type": "string",
+                    "example": "OFF"
+                },
+                "incoming_source": {
+                    "type": "string",
+                    "example": "SLY"
+                },
+                "lob": {
+                    "type": "string",
+                    "example": "KMB"
+                },
+                "order_at": {
+                    "type": "string",
+                    "example": "2021-07-15T11:44:05+07:00"
+                },
+                "prospect_id": {
+                    "type": "string",
+                    "example": "SAL042600001"
+                }
+            }
+        },
         "response.ApiResponse": {
             "type": "object",
             "properties": {
@@ -358,7 +1928,7 @@ var doc = `{
             "type": "object",
             "properties": {
                 "code": {
-                    "type": "string"
+                    "type": "object"
                 },
                 "decision": {
                     "type": "string"
@@ -386,9 +1956,35 @@ var doc = `{
                 }
             }
         },
+        "response.ElaborateLTV": {
+            "type": "object",
+            "properties": {
+                "adjut_tenor": {
+                    "type": "boolean"
+                },
+                "ltv": {
+                    "type": "integer"
+                },
+                "max_tenor": {
+                    "type": "integer"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
         "response.ElaborateResult": {
             "type": "object",
             "properties": {
+                "age_vehicle": {
+                    "type": "string"
+                },
+                "bpkb_name_type": {
+                    "type": "integer"
+                },
+                "cluster": {
+                    "type": "string"
+                },
                 "code": {
                     "type": "integer"
                 },
@@ -398,8 +1994,17 @@ var doc = `{
                 "ltv": {
                     "type": "integer"
                 },
+                "ltv_origin": {
+                    "type": "number"
+                },
                 "reason": {
                     "type": "string"
+                },
+                "result_pefindo": {
+                    "type": "string"
+                },
+                "total_balki_debet": {
+                    "type": "number"
                 }
             }
         },
@@ -410,6 +2015,51 @@ var doc = `{
                     "type": "string"
                 },
                 "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.InquiryRow": {
+            "type": "object",
+            "properties": {
+                "inquiry": {
+                    "type": "object"
+                },
+                "recordsFiltered": {
+                    "type": "integer"
+                },
+                "recordsTotal": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.ReasonMessageRow": {
+            "type": "object",
+            "properties": {
+                "reason": {
+                    "type": "object"
+                },
+                "recordsFiltered": {
+                    "type": "integer"
+                },
+                "recordsTotal": {
+                    "type": "integer"
+                }
+            }
+        },
+        "response.ReviewPrescreening": {
+            "type": "object",
+            "properties": {
+                "code": {
+                    "type": "object"
+                },
+                "decision": {
+                    "type": "string"
+                },
+                "prospect_id": {
+                    "type": "string"
+                },
+                "reason": {
                     "type": "string"
                 }
             }

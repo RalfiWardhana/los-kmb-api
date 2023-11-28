@@ -1,9 +1,20 @@
 package utils
 
 import (
-	"crypto/rand"
+	"bufio"
+	"bytes"
+	"crypto/md5"
+	"encoding/base64"
+	"encoding/hex"
 	"fmt"
+	"io/ioutil"
+	"los-kmb-api/models/entity"
+	"los-kmb-api/models/request"
+	"los-kmb-api/models/response"
 	"math"
+	"math/rand"
+	"net/http"
+	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -18,7 +29,7 @@ func DiffTwoDate(date time.Time) time.Duration {
 	currentTime := time.Now().In(loc)
 	//differnce between pastdate and current date
 	diff := currentTime.Sub(date)
-	fmt.Printf("time difference is %v or %v in minutes\n", diff, diff.Minutes())
+	// fmt.Printf("time difference is %v or %v in minutes\n", diff, diff.Minutes())
 	return diff
 }
 
@@ -27,6 +38,13 @@ func GenerateTimeNow() string {
 	loc, _ := time.LoadLocation("Asia/Jakarta")
 	currentTime := time.Now().In(loc).Format(time.RFC3339)
 	//differnce between pastdate and current date
+	return currentTime
+}
+
+func GenerateUnixTimeNow() int64 {
+	//fetching current time
+	currentTime := time.Now().Local().Unix()
+
 	return currentTime
 }
 
@@ -189,4 +207,245 @@ func ToFixed(num float64, precision int) float64 {
 func GenerateUUID() string {
 	id := uuid.Must(uuid.NewRandom())
 	return id.String()
+}
+
+func HumanAgeCalculator(birthdate, today time.Time) int {
+	today = today.In(birthdate.Location())
+	ty, tm, td := today.Date()
+	today = time.Date(ty, tm, td, 0, 0, 0, 0, time.UTC)
+	by, bm, bd := birthdate.Date()
+	birthdate = time.Date(by, bm, bd, 0, 0, 0, 0, time.UTC)
+	if today.Before(birthdate) {
+		return 0
+	}
+	age := ty - by
+	anniversary := birthdate.AddDate(age, 0, 0)
+	if anniversary.After(today) {
+		age--
+	}
+	return age
+}
+
+func UniqueID(length int) string {
+	rand.Seed(time.Now().UnixNano())
+	randomID := fmt.Sprintf("%s%d", UniqueIDFromTime(), rand.Intn(1000))
+	return randomID[:length]
+}
+
+func UniqueIDFromTime() string {
+	timestamp := time.Now().UnixNano()
+	uniqueID := fmt.Sprintf("%s%d", MD5Hash(fmt.Sprintf("%s%d", UniqueIDFromUniqid(), timestamp)), rand.Intn(1000))
+	return uniqueID
+}
+
+func UniqueIDFromUniqid() string {
+	return fmt.Sprintf("%s%d", Uniqid(), rand.Intn(1000))
+}
+
+func Uniqid() string {
+	return fmt.Sprintf("%d", time.Now().UnixNano())
+}
+
+func MD5Hash(text string) string {
+	hash := md5.Sum([]byte(text))
+	return hex.EncodeToString(hash[:])
+}
+
+func Contains(list []string, value string) bool {
+	for _, item := range list {
+		if item == value {
+			return true
+		}
+	}
+	return false
+}
+
+func GetIsMedia(urlImage string) bool {
+
+	urlMedia := strings.Split(os.Getenv("URL_MEDIA"), ",")
+
+	for _, url := range urlMedia {
+		if strings.Contains(urlImage, url) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func DecodeNonMedia(url string) (base64Image string, err error) {
+
+	image, err := http.Get(url)
+
+	if err != nil {
+		return
+	}
+
+	reader := bufio.NewReader(image.Body)
+	ioutil, err := ioutil.ReadAll(reader)
+
+	if err != nil {
+		return
+	}
+
+	base64Image = base64.StdEncoding.EncodeToString(ioutil)
+
+	return
+}
+
+func SafeEncoding(arrByte []byte) []byte {
+
+	arrByte = bytes.ReplaceAll(arrByte, []byte("\\u0026"), []byte("&"))
+	arrByte = bytes.ReplaceAll(arrByte, []byte("\\u003c"), []byte("<"))
+	arrByte = bytes.ReplaceAll(arrByte, []byte("\\u003e"), []byte(">"))
+
+	return arrByte
+}
+
+func SafeJsonReplacer(myString string) string {
+	r := strings.NewReplacer(
+		"\\u0026", "&",
+		"\\u003c", "<",
+		"\\u003e", ">",
+		"\\n", "",
+		"  ", "",
+		"\r", "",
+		"\t", "",
+		"\"{", "{",
+		"}\"", "}",
+		"\\", "",
+	)
+	myString = r.Replace(myString)
+	return myString
+}
+
+var floatType = reflect.TypeOf(float64(0))
+var stringType = reflect.TypeOf("")
+
+func GetFloat(unk interface{}) (float64, error) {
+	switch i := unk.(type) {
+	case float64:
+		return i, nil
+	case float32:
+		return float64(i), nil
+	case int64:
+		return float64(i), nil
+	case int32:
+		return float64(i), nil
+	case int:
+		return float64(i), nil
+	case uint64:
+		return float64(i), nil
+	case uint32:
+		return float64(i), nil
+	case uint:
+		return float64(i), nil
+	case string:
+		return strconv.ParseFloat(i, 64)
+	default:
+		v := reflect.ValueOf(unk)
+		v = reflect.Indirect(v)
+		if v.Type().ConvertibleTo(floatType) {
+			fv := v.Convert(floatType)
+			return fv.Float(), nil
+		} else if v.Type().ConvertibleTo(stringType) {
+			sv := v.Convert(stringType)
+			s := sv.String()
+			return strconv.ParseFloat(s, 64)
+		} else {
+			return math.NaN(), fmt.Errorf("Can't convert %v to float64", v.Type())
+		}
+	}
+}
+
+func GenerateBranchFilter(branchId string) string {
+	if branchId == "" || branchId == "999" {
+		return ""
+	}
+
+	arrBranch := strings.Split(branchId, ",")
+	var branch string
+
+	if len(arrBranch) == 1 && arrBranch[0] != "999" {
+		branch = fmt.Sprintf("'%s'", branchId)
+	} else {
+		for i, val := range arrBranch {
+			branch += fmt.Sprintf("'%s'", val)
+			if i < len(arrBranch)-1 {
+				branch += ","
+			}
+		}
+	}
+
+	return fmt.Sprintf("WHERE tt.BranchID IN (%s)", branch)
+}
+
+func GenerateFilter(search, filterBranch, rangeDays string) string {
+	var filter string
+
+	if search != "" {
+		if filterBranch != "" {
+			filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+		} else {
+			filter = fmt.Sprintf("WHERE (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+		}
+	} else {
+		if filterBranch != "" {
+			filter = filterBranch + fmt.Sprintf(" AND CAST(tt.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
+		} else {
+			filter = fmt.Sprintf("WHERE CAST(tt.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
+		}
+	}
+
+	return filter
+}
+
+func ApprovalScheme(req request.ReqSubmitApproval) (result response.RespApprovalScheme, err error) {
+	// get master limit
+	limit := []entity.MappingLimitApprovalScheme{
+		{
+			Alias: "CBM",
+			Name:  "Branch Manager",
+		},
+		{
+			Alias: "DRM",
+			Name:  "Regional Manager",
+		},
+		{
+			Alias: "GMO",
+			Name:  "GM Bisnis Operational",
+		},
+		{
+			Alias: "COM",
+			Name:  "Credit Operation Manager",
+		},
+		{
+			Alias: "GMC",
+			Name:  "GM Credit",
+		},
+		{
+			Alias: "UCC",
+			Name:  "UCC",
+		},
+	}
+
+	for i, v := range limit {
+		if req.Alias == v.Alias {
+			result.Name = v.Name
+			// add next
+			if req.Alias != req.FinalApproval {
+				result.NextStep = limit[i+1].Alias
+				break
+			} else {
+				if req.NeedEscalation {
+					result.NextStep = limit[i+1].Alias
+					result.IsEscalation = true
+				} else {
+					result.IsFinal = true
+				}
+				break
+			}
+		}
+	}
+	return
 }

@@ -1,7 +1,9 @@
 package platformlog
 
 import (
-	"errors"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"net/url"
@@ -13,7 +15,11 @@ import (
 
 type PlatformLog struct{}
 
+var Log *PlatformLog
+var Logger *platformLog.Logger
+
 type PlatformLogInterface interface {
+	CreateLogger()
 	WriteLog(accessToken, level, link, method string, duration float64, header map[string]string, request, response map[string]interface{}) error
 }
 
@@ -21,7 +27,7 @@ func NewPlatformLog() *PlatformLog {
 	return &PlatformLog{}
 }
 
-func (pl PlatformLog) WriteLog(accessToken, level, link, method string, duration float64, header map[string]string, request, response map[string]interface{}) error {
+func (pl PlatformLog) CreateLogger() {
 	var logEnv string
 
 	env := os.Getenv("APP_ENV")
@@ -34,13 +40,18 @@ func (pl PlatformLog) WriteLog(accessToken, level, link, method string, duration
 		logEnv = platformLog.ENV_DEVELOPMENT
 	}
 
+	Logger = platformLog.New(logEnv)
+}
+
+func (pl PlatformLog) WriteLog(accessToken, level, link, method string, duration float64, header map[string]string, request, response map[string]interface{}) (string, error) {
+
 	if !strings.Contains(link, "http") {
 		link = "http://" + link
 	}
 
 	parsedURL, errParseUrl := url.Parse(link)
 	if errParseUrl != nil {
-		return errParseUrl
+		return "", errParseUrl
 	}
 
 	timestamp := utils.GenerateTimeWithFormat(constant.FORMAT_DATE_TIME_MS)
@@ -62,13 +73,19 @@ func (pl PlatformLog) WriteLog(accessToken, level, link, method string, duration
 		"timestamp":  timestamp,
 	}
 
-	logger := platformLog.New(logEnv)
-	errLogger := logger.Log(accessToken, body)
+	payloadByte, _ := json.Marshal(body)
+	payloadBase64 := base64.RawStdEncoding.EncodeToString(payloadByte)
+
+	errLogger := Logger.Log(accessToken, body)
 	if errLogger != nil {
 		// log.Info("Payload body platform:", body) // gommon log
-		return errors.New(errLogger.Messages)
+		errPlatform, ok := errLogger.Errors.(error)
+		if !ok {
+			errPlatform = fmt.Errorf("unspecified error platform log: %s", errLogger.Messages)
+		}
+		return payloadBase64, errPlatform
 	}
-	logger.Flush(10)
+	Logger.Flush(10)
 
-	return nil
+	return payloadBase64, nil
 }

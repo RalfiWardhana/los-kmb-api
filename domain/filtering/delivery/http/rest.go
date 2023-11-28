@@ -30,13 +30,13 @@ func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase
 
 // KmbFiltering Tools godoc
 // @Description KmbFiltering
-// @Tags Tools
+// @Tags Filtering
 // @Produce json
 // @Param body body request.FilteringRequest true "Body payload"
 // @Success 200 {object} response.ApiResponse{data=response.DupcheckResult}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
-// @Router /filtering [post]
+// @Router /api/v2/kmb/filtering [post]
 func (c *handlerKmbFiltering) Filtering(ctx echo.Context) (err error) {
 
 	var r request.FilteringRequest

@@ -20,8 +20,6 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-var PltLog *platformlog.PlatformLog
-
 type CentralizeLogParameter struct {
 	Link       string
 	Method     string
@@ -63,7 +61,7 @@ func CentralizeLog(ctx context.Context, accessToken string, logParam CentralizeL
 	} else {
 		method, isOkGetMethod = ctx.Value(constant.CTX_KEY_INCOMING_REQUEST_METHOD).(string)
 		if !isOkGetMethod {
-			link = constant.METHOD_GET
+			method = constant.METHOD_GET
 		}
 	}
 
@@ -98,16 +96,23 @@ func CentralizeLog(ctx context.Context, accessToken string, logParam CentralizeL
 	}
 
 	if useLogPlatform {
-		err = PltLog.WriteLog(accessToken, logParam.LevelLog, link, method, duration, header, mapRequest, mapResponse)
+		payloadBase64, err := platformlog.Log.WriteLog(accessToken, logParam.LevelLog, link, method, duration, header, mapRequest, mapResponse)
 		if err != nil {
-			gommonLog.Error(err)
+			gommonLog.Error("[Error] Write Platform LOG ", err)
+			errWriteLog := WriteFileLog(logParam.LogFile, logParam.MsgLogFile, constant.PLATFORM_LOG_LEVEL_ERROR, link, method, duration, header, mapRequest, map[string]interface{}{
+				"payload_log": payloadBase64,
+				"errors":      err.Error(),
+			})
+			if errWriteLog != nil {
+				gommonLog.Error("[Error] Write File LOG ", errWriteLog)
+			}
 		}
 	}
 
 	if useLogFile {
 		err = WriteFileLog(logParam.LogFile, logParam.MsgLogFile, logParam.LevelLog, link, method, duration, header, mapRequest, mapResponse)
 		if err != nil {
-			gommonLog.Error(err)
+			gommonLog.Error("[Error] Write File LOG ", err)
 		}
 	}
 
