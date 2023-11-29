@@ -67,6 +67,8 @@ type ApiDupcheckKmbUpdate struct {
 	PefindoID              interface{} `gorm:"column:PefindoID"`
 	PefindoIDSpouse        interface{} `gorm:"column:PefindoIDSpouse"`
 	PefindoScore           interface{} `gorm:"column:PefindoScore"`
+	MaxOverdue             int         `gorm:"column:MaxOverdue"`
+	MaxOverdueLast12Months int         `gorm:"column:MaxOverdueLast12Months"`
 }
 
 func (c *ApiDupcheckKmbUpdate) TableName() string {
@@ -161,16 +163,18 @@ type ClusterBranch struct {
 }
 
 type MappingElaborateScheme struct {
-	ResultPefindo  string  `gorm:"type:varchar(10);column:result_pefindo"`
-	BranchID       string  `gorm:"type:varchar(10);column:branch_id"`
-	CustomerStatus string  `gorm:"type:varchar(10);column:customer_status"`
-	BPKBNameType   int     `gorm:"column:bpkb_name_type"`
-	Cluster        string  `gorm:"type:varchar(20);column:cluster"`
-	TotalBakiDebet int     `gorm:"column:total_baki_debet"`
-	Tenor          int     `gorm:"column:tenor"`
-	AgeVehicle     string  `gorm:"type:varchar(5);column:age_vehicle"`
-	LTV            float64 `gorm:"column:ltv"`
-	Decision       string  `gorm:"type:varchar(10);column:decision"`
+	ResultPefindo       string `gorm:"type:varchar(10);column:result_pefindo"`
+	Cluster             string `gorm:"type:varchar(50);column:cluster"`
+	TotalBakiDebetStart int    `gorm:"column:total_baki_debet_start"`
+	TotalBakiDebetEnd   int    `gorm:"column:total_baki_debet_end"`
+	TenorStart          int    `gorm:"column:tenor_start"`
+	TenorEnd            int    `gorm:"column:tenor_end"`
+	BPKBNameType        int    `gorm:"column:bpkb_name_type"`
+	AgeVehicle          string `gorm:"type:varchar(5);column:age_vehicle"`
+	LTV                 string `gorm:"type:varchar(5);column:ltv"`
+	LTVStart            int    `gorm:"column:ltv_start"`
+	LTVEnd              int    `gorm:"column:ltv_end"`
+	Decision            string `gorm:"type:varchar(10);column:decision"`
 }
 
 func (c *MappingElaborateScheme) TableName() string {

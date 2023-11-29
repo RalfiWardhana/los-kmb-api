@@ -287,6 +287,7 @@ type ElaborateResult struct {
 	AgeVehicle     string  `json:"age_vehicle,omitempty"`
 	LTVOrigin      float64 `json:"ltv_origin,omitempty"`
 	TotalBakiDebet float64 `json:"total_balki_debet,omitempty"`
+	IsMappingOvd   bool    `json:"is_mapping_ovd,omitempty"`
 }
 
 type ResponseMappingElaborateScheme struct {
@@ -301,6 +302,7 @@ type ResponseMappingElaborateScheme struct {
 	AgeVehicle     string  `json:"age_vehicle"`
 	LTV            float64 `json:"ltv"`
 	Decision       string  `json:"decision"`
+	IsMappingOvd   string  `json:"is_mapping_ovd,omitempty"`
 }
 
 type SpDupcheckMap struct {

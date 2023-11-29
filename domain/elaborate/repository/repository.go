@@ -3,11 +3,12 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"los-kmb-api/domain/elaborate/interfaces"
 	"los-kmb-api/models/entity"
-	"los-kmb-api/shared/config"
 	"los-kmb-api/shared/constant"
+	"os"
 	"strconv"
 	"time"
 
@@ -53,7 +54,7 @@ func (r repoHandler) UpdateDataElaborate(data entity.ApiElaborateKmbUpdate) (err
 func (r repoHandler) GetClusterBranchElaborate(branch_id string, cust_status string, bpkb int) (cluster entity.ClusterBranch, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -75,7 +76,7 @@ func (r repoHandler) GetClusterBranchElaborate(branch_id string, cust_status str
 func (r repoHandler) GetFilteringResult(prospect_id string) (filtering entity.ApiDupcheckKmbUpdate, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -83,21 +84,21 @@ func (r repoHandler) GetFilteringResult(prospect_id string) (filtering entity.Ap
 	db := r.minilosKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.minilosKmb.Raw("SELECT PefindoID, PefindoIDSpouse, PefindoScore FROM api_dupcheck_kmb WHERE ProspectID = ?", prospect_id).Scan(&filtering).Error; err != nil {
+	if err = r.minilosKmb.Raw("SELECT PefindoID, PefindoIDSpouse, PefindoScore, json_extract(ResultPefindo, '$.result.max_overdue') AS MaxOverdue, json_extract(ResultPefindo, '$.result.max_overdue_last12months') AS MaxOverdueLast12Months FROM api_dupcheck_kmb WHERE ProspectID = ? ORDER BY Timestamp DESC LIMIT 1", prospect_id).Scan(&filtering).Error; err != nil {
 		return
 	}
 
 	return
 }
 
-func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bpkb int, result_pefindo string, tenor int, age_vehicle string, ltv float64, baki_debet float64) (data entity.ResultElaborate, err error) {
+func (r repoHandler) GetResultElaborate(branchId string, customerStatus string, bpkb int, resultPefindo string, tenor int, ageVehicle string, ltv float64, bakiDebet float64) (data entity.ResultElaborate, err error) {
 
 	var queryAdd string
-	var ltv_range int = int(ltv)
-	var total_baki_debet int = int(baki_debet)
+	var rangeLtv int = int(ltv)
+	var total_baki_debet int = int(bakiDebet)
 
 	// PEFINDO PASS
-	if result_pefindo == constant.DECISION_PASS {
+	if resultPefindo == constant.DECISION_PASS {
 		if tenor >= 36 {
 			queryAdd = fmt.Sprintf("AND mes.bpkb_name_type = %d AND mes.tenor_start >= 36 AND mes.tenor_end = 0", bpkb)
 		} else {
@@ -105,42 +106,42 @@ func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bp
 		}
 
 		if tenor >= 36 && bpkb == 1 {
-			queryAdd += fmt.Sprintf(" AND mes.age_vehicle = '%s'", age_vehicle)
+			queryAdd += fmt.Sprintf(" AND mes.age_vehicle = '%s'", ageVehicle)
 		}
 
-		if (age_vehicle == "<=12" && bpkb == 1) || (age_vehicle == "<=12" && bpkb == 0 && tenor < 36) {
+		if (ageVehicle == "<=12" && bpkb == 1) || (ageVehicle == "<=12" && bpkb == 0 && tenor < 36) {
 
-			if ltv_range != 0 && ltv_range <= 1000 {
-				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", ltv_range, ltv_range)
+			if rangeLtv != 0 && rangeLtv <= 1000 {
+				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", rangeLtv, rangeLtv)
 			} else {
-				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= 1000", ltv_range)
+				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= 1000", rangeLtv)
 			}
 		} else if tenor < 36 {
-			if ltv_range != 0 && ltv_range <= 1000 {
-				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", ltv_range, ltv_range)
+			if rangeLtv != 0 && rangeLtv <= 1000 {
+				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", rangeLtv, rangeLtv)
 			} else {
-				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= 1000", ltv_range)
+				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= 1000", rangeLtv)
 			}
 		}
 	}
 
 	// PEFINDO NO HIT
-	if result_pefindo == constant.DECISION_PBK_NO_HIT {
+	if resultPefindo == constant.DECISION_PBK_NO_HIT {
 		if tenor >= 24 {
 			queryAdd = "AND mes.tenor_start >= 24 AND mes.tenor_end = 0"
 		} else {
 			queryAdd = fmt.Sprintf("AND mes.tenor_start <= %d AND mes.tenor_end >= %d", tenor, tenor)
 		}
 
-		if ltv_range != 0 && ltv_range <= 1000 {
-			queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", ltv_range, ltv_range)
+		if rangeLtv != 0 && rangeLtv <= 1000 {
+			queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", rangeLtv, rangeLtv)
 		} else {
-			queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= 1000", ltv_range)
+			queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= 1000", rangeLtv)
 		}
 	}
 
 	// PEFINDO REJECT
-	if result_pefindo == constant.DECISION_REJECT {
+	if resultPefindo == constant.DECISION_REJECT {
 
 		queryAdd = fmt.Sprintf("AND mes.total_baki_debet_start <= %d AND mes.total_baki_debet_end >= %d", total_baki_debet, total_baki_debet)
 
@@ -151,17 +152,17 @@ func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bp
 		}
 
 		if tenor < 24 {
-			if ltv_range != 0 && ltv_range <= 1000 {
-				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", ltv_range, ltv_range)
+			if rangeLtv != 0 && rangeLtv <= 1000 {
+				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= %d", rangeLtv, rangeLtv)
 			} else {
-				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= '1000'", ltv_range)
+				queryAdd += fmt.Sprintf(" AND mes.ltv_start <= %d AND mes.ltv_end >= '1000'", rangeLtv)
 			}
 		}
 	}
 
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -169,7 +170,85 @@ func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bp
 	db := r.KpLos.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.KpLos.Raw("SELECT mcb.cluster, mes.decision, mes.ltv_start FROM kmb_mapping_cluster_branch mcb JOIN kmb_mapping_elaborate_scheme mes ON mcb.cluster = mes.cluster WHERE mcb.branch_id = ? AND mcb.customer_status = ? AND mcb.bpkb_name_type = ? AND mes.result_pefindo = ? "+queryAdd, branch_id, cust_status, bpkb, result_pefindo).Scan(&data).Error; err != nil {
+	if err = r.KpLos.Raw("SELECT mcb.cluster, mes.decision, mes.ltv_start FROM kmb_mapping_cluster_branch mcb JOIN kmb_mapping_elaborate_scheme mes ON mcb.cluster = mes.cluster WHERE mcb.branch_id = ? AND mcb.customer_status = ? AND mcb.bpkb_name_type = ? AND mes.result_pefindo = ? "+queryAdd, branchId, customerStatus, bpkb, resultPefindo).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetMappingLtvOvd(branchID string, custStatus string, bpkb int, resultPefindo string, tenor int, ageVehicle string, ltv float64, bakiDebet float64) (data entity.ResultElaborate, err error) {
+	var queryAdd string
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ltvRange := int(ltv)
+	totalBakiDebet := int(bakiDebet)
+
+	// Common query building functions
+	buildTenorQuery := func() string {
+		if tenor >= 24 {
+			return "mes.tenor_start >= '24' AND mes.tenor_end = 0"
+		}
+		return fmt.Sprintf("mes.tenor_start <= %d AND mes.tenor_end >= %d", tenor, tenor)
+	}
+
+	buildLTVQuery := func() string {
+		if ltvRange != 0 && ltvRange <= 1000 {
+			return fmt.Sprintf("AND mes.ltv_start <= %d AND mes.ltv_end >= %d", ltvRange, ltvRange)
+		}
+		return fmt.Sprintf("AND mes.ltv_start <= %d AND mes.ltv_end >= '1000'", ltvRange)
+	}
+
+	buildAgeVehicleQuery := func() string {
+		return fmt.Sprintf(" AND mes.age_vehicle = '%s'", ageVehicle)
+	}
+
+	// PEFINDO PASS
+	if resultPefindo == constant.DECISION_PASS {
+		if tenor >= 36 {
+			queryAdd = fmt.Sprintf("AND mes.bpkb_name_type = %d AND mes.tenor_start >= 36 AND mes.tenor_end = 0", bpkb)
+		} else {
+			queryAdd = fmt.Sprintf("AND %s", buildTenorQuery())
+		}
+
+		if tenor >= 36 && bpkb == 1 {
+			queryAdd += buildAgeVehicleQuery()
+		}
+
+		if (ageVehicle == "<=12" && bpkb == 1) || (ageVehicle == "<=12" && bpkb == 0 && tenor < 36) {
+			queryAdd += buildLTVQuery()
+		} else if tenor < 36 {
+			queryAdd += buildLTVQuery()
+		}
+	}
+
+	// PEFINDO NO HIT
+	if resultPefindo == constant.DECISION_PBK_NO_HIT {
+		queryAdd = fmt.Sprintf("AND %s", buildTenorQuery())
+		queryAdd += buildLTVQuery()
+	}
+
+	// PEFINDO REJECT
+	if resultPefindo == constant.DECISION_REJECT {
+		queryAdd = fmt.Sprintf("AND mes.total_baki_debet_start <= %d AND mes.total_baki_debet_end >= %d", totalBakiDebet, totalBakiDebet)
+		queryAdd += buildTenorQuery()
+
+		if tenor < 24 {
+			queryAdd += buildLTVQuery()
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.KpLos.BeginTx(ctx, &sql.TxOptions{})
+	defer db.Commit()
+
+	if err = r.KpLos.Raw("SELECT mcb.cluster, mes.decision, mes.ltv_start FROM kmb_mapping_cluster_branch mcb JOIN kmb_mapping_elaborate_scheme_ovd mes ON mcb.cluster = mes.cluster WHERE mcb.branch_id = ? AND mcb.customer_status = ? AND mcb.bpkb_name_type = ? AND mes.result_pefindo = ? "+queryAdd, branchID, custStatus, bpkb, resultPefindo).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
 		return
 	}
 
