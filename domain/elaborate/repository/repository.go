@@ -177,66 +177,22 @@ func (r repoHandler) GetResultElaborate(branchId string, customerStatus string, 
 	return
 }
 
-func (r repoHandler) GetMappingLtvOvd(branchID string, custStatus string, bpkb int, resultPefindo string, tenor int, ageVehicle string, ltv float64, bakiDebet float64) (data entity.ResultElaborate, err error) {
-	var queryAdd string
+func (r repoHandler) GetMappingLtvOvd(cluster, resultPefindo string, tenor int, ltv float64) (data entity.ResultElaborate, err error) {
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ltvRange := int(ltv)
-	totalBakiDebet := int(bakiDebet)
 
 	// Common query building functions
 	buildTenorQuery := func() string {
-		if tenor >= 24 {
-			return "mes.tenor_start >= '24' AND mes.tenor_end = 0"
-		}
-		return fmt.Sprintf("mes.tenor_start <= %d AND mes.tenor_end >= %d", tenor, tenor)
+		return fmt.Sprintf("AND tenor_start <= %d AND tenor_end >= %d", tenor, tenor)
 	}
 
 	buildLTVQuery := func() string {
 		if ltvRange != 0 && ltvRange <= 1000 {
-			return fmt.Sprintf("AND mes.ltv_start <= %d AND mes.ltv_end >= %d", ltvRange, ltvRange)
+			return fmt.Sprintf("AND ltv_start <= %d AND ltv_end >= %d", ltvRange, ltvRange)
 		}
-		return fmt.Sprintf("AND mes.ltv_start <= %d AND mes.ltv_end >= '1000'", ltvRange)
-	}
-
-	buildAgeVehicleQuery := func() string {
-		return fmt.Sprintf(" AND mes.age_vehicle = '%s'", ageVehicle)
-	}
-
-	// PEFINDO PASS
-	if resultPefindo == constant.DECISION_PASS {
-		if tenor >= 36 {
-			queryAdd = fmt.Sprintf("AND mes.bpkb_name_type = %d AND mes.tenor_start >= 36 AND mes.tenor_end = 0", bpkb)
-		} else {
-			queryAdd = fmt.Sprintf("AND %s", buildTenorQuery())
-		}
-
-		if tenor >= 36 && bpkb == 1 {
-			queryAdd += buildAgeVehicleQuery()
-		}
-
-		if (ageVehicle == "<=12" && bpkb == 1) || (ageVehicle == "<=12" && bpkb == 0 && tenor < 36) {
-			queryAdd += buildLTVQuery()
-		} else if tenor < 36 {
-			queryAdd += buildLTVQuery()
-		}
-	}
-
-	// PEFINDO NO HIT
-	if resultPefindo == constant.DECISION_PBK_NO_HIT {
-		queryAdd = fmt.Sprintf("AND %s", buildTenorQuery())
-		queryAdd += buildLTVQuery()
-	}
-
-	// PEFINDO REJECT
-	if resultPefindo == constant.DECISION_REJECT {
-		queryAdd = fmt.Sprintf("AND mes.total_baki_debet_start <= %d AND mes.total_baki_debet_end >= %d", totalBakiDebet, totalBakiDebet)
-		queryAdd += buildTenorQuery()
-
-		if tenor < 24 {
-			queryAdd += buildLTVQuery()
-		}
+		return fmt.Sprintf("AND ltv_start <= %d AND ltv_end >= 1000", ltvRange)
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
@@ -245,7 +201,7 @@ func (r repoHandler) GetMappingLtvOvd(branchID string, custStatus string, bpkb i
 	db := r.KpLos.BeginTx(ctx, &sql.TxOptions{})
 	defer db.Commit()
 
-	if err = r.KpLos.Raw("SELECT mcb.cluster, mes.decision, mes.ltv_start FROM kmb_mapping_cluster_branch mcb JOIN kmb_mapping_elaborate_scheme_ovd mes ON mcb.cluster = mes.cluster WHERE mcb.branch_id = ? AND mcb.customer_status = ? AND mcb.bpkb_name_type = ? AND mes.result_pefindo = ? "+queryAdd, branchID, custStatus, bpkb, resultPefindo).Scan(&data).Error; err != nil {
+	if err = r.KpLos.Raw(fmt.Sprintf("SELECT cluster, decision, ltv_start FROM kmb_mapping_elaborate_scheme_ovd WITH (nolock) WHERE result_pefindo = '%s' AND cluster = '%s' %s %s", resultPefindo, cluster, buildTenorQuery(), buildLTVQuery())).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
 		}

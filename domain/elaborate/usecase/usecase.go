@@ -221,18 +221,18 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 	data.TotalBakiDebet = bakiDebet
 
 	// Get Cluster Branch
-	cluster_branch, err := u.repository.GetClusterBranchElaborate(branchId, statusKonsumen, bpkbNameType)
+	clusterBranch, err := u.repository.GetClusterBranchElaborate(branchId, statusKonsumen, bpkbNameType)
 	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
 		err = fmt.Errorf("failed get cluster branch elaborate")
 		return
 	}
 
-	if cluster_branch != (entity.ClusterBranch{}) {
-		data.Cluster = cluster_branch.Cluster
+	if clusterBranch != (entity.ClusterBranch{}) {
+		data.Cluster = clusterBranch.Cluster
 	}
 
 	if bakiDebet > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && bakiDebet <= constant.BAKI_DEBET {
-		if cluster_branch.Cluster == constant.CLUSTER_E || cluster_branch.Cluster == constant.CLUSTER_F {
+		if clusterBranch.Cluster == constant.CLUSTER_E || clusterBranch.Cluster == constant.CLUSTER_F {
 			data.Code = constant.CODE_REJECT_ELABORATE
 			data.Reason = constant.REASON_REJECT_ELABORATE
 			data.Decision = constant.DECISION_REJECT
@@ -278,15 +278,17 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 	}
 
 	data.IsMappingOvd = false
-	// Check max OVD 12 & max OVD current
-	if filteringResult.MaxOverdueLast12Months <= 10 && filteringResult.MaxOverdue == 0 {
-		// Get OVD Mapping LTV
-		getMappingLtvOvd, _ = u.repository.GetMappingLtvOvd(branchId, statusKonsumen, bpkbNameType, resultPefindo, tenor, ageVehicle, ltv, bakiDebet)
+	if (tenor <= 35) || (tenor >= 36 && bpkbNamaSama && age <= 12) { //excepting check age vehicle
+		// Check max OVD 12 & max OVD current
+		if filteringResult.MaxOverdueLast12Months <= 10 && filteringResult.MaxOverdue == 0 {
+			// Get OVD Mapping LTV
+			getMappingLtvOvd, _ = u.repository.GetMappingLtvOvd(clusterBranch.Cluster, resultPefindo, tenor, ltv)
 
-		// recent mapping ltv will replaced with ovd mapping ltv
-		if getMappingLtvOvd != (entity.ResultElaborate{}) {
-			resultElaborate = getMappingLtvOvd
-			data.IsMappingOvd = true
+			// recent mapping ltv will replaced with ovd mapping ltv
+			if getMappingLtvOvd != (entity.ResultElaborate{}) {
+				resultElaborate = getMappingLtvOvd
+				data.IsMappingOvd = true
+			}
 		}
 	}
 
