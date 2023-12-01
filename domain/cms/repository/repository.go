@@ -1249,7 +1249,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
 			CASE
-			 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+			 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL AND tst.status_process<>'FIN' THEN 1
 			 ELSE 0
 			END AS ActionEditData
 		FROM
@@ -1457,7 +1457,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tdb.BiroCustomerResult,
 		tdb.BiroSpouseResult,
 		CASE
-		 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+		 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL AND tst.status_process<>'FIN' THEN 1
 		 ELSE 0
 		END AS ActionEditData
 
