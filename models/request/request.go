@@ -332,6 +332,12 @@ type AfterPrescreening struct {
 	ProspectID string `json:"prospect_id" validate:"required,max=20" example:"SAL042600001"`
 }
 
+type MetricsEkyc struct {
+	CustomerStatus  string
+	CustomerSegment string
+	CBFound         bool
+}
+
 type Metrics struct {
 	Transaction        Transaction        `json:"transaction" validate:"required"`
 	Apk                Apk                `json:"apk" validate:"required"`

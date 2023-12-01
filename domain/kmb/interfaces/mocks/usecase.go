@@ -249,20 +249,20 @@ func (_m *Usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, custom
 	return r0, r1, r2, r3, r4, r5
 }
 
-// Dukcapil provides a mock function with given fields: ctx, req, accessToken
-func (_m *Usecase) Dukcapil(ctx context.Context, req request.Metrics, accessToken string) (response.Ekyc, error) {
-	ret := _m.Called(ctx, req, accessToken)
+// Dukcapil provides a mock function with given fields: ctx, req, reqMetricsEkyc, accessToken
+func (_m *Usecase) Dukcapil(ctx context.Context, req request.Metrics, reqMetricsEkyc request.MetricsEkyc, accessToken string) (response.Ekyc, error) {
+	ret := _m.Called(ctx, req, reqMetricsEkyc, accessToken)
 
 	var r0 response.Ekyc
-	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, string) response.Ekyc); ok {
-		r0 = rf(ctx, req, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, request.MetricsEkyc, string) response.Ekyc); ok {
+		r0 = rf(ctx, req, reqMetricsEkyc, accessToken)
 	} else {
 		r0 = ret.Get(0).(response.Ekyc)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, string) error); ok {
-		r1 = rf(ctx, req, accessToken)
+	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, request.MetricsEkyc, string) error); ok {
+		r1 = rf(ctx, req, reqMetricsEkyc, accessToken)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -354,20 +354,20 @@ func (_m *Usecase) InsertStaging(prospectID string) (response.InsertStaging, err
 	return r0, r1
 }
 
-// Ktp provides a mock function with given fields: ctx, req, cb_found, accessToken
-func (_m *Usecase) Ktp(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (response.Ekyc, error) {
-	ret := _m.Called(ctx, req, cb_found, accessToken)
+// Ktp provides a mock function with given fields: ctx, req, reqMetricsEkyc, accessToken
+func (_m *Usecase) Ktp(ctx context.Context, req request.Metrics, reqMetricsEkyc request.MetricsEkyc, accessToken string) (response.Ekyc, error) {
+	ret := _m.Called(ctx, req, reqMetricsEkyc, accessToken)
 
 	var r0 response.Ekyc
-	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, bool, string) response.Ekyc); ok {
-		r0 = rf(ctx, req, cb_found, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, request.MetricsEkyc, string) response.Ekyc); ok {
+		r0 = rf(ctx, req, reqMetricsEkyc, accessToken)
 	} else {
 		r0 = ret.Get(0).(response.Ekyc)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, bool, string) error); ok {
-		r1 = rf(ctx, req, cb_found, accessToken)
+	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, request.MetricsEkyc, string) error); ok {
+		r1 = rf(ctx, req, reqMetricsEkyc, accessToken)
 	} else {
 		r1 = ret.Error(1)
 	}

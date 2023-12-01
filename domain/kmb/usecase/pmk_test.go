@@ -9,6 +9,7 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
@@ -146,8 +147,8 @@ func TestPmk(t *testing.T) {
 			income:        7000000,
 			homeStatus:    "SD",
 			professionID:  "KRSW",
-			empYear:       "2022",
-			empMonth:      "12",
+			empYear:       time.Now().Format("2006"),
+			empMonth:      time.Now().Format("01"),
 			stayYear:      "2005",
 			stayMonth:     "09",
 			birthDate:     "1998-09-09",

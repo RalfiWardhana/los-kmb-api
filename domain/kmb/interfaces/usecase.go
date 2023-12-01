@@ -21,9 +21,9 @@ type Usecase interface {
 	CustomerKMB(spDupcheck response.SpDupCekCustomerByID) (statusKonsumen string, err error)
 	PMK(branchID string, statusKonsumen string, income float64, homeStatus, professionID, empYear, empMonth, stayYear, stayMonth, birthDate string, tenor int, maritalStatus string) (data response.UsecaseApi, err error)
 	DsrCheck(ctx context.Context, req request.DupcheckApi, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, accessToken string, configValue response.DupcheckConfig) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error)
-	Dukcapil(ctx context.Context, req request.Metrics, accessToken string) (data response.Ekyc, err error)
+	Dukcapil(ctx context.Context, req request.Metrics, reqMetricsEkyc request.MetricsEkyc, accessToken string) (data response.Ekyc, err error)
 	Asliri(ctx context.Context, req request.Metrics, accessToken string) (data response.Ekyc, err error)
-	Ktp(ctx context.Context, req request.Metrics, cb_found bool, accessToken string) (data response.Ekyc, err error)
+	Ktp(ctx context.Context, req request.Metrics, reqMetricsEkyc request.MetricsEkyc, accessToken string) (data response.Ekyc, err error)
 	Pefindo(cbFound bool, bpkbName string, filtering entity.FilteringKMB, spDupcheck response.SpDupcheckMap) (data response.UsecaseApi, err error)
 	Scorepro(ctx context.Context, req request.Metrics, pefindoScore, customerSegment string, spDupcheck response.SpDupcheckMap, accessToken string) (responseScs response.IntegratorScorePro, data response.ScorePro, pefindoIDX response.PefindoIDX, err error)
 	ElaborateScheme(req request.Metrics) (data response.UsecaseApi, err error)
@@ -36,7 +36,7 @@ type Usecase interface {
 
 type MultiUsecase interface {
 	Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken string, configValue response.DupcheckConfig) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error)
-	Ekyc(ctx context.Context, req request.Metrics, cbFound bool, accessToken string) (data response.Ekyc, trxDetail []entity.TrxDetail, trxFMF response.TrxFMF, err error)
+	Ekyc(ctx context.Context, req request.Metrics, reqMetricsEkyc request.MetricsEkyc, accessToken string) (data response.Ekyc, trxDetail []entity.TrxDetail, trxFMF response.TrxFMF, err error)
 }
 
 type Metrics interface {
