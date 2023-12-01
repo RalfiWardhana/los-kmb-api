@@ -104,6 +104,23 @@ func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster string) (data
 	return
 }
 
+func (r repoHandler) GetMappingElaborateLTVOvd(resultPefindo, cluster string) (data []entity.MappingElaborateLTV, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.NewKmb.Raw("SELECT * FROM m_mapping_elaborate_ltv_ovd WITH (nolock) WHERE result_pefindo = ? AND cluster = ? ", resultPefindo, cluster).Scan(&data).Error; err != nil {
+		return
+	}
+	return
+}
+
 func (r repoHandler) SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error) {
 
 	headerByte, _ := json.Marshal(header)
