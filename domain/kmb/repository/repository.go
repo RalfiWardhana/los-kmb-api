@@ -1362,6 +1362,7 @@ func (r repoHandler) SaveRecalculate(beforeRecalculate entity.TrxRecalculate, af
 			FidusiaFee:          afterRecalculate.FidusiaFee,
 			AssetInsuranceFee:   afterRecalculate.AssetInsuranceFee,
 			LifeInsuranceFee:    afterRecalculate.LifeInsuranceFee,
+			InsuranceAmount:     afterRecalculate.LifeInsuranceFee + afterRecalculate.AssetInsuranceFee,
 			NTF:                 afterRecalculate.NTF,
 			NTFAkumulasi:        afterRecalculate.NTFAkumulasi,
 			InterestRate:        afterRecalculate.InterestRate,
