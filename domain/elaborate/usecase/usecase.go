@@ -245,22 +245,9 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 			result_pefindo = reqs.Data.ResultPefindo
 		} else {
 			if result_pefindo == constant.DECISION_PASS {
-				switch score := filtering_result.PefindoScore.(type) {
-				case string:
-					if score == constant.UNSCORE_PBK {
-						result_pefindo = constant.DECISION_PBK_NO_HIT
-					} else {
-						result_pefindo = constant.DECISION_PASS
-					}
-				case []uint8:
-					// Convert []uint8 to string and then compare
-					stringValue := string(score)
-					if stringValue == constant.UNSCORE_PBK {
-						result_pefindo = constant.DECISION_PBK_NO_HIT
-					} else {
-						result_pefindo = constant.DECISION_PASS
-					}
-				default:
+				if *filtering_result.PefindoScore == constant.UNSCORE_PBK {
+					result_pefindo = constant.DECISION_PBK_NO_HIT
+				} else {
 					result_pefindo = constant.DECISION_PASS
 				}
 			}
