@@ -389,6 +389,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			RuleCode:       decisionEkyc.Code,
 			SourceDecision: decisionEkyc.Source,
 			Reason:         decisionEkyc.Reason,
+			Info:           decisionEkyc.Info,
 		}
 
 		details = append(details, addDetail)
