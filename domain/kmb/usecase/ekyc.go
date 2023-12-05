@@ -125,7 +125,6 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, accessToken 
 		"surgate_mother_name": req.CustomerPersonal.SurgateMotherName,
 		"threshold":           "0",
 		"transaction_id":      req.Transaction.ProspectID,
-		"marital_status":      req.CustomerPersonal.MaritalStatus,
 	})
 
 	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("DUKCAPIL_VD_URL"), paramVd, map[string]string{}, constant.METHOD_POST, true, 2, timeout, req.Transaction.ProspectID, accessToken)
