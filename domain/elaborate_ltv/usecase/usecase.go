@@ -99,13 +99,26 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		ManufacturingYear: reqs.ManufacturingYear,
 	}
 
+	maxOvd := filteringKMB.MaxOverdueBiro
+	maxOvd12 := filteringKMB.MaxOverdueLast12monthsBiro
+
+	maxOverdueBiro, ok := maxOvd.(int64)
+	if !ok {
+		maxOverdueBiro = 0
+	}
+
+	maxOverdueLast12, ok := maxOvd12.(int64)
+	if !ok {
+		maxOverdueLast12 = 0
+	}
+
 	// Check max OVD 12 & max OVD current
-	if filteringKMB.MaxOverdueLast12monthsBiro.(int) <= 10 && filteringKMB.MaxOverdueBiro == 0 {
+	if maxOverdueLast12 <= 10 && maxOverdueBiro == 0 {
 		// Get Mapping LTV OVD
 		getMappingLtvOvd, _ = u.repository.GetMappingElaborateLTVOvd(resultPefindo, filteringKMB.Cluster.(string))
 	}
 
-	if len(getMappingLtvOvd) > 0 && filteringKMB.MaxOverdueLast12monthsBiro.(int) <= 10 && filteringKMB.MaxOverdueBiro == 0 {
+	if len(getMappingLtvOvd) > 0 && maxOverdueLast12 <= 10 && maxOverdueBiro == 0 {
 		mappingElaborateLTV = getMappingLtvOvd
 	} else {
 		mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, filteringKMB.Cluster.(string))

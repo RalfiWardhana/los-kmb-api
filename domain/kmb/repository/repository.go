@@ -260,8 +260,9 @@ func (r repoHandler) GetMoblast(customerID string) (score entity.GetMoblast, err
 
 func (r repoHandler) GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error) {
 
-	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT mmel.ltv FROM trx_elaborate_ltv tel WITH (nolock) 
-	LEFT JOIN m_mapping_elaborate_ltv mmel WITH (nolock) ON tel.m_mapping_elaborate_ltv_id = mmel.id 
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT CASE WHEN mmel.ltv IS NULL THEN mmelovd.ltv ELSE mmel.ltv END AS ltv FROM trx_elaborate_ltv tel WITH (nolock) 
+	LEFT JOIN m_mapping_elaborate_ltv mmel WITH (nolock) ON tel.m_mapping_elaborate_ltv_id = mmel.id
+	LEFT JOIN m_mapping_elaborate_ltv_ovd mmelovd WITH (nolock) ON tel.m_mapping_elaborate_ltv_id = mmelovd.id 
 	WHERE tel.prospect_id ='%s'`, prospectID)).Scan(&elaborateLTV).Error; err != nil {
 		return
 	}
