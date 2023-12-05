@@ -279,15 +279,20 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 
 	data.IsMappingOvd = false
 	if (tenor <= 35) || (tenor >= 36 && bpkbNamaSama && age <= 12) { //excepting check age vehicle
-		// Check max OVD 12 & max OVD current
-		if filteringResult.MaxOverdueLast12Months <= 10 && filteringResult.MaxOverdue == 0 {
-			// Get OVD Mapping LTV
-			getMappingLtvOvd, _ = u.repository.GetMappingLtvOvd(clusterBranch.Cluster, resultPefindo, tenor, ltv)
+		maxOverdueBiro := filteringResult.MaxOverdue
+		maxOverdueLast12 := filteringResult.MaxOverdueLast12Months
 
-			// recent mapping ltv will replaced with ovd mapping ltv
-			if getMappingLtvOvd != (entity.ResultElaborate{}) {
-				resultElaborate = getMappingLtvOvd
-				data.IsMappingOvd = true
+		// Check max OVD 12 & max OVD current
+		if !filteringResult.IsNullMaxOverdue && !filteringResult.IsNullMaxOverdueLast12Months {
+			if maxOverdueBiro == 0 && maxOverdueLast12 <= 10 {
+				// Get OVD Mapping LTV
+				getMappingLtvOvd, _ = u.repository.GetMappingLtvOvd(clusterBranch.Cluster, resultPefindo, tenor, ltv)
+
+				// recent mapping ltv will replaced with ovd mapping ltv
+				if getMappingLtvOvd != (entity.ResultElaborate{}) {
+					resultElaborate = getMappingLtvOvd
+					data.IsMappingOvd = true
+				}
 			}
 		}
 	}

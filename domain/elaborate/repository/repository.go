@@ -84,7 +84,32 @@ func (r repoHandler) GetFilteringResult(prospect_id string) (filtering entity.Ap
 	db := r.minilosKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.minilosKmb.Raw("SELECT PefindoID, PefindoIDSpouse, PefindoScore, json_extract(ResultPefindo, '$.result.max_overdue') AS MaxOverdue, json_extract(ResultPefindo, '$.result.max_overdue_last12months') AS MaxOverdueLast12Months FROM api_dupcheck_kmb WHERE ProspectID = ? ORDER BY Timestamp DESC LIMIT 1", prospect_id).Scan(&filtering).Error; err != nil {
+	if err = r.minilosKmb.Raw(`SELECT
+			PefindoID,
+			PefindoIDSpouse,
+			PefindoScore,
+			CAST(
+			JSON_EXTRACT(ResultPefindo, '$.result.max_overdue') AS SIGNED
+			) AS MaxOverdue,
+			JSON_EXTRACT(ResultPefindo, '$.result.max_overdue') = CAST('null' AS JSON) AS IsNullMaxOverdue,
+			CAST(
+			JSON_EXTRACT(
+				ResultPefindo,
+				'$.result.max_overdue_last12months'
+			) AS SIGNED
+			) AS MaxOverdueLast12Months,
+			JSON_EXTRACT(
+			ResultPefindo,
+			'$.result.max_overdue_last12months'
+			) = CAST('null' AS JSON) AS IsNullMaxOverdueLast12Months
+		FROM
+			api_dupcheck_kmb
+		WHERE
+			ProspectID = ?
+		ORDER BY
+			Timestamp DESC
+		LIMIT
+			1`, prospect_id).Scan(&filtering).Error; err != nil {
 		return
 	}
 
