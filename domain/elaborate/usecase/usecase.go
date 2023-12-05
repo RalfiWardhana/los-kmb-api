@@ -245,10 +245,10 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 			result_pefindo = reqs.Data.ResultPefindo
 		} else {
 			if result_pefindo == constant.DECISION_PASS {
-				if *filtering_result.PefindoScore == constant.UNSCORE_PBK {
-					result_pefindo = constant.DECISION_PBK_NO_HIT
-				} else {
+				if (filtering_result.PefindoID != nil || filtering_result.PefindoIDSpouse != nil) && filtering_result.PefindoScore != constant.UNSCORE_PBK {
 					result_pefindo = constant.DECISION_PASS
+				} else {
+					result_pefindo = constant.DECISION_PBK_NO_HIT
 				}
 			}
 		}
