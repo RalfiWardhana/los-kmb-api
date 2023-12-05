@@ -66,7 +66,7 @@ type ApiDupcheckKmbUpdate struct {
 	Timestamp              time.Time   `gorm:"column:Timestamp"`
 	PefindoID              interface{} `gorm:"column:PefindoID"`
 	PefindoIDSpouse        interface{} `gorm:"column:PefindoIDSpouse"`
-	PefindoScore           *string     `gorm:"column:PefindoScore"`
+	PefindoScore           interface{} `gorm:"column:PefindoScore"`
 }
 
 func (c *ApiDupcheckKmbUpdate) TableName() string {
