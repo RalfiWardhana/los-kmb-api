@@ -1249,7 +1249,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
 			CASE
-			 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+			 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL AND tst.status_process<>'FIN' THEN 1
 			 ELSE 0
 			END AS ActionEditData
 		FROM
@@ -1457,7 +1457,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tdb.BiroCustomerResult,
 		tdb.BiroSpouseResult,
 		CASE
-		 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL THEN 1
+		 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL AND tst.status_process<>'FIN' THEN 1
 		 ELSE 0
 		END AS ActionEditData
 
@@ -1919,7 +1919,9 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		END AS FinalStatus,
 		CASE
 		  WHEN tps.ProspectID IS NOT NULL
-		  AND tcd.decision IS NULL THEN 1
+		  AND tcd.decision IS NULL
+		  AND tst.source_decision NOT IN('CBM','DRM','GMO','COM','GMC','UCC')
+		  AND tst.status_process <> 'FIN' THEN 1
 		  ELSE 0
 		END AS ActionReturn,
 		CASE
@@ -2304,6 +2306,12 @@ func (r repoHandler) ProcessReturnOrder(prospectID string, trxStatus entity.TrxS
 		// delete trx_history_approval_scheme
 		var history entity.TrxHistoryApprovalScheme
 		if err := tx.Where("ProspectID = ?", prospectID).Delete(&history).Error; err != nil {
+			return err
+		}
+
+		// delete trx_akkk
+		var akkk entity.TrxAkkk
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&akkk).Error; err != nil {
 			return err
 		}
 

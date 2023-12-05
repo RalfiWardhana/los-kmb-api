@@ -36,6 +36,7 @@ func TestEkyc(t *testing.T) {
 		trxDetail        []entity.TrxDetail
 		trxFMF           response.TrxFMF
 		err              error
+		reqMetricsEkyc   request.MetricsEkyc
 	}{
 		{
 			name: "test ekyc DUKCAPIL",
@@ -157,13 +158,13 @@ func TestEkyc(t *testing.T) {
 			mockHttpClient := new(httpclient.MockHttpClient)
 			mockUsecase := new(mocks.Usecase)
 
-			mockUsecase.On("Dukcapil", ctx, tc.req, "token").Return(tc.dataEkycDukcapil, tc.errEkycDukcapil).Once()
+			mockUsecase.On("Dukcapil", ctx, tc.req, tc.reqMetricsEkyc, "token").Return(tc.dataEkycDukcapil, tc.errEkycDukcapil).Once()
 			mockUsecase.On("Asliri", ctx, tc.req, "token").Return(tc.dataEkycAsliri, tc.errEkycAsliri).Once()
-			mockUsecase.On("Ktp", ctx, tc.req, tc.cbFound, "token").Return(tc.dataEkycKtp, tc.errEkycKtp).Once()
+			mockUsecase.On("Ktp", ctx, tc.req, tc.reqMetricsEkyc, "token").Return(tc.dataEkycKtp, tc.errEkycKtp).Once()
 
 			multiUsecase := NewMultiUsecase(mockRepository, mockHttpClient, mockUsecase)
 
-			ekyc, trxDetail, trxFMF, err := multiUsecase.Ekyc(ctx, tc.req, tc.cbFound, "token")
+			ekyc, trxDetail, trxFMF, err := multiUsecase.Ekyc(ctx, tc.req, tc.reqMetricsEkyc, "token")
 			require.Equal(t, tc.data, ekyc)
 			require.Equal(t, tc.trxDetail, trxDetail)
 			require.Equal(t, tc.trxFMF, trxFMF)
@@ -196,6 +197,7 @@ func TestDukcapil(t *testing.T) {
 		respAppConfig                  entity.AppConfig
 		respGetMappingDukcapil         respGetMappingDukcapil
 		respDukcapilVD, respDukcapilFR respDukcapil
+		reqMetricsEkyc                 request.MetricsEkyc
 	}{
 		{
 			label: "Test PASS",
@@ -1048,7 +1050,7 @@ func TestDukcapil(t *testing.T) {
 		mockHttpClient := new(httpclient.MockHttpClient)
 
 		mockRepository.On("GetConfig", mock.Anything, mock.Anything, mock.Anything).Return(test.respAppConfig, nil)
-		mockRepository.On("GetMappingDukcapil", mock.Anything, mock.Anything).Return(test.respGetMappingDukcapil.data, test.respGetMappingDukcapil.err)
+		mockRepository.On("GetMappingDukcapil", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(test.respGetMappingDukcapil.data, test.respGetMappingDukcapil.err)
 
 		//httpclient Dukcapil VD
 		rst := resty.New()
@@ -1068,7 +1070,7 @@ func TestDukcapil(t *testing.T) {
 
 		usecase := NewUsecase(mockRepository, mockHttpClient)
 
-		data, err := usecase.Dukcapil(ctx, test.request, "token")
+		data, err := usecase.Dukcapil(ctx, test.request, test.reqMetricsEkyc, "token")
 
 		fmt.Println(test.label)
 
@@ -1326,7 +1328,7 @@ func TestKtp(t *testing.T) {
 	testcases := []struct {
 		name             string
 		req              request.Metrics
-		cbFound          bool
+		reqMetricsEkyc   request.MetricsEkyc
 		codeKtpValidator int
 		respKtpValidator string
 		errKtpValidator  error
@@ -1334,8 +1336,10 @@ func TestKtp(t *testing.T) {
 		err              error
 	}{
 		{
-			name:    "test KTP pass",
-			cbFound: true,
+			name: "test KTP pass",
+			reqMetricsEkyc: request.MetricsEkyc{
+				CBFound: true,
+			},
 			req: request.Metrics{
 				Item: request.Item{
 					BPKBName: "K",
@@ -1352,8 +1356,10 @@ func TestKtp(t *testing.T) {
 			},
 		},
 		{
-			name:    "test KTP err api ktp",
-			cbFound: true,
+			name: "test KTP err api ktp",
+			reqMetricsEkyc: request.MetricsEkyc{
+				CBFound: true,
+			},
 			req: request.Metrics{
 				Item: request.Item{
 					BPKBName: "K",
@@ -1364,8 +1370,10 @@ func TestKtp(t *testing.T) {
 			err:              errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call KTP Validator"),
 		},
 		{
-			name:    "test KTP err api ktp",
-			cbFound: true,
+			name: "test KTP err api ktp",
+			reqMetricsEkyc: request.MetricsEkyc{
+				CBFound: true,
+			},
 			req: request.Metrics{
 				Item: request.Item{
 					BPKBName: "K",
@@ -1375,8 +1383,10 @@ func TestKtp(t *testing.T) {
 			err:              errors.New(constant.ERROR_UPSTREAM + " - Call KTP Validator"),
 		},
 		{
-			name:    "test KTP pass",
-			cbFound: true,
+			name: "test KTP pass",
+			reqMetricsEkyc: request.MetricsEkyc{
+				CBFound: true,
+			},
 			req: request.Metrics{
 				Item: request.Item{
 					BPKBName: "K",
@@ -1411,7 +1421,7 @@ func TestKtp(t *testing.T) {
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
-			result, err := usecase.Ktp(ctx, tc.req, tc.cbFound, "token")
+			result, err := usecase.Ktp(ctx, tc.req, tc.reqMetricsEkyc, "token")
 
 			require.Equal(t, tc.data, result)
 			require.Equal(t, tc.err, err)
