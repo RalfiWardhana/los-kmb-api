@@ -138,11 +138,11 @@ func (c *handlerKMB) Recalculate(ctx echo.Context) (err error) {
 	data, err := c.usecase.Recalculate(ctx.Request().Context(), req)
 
 	if err != nil {
-		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", req, err)
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB RECALCULATE", req, err)
 		return ctxJson
 	}
 
-	ctxJson, resp = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE - Success", req, data)
+	ctxJson, resp = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB RECALCULATE - Success", req, data)
 	return ctxJson
 }
 
