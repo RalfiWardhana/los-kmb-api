@@ -72,7 +72,7 @@ type IntegratorScorePro struct {
 	Status      string      `json:"status"`
 	Segmen      string      `json:"segmen"`
 	IsTsi       bool        `json:"is_tsi"`
-	ScoreBin    string      `json:"score_bin"`
+	ScoreBin    interface{} `json:"score_bin"`
 }
 
 type ScorePro struct {
