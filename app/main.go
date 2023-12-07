@@ -205,7 +205,8 @@ func main() {
 
 	// define kmb elaborate domain
 	kmbElaborateRepo := elaborateRepository.NewRepository(minilosKMB, kpLos)
-	kmbElaborateMultiCase, kmbElaborateCase := elaborateUsecase.NewMultiUsecase(kmbElaborateRepo, httpClient)
+	kmbElaborateUsecase := elaborateUsecase.NewUsecase(kmbElaborateRepo, httpClient)
+	kmbElaborateMultiCase, kmbElaborateCase := elaborateUsecase.NewMultiUsecase(kmbElaborateRepo, httpClient, kmbElaborateUsecase)
 	elaborateDelivery.ElaborateHandler(apiGroup, kmbElaborateMultiCase, kmbElaborateCase, kmbElaborateRepo, jsonResponse, accessToken)
 
 	// define new kmb filtering domain

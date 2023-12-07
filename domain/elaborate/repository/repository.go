@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"los-kmb-api/domain/elaborate/interfaces"
 	"los-kmb-api/models/entity"
-	"los-kmb-api/shared/config"
 	"los-kmb-api/shared/constant"
+	"os"
 	"strconv"
 	"time"
 
@@ -53,7 +53,7 @@ func (r repoHandler) UpdateDataElaborate(data entity.ApiElaborateKmbUpdate) (err
 func (r repoHandler) GetClusterBranchElaborate(branch_id string, cust_status string, bpkb int) (cluster entity.ClusterBranch, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -75,7 +75,7 @@ func (r repoHandler) GetClusterBranchElaborate(branch_id string, cust_status str
 func (r repoHandler) GetFilteringResult(prospect_id string) (filtering entity.ApiDupcheckKmbUpdate, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -161,7 +161,7 @@ func (r repoHandler) GetResultElaborate(branch_id string, cust_status string, bp
 
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
