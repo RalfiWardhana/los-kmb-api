@@ -1046,7 +1046,10 @@ func (r repoHandler) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 			WHEN ta.TotalDSR IS NULL THEN CAST(ISNULL(ta.DSRFMF, 0) AS NUMERIC(17,2)) + CAST(ISNULL(ta.DSRPBK, 0) AS NUMERIC(17,2))
 			ELSE ta.TotalDSR
 		END as TotalDSR,
-		ta.EkycSource,
+		CASE
+			WHEN ta.EkycSource IS NOT NULL THEN CONCAT(ta.EkycSource,' - ',ta.EkycReason)
+			ELSE NULL
+		END as EkycSource,
 		ta.EkycSimiliarity,
 		ta.EkycReason,
 		CASE tia.info 
