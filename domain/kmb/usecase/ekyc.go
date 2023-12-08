@@ -113,6 +113,7 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, reqMetricsEk
 		"birth_place":         req.CustomerPersonal.BirthPlace,
 		"city":                city,
 		"gender":              req.CustomerPersonal.Gender,
+		"marital_status":      req.CustomerPersonal.MaritalStatus,
 		"id_number":           req.CustomerPersonal.IDNumber,
 		"kabupaten":           city,
 		"kecamatan":           kecamatan,
