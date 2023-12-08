@@ -69,20 +69,20 @@ func (_m *MultiUsecase) Dupcheck(ctx context.Context, reqs request.DupcheckApi, 
 	return r0, r1, r2, r3, r4, r5
 }
 
-// Ekyc provides a mock function with given fields: ctx, req, cbFound, accessToken
-func (_m *MultiUsecase) Ekyc(ctx context.Context, req request.Metrics, cbFound bool, accessToken string) (response.Ekyc, []entity.TrxDetail, response.TrxFMF, error) {
-	ret := _m.Called(ctx, req, cbFound, accessToken)
+// Ekyc provides a mock function with given fields: ctx, req, reqMetricsEkyc, accessToken
+func (_m *MultiUsecase) Ekyc(ctx context.Context, req request.Metrics, reqMetricsEkyc request.MetricsEkyc, accessToken string) (response.Ekyc, []entity.TrxDetail, response.TrxFMF, error) {
+	ret := _m.Called(ctx, req, reqMetricsEkyc, accessToken)
 
 	var r0 response.Ekyc
-	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, bool, string) response.Ekyc); ok {
-		r0 = rf(ctx, req, cbFound, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, request.MetricsEkyc, string) response.Ekyc); ok {
+		r0 = rf(ctx, req, reqMetricsEkyc, accessToken)
 	} else {
 		r0 = ret.Get(0).(response.Ekyc)
 	}
 
 	var r1 []entity.TrxDetail
-	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, bool, string) []entity.TrxDetail); ok {
-		r1 = rf(ctx, req, cbFound, accessToken)
+	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, request.MetricsEkyc, string) []entity.TrxDetail); ok {
+		r1 = rf(ctx, req, reqMetricsEkyc, accessToken)
 	} else {
 		if ret.Get(1) != nil {
 			r1 = ret.Get(1).([]entity.TrxDetail)
@@ -90,15 +90,15 @@ func (_m *MultiUsecase) Ekyc(ctx context.Context, req request.Metrics, cbFound b
 	}
 
 	var r2 response.TrxFMF
-	if rf, ok := ret.Get(2).(func(context.Context, request.Metrics, bool, string) response.TrxFMF); ok {
-		r2 = rf(ctx, req, cbFound, accessToken)
+	if rf, ok := ret.Get(2).(func(context.Context, request.Metrics, request.MetricsEkyc, string) response.TrxFMF); ok {
+		r2 = rf(ctx, req, reqMetricsEkyc, accessToken)
 	} else {
 		r2 = ret.Get(2).(response.TrxFMF)
 	}
 
 	var r3 error
-	if rf, ok := ret.Get(3).(func(context.Context, request.Metrics, bool, string) error); ok {
-		r3 = rf(ctx, req, cbFound, accessToken)
+	if rf, ok := ret.Get(3).(func(context.Context, request.Metrics, request.MetricsEkyc, string) error); ok {
+		r3 = rf(ctx, req, reqMetricsEkyc, accessToken)
 	} else {
 		r3 = ret.Error(3)
 	}
