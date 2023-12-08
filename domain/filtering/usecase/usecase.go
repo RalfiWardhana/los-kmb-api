@@ -924,7 +924,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 			}
 
 			updateFiltering.PefindoID = &checkPefindo.Konsumen.PefindoID
-			updateFiltering.PefindoScore = pefindoResult.Score
+			updateFiltering.PefindoScore = &pefindoResult.Score
 			if checkPefindo.Pasangan != (response.PefindoResultPasangan{}) {
 				updateFiltering.PefindoIDSpouse = &checkPefindo.Pasangan.PefindoID
 			}
@@ -962,7 +962,9 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 			data.Reason = constant.REASON_FILTERING_PBK_DOWN
 			data.StatusKonsumen = status_konsumen
 			data.Decision = constant.DECISION_PASS
-			updateFiltering.PefindoScore = constant.PEFINDO_UNSCORE
+
+			unscore := constant.PEFINDO_UNSCORE
+			updateFiltering.PefindoScore = &unscore
 		}
 
 	} else {

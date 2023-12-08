@@ -422,20 +422,20 @@ func (_m *Repository) GetLogOrchestrator(prospectID string) (entity.LogOrchestra
 	return r0, r1
 }
 
-// GetMappingDukcapil provides a mock function with given fields: statusVD, statusFR
-func (_m *Repository) GetMappingDukcapil(statusVD string, statusFR string) (entity.MappingResultDukcapil, error) {
-	ret := _m.Called(statusVD, statusFR)
+// GetMappingDukcapil provides a mock function with given fields: statusVD, statusFR, customerStatus, customerSegment
+func (_m *Repository) GetMappingDukcapil(statusVD string, statusFR string, customerStatus string, customerSegment string) (entity.MappingResultDukcapil, error) {
+	ret := _m.Called(statusVD, statusFR, customerStatus, customerSegment)
 
 	var r0 entity.MappingResultDukcapil
-	if rf, ok := ret.Get(0).(func(string, string) entity.MappingResultDukcapil); ok {
-		r0 = rf(statusVD, statusFR)
+	if rf, ok := ret.Get(0).(func(string, string, string, string) entity.MappingResultDukcapil); ok {
+		r0 = rf(statusVD, statusFR, customerStatus, customerSegment)
 	} else {
 		r0 = ret.Get(0).(entity.MappingResultDukcapil)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(statusVD, statusFR)
+	if rf, ok := ret.Get(1).(func(string, string, string, string) error); ok {
+		r1 = rf(statusVD, statusFR, customerStatus, customerSegment)
 	} else {
 		r1 = ret.Error(1)
 	}

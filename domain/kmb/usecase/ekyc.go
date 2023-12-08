@@ -18,9 +18,9 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u multiUsecase) Ekyc(ctx context.Context, req request.Metrics, cbFound bool, accessToken string) (data response.Ekyc, trxDetail []entity.TrxDetail, trxFMF response.TrxFMF, err error) {
+func (u multiUsecase) Ekyc(ctx context.Context, req request.Metrics, reqMetricsEkyc request.MetricsEkyc, accessToken string) (data response.Ekyc, trxDetail []entity.TrxDetail, trxFMF response.TrxFMF, err error) {
 
-	data, err = u.usecase.Dukcapil(ctx, req, accessToken)
+	data, err = u.usecase.Dukcapil(ctx, req, reqMetricsEkyc, accessToken)
 
 	if err != nil && err.Error() != fmt.Sprintf("%s - Dukcapil", constant.TYPE_CONTINGENCY) {
 		return
@@ -36,7 +36,7 @@ func (u multiUsecase) Ekyc(ctx context.Context, req request.Metrics, cbFound boo
 
 			trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.Transaction.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_CONTINGENCY, RuleCode: constant.CODE_CONTINGENCY, SourceDecision: constant.SOURCE_DECISION_ASLIRI, Info: constant.TYPE_CONTINGENCY, NextStep: constant.SOURCE_DECISION_KTP_VALIDATOR})
 
-			data, err = u.usecase.Ktp(ctx, req, cbFound, accessToken)
+			data, err = u.usecase.Ktp(ctx, req, reqMetricsEkyc, accessToken)
 
 			trxFMF.EkycSource = "KTP VALIDATOR"
 			trxFMF.EkycSimiliarity = data.Similiarity
@@ -58,7 +58,7 @@ func (u multiUsecase) Ekyc(ctx context.Context, req request.Metrics, cbFound boo
 
 }
 
-func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, accessToken string) (data response.Ekyc, err error) {
+func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, reqMetricsEkyc request.MetricsEkyc, accessToken string) (data response.Ekyc, err error) {
 
 	var (
 		selfie, codeVD, _, decisionVD, decisionFR   string
@@ -198,7 +198,7 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, accessToken 
 		data.Similiarity = face.MatchScore
 	}
 
-	resultDukcapil, err := u.repository.GetMappingDukcapil(statusVD, statusFR)
+	resultDukcapil, err := u.repository.GetMappingDukcapil(statusVD, statusFR, reqMetricsEkyc.CustomerStatus, reqMetricsEkyc.CustomerSegment)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Dukcapil Error")
 		return
@@ -350,14 +350,14 @@ func (u usecase) Asliri(ctx context.Context, req request.Metrics, accessToken st
 	return
 }
 
-func (u usecase) Ktp(ctx context.Context, req request.Metrics, cbFound bool, accessToken string) (data response.Ekyc, err error) {
+func (u usecase) Ktp(ctx context.Context, req request.Metrics, reqMetricsEkyc request.MetricsEkyc, accessToken string) (data response.Ekyc, err error) {
 
 	paramKtp, _ := json.Marshal(map[string]interface{}{
 		"data": map[string]interface{}{
 			"birth_date": req.CustomerPersonal.BirthDate,
 			"gender":     req.CustomerPersonal.Gender,
 			"id_number":  req.CustomerPersonal.IDNumber,
-			"is_pefindo": cbFound,
+			"is_pefindo": reqMetricsEkyc.CBFound,
 			"request_id": uuid.New().String(),
 		},
 	})
@@ -398,7 +398,7 @@ func (u usecase) Ktp(ctx context.Context, req request.Metrics, cbFound bool, acc
 			data.Code = "2600"
 			data.Reason = "eKYC Sesuai - No KTP Valid"
 		}
-		if cbFound {
+		if reqMetricsEkyc.CBFound {
 			data.Result = constant.DECISION_PASS
 			data.Code = "2600"
 			data.Reason = "eKYC Sesuai - No KTP Valid"

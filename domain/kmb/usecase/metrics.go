@@ -360,7 +360,13 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 	details = append(details, trxDetailDupcheck...)
 
-	decisionEkyc, trxDetailEkyc, trxFMFEkyc, err := u.multiUsecase.Ekyc(ctx, reqMetrics, cbFound, accessToken)
+	reqMetricsEkyc := request.MetricsEkyc{
+		CBFound:         cbFound,
+		CustomerStatus:  customerStatus,
+		CustomerSegment: customerSegment,
+	}
+
+	decisionEkyc, trxDetailEkyc, trxFMFEkyc, err := u.multiUsecase.Ekyc(ctx, reqMetrics, reqMetricsEkyc, accessToken)
 	if err != nil {
 		return
 	}
@@ -383,6 +389,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			RuleCode:       decisionEkyc.Code,
 			SourceDecision: decisionEkyc.Source,
 			Reason:         decisionEkyc.Reason,
+			Info:           decisionEkyc.Info,
 		}
 
 		details = append(details, addDetail)
