@@ -432,7 +432,11 @@ type DataDupcheckConfig struct {
 	AttemptPMKDSR           int     `json:"attempt_pmk_dsr"`
 	AttemptNIK              int     `json:"attempt_nik"`
 	AttemptChassisNumber    int     `json:"attempt_chassis_number"`
-	MinimumPencairanROTopUp float64 `json:"minimum_pencairan_ro_top_up"`
+	MinimumPencairanROTopUp struct {
+		Prime    float64 `json:"prime"`
+		Priority float64 `json:"priority"`
+		Regular  float64 `json:"regular"`
+	} `json:"minimum_pencairan_ro_top_up"`
 }
 
 type LatestPaidInstallment struct {

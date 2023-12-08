@@ -422,6 +422,8 @@ const (
 	REASON_DSRGT35         = "- Confins DSR >"
 	CODE_TOPUP_MENUNGGAK   = "2703"
 	REASON_TOPUP_MENUNGGAK = "Menunggak"
+	CODE_PENCAIRAN_TOPUP   = "2704"
+	REASON_PENCAIRAN_TOPUP = "Persentase Minimum Pencairan yang diterima kurang dari Threshold"
 	TOP_UP                 = "Top Up"
 	CODE_MENUNGGAK         = "645"
 	CODE_TOTAL_DSRLTE35    = "2701"
