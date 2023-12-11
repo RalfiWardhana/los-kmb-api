@@ -99,7 +99,7 @@ func TestUpdateDataElaborate(t *testing.T) {
 }
 
 func TestGetClusterBranchElaborate(t *testing.T) {
-	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -117,10 +117,12 @@ func TestGetClusterBranchElaborate(t *testing.T) {
 	statusKonsumen := constant.STATUS_KONSUMEN_NEW
 	bpkbNameType := 0
 
+	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(branchID, statusKonsumen, bpkbNameType).
 		WillReturnRows(sqlmock.NewRows([]string{"branch_id", "customer_status", "bpkb_name_type", "cluster"}).
 			AddRow("426", "NEW", 0, "Cluster F"))
+	mock.ExpectCommit()
 
 	_, err := newDB.GetClusterBranchElaborate(branchID, statusKonsumen, bpkbNameType)
 	if err != nil {
@@ -129,7 +131,7 @@ func TestGetClusterBranchElaborate(t *testing.T) {
 }
 
 func TestGetClusterBranchElaborateErrorNotFound(t *testing.T) {
-	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -147,9 +149,11 @@ func TestGetClusterBranchElaborateErrorNotFound(t *testing.T) {
 	statusKonsumen := constant.STATUS_KONSUMEN_NEW
 	bpkbNameType := 0
 
+	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(branchID, statusKonsumen, bpkbNameType).
 		WillReturnError(gorm.ErrRecordNotFound)
+	mock.ExpectCommit()
 
 	_, err := newDB.GetClusterBranchElaborate(branchID, statusKonsumen, bpkbNameType)
 	if err != nil {
@@ -158,7 +162,7 @@ func TestGetClusterBranchElaborateErrorNotFound(t *testing.T) {
 }
 
 func TestGetFilteringResult(t *testing.T) {
-	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -174,10 +178,12 @@ func TestGetFilteringResult(t *testing.T) {
 
 	prospectID := "TEST0001"
 
+	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(prospectID).
 		WillReturnRows(sqlmock.NewRows([]string{"PefindoID", "PefindoIDSpouse", "PefindoScore"}).
 			AddRow("2467775893", "7838158537", "AVERAGE RISK"))
+	mock.ExpectCommit()
 
 	_, err := newDB.GetFilteringResult(prospectID)
 	if err != nil {
@@ -186,7 +192,7 @@ func TestGetFilteringResult(t *testing.T) {
 }
 
 func TestGetResultElaborate(t *testing.T) {
-	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -347,10 +353,12 @@ func TestGetResultElaborate(t *testing.T) {
 	for _, tc := range testCases {
 		testFailed := false
 		t.Run(tc.name, func(t *testing.T) {
+			mock.ExpectBegin()
 			mock.ExpectQuery(regexp.QuoteMeta("SELECT mcb.cluster, mes.decision, mes.ltv_start FROM kmb_mapping_cluster_branch mcb JOIN kmb_mapping_elaborate_scheme mes ON mcb.cluster = mes.cluster WHERE mcb.branch_id = ? AND mcb.customer_status = ? AND mcb.bpkb_name_type = ? AND mes.result_pefindo = ? "+tc.queryAdd)).
 				WithArgs(tc.branch_id, tc.cust_status, tc.bpkb, tc.result_pefindo).
 				WillReturnRows(sqlmock.NewRows([]string{"cluster", "decision", "ltv_start"}).
 					AddRow("Cluster A", constant.DECISION_PASS, 0))
+			mock.ExpectCommit()
 
 			_, err := newDB.GetResultElaborate(tc.branch_id, tc.cust_status, tc.bpkb, tc.result_pefindo, tc.tenor, tc.age_vehicle, tc.ltv, tc.baki_debet)
 			if err != nil {

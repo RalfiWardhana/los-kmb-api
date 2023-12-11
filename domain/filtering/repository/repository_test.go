@@ -33,7 +33,7 @@ func structToSlice(data interface{}) []driver.Value {
 }
 
 func TestDummyDataPbk(t *testing.T) {
-	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -44,10 +44,13 @@ func TestDummyDataPbk(t *testing.T) {
 	gormDB = gormDB.Debug()
 
 	newDB := NewRepository(gormDB, gormDB, gormDB)
+
+	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM dbo.dummy_pefindo_kmb WHERE IDNumber = ?")).
 		WithArgs("TST001").
 		WillReturnRows(sqlmock.NewRows([]string{"prospect_id"}).
 			AddRow("TST001"))
+	mock.ExpectCommit()
 
 	_, err := newDB.DummyDataPbk("TST001")
 	if err != nil {
@@ -56,7 +59,7 @@ func TestDummyDataPbk(t *testing.T) {
 }
 
 func TestGetMappingDp(t *testing.T) {
-	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -71,10 +74,12 @@ func TestGetMappingDp(t *testing.T) {
 	branchID := "426"
 	statusKonsumen := constant.STATUS_KONSUMEN_NEW
 
+	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT mbd.* FROM dbo.mapping_branch_dp mdp LEFT JOIN dbo.mapping_baki_debet mbd ON mdp.baki_debet = mbd.id LEFT JOIN dbo.master_list_dp mld ON mdp.master_list_dp = mld.id WHERE mdp.branch = ? AND mdp.customer_status = ?")).
 		WithArgs(branchID, statusKonsumen).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "range_start", "range_end", "created_at"}).
 			AddRow("379f6c45-8baf-4152-a3a6-c47e3452ecac", "baki_debet_1", 0, 3000000, "2022-09-19 11:46:32.000"))
+	mock.ExpectCommit()
 
 	_, err := newDB.DataGetMappingDp(branchID, statusKonsumen)
 	if err != nil {
@@ -83,7 +88,7 @@ func TestGetMappingDp(t *testing.T) {
 }
 
 func TestBranchDpData(t *testing.T) {
-	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -97,9 +102,11 @@ func TestBranchDpData(t *testing.T) {
 
 	query := "SELECT mdp.branch, mdp.customer_status, mdp.profession_group, mbd.name AS minimal_dp_name, mbd.range_start AS minimal_dp_value FROM dbo.mapping_branch_dp mdp LEFT JOIN dbo.mapping_baki_debet mbd ON mdp.baki_debet = mbd.id LEFT JOIN dbo.master_list_dp mld ON mdp.master_list_dp = mld.id"
 
+	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WillReturnRows(sqlmock.NewRows([]string{"branch", "customer_status", "profession_group", "minimal_dp_name", "minimal_dp_value"}).
 			AddRow("912", "NEW", "KARYAWAN", "baki_debet_1", "3000001"))
+	mock.ExpectCommit()
 
 	_, err := newDB.BranchDpData(query)
 	if err != nil {
