@@ -191,13 +191,13 @@ func TestDukcapil(t *testing.T) {
 	}
 
 	testcases := []struct {
-		label                   string
-		request                 request.Metrics
-		expected                expectedResult
-		respAppConfig           entity.AppConfig
-		respGetMappingDukcapil  respGetMappingDukcapil
-		MappingResultDukcapilVD entity.MappingResultDukcapilVD
-
+		label                          string
+		request                        request.Metrics
+		expected                       expectedResult
+		respAppConfig                  entity.AppConfig
+		respGetMappingDukcapil         respGetMappingDukcapil
+		MappingResultDukcapilVD        entity.MappingResultDukcapilVD
+		errMappingResultDukcapilVD     error
 		respDukcapilVD, respDukcapilFR respDukcapil
 		reqMetricsEkyc                 request.MetricsEkyc
 	}{
@@ -437,7 +437,7 @@ func TestDukcapil(t *testing.T) {
 				err: fmt.Errorf("error"),
 			},
 			expected: expectedResult{
-				err: fmt.Errorf("upstream_service_error - Get Mapping Dukcapil Error"),
+				err: fmt.Errorf("upstream_service_error - Get Mapping Result Dukcapil Error"),
 			},
 		},
 		{
@@ -454,6 +454,11 @@ func TestDukcapil(t *testing.T) {
 					},
 				},
 			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus:  "RO",
+				CustomerSegment: "PRIME",
+				CBFound:         true,
+			},
 			respAppConfig: entity.AppConfig{
 				Value: `{
 					"data": {
@@ -464,6 +469,10 @@ func TestDukcapil(t *testing.T) {
 					  "face_recognition": 5
 					}
 				  }`,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.DECISION_PASS,
 			},
 			respDukcapilVD: respDukcapil{
 				code: 200,
@@ -1053,7 +1062,7 @@ func TestDukcapil(t *testing.T) {
 
 		mockRepository.On("GetConfig", mock.Anything, mock.Anything, mock.Anything).Return(test.respAppConfig, nil)
 		mockRepository.On("GetMappingDukcapil", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(test.respGetMappingDukcapil.data, test.respGetMappingDukcapil.err)
-		mockRepository.On("GetMappingDukcapilVD", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(test.respGetMappingDukcapil.data, test.respGetMappingDukcapil.err)
+		mockRepository.On("GetMappingDukcapilVD", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(test.MappingResultDukcapilVD, test.errMappingResultDukcapilVD)
 
 		//httpclient Dukcapil VD
 		rst := resty.New()
@@ -1341,7 +1350,9 @@ func TestKtp(t *testing.T) {
 		{
 			name: "test KTP pass",
 			reqMetricsEkyc: request.MetricsEkyc{
-				CBFound: true,
+				CustomerStatus:  "NEW",
+				CustomerSegment: "REGULAR",
+				CBFound:         true,
 			},
 			req: request.Metrics{
 				Item: request.Item{
@@ -1361,7 +1372,9 @@ func TestKtp(t *testing.T) {
 		{
 			name: "test KTP err api ktp",
 			reqMetricsEkyc: request.MetricsEkyc{
-				CBFound: true,
+				CustomerStatus:  "NEW",
+				CustomerSegment: "REGULAR",
+				CBFound:         true,
 			},
 			req: request.Metrics{
 				Item: request.Item{
@@ -1375,7 +1388,9 @@ func TestKtp(t *testing.T) {
 		{
 			name: "test KTP err api ktp",
 			reqMetricsEkyc: request.MetricsEkyc{
-				CBFound: true,
+				CustomerStatus:  "NEW",
+				CustomerSegment: "REGULAR",
+				CBFound:         true,
 			},
 			req: request.Metrics{
 				Item: request.Item{
@@ -1388,7 +1403,9 @@ func TestKtp(t *testing.T) {
 		{
 			name: "test KTP pass",
 			reqMetricsEkyc: request.MetricsEkyc{
-				CBFound: true,
+				CustomerStatus:  "NEW",
+				CustomerSegment: "REGULAR",
+				CBFound:         true,
 			},
 			req: request.Metrics{
 				Item: request.Item{
