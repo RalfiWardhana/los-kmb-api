@@ -93,6 +93,7 @@ const (
 	RG_PRIORITY                      = "RG"
 	NG_APPLICATION_TYPE              = "NG"
 	CODE_SPOUSE                      = "SP"
+	CU                               = "CU"
 
 	CMO_AGENT                  = "CMO"
 	CODE_CMO_RECOMMENDED       = "1410"
