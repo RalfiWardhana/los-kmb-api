@@ -1718,7 +1718,12 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			return err
 		}
 
-		expiredDateIns := time.Now().AddDate(5, 0, 0)
+		var expiredDateIns interface{}
+
+		if item.InsAssetInsuredBy == constant.CU {
+			expiredDateIns = time.Now().AddDate(5, 0, 0)
+
+		}
 
 		if err := tx.Create(&entity.STG_GEN_INS_H{
 			BranchID:                master.BranchID,
