@@ -128,7 +128,7 @@ func TestScorepro(t *testing.T) {
 				Code:   constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
 				Reason: constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
 				Source: constant.SOURCE_DECISION_SCOREPRO,
-				Info:   `{"prospect_id":"EFM0TSTRT87183109505","score":200,"result":"REJECT","score_band":"","score_result":"LOW","status":"ASS-LOW","segmen":"1","is_tsi":false,"score_bin":""}`,
+				Info:   `{"prospect_id":"EFM0TSTRT87183109505","score":200,"result":"REJECT","score_band":"","score_result":"LOW","status":"ASS-LOW","segmen":"1","is_tsi":false,"score_bin":0}`,
 			},
 		},
 		{
