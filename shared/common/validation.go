@@ -376,18 +376,11 @@ func tenorValidation(fl validator.FieldLevel) bool {
 
 func photoValidation(fl validator.FieldLevel) bool {
 
-	photo, err := utils.ValidatorFromCache("group_label_photo_kmob")
+	Photo = "KTP,SLIPGAJI,SELFIE,SHM,SPOUSE_KTP,KK,BUKU_NIKAH,KONSUMEN_KTP_CMO,LAINNYA_I,LAINNYA_II,STNK,BPKB,PLAT_NOMOR,ASSET_DEPAN,ASSET_BELAKANG,ASSET_KANAN,ASSET_KIRI,RESULT_SURVEY"
 
-	if err != nil {
-		return false
-
-	}
-
-	arrPhoto := strings.Split(photo.Value, ",")
+	arrPhoto := strings.Split(Photo, ",")
 
 	validator := contains(arrPhoto, fl.Field().String())
-
-	Photo = photo.Value
 
 	return validator
 }
