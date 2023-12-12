@@ -443,6 +443,27 @@ func (_m *Repository) GetMappingDukcapil(statusVD string, statusFR string, custo
 	return r0, r1
 }
 
+// GetMappingDukcapilVD provides a mock function with given fields: statusVD, customerStatus, customerSegment, isValid
+func (_m *Repository) GetMappingDukcapilVD(statusVD string, customerStatus string, customerSegment string, isValid bool) (entity.MappingResultDukcapilVD, error) {
+	ret := _m.Called(statusVD, customerStatus, customerSegment, isValid)
+
+	var r0 entity.MappingResultDukcapilVD
+	if rf, ok := ret.Get(0).(func(string, string, string, bool) entity.MappingResultDukcapilVD); ok {
+		r0 = rf(statusVD, customerStatus, customerSegment, isValid)
+	} else {
+		r0 = ret.Get(0).(entity.MappingResultDukcapilVD)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string, string, bool) error); ok {
+		r1 = rf(statusVD, customerStatus, customerSegment, isValid)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetMappingElaborateIncome provides a mock function with given fields: mappingElaborateIncome
 func (_m *Repository) GetMappingElaborateIncome(mappingElaborateIncome entity.MappingElaborateIncome) (entity.MappingElaborateIncome, error) {
 	ret := _m.Called(mappingElaborateIncome)

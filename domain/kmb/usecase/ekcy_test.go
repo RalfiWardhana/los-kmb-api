@@ -191,11 +191,13 @@ func TestDukcapil(t *testing.T) {
 	}
 
 	testcases := []struct {
-		label                          string
-		request                        request.Metrics
-		expected                       expectedResult
-		respAppConfig                  entity.AppConfig
-		respGetMappingDukcapil         respGetMappingDukcapil
+		label                   string
+		request                 request.Metrics
+		expected                expectedResult
+		respAppConfig           entity.AppConfig
+		respGetMappingDukcapil  respGetMappingDukcapil
+		MappingResultDukcapilVD entity.MappingResultDukcapilVD
+
 		respDukcapilVD, respDukcapilFR respDukcapil
 		reqMetricsEkyc                 request.MetricsEkyc
 	}{
@@ -1051,6 +1053,7 @@ func TestDukcapil(t *testing.T) {
 
 		mockRepository.On("GetConfig", mock.Anything, mock.Anything, mock.Anything).Return(test.respAppConfig, nil)
 		mockRepository.On("GetMappingDukcapil", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(test.respGetMappingDukcapil.data, test.respGetMappingDukcapil.err)
+		mockRepository.On("GetMappingDukcapilVD", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(test.respGetMappingDukcapil.data, test.respGetMappingDukcapil.err)
 
 		//httpclient Dukcapil VD
 		rst := resty.New()
