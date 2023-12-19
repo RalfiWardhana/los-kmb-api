@@ -946,7 +946,17 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 				data.Reason = "PBK Tidak Ditemukan - " + status_konsumen
 			}
 
-			updateFiltering.PefindoScore = constant.PEFINDO_UNSCORE
+			updateFiltering.PefindoID = &checkPefindo.Konsumen.PefindoID
+			updateFiltering.PefindoScore = &pefindoResult.Score
+
+			unscore := constant.PEFINDO_UNSCORE
+
+			if pefindoResult.Score == "" {
+				updateFiltering.PefindoScore = &unscore
+			}
+			if checkPefindo.Pasangan != (response.PefindoResultPasangan{}) {
+				updateFiltering.PefindoIDSpouse = &checkPefindo.Pasangan.PefindoID
+			}
 
 		} else if checkPefindo.Code == "202" {
 			// data.Code = constant.SERVICE_PBK_UNAVAILABLE_CODE

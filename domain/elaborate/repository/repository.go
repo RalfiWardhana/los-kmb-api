@@ -83,7 +83,17 @@ func (r repoHandler) GetFilteringResult(prospect_id string) (filtering entity.Ap
 	db := r.minilosKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.minilosKmb.Raw("SELECT PefindoID, PefindoIDSpouse, PefindoScore FROM api_dupcheck_kmb WHERE ProspectID = ?", prospect_id).Scan(&filtering).Error; err != nil {
+	if err = r.minilosKmb.Raw(`SELECT
+	PefindoID,
+	PefindoIDSpouse,
+	CASE
+	  WHEN PefindoScore IS NULL then 'UNSCORE'
+	  ELSE PefindoScore
+	END AS PefindoScore
+	FROM
+		api_dupcheck_kmb
+	WHERE
+		ProspectID = ?`, prospect_id).Scan(&filtering).Error; err != nil {
 		return
 	}
 
