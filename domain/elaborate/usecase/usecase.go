@@ -72,12 +72,12 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 		status_konsumen = "AO/RO"
 	}
 
-	kategori_status_konsumen := reqs.Data.CategoryCustomer
-	check_prime_priority, _ := utils.ItemExists(kategori_status_konsumen, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
+	kategoriStatusKonsumen := reqs.Data.CategoryCustomer
+	checkPrimePriority, _ := utils.ItemExists(kategoriStatusKonsumen, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
 
 	parameter.BranchID = reqs.Data.BranchID
 
-	if reqs.Data.CustomerStatus == constant.STATUS_KONSUMEN_RO_AO && check_prime_priority {
+	if reqs.Data.CustomerStatus == constant.STATUS_KONSUMEN_RO_AO && checkPrimePriority {
 		parameter.BranchIDMask = constant.BRANCH_ID_PRIME_PRIORITY
 		reqs.Data.BranchID = constant.BRANCH_ID_PRIME_PRIORITY
 	}
@@ -85,12 +85,12 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 	tenor := reqs.Data.Tenor
 
 	// get the result elaborated scheme
-	result_elaborate, err := u.usecase.ResultElaborate(ctx, reqs)
+	resultElaborate, err := u.usecase.ResultElaborate(ctx, reqs)
 
 	updateElaborate.IsMapping = 1 //default, for mapping is exist
 
 	// not found mapping elaborate scheme
-	if result_elaborate.Decision == "" {
+	if resultElaborate.Decision == "" {
 		updateElaborate.IsMapping = 0 //set flag for mapping not found
 		updateElaborate.Code = constant.CODE_PASS_ELABORATE
 		updateElaborate.Decision = constant.DECISION_PASS
@@ -102,13 +102,13 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 			return
 		}
 
-		if result_elaborate.Decision == constant.DECISION_REJECT {
-			max_ltv = result_elaborate.LTV
+		if resultElaborate.Decision == constant.DECISION_REJECT {
+			max_ltv = resultElaborate.LTV
 		}
 
-		updateElaborate.Code = result_elaborate.Code
-		updateElaborate.Reason = result_elaborate.Reason
-		updateElaborate.Decision = result_elaborate.Decision
+		updateElaborate.Code = resultElaborate.Code
+		updateElaborate.Reason = resultElaborate.Reason
+		updateElaborate.Decision = resultElaborate.Decision
 	}
 
 	data.Code = updateElaborate.Code
@@ -121,15 +121,21 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 	updateElaborate.RequestID = savedata.RequestID
 	updateElaborate.Response = string(resp)
 
-	parameter.ResultPefindo = result_elaborate.ResultPefindo
+	parameter.ResultPefindo = resultElaborate.ResultPefindo
 	parameter.CustomerStatus = status_konsumen
-	parameter.BPKBNameType = result_elaborate.BPKBNameType
-	parameter.Cluster = result_elaborate.Cluster
+	parameter.BPKBNameType = resultElaborate.BPKBNameType
+	parameter.Cluster = resultElaborate.Cluster
 	parameter.Tenor = tenor
-	parameter.AgeVehicle = result_elaborate.AgeVehicle
-	parameter.LTV = result_elaborate.LTVOrigin
-	parameter.TotalBakiDebet = int(result_elaborate.TotalBakiDebet)
-	parameter.Decision = result_elaborate.Decision
+	parameter.AgeVehicle = resultElaborate.AgeVehicle
+	parameter.LTV = resultElaborate.LTVOrigin
+	parameter.TotalBakiDebet = int(resultElaborate.TotalBakiDebet)
+	parameter.Decision = resultElaborate.Decision
+
+	if resultElaborate.IsMappingOvd {
+		parameter.IsMappingOvd = "Yes"
+	} else {
+		parameter.IsMappingOvd = "No"
+	}
 
 	mapping, _ := json.Marshal(parameter)
 	updateElaborate.MappingParameter = string(mapping)
@@ -144,56 +150,62 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 
 func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestElaborate) (data response.ElaborateResult, err error) {
 
+	var (
+		ageVehicle       string
+		bpkbNameType     int
+		bakiDebet        float64
+		filteringResult  entity.ApiDupcheckKmbUpdate
+		getMappingLtvOvd entity.ResultElaborate
+	)
+
 	// convert date to year for age_vehicle
-	date_string := reqs.Data.ManufacturingYear
-	date_parse, err := time.Parse("2006", date_string)
+	dateString := reqs.Data.ManufacturingYear
+	dateParse, err := time.Parse("2006", dateString)
 	if err != nil {
-		err = fmt.Errorf("failed process elaborate")
+		err = fmt.Errorf("error parsing manufacturing year")
 		return
 	}
 
-	date_now := time.Now()
-	sub_date := date_now.Sub(date_parse)
-	age := int((sub_date.Hours()/24)/365) + (reqs.Data.Tenor / 12)
-	var age_vehicle string
+	dateNow := time.Now()
+	subDate := dateNow.Sub(dateParse)
+	age := int((subDate.Hours()/24)/365) + (reqs.Data.Tenor / 12)
+
+	// age vehicle
 	if age <= 12 {
-		age_vehicle = "<=12"
+		ageVehicle = "<=12"
 	} else {
-		age_vehicle = ">12"
+		ageVehicle = ">12"
 	}
 
 	// BPKB Name
-	var bpkbNameType int
 	namaSama := utils.AizuArrayString(os.Getenv("NAMA_SAMA"))
 	namaBeda := utils.AizuArrayString(os.Getenv("NAMA_BEDA"))
 
-	bpkb_nama_sama, _ := utils.ItemExists(reqs.Data.BPKBName, namaSama)
-	bpkb_nama_beda, _ := utils.ItemExists(reqs.Data.BPKBName, namaBeda)
+	bpkbNamaSama, _ := utils.ItemExists(reqs.Data.BPKBName, namaSama)
+	bpkbNamaBeda, _ := utils.ItemExists(reqs.Data.BPKBName, namaBeda)
 
-	if bpkb_nama_sama {
+	if bpkbNamaSama {
 		bpkbNameType = 1
-	} else if bpkb_nama_beda {
+	} else if bpkbNamaBeda {
 		bpkbNameType = 0
 	}
 
-	status_konsumen := reqs.Data.CustomerStatus
-	if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
-		status_konsumen = "AO/RO"
+	statusKonsumen := reqs.Data.CustomerStatus
+	if statusKonsumen == constant.STATUS_KONSUMEN_RO_AO {
+		statusKonsumen = "AO/RO"
 	}
 
-	branch_id := reqs.Data.BranchID
-	result_pefindo := reqs.Data.ResultPefindo
+	branchId := reqs.Data.BranchID
+	resultPefindo := reqs.Data.ResultPefindo
 	tenor := reqs.Data.Tenor
 	NTF := reqs.Data.NTF
 	OTR := reqs.Data.OTR
 
-	var baki_debet float64
 	var ok bool
-
 	if reqs.Data.TotalBakiDebet != nil {
-		baki_debet, ok = reqs.Data.TotalBakiDebet.(float64)
+		bakiDebet, ok = reqs.Data.TotalBakiDebet.(float64)
 		if !ok {
-			baki_debet = 0
+			bakiDebet = 0
 		}
 	}
 
@@ -202,31 +214,31 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 	// Hitung LTV
 	ltv := utils.ToFixed((NTF/OTR)*100, 0)
 
-	data.ResultPefindo = result_pefindo
+	data.ResultPefindo = resultPefindo
 	data.BPKBNameType = bpkbNameType
-	data.AgeVehicle = age_vehicle
+	data.AgeVehicle = ageVehicle
 	data.LTVOrigin = ltv
-	data.TotalBakiDebet = baki_debet
+	data.TotalBakiDebet = bakiDebet
 
 	// Get Cluster Branch
-	cluster_branch, err := u.repository.GetClusterBranchElaborate(branch_id, status_konsumen, bpkbNameType)
+	clusterBranch, err := u.repository.GetClusterBranchElaborate(branchId, statusKonsumen, bpkbNameType)
 	if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
 		err = fmt.Errorf("failed get cluster branch elaborate")
 		return
 	}
 
-	if cluster_branch != (entity.ClusterBranch{}) {
-		data.Cluster = cluster_branch.Cluster
+	if clusterBranch != (entity.ClusterBranch{}) {
+		data.Cluster = clusterBranch.Cluster
 	}
 
-	if baki_debet > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && baki_debet <= constant.BAKI_DEBET {
-		if cluster_branch.Cluster == constant.CLUSTER_E || cluster_branch.Cluster == constant.CLUSTER_F {
+	if bakiDebet > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && bakiDebet <= constant.BAKI_DEBET {
+		if clusterBranch.Cluster == constant.CLUSTER_E || clusterBranch.Cluster == constant.CLUSTER_F {
 			data.Code = constant.CODE_REJECT_ELABORATE
 			data.Reason = constant.REASON_REJECT_ELABORATE
 			data.Decision = constant.DECISION_REJECT
 			return
 		}
-	} else if baki_debet > constant.BAKI_DEBET { //This should be reject in Filtering tho
+	} else if bakiDebet > constant.BAKI_DEBET { //This should be reject in Filtering tho
 		data.Code = constant.CODE_REJECT_ELABORATE
 		data.Reason = constant.REASON_REJECT_ELABORATE
 		data.Decision = constant.DECISION_REJECT
@@ -234,47 +246,70 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 	}
 
 	// Set Result Pefindo for HIT/NO HIT based on Filtering Result
-	kategori_status_konsumen := reqs.Data.CategoryCustomer
-	check_prime_priority, _ := utils.ItemExists(kategori_status_konsumen, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
+	kategoriStatusKonsumen := reqs.Data.CategoryCustomer
+	checkPrimePriority, _ := utils.ItemExists(kategoriStatusKonsumen, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
 
-	if !check_prime_priority {
-		var filtering_result entity.ApiDupcheckKmbUpdate
-		filtering_result, _ = u.repository.GetFilteringResult(reqs.Data.ProspectID)
+	filteringResult, err = u.repository.GetFilteringResult(reqs.Data.ProspectID)
+	if err != nil {
+		err = fmt.Errorf("failed retrieve filtering result")
+		return
+	}
 
-		if filtering_result == (entity.ApiDupcheckKmbUpdate{}) {
-			result_pefindo = reqs.Data.ResultPefindo
+	if !checkPrimePriority {
+		if filteringResult == (entity.ApiDupcheckKmbUpdate{}) {
+			resultPefindo = reqs.Data.ResultPefindo
 		} else {
-			if result_pefindo == constant.DECISION_PASS {
-				if (filtering_result.PefindoID != nil || filtering_result.PefindoIDSpouse != nil) && filtering_result.PefindoScore != constant.UNSCORE_PBK {
-					result_pefindo = constant.DECISION_PASS
+			if resultPefindo == constant.DECISION_PASS {
+				if (filteringResult.PefindoID != nil || filteringResult.PefindoIDSpouse != nil) && filteringResult.PefindoScore != constant.UNSCORE_PBK {
+					resultPefindo = constant.DECISION_PASS
 				} else {
-					result_pefindo = constant.DECISION_PBK_NO_HIT
+					resultPefindo = constant.DECISION_PBK_NO_HIT
 				}
 			}
 		}
 	}
-	data.ResultPefindo = result_pefindo
+	data.ResultPefindo = resultPefindo
 
 	// Get Result from Mapping Elaborate
-	result_elaborate, err := u.repository.GetResultElaborate(branch_id, status_konsumen, bpkbNameType, result_pefindo, tenor, age_vehicle, ltv, baki_debet)
+	resultElaborate, err := u.repository.GetResultElaborate(branchId, statusKonsumen, bpkbNameType, resultPefindo, tenor, ageVehicle, ltv, bakiDebet)
 	if err != nil {
-		err = fmt.Errorf("failed get result elaborate")
+		err = fmt.Errorf("failed get mapping elaborate ltv")
 		return
 	}
 
-	if result_elaborate.Decision == constant.DECISION_PASS {
+	data.IsMappingOvd = false
+	if (tenor <= 35) || (tenor >= 36 && bpkbNamaSama && age <= 12) { //excepting check age vehicle
+		maxOverdueBiro := filteringResult.MaxOverdue
+		maxOverdueLast12 := filteringResult.MaxOverdueLast12Months
+
+		// Check max OVD 12 & max OVD current
+		if !filteringResult.IsNullMaxOverdue && !filteringResult.IsNullMaxOverdueLast12Months {
+			if maxOverdueBiro == 0 && maxOverdueLast12 <= 10 {
+				// Get OVD Mapping LTV
+				getMappingLtvOvd, _ = u.repository.GetMappingLtvOvd(clusterBranch.Cluster, resultPefindo, tenor, ltv)
+
+				// recent mapping ltv will replaced with ovd mapping ltv
+				if getMappingLtvOvd != (entity.ResultElaborate{}) {
+					resultElaborate = getMappingLtvOvd
+					data.IsMappingOvd = true
+				}
+			}
+		}
+	}
+
+	if resultElaborate.Decision == constant.DECISION_PASS {
 		data.Code = constant.CODE_PASS_ELABORATE
 	} else {
 		data.Code = constant.CODE_REJECT_ELABORATE
-		if result_elaborate.LTV > 0 {
+		if resultElaborate.LTV > 0 {
 			data.Code = constant.CODE_REJECT_NTF_ELABORATE
 			reason = constant.REASON_REJECT_NTF_ELABORATE
-			data.LTV = result_elaborate.LTV - 1
+			data.LTV = resultElaborate.LTV - 1
 		} else {
 			reason = constant.REASON_REJECT_ELABORATE
 		}
 	}
-	data.Decision = result_elaborate.Decision
+	data.Decision = resultElaborate.Decision
 	data.Reason = reason
 	return
 }
