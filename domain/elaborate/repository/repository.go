@@ -87,7 +87,10 @@ func (r repoHandler) GetFilteringResult(prospect_id string) (filtering entity.Ap
 	if err = r.minilosKmb.Raw(`SELECT
 			PefindoID,
 			PefindoIDSpouse,
-			PefindoScore,
+			CASE
+			 WHEN PefindoScore IS NULL then 'UNSCORE'
+			 ELSE PefindoScore
+			END AS PefindoScore,
 			CAST(
 			JSON_EXTRACT(ResultPefindo, '$.result.max_overdue') AS SIGNED
 			) AS MaxOverdue,

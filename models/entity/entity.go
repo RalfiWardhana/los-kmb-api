@@ -66,7 +66,7 @@ type ApiDupcheckKmbUpdate struct {
 	Timestamp                    time.Time   `gorm:"column:Timestamp"`
 	PefindoID                    interface{} `gorm:"column:PefindoID"`
 	PefindoIDSpouse              interface{} `gorm:"column:PefindoIDSpouse"`
-	PefindoScore                 interface{} `gorm:"column:PefindoScore"`
+	PefindoScore                 *string     `gorm:"column:PefindoScore"`
 	MaxOverdue                   int         `gorm:"column:MaxOverdue"`
 	MaxOverdueLast12Months       int         `gorm:"column:MaxOverdueLast12Months"`
 	IsNullMaxOverdue             bool        `gorm:"column:IsNullMaxOverdue"`
