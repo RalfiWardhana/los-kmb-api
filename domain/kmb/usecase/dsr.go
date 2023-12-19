@@ -146,13 +146,23 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 
 				result.Details = dsrDetails
 
-				if minimumPencairan < configValue.Data.MinimumPencairanROTopUp {
+				var configMinimumPencairanROTopUp float64
+
+				if konsumen.CustomerSegment == constant.RO_AO_PRIME {
+					configMinimumPencairanROTopUp = configValue.Data.MinimumPencairanROTopUp.Prime
+				} else if konsumen.CustomerSegment == constant.RO_AO_PRIORITY {
+					configMinimumPencairanROTopUp = configValue.Data.MinimumPencairanROTopUp.Priority
+				} else {
+					configMinimumPencairanROTopUp = configValue.Data.MinimumPencairanROTopUp.Regular
+				}
+
+				if minimumPencairan < configMinimumPencairanROTopUp {
 
 					dsr = ((installmentAmount + (installment + installmentConfinsSpouse) + (installmentOther + installmentOtherSpouse)) / income) * 100
 					data.Dsr = dsr
 					data.Result = constant.DECISION_REJECT
-					data.Code = constant.CODE_TOPUP_MENUNGGAK
-					data.Reason = fmt.Sprintf("%s %s", reasonCustomerStatus, constant.REASON_TOPUP_MENUNGGAK)
+					data.Code = constant.CODE_PENCAIRAN_TOPUP
+					data.Reason = fmt.Sprintf("%s %s", reasonCustomerStatus, constant.REASON_PENCAIRAN_TOPUP)
 
 					// set sebagai dupcheck
 					data.SourceDecision = constant.SOURCE_DECISION_DUPCHECK
