@@ -39,6 +39,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		bakiDebet           float64
 		bpkbNameType        int
 		manufacturingYear   time.Time
+		getMappingLtvOvd    []entity.MappingElaborateLTV
 		mappingElaborateLTV []entity.MappingElaborateLTV
 	)
 
@@ -98,11 +99,28 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		ManufacturingYear: reqs.ManufacturingYear,
 	}
 
-	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, filteringKMB.Cluster.(string))
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
-		return
+	maxOvd := filteringKMB.MaxOverdueBiro
+	maxOvd12 := filteringKMB.MaxOverdueLast12monthsBiro
+
+	maxOverdueBiro, _ := maxOvd.(int64)
+	maxOverdueLast12, _ := maxOvd12.(int64)
+
+	// Check max OVD 12 & max OVD current
+	if (maxOvd != nil && maxOvd12 != nil) && (maxOverdueLast12 <= 10 && maxOverdueBiro == 0) {
+		// Get Mapping LTV OVD
+		getMappingLtvOvd, _ = u.repository.GetMappingElaborateLTVOvd(resultPefindo, filteringKMB.Cluster.(string))
 	}
+
+	if len(getMappingLtvOvd) > 0 && (maxOvd != nil && maxOvd12 != nil) && (maxOverdueLast12 <= 10 && maxOverdueBiro == 0) {
+		mappingElaborateLTV = getMappingLtvOvd
+	} else {
+		mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, filteringKMB.Cluster.(string))
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
+			return
+		}
+	}
+
 	for _, m := range mappingElaborateLTV {
 		if reqs.Tenor >= 36 {
 			//no hit
