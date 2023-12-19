@@ -131,13 +131,13 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, reqMetricsEk
 	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("DUKCAPIL_VD_URL"), paramVd, map[string]string{}, constant.METHOD_POST, true, 2, timeout, req.Transaction.ProspectID, accessToken)
 
 	if resp.StatusCode() == 504 || resp.StatusCode() == 502 {
-		statusVD = "RTO"
+		statusVD = constant.EKYC_RTO
 
 		infoDukcapil.VdError = "Request Timed Out"
 	}
 
 	if resp.StatusCode() != 200 && resp.StatusCode() != 504 && resp.StatusCode() != 502 {
-		statusVD = "NOT CHECK"
+		statusVD = constant.EKYC_NOT_CHECK
 
 		var responseIntegrator response.ApiResponse
 		json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &responseIntegrator)
@@ -152,18 +152,33 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, reqMetricsEk
 		infoDukcapil.Vd = verify
 
 		if decisionVD == constant.DECISION_REJECT {
-			data.Result = decisionVD
-			data.Code = codeVD
-			data.Reason = constant.REASON_EKYC_INVALID
-			data.Source = constant.SOURCE_DECISION_DUKCAPIL
-
-			info, _ := json.Marshal(infoDukcapil)
-			data.Info = string(info)
-			return
+			statusVD = constant.DECISION_REJECT
+		} else {
+			statusVD = constant.DECISION_PASS
 		}
+	}
 
+	resultDukcapilVD, err := u.repository.GetMappingDukcapilVD(statusVD, reqMetricsEkyc.CustomerStatus, reqMetricsEkyc.CustomerSegment, verify.IsValid)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Verify Dukcapil Error")
+		return
+	}
+
+	if resultDukcapilVD.Decision == constant.DECISION_REJECT {
+		data.Result = resultDukcapilVD.Decision
+		data.Code = codeVD
+		data.Reason = constant.REASON_EKYC_INVALID
+		data.Source = constant.SOURCE_DECISION_DUKCAPIL
+
+		info, _ := json.Marshal(infoDukcapil)
+		data.Info = string(info)
+		return
+	}
+
+	statusVD = resultDukcapilVD.Decision
+
+	if resultDukcapilVD.Decision == constant.EKYC_BYPASS {
 		statusVD = constant.DECISION_PASS
-
 	}
 
 	//Face Recog
@@ -177,12 +192,12 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, reqMetricsEk
 	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("DUKCAPIL_FR_URL"), paramFr, map[string]string{}, constant.METHOD_POST, true, 2, timeout, req.Transaction.ProspectID, accessToken)
 
 	if resp.StatusCode() == 504 || resp.StatusCode() == 502 {
-		statusFR = "RTO"
+		statusFR = constant.EKYC_RTO
 		infoDukcapil.FrError = "Request Timed Out"
 	}
 
 	if resp.StatusCode() != 200 && resp.StatusCode() != 504 && resp.StatusCode() != 502 {
-		statusFR = "NOT CHECK"
+		statusFR = constant.EKYC_NOT_CHECK
 		var responseIntegrator response.ApiResponse
 		json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &responseIntegrator)
 		infoDukcapil.FrError = responseIntegrator.Message
@@ -201,7 +216,7 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, reqMetricsEk
 
 	resultDukcapil, err := u.repository.GetMappingDukcapil(statusVD, statusFR, reqMetricsEkyc.CustomerStatus, reqMetricsEkyc.CustomerSegment)
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Dukcapil Error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Result Dukcapil Error")
 		return
 	}
 

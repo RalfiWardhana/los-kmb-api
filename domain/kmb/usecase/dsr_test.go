@@ -234,7 +234,7 @@ func TestDsrCheck(t *testing.T) {
 			name: "DsrCheck ao top up menunggak",
 			dupcheckConfig: entity.AppConfig{
 				Key:   "parameterize",
-				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+				Value: `{"data":{"vehicle_age":13,"max_ovd":60,"max_ovd_ao_prime_priority":30,"max_ovd_ao_regular":0,"max_dsr":35,"angsuran_berjalan":6,"attempt_pmk_dsr":2,"attempt_nik":2,"attempt_chassis_number":3,"minimum_pencairan_ro_top_up":{"prime":20,"priority":30,"regular":30}}}`,
 			},
 			req: request.DupcheckApi{
 				ProspectID:      "TEST198091461892",
@@ -247,8 +247,8 @@ func TestDsrCheck(t *testing.T) {
 			code:         200,
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
-				Code:           constant.CODE_TOPUP_MENUNGGAK,
-				Reason:         "AO Top Up Menunggak",
+				Code:           constant.CODE_PENCAIRAN_TOPUP,
+				Reason:         "AO Top Up " + constant.REASON_PENCAIRAN_TOPUP,
 				SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
 				Dsr:            40,
 			},
@@ -257,8 +257,8 @@ func TestDsrCheck(t *testing.T) {
 			income:             400000,
 			codeChassisNumber:  200,
 			bodyChassisNumber: `{ "code": "OK", "message": "operasi berhasil dieksekusi.", "data": { "go_live_date": null, "id_number": "", 
-			"installment_amount": 300000, "is_active": true, "is_registered": false, "lc_installment": 0, "legal_name": "", "outstanding_interest": 0, 
-			"outstanding_principal": 0, "status": "" }, "errors": null, "request_id": "e818eaf9-cc7b-40cb-b707-37ab3006ae5c", 
+			"installment_amount": 300000, "is_active": true, "is_registered": false, "lc_installment": 3000000, "legal_name": "", "outstanding_interest": 3000000, 
+			"outstanding_principal": 6000000, "status": "" }, "errors": null, "request_id": "e818eaf9-cc7b-40cb-b707-37ab3006ae5c", 
 			"timestamp": "2023-11-02 06:22:17" }`,
 		},
 		{

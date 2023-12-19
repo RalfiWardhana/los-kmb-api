@@ -150,6 +150,32 @@ func (r repoHandler) GetTrxDetailBIro(prospectID string) (trxDetailBiro []entity
 	return
 }
 
+func (r repoHandler) GetMappingDukcapilVD(statusVD, customerStatus, customerSegment string, isValid bool) (resultDukcapil entity.MappingResultDukcapilVD, err error) {
+	if customerStatus == constant.STATUS_KONSUMEN_NEW {
+		if isValid || statusVD == constant.EKYC_RTO || statusVD == constant.EKYC_NOT_CHECK {
+			if err = r.losDB.Raw(fmt.Sprintf(`SELECT * FROM kmb_dukcapil_verify_result_v2 WITH (nolock) WHERE result_vd='%s' AND status_konsumen='%s'`, statusVD, customerStatus)).Scan(&resultDukcapil).Error; err != nil {
+				return
+			}
+		} else {
+			if err = r.losDB.Raw(fmt.Sprintf(`SELECT * FROM kmb_dukcapil_verify_result_v2 WITH (nolock) WHERE status_konsumen='%s' AND is_valid=0`, customerStatus)).Scan(&resultDukcapil).Error; err != nil {
+				return
+			}
+		}
+	} else {
+		if isValid || statusVD == constant.EKYC_RTO || statusVD == constant.EKYC_NOT_CHECK {
+			if err = r.losDB.Raw(fmt.Sprintf(`SELECT * FROM kmb_dukcapil_verify_result_v2 WITH (nolock) WHERE result_vd='%s' AND status_konsumen='%s' AND kategori_status_konsumen='%s'`, statusVD, customerStatus, customerSegment)).Scan(&resultDukcapil).Error; err != nil {
+				return
+			}
+		} else {
+			if err = r.losDB.Raw(fmt.Sprintf(`SELECT * FROM kmb_dukcapil_verify_result_v2 WITH (nolock) WHERE status_konsumen='%s' AND kategori_status_konsumen='%s' AND is_valid=0`, customerStatus, customerSegment)).Scan(&resultDukcapil).Error; err != nil {
+				return
+			}
+		}
+	}
+
+	return
+}
+
 func (r repoHandler) GetMappingDukcapil(statusVD, statusFR, customerStatus, customerSegment string) (resultDukcapil entity.MappingResultDukcapil, err error) {
 	if customerStatus == constant.STATUS_KONSUMEN_NEW {
 		if err = r.losDB.Raw(fmt.Sprintf(`SELECT * FROM kmb_dukcapil_mapping_result_v2 WITH (nolock) WHERE result_vd='%s' AND result_fr='%s' AND status_konsumen='%s'`, statusVD, statusFR, customerStatus)).Scan(&resultDukcapil).Error; err != nil {
@@ -1718,6 +1744,13 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			return err
 		}
 
+		var expiredDateIns interface{}
+
+		if item.InsAssetInsuredBy == constant.CU {
+			expiredDateIns = time.Now().AddDate(5, 0, 0)
+
+		}
+
 		if err := tx.Create(&entity.STG_GEN_INS_H{
 			BranchID:                master.BranchID,
 			ProspectID:              master.ProspectID,
@@ -1727,6 +1760,7 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			InsuranceCoyBranchID:    item.InsuranceCoyBranchID,
 			PremiumAmountToCustomer: apk.AssetInsuranceFee,
 			CoverageType:            item.CoverageType,
+			ExpiredDate:             expiredDateIns,
 			UsrCrt:                  constant.LOS_CREATED,
 			DtmCrt:                  time.Now(),
 		}).Error; err != nil {

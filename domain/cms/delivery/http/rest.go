@@ -10,6 +10,7 @@ import (
 	"los-kmb-api/shared/common/platformevent"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
+	"os"
 	"strconv"
 
 	"github.com/labstack/echo/v4"
@@ -184,9 +185,10 @@ func (c *handlerCMS) ListReason(ctx echo.Context) (err error) {
 	}
 
 	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	limit, _ := strconv.Atoi(os.Getenv("LIMIT_PAGE_REASON"))
 	pagination := request.RequestPagination{
 		Page:  page,
-		Limit: 50,
+		Limit: limit,
 	}
 
 	if err := ctx.Bind(&req); err != nil {
@@ -435,7 +437,7 @@ func (c *handlerCMS) CancelReason(ctx echo.Context) (err error) {
 	page, _ := strconv.Atoi(ctx.QueryParam("page"))
 	pagination := request.RequestPagination{
 		Page:  page,
-		Limit: 10,
+		Limit: 50,
 	}
 
 	data, rowTotal, err := c.usecase.GetCancelReason(ctx.Request().Context(), pagination)
@@ -662,9 +664,10 @@ func (c *handlerCMS) ApprovalReason(ctx echo.Context) (err error) {
 	}
 
 	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	limit, _ := strconv.Atoi(os.Getenv("LIMIT_PAGE_REASON"))
 	pagination := request.RequestPagination{
 		Page:  page,
-		Limit: 50,
+		Limit: limit,
 	}
 
 	if err := ctx.Bind(&req); err != nil {

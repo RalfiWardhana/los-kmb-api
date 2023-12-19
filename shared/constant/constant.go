@@ -93,6 +93,7 @@ const (
 	RG_PRIORITY                      = "RG"
 	NG_APPLICATION_TYPE              = "NG"
 	CODE_SPOUSE                      = "SP"
+	CU                               = "CU"
 
 	CMO_AGENT                  = "CMO"
 	CODE_CMO_RECOMMENDED       = "1410"
@@ -422,6 +423,8 @@ const (
 	REASON_DSRGT35         = "- Confins DSR >"
 	CODE_TOPUP_MENUNGGAK   = "2703"
 	REASON_TOPUP_MENUNGGAK = "Menunggak"
+	CODE_PENCAIRAN_TOPUP   = "2704"
+	REASON_PENCAIRAN_TOPUP = "Persentase Minimum Pencairan yang diterima kurang dari Threshold"
 	TOP_UP                 = "Top Up"
 	CODE_MENUNGGAK         = "645"
 	CODE_TOTAL_DSRLTE35    = "2701"
@@ -544,6 +547,9 @@ const (
 	DATA_INACTIVE                       = "Data Inactive"
 	DATA_NOT_FOUND                      = "Data Not Found"
 	EKYC_VALID                          = "Ekyc Valid"
+	EKYC_BYPASS                         = "BYPASS"
+	EKYC_RTO                            = "RTO"
+	EKYC_NOT_CHECK                      = "NOT CHECK"
 
 	TYPE_CONTINGENCY = "CONTINGENCY"
 

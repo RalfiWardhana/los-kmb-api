@@ -196,6 +196,8 @@ func TestDukcapil(t *testing.T) {
 		expected                       expectedResult
 		respAppConfig                  entity.AppConfig
 		respGetMappingDukcapil         respGetMappingDukcapil
+		MappingResultDukcapilVD        entity.MappingResultDukcapilVD
+		errMappingResultDukcapilVD     error
 		respDukcapilVD, respDukcapilFR respDukcapil
 		reqMetricsEkyc                 request.MetricsEkyc
 	}{
@@ -435,11 +437,11 @@ func TestDukcapil(t *testing.T) {
 				err: fmt.Errorf("error"),
 			},
 			expected: expectedResult{
-				err: fmt.Errorf("upstream_service_error - Get Mapping Dukcapil Error"),
+				err: fmt.Errorf("upstream_service_error - Get Mapping Result Dukcapil Error"),
 			},
 		},
 		{
-			label: "Test VD REJECT alamat",
+			label: "Test VD REJECT BYPASS RO PRIME",
 			request: request.Metrics{
 				Address: []request.Address{
 					{
@@ -452,6 +454,11 @@ func TestDukcapil(t *testing.T) {
 					},
 				},
 			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus:  "RO",
+				CustomerSegment: "PRIME",
+				CBFound:         true,
+			},
 			respAppConfig: entity.AppConfig{
 				Value: `{
 					"data": {
@@ -462,6 +469,16 @@ func TestDukcapil(t *testing.T) {
 					  "face_recognition": 5
 					}
 				  }`,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.EKYC_BYPASS,
+			},
+			respGetMappingDukcapil: respGetMappingDukcapil{
+				data: entity.MappingResultDukcapil{
+					Decision: "PASS",
+					RuleCode: "1621",
+				},
 			},
 			respDukcapilVD: respDukcapil{
 				code: 200,
@@ -498,13 +515,31 @@ func TestDukcapil(t *testing.T) {
 					"server_time": "string"
 				  }`,
 			},
+			respDukcapilFR: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"rule_code": "6018",
+						"reason": "EKYC Sesuai",
+						"threshold": "5.0",
+						"ref_id": "7301010xxxxxxxxx",
+						"matchScore": "8.331"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
 			expected: expectedResult{
 				data: response.Ekyc{
-					Result: "REJECT",
-					Code:   "1612",
-					Reason: "Ekyc Invalid",
-					Source: "DCP",
-					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":true,\"no_kk\":\"Sesuai\",\"nama_lgkp\":80,\"tmpt_lhr\":100,\"tgl_lhr\":\"Sesuai\",\"prop_name\":\"Sesuai\",\"kab_name\":\"Sesuai\",\"kec_name\":\"Sesuai\",\"kel_name\":\"Sesuai\",\"no_rt\":\"Sesuai\",\"no_rw\":\"Sesuai\",\"alamat\":45,\"nama_lgkp_ibu\":100,\"status_kawin\":\"Sesuai\",\"jenis_pkrjn\":\"Sesuai\",\"jenis_klmin\":\"Sesuai\",\"no_prop\":\"Sesuai\",\"no_kab\":\"Sesuai\",\"no_kec\":\"Sesuai\",\"no_kel\":\"Sesuai\",\"nik\":\"Sesuai\"},\"vd_error\":null,\"fr\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
+					Result:      "PASS",
+					Code:        "1621",
+					Reason:      "Ekyc Valid",
+					Source:      "DCP",
+					Info:        "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":true,\"no_kk\":\"Sesuai\",\"nama_lgkp\":80,\"tmpt_lhr\":100,\"tgl_lhr\":\"Sesuai\",\"prop_name\":\"Sesuai\",\"kab_name\":\"Sesuai\",\"kec_name\":\"Sesuai\",\"kel_name\":\"Sesuai\",\"no_rt\":\"Sesuai\",\"no_rw\":\"Sesuai\",\"alamat\":45,\"nama_lgkp_ibu\":100,\"status_kawin\":\"Sesuai\",\"jenis_pkrjn\":\"Sesuai\",\"jenis_klmin\":\"Sesuai\",\"no_prop\":\"Sesuai\",\"no_kab\":\"Sesuai\",\"no_kec\":\"Sesuai\",\"no_kel\":\"Sesuai\",\"nik\":\"Sesuai\"},\"vd_error\":null,\"fr\":{\"transaction_id\":\"EFM01108902308030001\",\"rule_code\":\"6018\",\"reason\":\"EKYC Sesuai\",\"threshold\":\"5.0\",\"ref_id\":\"7301010xxxxxxxxx\",\"matchScore\":\"8.331\"},\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
+					Similiarity: "8.331",
 				},
 			},
 		},
@@ -567,6 +602,15 @@ func TestDukcapil(t *testing.T) {
 					"request_id": "string",
 					"server_time": "string"
 				  }`,
+			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus:  "RO",
+				CustomerSegment: "REGULAR",
+				CBFound:         true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.DECISION_REJECT,
 			},
 			expected: expectedResult{
 				data: response.Ekyc{
@@ -638,6 +682,15 @@ func TestDukcapil(t *testing.T) {
 					"server_time": "string"
 				  }`,
 			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus:  "RO",
+				CustomerSegment: "REGULAR",
+				CBFound:         true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.DECISION_REJECT,
+			},
 			expected: expectedResult{
 				data: response.Ekyc{
 					Result: "REJECT",
@@ -688,6 +741,14 @@ func TestDukcapil(t *testing.T) {
 					"request_id": "string",
 					"server_time": "string"
 				  }`,
+			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus: "NEW",
+				CBFound:        true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.DECISION_REJECT,
 			},
 			expected: expectedResult{
 				data: response.Ekyc{
@@ -740,6 +801,14 @@ func TestDukcapil(t *testing.T) {
 					"server_time": "string"
 				  }`,
 			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus: "NEW",
+				CBFound:        true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.DECISION_REJECT,
+			},
 			expected: expectedResult{
 				data: response.Ekyc{
 					Result: "REJECT",
@@ -791,6 +860,14 @@ func TestDukcapil(t *testing.T) {
 					"server_time": "string"
 				  }`,
 			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus: "NEW",
+				CBFound:        true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.DECISION_REJECT,
+			},
 			expected: expectedResult{
 				data: response.Ekyc{
 					Result: "REJECT",
@@ -841,6 +918,14 @@ func TestDukcapil(t *testing.T) {
 					"request_id": "string",
 					"server_time": "string"
 				  }`,
+			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus: "NEW",
+				CBFound:        true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.DECISION_REJECT,
 			},
 			expected: expectedResult{
 				data: response.Ekyc{
@@ -934,6 +1019,14 @@ func TestDukcapil(t *testing.T) {
 					Decision: "REJECT",
 					RuleCode: "1623",
 				},
+			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus: "NEW",
+				CBFound:        true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_PASS,
+				Decision: constant.DECISION_PASS,
 			},
 			expected: expectedResult{
 				data: response.Ekyc{
@@ -1029,6 +1122,14 @@ func TestDukcapil(t *testing.T) {
 					RuleCode: "1622",
 				},
 			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus: "NEW",
+				CBFound:        true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_PASS,
+				Decision: constant.DECISION_PASS,
+			},
 			expected: expectedResult{
 				data: response.Ekyc{
 					Result:      "REJECT",
@@ -1038,6 +1139,60 @@ func TestDukcapil(t *testing.T) {
 					Similiarity: "8.331",
 					Info:        "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":true,\"no_kk\":\"Sesuai\",\"nama_lgkp\":100,\"tmpt_lhr\":100,\"tgl_lhr\":\"Sesuai\",\"prop_name\":\"Sesuai\",\"kab_name\":\"Sesuai\",\"kec_name\":\"Sesuai\",\"kel_name\":\"Sesuai\",\"no_rt\":\"Sesuai\",\"no_rw\":\"Sesuai\",\"alamat\":100,\"nama_lgkp_ibu\":100,\"status_kawin\":\"Sesuai\",\"jenis_pkrjn\":\"Sesuai\",\"jenis_klmin\":\"Sesuai\",\"no_prop\":\"Sesuai\",\"no_kab\":\"Sesuai\",\"no_kec\":\"Sesuai\",\"no_kel\":\"Sesuai\",\"nik\":\"Sesuai\"},\"vd_error\":null,\"fr\":{\"transaction_id\":\"EFM01108902308030001\",\"rule_code\":\"6019\",\"reason\":\"EKYC Tidak Sesuai\",\"threshold\":\"5.0\",\"ref_id\":\"7301010xxxxxxxxx\",\"matchScore\":\"8.331\"},\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
 				},
+			},
+		},
+		{
+			label: "Test VD MAPPING ERROR",
+			request: request.Metrics{
+				Address: []request.Address{
+					{
+						Type: "LEGAL",
+					},
+				},
+				CustomerPhoto: []request.CustomerPhoto{
+					{
+						ID: "SELFIE",
+					},
+				},
+			},
+			respAppConfig: entity.AppConfig{
+				Value: `{
+					"data": {
+					  "verify_data": {
+						"nama_lgkp": 80,
+						"alamat": 50
+					  },
+					  "face_recognition": 5
+					}
+				  }`,
+			},
+			respDukcapilVD: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"threshold": "0",
+						"ref_id": "1000338d-208e-4e06-80f0-cbe8c1358a20",
+						"is_valid": false,
+						"reason": "Data Not Found"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus: "NEW",
+				CBFound:        true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.DECISION_REJECT,
+			},
+			errMappingResultDukcapilVD: errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Verify Dukcapil Error"),
+			expected: expectedResult{
+				err: errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Verify Dukcapil Error"),
 			},
 		},
 	}
@@ -1051,6 +1206,7 @@ func TestDukcapil(t *testing.T) {
 
 		mockRepository.On("GetConfig", mock.Anything, mock.Anything, mock.Anything).Return(test.respAppConfig, nil)
 		mockRepository.On("GetMappingDukcapil", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(test.respGetMappingDukcapil.data, test.respGetMappingDukcapil.err)
+		mockRepository.On("GetMappingDukcapilVD", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(test.MappingResultDukcapilVD, test.errMappingResultDukcapilVD)
 
 		//httpclient Dukcapil VD
 		rst := resty.New()
@@ -1338,7 +1494,9 @@ func TestKtp(t *testing.T) {
 		{
 			name: "test KTP pass",
 			reqMetricsEkyc: request.MetricsEkyc{
-				CBFound: true,
+				CustomerStatus:  "NEW",
+				CustomerSegment: "REGULAR",
+				CBFound:         true,
 			},
 			req: request.Metrics{
 				Item: request.Item{
@@ -1358,7 +1516,9 @@ func TestKtp(t *testing.T) {
 		{
 			name: "test KTP err api ktp",
 			reqMetricsEkyc: request.MetricsEkyc{
-				CBFound: true,
+				CustomerStatus:  "NEW",
+				CustomerSegment: "REGULAR",
+				CBFound:         true,
 			},
 			req: request.Metrics{
 				Item: request.Item{
@@ -1372,7 +1532,9 @@ func TestKtp(t *testing.T) {
 		{
 			name: "test KTP err api ktp",
 			reqMetricsEkyc: request.MetricsEkyc{
-				CBFound: true,
+				CustomerStatus:  "NEW",
+				CustomerSegment: "REGULAR",
+				CBFound:         true,
 			},
 			req: request.Metrics{
 				Item: request.Item{
@@ -1385,7 +1547,9 @@ func TestKtp(t *testing.T) {
 		{
 			name: "test KTP pass",
 			reqMetricsEkyc: request.MetricsEkyc{
-				CBFound: true,
+				CustomerStatus:  "NEW",
+				CustomerSegment: "REGULAR",
+				CBFound:         true,
 			},
 			req: request.Metrics{
 				Item: request.Item{
