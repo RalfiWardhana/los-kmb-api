@@ -388,18 +388,35 @@ type ConfigThresholdDukcapil struct {
 	} `json:"data"`
 }
 
+type MappingResultDukcapilVD struct {
+	ID                     string      `gorm:"column:id"`
+	ResultVD               string      `gorm:"column:result_vd"`
+	StatusKonsumen         string      `gorm:"column:status_konsumen"`
+	KategoriStatusKonsumen string      `gorm:"column:kategori_status_konsumen"`
+	Decision               string      `gorm:"column:decision"`
+	RuleCode               string      `gorm:"column:rule_code"`
+	CreatedAt              time.Time   `gorm:"column:created_at"`
+	IsValid                interface{} `gorm:"column:is_valid"`
+}
+
+func (c *MappingResultDukcapilVD) TableName() string {
+	return "kmb_dukcapil_verify_result_v2"
+}
+
 type MappingResultDukcapil struct {
-	ID        string    `gorm:"column:id"`
-	ResultVD  string    `gorm:"column:result_vd"`
-	ResultFR  string    `gorm:"column:result_fr"`
-	Decision  string    `gorm:"column:decision"`
-	RuleCode  string    `gorm:"column:rule_code"`
-	CreatedAt time.Time `gorm:"column:created_at"`
-	UpdatedAt time.Time `gorm:"column:updated_at"`
+	ID                     string    `gorm:"column:id"`
+	ResultVD               string    `gorm:"column:result_vd"`
+	ResultFR               string    `gorm:"column:result_fr"`
+	StatusKonsumen         string    `gorm:"column:status_konsumen"`
+	KategoriStatusKonsumen string    `gorm:"column:kategori_status_konsumen"`
+	Decision               string    `gorm:"column:decision"`
+	RuleCode               string    `gorm:"column:rule_code"`
+	CreatedAt              time.Time `gorm:"column:created_at"`
+	UpdatedAt              time.Time `gorm:"column:updated_at"`
 }
 
 func (c *MappingResultDukcapil) TableName() string {
-	return "kmb_dukcapil_mapping_result"
+	return "kmb_dukcapil_mapping_result_v2"
 }
 
 type ScoreGenerator struct {

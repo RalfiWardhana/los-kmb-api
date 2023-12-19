@@ -349,10 +349,8 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 
 	resp, err = h.metrics.MetricsLos(ctx, req, middlewares.UserInfoData.AccessToken)
 	if err != nil {
-		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
 
-		// callback
-		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
+		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
 
 	} else {
 		// convert to struct

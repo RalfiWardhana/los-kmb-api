@@ -547,6 +547,9 @@ const (
 	DATA_INACTIVE                       = "Data Inactive"
 	DATA_NOT_FOUND                      = "Data Not Found"
 	EKYC_VALID                          = "Ekyc Valid"
+	EKYC_BYPASS                         = "BYPASS"
+	EKYC_RTO                            = "RTO"
+	EKYC_NOT_CHECK                      = "NOT CHECK"
 
 	TYPE_CONTINGENCY = "CONTINGENCY"
 
