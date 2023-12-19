@@ -1719,6 +1719,13 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			return err
 		}
 
+		var expiredDateIns interface{}
+
+		if item.InsAssetInsuredBy == constant.CU {
+			expiredDateIns = time.Now().AddDate(5, 0, 0)
+
+		}
+
 		if err := tx.Create(&entity.STG_GEN_INS_H{
 			BranchID:                master.BranchID,
 			ProspectID:              master.ProspectID,
@@ -1728,6 +1735,7 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			InsuranceCoyBranchID:    item.InsuranceCoyBranchID,
 			PremiumAmountToCustomer: apk.AssetInsuranceFee,
 			CoverageType:            item.CoverageType,
+			ExpiredDate:             expiredDateIns,
 			UsrCrt:                  constant.LOS_CREATED,
 			DtmCrt:                  time.Now(),
 		}).Error; err != nil {
