@@ -862,6 +862,15 @@ func (c *MasterMappingCluster) TableName() string {
 	return "m_mapping_cluster"
 }
 
+type MasterMappingMaxDSR struct {
+	Cluster      string  `gorm:"column:cluster"`
+	DSRThreshold float64 `gorm:"column:dsr_threshold"`
+}
+
+func (c *MasterMappingMaxDSR) TableName() string {
+	return "kmb_mapping_cluster_dsr"
+}
+
 type TrxAgreement struct {
 	ProspectID          string      `gorm:"type:varchar(20);column:ProspectID"`
 	BranchID            interface{} `gorm:"type:varchar(5);column:BranchID"`

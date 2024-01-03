@@ -156,7 +156,7 @@ func TestDsrCheck(t *testing.T) {
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
 				Code:           constant.CODE_DSRLTE35,
-				Reason:         "NEW - Confins DSR <= 35",
+				Reason:         "NEW - Confins DSR <= Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 				Dsr:            2.6,
 			},
@@ -175,7 +175,7 @@ func TestDsrCheck(t *testing.T) {
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
 				Code:           constant.CODE_DSRGT35,
-				Reason:         "NEW - Confins DSR > 35",
+				Reason:         "NEW - Confins DSR > Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 				Dsr:            65,
 			},
@@ -215,7 +215,7 @@ func TestDsrCheck(t *testing.T) {
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
 				Code:           constant.CODE_DSRGT35,
-				Reason:         "RO - Confins DSR > 35",
+				Reason:         "RO - Confins DSR > Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 				Dsr:            254,
 			},
@@ -327,7 +327,7 @@ func TestDsrCheck(t *testing.T) {
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
 				Code:           constant.CODE_DSRGT35,
-				Reason:         "AO Top Up - Confins DSR > 35",
+				Reason:         "AO Top Up - Confins DSR > Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 				Dsr:            40,
 			},
@@ -443,7 +443,7 @@ func TestDsrCheck(t *testing.T) {
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
 				Code:           constant.CODE_DSRLTE35,
-				Reason:         "AO PRIORITY Top Up - Confins DSR <= 35",
+				Reason:         "AO PRIORITY Top Up - Confins DSR <= Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 				Dsr:            6.5,
 			},
@@ -535,11 +535,12 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				Dsr:            30,
 				CustomerID:     "",
+				ConfigMaxDSR:   35,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
 				Code:           constant.CODE_TOTAL_DSRGT35,
-				Reason:         "NEW - DSR > 35",
+				Reason:         "NEW - DSR > Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 			},
 			trxFMF: response.TrxFMF{
@@ -563,11 +564,12 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				Dsr:            30,
 				CustomerID:     "",
+				ConfigMaxDSR:   35,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
 				Code:           constant.CODE_TOTAL_DSRLTE35,
-				Reason:         "NEW - DSR <= 35",
+				Reason:         "NEW - DSR <= Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 			},
 			trxFMF: response.TrxFMF{
@@ -591,6 +593,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
 				Dsr:            30,
 				CustomerID:     "123456",
+				ConfigMaxDSR:   35,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
@@ -625,11 +628,12 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
 				Dsr:            30,
 				CustomerID:     "123456",
+				ConfigMaxDSR:   35,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
 				Code:           constant.CODE_TOTAL_DSRLTE35,
-				Reason:         "RO PRIME - DSR <= 35",
+				Reason:         "RO PRIME - DSR <= Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 			},
 			trxFMF: response.TrxFMF{
@@ -659,11 +663,12 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
 				Dsr:            30,
 				CustomerID:     "123456",
+				ConfigMaxDSR:   35,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
 				Code:           constant.CODE_TOTAL_DSRLTE35,
-				Reason:         "RO PRIORITY - DSR <= 35",
+				Reason:         "RO PRIORITY - DSR <= Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 			},
 			trxFMF: response.TrxFMF{
@@ -688,6 +693,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Dsr:              30,
 				CustomerID:       "123456",
 				InstallmentTopup: 1000000,
+				ConfigMaxDSR:     35,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
@@ -723,11 +729,12 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Dsr:              30,
 				CustomerID:       "123456",
 				InstallmentTopup: 100000,
+				ConfigMaxDSR:     35,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
 				Code:           constant.CODE_TOTAL_DSRLTE35,
-				Reason:         "AO PRIME Top Up - DSR <= 35",
+				Reason:         "AO PRIME Top Up - DSR <= Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 			},
 			trxFMF: response.TrxFMF{
@@ -758,11 +765,12 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Dsr:                     30,
 				CustomerID:              "123456",
 				NumberOfPaidInstallment: 7,
+				ConfigMaxDSR:            35,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
 				Code:           constant.CODE_TOTAL_DSRLTE35,
-				Reason:         "AO PRIME - DSR <= 35",
+				Reason:         "AO PRIME - DSR <= Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 			},
 			trxFMF: response.TrxFMF{
@@ -787,11 +795,12 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Dsr:              30,
 				CustomerID:       "123456",
 				InstallmentTopup: 100000,
+				ConfigMaxDSR:     35,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
 				Code:           constant.CODE_TOTAL_DSRLTE35,
-				Reason:         "AO PRIORITY Top Up - DSR <= 35",
+				Reason:         "AO PRIORITY Top Up - DSR <= Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 			},
 			trxFMF: response.TrxFMF{
@@ -816,11 +825,12 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Dsr:                     30,
 				CustomerID:              "123456",
 				NumberOfPaidInstallment: 7,
+				ConfigMaxDSR:            35,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
 				Code:           constant.CODE_TOTAL_DSRLTE35,
-				Reason:         "AO PRIORITY - DSR <= 35",
+				Reason:         "AO PRIORITY - DSR <= Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 			},
 			trxFMF: response.TrxFMF{
@@ -844,6 +854,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
 				Dsr:            30,
 				CustomerID:     "123456",
+				ConfigMaxDSR:   35,
 			},
 			trxFMF: response.TrxFMF{
 				DSRPBK:   float64(0.5),
@@ -872,6 +883,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
 				Dsr:            30,
 				CustomerID:     "123456",
+				ConfigMaxDSR:   35,
 			},
 			trxFMF: response.TrxFMF{
 				DSRPBK:   float64(0.5),
@@ -899,6 +911,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
 				Dsr:            30,
 				CustomerID:     "123456",
+				ConfigMaxDSR:   35,
 			},
 			trxFMF: response.TrxFMF{
 				DSRPBK:   float64(0.5),

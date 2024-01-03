@@ -49,6 +49,8 @@ type Repository interface {
 	GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig, err error)
 	SaveVerificationFaceCompare(data entity.VerificationFaceCompare) error
 
+	MasterMappingCluster(req entity.MasterMappingCluster) (data entity.MasterMappingCluster, err error)
+	MasterMappingMaxDSR(req entity.MasterMappingMaxDSR) (data entity.MasterMappingMaxDSR, err error)
 	GetEncB64(myString string) (encryptedString entity.EncryptedString, err error)
 	GetCurrentTrxWithRejectDSR(idNumber string) (data entity.TrxStatus, err error)
 	GetBannedPMKDSR(idNumber string) (data entity.TrxBannedPMKDSR, err error)
