@@ -66,6 +66,10 @@ func TestMetrics(t *testing.T) {
 		codeInternalRecord        int
 		bodyInternalRecord        string
 		errInternalRecord         error
+		mappingCluster            entity.MasterMappingCluster
+		mappingMaxDSR             entity.MasterMappingMaxDSR
+		errmappingCluster         error
+		errmappingMaxDSR          error
 	}{
 		{
 			name: "test metrics errScanTrxMaster",
@@ -130,7 +134,8 @@ func TestMetrics(t *testing.T) {
 			err:       errors.New(constant.ERROR_BAD_REQUEST + " - Tidak bisa lanjut proses"),
 			trxMaster: 0,
 			filtering: entity.FilteringKMB{
-				NextProcess: 0,
+				NextProcess:    0,
+				CustomerStatus: "NEW",
 			},
 		},
 		{
@@ -144,7 +149,8 @@ func TestMetrics(t *testing.T) {
 			trxMaster: 0,
 			countTrx:  1,
 			filtering: entity.FilteringKMB{
-				NextProcess: 1,
+				NextProcess:    1,
+				CustomerStatus: "NEW",
 			},
 			errGetFilteringForJourney: errors.New(constant.ERROR_UPSTREAM + " - Get Filtering Error"),
 		},
@@ -158,7 +164,8 @@ func TestMetrics(t *testing.T) {
 			err:       errors.New(constant.ERROR_BAD_REQUEST + " - Belum melakukan pengecekan LTV"),
 			trxMaster: 0,
 			filtering: entity.FilteringKMB{
-				NextProcess: 1,
+				NextProcess:    1,
+				CustomerStatus: "NEW",
 			},
 			errGetElaborateLtv: errors.New(constant.ERROR_BAD_REQUEST + " - Belum melakukan pengecekan LTV"),
 		},
@@ -176,8 +183,9 @@ func TestMetrics(t *testing.T) {
 			trxMaster: 0,
 			countTrx:  0,
 			filtering: entity.FilteringKMB{
-				NextProcess: 1,
-				ScoreBiro:   "AVERAGE RISK",
+				NextProcess:    1,
+				ScoreBiro:      "AVERAGE RISK",
+				CustomerStatus: "NEW",
 			},
 			details: []entity.TrxDetail{
 				{
@@ -224,8 +232,9 @@ func TestMetrics(t *testing.T) {
 			trxMaster: 0,
 			countTrx:  0,
 			filtering: entity.FilteringKMB{
-				NextProcess: 1,
-				ScoreBiro:   "AVERAGE RISK",
+				NextProcess:    1,
+				ScoreBiro:      "AVERAGE RISK",
+				CustomerStatus: "NEW",
 			},
 			details: []entity.TrxDetail{
 				{
@@ -268,8 +277,9 @@ func TestMetrics(t *testing.T) {
 			trxMaster: 0,
 			countTrx:  0,
 			filtering: entity.FilteringKMB{
-				NextProcess: 1,
-				ScoreBiro:   "AVERAGE RISK",
+				NextProcess:    1,
+				ScoreBiro:      "AVERAGE RISK",
+				CustomerStatus: "NEW",
 			},
 			details: []entity.TrxDetail{
 				{
@@ -302,8 +312,9 @@ func TestMetrics(t *testing.T) {
 			trxMaster: 0,
 			countTrx:  0,
 			filtering: entity.FilteringKMB{
-				NextProcess: 1,
-				ScoreBiro:   "AVERAGE RISK",
+				NextProcess:    1,
+				ScoreBiro:      "AVERAGE RISK",
+				CustomerStatus: "NEW",
 			},
 			details: []entity.TrxDetail{
 				{
@@ -339,8 +350,9 @@ func TestMetrics(t *testing.T) {
 			trxMaster: 0,
 			countTrx:  0,
 			filtering: entity.FilteringKMB{
-				NextProcess: 1,
-				ScoreBiro:   "AVERAGE RISK",
+				NextProcess:    1,
+				ScoreBiro:      "AVERAGE RISK",
+				CustomerStatus: "NEW",
 			},
 			details: []entity.TrxDetail{
 				{
@@ -380,8 +392,9 @@ func TestMetrics(t *testing.T) {
 			trxMaster: 0,
 			countTrx:  1,
 			filtering: entity.FilteringKMB{
-				NextProcess: 1,
-				ScoreBiro:   "AVERAGE RISK",
+				NextProcess:    1,
+				ScoreBiro:      "AVERAGE RISK",
+				CustomerStatus: "NEW",
 			},
 			details: []entity.TrxDetail{
 				{
@@ -422,8 +435,9 @@ func TestMetrics(t *testing.T) {
 			trxMaster: 0,
 			countTrx:  1,
 			filtering: entity.FilteringKMB{
-				NextProcess: 1,
-				ScoreBiro:   "AVERAGE RISK",
+				NextProcess:    1,
+				ScoreBiro:      "AVERAGE RISK",
+				CustomerStatus: "NEW",
 			},
 			details: []entity.TrxDetail{
 				{
@@ -462,8 +476,9 @@ func TestMetrics(t *testing.T) {
 			trxMaster: 0,
 			countTrx:  1,
 			filtering: entity.FilteringKMB{
-				NextProcess: 1,
-				ScoreBiro:   "AVERAGE RISK",
+				NextProcess:    1,
+				ScoreBiro:      "AVERAGE RISK",
+				CustomerStatus: "NEW",
 			},
 			details: []entity.TrxDetail{
 				{
@@ -527,8 +542,9 @@ func TestMetrics(t *testing.T) {
 			trxMaster: 0,
 			countTrx:  1,
 			filtering: entity.FilteringKMB{
-				NextProcess: 1,
-				ScoreBiro:   "AVERAGE RISK",
+				NextProcess:    1,
+				ScoreBiro:      "AVERAGE RISK",
+				CustomerStatus: "NEW",
 			},
 			details: []entity.TrxDetail{
 				{
@@ -597,6 +613,7 @@ func TestMetrics(t *testing.T) {
 				NextProcess:     1,
 				ScoreBiro:       "AVERAGE RISK",
 				CustomerSegment: constant.RO_AO_PRIME,
+				CustomerStatus:  "RO",
 			},
 			details: []entity.TrxDetail{
 				{
@@ -676,6 +693,7 @@ func TestMetrics(t *testing.T) {
 				NextProcess:     1,
 				ScoreBiro:       "AVERAGE RISK",
 				CustomerSegment: constant.RO_AO_PRIME,
+				CustomerStatus:  "RO",
 			},
 			details: []entity.TrxDetail{
 				{
@@ -758,6 +776,7 @@ func TestMetrics(t *testing.T) {
 				NextProcess:     1,
 				ScoreBiro:       "AVERAGE RISK",
 				CustomerSegment: constant.RO_AO_PRIME,
+				CustomerStatus:  "RO",
 			},
 			details: []entity.TrxDetail{
 				{
@@ -842,6 +861,267 @@ func TestMetrics(t *testing.T) {
 			errSaveTransaction: errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - metricsDupcheck Error"),
 		},
 		{
+			name: "test metrics dupcheck err mapping cluster ",
+			reqMetrics: request.Metrics{
+				Transaction: request.Transaction{
+					ProspectID: "TEST1",
+				},
+				Apk: request.Apk{
+					Tenor: 36,
+				},
+				CustomerPersonal: request.CustomerPersonal{
+					IDNumber: "123456",
+				},
+				CustomerSpouse: &request.CustomerSpouse{
+					IDNumber:  "123456",
+					LegalName: "SPOUSE",
+				},
+				CustomerPhoto: []request.CustomerPhoto{
+					{
+						ID:  constant.TAG_KTP_PHOTO,
+						Url: "URL KTP",
+					},
+					{
+						ID:  constant.TAG_SELFIE_PHOTO,
+						Url: "URL SELFIE",
+					},
+				},
+				Address: []request.Address{
+					{
+						Type:    constant.ADDRESS_TYPE_LEGAL,
+						ZipCode: "12345",
+					},
+					{
+						Type: constant.ADDRESS_TYPE_COMPANY,
+					},
+				},
+				CustomerEmployment: request.CustomerEmployment{
+					MonthlyVariableIncome: &MonthlyVariableIncome,
+					SpouseIncome:          &SpouseIncome,
+				},
+			},
+			trxMaster: 0,
+			countTrx:  1,
+			filtering: entity.FilteringKMB{
+				NextProcess:     1,
+				ScoreBiro:       "AVERAGE RISK",
+				CustomerSegment: constant.RO_AO_PRIME,
+				CustomerStatus:  "RO",
+			},
+			details: []entity.TrxDetail{
+				{
+					ProspectID:     "TEST1",
+					StatusProcess:  constant.STATUS_ONPROCESS,
+					Activity:       constant.ACTIVITY_PROCESS,
+					Decision:       constant.DB_DECISION_PASS,
+					RuleCode:       "123",
+					SourceDecision: constant.SOURCE_DECISION_TENOR,
+					NextStep:       constant.SOURCE_DECISION_DUPCHECK,
+					CreatedBy:      constant.SYSTEM_CREATED,
+					Reason:         "PASS TENOR 36",
+				},
+				{
+					ProspectID:     "TEST1",
+					StatusProcess:  constant.STATUS_FINAL,
+					Activity:       constant.ACTIVITY_STOP,
+					Decision:       constant.DB_DECISION_REJECT,
+					RuleCode:       "123",
+					SourceDecision: "DUPCHECK",
+					Reason:         "dupcheck reject",
+					Info:           string(utils.SafeEncoding(info)),
+				},
+			},
+			trxTenor: response.UsecaseApi{
+				Code:   "123",
+				Result: constant.DECISION_PASS,
+				Reason: "PASS TENOR 36",
+			},
+			config: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35}}`,
+			},
+			configValue: response.DupcheckConfig{
+				Data: response.DataDupcheckConfig{
+					VehicleAge: 17,
+					MaxOvd:     60,
+					MaxDsr:     35,
+				},
+			},
+			dupcheckData: response.SpDupcheckMap{
+				CustomerID: "123456",
+			},
+			metricsDupcheck: response.UsecaseApi{
+				Code:           "123",
+				Result:         constant.DECISION_REJECT,
+				Reason:         "dupcheck reject",
+				SourceDecision: "DUPCHECK",
+			},
+			trxFMF: response.TrxFMF{
+				DupcheckData: response.SpDupcheckMap{
+					CustomerID: "123456",
+				},
+				DSRFMF: float64(0),
+				AgreementCONFINS: []response.AgreementCONFINS{
+					{
+						ApplicationID:     "426A202212124023",
+						ProductType:       "WG",
+						AgreementDate:     "12/20/2022",
+						AssetCode:         "APPLE.HP/SMARTPHONES.HPIPHONE6S32",
+						Tenor:             12,
+						InstallmentAmount: 371000,
+						ContractStatus:    "EXP",
+						CurrentCondition:  "Current",
+					},
+					{
+						ApplicationID:     "426A202306124184",
+						ProductType:       "WG",
+						AgreementDate:     "06/20/2023",
+						AssetCode:         "OPPO.HP/SMARTPHONES.PHABLETF56GB",
+						Tenor:             11,
+						InstallmentAmount: 161000,
+						ContractStatus:    "LIV",
+						CurrentCondition:  "Current",
+					},
+				},
+			},
+			codeInternalRecord: 200,
+			bodyInternalRecord: `{"messages":"LOS-ListAgreements","errors":null,"data":[{"application_id":"426A202212124023","product_type":"WG","agreement_date":"12/20/2022","asset_code":"APPLE.HP/SMARTPHONES.HPIPHONE6S32","period":12,"outstanding_principal":0,"installment_amount":371000,"contract_status":"EXP","current_condition":"Current"},{"application_id":"426A202306124184","product_type":"WG","agreement_date":"06/20/2023","asset_code":"OPPO.HP/SMARTPHONES.PHABLETF56GB","period":11,"outstanding_principal":0,"installment_amount":161000,"contract_status":"LIV","current_condition":"Current"}],"server_time":"2023-11-27T17:00:19+07:00","request_id":"db8b5f93-242d-4b9b-9932-0c8e99bcac00"}`,
+			err:                errors.New(constant.ERROR_UPSTREAM + " - Get Mapping cluster error"),
+			errmappingCluster:  errors.New(constant.ERROR_UPSTREAM + " - Get Mapping cluster error"),
+		},
+		{
+			name: "test metrics dupcheck err mapping max dsr ",
+			reqMetrics: request.Metrics{
+				Transaction: request.Transaction{
+					ProspectID: "TEST1",
+				},
+				Apk: request.Apk{
+					Tenor: 36,
+				},
+				CustomerPersonal: request.CustomerPersonal{
+					IDNumber: "123456",
+				},
+				CustomerSpouse: &request.CustomerSpouse{
+					IDNumber:  "123456",
+					LegalName: "SPOUSE",
+				},
+				CustomerPhoto: []request.CustomerPhoto{
+					{
+						ID:  constant.TAG_KTP_PHOTO,
+						Url: "URL KTP",
+					},
+					{
+						ID:  constant.TAG_SELFIE_PHOTO,
+						Url: "URL SELFIE",
+					},
+				},
+				Address: []request.Address{
+					{
+						Type:    constant.ADDRESS_TYPE_LEGAL,
+						ZipCode: "12345",
+					},
+					{
+						Type: constant.ADDRESS_TYPE_COMPANY,
+					},
+				},
+				CustomerEmployment: request.CustomerEmployment{
+					MonthlyVariableIncome: &MonthlyVariableIncome,
+					SpouseIncome:          &SpouseIncome,
+				},
+			},
+			trxMaster: 0,
+			countTrx:  1,
+			filtering: entity.FilteringKMB{
+				NextProcess:     1,
+				ScoreBiro:       "AVERAGE RISK",
+				CustomerSegment: constant.RO_AO_PRIME,
+				CustomerStatus:  "RO",
+			},
+			details: []entity.TrxDetail{
+				{
+					ProspectID:     "TEST1",
+					StatusProcess:  constant.STATUS_ONPROCESS,
+					Activity:       constant.ACTIVITY_PROCESS,
+					Decision:       constant.DB_DECISION_PASS,
+					RuleCode:       "123",
+					SourceDecision: constant.SOURCE_DECISION_TENOR,
+					NextStep:       constant.SOURCE_DECISION_DUPCHECK,
+					CreatedBy:      constant.SYSTEM_CREATED,
+					Reason:         "PASS TENOR 36",
+				},
+				{
+					ProspectID:     "TEST1",
+					StatusProcess:  constant.STATUS_FINAL,
+					Activity:       constant.ACTIVITY_STOP,
+					Decision:       constant.DB_DECISION_REJECT,
+					RuleCode:       "123",
+					SourceDecision: "DUPCHECK",
+					Reason:         "dupcheck reject",
+					Info:           string(utils.SafeEncoding(info)),
+				},
+			},
+			trxTenor: response.UsecaseApi{
+				Code:   "123",
+				Result: constant.DECISION_PASS,
+				Reason: "PASS TENOR 36",
+			},
+			config: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35}}`,
+			},
+			configValue: response.DupcheckConfig{
+				Data: response.DataDupcheckConfig{
+					VehicleAge: 17,
+					MaxOvd:     60,
+					MaxDsr:     35,
+				},
+			},
+			dupcheckData: response.SpDupcheckMap{
+				CustomerID: "123456",
+			},
+			metricsDupcheck: response.UsecaseApi{
+				Code:           "123",
+				Result:         constant.DECISION_REJECT,
+				Reason:         "dupcheck reject",
+				SourceDecision: "DUPCHECK",
+			},
+			trxFMF: response.TrxFMF{
+				DupcheckData: response.SpDupcheckMap{
+					CustomerID: "123456",
+				},
+				DSRFMF: float64(0),
+				AgreementCONFINS: []response.AgreementCONFINS{
+					{
+						ApplicationID:     "426A202212124023",
+						ProductType:       "WG",
+						AgreementDate:     "12/20/2022",
+						AssetCode:         "APPLE.HP/SMARTPHONES.HPIPHONE6S32",
+						Tenor:             12,
+						InstallmentAmount: 371000,
+						ContractStatus:    "EXP",
+						CurrentCondition:  "Current",
+					},
+					{
+						ApplicationID:     "426A202306124184",
+						ProductType:       "WG",
+						AgreementDate:     "06/20/2023",
+						AssetCode:         "OPPO.HP/SMARTPHONES.PHABLETF56GB",
+						Tenor:             11,
+						InstallmentAmount: 161000,
+						ContractStatus:    "LIV",
+						CurrentCondition:  "Current",
+					},
+				},
+			},
+			mappingCluster: entity.MasterMappingCluster{
+				Cluster: "Cluster A",
+			},
+			codeInternalRecord: 200,
+			bodyInternalRecord: `{"messages":"LOS-ListAgreements","errors":null,"data":[{"application_id":"426A202212124023","product_type":"WG","agreement_date":"12/20/2022","asset_code":"APPLE.HP/SMARTPHONES.HPIPHONE6S32","period":12,"outstanding_principal":0,"installment_amount":371000,"contract_status":"EXP","current_condition":"Current"},{"application_id":"426A202306124184","product_type":"WG","agreement_date":"06/20/2023","asset_code":"OPPO.HP/SMARTPHONES.PHABLETF56GB","period":11,"outstanding_principal":0,"installment_amount":161000,"contract_status":"LIV","current_condition":"Current"}],"server_time":"2023-11-27T17:00:19+07:00","request_id":"db8b5f93-242d-4b9b-9932-0c8e99bcac00"}`,
+			err:                errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Max DSR error"),
+			errmappingMaxDSR:   errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Max DSR error"),
+		},
+		{
 			name: "test metrics dupcheck reject ",
 			reqMetrics: request.Metrics{
 				Transaction: request.Transaction{
@@ -887,6 +1167,7 @@ func TestMetrics(t *testing.T) {
 				NextProcess:     1,
 				ScoreBiro:       "AVERAGE RISK",
 				CustomerSegment: constant.RO_AO_PRIME,
+				CustomerStatus:  "RO",
 			},
 			details: []entity.TrxDetail{
 				{
@@ -926,6 +1207,12 @@ func TestMetrics(t *testing.T) {
 					MaxOvd:     60,
 					MaxDsr:     35,
 				},
+			},
+			mappingCluster: entity.MasterMappingCluster{
+				Cluster: "Cluster A",
+			},
+			mappingMaxDSR: entity.MasterMappingMaxDSR{
+				DSRThreshold: 35,
 			},
 			dupcheckData: response.SpDupcheckMap{
 				CustomerID: "123456",
@@ -983,6 +1270,8 @@ func TestMetrics(t *testing.T) {
 			mockRepository.On("GetFilteringResult", tc.reqMetrics.Transaction.ProspectID).Return(tc.filtering, tc.errGetFilteringResult)
 			mockRepository.On("GetFilteringForJourney", tc.reqMetrics.Transaction.ProspectID).Return(tc.filtering, tc.errGetFilteringForJourney)
 			mockRepository.On("GetElaborateLtv", tc.reqMetrics.Transaction.ProspectID).Return(entity.MappingElaborateLTV{}, tc.errGetElaborateLtv)
+			mockRepository.On("MasterMappingCluster", mock.Anything).Return(tc.mappingCluster, tc.errmappingCluster)
+			mockRepository.On("MasterMappingMaxDSR", mock.Anything).Return(tc.mappingMaxDSR, tc.errmappingMaxDSR)
 			mockUsecase.On("SaveTransaction", tc.countTrx, tc.reqMetrics, tc.trxPrescreening, tc.trxFMF, tc.details, mock.Anything).Return(tc.resultMetrics, tc.errSaveTransaction)
 			mockUsecase.On("Prescreening", ctx, tc.reqMetrics, tc.filtering, "token").Return(tc.trxPrescreening, tc.trxFMF, tc.trxPrescreeningDetail, tc.errPrescreening)
 			mockUsecase.On("RejectTenor36", tc.reqMetrics.CustomerPersonal.IDNumber).Return(tc.trxTenor, tc.errRejectTenor36)

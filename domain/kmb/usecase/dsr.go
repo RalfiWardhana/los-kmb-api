@@ -231,8 +231,6 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 
 func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment, totalInstallmentPBK float64, prospectID, customerSegment, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig) (data response.UsecaseApi, trxFMF response.TrxFMF, err error) {
 
-	configValue.Data.MaxDsr = SpDupcheckMap.ConfigMaxDSR
-
 	dsrPBK := totalInstallmentPBK / totalIncome * 100
 
 	totalDSR := SpDupcheckMap.Dsr + dsrPBK

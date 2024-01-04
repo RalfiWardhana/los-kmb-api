@@ -11,6 +11,7 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -172,6 +173,24 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		}
 	}
 
+	// get mapping cluster
+	mappingCluster := entity.MasterMappingCluster{
+		BranchID:       reqMetrics.Transaction.BranchID,
+		CustomerStatus: filtering.CustomerStatus.(string),
+	}
+	if strings.Contains(os.Getenv("NAMA_SAMA"), reqMetrics.Item.BPKBName) {
+		mappingCluster.BpkbNameType = 1
+	}
+	if strings.Contains(constant.STATUS_KONSUMEN_RO_AO, filtering.CustomerStatus.(string)) {
+		mappingCluster.CustomerStatus = "AO/RO"
+	}
+
+	mappingCluster, err = u.repository.MasterMappingCluster(mappingCluster)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping cluster error")
+		return
+	}
+
 	//  STEP 3 tenor 36
 	if reqMetrics.Apk.Tenor >= 36 {
 		var trxTenor response.UsecaseApi
@@ -307,6 +326,22 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	var configValue response.DupcheckConfig
 
 	json.Unmarshal([]byte(config.Value), &configValue)
+
+	// get config max dsr
+	if mappingCluster.Cluster != "" {
+		mappingMaxDSR := entity.MasterMappingMaxDSR{
+			Cluster: mappingCluster.Cluster,
+		}
+		mappingMaxDSR, err = u.repository.MasterMappingMaxDSR(mappingMaxDSR)
+		if err != nil {
+			if err.Error() != constant.DATA_NOT_FOUND {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Max DSR error")
+				return
+			}
+		} else {
+			configValue.Data.MaxDsr = mappingMaxDSR.DSRThreshold
+		}
+	}
 
 	dupcheckData, customerStatus, metricsDupcheck, trxFMFDupcheck, trxDetailDupcheck, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken, configValue)
 	if err != nil {

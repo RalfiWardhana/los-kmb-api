@@ -238,39 +238,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		mapping.InstallmentAmountSpouseFMF = dataCustomer[1].TotalInstallment
 	}
 
-	// get config max dsr by cluster
-	mappingCluster := entity.MasterMappingCluster{
-		BranchID:       req.BranchID,
-		CustomerStatus: customerKMB,
-	}
-	if strings.Contains(os.Getenv("NAMA_SAMA"), req.BPKBName) {
-		mappingCluster.BpkbNameType = 1
-	}
-	if strings.Contains(constant.STATUS_KONSUMEN_RO_AO, customerKMB) {
-		mappingCluster.CustomerStatus = "AO/RO"
-	}
-
-	mappingCluster, err = u.repository.MasterMappingCluster(mappingCluster)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping cluster error")
-		return
-	}
-
-	if mappingCluster.Cluster != "" {
-		mappingMaxDSR := entity.MasterMappingMaxDSR{
-			Cluster: mappingCluster.Cluster,
-		}
-		mappingMaxDSR, err = u.repository.MasterMappingMaxDSR(mappingMaxDSR)
-		if err != nil {
-			if err.Error() != constant.DATA_NOT_FOUND {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Max DSR error")
-				return
-			}
-		} else {
-			configValue.Data.MaxDsr = mappingMaxDSR.DSRThreshold
-		}
-	}
-
 	// Check DSR
 	dsr, mappingDSR, instOther, instOtherSpouse, instTopup, err := u.usecase.DsrCheck(ctx, req, customerData, req.InstallmentAmount, mapping.InstallmentAmountFMF, mapping.InstallmentAmountSpouseFMF, income, accessToken, configValue)
 	if err != nil {
@@ -285,7 +252,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	mapping.Reason = data.Reason
 	mapping.DetailsDSR = mappingDSR.Details
 	mapping.ConfigMaxDSR = configValue.Data.MaxDsr
-	mapping.Cluster = mappingCluster.Cluster
 
 	if dsr.Result == constant.DECISION_REJECT {
 		return
