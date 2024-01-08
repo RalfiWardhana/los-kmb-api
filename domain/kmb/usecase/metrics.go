@@ -348,6 +348,10 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		return
 	}
 
+	if mappingCluster.Cluster != "" {
+		dupcheckData.Cluster = mappingCluster.Cluster
+	}
+
 	trxFMF.DupcheckData = dupcheckData
 	trxFMF.CustomerStatus = customerStatus
 	trxFMF.DSRFMF = dupcheckData.Dsr
