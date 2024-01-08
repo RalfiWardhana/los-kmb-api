@@ -32,11 +32,6 @@ func TestMetrics(t *testing.T) {
 		CustomerID: "123456",
 	})
 
-	info2, _ := json.Marshal(response.SpDupcheckMap{
-		CustomerID: "123456",
-		Cluster:    "Cluster A",
-	})
-
 	testcases := []struct {
 		name                      string
 		reqMetrics                request.Metrics
@@ -964,7 +959,6 @@ func TestMetrics(t *testing.T) {
 			trxFMF: response.TrxFMF{
 				DupcheckData: response.SpDupcheckMap{
 					CustomerID: "123456",
-					Cluster:    "Cluster A",
 				},
 				DSRFMF: float64(0),
 				AgreementCONFINS: []response.AgreementCONFINS{
@@ -1094,7 +1088,6 @@ func TestMetrics(t *testing.T) {
 			trxFMF: response.TrxFMF{
 				DupcheckData: response.SpDupcheckMap{
 					CustomerID: "123456",
-					Cluster:    "Cluster A",
 				},
 				DSRFMF: float64(0),
 				AgreementCONFINS: []response.AgreementCONFINS{
@@ -1196,7 +1189,7 @@ func TestMetrics(t *testing.T) {
 					RuleCode:       "123",
 					SourceDecision: "DUPCHECK",
 					Reason:         "dupcheck reject",
-					Info:           string(utils.SafeEncoding(info2)),
+					Info:           string(utils.SafeEncoding(info)),
 				},
 			},
 			trxTenor: response.UsecaseApi{
@@ -1235,7 +1228,6 @@ func TestMetrics(t *testing.T) {
 			trxFMF: response.TrxFMF{
 				DupcheckData: response.SpDupcheckMap{
 					CustomerID: "123456",
-					Cluster:    "Cluster A",
 				},
 				DSRFMF: float64(0),
 				AgreementCONFINS: []response.AgreementCONFINS{

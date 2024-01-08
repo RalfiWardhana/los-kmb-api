@@ -129,6 +129,7 @@ type DupcheckApi struct {
 	CustomerSegment       string             `json:"customer_segment"`
 	Dealer                string             `json:"dealer"`
 	AdminFee              *float64           `json:"admin_fee" validate:"required,max=999999999999" example:"1500000"`
+	Cluster               string             `json:"-"`
 }
 
 type SpouseDupcheck struct {

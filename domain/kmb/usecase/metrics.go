@@ -329,6 +329,8 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 	// get config max dsr
 	if mappingCluster.Cluster != "" {
+		reqDupcheck.Cluster = mappingCluster.Cluster
+
 		mappingMaxDSR := entity.MasterMappingMaxDSR{
 			Cluster: mappingCluster.Cluster,
 		}
@@ -346,10 +348,6 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	dupcheckData, customerStatus, metricsDupcheck, trxFMFDupcheck, trxDetailDupcheck, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken, configValue)
 	if err != nil {
 		return
-	}
-
-	if mappingCluster.Cluster != "" {
-		dupcheckData.Cluster = mappingCluster.Cluster
 	}
 
 	trxFMF.DupcheckData = dupcheckData
