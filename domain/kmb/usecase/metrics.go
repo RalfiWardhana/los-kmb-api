@@ -329,6 +329,8 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 	// get config max dsr
 	if mappingCluster.Cluster != "" {
+		reqDupcheck.Cluster = mappingCluster.Cluster
+
 		mappingMaxDSR := entity.MasterMappingMaxDSR{
 			Cluster: mappingCluster.Cluster,
 		}
