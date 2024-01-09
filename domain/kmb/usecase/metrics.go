@@ -209,6 +209,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 				SourceDecision: constant.SOURCE_DECISION_TENOR,
 				CreatedBy:      constant.SYSTEM_CREATED,
 				Reason:         trxTenor.Reason,
+				Info:           fmt.Sprintf("Cluster: %s", mappingCluster.Cluster),
 			})
 
 			resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, trxTenor.Reason)
@@ -228,6 +229,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			NextStep:       constant.SOURCE_DECISION_DUPCHECK,
 			CreatedBy:      constant.SYSTEM_CREATED,
 			Reason:         trxTenor.Reason,
+			Info:           fmt.Sprintf("Cluster: %s", mappingCluster.Cluster),
 		})
 	}
 
