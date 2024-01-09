@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"los-kmb-api/domain/kmb/interfaces/mocks"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
@@ -549,22 +550,22 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			},
 		},
 		{
-			name:                "TotalDsrFmfPbk reject",
-			totalIncome:         6000000,
-			newInstallment:      2000000,
-			totalInstallmentPBK: 30000,
+			name:                "TotalDsrFmfPbk pass new",
+			totalIncome:         7200000,
+			newInstallment:      2240000,
+			totalInstallmentPBK: 1000000,
 			prospectID:          "TEST1",
 			customerSegment:     "",
 			accessToken:         "token",
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
-				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":45,"minimum_pencairan_ro_top_up":5000000}}`,
 			},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
-				Dsr:            30,
+				Dsr:            31.11111111111111,
 				CustomerID:     "",
-				ConfigMaxDSR:   35,
+				ConfigMaxDSR:   45,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
@@ -573,8 +574,8 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 			},
 			trxFMF: response.TrxFMF{
-				DSRPBK:   float64(0.5),
-				TotalDSR: float64(30.5),
+				DSRPBK:   float64(13.88888888888889),
+				TotalDSR: float64(45),
 			},
 		},
 		{
@@ -810,9 +811,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 		},
 		{
 			name:                "TotalDsrFmfPbk ao priority NumberOfPaidInstallment >= 6",
-			totalIncome:         6000000,
-			newInstallment:      200000,
-			totalInstallmentPBK: 30000,
+			totalIncome:         7200000,
+			newInstallment:      2240000,
+			totalInstallmentPBK: 1000000,
 			prospectID:          "TEST1",
 			customerSegment:     constant.RO_AO_PRIORITY,
 			accessToken:         "token",
@@ -834,7 +835,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 			},
 			trxFMF: response.TrxFMF{
-				DSRPBK:   float64(0.5),
+				DSRPBK:   float64(13.88888888888889),
 				TotalDSR: float64(30),
 			},
 		},
@@ -925,6 +926,12 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
+			dsrPBK := tc.totalInstallmentPBK / tc.totalIncome * 100
+
+			totalDSR := tc.SpDupcheckMap.Dsr + dsrPBK
+
+			log.Println(tc.name)
+			log.Println(totalDSR)
 
 			var configValue response.DupcheckConfig
 			json.Unmarshal([]byte(tc.configValue.Value), &configValue)
@@ -944,6 +951,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
 			data, trx, err := usecase.TotalDsrFmfPbk(ctx, tc.totalIncome, tc.newInstallment, tc.totalInstallmentPBK, tc.prospectID, tc.customerSegment, tc.accessToken, tc.SpDupcheckMap, configValue)
+
 			require.Equal(t, tc.result, data)
 			require.Equal(t, tc.trxFMF, trx)
 			require.Equal(t, tc.errResult, err)

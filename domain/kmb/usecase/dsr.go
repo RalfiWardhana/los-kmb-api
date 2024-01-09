@@ -351,7 +351,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 		}
 	}
 
-	if totalDSR < configValue.Data.MaxDsr {
+	if totalDSR <= configValue.Data.MaxDsr {
 		data = response.UsecaseApi{
 			Result:         constant.DECISION_PASS,
 			Code:           constant.CODE_TOTAL_DSRLTE35,
