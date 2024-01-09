@@ -449,6 +449,7 @@ func TestMetrics(t *testing.T) {
 					SourceDecision: constant.SOURCE_DECISION_TENOR,
 					CreatedBy:      constant.SYSTEM_CREATED,
 					Reason:         "REJECT TENOR 36",
+					Info:           fmt.Sprintf("Cluster : "),
 				},
 			},
 			trxTenor: response.UsecaseApi{
@@ -490,6 +491,7 @@ func TestMetrics(t *testing.T) {
 					SourceDecision: constant.SOURCE_DECISION_TENOR,
 					CreatedBy:      constant.SYSTEM_CREATED,
 					Reason:         "REJECT TENOR 36",
+					Info:           fmt.Sprintf("Cluster : "),
 				},
 			},
 			trxTenor: response.UsecaseApi{
@@ -789,6 +791,7 @@ func TestMetrics(t *testing.T) {
 					NextStep:       constant.SOURCE_DECISION_DUPCHECK,
 					CreatedBy:      constant.SYSTEM_CREATED,
 					Reason:         "PASS TENOR 36",
+					Info:           fmt.Sprintf("Cluster : "),
 				},
 				{
 					ProspectID:     "TEST1",
@@ -1180,6 +1183,7 @@ func TestMetrics(t *testing.T) {
 					NextStep:       constant.SOURCE_DECISION_DUPCHECK,
 					CreatedBy:      constant.SYSTEM_CREATED,
 					Reason:         "PASS TENOR 36",
+					Info:           fmt.Sprintf("Cluster : Cluster A"),
 				},
 				{
 					ProspectID:     "TEST1",
@@ -1274,7 +1278,7 @@ func TestMetrics(t *testing.T) {
 			mockRepository.On("MasterMappingMaxDSR", mock.Anything).Return(tc.mappingMaxDSR, tc.errmappingMaxDSR)
 			mockUsecase.On("SaveTransaction", tc.countTrx, tc.reqMetrics, tc.trxPrescreening, tc.trxFMF, tc.details, mock.Anything).Return(tc.resultMetrics, tc.errSaveTransaction)
 			mockUsecase.On("Prescreening", ctx, tc.reqMetrics, tc.filtering, "token").Return(tc.trxPrescreening, tc.trxFMF, tc.trxPrescreeningDetail, tc.errPrescreening)
-			mockUsecase.On("RejectTenor36", tc.reqMetrics.CustomerPersonal.IDNumber).Return(tc.trxTenor, tc.errRejectTenor36)
+			mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.trxTenor, tc.errRejectTenor36)
 			mockRepository.On("GetConfig", "dupcheck", "KMB-OFF", "dupcheck_kmb_config").Return(tc.config, tc.errGetConfig)
 			mockMultiUsecase.On("Dupcheck", ctx, mock.Anything, true, "token", tc.configValue).Return(tc.dupcheckData, tc.customerStatus, tc.metricsDupcheck, tc.trxFMFDupcheck, tc.trxDetailDupcheck, tc.errDupcheck)
 

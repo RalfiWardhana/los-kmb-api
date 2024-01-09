@@ -7,12 +7,6 @@ import (
 	"los-kmb-api/shared/constant"
 )
 
-func jsonToMap(jsonStr string) map[string]interface{} {
-	result := make(map[string]interface{})
-	json.Unmarshal([]byte(jsonStr), &result)
-	return result
-}
-
 func (u usecase) RejectTenor36(cluster string) (result response.UsecaseApi, err error) {
 
 	var (
