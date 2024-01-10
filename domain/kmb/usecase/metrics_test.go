@@ -633,6 +633,12 @@ func TestMetrics(t *testing.T) {
 				Result: constant.DECISION_PASS,
 				Reason: "PASS TENOR 36",
 			},
+			mappingCluster: entity.MasterMappingCluster{
+				Cluster: "Cluster A",
+			},
+			mappingMaxDSR: entity.MasterMappingMaxDSR{
+				DSRThreshold: 35,
+			},
 			config: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35}}`,
@@ -712,6 +718,12 @@ func TestMetrics(t *testing.T) {
 				Code:   "123",
 				Result: constant.DECISION_PASS,
 				Reason: "PASS TENOR 36",
+			},
+			mappingCluster: entity.MasterMappingCluster{
+				Cluster: "Cluster A",
+			},
+			mappingMaxDSR: entity.MasterMappingMaxDSR{
+				DSRThreshold: 35,
 			},
 			config: entity.AppConfig{
 				Key:   "parameterize",
@@ -805,6 +817,10 @@ func TestMetrics(t *testing.T) {
 				Code:   "123",
 				Result: constant.DECISION_PASS,
 				Reason: "PASS TENOR 36",
+			},
+			mappingCluster: entity.MasterMappingCluster{},
+			mappingMaxDSR: entity.MasterMappingMaxDSR{
+				DSRThreshold: 35,
 			},
 			config: entity.AppConfig{
 				Key:   "parameterize",

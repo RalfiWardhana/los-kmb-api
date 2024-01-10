@@ -328,21 +328,23 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	json.Unmarshal([]byte(config.Value), &configValue)
 
 	// get config max dsr
-	if mappingCluster.Cluster != "" {
-		reqDupcheck.Cluster = mappingCluster.Cluster
+	if mappingCluster.Cluster == "" {
+		mappingCluster.Cluster = "Cluster C"
+	}
 
-		mappingMaxDSR := entity.MasterMappingMaxDSR{
-			Cluster: mappingCluster.Cluster,
+	reqDupcheck.Cluster = mappingCluster.Cluster
+
+	mappingMaxDSR := entity.MasterMappingMaxDSR{
+		Cluster: mappingCluster.Cluster,
+	}
+	mappingMaxDSR, err = u.repository.MasterMappingMaxDSR(mappingMaxDSR)
+	if err != nil {
+		if err.Error() != constant.DATA_NOT_FOUND {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Max DSR error")
+			return
 		}
-		mappingMaxDSR, err = u.repository.MasterMappingMaxDSR(mappingMaxDSR)
-		if err != nil {
-			if err.Error() != constant.DATA_NOT_FOUND {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Max DSR error")
-				return
-			}
-		} else {
-			configValue.Data.MaxDsr = mappingMaxDSR.DSRThreshold
-		}
+	} else {
+		configValue.Data.MaxDsr = mappingMaxDSR.DSRThreshold
 	}
 
 	dupcheckData, customerStatus, metricsDupcheck, trxFMFDupcheck, trxDetailDupcheck, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken, configValue)
