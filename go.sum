@@ -3,8 +3,8 @@ cloud.google.com/go v0.34.0/go.mod h1:aQUYkXzVsufM+DwF1aE+0xfcU+56JwCaLick0ClmMT
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/DATA-DOG/go-sqlmock v1.5.0 h1:Shsta01QNfFxHCfpW6YH2STWB0MudeXXEWMr20OEh60=
 github.com/DATA-DOG/go-sqlmock v1.5.0/go.mod h1:f/Ixk793poVmq4qj/V1dPUg2JEAKC73Q5eFN3EC/SaM=
-github.com/KB-FMF/platform-library v1.0.13 h1:H9w8H5UcIlk6KCPiw+hlj0O8OCDdZA0a206xfjqXIVs=
-github.com/KB-FMF/platform-library v1.0.13/go.mod h1:UuA86SioNq0yXtWMydqu+3LSWAheonMrtsbJvn4tZBA=
+github.com/KB-FMF/platform-library v1.0.20 h1:PPEQfNbG+1a1WvKH7wwdXbn6RUlhD75msAYCpjDZD9g=
+github.com/KB-FMF/platform-library v1.0.20/go.mod h1:UuA86SioNq0yXtWMydqu+3LSWAheonMrtsbJvn4tZBA=
 github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc=
 github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6XgeJcm8brE=
 github.com/PuerkitoBio/goquery v1.5.1/go.mod h1:GsLWisAFVj4WgDibEWF4pvYnkVQBpKBKeU+7zCJoLcc=
