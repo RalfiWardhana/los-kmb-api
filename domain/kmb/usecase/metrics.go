@@ -194,9 +194,17 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	//  STEP 3 tenor 36
 	if reqMetrics.Apk.Tenor >= 36 {
 		var trxTenor response.UsecaseApi
-		trxTenor, err = u.usecase.RejectTenor36(mappingCluster.Cluster)
-		if err != nil {
-			return
+		if reqMetrics.Apk.Tenor == 36 {
+			trxTenor, err = u.usecase.RejectTenor36(reqMetrics.CustomerPersonal.IDNumber)
+			if err != nil {
+				return
+			}
+		} else if reqMetrics.Apk.Tenor > 36 {
+			trxTenor = response.UsecaseApi{
+				Code:   constant.CODE_REJECT_TENOR,
+				Result: constant.DECISION_REJECT,
+				Reason: constant.REASON_REJECT_TENOR,
+			}
 		}
 
 		if trxTenor.Result == constant.DECISION_REJECT {
