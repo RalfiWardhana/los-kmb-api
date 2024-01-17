@@ -224,16 +224,19 @@ type ResponsePefindo struct {
 }
 
 type PefindoResult struct {
-	SearchID                string      `json:"search_id"`
-	PefindoID               string      `json:"pefindo_id"`
-	Score                   string      `json:"score"`
-	MaxOverdue              interface{} `json:"max_overdue"`
-	MaxOverdueLast12Months  interface{} `json:"max_overdue_last12months"`
-	AngsuranAktifPbk        float64     `json:"angsuran_aktif_pbk"`
-	WoContract              bool        `json:"wo_contract"`
-	WoAdaAgunan             bool        `json:"wo_ada_agunan"`
-	TotalBakiDebetNonAgunan float64     `json:"total_baki_debet_non_agunan"`
-	DetailReport            string      `json:"detail_report"`
+	SearchID                   string      `json:"search_id"`
+	PefindoID                  string      `json:"pefindo_id"`
+	Score                      string      `json:"score"`
+	MaxOverdue                 interface{} `json:"max_overdue"`
+	MaxOverdueLast12Months     interface{} `json:"max_overdue_last12months"`
+	AngsuranAktifPbk           float64     `json:"angsuran_aktif_pbk"`
+	WoContract                 bool        `json:"wo_contract"`
+	WoAdaAgunan                bool        `json:"wo_ada_agunan"`
+	TotalBakiDebetNonAgunan    float64     `json:"total_baki_debet_non_agunan"`
+	DetailReport               string      `json:"detail_report"`
+	OverdueCategory            float64     `json:"overdue_category"`
+	OverdueLastKORules         interface{} `json:"overdue_last_ko_rules"`
+	OverdueLast12MonthsKORules interface{} `json:"overdue_last_12month_ko_rules"`
 }
 
 type PefindoResultKonsumen struct {
