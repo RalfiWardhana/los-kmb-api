@@ -739,17 +739,17 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 				if pefindoResult.OverdueLast12MonthsKORules != nil {
 					if checkNullMaxOverdueLast12Months(pefindoResult.OverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12 {
 						if pefindoResult.OverdueLast12MonthsKORules == nil {
-							data.Code = constant.NAMA_BEDA_CURRENT_OVD_NULL_CODE
+							data.Code = constant.NAMA_SAMA_CURRENT_OVD_NULL_CODE
 							data.StatusKonsumen = status_konsumen
 							data.Decision = constant.DECISION_PASS
 							data.Reason = fmt.Sprintf("NAMA SAMA & PBK OVD 12 Bulan Terakhir <= %d", constant.PBK_OVD_LAST_12)
 						} else if checkNullMaxOverdue(pefindoResult.OverdueLastKORules) <= constant.PBK_OVD_CURRENT {
-							data.Code = constant.NAMA_BEDA_CURRENT_OVD_UNDER_LIMIT_CODE
+							data.Code = constant.NAMA_SAMA_CURRENT_OVD_UNDER_LIMIT_CODE
 							data.StatusKonsumen = status_konsumen
 							data.Decision = constant.DECISION_PASS
 							data.Reason = fmt.Sprintf("NAMA SAMA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
 						} else if checkNullMaxOverdue(pefindoResult.OverdueLastKORules) > constant.PBK_OVD_CURRENT {
-							data.Code = constant.NAMA_BEDA_CURRENT_OVD_OVER_LIMIT_CODE
+							data.Code = constant.NAMA_SAMA_CURRENT_OVD_OVER_LIMIT_CODE
 							data.StatusKonsumen = status_konsumen
 							data.Reason = fmt.Sprintf("NAMA SAMA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
 
@@ -760,7 +760,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 							}
 						}
 					} else {
-						data.Code = constant.NAMA_BEDA_12_OVD_OVER_LIMIT_CODE
+						data.Code = constant.NAMA_SAMA_12_OVD_OVER_LIMIT_CODE
 						data.StatusKonsumen = status_konsumen
 						data.Reason = fmt.Sprintf("NAMA SAMA & OVD 12 Bulan Terakhir > %d", constant.PBK_OVD_LAST_12)
 
@@ -771,7 +771,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 						}
 					}
 				} else {
-					data.Code = constant.NAMA_BEDA_12_OVD_NULL_CODE
+					data.Code = constant.NAMA_SAMA_12_OVD_NULL_CODE
 					data.StatusKonsumen = status_konsumen
 					data.Decision = constant.DECISION_PASS
 					data.Reason = "NAMA SAMA & OVD 12 Bulan Terakhir Null"
