@@ -199,12 +199,14 @@ func main() {
 
 	// define kmb filtering domain
 	kmbFilteringRepo := filteringRepository.NewRepository(minilosKMB, kpLos, kpLosLogs)
-	kmbFilteringMultiCase, kmbFilteringCase := filteringUsecase.NewMultiUsecase(kmbFilteringRepo, httpClient)
+	kmbFilteringUsecase := filteringUsecase.NewUsecase(kmbFilteringRepo, httpClient)
+	kmbFilteringMultiCase, kmbFilteringCase := filteringUsecase.NewMultiUsecase(kmbFilteringRepo, httpClient, kmbFilteringUsecase)
 	filteringDelivery.FilteringHandler(apiGroup, kmbFilteringMultiCase, kmbFilteringCase, kmbFilteringRepo, jsonResponse, accessToken)
 
 	// define kmb elaborate domain
 	kmbElaborateRepo := elaborateRepository.NewRepository(minilosKMB, kpLos)
-	kmbElaborateMultiCase, kmbElaborateCase := elaborateUsecase.NewMultiUsecase(kmbElaborateRepo, httpClient)
+	kmbElaborateUsecase := elaborateUsecase.NewUsecase(kmbElaborateRepo, httpClient)
+	kmbElaborateMultiCase, kmbElaborateCase := elaborateUsecase.NewMultiUsecase(kmbElaborateRepo, httpClient, kmbElaborateUsecase)
 	elaborateDelivery.ElaborateHandler(apiGroup, kmbElaborateMultiCase, kmbElaborateCase, kmbElaborateRepo, jsonResponse, accessToken)
 
 	// define new kmb filtering domain
