@@ -189,10 +189,11 @@ func TestElaborate(t *testing.T) {
 				},
 			},
 			resResultElaborate: response.ElaborateResult{
-				Code:     constant.CODE_REJECT_NTF_ELABORATE,
-				Decision: constant.DECISION_REJECT,
-				Reason:   constant.REASON_REJECT_NTF_ELABORATE,
-				LTV:      50,
+				Code:         constant.CODE_REJECT_NTF_ELABORATE,
+				Decision:     constant.DECISION_REJECT,
+				Reason:       constant.REASON_REJECT_NTF_ELABORATE,
+				LTV:          50,
+				IsMappingOvd: true,
 			},
 			errUpdateDataElaborate: errors.New("failed update data api elaborate"),
 			resFinal: response.ElaborateResult{
@@ -234,6 +235,9 @@ func TestResultElaborate(t *testing.T) {
 	reqID := utils.GenerateUUID()
 	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
 
+	pefindoUnscoreValue := constant.UNSCORE_PBK
+	pefindoNotMatchValue := constant.NOT_MATCH_PBK
+
 	testCases := []struct {
 		name                         string
 		req                          request.BodyRequestElaborate
@@ -243,6 +247,8 @@ func TestResultElaborate(t *testing.T) {
 		errGetFilteringResult        error
 		resGetResultElaborate        entity.ResultElaborate
 		errGetResultElaborate        error
+		resGetMappingLtvOvd          entity.ResultElaborate
+		errGetMappingLtvOvd          error
 		resFinal                     response.ElaborateResult
 		errFinal                     error
 	}{
@@ -264,7 +270,7 @@ func TestResultElaborate(t *testing.T) {
 					NTF:               23571178,
 				},
 			},
-			errFinal: errors.New("failed process elaborate"),
+			errFinal: errors.New("error parsing manufacturing year"),
 		},
 		{
 			name: "TEST_ERROR_ResultElaborate_GetClusterBranchElaborate",
@@ -387,7 +393,8 @@ func TestResultElaborate(t *testing.T) {
 				Cluster: "Cluster A",
 			},
 			resGetFilteringResult: entity.ApiDupcheckKmbUpdate{
-				RequestID: "TEST123",
+				RequestID:    "TEST123",
+				PefindoScore: &pefindoUnscoreValue,
 			},
 			resGetResultElaborate: entity.ResultElaborate{
 				Decision: constant.DECISION_REJECT,
@@ -428,8 +435,9 @@ func TestResultElaborate(t *testing.T) {
 				Cluster: "Cluster A",
 			},
 			resGetFilteringResult: entity.ApiDupcheckKmbUpdate{
-				RequestID: "TEST123",
-				PefindoID: "1676593952",
+				RequestID:    "TEST123",
+				PefindoID:    "1676593952",
+				PefindoScore: &pefindoUnscoreValue,
 			},
 			resGetResultElaborate: entity.ResultElaborate{
 				Decision: constant.DECISION_REJECT,
@@ -439,7 +447,7 @@ func TestResultElaborate(t *testing.T) {
 				Code:           constant.CODE_REJECT_ELABORATE,
 				Decision:       constant.DECISION_REJECT,
 				Reason:         constant.REASON_REJECT_ELABORATE,
-				ResultPefindo:  constant.DECISION_PASS,
+				ResultPefindo:  constant.DECISION_PBK_NO_HIT,
 				Cluster:        "Cluster A",
 				BPKBNameType:   0,
 				AgeVehicle:     ">12",
@@ -474,7 +482,7 @@ func TestResultElaborate(t *testing.T) {
 				Decision: constant.DECISION_REJECT,
 				LTV:      0,
 			},
-			errGetResultElaborate: errors.New("failed get result elaborate"),
+			errGetResultElaborate: errors.New("failed get mapping elaborate ltv"),
 			resFinal: response.ElaborateResult{
 				ResultPefindo:  constant.DECISION_PASS,
 				Cluster:        "Cluster A",
@@ -484,7 +492,52 @@ func TestResultElaborate(t *testing.T) {
 				LTV:            0,
 				TotalBakiDebet: 11000000.00,
 			},
-			errFinal: errors.New("failed get result elaborate"),
+			errFinal: errors.New("failed get mapping elaborate ltv"),
+		},
+		{
+			name: "TEST_ERROR_GetFilteringResult",
+			req: request.BodyRequestElaborate{
+				ClientKey: "$2y$10$5X1gt1p11.CWbm.Gtgg7E.bATsMup..KhU2HeY/RJRteoW7UwT9N6",
+				Data: request.DataElaborate{
+					ProspectID:        "NE65499A4AA35CF",
+					BranchID:          "426",
+					BPKBName:          "O",
+					CustomerStatus:    constant.STATUS_KONSUMEN_RO_AO,
+					CategoryCustomer:  "",
+					ResultPefindo:     constant.DECISION_PASS,
+					TotalBakiDebet:    11000000.00,
+					Tenor:             12,
+					ManufacturingYear: "2010",
+					OTR:               35355000,
+					NTF:               23571178,
+				},
+			},
+			resGetClusterBranchElaborate: entity.ClusterBranch{
+				Cluster: "Cluster A",
+			},
+			resGetFilteringResult: entity.ApiDupcheckKmbUpdate{
+				RequestID:    "TEST123",
+				PefindoID:    "1676593952",
+				PefindoScore: &pefindoUnscoreValue,
+			},
+			errGetFilteringResult: errors.New("failed retrieve filtering result"),
+			resGetResultElaborate: entity.ResultElaborate{
+				Decision: constant.DECISION_PASS,
+				LTV:      0,
+			},
+			resFinal: response.ElaborateResult{
+				Code:           constant.CODE_PASS_ELABORATE,
+				Decision:       constant.DECISION_PASS,
+				Reason:         constant.REASON_PASS_ELABORATE,
+				ResultPefindo:  constant.DECISION_PBK_NO_HIT,
+				Cluster:        "Cluster A",
+				BPKBNameType:   0,
+				AgeVehicle:     ">12",
+				LTVOrigin:      67,
+				LTV:            0,
+				TotalBakiDebet: 11000000.00,
+			},
+			errFinal: errors.New("failed retrieve filtering result"),
 		},
 		{
 			name: "TEST_PASS_ResultElaborate",
@@ -508,12 +561,18 @@ func TestResultElaborate(t *testing.T) {
 				Cluster: "Cluster A",
 			},
 			resGetFilteringResult: entity.ApiDupcheckKmbUpdate{
-				RequestID: "TEST123",
-				PefindoID: "1676593952",
+				RequestID:    "TEST123",
+				PefindoID:    "1676593952",
+				PefindoScore: &pefindoNotMatchValue,
 			},
 			resGetResultElaborate: entity.ResultElaborate{
 				Decision: constant.DECISION_PASS,
 				LTV:      0,
+			},
+			resGetMappingLtvOvd: entity.ResultElaborate{
+				Cluster:  "Cluster D",
+				Decision: constant.DECISION_PASS,
+				LTV:      60,
 			},
 			resFinal: response.ElaborateResult{
 				Code:           constant.CODE_PASS_ELABORATE,
@@ -538,6 +597,7 @@ func TestResultElaborate(t *testing.T) {
 			mockRepository.On("GetClusterBranchElaborate", mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetClusterBranchElaborate, tc.errGetClusterBranchElaborate).Once()
 			mockRepository.On("GetFilteringResult", mock.Anything).Return(tc.resGetFilteringResult, tc.errGetFilteringResult).Once()
 			mockRepository.On("GetResultElaborate", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetResultElaborate, tc.errGetResultElaborate).Once()
+			mockRepository.On("GetMappingLtvOvd", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetMappingLtvOvd, tc.errGetMappingLtvOvd).Once()
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 

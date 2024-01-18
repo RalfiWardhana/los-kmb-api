@@ -13,20 +13,20 @@ type Repository struct {
 	mock.Mock
 }
 
-// GetClusterBranchElaborate provides a mock function with given fields: branch_id, cust_status, bpkb
-func (_m *Repository) GetClusterBranchElaborate(branch_id string, cust_status string, bpkb int) (entity.ClusterBranch, error) {
-	ret := _m.Called(branch_id, cust_status, bpkb)
+// GetClusterBranchElaborate provides a mock function with given fields: branchId, customerStatus, bpkb
+func (_m *Repository) GetClusterBranchElaborate(branchId string, customerStatus string, bpkb int) (entity.ClusterBranch, error) {
+	ret := _m.Called(branchId, customerStatus, bpkb)
 
 	var r0 entity.ClusterBranch
 	if rf, ok := ret.Get(0).(func(string, string, int) entity.ClusterBranch); ok {
-		r0 = rf(branch_id, cust_status, bpkb)
+		r0 = rf(branchId, customerStatus, bpkb)
 	} else {
 		r0 = ret.Get(0).(entity.ClusterBranch)
 	}
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, string, int) error); ok {
-		r1 = rf(branch_id, cust_status, bpkb)
+		r1 = rf(branchId, customerStatus, bpkb)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -55,20 +55,41 @@ func (_m *Repository) GetFilteringResult(prospect_id string) (entity.ApiDupcheck
 	return r0, r1
 }
 
-// GetResultElaborate provides a mock function with given fields: branch_id, cust_status, bpkb, result_pefindo, tenor, age_vehicle, ltv, baki_debet
-func (_m *Repository) GetResultElaborate(branch_id string, cust_status string, bpkb int, result_pefindo string, tenor int, age_vehicle string, ltv float64, baki_debet float64) (entity.ResultElaborate, error) {
-	ret := _m.Called(branch_id, cust_status, bpkb, result_pefindo, tenor, age_vehicle, ltv, baki_debet)
+// GetMappingLtvOvd provides a mock function with given fields: cluster, resultPefindo, tenor, ltv
+func (_m *Repository) GetMappingLtvOvd(cluster string, resultPefindo string, tenor int, ltv float64) (entity.ResultElaborate, error) {
+	ret := _m.Called(cluster, resultPefindo, tenor, ltv)
+
+	var r0 entity.ResultElaborate
+	if rf, ok := ret.Get(0).(func(string, string, int, float64) entity.ResultElaborate); ok {
+		r0 = rf(cluster, resultPefindo, tenor, ltv)
+	} else {
+		r0 = ret.Get(0).(entity.ResultElaborate)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string, int, float64) error); ok {
+		r1 = rf(cluster, resultPefindo, tenor, ltv)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetResultElaborate provides a mock function with given fields: branchId, customerStatus, bpkb, resultPefindo, tenor, ageVehicle, ltv, bakiDebet
+func (_m *Repository) GetResultElaborate(branchId string, customerStatus string, bpkb int, resultPefindo string, tenor int, ageVehicle string, ltv float64, bakiDebet float64) (entity.ResultElaborate, error) {
+	ret := _m.Called(branchId, customerStatus, bpkb, resultPefindo, tenor, ageVehicle, ltv, bakiDebet)
 
 	var r0 entity.ResultElaborate
 	if rf, ok := ret.Get(0).(func(string, string, int, string, int, string, float64, float64) entity.ResultElaborate); ok {
-		r0 = rf(branch_id, cust_status, bpkb, result_pefindo, tenor, age_vehicle, ltv, baki_debet)
+		r0 = rf(branchId, customerStatus, bpkb, resultPefindo, tenor, ageVehicle, ltv, bakiDebet)
 	} else {
 		r0 = ret.Get(0).(entity.ResultElaborate)
 	}
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, string, int, string, int, string, float64, float64) error); ok {
-		r1 = rf(branch_id, cust_status, bpkb, result_pefindo, tenor, age_vehicle, ltv, baki_debet)
+		r1 = rf(branchId, customerStatus, bpkb, resultPefindo, tenor, ageVehicle, ltv, bakiDebet)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -174,7 +174,35 @@ func TestGetFilteringResult(t *testing.T) {
 
 	newDB := NewRepository(gormDB, gormDB)
 
-	query := "SELECT PefindoID, PefindoIDSpouse, PefindoScore FROM api_dupcheck_kmb WHERE ProspectID = ?"
+	query := `SELECT
+				PefindoID,
+				PefindoIDSpouse,
+				CASE
+				WHEN PefindoScore IS NULL then 'UNSCORE'
+				ELSE PefindoScore
+				END AS PefindoScore,
+				CAST(
+				JSON_EXTRACT(ResultPefindo, '$.result.max_overdue') AS SIGNED
+				) AS MaxOverdue,
+				JSON_EXTRACT(ResultPefindo, '$.result.max_overdue') = CAST('null' AS JSON) AS IsNullMaxOverdue,
+				CAST(
+				JSON_EXTRACT(
+					ResultPefindo,
+					'$.result.max_overdue_last12months'
+				) AS SIGNED
+				) AS MaxOverdueLast12Months,
+				JSON_EXTRACT(
+				ResultPefindo,
+				'$.result.max_overdue_last12months'
+				) = CAST('null' AS JSON) AS IsNullMaxOverdueLast12Months
+			FROM
+				api_dupcheck_kmb
+			WHERE
+				ProspectID = ?
+			ORDER BY
+				Timestamp DESC
+			LIMIT
+				1`
 
 	prospectID := "TEST0001"
 

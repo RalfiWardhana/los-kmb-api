@@ -707,7 +707,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 			if bpkbName == constant.NAMA_BEDA {
 				if pefindoResult.OverdueLast12MonthsKORules != nil {
 					if checkNullMaxOverdueLast12Months(pefindoResult.OverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12 {
-						if pefindoResult.OverdueLast12MonthsKORules == nil {
+						if pefindoResult.OverdueLastKORules == nil {
 							data.Code = constant.NAMA_BEDA_CURRENT_OVD_NULL_CODE
 							data.StatusKonsumen = status_konsumen
 							data.Decision = constant.DECISION_PASS
@@ -738,7 +738,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 			} else if bpkbName == constant.NAMA_SAMA {
 				if pefindoResult.OverdueLast12MonthsKORules != nil {
 					if checkNullMaxOverdueLast12Months(pefindoResult.OverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12 {
-						if pefindoResult.OverdueLast12MonthsKORules == nil {
+						if pefindoResult.OverdueLastKORules == nil {
 							data.Code = constant.NAMA_SAMA_CURRENT_OVD_NULL_CODE
 							data.StatusKonsumen = status_konsumen
 							data.Decision = constant.DECISION_PASS
@@ -753,22 +753,24 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 							data.StatusKonsumen = status_konsumen
 							data.Reason = fmt.Sprintf("NAMA SAMA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
 
-							if pefindoResult.OverdueCategory == 3 {
-								data.Decision = constant.DECISION_REJECT
-							} else {
-								data.Decision = constant.DECISION_PASS
-							}
+							data.Decision = func() string {
+								if pefindoResult.OverdueCategory == 3 {
+									return constant.DECISION_REJECT
+								}
+								return constant.DECISION_PASS
+							}()
 						}
 					} else {
 						data.Code = constant.NAMA_SAMA_12_OVD_OVER_LIMIT_CODE
 						data.StatusKonsumen = status_konsumen
 						data.Reason = fmt.Sprintf("NAMA SAMA & OVD 12 Bulan Terakhir > %d", constant.PBK_OVD_LAST_12)
 
-						if pefindoResult.OverdueCategory == 3 {
-							data.Decision = constant.DECISION_REJECT
-						} else {
-							data.Decision = constant.DECISION_PASS
-						}
+						data.Decision = func() string {
+							if pefindoResult.OverdueCategory == 3 {
+								return constant.DECISION_REJECT
+							}
+							return constant.DECISION_PASS
+						}()
 					}
 				} else {
 					data.Code = constant.NAMA_SAMA_12_OVD_NULL_CODE
