@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	filteringMock "los-kmb-api/domain/filtering/interfaces/mocks"
+	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
@@ -11538,6 +11539,218 @@ func TestFilteringPefindo(t *testing.T) {
 
 			mockHttpClient.On("EngineAPI", ctx, constant.FILTERING_LOG, os.Getenv("PBK_URL"), mock.Anything, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, tc.req.Data.ProspectID, accessToken).Return(resp, tc.errPefindo).Once()
 
+			mockRepository.On("UpdateData", mock.Anything).Return(tc.errUpdateData).Once()
+
+			if tc.name == "TEST_PASS_FilteringPefindo_PBKNoHit" {
+				os.Setenv("ACTIVE_PBK", "false")
+			} else {
+				os.Setenv("ACTIVE_PBK", "true")
+			}
+
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			result, err := usecase.FilteringPefindo(ctx, tc.req, tc.statusKonsumen, accessToken)
+
+			require.Equal(t, tc.resFinal, result)
+			require.Equal(t, tc.errFinal, err)
+		})
+	}
+}
+
+func TestFilteringPefindoDummy(t *testing.T) {
+	os.Setenv("NAMA_SAMA", "K,P")
+	os.Setenv("NAMA_BEDA", "O,KK")
+	os.Setenv("ACTIVE_PBK", "true")
+	os.Setenv("DUMMY_PBK", "true")
+
+	accessToken := "token"
+	ctx := context.Background()
+	reqID := utils.GenerateUUID()
+	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
+
+	testCases := []struct {
+		name            string
+		req             request.FilteringRequest
+		statusKonsumen  string
+		resPefindoDummy entity.DummyPBK
+		errPefindoDummy error
+		errUpdateData   error
+		resFinal        response.DupcheckResult
+		errFinal        error
+	}{
+		{
+			name: "TEST_PASS_FilteringPefindo_DummyEmpty_KonsumenNew_Unscore",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "K",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "S",
+					ProfessionID:      "WRST",
+					MobilePhone:       "085720230309",
+				},
+			},
+			statusKonsumen: constant.STATUS_KONSUMEN_NEW,
+			resFinal: response.DupcheckResult{
+				Code:           constant.NAMA_SAMA_UNSCORE_NEW_CODE,
+				Decision:       constant.DECISION_PASS,
+				Reason:         "PBK Tidak Ditemukan - " + constant.STATUS_KONSUMEN_NEW,
+				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
+				NextProcess:    1,
+			},
+		},
+		{
+			name: "TEST_PASS_FilteringPefindo_DummyNotEmpty_KonsumenNew_Unscore",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "K",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "S",
+					ProfessionID:      "WRST",
+					MobilePhone:       "085720230309",
+				},
+			},
+			statusKonsumen: constant.STATUS_KONSUMEN_NEW,
+			resPefindoDummy: entity.DummyPBK{
+				IDNumber: "3275066006789999",
+				Response: `{
+					"code": "201",
+					"status": "SUCCESS",
+					"result": "NOT_MATCH",
+					"konsumen": {
+						"search_id": "kp_653f2dcd17887",
+						"pefindo_id": null,
+						"score": null,
+						"max_overdue": null,
+						"max_overdue_last12months": null,
+						"angsuran_aktif_pbk": null,
+						"wo_contract": null,
+						"wo_ada_agunan": null,
+						"baki_debet_non_agunan": null,
+						"detail_report": null,
+						"plafon": null,
+						"fasilitas_aktif": null,
+						"kualitas_kredit_terburuk": null,
+						"bulan_kualitas_terburuk": null,
+						"baki_debet_kualitas_terburuk": null,
+						"kualitas_kredit_terakhir": null,
+						"bulan_kualitas_kredit_terakhir": null
+					},
+					"pasangan": null,
+					"server_time": "2023-10-30T11:15:10+07:00",
+					"duration_time": "1000 ms"
+				}`,
+			},
+			resFinal: response.DupcheckResult{
+				Code:           constant.NAMA_SAMA_UNSCORE_NEW_CODE,
+				Decision:       constant.DECISION_PASS,
+				Reason:         "PBK Tidak Ditemukan - " + constant.STATUS_KONSUMEN_NEW,
+				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
+				NextProcess:    1,
+			},
+		},
+		{
+			name: "TEST_ERROR_FilteringPefindo_DummyNotEmpty_FailedGetData",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "K",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "S",
+					ProfessionID:      "WRST",
+					MobilePhone:       "085720230309",
+				},
+			},
+			statusKonsumen: constant.STATUS_KONSUMEN_NEW,
+			resPefindoDummy: entity.DummyPBK{
+				IDNumber: "3275066006789999",
+				Response: `{
+					"code": "201",
+					"status": "SUCCESS",
+					"result": "NOT_MATCH",
+					"konsumen": {
+						"search_id": "kp_653f2dcd17887",
+						"pefindo_id": null,
+						"score": null,
+						"max_overdue": null,
+						"max_overdue_last12months": null,
+						"angsuran_aktif_pbk": null,
+						"wo_contract": null,
+						"wo_ada_agunan": null,
+						"baki_debet_non_agunan": null,
+						"detail_report": null,
+						"plafon": null,
+						"fasilitas_aktif": null,
+						"kualitas_kredit_terburuk": null,
+						"bulan_kualitas_terburuk": null,
+						"baki_debet_kualitas_terburuk": null,
+						"kualitas_kredit_terakhir": null,
+						"bulan_kualitas_kredit_terakhir": null
+					},
+					"pasangan": null,
+					"server_time": "2023-10-30T11:15:10+07:00",
+					"duration_time": "1000 ms"
+				}`,
+			},
+			errPefindoDummy: errors.New("failed get data dummy pefindo"),
+			errFinal:        errors.New("failed get data dummy pefindo"),
+		},
+		{
+			name: "TEST_ERROR_FilteringPefindo_DummyNotEmpty_UnmarshalDummyResponse",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "K",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "S",
+					ProfessionID:      "WRST",
+					MobilePhone:       "085720230309",
+				},
+			},
+			statusKonsumen: constant.STATUS_KONSUMEN_NEW,
+			resPefindoDummy: entity.DummyPBK{
+				IDNumber: "3275066006789999",
+				Response: `-`,
+			},
+			errFinal: errors.New("error unmarshal data pefindo dummy"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(filteringMock.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			rst := resty.New()
+			httpmock.ActivateNonDefault(rst.GetClient())
+			defer httpmock.DeactivateAndReset()
+
+			mockRepository.On("DummyDataPbk", tc.req.Data.IDNumber).Return(tc.resPefindoDummy, tc.errPefindoDummy).Once()
 			mockRepository.On("UpdateData", mock.Anything).Return(tc.errUpdateData).Once()
 
 			if tc.name == "TEST_PASS_FilteringPefindo_PBKNoHit" {
