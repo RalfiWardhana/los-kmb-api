@@ -87,6 +87,36 @@ func TestDsrCheck(t *testing.T) {
 		},
 	}
 
+	konsumenOnlyAoPrio := []request.CustomerData{
+		{
+			StatusKonsumen:  constant.STATUS_KONSUMEN_AO,
+			IDNumber:        idNumber,
+			LegalName:       legalName,
+			BirthDate:       birthDate,
+			MotherName:      motherName,
+			CustomerSegment: constant.RO_AO_PRIORITY,
+		},
+	}
+
+	konsumenPasanganRo := []request.CustomerData{
+		{
+			StatusKonsumen: constant.STATUS_KONSUMEN_RO,
+			IDNumber:       idNumber,
+			LegalName:      legalName,
+			BirthDate:      birthDate,
+			MotherName:     motherName,
+		},
+		{
+			StatusKonsumen: "",
+			IDNumber:       idNumber,
+			LegalName:      legalName,
+			BirthDate:      birthDate,
+			MotherName:     motherName,
+		},
+	}
+
+	adminFee := float64(10000)
+
 	testcases := []struct {
 		name                                                                    string
 		body                                                                    string
@@ -102,6 +132,7 @@ func TestDsrCheck(t *testing.T) {
 		installmentAmount, installmentConfins, installmentConfinsSpouse, income float64
 		bodyChassisNumber                                                       string
 		codeChassisNumber                                                       int
+		errRespChassisNumber                                                    error
 	}{
 		{
 			name:           "DsrCheck error EngineAPI",
@@ -152,20 +183,41 @@ func TestDsrCheck(t *testing.T) {
 			income:            400000,
 		},
 		{
+			name:           "DsrCheck ro Call Installment Pending API Error",
+			dupcheckConfig: config,
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+				RangkaNo:   "198091461892",
+			},
+			customerData:       konsumenOnlyRo,
+			code:               200,
+			installmentAmount:  260000,
+			installmentConfins: 200000,
+			income:             400000,
+			codeChassisNumber:  200,
+			bodyChassisNumber: `{ "code": "OK", "message": "operasi berhasil dieksekusi.", "data": { "go_live_date": null, "id_number": "", 
+			"installment_amount": 0, "is_active": false, "is_registered": false, "lc_installment": 0, "legal_name": "", "outstanding_interest": 0, 
+			"outstanding_principal": 0, "status": "" }, "errors": null, "request_id": "e818eaf9-cc7b-40cb-b707-37ab3006ae5c", 
+			"timestamp": "2023-11-02 06:22:17" }`,
+			errResp:   errors.New(constant.ERROR_UPSTREAM + " - Call Installment Pending API Error"),
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - Call Installment Pending API Error"),
+		},
+		{
 			name:           "DsrCheck ro",
 			dupcheckConfig: config,
 			req: request.DupcheckApi{
 				ProspectID: "TEST198091461892",
 				RangkaNo:   "198091461892",
 			},
-			customerData: konsumenOnlyRo,
+			customerData: konsumenPasanganRo,
 			code:         200,
+			body:         `{"messages":"LOS - Installment Pending","errors":null,"data":{"new_wg":75000,"wg_offline":62000,"kmb":241000,"kmob":0,"uc":0,"new_kmb":0},"server_time":"2023-10-18T14:07:34+07:00","request_id":"aa533888-e940-4ac6-8fc2-aee5238d075d"}`,
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
 				Code:           constant.CODE_DSRGT35,
 				Reason:         "RO - Confins DSR > 35",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
-				Dsr:            65,
+				Dsr:            254,
 			},
 			installmentAmount:  260000,
 			installmentConfins: 200000,
@@ -175,6 +227,64 @@ func TestDsrCheck(t *testing.T) {
 			"installment_amount": 0, "is_active": false, "is_registered": false, "lc_installment": 0, "legal_name": "", "outstanding_interest": 0, 
 			"outstanding_principal": 0, "status": "" }, "errors": null, "request_id": "e818eaf9-cc7b-40cb-b707-37ab3006ae5c", 
 			"timestamp": "2023-11-02 06:22:17" }`,
+		},
+		{
+			name:           "DsrCheck ro Call Get Agreement of Chassis Number Timeout",
+			dupcheckConfig: config,
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+				RangkaNo:   "198091461892",
+			},
+			customerData:       konsumenPasanganRo,
+			code:               200,
+			body:               `{"messages":"LOS - Installment Pending","errors":null,"data":{"new_wg":75000,"wg_offline":62000,"kmb":241000,"kmob":0,"uc":0,"new_kmb":0},"server_time":"2023-10-18T14:07:34+07:00","request_id":"aa533888-e940-4ac6-8fc2-aee5238d075d"}`,
+			installmentAmount:  260000,
+			installmentConfins: 200000,
+			income:             400000,
+			codeChassisNumber:  200,
+			bodyChassisNumber: `{ "code": "OK", "message": "operasi berhasil dieksekusi.", "data": { "go_live_date": null, "id_number": "", 
+			"installment_amount": 0, "is_active": false, "is_registered": false, "lc_installment": 0, "legal_name": "", "outstanding_interest": 0, 
+			"outstanding_principal": 0, "status": "" }, "errors": null, "request_id": "e818eaf9-cc7b-40cb-b707-37ab3006ae5c", 
+			"timestamp": "2023-11-02 06:22:17" }`,
+			errRespChassisNumber: errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - DsrCheck Call Get Agreement of Chassis Number Timeout"),
+			errResult:            errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - DsrCheck Call Get Agreement of Chassis Number Timeout"),
+		},
+		{
+			name:           "DsrCheck ro Call Get Agreement of Chassis Number Error",
+			dupcheckConfig: config,
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+				RangkaNo:   "198091461892",
+			},
+			customerData:       konsumenPasanganRo,
+			code:               200,
+			body:               `{"messages":"LOS - Installment Pending","errors":null,"data":{"new_wg":75000,"wg_offline":62000,"kmb":241000,"kmob":0,"uc":0,"new_kmb":0},"server_time":"2023-10-18T14:07:34+07:00","request_id":"aa533888-e940-4ac6-8fc2-aee5238d075d"}`,
+			installmentAmount:  260000,
+			installmentConfins: 200000,
+			income:             400000,
+			codeChassisNumber:  500,
+			bodyChassisNumber: `{ "code": "OK", "message": "operasi berhasil dieksekusi.", "data": { "go_live_date": null, "id_number": "", 
+			"installment_amount": 0, "is_active": false, "is_registered": false, "lc_installment": 0, "legal_name": "", "outstanding_interest": 0, 
+			"outstanding_principal": 0, "status": "" }, "errors": null, "request_id": "e818eaf9-cc7b-40cb-b707-37ab3006ae5c", 
+			"timestamp": "2023-11-02 06:22:17" }`,
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - DsrCheck Call Get Agreement of Chassis Number Error"),
+		},
+		{
+			name:           "DsrCheck ro Unmarshal Get Agreement of Chassis Number Error",
+			dupcheckConfig: config,
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+				RangkaNo:   "198091461892",
+			},
+			customerData:       konsumenPasanganRo,
+			code:               200,
+			body:               `{"messages":"LOS - Installment Pending","errors":null,"data":{"new_wg":75000,"wg_offline":62000,"kmb":241000,"kmob":0,"uc":0,"new_kmb":0},"server_time":"2023-10-18T14:07:34+07:00","request_id":"aa533888-e940-4ac6-8fc2-aee5238d075d"}`,
+			installmentAmount:  260000,
+			installmentConfins: 200000,
+			income:             400000,
+			codeChassisNumber:  200,
+			bodyChassisNumber:  `{ "response salah" }`,
+			errResult:          errors.New(constant.ERROR_UPSTREAM + " - DsrCheck Unmarshal Get Agreement of Chassis Number Error"),
 		},
 		{
 			name:           "DsrCheck ro prime",
@@ -242,6 +352,8 @@ func TestDsrCheck(t *testing.T) {
 				CustomerSegment: constant.RO_AO_PRIME,
 				OTRPrice:        17000000,
 				DPAmount:        2000000,
+				AdminFee:        &adminFee,
+				Dealer:          constant.DEALER_PSA,
 			},
 			customerData: konsumenOnlyAO,
 			code:         200,
@@ -260,6 +372,33 @@ func TestDsrCheck(t *testing.T) {
 			"installment_amount": 300000, "is_active": true, "is_registered": false, "lc_installment": 3000000, "legal_name": "", "outstanding_interest": 3000000, 
 			"outstanding_principal": 6000000, "status": "" }, "errors": null, "request_id": "e818eaf9-cc7b-40cb-b707-37ab3006ae5c", 
 			"timestamp": "2023-11-02 06:22:17" }`,
+		},
+		{
+			name: "DsrCheck ao top up menunggak err Perhitungan OTR - DP harus lebih dari 0",
+			dupcheckConfig: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":13,"max_ovd":60,"max_ovd_ao_prime_priority":30,"max_ovd_ao_regular":0,"max_dsr":35,"angsuran_berjalan":6,"attempt_pmk_dsr":2,"attempt_nik":2,"attempt_chassis_number":3,"minimum_pencairan_ro_top_up":{"prime":20,"priority":30,"regular":30}}}`,
+			},
+			req: request.DupcheckApi{
+				ProspectID:      "TEST198091461892",
+				RangkaNo:        "198091461892",
+				CustomerSegment: constant.RO_AO_PRIME,
+				OTRPrice:        190000,
+				DPAmount:        2000000,
+				AdminFee:        &adminFee,
+				Dealer:          constant.DEALER_PSA,
+			},
+			customerData:       konsumenOnlyAO,
+			code:               200,
+			installmentAmount:  260000,
+			installmentConfins: 200000,
+			income:             400000,
+			codeChassisNumber:  200,
+			bodyChassisNumber: `{ "code": "OK", "message": "operasi berhasil dieksekusi.", "data": { "go_live_date": null, "id_number": "", 
+			"installment_amount": 300000, "is_active": true, "is_registered": false, "lc_installment": 3000000, "legal_name": "", "outstanding_interest": 3000000, 
+			"outstanding_principal": 6000000, "status": "" }, "errors": null, "request_id": "e818eaf9-cc7b-40cb-b707-37ab3006ae5c", 
+			"timestamp": "2023-11-02 06:22:17" }`,
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - Perhitungan OTR - DP harus lebih dari 0"),
 		},
 		{
 			name:           "DsrCheck ao prime",
@@ -289,6 +428,34 @@ func TestDsrCheck(t *testing.T) {
 			"outstanding_principal": 12000000, "status": "" }, "errors": null, "request_id": "e818eaf9-cc7b-40cb-b707-37ab3006ae5c", 
 			"timestamp": "2023-11-02 06:22:17" }`,
 		},
+		{
+			name:           "DsrCheck ao priority",
+			dupcheckConfig: config,
+			req: request.DupcheckApi{
+				ProspectID:      "TEST198091461892",
+				RangkaNo:        "198091461892",
+				CustomerSegment: constant.RO_AO_PRIORITY,
+				OTRPrice:        17000000,
+				DPAmount:        2000000,
+			},
+			customerData: konsumenOnlyAoPrio,
+			code:         200,
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_DSRLTE35,
+				Reason:         "AO PRIORITY Top Up - Confins DSR <= 35",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+				Dsr:            6.5,
+			},
+			installmentAmount:  260000,
+			installmentConfins: 200000,
+			income:             4000000,
+			codeChassisNumber:  200,
+			bodyChassisNumber: `{ "code": "OK", "message": "operasi berhasil dieksekusi.", "data": { "go_live_date": null, "id_number": "", 
+			"installment_amount": 200000, "is_active": true, "is_registered": false, "lc_installment": 0, "legal_name": "", "outstanding_interest": 0, 
+			"outstanding_principal": 12000000, "status": "" }, "errors": null, "request_id": "e818eaf9-cc7b-40cb-b707-37ab3006ae5c", 
+			"timestamp": "2023-11-02 06:22:17" }`,
+		},
 	}
 
 	for _, tc := range testcases {
@@ -310,6 +477,10 @@ func TestDsrCheck(t *testing.T) {
 
 			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("INSTALLMENT_PENDING_URL"), mock.Anything, mock.Anything, constant.METHOD_POST, true, 2, 60, tc.req.ProspectID, accessToken).Return(resp, tc.errResp).Once()
 
+			if len(tc.customerData) > 1 {
+				mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("INSTALLMENT_PENDING_URL"), mock.Anything, mock.Anything, constant.METHOD_POST, true, 2, 60, tc.req.ProspectID, accessToken).Return(resp, tc.errResp).Once()
+			}
+
 			rst = resty.New()
 			httpmock.ActivateNonDefault(rst.GetClient())
 			defer httpmock.DeactivateAndReset()
@@ -317,7 +488,7 @@ func TestDsrCheck(t *testing.T) {
 			httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL"), httpmock.NewStringResponder(tc.codeChassisNumber, tc.bodyChassisNumber))
 			resp, _ = rst.R().Get(os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL"))
 
-			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+tc.req.RangkaNo, mock.Anything, mock.Anything, constant.METHOD_GET, true, 2, 60, tc.req.ProspectID, accessToken).Return(resp, tc.errResp).Once()
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+tc.req.RangkaNo, mock.Anything, mock.Anything, constant.METHOD_GET, true, 2, 60, tc.req.ProspectID, accessToken).Return(resp, tc.errRespChassisNumber).Once()
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
