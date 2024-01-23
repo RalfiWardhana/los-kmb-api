@@ -353,6 +353,21 @@ type Metrics struct {
 	Surveyor           []Surveyor         `json:"surveyor" validate:"required"`
 }
 
+type MetricsNE struct {
+	Transaction        Transaction        `json:"transaction" validate:"required"`
+	Apk                Apk                `json:"apk" validate:"required"`
+	CustomerPersonal   CustomerPersonal   `json:"customer_personal" validate:"required"`
+	CustomerEmployment CustomerEmployment `json:"customer_employment" validate:"required"`
+	Address            []Address          `json:"address" validate:"len=7,dive"`
+	CustomerPhoto      []CustomerPhoto    `json:"customer_photo" validate:"dive"`
+	CustomerEmcon      CustomerEmcon      `json:"customer_emcon" validate:"required"`
+	CustomerSpouse     *CustomerSpouse    `json:"customer_spouse"`
+	CustomerOmset      *[]CustomerOmset   `json:"customer_omset"`
+	Item               Item               `json:"item" validate:"required"`
+	Agent              Agent              `json:"agent" validate:"required"`
+	Surveyor           []Surveyor         `json:"surveyor" validate:"required"`
+}
+
 type ValidateOmset struct {
 	CustomerOmset []CustomerOmset `json:"customer_omset" validate:"required,len=3"`
 }

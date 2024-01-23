@@ -1892,3 +1892,8 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 
 	return
 }
+
+func (u usecase) SubmitNE(ctx context.Context, req request.Metrics) (data interface{}, err error) {
+
+	return
+}
