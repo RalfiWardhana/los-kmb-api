@@ -526,10 +526,7 @@ func TestResultElaborate(t *testing.T) {
 				LTV:      0,
 			},
 			resFinal: response.ElaborateResult{
-				Code:           constant.CODE_PASS_ELABORATE,
-				Decision:       constant.DECISION_PASS,
-				Reason:         constant.REASON_PASS_ELABORATE,
-				ResultPefindo:  constant.DECISION_PBK_NO_HIT,
+				ResultPefindo:  constant.DECISION_PASS,
 				Cluster:        "Cluster A",
 				BPKBNameType:   0,
 				AgeVehicle:     ">12",
@@ -585,6 +582,7 @@ func TestResultElaborate(t *testing.T) {
 				LTVOrigin:      67,
 				LTV:            0,
 				TotalBakiDebet: 11000000.00,
+				IsMappingOvd:   true,
 			},
 		},
 	}
