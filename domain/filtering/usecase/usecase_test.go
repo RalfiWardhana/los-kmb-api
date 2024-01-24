@@ -8535,7 +8535,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": null,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 1
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -8606,7 +8606,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 29,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 1
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -8677,7 +8677,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 1
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -8748,7 +8748,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 3
+					"category": 3
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -8819,7 +8819,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 3
+					"category": 3
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -8890,7 +8890,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 3
+					"category": 3
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -8961,7 +8961,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 3
+					"category": 3
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9032,7 +9032,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 3
+					"category": 3
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9103,7 +9103,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 3
+					"category": 3
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9174,7 +9174,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 3
+					"category": 3
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9245,7 +9245,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 3
+					"category": 3
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9315,7 +9315,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 3
+					"category": 3
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9385,7 +9385,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 3
+					"category": 3
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9456,7 +9456,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 3
+					"category": 3
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9527,7 +9527,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 3
+					"category": 3
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9598,7 +9598,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 3
+					"category": 3
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9668,7 +9668,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 3
+					"category": 3
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9738,7 +9738,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": null,
 					"overdue_last_12month_ko_rules": 61,
-					"overdue_category": 1
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9809,7 +9809,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": null,
 					"overdue_last_12month_ko_rules": 61,
-					"overdue_category": 3
+					"category": 3
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9880,7 +9880,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": null,
 					"overdue_last_12month_ko_rules": null,
-					"overdue_category": null
+					"category": null
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9951,7 +9951,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": null,
 					"overdue_last_12month_ko_rules": null,
-					"overdue_category": null
+					"category": null
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10022,7 +10022,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": null,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10093,7 +10093,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 29,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10164,7 +10164,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10235,7 +10235,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10306,7 +10306,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10377,7 +10377,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10448,7 +10448,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10519,7 +10519,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10590,7 +10590,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10661,7 +10661,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10731,7 +10731,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10801,7 +10801,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10872,7 +10872,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10943,7 +10943,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -11014,7 +11014,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -11084,7 +11084,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -11172,7 +11172,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": null,
 					"overdue_last_12month_ko_rules": 61,
-					"overdue_category": 2
+					"category": 2
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -11487,7 +11487,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": null,
 					"overdue_last_12month_ko_rules": null,
-					"overdue_category": null
+					"category": null
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
