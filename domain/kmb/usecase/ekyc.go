@@ -69,6 +69,8 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, reqMetricsEk
 		thresholdDukcapil                           entity.ConfigThresholdDukcapil
 		timeout                                     int
 		statusVD, statusFR                          string
+		endpointVd, endpointFr                      string
+		thresholdFr                                 float64
 	)
 
 	config, err := u.repository.GetConfig("dukcapil", "KMB-OFF", "threshold_dukcapil")
@@ -128,7 +130,20 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, reqMetricsEk
 		"transaction_id":      req.Transaction.ProspectID,
 	})
 
-	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("DUKCAPIL_VD_URL"), paramVd, map[string]string{}, constant.METHOD_POST, true, 2, timeout, req.Transaction.ProspectID, accessToken)
+	serviceVD := thresholdDukcapil.Data.VerifyData.Service
+
+	switch serviceVD {
+	case constant.SERVICE_IZIDATA:
+		endpointVd = os.Getenv("IZIDATA_VD_URL")
+	case constant.SERVICE_DUKCAPIL:
+		endpointVd = os.Getenv("DUKCAPIL_VD_URL")
+	default:
+		endpointVd = os.Getenv("DUKCAPIL_VD_URL")
+	}
+
+	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointVd, paramVd, map[string]string{}, constant.METHOD_POST, true, 2, timeout, req.Transaction.ProspectID, accessToken)
+
+	infoDukcapil.VdService = serviceVD
 
 	if resp.StatusCode() == 504 || resp.StatusCode() == 502 {
 		statusVD = constant.EKYC_RTO
@@ -147,7 +162,12 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, reqMetricsEk
 	if err == nil && resp.StatusCode() == 200 {
 
 		json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &verify)
-		codeVD, _, decisionVD = checkEKYC(verify, thresholdDukcapil)
+
+		if serviceVD == constant.SERVICE_IZIDATA {
+			codeVD, _, decisionVD = checkEKYCIzidata(verify, thresholdDukcapil)
+		} else {
+			codeVD, _, decisionVD = checkEKYCDukcapil(verify, thresholdDukcapil)
+		}
 
 		infoDukcapil.Vd = verify
 
@@ -181,15 +201,32 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, reqMetricsEk
 		statusVD = constant.DECISION_PASS
 	}
 
+	serviceFR := thresholdDukcapil.Data.FaceRecognition.Service
+
+	switch serviceFR {
+	case constant.SERVICE_IZIDATA:
+		endpointFr = os.Getenv("IZIDATA_FR_URL")
+		thresholdFr = thresholdDukcapil.Data.FaceRecognition.FRIziData.Threshold
+	case constant.SERVICE_DUKCAPIL:
+		endpointFr = os.Getenv("DUKCAPIL_FR_URL")
+		thresholdFr = thresholdDukcapil.Data.FaceRecognition.FRDukcapil.Threshold
+	default:
+		endpointFr = os.Getenv("DUKCAPIL_FR_URL")
+		parseThreshold, _ := strconv.ParseFloat(strings.TrimSpace(os.Getenv("THRESHOLD_FR")), 64)
+		thresholdFr = parseThreshold
+	}
+
 	//Face Recog
 	paramFr, _ := json.Marshal(map[string]interface{}{
 		"id_number":      req.CustomerPersonal.IDNumber,
 		"selfie_image":   selfie,
-		"threshold":      fmt.Sprintf("%.1f", thresholdDukcapil.Data.FaceRecognition),
+		"threshold":      fmt.Sprintf("%.1f", thresholdFr),
 		"transaction_id": req.Transaction.ProspectID,
 	})
 
-	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("DUKCAPIL_FR_URL"), paramFr, map[string]string{}, constant.METHOD_POST, true, 2, timeout, req.Transaction.ProspectID, accessToken)
+	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointFr, paramFr, map[string]string{}, constant.METHOD_POST, true, 2, timeout, req.Transaction.ProspectID, accessToken)
+
+	infoDukcapil.FrService = serviceFR
 
 	if resp.StatusCode() == 504 || resp.StatusCode() == 502 {
 		statusFR = constant.EKYC_RTO
@@ -206,7 +243,11 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, reqMetricsEk
 	if err == nil && resp.StatusCode() == 200 {
 
 		json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &face)
-		_, _, decisionFR = checkThreshold(face)
+		if serviceFR == constant.SERVICE_IZIDATA {
+			_, _, decisionFR = checkRuleCodeIzidata(face)
+		} else {
+			_, _, decisionFR = checkRuleCodeDukcapil(face)
+		}
 
 		infoDukcapil.Fr = face
 
@@ -424,7 +465,7 @@ func (u usecase) Ktp(ctx context.Context, req request.Metrics, reqMetricsEkyc re
 	return
 }
 
-func checkThreshold(data response.FaceRecognitionIntegratorData) (code, reason, decision string) {
+func checkRuleCodeDukcapil(data response.FaceRecognitionIntegratorData) (code, reason, decision string) {
 
 	switch data.RuleCode {
 	case "6020":
@@ -441,18 +482,35 @@ func checkThreshold(data response.FaceRecognitionIntegratorData) (code, reason, 
 	return
 }
 
-func checkEKYC(data response.VerifyDataIntegratorResponse, thresholdDukcapil entity.ConfigThresholdDukcapil) (code, reason, decision string) {
+func checkRuleCodeIzidata(data response.FaceRecognitionIntegratorData) (code, reason, decision string) {
+
+	switch data.RuleCode {
+	case "6060":
+		code = constant.CODE_FACERECOGNITION_IZIDATA_REJECT_NIK
+		decision = constant.DECISION_REJECT
+	case "6059":
+		code = constant.CODE_FACERECOGNITION_IZIDATA_REJECT_FOTO
+		decision = constant.DECISION_REJECT
+	case "6058":
+		code = constant.CODE_FACERECOGNITION_IZIDATA_PASS
+		decision = constant.DECISION_PASS
+	}
+	reason = data.Reason
+	return
+}
+
+func checkEKYCDukcapil(data response.VerifyDataIntegratorResponse, thresholdDukcapil entity.ConfigThresholdDukcapil) (code, reason, decision string) {
 
 	if data.IsValid {
 		if strings.Contains(data.Nik, "Tidak Sesuai") || strings.Contains(data.TglLhr, "Tidak Sesuai") || strings.Contains(data.JenisKlmin, "Tidak Sesuai") {
 			return constant.CODE_VERIFICATION_REJECT_EKYC, "EKYC Tidak Sesuai", constant.DECISION_REJECT
 		}
 
-		if float64(data.NamaLgkp) < thresholdDukcapil.Data.VerifyData.NamaLengkap {
+		if float64(data.NamaLgkp) < thresholdDukcapil.Data.VerifyData.VDDukcapil.NamaLengkap {
 			return constant.CODE_VERIFICATION_REJECT_EKYC, "EKYC Tidak Sesuai", constant.DECISION_REJECT
 		}
 
-		if float64(data.Alamat) < thresholdDukcapil.Data.VerifyData.Alamat {
+		if float64(data.Alamat) < thresholdDukcapil.Data.VerifyData.VDDukcapil.Alamat {
 			return constant.CODE_VERIFICATION_REJECT_EKYC, "EKYC Tidak Sesuai", constant.DECISION_REJECT
 		}
 
@@ -476,4 +534,35 @@ func checkEKYC(data response.VerifyDataIntegratorResponse, thresholdDukcapil ent
 	reason = *data.Reason
 
 	return
+
+}
+
+func checkEKYCIzidata(data response.VerifyDataIntegratorResponse, configEkyc entity.ConfigThresholdDukcapil) (code, reason, decision string) {
+
+	if data.IsValid {
+		if strings.Contains(data.Nik, "Tidak Sesuai") || strings.Contains(data.TglLhr, "Tidak Sesuai") {
+			return constant.CODE_IZIDATA_REJECT_INVALID, "EKYC Tidak Sesuai", constant.DECISION_REJECT
+		}
+
+		if float64(data.NamaLgkp) < configEkyc.Data.VerifyData.VDIziData.NamaLengkap {
+			return constant.CODE_IZIDATA_REJECT_INVALID, "EKYC Tidak Sesuai", constant.DECISION_REJECT
+		}
+
+		return constant.CODE_IZIDATA_PASS_VALID, "EKYC Sesuai", constant.DECISION_PASS
+
+	}
+
+	//Data Invalid
+	switch *data.Reason {
+	case constant.DATA_INVALID:
+		code = constant.CODE_IZIDATA_REJECT_INVALID
+		decision = constant.DECISION_REJECT
+	case constant.DATA_NOT_FOUND:
+		code = constant.CODE_IZIDATA_REJECT_NOT_FOUND
+		decision = constant.DECISION_REJECT
+	}
+	reason = *data.Reason
+
+	return
+
 }
