@@ -3028,8 +3028,8 @@ func (r repoHandler) SubmitNE(req request.MetricsNE, filtering request.Filtering
 	err = r.NewKmb.Transaction(func(tx *gorm.DB) error {
 		var encrypted entity.Encrypted
 
-		if err := tx.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS LegalName, SCP.dbo.ENC_B64('SEC','%s') AS SurgateMotherName, SCP.dbo.ENC_B64('SEC','%s') AS IDNumber`,
-			req.CustomerPersonal.LegalName, req.CustomerPersonal.SurgateMotherName, req.CustomerPersonal.IDNumber)).Scan(&encrypted).Error; err != nil {
+		if err := tx.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS LegalName,  SCP.dbo.ENC_B64('SEC','%s') AS IDNumber`,
+			req.CustomerPersonal.LegalName, req.CustomerPersonal.IDNumber)).Scan(&encrypted).Error; err != nil {
 			return err
 		}
 
@@ -3038,18 +3038,17 @@ func (r repoHandler) SubmitNE(req request.MetricsNE, filtering request.Filtering
 		PayloadLTV, _ := json.Marshal(elaboreateLTV)
 		PayloadJourney, _ := json.Marshal(journey)
 		ne := entity.NewEntry{
-			ProspectID:        req.Transaction.ProspectID,
-			BranchID:          req.Transaction.BranchID,
-			IDNumber:          encrypted.IDNumber,
-			LegalName:         encrypted.LegalName,
-			BirthDate:         req.CustomerPersonal.BirthDate,
-			SurgateMotherName: encrypted.SurgateMotherName,
-			CreatedByID:       req.CreatedBy.CreatedByID,
-			CreatedByName:     req.CreatedBy.CreatedByName,
-			PayloadNE:         utils.SafeJsonReplacer(string(PayloadNE)),
-			PayloadFiltering:  utils.SafeJsonReplacer(string(PayloadFiltering)),
-			PayloadLTV:        utils.SafeJsonReplacer(string(PayloadLTV)),
-			PayloadJourney:    utils.SafeJsonReplacer(string(PayloadJourney)),
+			ProspectID:       req.Transaction.ProspectID,
+			BranchID:         req.Transaction.BranchID,
+			IDNumber:         encrypted.IDNumber,
+			LegalName:        encrypted.LegalName,
+			BirthDate:        req.CustomerPersonal.BirthDate,
+			CreatedByID:      req.CreatedBy.CreatedByID,
+			CreatedByName:    req.CreatedBy.CreatedByName,
+			PayloadNE:        utils.SafeJsonReplacer(string(PayloadNE)),
+			PayloadFiltering: utils.SafeJsonReplacer(string(PayloadFiltering)),
+			PayloadLTV:       utils.SafeJsonReplacer(string(PayloadLTV)),
+			PayloadJourney:   utils.SafeJsonReplacer(string(PayloadJourney)),
 		}
 
 		if err := tx.Create(&ne).Error; err != nil {
