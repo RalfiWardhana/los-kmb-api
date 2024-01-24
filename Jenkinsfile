@@ -131,7 +131,8 @@ podTemplate(
                 slackChannel    = "${devstgChannel}"
                echo "Running ${environment} pipeline with PR Number: ${ghprbPullId}"
             }
-
+            
+            currentBuild.result = currentBuild.currentResult
             currentBuild.displayName="#${BUILD_NUMBER} ${JOB_BASE_NAME}: ${serviceVersion}"
             sendNotification(job_status: "START", name: serviceName, version: serviceVersion, to: environment, gchat: gchatWorkspace, channel: slackChannel)
             
