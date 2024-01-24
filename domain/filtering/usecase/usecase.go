@@ -754,7 +754,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 							data.Reason = fmt.Sprintf("NAMA SAMA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
 
 							data.Decision = func() string {
-								if pefindoResult.OverdueCategory == 3 {
+								if pefindoResult.Category == 3 {
 									return constant.DECISION_REJECT
 								}
 								return constant.DECISION_PASS
@@ -766,7 +766,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 						data.Reason = fmt.Sprintf("NAMA SAMA & OVD 12 Bulan Terakhir > %d", constant.PBK_OVD_LAST_12)
 
 						data.Decision = func() string {
-							if pefindoResult.OverdueCategory == 3 {
+							if pefindoResult.Category == 3 {
 								return constant.DECISION_REJECT
 							}
 							return constant.DECISION_PASS
