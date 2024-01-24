@@ -46,6 +46,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.GET("/cms/approval/inquiry", handler.ApprovalInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/approval/reason", handler.ApprovalReason, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/approval/submit-approval", handler.SubmitApproval, middlewares.AccessMiddleware())
+	cmsroute.POST("/cms/ne/submit", handler.SubmitNE, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
@@ -750,6 +751,52 @@ func (c *handlerCMS) SubmitApproval(ctx echo.Context) (err error) {
 
 		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(responseEvent), 0)
 	}
+
+	return ctxJson
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Submit NE
+// @Tags Submit NE
+// @Produce json
+// @Param body body request.MetricsNE true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.ApiResponse}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/ne/submit [post]
+func (c *handlerCMS) SubmitNE(ctx echo.Context) (err error) {
+
+	var (
+		resp        interface{}
+		accessToken = middlewares.UserInfoData.AccessToken
+		req         request.MetricsNE
+		ctxJson     error
+	)
+
+	// Save Log Orchestrator
+	defer func() {
+		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
+		go c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/ne/submit", constant.METHOD_POST, req.Transaction.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
+	}()
+
+	if err := ctx.Bind(&req); err != nil {
+		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE", err)
+		return ctxJson
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE", req, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.SubmitNE(ctx.Request().Context(), req)
+
+	if err != nil {
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE", req, err)
+		return ctxJson
+	}
+
+	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE", req, data)
 
 	return ctxJson
 }

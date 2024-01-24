@@ -569,3 +569,17 @@ func (_m *Repository) SubmitApproval(req request.ReqSubmitApproval, trxStatus en
 
 	return r0
 }
+
+// SubmitNE provides a mock function with given fields: req, filtering, elaboreateLTV, journey
+func (_m *Repository) SubmitNE(req request.MetricsNE, filtering request.Filtering, elaboreateLTV request.ElaborateLTV, journey request.Metrics) error {
+	ret := _m.Called(req, filtering, elaboreateLTV, journey)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(request.MetricsNE, request.Filtering, request.ElaborateLTV, request.Metrics) error); ok {
+		r0 = rf(req, filtering, elaboreateLTV, journey)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
