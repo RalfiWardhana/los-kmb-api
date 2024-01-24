@@ -365,7 +365,7 @@ type MetricsNE struct {
 	CustomerOmset      *[]CustomerOmsetNE `json:"customer_omset"`
 	Item               ItemNE             `json:"item" validate:"required"`
 	Agent              AgentNE            `json:"agent" validate:"required"`
-	CreatedBy          CreatedBy          `json:"created_by" validate:"created_by"`
+	CreatedBy          CreatedBy          `json:"created_by" validate:"required"`
 }
 
 type CreatedBy struct {
