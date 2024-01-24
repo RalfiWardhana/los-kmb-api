@@ -551,6 +551,18 @@ const (
 	EKYC_RTO                            = "RTO"
 	EKYC_NOT_CHECK                      = "NOT CHECK"
 
+	//IZIDATA
+	SERVICE_DUKCAPIL                         = "dukcapil"
+	SERVICE_IZIDATA                          = "izidata"
+	REASON_IZIDATA_INVALID                   = "Izi Data Invalid"
+	CODE_IZIDATA_PASS_VALID                  = "1650"
+	CODE_IZIDATA_REJECT_NOT_FOUND            = "1651"
+	CODE_IZIDATA_REJECT_INVALID              = "1652"
+	CODE_FACERECOGNITION_IZIDATA_PASS        = "6058"
+	CODE_FACERECOGNITION_IZIDATA_REJECT_FOTO = "6059"
+	CODE_FACERECOGNITION_IZIDATA_REJECT_NIK  = "6060"
+	DATA_INVALID                             = "Data Invalid"
+
 	TYPE_CONTINGENCY = "CONTINGENCY"
 
 	// Address Type

@@ -387,11 +387,33 @@ type AsliriConfig struct {
 type ConfigThresholdDukcapil struct {
 	Data struct {
 		VerifyData struct {
-			NamaLengkap float64 `json:"nama_lgkp"`
-			Alamat      float64 `json:"alamat"`
+			Service    string     `json:"service_on"`
+			VDIziData  VDIziData  `json:"izidata"`
+			VDDukcapil VDDukcapil `json:"dukcapil"`
 		} `json:"verify_data"`
-		FaceRecognition float64 `json:"face_recognition"`
+		FaceRecognition struct {
+			Service    string     `json:"service_on"`
+			FRIziData  FRIziData  `json:"izidata"`
+			FRDukcapil FRDukcapil `json:"dukcapil"`
+		} `json:"face_recognition"`
 	} `json:"data"`
+}
+
+type VDDukcapil struct {
+	NamaLengkap float64 `json:"nama_lengkap"`
+	Alamat      float64 `json:"alamat"`
+}
+
+type VDIziData struct {
+	NamaLengkap float64 `json:"nama_lengkap"`
+}
+
+type FRDukcapil struct {
+	Threshold float64 `json:"threshold"`
+}
+
+type FRIziData struct {
+	Threshold float64 `json:"threshold"`
 }
 
 type MappingResultDukcapilVD struct {

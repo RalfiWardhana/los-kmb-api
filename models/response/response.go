@@ -683,12 +683,14 @@ type Config struct {
 }
 
 type InfoEkyc struct {
-	Vd      interface{} `json:"vd"`
-	VdError interface{} `json:"vd_error"`
-	Fr      interface{} `json:"fr"`
-	FrError interface{} `json:"fr_error"`
-	Asliri  interface{} `json:"asliri"`
-	Ktp     interface{} `json:"ktp"`
+	Vd        interface{} `json:"vd"`
+	VdService interface{} `json:"vd_service"`
+	VdError   interface{} `json:"vd_error"`
+	Fr        interface{} `json:"fr"`
+	FrService interface{} `json:"fr_service"`
+	FrError   interface{} `json:"fr_error"`
+	Asliri    interface{} `json:"asliri"`
+	Ktp       interface{} `json:"ktp"`
 }
 
 type Ekyc struct {
