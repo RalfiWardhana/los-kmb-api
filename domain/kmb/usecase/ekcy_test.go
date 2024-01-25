@@ -198,11 +198,12 @@ func TestDukcapil(t *testing.T) {
 		respGetMappingDukcapil         respGetMappingDukcapil
 		MappingResultDukcapilVD        entity.MappingResultDukcapilVD
 		errMappingResultDukcapilVD     error
+		errGetConfig                   error
 		respDukcapilVD, respDukcapilFR respDukcapil
 		reqMetricsEkyc                 request.MetricsEkyc
 	}{
 		{
-			label: "Test PASS",
+			label: "Test PASS dukcapil",
 			request: request.Metrics{
 				Address: []request.Address{
 					{
@@ -216,7 +217,7 @@ func TestDukcapil(t *testing.T) {
 				},
 			},
 			respAppConfig: entity.AppConfig{
-				Value: `{"data":{"verify_data":{"service_on":"izidata","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+				Value: `{"data":{"verify_data":{"service_on":"dukcapil","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
 			},
 			respDukcapilVD: respDukcapil{
 				code: 200,
@@ -283,7 +284,93 @@ func TestDukcapil(t *testing.T) {
 					Reason:      "Ekyc Valid",
 					Source:      "DCP",
 					Similiarity: "8.331",
-					Info:        "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":true,\"no_kk\":\"Sesuai\",\"nama_lgkp\":100,\"tmpt_lhr\":100,\"tgl_lhr\":\"Sesuai\",\"prop_name\":\"Sesuai\",\"kab_name\":\"Sesuai\",\"kec_name\":\"Sesuai\",\"kel_name\":\"Sesuai\",\"no_rt\":\"Sesuai\",\"no_rw\":\"Sesuai\",\"alamat\":100,\"nama_lgkp_ibu\":100,\"status_kawin\":\"Sesuai\",\"jenis_pkrjn\":\"Sesuai\",\"jenis_klmin\":\"Sesuai\",\"no_prop\":\"Sesuai\",\"no_kab\":\"Sesuai\",\"no_kec\":\"Sesuai\",\"no_kel\":\"Sesuai\",\"nik\":\"Sesuai\"},\"vd_service\":\"izidata\",\"vd_error\":null,\"fr\":{\"transaction_id\":\"EFM01108902308030001\",\"rule_code\":\"6018\",\"reason\":\"EKYC Sesuai\",\"threshold\":\"5.0\",\"ref_id\":\"7301010xxxxxxxxx\",\"matchScore\":\"8.331\"},\"fr_service\":\"dukcapil\",\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
+					Info:        "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":true,\"no_kk\":\"Sesuai\",\"nama_lgkp\":100,\"tmpt_lhr\":100,\"tgl_lhr\":\"Sesuai\",\"prop_name\":\"Sesuai\",\"kab_name\":\"Sesuai\",\"kec_name\":\"Sesuai\",\"kel_name\":\"Sesuai\",\"no_rt\":\"Sesuai\",\"no_rw\":\"Sesuai\",\"alamat\":100,\"nama_lgkp_ibu\":100,\"status_kawin\":\"Sesuai\",\"jenis_pkrjn\":\"Sesuai\",\"jenis_klmin\":\"Sesuai\",\"no_prop\":\"Sesuai\",\"no_kab\":\"Sesuai\",\"no_kec\":\"Sesuai\",\"no_kel\":\"Sesuai\",\"nik\":\"Sesuai\"},\"vd_service\":\"dukcapil\",\"vd_error\":null,\"fr\":{\"transaction_id\":\"EFM01108902308030001\",\"rule_code\":\"6018\",\"reason\":\"EKYC Sesuai\",\"threshold\":\"5.0\",\"ref_id\":\"7301010xxxxxxxxx\",\"matchScore\":\"8.331\"},\"fr_service\":\"dukcapil\",\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
+				},
+			},
+		},
+		{
+			label: "Test PASS FR izidata",
+			request: request.Metrics{
+				Address: []request.Address{
+					{
+						Type: "LEGAL",
+					},
+				},
+				CustomerPhoto: []request.CustomerPhoto{
+					{
+						ID: "SELFIE",
+					},
+				},
+			},
+			respAppConfig: entity.AppConfig{
+				Value: `{"data":{"verify_data":{"service_on":"izidata","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"izidata","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+			},
+			respDukcapilVD: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"threshold": "0",
+						"ref_id": "1000338d-208e-4e06-80f0-cbe8c1358a20",
+						"is_valid": true,
+						"no_kk": "Sesuai",
+						"nama_lgkp": 100,
+						"tmpt_lhr": 100,
+						"tgl_lhr": "Sesuai",
+						"prop_name": "Sesuai",
+						"kab_name": "Sesuai",
+						"kec_name": "Sesuai",
+						"kel_name": "Sesuai",
+						"no_rt": "Sesuai",
+						"no_rw": "Sesuai",
+						"alamat": 100,
+						"nama_lgkp_ibu": 100,
+						"status_kawin": "Sesuai",
+						"jenis_pkrjn": "Sesuai",
+						"jenis_klmin": "Sesuai",
+						"no_prop": "Sesuai",
+						"no_kab": "Sesuai",
+						"no_kec": "Sesuai",
+						"no_kel": "Sesuai",
+						"nik": "Sesuai"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
+			respDukcapilFR: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"rule_code": "6058",
+						"reason": "EKYC Sesuai",
+						"threshold": "5.0",
+						"ref_id": "7301010xxxxxxxxx",
+						"matchScore": "8.331"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
+			respGetMappingDukcapil: respGetMappingDukcapil{
+				data: entity.MappingResultDukcapil{
+					Decision: "PASS",
+					RuleCode: "1621",
+				},
+			},
+			expected: expectedResult{
+				data: response.Ekyc{
+					Result:      "PASS",
+					Code:        "1621",
+					Reason:      "Ekyc Valid",
+					Source:      "DCP",
+					Similiarity: "8.331",
+					Info:        "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":true,\"no_kk\":\"Sesuai\",\"nama_lgkp\":100,\"tmpt_lhr\":100,\"tgl_lhr\":\"Sesuai\",\"prop_name\":\"Sesuai\",\"kab_name\":\"Sesuai\",\"kec_name\":\"Sesuai\",\"kel_name\":\"Sesuai\",\"no_rt\":\"Sesuai\",\"no_rw\":\"Sesuai\",\"alamat\":100,\"nama_lgkp_ibu\":100,\"status_kawin\":\"Sesuai\",\"jenis_pkrjn\":\"Sesuai\",\"jenis_klmin\":\"Sesuai\",\"no_prop\":\"Sesuai\",\"no_kab\":\"Sesuai\",\"no_kec\":\"Sesuai\",\"no_kel\":\"Sesuai\",\"nik\":\"Sesuai\"},\"vd_service\":\"izidata\",\"vd_error\":null,\"fr\":{\"transaction_id\":\"EFM01108902308030001\",\"rule_code\":\"6058\",\"reason\":\"EKYC Sesuai\",\"threshold\":\"5.0\",\"ref_id\":\"7301010xxxxxxxxx\",\"matchScore\":\"8.331\"},\"fr_service\":\"izidata\",\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
 				},
 			},
 		},
@@ -302,7 +389,7 @@ func TestDukcapil(t *testing.T) {
 				},
 			},
 			respAppConfig: entity.AppConfig{
-				Value: `{"data":{"verify_data":{"service_on":"izidata","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+				Value: `{"data":{"verify_data":{"service_on":"","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
 			},
 			respDukcapilVD: respDukcapil{
 				code: 504,
@@ -323,7 +410,7 @@ func TestDukcapil(t *testing.T) {
 					Code:   "1626",
 					Reason: "CONTINGENCY",
 					Source: "DCP",
-					Info:   "{\"vd\":null,\"vd_service\":\"izidata\",\"vd_error\":\"Request Timed Out\",\"fr\":null,\"fr_service\":\"dukcapil\",\"fr_error\":\"Request Timed Out\",\"asliri\":null,\"ktp\":null}",
+					Info:   "{\"vd\":null,\"vd_service\":\"\",\"vd_error\":\"Request Timed Out\",\"fr\":null,\"fr_service\":\"\",\"fr_error\":\"Request Timed Out\",\"asliri\":null,\"ktp\":null}",
 				},
 			},
 		},
@@ -504,7 +591,149 @@ func TestDukcapil(t *testing.T) {
 			},
 		},
 		{
-			label: "Test VD REJECT nik",
+			label: "Test VD REJECT nik dukcapil",
+			request: request.Metrics{
+				Address: []request.Address{
+					{
+						Type: "LEGAL",
+					},
+				},
+				CustomerPhoto: []request.CustomerPhoto{
+					{
+						ID: "SELFIE",
+					},
+				},
+			},
+			respAppConfig: entity.AppConfig{
+				Value: `{"data":{"verify_data":{"service_on":"dukcapil","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+			},
+			respDukcapilVD: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"threshold": "0",
+						"ref_id": "1000338d-208e-4e06-80f0-cbe8c1358a20",
+						"is_valid": true,
+						"no_kk": "Sesuai",
+						"nama_lgkp": 50,
+						"tmpt_lhr": 100,
+						"tgl_lhr": "Sesuai",
+						"prop_name": "Sesuai",
+						"kab_name": "Sesuai",
+						"kec_name": "Sesuai",
+						"kel_name": "Sesuai",
+						"no_rt": "Sesuai",
+						"no_rw": "Sesuai",
+						"alamat": 60,
+						"nama_lgkp_ibu": 100,
+						"status_kawin": "Sesuai",
+						"jenis_pkrjn": "Sesuai",
+						"jenis_klmin": "Sesuai",
+						"no_prop": "Sesuai",
+						"no_kab": "Sesuai",
+						"no_kec": "Sesuai",
+						"no_kel": "Sesuai",
+						"nik": "Tidak Sesuai"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus:  "RO",
+				CustomerSegment: "REGULAR",
+				CBFound:         true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.DECISION_REJECT,
+			},
+			expected: expectedResult{
+				data: response.Ekyc{
+					Result: "REJECT",
+					Code:   "1612",
+					Reason: "Ekyc Invalid",
+					Source: "DCP",
+					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":true,\"no_kk\":\"Sesuai\",\"nama_lgkp\":50,\"tmpt_lhr\":100,\"tgl_lhr\":\"Sesuai\",\"prop_name\":\"Sesuai\",\"kab_name\":\"Sesuai\",\"kec_name\":\"Sesuai\",\"kel_name\":\"Sesuai\",\"no_rt\":\"Sesuai\",\"no_rw\":\"Sesuai\",\"alamat\":60,\"nama_lgkp_ibu\":100,\"status_kawin\":\"Sesuai\",\"jenis_pkrjn\":\"Sesuai\",\"jenis_klmin\":\"Sesuai\",\"no_prop\":\"Sesuai\",\"no_kab\":\"Sesuai\",\"no_kec\":\"Sesuai\",\"no_kel\":\"Sesuai\",\"nik\":\"Tidak Sesuai\"},\"vd_service\":\"dukcapil\",\"vd_error\":null,\"fr\":null,\"fr_service\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
+				},
+			},
+		},
+		{
+			label: "Test VD REJECT alamat dukcapil",
+			request: request.Metrics{
+				Address: []request.Address{
+					{
+						Type: "LEGAL",
+					},
+				},
+				CustomerPhoto: []request.CustomerPhoto{
+					{
+						ID: "SELFIE",
+					},
+				},
+			},
+			respAppConfig: entity.AppConfig{
+				Value: `{"data":{"verify_data":{"service_on":"dukcapil","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":90}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+			},
+			respDukcapilVD: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"threshold": "0",
+						"ref_id": "1000338d-208e-4e06-80f0-cbe8c1358a20",
+						"is_valid": true,
+						"no_kk": "Sesuai",
+						"nama_lgkp": 100,
+						"tmpt_lhr": 100,
+						"tgl_lhr": "Sesuai",
+						"prop_name": "Sesuai",
+						"kab_name": "Sesuai",
+						"kec_name": "Sesuai",
+						"kel_name": "Sesuai",
+						"no_rt": "Sesuai",
+						"no_rw": "Sesuai",
+						"alamat": 60,
+						"nama_lgkp_ibu": 100,
+						"status_kawin": "Sesuai",
+						"jenis_pkrjn": "Sesuai",
+						"jenis_klmin": "Sesuai",
+						"no_prop": "Sesuai",
+						"no_kab": "Sesuai",
+						"no_kec": "Sesuai",
+						"no_kel": "Sesuai",
+						"nik": "Sesuai"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus:  "RO",
+				CustomerSegment: "REGULAR",
+				CBFound:         true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.DECISION_REJECT,
+			},
+			expected: expectedResult{
+				data: response.Ekyc{
+					Result: "REJECT",
+					Code:   "1612",
+					Reason: "Ekyc Invalid",
+					Source: "DCP",
+					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":true,\"no_kk\":\"Sesuai\",\"nama_lgkp\":100,\"tmpt_lhr\":100,\"tgl_lhr\":\"Sesuai\",\"prop_name\":\"Sesuai\",\"kab_name\":\"Sesuai\",\"kec_name\":\"Sesuai\",\"kel_name\":\"Sesuai\",\"no_rt\":\"Sesuai\",\"no_rw\":\"Sesuai\",\"alamat\":60,\"nama_lgkp_ibu\":100,\"status_kawin\":\"Sesuai\",\"jenis_pkrjn\":\"Sesuai\",\"jenis_klmin\":\"Sesuai\",\"no_prop\":\"Sesuai\",\"no_kab\":\"Sesuai\",\"no_kec\":\"Sesuai\",\"no_kel\":\"Sesuai\",\"nik\":\"Sesuai\"},\"vd_service\":\"dukcapil\",\"vd_error\":null,\"fr\":null,\"fr_service\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
+				},
+			},
+		},
+		{
+			label: "Test VD REJECT nik izidata",
 			request: request.Metrics{
 				Address: []request.Address{
 					{
@@ -575,7 +804,78 @@ func TestDukcapil(t *testing.T) {
 			},
 		},
 		{
-			label: "Test VD REJECT nama_lgkp",
+			label: "Test VD REJECT nama_lgkp dukcapil",
+			request: request.Metrics{
+				Address: []request.Address{
+					{
+						Type: "LEGAL",
+					},
+				},
+				CustomerPhoto: []request.CustomerPhoto{
+					{
+						ID: "SELFIE",
+					},
+				},
+			},
+			respAppConfig: entity.AppConfig{
+				Value: `{"data":{"verify_data":{"service_on":"dukcapil","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+			},
+			respDukcapilVD: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"threshold": "0",
+						"ref_id": "1000338d-208e-4e06-80f0-cbe8c1358a20",
+						"is_valid": true,
+						"no_kk": "Sesuai",
+						"nama_lgkp": 50,
+						"tmpt_lhr": 100,
+						"tgl_lhr": "Sesuai",
+						"prop_name": "Sesuai",
+						"kab_name": "Sesuai",
+						"kec_name": "Sesuai",
+						"kel_name": "Sesuai",
+						"no_rt": "Sesuai",
+						"no_rw": "Sesuai",
+						"alamat": 60,
+						"nama_lgkp_ibu": 100,
+						"status_kawin": "Sesuai",
+						"jenis_pkrjn": "Sesuai",
+						"jenis_klmin": "Sesuai",
+						"no_prop": "Sesuai",
+						"no_kab": "Sesuai",
+						"no_kec": "Sesuai",
+						"no_kel": "Sesuai",
+						"nik": "Sesuai"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus:  "RO",
+				CustomerSegment: "REGULAR",
+				CBFound:         true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.DECISION_REJECT,
+			},
+			expected: expectedResult{
+				data: response.Ekyc{
+					Result: "REJECT",
+					Code:   "1612",
+					Reason: "Ekyc Invalid",
+					Source: "DCP",
+					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":true,\"no_kk\":\"Sesuai\",\"nama_lgkp\":50,\"tmpt_lhr\":100,\"tgl_lhr\":\"Sesuai\",\"prop_name\":\"Sesuai\",\"kab_name\":\"Sesuai\",\"kec_name\":\"Sesuai\",\"kel_name\":\"Sesuai\",\"no_rt\":\"Sesuai\",\"no_rw\":\"Sesuai\",\"alamat\":60,\"nama_lgkp_ibu\":100,\"status_kawin\":\"Sesuai\",\"jenis_pkrjn\":\"Sesuai\",\"jenis_klmin\":\"Sesuai\",\"no_prop\":\"Sesuai\",\"no_kab\":\"Sesuai\",\"no_kec\":\"Sesuai\",\"no_kel\":\"Sesuai\",\"nik\":\"Sesuai\"},\"vd_service\":\"dukcapil\",\"vd_error\":null,\"fr\":null,\"fr_service\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
+				},
+			},
+		},
+		{
+			label: "Test VD REJECT nama_lgkp izidata",
 			request: request.Metrics{
 				Address: []request.Address{
 					{
@@ -660,7 +960,7 @@ func TestDukcapil(t *testing.T) {
 				},
 			},
 			respAppConfig: entity.AppConfig{
-				Value: `{"data":{"verify_data":{"service_on":"izidata","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+				Value: `{"data":{"verify_data":{"service_on":"dukcapil","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
 			},
 			respDukcapilVD: respDukcapil{
 				code: 200,
@@ -689,10 +989,10 @@ func TestDukcapil(t *testing.T) {
 			expected: expectedResult{
 				data: response.Ekyc{
 					Result: "REJECT",
-					Code:   "",
+					Code:   "1613",
 					Reason: "Ekyc Invalid",
 					Source: "DCP",
-					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":false,\"reason\":\"Customer Meninggal Dunia\"},\"vd_service\":\"izidata\",\"vd_error\":null,\"fr\":null,\"fr_service\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
+					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":false,\"reason\":\"Customer Meninggal Dunia\"},\"vd_service\":\"dukcapil\",\"vd_error\":null,\"fr\":null,\"fr_service\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
 				},
 			},
 		},
@@ -711,7 +1011,7 @@ func TestDukcapil(t *testing.T) {
 				},
 			},
 			respAppConfig: entity.AppConfig{
-				Value: `{"data":{"verify_data":{"service_on":"izidata","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+				Value: `{"data":{"verify_data":{"service_on":"dukcapil","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
 			},
 			respDukcapilVD: respDukcapil{
 				code: 200,
@@ -740,10 +1040,10 @@ func TestDukcapil(t *testing.T) {
 			expected: expectedResult{
 				data: response.Ekyc{
 					Result: "REJECT",
-					Code:   "",
+					Code:   "1614",
 					Reason: "Ekyc Invalid",
 					Source: "DCP",
-					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":false,\"reason\":\"Data Ganda\"},\"vd_service\":\"izidata\",\"vd_error\":null,\"fr\":null,\"fr_service\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
+					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":false,\"reason\":\"Data Ganda\"},\"vd_service\":\"dukcapil\",\"vd_error\":null,\"fr\":null,\"fr_service\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
 				},
 			},
 		},
@@ -762,7 +1062,7 @@ func TestDukcapil(t *testing.T) {
 				},
 			},
 			respAppConfig: entity.AppConfig{
-				Value: `{"data":{"verify_data":{"service_on":"izidata","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+				Value: `{"data":{"verify_data":{"service_on":"dukcapil","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
 			},
 			respDukcapilVD: respDukcapil{
 				code: 200,
@@ -791,15 +1091,15 @@ func TestDukcapil(t *testing.T) {
 			expected: expectedResult{
 				data: response.Ekyc{
 					Result: "REJECT",
-					Code:   "",
+					Code:   "1615",
 					Reason: "Ekyc Invalid",
 					Source: "DCP",
-					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":false,\"reason\":\"Data Inactive\"},\"vd_service\":\"izidata\",\"vd_error\":null,\"fr\":null,\"fr_service\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
+					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":false,\"reason\":\"Data Inactive\"},\"vd_service\":\"dukcapil\",\"vd_error\":null,\"fr\":null,\"fr_service\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
 				},
 			},
 		},
 		{
-			label: "Test VD REJECT Data Not Found",
+			label: "Test VD REJECT Data Invalid izidata",
 			request: request.Metrics{
 				Address: []request.Address{
 					{
@@ -814,6 +1114,57 @@ func TestDukcapil(t *testing.T) {
 			},
 			respAppConfig: entity.AppConfig{
 				Value: `{"data":{"verify_data":{"service_on":"izidata","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+			},
+			respDukcapilVD: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"threshold": "0",
+						"ref_id": "1000338d-208e-4e06-80f0-cbe8c1358a20",
+						"is_valid": false,
+						"reason": "Data Invalid"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus: "NEW",
+				CBFound:        true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.DECISION_REJECT,
+			},
+			expected: expectedResult{
+				data: response.Ekyc{
+					Result: "REJECT",
+					Code:   "1652",
+					Reason: "Ekyc Invalid",
+					Source: "DCP",
+					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":false,\"reason\":\"Data Invalid\"},\"vd_service\":\"izidata\",\"vd_error\":null,\"fr\":null,\"fr_service\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
+				},
+			},
+		},
+		{
+			label: "Test VD REJECT Data Not Found dukcapil",
+			request: request.Metrics{
+				Address: []request.Address{
+					{
+						Type: "LEGAL",
+					},
+				},
+				CustomerPhoto: []request.CustomerPhoto{
+					{
+						ID: "SELFIE",
+					},
+				},
+			},
+			respAppConfig: entity.AppConfig{
+				Value: `{"data":{"verify_data":{"service_on":"dukcapil","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
 			},
 			respDukcapilVD: respDukcapil{
 				code: 200,
@@ -842,15 +1193,15 @@ func TestDukcapil(t *testing.T) {
 			expected: expectedResult{
 				data: response.Ekyc{
 					Result: "REJECT",
-					Code:   "1651",
+					Code:   "1616",
 					Reason: "Ekyc Invalid",
 					Source: "DCP",
-					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":false,\"reason\":\"Data Not Found\"},\"vd_service\":\"izidata\",\"vd_error\":null,\"fr\":null,\"fr_service\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
+					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":false,\"reason\":\"Data Not Found\"},\"vd_service\":\"dukcapil\",\"vd_error\":null,\"fr\":null,\"fr_service\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
 				},
 			},
 		},
 		{
-			label: "Test FR REJECT nik",
+			label: "Test FR REJECT nik dukcapil",
 			request: request.Metrics{
 				Address: []request.Address{
 					{
@@ -944,7 +1295,101 @@ func TestDukcapil(t *testing.T) {
 			},
 		},
 		{
-			label: "Test FR REJECT foto",
+			label: "Test FR REJECT nik izidata",
+			request: request.Metrics{
+				Address: []request.Address{
+					{
+						Type: "LEGAL",
+					},
+				},
+				CustomerPhoto: []request.CustomerPhoto{
+					{
+						ID: "SELFIE",
+					},
+				},
+			},
+			respAppConfig: entity.AppConfig{
+				Value: `{"data":{"verify_data":{"service_on":"izidata","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"izidata","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+			},
+			respDukcapilVD: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"threshold": "0",
+						"ref_id": "1000338d-208e-4e06-80f0-cbe8c1358a20",
+						"is_valid": true,
+						"no_kk": "Sesuai",
+						"nama_lgkp": 100,
+						"tmpt_lhr": 100,
+						"tgl_lhr": "Sesuai",
+						"prop_name": "Sesuai",
+						"kab_name": "Sesuai",
+						"kec_name": "Sesuai",
+						"kel_name": "Sesuai",
+						"no_rt": "Sesuai",
+						"no_rw": "Sesuai",
+						"alamat": 100,
+						"nama_lgkp_ibu": 100,
+						"status_kawin": "Sesuai",
+						"jenis_pkrjn": "Sesuai",
+						"jenis_klmin": "Sesuai",
+						"no_prop": "Sesuai",
+						"no_kab": "Sesuai",
+						"no_kec": "Sesuai",
+						"no_kel": "Sesuai",
+						"nik": "Sesuai"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
+			respDukcapilFR: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"rule_code": "6060",
+						"reason": "EKYC Tidak Sesuai",
+						"threshold": "5.0",
+						"ref_id": "7301010xxxxxxxxx",
+						"matchScore": "8.331"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
+			respGetMappingDukcapil: respGetMappingDukcapil{
+				data: entity.MappingResultDukcapil{
+					Decision: "REJECT",
+					RuleCode: "1623",
+				},
+			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus: "NEW",
+				CBFound:        true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_PASS,
+				Decision: constant.DECISION_PASS,
+			},
+			expected: expectedResult{
+				data: response.Ekyc{
+					Result:      "REJECT",
+					Code:        "1623",
+					Reason:      "Ekyc Invalid",
+					Source:      "DCP",
+					Similiarity: "8.331",
+					Info:        "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":true,\"no_kk\":\"Sesuai\",\"nama_lgkp\":100,\"tmpt_lhr\":100,\"tgl_lhr\":\"Sesuai\",\"prop_name\":\"Sesuai\",\"kab_name\":\"Sesuai\",\"kec_name\":\"Sesuai\",\"kel_name\":\"Sesuai\",\"no_rt\":\"Sesuai\",\"no_rw\":\"Sesuai\",\"alamat\":100,\"nama_lgkp_ibu\":100,\"status_kawin\":\"Sesuai\",\"jenis_pkrjn\":\"Sesuai\",\"jenis_klmin\":\"Sesuai\",\"no_prop\":\"Sesuai\",\"no_kab\":\"Sesuai\",\"no_kec\":\"Sesuai\",\"no_kel\":\"Sesuai\",\"nik\":\"Sesuai\"},\"vd_service\":\"izidata\",\"vd_error\":null,\"fr\":{\"transaction_id\":\"EFM01108902308030001\",\"rule_code\":\"6060\",\"reason\":\"EKYC Tidak Sesuai\",\"threshold\":\"5.0\",\"ref_id\":\"7301010xxxxxxxxx\",\"matchScore\":\"8.331\"},\"fr_service\":\"izidata\",\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
+				},
+			},
+		},
+		{
+			label: "Test FR REJECT foto dukcapil",
 			request: request.Metrics{
 				Address: []request.Address{
 					{
@@ -1038,7 +1483,101 @@ func TestDukcapil(t *testing.T) {
 			},
 		},
 		{
-			label: "Test VD MAPPING ERROR",
+			label: "Test FR REJECT foto izidata",
+			request: request.Metrics{
+				Address: []request.Address{
+					{
+						Type: "LEGAL",
+					},
+				},
+				CustomerPhoto: []request.CustomerPhoto{
+					{
+						ID: "SELFIE",
+					},
+				},
+			},
+			respAppConfig: entity.AppConfig{
+				Value: `{"data":{"verify_data":{"service_on":"izidata","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"izidata","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+			},
+			respDukcapilVD: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"threshold": "0",
+						"ref_id": "1000338d-208e-4e06-80f0-cbe8c1358a20",
+						"is_valid": true,
+						"no_kk": "Sesuai",
+						"nama_lgkp": 100,
+						"tmpt_lhr": 100,
+						"tgl_lhr": "Sesuai",
+						"prop_name": "Sesuai",
+						"kab_name": "Sesuai",
+						"kec_name": "Sesuai",
+						"kel_name": "Sesuai",
+						"no_rt": "Sesuai",
+						"no_rw": "Sesuai",
+						"alamat": 100,
+						"nama_lgkp_ibu": 100,
+						"status_kawin": "Sesuai",
+						"jenis_pkrjn": "Sesuai",
+						"jenis_klmin": "Sesuai",
+						"no_prop": "Sesuai",
+						"no_kab": "Sesuai",
+						"no_kec": "Sesuai",
+						"no_kel": "Sesuai",
+						"nik": "Sesuai"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
+			respDukcapilFR: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"rule_code": "6059",
+						"reason": "EKYC Tidak Sesuai",
+						"threshold": "5.0",
+						"ref_id": "7301010xxxxxxxxx",
+						"matchScore": "8.331"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
+			respGetMappingDukcapil: respGetMappingDukcapil{
+				data: entity.MappingResultDukcapil{
+					Decision: "REJECT",
+					RuleCode: "1622",
+				},
+			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus: "NEW",
+				CBFound:        true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_PASS,
+				Decision: constant.DECISION_PASS,
+			},
+			expected: expectedResult{
+				data: response.Ekyc{
+					Result:      "REJECT",
+					Code:        "1622",
+					Reason:      "Ekyc Invalid",
+					Source:      "DCP",
+					Similiarity: "8.331",
+					Info:        "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":true,\"no_kk\":\"Sesuai\",\"nama_lgkp\":100,\"tmpt_lhr\":100,\"tgl_lhr\":\"Sesuai\",\"prop_name\":\"Sesuai\",\"kab_name\":\"Sesuai\",\"kec_name\":\"Sesuai\",\"kel_name\":\"Sesuai\",\"no_rt\":\"Sesuai\",\"no_rw\":\"Sesuai\",\"alamat\":100,\"nama_lgkp_ibu\":100,\"status_kawin\":\"Sesuai\",\"jenis_pkrjn\":\"Sesuai\",\"jenis_klmin\":\"Sesuai\",\"no_prop\":\"Sesuai\",\"no_kab\":\"Sesuai\",\"no_kec\":\"Sesuai\",\"no_kel\":\"Sesuai\",\"nik\":\"Sesuai\"},\"vd_service\":\"izidata\",\"vd_error\":null,\"fr\":{\"transaction_id\":\"EFM01108902308030001\",\"rule_code\":\"6059\",\"reason\":\"EKYC Tidak Sesuai\",\"threshold\":\"5.0\",\"ref_id\":\"7301010xxxxxxxxx\",\"matchScore\":\"8.331\"},\"fr_service\":\"izidata\",\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
+				},
+			},
+		},
+		{
+			label: "Test VD MAPPING ERROR data not found izidata",
 			request: request.Metrics{
 				Address: []request.Address{
 					{
@@ -1083,6 +1622,52 @@ func TestDukcapil(t *testing.T) {
 				err: errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Verify Dukcapil Error"),
 			},
 		},
+		{
+			label: "Test Get config ERROR",
+			request: request.Metrics{
+				Address: []request.Address{
+					{
+						Type: "LEGAL",
+					},
+				},
+				CustomerPhoto: []request.CustomerPhoto{
+					{
+						ID: "SELFIE",
+					},
+				},
+			},
+			respAppConfig: entity.AppConfig{
+				Value: `{"data":{"verify_data":{"service_on":"izidata","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+			},
+			respDukcapilVD: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"threshold": "0",
+						"ref_id": "1000338d-208e-4e06-80f0-cbe8c1358a20",
+						"is_valid": false,
+						"reason": "Data Not Found"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus: "NEW",
+				CBFound:        true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.DECISION_REJECT,
+			},
+			errGetConfig: errors.New(constant.ERROR_UPSTREAM + " - Get Dukcapil Config Error"),
+			expected: expectedResult{
+				err: errors.New(constant.ERROR_UPSTREAM + " - Get Dukcapil Config Error"),
+			},
+		},
 	}
 
 	for _, test := range testcases {
@@ -1092,7 +1677,7 @@ func TestDukcapil(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
 
-		mockRepository.On("GetConfig", mock.Anything, mock.Anything, mock.Anything).Return(test.respAppConfig, nil)
+		mockRepository.On("GetConfig", mock.Anything, mock.Anything, mock.Anything).Return(test.respAppConfig, test.errGetConfig)
 		mockRepository.On("GetMappingDukcapil", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(test.respGetMappingDukcapil.data, test.respGetMappingDukcapil.err)
 		mockRepository.On("GetMappingDukcapilVD", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(test.MappingResultDukcapilVD, test.errMappingResultDukcapilVD)
 
@@ -1157,13 +1742,14 @@ func TestAsliri(t *testing.T) {
 	)
 
 	testcase := []struct {
-		payload     request.Metrics
-		expected    response.Ekyc
-		body        string
-		code        int
-		err         error
-		errExpected error
-		label       string
+		payload      request.Metrics
+		expected     response.Ekyc
+		body         string
+		code         int
+		err          error
+		errGetConfig error
+		errExpected  error
+		label        string
 	}{
 		{
 			payload: request.Metrics{
@@ -1329,13 +1915,44 @@ func TestAsliri(t *testing.T) {
 			errExpected: fmt.Errorf("upstream_service_error - Call Asliri"),
 			label:       "TEST_ASLIRI_RESPONSE_ERROR_CODE",
 		},
+		{
+			payload: request.Metrics{
+				Transaction: request.Transaction{
+					ProspectID: prospectID,
+				},
+				CustomerPersonal: request.CustomerPersonal{
+					IDNumber:   idNumber,
+					LegalName:  legalName,
+					BirthDate:  birthDate,
+					BirthPlace: birthPlace,
+					Gender:     "F",
+				},
+				CustomerPhoto: customerPhoto,
+			},
+			body: `{
+				"message": "LOS - ASLIRI",
+				"errors": null,
+				"data": {
+				  "name": 100,
+				  "pdob": 100,
+				  "selfie_photo": 0,
+				  "not_found": false,
+				  "ref_id": "aW50ZXJuYWw=-1675666687732"
+				},
+				"server_time": "2022-11-30T16:48:45+07:00"
+			  }`,
+			code:         200,
+			errGetConfig: errors.New(constant.ERROR_UPSTREAM + " - Get ASLI RI Config Error"),
+			errExpected:  errors.New(constant.ERROR_UPSTREAM + " - Get ASLI RI Config Error"),
+			label:        "TEST_GET_CONFIG_ERROR",
+		},
 	}
 
 	for _, test := range testcase {
 
 		timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 		mockRepository := new(mocks.Repository)
-		mockRepository.On("GetConfig", mock.Anything, mock.Anything, mock.Anything).Return(responseAppConfig, nil)
+		mockRepository.On("GetConfig", mock.Anything, mock.Anything, mock.Anything).Return(responseAppConfig, test.errGetConfig)
 
 		rst := resty.New()
 		ctx := context.Background()
