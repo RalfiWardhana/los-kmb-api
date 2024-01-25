@@ -187,7 +187,14 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, reqMetricsEk
 	if resultDukcapilVD.Decision == constant.DECISION_REJECT {
 		data.Result = resultDukcapilVD.Decision
 		data.Code = codeVD
-		data.Reason = constant.REASON_EKYC_INVALID
+		switch serviceVD {
+		case constant.SERVICE_IZIDATA:
+			data.Reason = constant.REASON_IZIDATA_INVALID
+		case constant.SERVICE_DUKCAPIL:
+			data.Reason = constant.REASON_EKYC_INVALID
+		default:
+			data.Reason = constant.REASON_EKYC_INVALID
+		}
 		data.Source = constant.SOURCE_DECISION_DUKCAPIL
 
 		info, _ := json.Marshal(infoDukcapil)
