@@ -1099,7 +1099,7 @@ func TestDukcapil(t *testing.T) {
 			},
 		},
 		{
-			label: "Test VD REJECT Data Invalid izidata",
+			label: "Test VD REJECT Data Invalid izidata fix: reason izi data",
 			request: request.Metrics{
 				Address: []request.Address{
 					{
