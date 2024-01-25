@@ -797,7 +797,7 @@ func TestDukcapil(t *testing.T) {
 				data: response.Ekyc{
 					Result: "REJECT",
 					Code:   "1652",
-					Reason: "Ekyc Invalid",
+					Reason: "Izi Data Invalid",
 					Source: "DCP",
 					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":true,\"no_kk\":\"Sesuai\",\"nama_lgkp\":50,\"tmpt_lhr\":100,\"tgl_lhr\":\"Sesuai\",\"prop_name\":\"Sesuai\",\"kab_name\":\"Sesuai\",\"kec_name\":\"Sesuai\",\"kel_name\":\"Sesuai\",\"no_rt\":\"Sesuai\",\"no_rw\":\"Sesuai\",\"alamat\":60,\"nama_lgkp_ibu\":100,\"status_kawin\":\"Sesuai\",\"jenis_pkrjn\":\"Sesuai\",\"jenis_klmin\":\"Sesuai\",\"no_prop\":\"Sesuai\",\"no_kab\":\"Sesuai\",\"no_kec\":\"Sesuai\",\"no_kel\":\"Sesuai\",\"nik\":\"Tidak Sesuai\"},\"vd_service\":\"izidata\",\"vd_error\":null,\"fr\":null,\"fr_service\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
 				},
@@ -939,7 +939,7 @@ func TestDukcapil(t *testing.T) {
 				data: response.Ekyc{
 					Result: "REJECT",
 					Code:   "1652",
-					Reason: "Ekyc Invalid",
+					Reason: "Izi Data Invalid",
 					Source: "DCP",
 					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":true,\"no_kk\":\"Sesuai\",\"nama_lgkp\":50,\"tmpt_lhr\":100,\"tgl_lhr\":\"Sesuai\",\"prop_name\":\"Sesuai\",\"kab_name\":\"Sesuai\",\"kec_name\":\"Sesuai\",\"kel_name\":\"Sesuai\",\"no_rt\":\"Sesuai\",\"no_rw\":\"Sesuai\",\"alamat\":60,\"nama_lgkp_ibu\":100,\"status_kawin\":\"Sesuai\",\"jenis_pkrjn\":\"Sesuai\",\"jenis_klmin\":\"Sesuai\",\"no_prop\":\"Sesuai\",\"no_kab\":\"Sesuai\",\"no_kec\":\"Sesuai\",\"no_kel\":\"Sesuai\",\"nik\":\"Sesuai\"},\"vd_service\":\"izidata\",\"vd_error\":null,\"fr\":null,\"fr_service\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
 				},
@@ -1143,7 +1143,7 @@ func TestDukcapil(t *testing.T) {
 				data: response.Ekyc{
 					Result: "REJECT",
 					Code:   "1652",
-					Reason: "Ekyc Invalid",
+					Reason: "Izi Data Invalid",
 					Source: "DCP",
 					Info:   "{\"vd\":{\"transaction_id\":\"EFM01108902308030001\",\"threshold\":\"0\",\"ref_id\":\"1000338d-208e-4e06-80f0-cbe8c1358a20\",\"is_valid\":false,\"reason\":\"Data Invalid\"},\"vd_service\":\"izidata\",\"vd_error\":null,\"fr\":null,\"fr_service\":null,\"fr_error\":null,\"asliri\":null,\"ktp\":null}",
 				},
