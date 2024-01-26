@@ -704,23 +704,13 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 		}
 
 		if checkPefindo.Code == "200" && pefindoResult.Score != constant.PEFINDO_UNSCORE {
-			overdueCurrent := func() interface{} {
+			overdueCurrent, overdueLast12Month := func() (interface{}, interface{}) {
 				if pefindoResult.Category == 1 {
-					return pefindoResult.OverdueLastKORules
+					return pefindoResult.OverdueLastKORules, pefindoResult.OverdueLast12MonthsKORules
 				} else if pefindoResult.Category == 2 {
-					return pefindoResult.MaxOverdueNonAgunanKORules
+					return pefindoResult.MaxOverdueNonAgunanKORules, pefindoResult.MaxOverdueNonAgunanLast12MonthsKORules
 				} else {
-					return pefindoResult.MaxOverdueAgunanKORules
-				}
-			}()
-
-			overdueLast12Month := func() interface{} {
-				if pefindoResult.Category == 1 {
-					return pefindoResult.OverdueLast12MonthsKORules
-				} else if pefindoResult.Category == 2 {
-					return pefindoResult.MaxOverdueNonAgunanLast12MonthsKORules
-				} else {
-					return pefindoResult.MaxOverdueAgunanLast12MonthsKORules
+					return pefindoResult.MaxOverdueAgunanKORules, pefindoResult.MaxOverdueAgunanLast12MonthsKORules
 				}
 			}()
 
