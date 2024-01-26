@@ -704,20 +704,40 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 		}
 
 		if checkPefindo.Code == "200" && pefindoResult.Score != constant.PEFINDO_UNSCORE {
+			overdueCurrent := func() interface{} {
+				if pefindoResult.Category == 1 {
+					return pefindoResult.OverdueLastKORules
+				} else if pefindoResult.Category == 2 {
+					return pefindoResult.MaxOverdueNonAgunanKORules
+				} else {
+					return pefindoResult.MaxOverdueAgunanKORules
+				}
+			}()
+
+			overdueLast12Month := func() interface{} {
+				if pefindoResult.Category == 1 {
+					return pefindoResult.OverdueLast12MonthsKORules
+				} else if pefindoResult.Category == 2 {
+					return pefindoResult.MaxOverdueNonAgunanLast12MonthsKORules
+				} else {
+					return pefindoResult.MaxOverdueAgunanLast12MonthsKORules
+				}
+			}()
+
 			if bpkbName == constant.NAMA_BEDA {
-				if pefindoResult.OverdueLast12MonthsKORules != nil {
-					if checkNullMaxOverdueLast12Months(pefindoResult.OverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12 {
-						if pefindoResult.OverdueLastKORules == nil {
+				if overdueLast12Month != nil {
+					if checkNullMaxOverdueLast12Months(overdueLast12Month) <= constant.PBK_OVD_LAST_12 {
+						if overdueCurrent == nil {
 							data.Code = constant.NAMA_BEDA_CURRENT_OVD_NULL_CODE
 							data.StatusKonsumen = status_konsumen
 							data.Decision = constant.DECISION_PASS
 							data.Reason = fmt.Sprintf("NAMA BEDA & PBK OVD 12 Bulan Terakhir <= %d", constant.PBK_OVD_LAST_12)
-						} else if checkNullMaxOverdue(pefindoResult.OverdueLastKORules) <= constant.PBK_OVD_CURRENT {
+						} else if checkNullMaxOverdue(overdueCurrent) <= constant.PBK_OVD_CURRENT {
 							data.Code = constant.NAMA_BEDA_CURRENT_OVD_UNDER_LIMIT_CODE
 							data.StatusKonsumen = status_konsumen
 							data.Decision = constant.DECISION_PASS
 							data.Reason = fmt.Sprintf("NAMA BEDA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
-						} else if checkNullMaxOverdue(pefindoResult.OverdueLastKORules) > constant.PBK_OVD_CURRENT {
+						} else if checkNullMaxOverdue(overdueCurrent) > constant.PBK_OVD_CURRENT {
 							data.Code = constant.NAMA_BEDA_CURRENT_OVD_OVER_LIMIT_CODE
 							data.StatusKonsumen = status_konsumen
 							data.Decision = constant.DECISION_REJECT
@@ -736,19 +756,19 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 					data.Reason = "NAMA BEDA & OVD 12 Bulan Terakhir Null"
 				}
 			} else if bpkbName == constant.NAMA_SAMA {
-				if pefindoResult.OverdueLast12MonthsKORules != nil {
-					if checkNullMaxOverdueLast12Months(pefindoResult.OverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12 {
-						if pefindoResult.OverdueLastKORules == nil {
+				if overdueLast12Month != nil {
+					if checkNullMaxOverdueLast12Months(overdueLast12Month) <= constant.PBK_OVD_LAST_12 {
+						if overdueCurrent == nil {
 							data.Code = constant.NAMA_SAMA_CURRENT_OVD_NULL_CODE
 							data.StatusKonsumen = status_konsumen
 							data.Decision = constant.DECISION_PASS
 							data.Reason = fmt.Sprintf("NAMA SAMA & PBK OVD 12 Bulan Terakhir <= %d", constant.PBK_OVD_LAST_12)
-						} else if checkNullMaxOverdue(pefindoResult.OverdueLastKORules) <= constant.PBK_OVD_CURRENT {
+						} else if checkNullMaxOverdue(overdueCurrent) <= constant.PBK_OVD_CURRENT {
 							data.Code = constant.NAMA_SAMA_CURRENT_OVD_UNDER_LIMIT_CODE
 							data.StatusKonsumen = status_konsumen
 							data.Decision = constant.DECISION_PASS
 							data.Reason = fmt.Sprintf("NAMA SAMA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
-						} else if checkNullMaxOverdue(pefindoResult.OverdueLastKORules) > constant.PBK_OVD_CURRENT {
+						} else if checkNullMaxOverdue(overdueCurrent) > constant.PBK_OVD_CURRENT {
 							data.Code = constant.NAMA_SAMA_CURRENT_OVD_OVER_LIMIT_CODE
 							data.StatusKonsumen = status_konsumen
 							data.Reason = fmt.Sprintf("NAMA SAMA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
