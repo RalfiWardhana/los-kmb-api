@@ -8642,7 +8642,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_PASS_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30",
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaSama_Category1_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -8713,7 +8713,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenNew_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -8748,7 +8748,175 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 3
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 60,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 61
+				},
+				"konsumen": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 50,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": 1,
+					"wo_ada_agunan": 0,
+					"baki_debet_non_agunan": 873675,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"plafon": 7928083,
+					"fasilitas_aktif": 7,
+					"kualitas_kredit_terburuk": "COLL 5",
+					"bulan_kualitas_terburuk": "2023-10-31",
+					"baki_debet_kualitas_terburuk": 6000000,
+					"kualitas_kredit_terakhir": "COLL 5",
+					"bulan_kualitas_kredit_terakhir": "2022-11-30",
+					"overdue_last_ko_rules": 31,
+					"overdue_last_12month_ko_rules": 50,
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 61,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 61
+				},
+				"pasangan": null,
+				"server_time": "2023-12-04T13:15:46+07:00",
+				"duration_time": "78000 ms"
+			}`,
+			resFinal: response.DupcheckResult{
+				Code:           constant.WO_AGUNAN_REJECT_CODE,
+				Decision:       constant.DECISION_REJECT,
+				Reason:         constant.NAMA_SAMA_BAKI_DEBET_SESUAI,
+				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
+				NextProcess:    1,
+				TotalBakiDebet: 873675,
+				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+			},
+		},
+		{
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules>60_MaxOverdueAgunanKORules>30",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "K",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "S",
+					ProfessionID:      "WRST",
+					MobilePhone:       "085720230309",
+				},
+			},
+			statusKonsumen: constant.STATUS_KONSUMEN_NEW,
+			resPefindoCode: 200,
+			resPefindoBody: `{
+				"code": "200",
+				"status": "SUCCESS",
+				"result": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 50,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": true,
+					"wo_ada_agunan": false,
+					"total_baki_debet_non_agunan": 873675,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"overdue_last_ko_rules": 31,
+					"overdue_last_12month_ko_rules": 50,
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 61,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 61
+				},
+				"konsumen": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 50,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": 1,
+					"wo_ada_agunan": 0,
+					"baki_debet_non_agunan": 873675,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"plafon": 7928083,
+					"fasilitas_aktif": 7,
+					"kualitas_kredit_terburuk": "COLL 5",
+					"bulan_kualitas_terburuk": "2023-10-31",
+					"baki_debet_kualitas_terburuk": 6000000,
+					"kualitas_kredit_terakhir": "COLL 5",
+					"bulan_kualitas_kredit_terakhir": "2022-11-30",
+					"overdue_last_ko_rules": 31,
+					"overdue_last_12month_ko_rules": 50,
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 61,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 61
+				},
+				"pasangan": null,
+				"server_time": "2023-12-04T13:15:46+07:00",
+				"duration_time": "78000 ms"
+			}`,
+			resFinal: response.DupcheckResult{
+				Code:           constant.WO_AGUNAN_REJECT_CODE,
+				Decision:       constant.DECISION_REJECT,
+				Reason:         constant.NAMA_SAMA_BAKI_DEBET_SESUAI,
+				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
+				NextProcess:    1,
+				TotalBakiDebet: 873675,
+				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+			},
+		},
+		{
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenNew_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan<=20jt",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "K",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "S",
+					ProfessionID:      "WRST",
+					MobilePhone:       "085720230309",
+				},
+			},
+			statusKonsumen: constant.STATUS_KONSUMEN_NEW,
+			resPefindoCode: 200,
+			resPefindoBody: `{
+				"code": "200",
+				"status": "SUCCESS",
+				"result": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 50,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": true,
+					"wo_ada_agunan": false,
+					"total_baki_debet_non_agunan": 873675,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"overdue_last_ko_rules": 31,
+					"overdue_last_12month_ko_rules": 50,
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 50,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 50
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -8784,7 +8952,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenNew_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenNew_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -8819,7 +8987,11 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 3
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 50,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 50
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -8855,7 +9027,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenROAO_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenROAO_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -8890,7 +9062,11 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 3
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 50,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 50
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -8926,7 +9102,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenROAO_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenROAO_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -8961,7 +9137,11 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 3
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 50,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 50
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -8997,7 +9177,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenNew_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenNew_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9032,7 +9212,11 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 3
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 50,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 50
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9068,7 +9252,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenNew_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenNew_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9103,7 +9287,11 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 3
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 50,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 50
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9139,7 +9327,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenROAO_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenROAO_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9174,7 +9362,11 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 3
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 50,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 50
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9210,7 +9402,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenROAO_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenROAO_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9245,7 +9437,11 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 3
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 50,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 50
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9281,7 +9477,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_Konsumen_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_Konsumen_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9315,7 +9511,11 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 3
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 50,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 50
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9350,7 +9550,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenNew_WoContractNo_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenNew_WoContractNo_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9385,7 +9585,11 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 3
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 50,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 50
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9421,7 +9625,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenNew_WoContractNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenNew_WoContractNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9456,7 +9660,11 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 3
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 50,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 50
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9492,7 +9700,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenROAO_WoContractNo_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenROAO_WoContractNo_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9527,7 +9735,11 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 3
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 50,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 50
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9563,7 +9775,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenROAO_WoContractNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenROAO_WoContractNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9598,7 +9810,11 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 3
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 50,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 50
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9634,7 +9850,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_Konsumen_WoContractNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_Konsumen_WoContractNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9668,7 +9884,11 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 3
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 50,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 50
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9774,7 +9994,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules>60",
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules>60",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9809,7 +10029,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": null,
 					"overdue_last_12month_ko_rules": 61,
-					"category": 3
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -9835,9 +10055,9 @@ func TestFilteringPefindo(t *testing.T) {
 				"duration_time": "78000 ms"
 			}`,
 			resFinal: response.DupcheckResult{
-				Code:           constant.WO_AGUNAN_REJECT_CODE,
-				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_SAMA_BAKI_DEBET_SESUAI,
+				Code:           constant.NAMA_SAMA_12_OVD_OVER_LIMIT_CODE,
+				Decision:       constant.DECISION_PASS,
+				Reason:         fmt.Sprintf("NAMA SAMA & OVD 12 Bulan Terakhir > %d", constant.PBK_OVD_LAST_12),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -10022,7 +10242,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": null,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10058,7 +10278,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_PASS_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules<=30",
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaBeda_Category1_OverdueLast12MonthsKORules<=60_OverdueLastKORules<=30",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -10091,9 +10311,13 @@ func TestFilteringPefindo(t *testing.T) {
 					"wo_ada_agunan": false,
 					"total_baki_debet_non_agunan": 873675,
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
-					"overdue_last_ko_rules": 29,
-					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"overdue_last_ko_rules": 30,
+					"overdue_last_12month_ko_rules": 60,
+					"category": 1,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 61,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 61
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10112,7 +10336,178 @@ func TestFilteringPefindo(t *testing.T) {
 					"bulan_kualitas_terburuk": "2023-10-31",
 					"baki_debet_kualitas_terburuk": 6000000,
 					"kualitas_kredit_terakhir": "COLL 5",
-					"bulan_kualitas_kredit_terakhir": "2022-11-30"
+					"bulan_kualitas_kredit_terakhir": "2022-11-30",
+					"overdue_last_ko_rules": 30,
+					"overdue_last_12month_ko_rules": 60,
+					"category": 1,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 61,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 61
+				},
+				"pasangan": null,
+				"server_time": "2023-12-04T13:15:46+07:00",
+				"duration_time": "78000 ms"
+			}`,
+			resFinal: response.DupcheckResult{
+				Code:           constant.NAMA_BEDA_CURRENT_OVD_UNDER_LIMIT_CODE,
+				Decision:       constant.DECISION_PASS,
+				Reason:         fmt.Sprintf("NAMA BEDA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT),
+				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
+				NextProcess:    1,
+				TotalBakiDebet: 873675,
+				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+			},
+		},
+		{
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaBeda_Category2_MaxOverdueNonAgunanLast12MonthsKORules<=60_MaxOverdueNonAgunanKORules<=30",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "O",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "S",
+					ProfessionID:      "WRST",
+					MobilePhone:       "085720230309",
+				},
+			},
+			statusKonsumen: constant.STATUS_KONSUMEN_NEW,
+			resPefindoCode: 200,
+			resPefindoBody: `{
+				"code": "200",
+				"status": "SUCCESS",
+				"result": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 29,
+					"max_overdue_last12months": 50,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": true,
+					"wo_ada_agunan": false,
+					"total_baki_debet_non_agunan": 873675,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"overdue_last_ko_rules": 31,
+					"overdue_last_12month_ko_rules": 61,
+					"category": 2,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 61,
+					"max_ovd_non_agunan_ko_rules": 30,
+					"max_ovd_non_agunan_last_12month_ko_rules": 60
+				},
+				"konsumen": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 29,
+					"max_overdue_last12months": 50,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": 1,
+					"wo_ada_agunan": 0,
+					"baki_debet_non_agunan": 873675,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"plafon": 7928083,
+					"fasilitas_aktif": 7,
+					"kualitas_kredit_terburuk": "COLL 5",
+					"bulan_kualitas_terburuk": "2023-10-31",
+					"baki_debet_kualitas_terburuk": 6000000,
+					"kualitas_kredit_terakhir": "COLL 5",
+					"bulan_kualitas_kredit_terakhir": "2022-11-30",
+					"overdue_last_ko_rules": 31,
+					"overdue_last_12month_ko_rules": 61,
+					"category": 2,
+					"max_ovd_agunan_ko_rules": 31,
+					"max_ovd_agunan_last_12month_ko_rules": 61,
+					"max_ovd_non_agunan_ko_rules": 30,
+					"max_ovd_non_agunan_last_12month_ko_rules": 60
+				},
+				"pasangan": null,
+				"server_time": "2023-12-04T13:15:46+07:00",
+				"duration_time": "78000 ms"
+			}`,
+			resFinal: response.DupcheckResult{
+				Code:           constant.NAMA_BEDA_CURRENT_OVD_UNDER_LIMIT_CODE,
+				Decision:       constant.DECISION_PASS,
+				Reason:         fmt.Sprintf("NAMA BEDA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT),
+				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
+				NextProcess:    1,
+				TotalBakiDebet: 873675,
+				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+			},
+		},
+		{
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaBeda_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules<=30",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "O",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "S",
+					ProfessionID:      "WRST",
+					MobilePhone:       "085720230309",
+				},
+			},
+			statusKonsumen: constant.STATUS_KONSUMEN_NEW,
+			resPefindoCode: 200,
+			resPefindoBody: `{
+				"code": "200",
+				"status": "SUCCESS",
+				"result": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 29,
+					"max_overdue_last12months": 50,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": true,
+					"wo_ada_agunan": false,
+					"total_baki_debet_non_agunan": 873675,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"overdue_last_ko_rules": 31,
+					"overdue_last_12month_ko_rules": 61,
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 30,
+					"max_ovd_agunan_last_12month_ko_rules": 60,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 61
+				},
+				"konsumen": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 29,
+					"max_overdue_last12months": 50,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": 1,
+					"wo_ada_agunan": 0,
+					"baki_debet_non_agunan": 873675,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"plafon": 7928083,
+					"fasilitas_aktif": 7,
+					"kualitas_kredit_terburuk": "COLL 5",
+					"bulan_kualitas_terburuk": "2023-10-31",
+					"baki_debet_kualitas_terburuk": 6000000,
+					"kualitas_kredit_terakhir": "COLL 5",
+					"bulan_kualitas_kredit_terakhir": "2022-11-30",
+					"overdue_last_ko_rules": 31,
+					"overdue_last_12month_ko_rules": 61,
+					"category": 3,
+					"max_ovd_agunan_ko_rules": 30,
+					"max_ovd_agunan_last_12month_ko_rules": 60,
+					"max_ovd_non_agunan_ko_rules": 31,
+					"max_ovd_non_agunan_last_12month_ko_rules": 61
 				},
 				"pasangan": null,
 				"server_time": "2023-12-04T13:15:46+07:00",
@@ -10164,7 +10559,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10235,7 +10630,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10306,7 +10701,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10377,7 +10772,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10448,7 +10843,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10519,7 +10914,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10590,7 +10985,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10661,7 +11056,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10731,7 +11126,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10801,7 +11196,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10872,7 +11267,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -10943,7 +11338,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -11014,7 +11409,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -11050,7 +11445,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_PASS_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_Konsumen_WoContractNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_Konsumen_WoContractNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -11084,7 +11479,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": 31,
 					"overdue_last_12month_ko_rules": 50,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
@@ -11172,7 +11567,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"overdue_last_ko_rules": null,
 					"overdue_last_12month_ko_rules": 61,
-					"category": 2
+					"category": 1
 				},
 				"konsumen": {
 					"search_id": "kp_656d6e44a6bf8",
