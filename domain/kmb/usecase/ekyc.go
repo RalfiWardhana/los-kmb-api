@@ -73,7 +73,7 @@ func (u usecase) Dukcapil(ctx context.Context, req request.Metrics, reqMetricsEk
 		thresholdFr                                 float64
 	)
 
-	config, err := u.repository.GetConfig("ekyc", "NKMB", "threshold_ekyc")
+	config, err := u.repository.GetConfig("ekyc", "KMB-OFF", "threshold_ekyc")
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get Dukcapil Config Error")

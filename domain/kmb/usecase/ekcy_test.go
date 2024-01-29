@@ -1677,7 +1677,7 @@ func TestDukcapil(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
 
-		mockRepository.On("GetConfig", "ekyc", "NKMB", "threshold_ekyc").Return(test.respAppConfig, test.errGetConfig)
+		mockRepository.On("GetConfig", "ekyc", "KMB-OFF", "threshold_ekyc").Return(test.respAppConfig, test.errGetConfig)
 		mockRepository.On("GetMappingDukcapil", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(test.respGetMappingDukcapil.data, test.respGetMappingDukcapil.err)
 		mockRepository.On("GetMappingDukcapilVD", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(test.MappingResultDukcapilVD, test.errMappingResultDukcapilVD)
 
