@@ -8563,7 +8563,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.NAMA_SAMA_CURRENT_OVD_NULL_CODE,
 				Decision:       constant.DECISION_PASS,
-				Reason:         fmt.Sprintf("NAMA SAMA & PBK OVD 12 Bulan Terakhir <= %d", constant.PBK_OVD_LAST_12),
+				Reason:         fmt.Sprintf("NAMA SAMA (I) & PBK OVD 12 Bulan Terakhir <= %d", constant.PBK_OVD_LAST_12),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -8634,7 +8634,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.NAMA_SAMA_CURRENT_OVD_UNDER_LIMIT_CODE,
 				Decision:       constant.DECISION_PASS,
-				Reason:         fmt.Sprintf("NAMA SAMA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT),
+				Reason:         fmt.Sprintf("NAMA SAMA (I) & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -8705,7 +8705,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.NAMA_SAMA_CURRENT_OVD_OVER_LIMIT_CODE,
 				Decision:       constant.DECISION_PASS,
-				Reason:         fmt.Sprintf("NAMA SAMA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT),
+				Reason:         fmt.Sprintf("NAMA SAMA (I) & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -8787,7 +8787,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_SAMA_BAKI_DEBET_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, "(III)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -8869,7 +8869,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_SAMA_BAKI_DEBET_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, "(III)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -8944,7 +8944,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_SAMA_BAKI_DEBET_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, "(III)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -9019,7 +9019,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, "(III)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    0,
 				TotalBakiDebet: 20873675,
@@ -9094,7 +9094,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_SAMA_BAKI_DEBET_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, "(III)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO_AO,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -9169,7 +9169,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, "(III)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO_AO,
 				NextProcess:    0,
 				TotalBakiDebet: 20873675,
@@ -9244,7 +9244,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         "Nama Sama & " + constant.ADA_FASILITAS_WO_AGUNAN,
+				Reason:         fmt.Sprintf("NAMA SAMA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, "(III)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    0,
 				TotalBakiDebet: 873675,
@@ -9319,7 +9319,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, "(III)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    0,
 				TotalBakiDebet: 20873675,
@@ -9394,7 +9394,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_SAMA_BAKI_DEBET_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, "(III)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO_AO,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -9469,7 +9469,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, "(III)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO_AO,
 				NextProcess:    0,
 				TotalBakiDebet: 21000000,
@@ -9543,7 +9543,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.ADA_FASILITAS_WO_AGUNAN,
+				Reason:         fmt.Sprintf("NAMA SAMA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, "(III)"),
 				NextProcess:    0,
 				TotalBakiDebet: 20873675,
 				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
@@ -9617,7 +9617,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_SAMA_BAKI_DEBET_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, "(III)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -9692,7 +9692,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, "(III)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    0,
 				TotalBakiDebet: 20873675,
@@ -9767,7 +9767,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_SAMA_BAKI_DEBET_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, "(III)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO_AO,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -9842,7 +9842,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, "(III)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO_AO,
 				NextProcess:    0,
 				TotalBakiDebet: 21000000,
@@ -9916,7 +9916,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_PASS_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.TIDAK_ADA_FASILITAS_WO_AGUNAN,
+				Reason:         fmt.Sprintf("NAMA SAMA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, "(III)"),
 				NextProcess:    1,
 				TotalBakiDebet: 20873675,
 				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
@@ -9986,7 +9986,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.NAMA_SAMA_12_OVD_OVER_LIMIT_CODE,
 				Decision:       constant.DECISION_PASS,
-				Reason:         fmt.Sprintf("NAMA SAMA & OVD 12 Bulan Terakhir > %d", constant.PBK_OVD_LAST_12),
+				Reason:         fmt.Sprintf("NAMA SAMA (I) & OVD 12 Bulan Terakhir > %d", constant.PBK_OVD_LAST_12),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -10057,7 +10057,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.NAMA_SAMA_12_OVD_OVER_LIMIT_CODE,
 				Decision:       constant.DECISION_PASS,
-				Reason:         fmt.Sprintf("NAMA SAMA & OVD 12 Bulan Terakhir > %d", constant.PBK_OVD_LAST_12),
+				Reason:         fmt.Sprintf("NAMA SAMA (I) & OVD 12 Bulan Terakhir > %d", constant.PBK_OVD_LAST_12),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -10128,7 +10128,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.NAMA_SAMA_12_OVD_NULL_CODE,
 				Decision:       constant.DECISION_PASS,
-				Reason:         "NAMA SAMA & OVD 12 Bulan Terakhir Null",
+				Reason:         "NAMA SAMA  & OVD 12 Bulan Terakhir Null",
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -10199,7 +10199,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.NAMA_BEDA_12_OVD_NULL_CODE,
 				Decision:       constant.DECISION_PASS,
-				Reason:         "NAMA BEDA & OVD 12 Bulan Terakhir Null",
+				Reason:         "NAMA BEDA  & OVD 12 Bulan Terakhir Null",
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -10270,7 +10270,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.NAMA_BEDA_CURRENT_OVD_NULL_CODE,
 				Decision:       constant.DECISION_PASS,
-				Reason:         fmt.Sprintf("NAMA BEDA & PBK OVD 12 Bulan Terakhir <= %d", constant.PBK_OVD_LAST_12),
+				Reason:         fmt.Sprintf("NAMA BEDA (I) & PBK OVD 12 Bulan Terakhir <= %d", constant.PBK_OVD_LAST_12),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -10352,7 +10352,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.NAMA_BEDA_CURRENT_OVD_UNDER_LIMIT_CODE,
 				Decision:       constant.DECISION_PASS,
-				Reason:         fmt.Sprintf("NAMA BEDA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT),
+				Reason:         fmt.Sprintf("NAMA BEDA (I) & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -10434,7 +10434,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.NAMA_BEDA_CURRENT_OVD_UNDER_LIMIT_CODE,
 				Decision:       constant.DECISION_PASS,
-				Reason:         fmt.Sprintf("NAMA BEDA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT),
+				Reason:         fmt.Sprintf("NAMA BEDA (II) & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -10516,7 +10516,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.NAMA_BEDA_CURRENT_OVD_UNDER_LIMIT_CODE,
 				Decision:       constant.DECISION_PASS,
-				Reason:         fmt.Sprintf("NAMA BEDA & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT),
+				Reason:         fmt.Sprintf("NAMA BEDA (III) & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -10587,7 +10587,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_BEDA_BAKI_DEBET_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, "(I)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    0,
 				TotalBakiDebet: 873675,
@@ -10658,7 +10658,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, "(I)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    0,
 				TotalBakiDebet: 20873675,
@@ -10729,7 +10729,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_BEDA_BAKI_DEBET_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, "(I)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO_AO,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -10800,7 +10800,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, "(I)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO_AO,
 				NextProcess:    0,
 				TotalBakiDebet: 20873675,
@@ -10871,7 +10871,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         "Nama Beda & " + constant.ADA_FASILITAS_WO_AGUNAN,
+				Reason:         fmt.Sprintf("NAMA BEDA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, "(I)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    0,
 				TotalBakiDebet: 873675,
@@ -10942,7 +10942,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, "(I)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    0,
 				TotalBakiDebet: 20873675,
@@ -11013,7 +11013,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_BEDA_BAKI_DEBET_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, "(I)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO_AO,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -11084,7 +11084,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, "(I)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO_AO,
 				NextProcess:    0,
 				TotalBakiDebet: 21000000,
@@ -11154,7 +11154,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.ADA_FASILITAS_WO_AGUNAN,
+				Reason:         fmt.Sprintf("NAMA BEDA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, "(I)"),
 				NextProcess:    0,
 				TotalBakiDebet: 20873675,
 				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
@@ -11224,7 +11224,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_BEDA_BAKI_DEBET_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, "(I)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    0,
 				TotalBakiDebet: 873675,
@@ -11295,7 +11295,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, "(I)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    0,
 				TotalBakiDebet: 20873675,
@@ -11366,7 +11366,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_BEDA_BAKI_DEBET_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, "(I)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO_AO,
 				NextProcess:    1,
 				TotalBakiDebet: 873675,
@@ -11437,7 +11437,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, "(I)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO_AO,
 				NextProcess:    0,
 				TotalBakiDebet: 21000000,
@@ -11525,7 +11525,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_PASS_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.TIDAK_ADA_FASILITAS_WO_AGUNAN,
+				Reason:         fmt.Sprintf("NAMA BEDA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, "(I)"),
 				NextProcess:    1,
 				TotalBakiDebet: 20873675,
 				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
@@ -11595,7 +11595,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.WO_AGUNAN_REJECT_CODE,
 				Decision:       constant.DECISION_REJECT,
-				Reason:         constant.NAMA_BEDA_BAKI_DEBET_SESUAI,
+				Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, "(I)"),
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    0,
 				TotalBakiDebet: 873675,
@@ -11911,7 +11911,7 @@ func TestFilteringPefindo(t *testing.T) {
 			resFinal: response.DupcheckResult{
 				Code:           constant.NAMA_SAMA_12_OVD_NULL_CODE,
 				Decision:       constant.DECISION_PASS,
-				Reason:         "NAMA SAMA & OVD 12 Bulan Terakhir Null",
+				Reason:         "NAMA SAMA  & OVD 12 Bulan Terakhir Null",
 				NextProcess:    1,
 				TotalBakiDebet: 20873675,
 				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
