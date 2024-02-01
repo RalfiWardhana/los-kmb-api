@@ -704,90 +704,90 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 		}
 
 		if checkPefindo.Code == "200" && pefindoResult.Score != constant.PEFINDO_UNSCORE {
-			overdueCurrent, overdueLast12Month := func() (interface{}, interface{}) {
-				if pefindoResult.Category == 1 {
-					return pefindoResult.OverdueLastKORules, pefindoResult.OverdueLast12MonthsKORules
-				} else if pefindoResult.Category == 2 {
-					return pefindoResult.MaxOverdueNonAgunanKORules, pefindoResult.MaxOverdueNonAgunanLast12MonthsKORules
-				} else {
-					return pefindoResult.MaxOverdueAgunanKORules, pefindoResult.MaxOverdueAgunanLast12MonthsKORules
-				}
-			}()
-
-			if bpkbName == constant.NAMA_BEDA {
-				if overdueLast12Month != nil {
-					if checkNullMaxOverdueLast12Months(overdueLast12Month) <= constant.PBK_OVD_LAST_12 {
-						if overdueCurrent == nil {
-							data.Code = constant.NAMA_BEDA_CURRENT_OVD_NULL_CODE
-							data.StatusKonsumen = status_konsumen
-							data.Decision = constant.DECISION_PASS
-							data.Reason = fmt.Sprintf("NAMA BEDA %s & PBK OVD 12 Bulan Terakhir <= %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
-						} else if checkNullMaxOverdue(overdueCurrent) <= constant.PBK_OVD_CURRENT {
-							data.Code = constant.NAMA_BEDA_CURRENT_OVD_UNDER_LIMIT_CODE
-							data.StatusKonsumen = status_konsumen
-							data.Decision = constant.DECISION_PASS
-							data.Reason = fmt.Sprintf("NAMA BEDA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
-						} else if checkNullMaxOverdue(overdueCurrent) > constant.PBK_OVD_CURRENT {
-							data.Code = constant.NAMA_BEDA_CURRENT_OVD_OVER_LIMIT_CODE
+			if pefindoResult.Category != nil {
+				if bpkbName == constant.NAMA_BEDA {
+					if pefindoResult.MaxOverdueLast12MonthsKORules != nil {
+						if checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12 {
+							if pefindoResult.MaxOverdueKORules == nil {
+								data.Code = constant.NAMA_BEDA_CURRENT_OVD_NULL_CODE
+								data.StatusKonsumen = status_konsumen
+								data.Decision = constant.DECISION_PASS
+								data.Reason = fmt.Sprintf("NAMA BEDA %s & PBK OVD 12 Bulan Terakhir <= %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
+							} else if checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) <= constant.PBK_OVD_CURRENT {
+								data.Code = constant.NAMA_BEDA_CURRENT_OVD_UNDER_LIMIT_CODE
+								data.StatusKonsumen = status_konsumen
+								data.Decision = constant.DECISION_PASS
+								data.Reason = fmt.Sprintf("NAMA BEDA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+							} else if checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) > constant.PBK_OVD_CURRENT {
+								data.Code = constant.NAMA_BEDA_CURRENT_OVD_OVER_LIMIT_CODE
+								data.StatusKonsumen = status_konsumen
+								data.Decision = constant.DECISION_REJECT
+								data.Reason = fmt.Sprintf("NAMA BEDA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+							}
+						} else {
+							data.Code = constant.NAMA_BEDA_12_OVD_OVER_LIMIT_CODE
 							data.StatusKonsumen = status_konsumen
 							data.Decision = constant.DECISION_REJECT
-							data.Reason = fmt.Sprintf("NAMA BEDA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+							data.Reason = fmt.Sprintf("NAMA BEDA %s & OVD 12 Bulan Terakhir > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
 						}
 					} else {
-						data.Code = constant.NAMA_BEDA_12_OVD_OVER_LIMIT_CODE
+						data.Code = constant.NAMA_BEDA_12_OVD_NULL_CODE
 						data.StatusKonsumen = status_konsumen
-						data.Decision = constant.DECISION_REJECT
-						data.Reason = fmt.Sprintf("NAMA BEDA %s & OVD 12 Bulan Terakhir > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
+						data.Decision = constant.DECISION_PASS
+						data.Reason = fmt.Sprintf("NAMA BEDA %s & OVD 12 Bulan Terakhir Null", getReasonCategoryRoman(pefindoResult.Category))
 					}
-				} else {
-					data.Code = constant.NAMA_BEDA_12_OVD_NULL_CODE
-					data.StatusKonsumen = status_konsumen
-					data.Decision = constant.DECISION_PASS
-					data.Reason = fmt.Sprintf("NAMA BEDA %s & OVD 12 Bulan Terakhir Null", getReasonCategoryRoman(pefindoResult.Category))
-				}
-			} else if bpkbName == constant.NAMA_SAMA {
-				if overdueLast12Month != nil {
-					if checkNullMaxOverdueLast12Months(overdueLast12Month) <= constant.PBK_OVD_LAST_12 {
-						if overdueCurrent == nil {
-							data.Code = constant.NAMA_SAMA_CURRENT_OVD_NULL_CODE
+				} else if bpkbName == constant.NAMA_SAMA {
+					if pefindoResult.MaxOverdueLast12MonthsKORules != nil {
+						if checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12 {
+							if pefindoResult.MaxOverdueKORules == nil {
+								data.Code = constant.NAMA_SAMA_CURRENT_OVD_NULL_CODE
+								data.StatusKonsumen = status_konsumen
+								data.Decision = constant.DECISION_PASS
+								data.Reason = fmt.Sprintf("NAMA SAMA %s & PBK OVD 12 Bulan Terakhir <= %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
+							} else if checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) <= constant.PBK_OVD_CURRENT {
+								data.Code = constant.NAMA_SAMA_CURRENT_OVD_UNDER_LIMIT_CODE
+								data.StatusKonsumen = status_konsumen
+								data.Decision = constant.DECISION_PASS
+								data.Reason = fmt.Sprintf("NAMA SAMA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+							} else if checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) > constant.PBK_OVD_CURRENT {
+								data.Code = constant.NAMA_SAMA_CURRENT_OVD_OVER_LIMIT_CODE
+								data.StatusKonsumen = status_konsumen
+								data.Reason = fmt.Sprintf("NAMA SAMA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+
+								data.Decision = func() string {
+									if checkNullCategory(pefindoResult.Category) == 3 {
+										return constant.DECISION_REJECT
+									}
+									return constant.DECISION_PASS
+								}()
+							}
+						} else {
+							data.Code = constant.NAMA_SAMA_12_OVD_OVER_LIMIT_CODE
 							data.StatusKonsumen = status_konsumen
-							data.Decision = constant.DECISION_PASS
-							data.Reason = fmt.Sprintf("NAMA SAMA %s & PBK OVD 12 Bulan Terakhir <= %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
-						} else if checkNullMaxOverdue(overdueCurrent) <= constant.PBK_OVD_CURRENT {
-							data.Code = constant.NAMA_SAMA_CURRENT_OVD_UNDER_LIMIT_CODE
-							data.StatusKonsumen = status_konsumen
-							data.Decision = constant.DECISION_PASS
-							data.Reason = fmt.Sprintf("NAMA SAMA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
-						} else if checkNullMaxOverdue(overdueCurrent) > constant.PBK_OVD_CURRENT {
-							data.Code = constant.NAMA_SAMA_CURRENT_OVD_OVER_LIMIT_CODE
-							data.StatusKonsumen = status_konsumen
-							data.Reason = fmt.Sprintf("NAMA SAMA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+							data.Reason = fmt.Sprintf("NAMA SAMA %s & OVD 12 Bulan Terakhir > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
 
 							data.Decision = func() string {
-								if pefindoResult.Category == 3 {
+								if checkNullCategory(pefindoResult.Category) == 3 {
 									return constant.DECISION_REJECT
 								}
 								return constant.DECISION_PASS
 							}()
 						}
 					} else {
-						data.Code = constant.NAMA_SAMA_12_OVD_OVER_LIMIT_CODE
+						data.Code = constant.NAMA_SAMA_12_OVD_NULL_CODE
 						data.StatusKonsumen = status_konsumen
-						data.Reason = fmt.Sprintf("NAMA SAMA %s & OVD 12 Bulan Terakhir > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
-
-						data.Decision = func() string {
-							if pefindoResult.Category == 3 {
-								return constant.DECISION_REJECT
-							}
-							return constant.DECISION_PASS
-						}()
+						data.Decision = constant.DECISION_PASS
+						data.Reason = fmt.Sprintf("NAMA SAMA %s & OVD 12 Bulan Terakhir Null", getReasonCategoryRoman(pefindoResult.Category))
 					}
-				} else {
-					data.Code = constant.NAMA_SAMA_12_OVD_NULL_CODE
-					data.StatusKonsumen = status_konsumen
-					data.Decision = constant.DECISION_PASS
-					data.Reason = fmt.Sprintf("NAMA SAMA %s & OVD 12 Bulan Terakhir Null", getReasonCategoryRoman(pefindoResult.Category))
 				}
+
+				data.PbkReport = pefindoResult.DetailReport
+				data.TotalBakiDebet = pefindoResult.TotalBakiDebetNonAgunan
+			} else {
+				data.Code = constant.PBK_NO_HIT
+				data.StatusKonsumen = status_konsumen
+				data.Reason = "PBK No Hit - Kategori Konsumen Null"
+				data.NextProcess = 1
 			}
 
 			if data.Decision == constant.DECISION_REJECT {
@@ -946,9 +946,6 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 				updateFiltering.PefindoIDSpouse = &checkPefindo.Pasangan.PefindoID
 			}
 
-			data.PbkReport = pefindoResult.DetailReport
-			data.TotalBakiDebet = pefindoResult.TotalBakiDebetNonAgunan
-
 		} else if checkPefindo.Code == "201" || pefindoResult.Score == constant.PEFINDO_UNSCORE {
 
 			if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
@@ -1037,9 +1034,21 @@ func checkNullMaxOverdue(MaxOverdueLast interface{}) float64 {
 	return max_overdue_months
 }
 
+func checkNullCategory(Category interface{}) float64 {
+	var category float64
+
+	if utils.CheckVriable(Category) == reflect.String.String() {
+		category = utils.StrConvFloat64(Category.(string))
+	} else {
+		category = Category.(float64)
+	}
+
+	return category
+}
+
 // function to map reason category values to Roman numerals
-func getReasonCategoryRoman(category float64) string {
-	switch category {
+func getReasonCategoryRoman(category interface{}) string {
+	switch category.(float64) {
 	case 1:
 		return "(I)"
 	case 2:
