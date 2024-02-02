@@ -781,167 +781,172 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 					}
 				}
 
+				if data.Decision == constant.DECISION_REJECT {
+
+					data.StatusKonsumen = status_konsumen
+					data.Code = constant.WO_AGUNAN_REJECT_CODE
+
+					// BPKB Nama Sama
+					if bpkbName == constant.NAMA_SAMA {
+						if pefindoResult.WoContract { //Wo Contract Yes
+
+							if pefindoResult.WoAdaAgunan { //Wo Agunan Yes
+
+								if status_konsumen == constant.STATUS_KONSUMEN_NEW {
+									if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+										data.NextProcess = 0
+										data.Reason = fmt.Sprintf("NAMA SAMA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
+									} else {
+										data.NextProcess = 0
+										data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									}
+								} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
+									if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+										data.NextProcess = 1
+										data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									} else {
+										data.NextProcess = 0
+										data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									}
+								} else {
+									data.NextProcess = 0
+									data.Reason = fmt.Sprintf("NAMA SAMA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
+								}
+
+							} else { //Wo Agunan No
+								if status_konsumen == constant.STATUS_KONSUMEN_NEW {
+									if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+										data.NextProcess = 1
+										data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									} else {
+										data.NextProcess = 0
+										data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									}
+								} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
+									if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+										data.NextProcess = 1
+										data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									} else {
+										data.NextProcess = 0
+										data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									}
+								}
+							}
+						} else { //Wo Contract No
+							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+									data.NextProcess = 1
+									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+								} else {
+									data.NextProcess = 0
+									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+								}
+
+							} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+									data.NextProcess = 1
+									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+								} else {
+									data.NextProcess = 0
+									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+								}
+							} else {
+								data.NextProcess = 1
+								data.Code = constant.WO_AGUNAN_PASS_CODE
+								data.Reason = fmt.Sprintf("NAMA SAMA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
+							}
+						}
+					}
+
+					// BPKB Nama Beda
+					if bpkbName == constant.NAMA_BEDA {
+						if pefindoResult.WoContract { //Wo Contract Yes
+
+							if pefindoResult.WoAdaAgunan { //Wo Agunan Yes
+
+								if status_konsumen == constant.STATUS_KONSUMEN_NEW {
+									if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+										data.NextProcess = 0
+										data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
+									} else {
+										data.NextProcess = 0
+										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									}
+								} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
+									if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+										data.NextProcess = 1
+										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									} else {
+										data.NextProcess = 0
+										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									}
+								} else {
+									data.NextProcess = 0
+									data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
+								}
+
+							} else { //Wo Agunan No
+								if status_konsumen == constant.STATUS_KONSUMEN_NEW {
+									if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+										data.NextProcess = 0
+										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									} else {
+										data.NextProcess = 0
+										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									}
+								} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
+									if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+										data.NextProcess = 1
+										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									} else {
+										data.NextProcess = 0
+										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									}
+								}
+							}
+						} else { //Wo Contract No
+							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+									data.NextProcess = 0
+									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+								} else {
+									data.NextProcess = 0
+									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+								}
+
+							} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+									data.NextProcess = 1
+									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+								} else {
+									data.NextProcess = 0
+									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+								}
+							} else {
+								data.NextProcess = 1
+								data.Code = constant.WO_AGUNAN_PASS_CODE
+								data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
+							}
+						}
+					}
+				}
+
 				data.PbkReport = pefindoResult.DetailReport
 				data.TotalBakiDebet = pefindoResult.TotalBakiDebetNonAgunan
+
+				updateFiltering.PefindoScore = &pefindoResult.Score
 			} else {
 				data.Code = constant.PBK_NO_HIT
 				data.StatusKonsumen = status_konsumen
+				data.Decision = constant.DECISION_PASS
 				data.Reason = "PBK No Hit - Kategori Konsumen Null"
 				data.NextProcess = 1
-			}
 
-			if data.Decision == constant.DECISION_REJECT {
-
-				data.StatusKonsumen = status_konsumen
-				data.Code = constant.WO_AGUNAN_REJECT_CODE
-
-				// BPKB Nama Sama
-				if bpkbName == constant.NAMA_SAMA {
-					if pefindoResult.WoContract { //Wo Contract Yes
-
-						if pefindoResult.WoAdaAgunan { //Wo Agunan Yes
-
-							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
-								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-									data.NextProcess = 0
-									data.Reason = fmt.Sprintf("NAMA SAMA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
-								} else {
-									data.NextProcess = 0
-									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-								}
-							} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
-								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-									data.NextProcess = 1
-									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-								} else {
-									data.NextProcess = 0
-									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-								}
-							} else {
-								data.NextProcess = 0
-								data.Reason = fmt.Sprintf("NAMA SAMA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
-							}
-
-						} else { //Wo Agunan No
-							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
-								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-									data.NextProcess = 1
-									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-								} else {
-									data.NextProcess = 0
-									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-								}
-							} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
-								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-									data.NextProcess = 1
-									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-								} else {
-									data.NextProcess = 0
-									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-								}
-							}
-						}
-					} else { //Wo Contract No
-						if status_konsumen == constant.STATUS_KONSUMEN_NEW {
-							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-								data.NextProcess = 1
-								data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-							} else {
-								data.NextProcess = 0
-								data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-							}
-
-						} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
-							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-								data.NextProcess = 1
-								data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-							} else {
-								data.NextProcess = 0
-								data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-							}
-						} else {
-							data.NextProcess = 1
-							data.Code = constant.WO_AGUNAN_PASS_CODE
-							data.Reason = fmt.Sprintf("NAMA SAMA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
-						}
-					}
-				}
-
-				// BPKB Nama Beda
-				if bpkbName == constant.NAMA_BEDA {
-					if pefindoResult.WoContract { //Wo Contract Yes
-
-						if pefindoResult.WoAdaAgunan { //Wo Agunan Yes
-
-							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
-								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-									data.NextProcess = 0
-									data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
-								} else {
-									data.NextProcess = 0
-									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-								}
-							} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
-								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-									data.NextProcess = 1
-									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-								} else {
-									data.NextProcess = 0
-									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-								}
-							} else {
-								data.NextProcess = 0
-								data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
-							}
-
-						} else { //Wo Agunan No
-							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
-								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-									data.NextProcess = 0
-									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-								} else {
-									data.NextProcess = 0
-									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-								}
-							} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
-								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-									data.NextProcess = 1
-									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-								} else {
-									data.NextProcess = 0
-									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-								}
-							}
-						}
-					} else { //Wo Contract No
-						if status_konsumen == constant.STATUS_KONSUMEN_NEW {
-							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-								data.NextProcess = 0
-								data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-							} else {
-								data.NextProcess = 0
-								data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-							}
-
-						} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
-							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-								data.NextProcess = 1
-								data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-							} else {
-								data.NextProcess = 0
-								data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
-							}
-						} else {
-							data.NextProcess = 1
-							data.Code = constant.WO_AGUNAN_PASS_CODE
-							data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
-						}
-					}
-				}
+				updateFiltering.PefindoScore = new(string)
+				*updateFiltering.PefindoScore = constant.UNSCORE_PBK
 			}
 
 			updateFiltering.PefindoID = &checkPefindo.Konsumen.PefindoID
-			updateFiltering.PefindoScore = &pefindoResult.Score
 			if checkPefindo.Pasangan != (response.PefindoResultPasangan{}) {
 				updateFiltering.PefindoIDSpouse = &checkPefindo.Pasangan.PefindoID
 			}

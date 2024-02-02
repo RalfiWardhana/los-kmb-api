@@ -10276,6 +10276,7 @@ func TestFilteringPefindo(t *testing.T) {
 			}`,
 			resFinal: response.DupcheckResult{
 				Code:           constant.PBK_NO_HIT,
+				Decision:       constant.DECISION_PASS,
 				Reason:         "PBK No Hit - Kategori Konsumen Null",
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				NextProcess:    1,
