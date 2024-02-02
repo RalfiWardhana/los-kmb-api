@@ -12,6 +12,7 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/iancoleman/strcase v0.2.0
 	github.com/jarcoal/httpmock v1.3.0
+	github.com/jinzhu/copier v0.4.0
 	github.com/jinzhu/gorm v1.9.16
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/joho/godotenv v1.4.0

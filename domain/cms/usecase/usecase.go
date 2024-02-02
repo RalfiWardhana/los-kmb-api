@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jinzhu/copier"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -1889,6 +1890,45 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 		IsFinal:        approvalScheme.IsFinal,
 		NeedEscalation: approvalScheme.IsEscalation,
 	}
+
+	return
+}
+
+func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data interface{}, err error) {
+
+	filtering := request.Filtering{
+		ProspectID: req.Transaction.ProspectID,
+		BranchID:   req.Transaction.BranchID,
+		BirthDate:  req.CustomerPersonal.BirthDate,
+		Gender:     req.CustomerPersonal.Gender,
+		BPKBName:   req.Item.BPKBName,
+	}
+
+	filtering.IDNumber, _ = utils.PlatformEncryptText(req.CustomerPersonal.IDNumber)
+	filtering.LegalName, _ = utils.PlatformEncryptText(req.CustomerPersonal.LegalName)
+	filtering.MotherName, _ = utils.PlatformEncryptText(req.CustomerPersonal.SurgateMotherName)
+
+	if req.CustomerSpouse != nil {
+		filtering.Spouse.IDNumber, _ = utils.PlatformEncryptText(req.CustomerSpouse.IDNumber)
+		filtering.Spouse.LegalName, _ = utils.PlatformEncryptText(req.CustomerSpouse.LegalName)
+		filtering.Spouse.MotherName, _ = utils.PlatformEncryptText(req.CustomerSpouse.SurgateMotherName)
+		filtering.Spouse.Gender = req.CustomerSpouse.Gender
+	}
+
+	elaborateLTV := request.ElaborateLTV{
+		ProspectID:        req.Transaction.ProspectID,
+		Tenor:             req.Apk.Tenor,
+		ManufacturingYear: req.Item.ManufactureYear,
+	}
+
+	var journey request.Metrics
+	err = copier.Copy(&journey, &req)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Submit NE error")
+		return
+	}
+
+	err = u.repository.SubmitNE(req, filtering, elaborateLTV, journey)
 
 	return
 }

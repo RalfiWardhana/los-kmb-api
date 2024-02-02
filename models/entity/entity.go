@@ -2265,3 +2265,22 @@ type STG_CUST_FAM struct {
 func (c *STG_CUST_FAM) TableName() string {
 	return "STG_CUST_FAM"
 }
+
+type NewEntry struct {
+	ProspectID       string    `gorm:"type:varchar(20);column:ProspectID" json:"prospect_id"`
+	BranchID         string    `gorm:"type:varchar(3);column:BranchID" json:"branch_id"`
+	IDNumber         string    `gorm:"type:varchar(100);column:IDNumber" json:"id_number"`
+	LegalName        string    `gorm:"type:varchar(100);column:LegalName" json:"legal_name"`
+	BirthDate        string    `gorm:"column:BirthDate" json:"birth_date"`
+	CreatedAt        time.Time `gorm:"column:created_at"`
+	CreatedByID      string    `gorm:"type:varchar(100);column:created_by_id" json:"created_by_id"`
+	CreatedByName    string    `gorm:"type:varchar(200);column:created_by_name" json:"created_by_name"`
+	PayloadNE        string    `gorm:"type:varchar(5000);column:payload_ne" json:"payload_ne"`
+	PayloadFiltering string    `gorm:"type:varchar(1000);column:payload_filtering" json:"payload_filtering"`
+	PayloadLTV       string    `gorm:"type:varchar(200);column:payload_ltv" json:"payload_ltv"`
+	PayloadJourney   string    `gorm:"type:varchar(5000);column:payload_journey" json:"payload_journey"`
+}
+
+func (c *NewEntry) TableName() string {
+	return "new_entry"
+}

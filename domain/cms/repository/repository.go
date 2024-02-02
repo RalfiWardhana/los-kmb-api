@@ -3023,3 +3023,39 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 		return nil
 	})
 }
+
+func (r repoHandler) SubmitNE(req request.MetricsNE, filtering request.Filtering, elaboreateLTV request.ElaborateLTV, journey request.Metrics) (err error) {
+	err = r.NewKmb.Transaction(func(tx *gorm.DB) error {
+		var encrypted entity.Encrypted
+
+		if err := tx.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS LegalName,  SCP.dbo.ENC_B64('SEC','%s') AS IDNumber`,
+			req.CustomerPersonal.LegalName, req.CustomerPersonal.IDNumber)).Scan(&encrypted).Error; err != nil {
+			return err
+		}
+
+		PayloadNE, _ := json.Marshal(req)
+		PayloadFiltering, _ := json.Marshal(filtering)
+		PayloadLTV, _ := json.Marshal(elaboreateLTV)
+		PayloadJourney, _ := json.Marshal(journey)
+		ne := entity.NewEntry{
+			ProspectID:       req.Transaction.ProspectID,
+			BranchID:         req.Transaction.BranchID,
+			IDNumber:         encrypted.IDNumber,
+			LegalName:        encrypted.LegalName,
+			BirthDate:        req.CustomerPersonal.BirthDate,
+			CreatedByID:      req.CreatedBy.CreatedByID,
+			CreatedByName:    req.CreatedBy.CreatedByName,
+			PayloadNE:        utils.SafeJsonReplacer(string(PayloadNE)),
+			PayloadFiltering: utils.SafeJsonReplacer(string(PayloadFiltering)),
+			PayloadLTV:       utils.SafeJsonReplacer(string(PayloadLTV)),
+			PayloadJourney:   utils.SafeJsonReplacer(string(PayloadJourney)),
+		}
+
+		if err := tx.Create(&ne).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+
+	return
+}
