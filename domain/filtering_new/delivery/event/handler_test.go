@@ -8,6 +8,7 @@ import (
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/common"
 	mocksJson "los-kmb-api/shared/common/json/mocks"
+	mockplatformcache "los-kmb-api/shared/common/platformcache/mocks"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
@@ -299,13 +300,15 @@ func TestFiltering(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockJson := new(mocksJson.JSON)
 			mockEvent := new(MockEvent)
+			mockPlatformCache := new(mockplatformcache.PlatformCacheInterface)
 
 			handler := &handlers{
-				multiusecase: mockMultiUsecase,
-				usecase:      mockUsecase,
-				repository:   mockRepository,
-				validator:    validator,
-				Json:         mockJson,
+				multiusecase:  mockMultiUsecase,
+				usecase:       mockUsecase,
+				repository:    mockRepository,
+				validator:     validator,
+				Json:          mockJson,
+				platformCache: mockPlatformCache,
 			}
 			ctx := context.Background()
 			startTime := utils.GenerateTimeInMilisecond()
@@ -323,6 +326,8 @@ func TestFiltering(t *testing.T) {
 			mockJson.On("EventServiceError", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{})
 			mockJson.On("EventBadRequestErrorValidation", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{})
 			mockJson.On("EventSuccess", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{})
+			mockPlatformCache.On("SetCache", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, nil)
+			mockPlatformCache.On("GetCache", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, nil)
 			err := handler.Filtering(ctx, mockEvent)
 			if err != nil {
 				t.Errorf("error '%s' was not expected, but got: ", err)

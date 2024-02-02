@@ -5,6 +5,7 @@ import (
 	"los-kmb-api/middlewares"
 	"los-kmb-api/shared/common"
 	mocksJson "los-kmb-api/shared/common/json/mocks"
+	mockplatformcache "los-kmb-api/shared/common/platformcache/mocks"
 	"los-kmb-api/shared/common/platformevent"
 	mockplatformevent "los-kmb-api/shared/common/platformevent/mocks"
 	"net/http"
@@ -64,6 +65,7 @@ func TestProduceFiltering(t *testing.T) {
 			mockUsecase := new(mocks.Usecase)
 			mockRepository := new(mocks.Repository)
 			mockJson := new(mocksJson.JSON)
+			mockPlatformCache := new(mockplatformcache.PlatformCacheInterface)
 			e := echo.New()
 			e.Validator = common.NewValidator()
 
@@ -89,7 +91,7 @@ func TestProduceFiltering(t *testing.T) {
 			mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			route := e.Group("/kmb")
-			FilteringHandler(route, mockMultiUsecase, mockUsecase, mockRepository, mockJson, mockMiddleware, platformEvent)
+			FilteringHandler(route, mockMultiUsecase, mockUsecase, mockRepository, mockJson, mockMiddleware, platformEvent, mockPlatformCache)
 
 			handler := &handlerKmbFiltering{
 				multiusecase: mockMultiUsecase,

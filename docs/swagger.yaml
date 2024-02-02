@@ -184,7 +184,7 @@ definitions:
         example: 36
         type: integer
       way_of_payment:
-        example: Payment Point
+        example: CA
         type: string
     required:
     - admin_fee
@@ -205,7 +205,6 @@ definitions:
     - ntf
     - otr
     - payment_method
-    - premium_amount_to_customer
     - product_id
     - product_offering_id
     - provision_fee
@@ -441,7 +440,6 @@ definitions:
         type: string
     required:
     - agree_to_accept_other_offering
-    - counterpart
     - customer_group
     - data_type
     - debt_business_scale
@@ -599,7 +597,6 @@ definitions:
         type: integer
     required:
     - manufacturing_year
-    - prospect_id
     - tenor
     type: object
   request.Filtering:
@@ -637,7 +634,6 @@ definitions:
     - gender
     - id_number
     - legal_name
-    - prospect_id
     - surgate_mother_name
     type: object
   request.FilteringRequest:
@@ -774,7 +770,6 @@ definitions:
     - owner_asset
     - owner_ktp
     - pos
-    - premium_amount_to_customer
     - qty
     - region
     - stnk_expired_date
@@ -825,6 +820,133 @@ definitions:
     - surveyor
     - transaction
     type: object
+  request.Recalculate:
+    properties:
+      admin_fee:
+        example: 1500000
+        type: number
+      af:
+        example: 84000000
+        type: number
+      asset_premium_amount_to_customer:
+        example: 2184000
+        type: number
+      down_payment_amount:
+        example: 22000000
+        type: number
+      down_payment_rate:
+        example: 20.95
+        type: number
+      fidusia_fee:
+        example: 0
+        type: number
+      installment_amount:
+        example: 4181333
+        type: number
+      interest_amount:
+        example: 66528000
+        type: number
+      interest_rate:
+        example: 2.2
+        type: number
+      life_premium_amount_to_customer:
+        example: 2184000
+        type: number
+      loan_amount:
+        example: 105000000
+        type: number
+      ntf:
+        example: 150528000
+        type: number
+      product_offering_desc:
+        type: string
+      product_offering_id:
+        example: NLMKKAPSEP
+        type: string
+      prospect_id:
+        example: SAL042600001
+        type: string
+      provision_fee:
+        example: 2475000
+        type: number
+      tenor:
+        example: 36
+        type: integer
+    required:
+    - af
+    - down_payment_amount
+    - down_payment_rate
+    - installment_amount
+    - ntf
+    - product_offering_id
+    - tenor
+    type: object
+  request.ReqCancelOrder:
+    properties:
+      decision_by:
+        type: string
+      decision_by_name:
+        type: string
+      prospect_id:
+        example: TEST-DEV
+        type: string
+      reason:
+        type: string
+    required:
+    - decision_by
+    - decision_by_name
+    - prospect_id
+    - reason
+    type: object
+  request.ReqInquiryCa:
+    properties:
+      branch_id:
+        type: string
+      filter:
+        type: string
+      multi_branch:
+        type: string
+      search:
+        type: string
+      user_id:
+        type: string
+    required:
+    - branch_id
+    - multi_branch
+    - user_id
+    type: object
+  request.ReqRecalculateOrder:
+    properties:
+      decision_by:
+        type: string
+      decision_by_name:
+        type: string
+      dp_amount:
+        example: 245000
+        type: number
+      prospect_id:
+        example: TEST-DEV
+        type: string
+    required:
+    - decision_by
+    - decision_by_name
+    - dp_amount
+    - prospect_id
+    type: object
+  request.ReqReturnOrder:
+    properties:
+      decision_by:
+        type: string
+      decision_by_name:
+        type: string
+      prospect_id:
+        example: TEST-DEV
+        type: string
+    required:
+    - decision_by
+    - decision_by_name
+    - prospect_id
+    type: object
   request.ReqReviewPrescreening:
     properties:
       decision:
@@ -844,6 +966,107 @@ definitions:
     - decision_by
     - decision_by_name
     - prospect_id
+    type: object
+  request.ReqSaveAsDraft:
+    properties:
+      decision:
+        example: APPROVE,REJECT
+        type: string
+      decision_by:
+        type: string
+      decision_by_name:
+        type: string
+      note:
+        type: string
+      prospect_id:
+        example: TEST-DEV
+        type: string
+      slik_result:
+        type: string
+    required:
+    - decision
+    - decision_by
+    - decision_by_name
+    - prospect_id
+    - slik_result
+    type: object
+  request.ReqSearchInquiry:
+    properties:
+      branch_id:
+        type: string
+      multi_branch:
+        type: string
+      search:
+        type: string
+      user_id:
+        type: string
+    required:
+    - branch_id
+    - multi_branch
+    - search
+    - user_id
+    type: object
+  request.ReqSubmitApproval:
+    properties:
+      alias:
+        type: string
+      code:
+        type: string
+      decision:
+        example: APPROVE,REJECT,RETURN
+        type: string
+      decision_by:
+        type: string
+      decision_by_name:
+        type: string
+      dp_amount:
+        type: number
+      final_approval:
+        type: string
+      need_escalation:
+        type: boolean
+      note:
+        type: string
+      prospect_id:
+        example: TEST-DEV
+        type: string
+      reason:
+        type: string
+    required:
+    - alias
+    - code
+    - decision
+    - decision_by
+    - decision_by_name
+    - final_approval
+    - prospect_id
+    - reason
+    type: object
+  request.ReqSubmitDecision:
+    properties:
+      decision:
+        example: APPROVE,REJECT
+        type: string
+      decision_by:
+        type: string
+      decision_by_name:
+        type: string
+      note:
+        type: string
+      ntf_akumulasi:
+        type: number
+      prospect_id:
+        example: TEST-DEV
+        type: string
+      slik_result:
+        type: string
+    required:
+    - decision
+    - decision_by
+    - decision_by_name
+    - ntf_akumulasi
+    - prospect_id
+    - slik_result
     type: object
   request.Spouse:
     properties:
@@ -895,6 +1118,25 @@ definitions:
     - surveyor_name
     - surveyor_status
     type: object
+  request.SyncGoLive:
+    properties:
+      agreement_no:
+        type: string
+      application_id:
+        type: string
+      final_disbursed_amount:
+        type: number
+      go_live_date:
+        type: string
+      go_live_status:
+        type: string
+      pay_to_agent_amount:
+        type: number
+      pay_to_agent_date:
+        type: string
+      prospect_id:
+        type: string
+    type: object
   request.Transaction:
     properties:
       application_source:
@@ -921,7 +1163,6 @@ definitions:
     required:
     - application_source
     - order_at
-    - prospect_id
     type: object
   response.ApiResponse:
     properties:
@@ -934,6 +1175,32 @@ definitions:
       request_id:
         type: string
       server_time:
+        type: string
+    type: object
+  response.ApprovalResponse:
+    properties:
+      decision:
+        type: string
+      is_final:
+        type: boolean
+      need_escalation:
+        type: boolean
+      note:
+        type: string
+      prospect_id:
+        type: string
+      reason:
+        type: string
+    type: object
+  response.CAResponse:
+    properties:
+      decision:
+        type: string
+      note:
+        type: string
+      prospect_id:
+        type: string
+      slik_result:
         type: string
     type: object
   response.DupcheckResult:
@@ -980,6 +1247,8 @@ definitions:
         type: integer
       decision:
         type: string
+      is_mapping_ovd:
+        type: boolean
       ltv:
         type: integer
       ltv_origin:
@@ -1108,6 +1377,402 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Filtering
+  /api/v3/kmb/ca/cancel:
+    post:
+      description: Api CA
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqCancelOrder'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ApiResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - CA
+  /api/v3/kmb/ca/recalculate:
+    post:
+      description: Api CA
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqRecalculateOrder'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ApiResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - CA
+  /api/v3/kmb/ca/return:
+    post:
+      description: Api CA
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqReturnOrder'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ApiResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - CA
+  /api/v3/kmb/cache/filtering/{prospect_id}:
+    delete:
+      description: Remove Cache Filtering via REST API
+      parameters:
+      - description: Prospect ID
+        in: path
+        name: prospect_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Filtering
+  /api/v3/kmb/cms/akkk/view/{prospect_id}:
+    get:
+      description: Api AKKK
+      parameters:
+      - description: Prospect ID
+        in: path
+        name: prospect_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ReasonMessageRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - AKKK
+  /api/v3/kmb/cms/approval/inquiry:
+    get:
+      description: Api Credit Approval
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqInquiryCa'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.InquiryRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Credit Approval
+  /api/v3/kmb/cms/approval/reason:
+    get:
+      description: Api Credit Approval
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ReasonMessageRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Credit Approval
+  /api/v3/kmb/cms/approval/submit-approval:
+    post:
+      description: Api Credit Approval
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqSubmitApproval'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ApprovalResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Credit Approval
+  /api/v3/kmb/cms/ca/cancel-reason:
+    get:
+      description: Api CA
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ReasonMessageRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - CA
+  /api/v3/kmb/cms/ca/inquiry:
+    get:
+      description: Api CA
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqInquiryCa'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.InquiryRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - CA
+  /api/v3/kmb/cms/ca/submit-decision:
+    post:
+      description: Api CA
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqSubmitDecision'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.CAResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - CA
   /api/v3/kmb/cms/prescreening/inquiry:
     get:
       description: Api Prescreening
@@ -1227,6 +1892,80 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Prescreening
+  /api/v3/kmb/cms/save-as-draft:
+    post:
+      description: Api CA
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqSaveAsDraft'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.CAResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - CA
+  /api/v3/kmb/cms/search:
+    get:
+      description: Api Search Inquiry
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqSearchInquiry'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.InquiryRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Search Inquiry
   /api/v3/kmb/elaborate:
     post:
       description: ElaborateLTV
@@ -1303,6 +2042,69 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Tools
+  /api/v3/kmb/go-live:
+    post:
+      description: Sync Go-Live
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.SyncGoLive'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Sync Go-Live
+  /api/v3/kmb/insert-staging/{prospectID}:
+    post:
+      description: Insert Staging
+      parameters:
+      - description: Prospect ID
+        in: path
+        name: prospectID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Insert Staging
   /api/v3/kmb/produce/filtering:
     post:
       description: Produce Filtering via REST API
@@ -1399,4 +2201,36 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Submit to LOS
+  /api/v3/kmb/recalculate:
+    post:
+      description: Recalculate
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.Recalculate'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Recalculate
 swagger: "2.0"
