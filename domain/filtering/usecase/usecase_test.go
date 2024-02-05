@@ -8500,7 +8500,7 @@ func TestFilteringPefindo(t *testing.T) {
 			errFinal: errors.New("error unmarshal data pefindo"),
 		},
 		{
-			name: "TEST_PASS_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORulesNil",
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaSama_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORulesNil",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -8571,7 +8571,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_PASS_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules<=60_OverdueLastKORules<=30",
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaSama_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules<=30",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -8642,7 +8642,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_PASS_FilteringPefindo_BPKBNamaSama_Category1_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30",
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaSama_Category1_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -8713,7 +8713,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -8791,7 +8791,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules>60_MaxOverdueAgunanKORules>30",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules>60_MaxOverdueKORules>30",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -8869,7 +8869,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenNew_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenNew_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -8940,7 +8940,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenNew_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenNew_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9011,7 +9011,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenROAO_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenROAO_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9082,7 +9082,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenROAO_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenROAO_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9153,7 +9153,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenNew_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenNew_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9224,7 +9224,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenNew_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenNew_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9295,7 +9295,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenROAO_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenROAO_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9366,7 +9366,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenROAO_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenROAO_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9437,7 +9437,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_Konsumen_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_Konsumen_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9506,7 +9506,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenNew_WoContractNo_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenNew_WoContractNo_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9577,7 +9577,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenNew_WoContractNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenNew_WoContractNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9648,7 +9648,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenROAO_WoContractNo_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenROAO_WoContractNo_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9719,7 +9719,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_KonsumenROAO_WoContractNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenROAO_WoContractNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9790,7 +9790,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules>30_Konsumen_WoContractNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_Konsumen_WoContractNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9859,7 +9859,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_PASS_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules>60",
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaSama_MaxOverdueLast12MonthsKORules>60",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -9930,7 +9930,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_PASS_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORules>60",
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaSama_MaxOverdueLast12MonthsKORules>60",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -10001,7 +10001,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_PASS_FilteringPefindo_BPKBNamaSama_OverdueLast12MonthsKORulesNil",
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaSama_MaxOverdueLast12MonthsKORulesNil",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -10072,7 +10072,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_PASS_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORulesNil",
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORulesNil",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "KK",
@@ -10143,7 +10143,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_PASS_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORulesNil",
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORulesNil",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -10283,7 +10283,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_PASS_FilteringPefindo_BPKBNamaBeda_Category1_OverdueLast12MonthsKORules<=60_OverdueLastKORules<=30",
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaBeda_Category1_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules<=30",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -10361,7 +10361,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_PASS_FilteringPefindo_BPKBNamaBeda_Category2_MaxOverdueNonAgunanLast12MonthsKORules<=60_MaxOverdueNonAgunanKORules<=30",
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaBeda_Category2_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules<=30",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -10439,7 +10439,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_PASS_FilteringPefindo_BPKBNamaBeda_Category3_MaxOverdueAgunanLast12MonthsKORules<=60_MaxOverdueAgunanKORules<=30",
+			name: "TEST_PASS_FilteringPefindo_BPKBNamaBeda_Category3_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules<=30",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -10517,7 +10517,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenNew_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenNew_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -10588,7 +10588,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenNew_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenNew_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -10659,7 +10659,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenROAO_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenROAO_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -10730,7 +10730,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenROAO_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenROAO_WoContractYes_WoAgunanNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -10801,7 +10801,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenNew_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenNew_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -10872,7 +10872,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenNew_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenNew_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -10943,7 +10943,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenROAO_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenROAO_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -11014,7 +11014,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenROAO_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenROAO_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -11085,7 +11085,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_Konsumen_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_Konsumen_WoContractYes_WoAgunanYes_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -11154,7 +11154,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenNew_WoContractNo_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenNew_WoContractNo_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -11225,7 +11225,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenNew_WoContractNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenNew_WoContractNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -11296,7 +11296,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenROAO_WoContractNo_TotalBakiDebetNonAgunan<=20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenROAO_WoContractNo_TotalBakiDebetNonAgunan<=20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -11367,7 +11367,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_KonsumenROAO_WoContractNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_KonsumenROAO_WoContractNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -11438,7 +11438,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules<=60_OverdueLastKORules>30_Konsumen_WoContractNo_TotalBakiDebetNonAgunan>20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules<=60_MaxOverdueKORules>30_Konsumen_WoContractNo_TotalBakiDebetNonAgunan>20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
@@ -11525,7 +11525,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_OverdueLast12MonthsKORules>60",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_MaxOverdueLast12MonthsKORules>60",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "O",
