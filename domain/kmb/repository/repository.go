@@ -190,6 +190,48 @@ func (r repoHandler) GetMappingDukcapil(statusVD, statusFR, customerStatus, cust
 	return
 }
 
+func (r repoHandler) MasterMappingCluster(req entity.MasterMappingCluster) (data entity.MasterMappingCluster, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.newKmbDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = db.Raw("SELECT * FROM dbo.m_mapping_cluster WITH (nolock) WHERE branch_id = ? AND customer_status = ? AND bpkb_name_type = ?", req.BranchID, req.CustomerStatus, req.BpkbNameType).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) MasterMappingMaxDSR(req entity.MasterMappingMaxDSR) (data entity.MasterMappingMaxDSR, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.losDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = db.Raw("SELECT * FROM dbo.kmb_mapping_cluster_dsr WITH (nolock) WHERE cluster = ?", req.Cluster).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.DATA_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) GetScoreGenerator(zipCode string) (score entity.ScoreGenerator, err error) {
 
 	if err = r.scoreProDB.Raw(fmt.Sprintf(`SELECT TOP 1 x.* 
@@ -1001,7 +1043,7 @@ func (r repoHandler) SaveTrxJourney(prospectID string, request interface{}) (err
 
 func (r repoHandler) GetTrxJourney(prospectID string) (trxJourney entity.TrxJourney, err error) {
 
-	if err = r.logsDB.Raw(fmt.Sprintf("SELECT ProspectID, request from trx_journey with (nolock) where ProspectID = '%s'", prospectID)).Scan(&trxJourney).Error; err != nil {
+	if err = r.newKmbDB.Raw(fmt.Sprintf("SELECT ProspectID, request from trx_journey with (nolock) where ProspectID = '%s'", prospectID)).Scan(&trxJourney).Error; err != nil {
 		return
 	}
 

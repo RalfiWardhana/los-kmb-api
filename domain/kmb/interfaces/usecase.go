@@ -9,7 +9,7 @@ import (
 
 type Usecase interface {
 	Prescreening(ctx context.Context, reqs request.Metrics, filtering entity.FilteringKMB, accessToken string) (trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, trxDetail entity.TrxDetail, err error)
-	RejectTenor36(idNumber string) (result response.UsecaseApi, err error)
+	RejectTenor36(cluster string) (result response.UsecaseApi, err error)
 	CheckBannedChassisNumber(chassisNumber string) (data response.UsecaseApi, err error)
 	CheckBannedPMKDSR(idNumber string) (data response.UsecaseApi, err error)
 	CheckRejection(idNumber, prospectID string, configValue response.DupcheckConfig) (data response.UsecaseApi, trxBannedPMKDSR entity.TrxBannedPMKDSR, err error)

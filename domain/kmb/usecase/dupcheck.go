@@ -238,6 +238,10 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		mapping.InstallmentAmountSpouseFMF = dataCustomer[1].TotalInstallment
 	}
 
+	if req.Cluster != "" {
+		mapping.Cluster = req.Cluster
+	}
+
 	// Check DSR
 	dsr, mappingDSR, instOther, instOtherSpouse, instTopup, err := u.usecase.DsrCheck(ctx, req, customerData, req.InstallmentAmount, mapping.InstallmentAmountFMF, mapping.InstallmentAmountSpouseFMF, income, accessToken, configValue)
 	if err != nil {
@@ -251,6 +255,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	mapping.Dsr = dsr.Dsr
 	mapping.Reason = data.Reason
 	mapping.DetailsDSR = mappingDSR.Details
+	mapping.ConfigMaxDSR = configValue.Data.MaxDsr
 
 	if dsr.Result == constant.DECISION_REJECT {
 		return

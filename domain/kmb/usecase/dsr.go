@@ -24,7 +24,7 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 		reasonCustomerStatus string
 	)
 
-	reasonMaxDsr := int(configValue.Data.MaxDsr)
+	reasonMaxDsr := "Threshold"
 
 	konsumen := customerData[0]
 
@@ -80,7 +80,7 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 		if dsr > configValue.Data.MaxDsr {
 			data.Result = constant.DECISION_REJECT
 			data.Code = constant.CODE_DSRGT35
-			data.Reason = fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRGT35, reasonMaxDsr)
+			data.Reason = fmt.Sprintf("%s %s %s", reasonCustomerStatus, constant.REASON_DSRGT35, reasonMaxDsr)
 			data.SourceDecision = constant.SOURCE_DECISION_DSR
 
 			_ = mapstructure.Decode(data, &result)
@@ -191,7 +191,7 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 			} else if dsr > configValue.Data.MaxDsr {
 				data.Result = constant.DECISION_REJECT
 				data.Code = constant.CODE_DSRGT35
-				data.Reason = fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRGT35, reasonMaxDsr)
+				data.Reason = fmt.Sprintf("%s %s %s", reasonCustomerStatus, constant.REASON_DSRGT35, reasonMaxDsr)
 				data.SourceDecision = constant.SOURCE_DECISION_DSR
 
 				_ = mapstructure.Decode(data, &result)
@@ -210,7 +210,7 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 			} else if dsr > configValue.Data.MaxDsr {
 				data.Result = constant.DECISION_REJECT
 				data.Code = constant.CODE_DSRGT35
-				data.Reason = fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRGT35, reasonMaxDsr)
+				data.Reason = fmt.Sprintf("%s %s %s", reasonCustomerStatus, constant.REASON_DSRGT35, reasonMaxDsr)
 				data.SourceDecision = constant.SOURCE_DECISION_DSR
 
 				_ = mapstructure.Decode(data, &result)
@@ -222,7 +222,7 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 
 	data.Result = constant.DECISION_PASS
 	data.Code = constant.CODE_DSRLTE35
-	data.Reason = fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_DSRLTE35, reasonMaxDsr)
+	data.Reason = fmt.Sprintf("%s %s %s", reasonCustomerStatus, constant.REASON_DSRLTE35, reasonMaxDsr)
 	data.SourceDecision = constant.SOURCE_DECISION_DSR
 
 	_ = mapstructure.Decode(data, &result)
@@ -240,7 +240,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 		TotalDSR: totalDSR,
 	}
 
-	reasonMaxDsr := int(configValue.Data.MaxDsr)
+	reasonMaxDsr := "Threshold"
 
 	var reasonCustomerStatus string
 	if customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY {
@@ -351,18 +351,18 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 		}
 	}
 
-	if totalDSR < configValue.Data.MaxDsr {
+	if totalDSR <= configValue.Data.MaxDsr {
 		data = response.UsecaseApi{
 			Result:         constant.DECISION_PASS,
 			Code:           constant.CODE_TOTAL_DSRLTE35,
-			Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_TOTAL_DSRLTE, reasonMaxDsr),
+			Reason:         fmt.Sprintf("%s %s %s", reasonCustomerStatus, constant.REASON_TOTAL_DSRLTE, reasonMaxDsr),
 			SourceDecision: constant.SOURCE_DECISION_DSR,
 		}
 	} else {
 		data = response.UsecaseApi{
 			Result:         constant.DECISION_REJECT,
 			Code:           constant.CODE_TOTAL_DSRGT35,
-			Reason:         fmt.Sprintf("%s %s %d", reasonCustomerStatus, constant.REASON_TOTAL_DSRGT, reasonMaxDsr),
+			Reason:         fmt.Sprintf("%s %s %s", reasonCustomerStatus, constant.REASON_TOTAL_DSRGT, reasonMaxDsr),
 			SourceDecision: constant.SOURCE_DECISION_DSR,
 		}
 	}

@@ -655,6 +655,48 @@ func (_m *Repository) GetTrxJourney(prospectID string) (entity.TrxJourney, error
 	return r0, r1
 }
 
+// MasterMappingCluster provides a mock function with given fields: req
+func (_m *Repository) MasterMappingCluster(req entity.MasterMappingCluster) (entity.MasterMappingCluster, error) {
+	ret := _m.Called(req)
+
+	var r0 entity.MasterMappingCluster
+	if rf, ok := ret.Get(0).(func(entity.MasterMappingCluster) entity.MasterMappingCluster); ok {
+		r0 = rf(req)
+	} else {
+		r0 = ret.Get(0).(entity.MasterMappingCluster)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(entity.MasterMappingCluster) error); ok {
+		r1 = rf(req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MasterMappingMaxDSR provides a mock function with given fields: req
+func (_m *Repository) MasterMappingMaxDSR(req entity.MasterMappingMaxDSR) (entity.MasterMappingMaxDSR, error) {
+	ret := _m.Called(req)
+
+	var r0 entity.MasterMappingMaxDSR
+	if rf, ok := ret.Get(0).(func(entity.MasterMappingMaxDSR) entity.MasterMappingMaxDSR); ok {
+		r0 = rf(req)
+	} else {
+		r0 = ret.Get(0).(entity.MasterMappingMaxDSR)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(entity.MasterMappingMaxDSR) error); ok {
+		r1 = rf(req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // SaveDataApiLog provides a mock function with given fields: data
 func (_m *Repository) SaveDataApiLog(data entity.TrxApiLog) error {
 	ret := _m.Called(data)

@@ -1,28 +1,35 @@
 package usecase
 
 import (
+	"encoding/json"
 	"errors"
-	"los-kmb-api/models/entity"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 )
 
-func (u usecase) RejectTenor36(idNumber string) (result response.UsecaseApi, err error) {
+func (u usecase) RejectTenor36(cluster string) (result response.UsecaseApi, err error) {
 
-	var encryptedIDNumber entity.EncryptedString
-	encryptedIDNumber, err = u.repository.GetEncB64(idNumber)
+	var (
+		pass        bool
+		configValue map[string][]string
+	)
+
+	config, err := u.repository.GetConfig("tenor36", "KMB-OFF", "exclusion_tenor36")
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - GetEncB64 ID Number Error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - GetConfig exclusion_tenor36 Error")
 		return
 	}
 
-	currentTrxWithRejectDSR, err := u.repository.GetCurrentTrxWithRejectDSR(encryptedIDNumber.MyString)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - GetCurrentTrxWithRejectDSR Error")
-		return
+	json.Unmarshal([]byte(config.Value), &configValue)
+
+	for _, v := range configValue["data"] {
+		if v == cluster {
+			pass = true
+			break
+		}
 	}
 
-	if currentTrxWithRejectDSR.ProspectID != "" {
+	if pass {
 		result.Code = constant.CODE_PASS_TENOR
 		result.Result = constant.DECISION_PASS
 		result.Reason = constant.REASON_PASS_TENOR
