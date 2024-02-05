@@ -782,7 +782,6 @@ func (u usecase) GetResultFiltering(prospectID string) (respFiltering response.F
 		CustomerSegment: getResultFiltering[0].CustomerSegment,
 		IsBlacklist:     getResultFiltering[0].IsBlacklist,
 		NextProcess:     getResultFiltering[0].NextProcess,
-		TotalBakiDebet:  getResultFiltering[0].TotalBakiDebetNonCollateralBiro,
 	}
 
 	if getResultFiltering[0].TotalBakiDebetNonCollateralBiro != nil {
