@@ -1,8 +1,10 @@
 package http
 
 import (
+	"errors"
 	"los-kmb-api/domain/filtering_new/interfaces/mocks"
 	"los-kmb-api/middlewares"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/common"
 	mocksJson "los-kmb-api/shared/common/json/mocks"
 	mockplatformcache "los-kmb-api/shared/common/platformcache/mocks"
@@ -106,6 +108,67 @@ func TestProduceFiltering(t *testing.T) {
 			}
 			srv.Close()
 
+		})
+	}
+}
+
+func TestRemoveCacheFiltering(t *testing.T) {
+	testcases := []struct {
+		name       string
+		prospectID string
+		errCache   error
+	}{
+		{
+			name:       "test remove cache success",
+			prospectID: "SAL-123456789",
+		},
+		{
+			name:       "test remove cache errppid",
+			prospectID: "",
+		},
+		{
+			name:       "test remove cache err",
+			prospectID: "SAL-123456789",
+			errCache:   errors.New("error"),
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockMultiUsecase := new(mocks.MultiUsecase)
+			mockUsecase := new(mocks.Usecase)
+			mockRepository := new(mocks.Repository)
+			mockJson := new(mocksJson.JSON)
+			mockPlatformCache := new(mockplatformcache.PlatformCacheInterface)
+
+			handler := &handlerKmbFiltering{
+				multiusecase: mockMultiUsecase,
+				usecase:      mockUsecase,
+				repository:   mockRepository,
+				Json:         mockJson,
+				cache:        mockPlatformCache,
+			}
+			e := echo.New()
+			e.Validator = common.NewValidator()
+
+			mockPlatformCache.On("SetCache", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, tc.errCache)
+			mockJson.On("BadRequestErrorBindV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+			mockJson.On("ServerSideErrorV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+			mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+			// Create a request and recorder for testing
+			req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cache/filtering/:prospect_id", nil)
+			req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+			rec := httptest.NewRecorder()
+			c := e.NewContext(req, rec)
+
+			c.SetParamNames("prospect_id")
+			c.SetParamValues(tc.prospectID)
+
+			// Call the handler
+			err := handler.RemoveCacheFiltering(c)
+			if err != nil {
+				t.Errorf("error '%s' was not expected, but got: ", err)
+			}
 		})
 	}
 }
