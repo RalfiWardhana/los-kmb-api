@@ -3,6 +3,7 @@ package eventhandlers
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"los-kmb-api/domain/filtering_new/interfaces"
@@ -151,7 +152,10 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 				h.platformCache.SetCache(ctx, middlewares.UserInfoData.AccessToken, os.Getenv("CACHE_COLLECTION_NAME"), fmt.Sprintf(constant.DOC_FILTERING, req.ProspectID), resp, os.Getenv("CACHE_FILTERING_EXPIRED"))
 			}
 		}
-		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+		var rs response.ApiResponse
+		resp, _ := json.Marshal(resp)
+		json.Unmarshal(resp, &rs)
+		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(rs), 0)
 		return nil
 	}
 
