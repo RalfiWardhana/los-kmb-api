@@ -451,12 +451,12 @@ type CustomerPersonal struct {
 }
 
 type CustomerPersonalNE struct {
-	IDNumber          string  `json:"id_number" validate:"required,id_number" example:"ENCRYPTED"`
-	FullName          string  `json:"full_name" validate:"required,allow_name" example:"ENCRYPTED"`
-	LegalName         string  `json:"legal_name" validate:"required,allow_name" example:"ENCRYPTED"`
+	IDNumber          string  `json:"id_number" validate:"required,len=16,number" example:"1234567890123456"`
+	FullName          string  `json:"full_name" validate:"required,min=2,allowcharsname" example:"ENCRYPTED"`
+	LegalName         string  `json:"legal_name" validate:"required,min=2,allowcharsname" example:"ENCRYPTED"`
 	BirthPlace        string  `json:"birth_place" validate:"min=3,max=100" example:"JAKARTA"`
 	BirthDate         string  `json:"birth_date" validate:"dateformat" example:"1991-01-12"`
-	SurgateMotherName string  `json:"surgate_mother_name" validate:"required,allow_name" example:"ENCRYPTED"`
+	SurgateMotherName string  `json:"surgate_mother_name" validate:"required,min=2,allowcharsname" example:"ENCRYPTED"`
 	Gender            string  `json:"gender" validate:"gender" example:"M"`
 	MobilePhone       string  `json:"mobile_phone" validate:"min=9,max=14" example:"085689XXX01"`
 	Email             string  `json:"email" validate:"email,max=100" example:"jonathaxx@gmail.com"`
@@ -541,12 +541,12 @@ type CustomerSpouse struct {
 }
 
 type CustomerSpouseNE struct {
-	IDNumber          string `json:"id_number" validate:"required,id_number" example:"177105550374XX01"`
-	FullName          string `json:"full_name" validate:"required,allow_name" example:"SUSI BUNGA"`
-	LegalName         string `json:"legal_name" validate:"required,allow_name" example:"SUSI BUNGA"`
+	IDNumber          string `json:"id_number" validate:"required,len=16,number" example:"177105550374XX01"`
+	FullName          string `json:"full_name" validate:"required,min=2,allowcharsname" example:"SUSI BUNGA"`
+	LegalName         string `json:"legal_name" validate:"required,min=2,allowcharsname" example:"SUSI BUNGA"`
 	BirthDate         string `json:"birth_date"  validate:"dateformat" example:"1991-01-29"`
 	Gender            string `json:"gender" validate:"gender" example:"F"`
-	SurgateMotherName string `json:"surgate_mother_name" validate:"required,allow_name" example:"TUTI"`
+	SurgateMotherName string `json:"surgate_mother_name" validate:"required,min=2,allowcharsname" example:"TUTI"`
 }
 
 type Apk struct {

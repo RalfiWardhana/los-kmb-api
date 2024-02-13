@@ -1909,10 +1909,18 @@ func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data inte
 	filtering.MotherName, _ = utils.PlatformEncryptText(req.CustomerPersonal.SurgateMotherName)
 
 	if req.CustomerSpouse != nil {
-		filtering.Spouse.IDNumber, _ = utils.PlatformEncryptText(req.CustomerSpouse.IDNumber)
-		filtering.Spouse.LegalName, _ = utils.PlatformEncryptText(req.CustomerSpouse.LegalName)
-		filtering.Spouse.MotherName, _ = utils.PlatformEncryptText(req.CustomerSpouse.SurgateMotherName)
-		filtering.Spouse.Gender = req.CustomerSpouse.Gender
+		IDNumber, _ := utils.PlatformEncryptText(req.CustomerSpouse.IDNumber)
+		LegalName, _ := utils.PlatformEncryptText(req.CustomerSpouse.LegalName)
+		MotherName, _ := utils.PlatformEncryptText(req.CustomerSpouse.SurgateMotherName)
+
+		filtering.Spouse = &request.FilteringSpouse{
+			IDNumber:   IDNumber,
+			LegalName:  LegalName,
+			MotherName: MotherName,
+			BirthDate:  req.CustomerSpouse.BirthDate,
+			Gender:     req.CustomerSpouse.Gender,
+		}
+
 	}
 
 	elaborateLTV := request.ElaborateLTV{
@@ -1928,7 +1936,33 @@ func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data inte
 		return
 	}
 
+	journey.CustomerPersonal.IDNumber = filtering.IDNumber
+	journey.CustomerPersonal.LegalName = filtering.LegalName
+	journey.CustomerPersonal.FullName = filtering.LegalName
+	journey.CustomerPersonal.SurgateMotherName = filtering.MotherName
+
+	if req.CustomerSpouse != nil {
+		IDNumber, _ := utils.PlatformEncryptText(req.CustomerSpouse.IDNumber)
+		LegalName, _ := utils.PlatformEncryptText(req.CustomerSpouse.LegalName)
+		MotherName, _ := utils.PlatformEncryptText(req.CustomerSpouse.SurgateMotherName)
+
+		spouse := &request.CustomerSpouse{
+			IDNumber:          IDNumber,
+			LegalName:         LegalName,
+			SurgateMotherName: MotherName,
+		}
+
+		journey.CustomerSpouse.IDNumber = spouse.IDNumber
+		journey.CustomerSpouse.LegalName = spouse.LegalName
+		journey.CustomerSpouse.FullName = spouse.LegalName
+		journey.CustomerSpouse.SurgateMotherName = spouse.SurgateMotherName
+	}
+
 	err = u.repository.SubmitNE(req, filtering, elaborateLTV, journey)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - " + err.Error())
+		return
+	}
 
 	return
 }

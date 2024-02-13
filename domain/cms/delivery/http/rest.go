@@ -780,23 +780,23 @@ func (c *handlerCMS) SubmitNE(ctx echo.Context) (err error) {
 	}()
 
 	if err := ctx.Bind(&req); err != nil {
-		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE", err)
+		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Error", err)
 		return ctxJson
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE", req, err)
+		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Error", req, err)
 		return ctxJson
 	}
 
 	data, err := c.usecase.SubmitNE(ctx.Request().Context(), req)
 
 	if err != nil {
-		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE", req, err)
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Error", req, err)
 		return ctxJson
 	}
 
-	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE", req, data)
+	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Success", req, data)
 
 	return ctxJson
 }

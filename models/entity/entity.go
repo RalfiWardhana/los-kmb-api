@@ -2282,5 +2282,5 @@ type NewEntry struct {
 }
 
 func (c *NewEntry) TableName() string {
-	return "new_entry"
+	return "trx_new_entry"
 }
