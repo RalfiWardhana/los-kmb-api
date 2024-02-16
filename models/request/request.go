@@ -516,14 +516,9 @@ type CustomerEmcon struct {
 }
 
 type CustomerEmconNE struct {
-	Name                   string `json:"name" validate:"min=2,allowcharsname" example:"MULYADI"`
-	Relationship           string `json:"relationship" validate:"relationship" example:"FM"`
-	MobilePhone            string `json:"mobile_phone" validate:"min=9,max=14" example:"0856789XXX1"`
-	VerificationWith       string `json:"verification_with" validate:"required,max=100" example:"JONO"`
-	ApplicationEmconSesuai string `json:"application_emcon_sesuai" validate:"required,max=1" example:"1"`
-	VerifyBy               string `json:"verify_by" validate:"required,max=10" example:"PHONE"`
-	KnownCustomerAddress   string `json:"known_customer_address" validate:"required,max=1" example:"1"`
-	KnownCustomerJob       string `json:"known_customer_job" validate:"required,max=1" example:"1"`
+	Name         string `json:"name" validate:"min=2,allowcharsname" example:"MULYADI"`
+	Relationship string `json:"relationship" validate:"relationship" example:"FM"`
+	MobilePhone  string `json:"mobile_phone" validate:"min=9,max=14" example:"0856789XXX1"`
 }
 
 type CustomerSpouse struct {
@@ -589,9 +584,6 @@ type Apk struct {
 
 type ApkNE struct {
 	Tenor                   int      `json:"tenor" validate:"required,max=60" example:"36"`
-	ProductOfferingID       string   `json:"product_offering_id" validate:"required,max=10" example:"NLMKKAPSEP"`
-	ProductOfferingDesc     string   `json:"product_offering_desc" validate:"omitempty,max=200"`
-	ProductID               string   `json:"product_id" validate:"required,max=10" example:"1SNLMK"`
 	OTR                     float64  `json:"otr" validate:"required,max=999999999999" example:"105000000"`
 	DPAmount                float64  `json:"down_payment_amount" validate:"required,max=999999999999" example:"22000000"`
 	NTF                     float64  `json:"ntf" validate:"required,max=999999999999" example:"150528000"`
@@ -604,6 +596,7 @@ type ApkNE struct {
 	ProvisionFee            *float64 `json:"provision_fee" validate:"required,max=999999999999" example:"2475000"`
 	FinancePurpose          string   `json:"finance_purpose" validate:"required,max=100"`
 	Dealer                  string   `json:"dealer" validate:"omitempty,max=50"`
+	LoanAmount              float64  `json:"loan_amount"  validate:"max=999999999999" example:"105000000"`
 }
 
 type Item struct {
@@ -641,7 +634,6 @@ type ItemNE struct {
 	NoChassis               string  `json:"chassis_number" validate:"required,max=30" example:"MHKV1AA2JBK107322"`
 	NoEngine                string  `json:"engine_number" validate:"required,max=30" example:"73218JAJK"`
 	Condition               string  `json:"condition" validate:"required,max=10" example:"U"`
-	AssetUsage              string  `json:"asset_usage" validate:"required,max=10" example:"N"`
 	CategoryID              string  `json:"category_id" validate:"required,max=100" example:"SEDAN"`
 	AssetDescription        string  `json:"asset_description" validate:"required,max=200" example:"SUZUKI.KMOBIL.GRAND VITARA.JLX 2,0 AT"`
 	BPKBName                string  `json:"bpkb_name" validate:"required,bpkbname" example:"K"`
