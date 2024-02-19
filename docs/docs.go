@@ -160,6 +160,710 @@ var doc = `{
                 }
             }
         },
+        "/api/v3/kmb/ca/cancel": {
+            "post": {
+                "description": "Api CA",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CA"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReqCancelOrder"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.ApiResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/ca/recalculate": {
+            "post": {
+                "description": "Api CA",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CA"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReqRecalculateOrder"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.ApiResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/ca/return": {
+            "post": {
+                "description": "Api CA",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CA"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReqReturnOrder"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.ApiResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/cache/filtering/{prospect_id}": {
+            "delete": {
+                "description": "Remove Cache Filtering via REST API",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Filtering"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Prospect ID",
+                        "name": "prospect_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/cms/akkk/view/{prospect_id}": {
+            "get": {
+                "description": "Api AKKK",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AKKK"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Prospect ID",
+                        "name": "prospect_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.ReasonMessageRow"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/cms/approval/inquiry": {
+            "get": {
+                "description": "Api Credit Approval",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Credit Approval"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReqInquiryCa"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.InquiryRow"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/cms/approval/reason": {
+            "get": {
+                "description": "Api Credit Approval",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Credit Approval"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.ReasonMessageRow"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/cms/approval/submit-approval": {
+            "post": {
+                "description": "Api Credit Approval",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Credit Approval"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReqSubmitApproval"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.ApprovalResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/cms/ca/cancel-reason": {
+            "get": {
+                "description": "Api CA",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CA"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "page",
+                        "name": "page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.ReasonMessageRow"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/cms/ca/inquiry": {
+            "get": {
+                "description": "Api CA",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CA"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReqInquiryCa"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.InquiryRow"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/cms/ca/submit-decision": {
+            "post": {
+                "description": "Api CA",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CA"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReqSubmitDecision"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.CAResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v3/kmb/cms/prescreening/inquiry": {
             "get": {
                 "description": "Api Prescreening",
@@ -370,6 +1074,138 @@ var doc = `{
                 }
             }
         },
+        "/api/v3/kmb/cms/save-as-draft": {
+            "post": {
+                "description": "Api CA",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CA"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReqSaveAsDraft"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.CAResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/cms/search": {
+            "get": {
+                "description": "Api Search Inquiry",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Search Inquiry"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.ReqSearchInquiry"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.InquiryRow"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v3/kmb/elaborate": {
             "post": {
                 "description": "ElaborateLTV",
@@ -476,6 +1312,112 @@ var doc = `{
                                     }
                                 }
                             ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/go-live": {
+            "post": {
+                "description": "Sync Go-Live",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Sync Go-Live"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.SyncGoLive"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/insert-staging/{prospectID}": {
+            "post": {
+                "description": "Insert Staging",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Insert Staging"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Prospect ID",
+                        "name": "prospectID",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
                         }
                     },
                     "400": {
@@ -666,6 +1608,60 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/api/v3/kmb/recalculate": {
+            "post": {
+                "description": "Recalculate",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Recalculate"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.Recalculate"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -804,7 +1800,6 @@ var doc = `{
                 "ntf",
                 "otr",
                 "payment_method",
-                "premium_amount_to_customer",
                 "product_id",
                 "product_offering_id",
                 "provision_fee",
@@ -950,7 +1945,7 @@ var doc = `{
                 },
                 "way_of_payment": {
                     "type": "string",
-                    "example": "Payment Point"
+                    "example": "CA"
                 }
             }
         },
@@ -1104,7 +2099,6 @@ var doc = `{
             "type": "object",
             "required": [
                 "agree_to_accept_other_offering",
-                "counterpart",
                 "customer_group",
                 "data_type",
                 "debt_business_scale",
@@ -1459,7 +2453,6 @@ var doc = `{
             "type": "object",
             "required": [
                 "manufacturing_year",
-                "prospect_id",
                 "tenor"
             ],
             "properties": {
@@ -1483,7 +2476,6 @@ var doc = `{
                 "gender",
                 "id_number",
                 "legal_name",
-                "prospect_id",
                 "surgate_mother_name"
             ],
             "properties": {
@@ -1593,7 +2585,6 @@ var doc = `{
                 "owner_asset",
                 "owner_ktp",
                 "pos",
-                "premium_amount_to_customer",
                 "qty",
                 "region",
                 "stnk_expired_date",
@@ -1770,6 +2761,181 @@ var doc = `{
                 }
             }
         },
+        "request.Recalculate": {
+            "type": "object",
+            "required": [
+                "af",
+                "down_payment_amount",
+                "down_payment_rate",
+                "installment_amount",
+                "ntf",
+                "product_offering_id",
+                "tenor"
+            ],
+            "properties": {
+                "admin_fee": {
+                    "type": "number",
+                    "example": 1500000
+                },
+                "af": {
+                    "type": "number",
+                    "example": 84000000
+                },
+                "asset_premium_amount_to_customer": {
+                    "type": "number",
+                    "example": 2184000
+                },
+                "down_payment_amount": {
+                    "type": "number",
+                    "example": 22000000
+                },
+                "down_payment_rate": {
+                    "type": "number",
+                    "example": 20.95
+                },
+                "fidusia_fee": {
+                    "type": "number",
+                    "example": 0
+                },
+                "installment_amount": {
+                    "type": "number",
+                    "example": 4181333
+                },
+                "interest_amount": {
+                    "type": "number",
+                    "example": 66528000
+                },
+                "interest_rate": {
+                    "type": "number",
+                    "example": 2.2
+                },
+                "life_premium_amount_to_customer": {
+                    "type": "number",
+                    "example": 2184000
+                },
+                "loan_amount": {
+                    "type": "number",
+                    "example": 105000000
+                },
+                "ntf": {
+                    "type": "number",
+                    "example": 150528000
+                },
+                "product_offering_desc": {
+                    "type": "string"
+                },
+                "product_offering_id": {
+                    "type": "string",
+                    "example": "NLMKKAPSEP"
+                },
+                "prospect_id": {
+                    "type": "string",
+                    "example": "SAL042600001"
+                },
+                "provision_fee": {
+                    "type": "number",
+                    "example": 2475000
+                },
+                "tenor": {
+                    "type": "integer",
+                    "example": 36
+                }
+            }
+        },
+        "request.ReqCancelOrder": {
+            "type": "object",
+            "required": [
+                "decision_by",
+                "decision_by_name",
+                "prospect_id",
+                "reason"
+            ],
+            "properties": {
+                "decision_by": {
+                    "type": "string"
+                },
+                "decision_by_name": {
+                    "type": "string"
+                },
+                "prospect_id": {
+                    "type": "string",
+                    "example": "TEST-DEV"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.ReqInquiryCa": {
+            "type": "object",
+            "required": [
+                "branch_id",
+                "multi_branch",
+                "user_id"
+            ],
+            "properties": {
+                "branch_id": {
+                    "type": "string"
+                },
+                "filter": {
+                    "type": "string"
+                },
+                "multi_branch": {
+                    "type": "string"
+                },
+                "search": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.ReqRecalculateOrder": {
+            "type": "object",
+            "required": [
+                "decision_by",
+                "decision_by_name",
+                "dp_amount",
+                "prospect_id"
+            ],
+            "properties": {
+                "decision_by": {
+                    "type": "string"
+                },
+                "decision_by_name": {
+                    "type": "string"
+                },
+                "dp_amount": {
+                    "type": "number",
+                    "example": 245000
+                },
+                "prospect_id": {
+                    "type": "string",
+                    "example": "TEST-DEV"
+                }
+            }
+        },
+        "request.ReqReturnOrder": {
+            "type": "object",
+            "required": [
+                "decision_by",
+                "decision_by_name",
+                "prospect_id"
+            ],
+            "properties": {
+                "decision_by": {
+                    "type": "string"
+                },
+                "decision_by_name": {
+                    "type": "string"
+                },
+                "prospect_id": {
+                    "type": "string",
+                    "example": "TEST-DEV"
+                }
+            }
+        },
         "request.ReqReviewPrescreening": {
             "type": "object",
             "required": [
@@ -1794,6 +2960,147 @@ var doc = `{
                     "example": "TEST-DEV"
                 },
                 "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.ReqSaveAsDraft": {
+            "type": "object",
+            "required": [
+                "decision",
+                "decision_by",
+                "decision_by_name",
+                "prospect_id",
+                "slik_result"
+            ],
+            "properties": {
+                "decision": {
+                    "type": "string",
+                    "example": "APPROVE,REJECT"
+                },
+                "decision_by": {
+                    "type": "string"
+                },
+                "decision_by_name": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "prospect_id": {
+                    "type": "string",
+                    "example": "TEST-DEV"
+                },
+                "slik_result": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.ReqSearchInquiry": {
+            "type": "object",
+            "required": [
+                "branch_id",
+                "multi_branch",
+                "search",
+                "user_id"
+            ],
+            "properties": {
+                "branch_id": {
+                    "type": "string"
+                },
+                "multi_branch": {
+                    "type": "string"
+                },
+                "search": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.ReqSubmitApproval": {
+            "type": "object",
+            "required": [
+                "alias",
+                "code",
+                "decision",
+                "decision_by",
+                "decision_by_name",
+                "final_approval",
+                "prospect_id",
+                "reason"
+            ],
+            "properties": {
+                "alias": {
+                    "type": "string"
+                },
+                "code": {
+                    "type": "string"
+                },
+                "decision": {
+                    "type": "string",
+                    "example": "APPROVE,REJECT,RETURN"
+                },
+                "decision_by": {
+                    "type": "string"
+                },
+                "decision_by_name": {
+                    "type": "string"
+                },
+                "dp_amount": {
+                    "type": "number"
+                },
+                "final_approval": {
+                    "type": "string"
+                },
+                "need_escalation": {
+                    "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "prospect_id": {
+                    "type": "string",
+                    "example": "TEST-DEV"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.ReqSubmitDecision": {
+            "type": "object",
+            "required": [
+                "decision",
+                "decision_by",
+                "decision_by_name",
+                "ntf_akumulasi",
+                "prospect_id",
+                "slik_result"
+            ],
+            "properties": {
+                "decision": {
+                    "type": "string",
+                    "example": "APPROVE,REJECT"
+                },
+                "decision_by": {
+                    "type": "string"
+                },
+                "decision_by_name": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "ntf_akumulasi": {
+                    "type": "number"
+                },
+                "prospect_id": {
+                    "type": "string",
+                    "example": "TEST-DEV"
+                },
+                "slik_result": {
                     "type": "string"
                 }
             }
@@ -1866,12 +3173,40 @@ var doc = `{
                 }
             }
         },
+        "request.SyncGoLive": {
+            "type": "object",
+            "properties": {
+                "agreement_no": {
+                    "type": "string"
+                },
+                "application_id": {
+                    "type": "string"
+                },
+                "final_disbursed_amount": {
+                    "type": "number"
+                },
+                "go_live_date": {
+                    "type": "string"
+                },
+                "go_live_status": {
+                    "type": "string"
+                },
+                "pay_to_agent_amount": {
+                    "type": "number"
+                },
+                "pay_to_agent_date": {
+                    "type": "string"
+                },
+                "prospect_id": {
+                    "type": "string"
+                }
+            }
+        },
         "request.Transaction": {
             "type": "object",
             "required": [
                 "application_source",
-                "order_at",
-                "prospect_id"
+                "order_at"
             ],
             "properties": {
                 "application_source": {
@@ -1920,6 +3255,46 @@ var doc = `{
                     "type": "string"
                 },
                 "server_time": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.ApprovalResponse": {
+            "type": "object",
+            "properties": {
+                "decision": {
+                    "type": "string"
+                },
+                "is_final": {
+                    "type": "boolean"
+                },
+                "need_escalation": {
+                    "type": "boolean"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "prospect_id": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.CAResponse": {
+            "type": "object",
+            "properties": {
+                "decision": {
+                    "type": "string"
+                },
+                "note": {
+                    "type": "string"
+                },
+                "prospect_id": {
+                    "type": "string"
+                },
+                "slik_result": {
                     "type": "string"
                 }
             }
@@ -1990,6 +3365,9 @@ var doc = `{
                 },
                 "decision": {
                     "type": "string"
+                },
+                "is_mapping_ovd": {
+                    "type": "boolean"
                 },
                 "ltv": {
                     "type": "integer"

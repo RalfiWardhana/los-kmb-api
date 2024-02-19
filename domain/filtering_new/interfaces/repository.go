@@ -8,4 +8,5 @@ type Repository interface {
 	GetFilteringByID(prospectID string) (row int, err error)
 	MasterMappingCluster(req entity.MasterMappingCluster) (data entity.MasterMappingCluster, err error)
 	SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error)
+	GetResultFiltering(prospectID string) (data []entity.ResultFiltering, err error)
 }

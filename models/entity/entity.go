@@ -826,6 +826,19 @@ func (c *FilteringKMB) TableName() string {
 	return "trx_filtering"
 }
 
+type ResultFiltering struct {
+	ProspectID                      string      `gorm:"column:prospect_id;type:varchar(20)" json:"prospect_id"`
+	Decision                        string      `gorm:"column:decision;type:varchar(20)" json:"decision"`
+	CustomerStatus                  interface{} `gorm:"column:customer_status;type:varchar(5)" json:"customer_status"`
+	CustomerSegment                 interface{} `gorm:"column:customer_segment;type:varchar(20)" json:"customer_segment"`
+	IsBlacklist                     bool        `gorm:"column:is_blacklist" json:"is_blacklist"`
+	NextProcess                     bool        `gorm:"column:next_process" json:"next_process"`
+	UrlPdfReport                    interface{} `gorm:"column:url_pdf_report" json:"url_pdf_report"`
+	TotalBakiDebetNonCollateralBiro interface{} `gorm:"column:total_baki_debet_non_collateral_biro" json:"total_baki_debet_non_collateral_biro"`
+	Reason                          string      `gorm:"column:reason;type:varchar(250)" json:"reason"`
+	Subject                         string      `gorm:"type:varchar(10);column:subject" json:"subject"`
+}
+
 type TrxDetail struct {
 	ProspectID     string      `gorm:"type:varchar(20);column:ProspectID;primary_key:true" json:"-"`
 	StatusProcess  string      `gorm:"type:varchar(3);column:status_process" json:"-"`

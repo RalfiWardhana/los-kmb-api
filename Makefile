@@ -1,3 +1,5 @@
+swagger:
+	@swag init -g app/main.go
 test:
 	@go test -coverprofile="unit_test/coverage.out" "./domain/..."
 	@go tool cover -func="unit_test/coverage.out"
@@ -17,3 +19,5 @@ mock_json:
 	@mockery --name JSON --dir=shared/common --output shared/common/json/mocks --case underscore
 mock_platformlog:
 	@mockery --name PlatformLogInterface --dir=shared/common/platformlog --output shared/common/platformlog/mocks --case underscore
+mock_platformcache:
+	@mockery --name PlatformCacheInterface --dir=shared/common/platformcache --output shared/common/platformcache/mocks --case underscore

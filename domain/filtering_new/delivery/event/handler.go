@@ -3,6 +3,7 @@ package eventhandlers
 import (
 	"context"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"los-kmb-api/domain/filtering_new/interfaces"
@@ -10,6 +11,7 @@ import (
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/common"
+	"los-kmb-api/shared/common/platformcache"
 	"los-kmb-api/shared/common/platformevent"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
@@ -21,22 +23,25 @@ import (
 )
 
 type handlers struct {
-	multiusecase interfaces.MultiUsecase
-	usecase      interfaces.Usecase
-	repository   interfaces.Repository
-	validator    *common.Validator
-	producer     platformevent.PlatformEvent
-	Json         common.JSON
+	multiusecase  interfaces.MultiUsecase
+	usecase       interfaces.Usecase
+	repository    interfaces.Repository
+	validator     *common.Validator
+	producer      platformevent.PlatformEvent
+	Json          common.JSON
+	platformCache platformcache.PlatformCacheInterface
 }
 
-func NewServiceFiltering(app *platformevent.ConsumerRouter, repository interfaces.Repository, usecase interfaces.Usecase, multiUsecase interfaces.MultiUsecase, validator *common.Validator, producer platformevent.PlatformEvent, json common.JSON) {
+func NewServiceFiltering(app *platformevent.ConsumerRouter, repository interfaces.Repository, usecase interfaces.Usecase, multiUsecase interfaces.MultiUsecase, validator *common.Validator, producer platformevent.PlatformEvent, json common.JSON,
+	platformCache platformcache.PlatformCacheInterface) {
 	handler := handlers{
-		multiusecase: multiUsecase,
-		usecase:      usecase,
-		repository:   repository,
-		validator:    validator,
-		producer:     producer,
-		Json:         json,
+		multiusecase:  multiUsecase,
+		usecase:       usecase,
+		repository:    repository,
+		validator:     validator,
+		producer:      producer,
+		Json:          json,
+		platformCache: platformCache,
 	}
 	app.Handle(constant.KEY_PREFIX_FILTERING, handler.Filtering)
 }
@@ -129,6 +134,7 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 		married = true
 	}
 
+	// filtering already exist
 	check, errCheck := h.usecase.FilteringProspectID(req.ProspectID)
 	if errCheck != nil {
 		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, errCheck)
@@ -136,8 +142,20 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 		return nil
 	}
 	if err := h.validator.Validate(&check); err != nil {
-		resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
-		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+		resp, err = h.platformCache.GetCache(ctx, middlewares.UserInfoData.AccessToken, os.Getenv("CACHE_COLLECTION_NAME"), fmt.Sprintf(constant.DOC_FILTERING, req.ProspectID))
+		if err != nil {
+			resultFiltering, err = h.usecase.GetResultFiltering(req.ProspectID)
+			if err != nil {
+				resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+			} else {
+				resp = h.Json.EventSuccess(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, resultFiltering)
+				h.platformCache.SetCache(ctx, middlewares.UserInfoData.AccessToken, os.Getenv("CACHE_COLLECTION_NAME"), fmt.Sprintf(constant.DOC_FILTERING, req.ProspectID), resp, os.Getenv("CACHE_FILTERING_EXPIRED"))
+			}
+		}
+		var rs response.ApiResponse
+		resp, _ := json.Marshal(resp)
+		json.Unmarshal(resp, &rs)
+		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(rs), 0)
 		return nil
 	}
 
@@ -146,6 +164,7 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 	} else {
 		resp = h.Json.EventSuccess(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, resultFiltering)
+		h.platformCache.SetCache(ctx, middlewares.UserInfoData.AccessToken, os.Getenv("CACHE_COLLECTION_NAME"), fmt.Sprintf(constant.DOC_FILTERING, req.ProspectID), resp, os.Getenv("CACHE_FILTERING_EXPIRED"))
 	}
 
 	h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
