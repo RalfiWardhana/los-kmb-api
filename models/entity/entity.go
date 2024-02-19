@@ -1347,6 +1347,17 @@ func (c *CancelReason) TableName() string {
 	return "m_cancel_reason"
 }
 
+type InquiryDataNE struct {
+	ProspectID      string `gorm:"type:varchar(20);column:ProspectID" json:"prospect_id"`
+	BranchID        string `gorm:"type:varchar(3);column:BranchID" json:"branch_id"`
+	IDNumber        string `gorm:"type:varchar(100);column:IDNumber" json:"id_number"`
+	LegalName       string `gorm:"type:varchar(100);column:LegalName" json:"legal_name"`
+	BirthDate       string `gorm:"column:BirthDate" json:"birth_date"`
+	CreatedAt       string `gorm:"column:created_at" json:"created_at"`
+	ResultFiltering string `gorm:"column:ResultFiltering" json:"result_filtering"`
+	Reason          string `gorm:"column:Reason" json:"reason"`
+}
+
 type InquiryData struct {
 	Prescreening DataPrescreening   `json:"prescreening"`
 	General      DataGeneral        `json:"general"`

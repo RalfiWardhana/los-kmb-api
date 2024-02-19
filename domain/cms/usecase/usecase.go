@@ -1966,3 +1966,16 @@ func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data inte
 
 	return
 }
+
+func (u usecase) GetInquiryNE(ctx context.Context, req request.ReqInquiryNE, pagination interface{}) (data []entity.InquiryDataNE, rowTotal int, err error) {
+
+	result, rowTotal, err := u.repository.GetInquiryNE(req, pagination)
+
+	if err != nil {
+		return []entity.InquiryDataNE{}, 0, err
+	}
+
+	data = result
+
+	return
+}

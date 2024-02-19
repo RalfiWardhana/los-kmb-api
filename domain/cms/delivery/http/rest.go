@@ -47,6 +47,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.GET("/cms/approval/reason", handler.ApprovalReason, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/approval/submit-approval", handler.SubmitApproval, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ne/submit", handler.SubmitNE, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/ne/inquiry", handler.NEInquiry, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
@@ -799,4 +800,56 @@ func (c *handlerCMS) SubmitNE(ctx echo.Context) (err error) {
 	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Success", req, data)
 
 	return ctxJson
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api CA
+// @Tags CA
+// @Produce json
+// @Param body body request.ReqInquiryCa true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.InquiryRow}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/ne/inquiry [get]
+func (c *handlerCMS) NEInquiry(ctx echo.Context) (err error) {
+
+	var accessToken = middlewares.UserInfoData.AccessToken
+
+	req := request.ReqInquiryNE{
+		Search:      ctx.QueryParam("search"),
+		BranchID:    ctx.QueryParam("branch_id"),
+		MultiBranch: ctx.QueryParam("multi_branch"),
+		Filter:      ctx.QueryParam("filter"),
+		UserID:      ctx.QueryParam("user_id"),
+	}
+
+	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	pagination := request.RequestPagination{
+		Page:  page,
+		Limit: 10,
+	}
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", req, err)
+	}
+
+	data, rowTotal, err := c.usecase.GetInquiryNE(ctx.Request().Context(), req, pagination)
+
+	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", req, response.InquiryRow{Inquiry: data})
+	}
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", req, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", req, response.InquiryRow{
+		Inquiry:        data,
+		RecordFiltered: len(data),
+		RecordTotal:    rowTotal,
+	})
 }

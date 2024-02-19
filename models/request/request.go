@@ -839,6 +839,14 @@ type ReqInquiryCa struct {
 	UserID      string `json:"user_id" validate:"required,max=20"`
 }
 
+type ReqInquiryNE struct {
+	Search      string `json:"search"`
+	BranchID    string `json:"branch_id" validate:"required,max=3"`
+	MultiBranch string `json:"multi_branch" validate:"required,max=1"`
+	Filter      string `json:"filter" validate:"max=15"`
+	UserID      string `json:"user_id" validate:"required,max=20"`
+}
+
 type ReqSaveAsDraft struct {
 	ProspectID string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
 	Decision   string `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
