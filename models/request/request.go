@@ -639,7 +639,6 @@ type ItemNE struct {
 	BPKBName                string  `json:"bpkb_name" validate:"required,bpkbname" example:"K"`
 	OwnerAsset              string  `json:"owner_asset" validate:"required,max=50" example:"JONATHAN"`
 	Color                   string  `json:"color" validate:"required,max=50" example:"HITAM"`
-	OwnerKTP                string  `json:"owner_ktp" validate:"required,len=16,number" example:"3172024508XXX002"`
 	Brand                   string  `json:"brand" validate:"required,max=255" example:"TOYOTA"`
 	PremiumAmountToCustomer float64 `json:"premium_amount_to_customer" validate:"min=0,max=999999999999" example:"2184000"`
 }
