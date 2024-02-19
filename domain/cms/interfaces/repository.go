@@ -33,4 +33,5 @@ type Repository interface {
 	GetAFMobilePhone(prospectID string) (data entity.AFMobilePhone, err error)
 	GetRegionBranch(userId string) (data []entity.RegionBranch, err error)
 	SubmitNE(req request.MetricsNE, filtering request.Filtering, elaboreateLTV request.ElaborateLTV, journey request.Metrics) (err error)
+	GetInquiryNE(req request.ReqInquiryNE, pagination interface{}) (data []entity.InquiryDataNE, rowTotal int, err error)
 }

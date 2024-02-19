@@ -180,6 +180,36 @@ func (_m *Usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, p
 	return r0, r1, r2
 }
 
+// GetInquiryNE provides a mock function with given fields: ctx, req, pagination
+func (_m *Usecase) GetInquiryNE(ctx context.Context, req request.ReqInquiryNE, pagination interface{}) ([]entity.InquiryDataNE, int, error) {
+	ret := _m.Called(ctx, req, pagination)
+
+	var r0 []entity.InquiryDataNE
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqInquiryNE, interface{}) []entity.InquiryDataNE); ok {
+		r0 = rf(ctx, req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.InquiryDataNE)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqInquiryNE, interface{}) int); ok {
+		r1 = rf(ctx, req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, request.ReqInquiryNE, interface{}) error); ok {
+		r2 = rf(ctx, req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // GetInquiryPrescreening provides a mock function with given fields: ctx, req, pagination
 func (_m *Usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInquiryPrescreening, pagination interface{}) ([]entity.InquiryData, int, error) {
 	ret := _m.Called(ctx, req, pagination)
