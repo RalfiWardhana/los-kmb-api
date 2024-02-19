@@ -3149,7 +3149,7 @@ func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface
 	tm.created_at,
 	scp.dbo.DEC_B64('SEC', tm.IDNumber) AS IDNumber,
 	scp.dbo.DEC_B64('SEC', tm.LegalName) AS LegalName,
-	tm.BirthDate
+	tm.BirthDate,
 	CASE
 	WHEN tf.next_process = 1 THEN 'PASS'
 	WHEN tf.next_process = 0 THEN 'REJECT'
