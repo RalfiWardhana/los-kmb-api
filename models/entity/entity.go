@@ -894,7 +894,7 @@ type MasterMappingCluster struct {
 }
 
 func (c *MasterMappingCluster) TableName() string {
-	return "m_mapping_cluster"
+	return "kmb_mapping_cluster_branch"
 }
 
 type MasterMappingMaxDSR struct {
