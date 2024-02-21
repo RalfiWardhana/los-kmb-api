@@ -99,10 +99,10 @@ func (r repoHandler) MasterMappingCluster(req entity.MasterMappingCluster) (data
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
 
-	db := r.NewKmb.BeginTx(ctx, &x)
+	db := r.KpLos.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = db.Raw("SELECT * FROM dbo.m_mapping_cluster WITH (nolock) WHERE branch_id = ? AND customer_status = ? AND bpkb_name_type = ?", req.BranchID, req.CustomerStatus, req.BpkbNameType).Scan(&data).Error; err != nil {
+	if err = db.Raw("SELECT * FROM dbo.kmb_mapping_cluster_branch WITH (nolock) WHERE branch_id = ? AND customer_status = ? AND bpkb_name_type = ?", req.BranchID, req.CustomerStatus, req.BpkbNameType).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}

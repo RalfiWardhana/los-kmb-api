@@ -140,7 +140,7 @@ func TestMasterMappingCluster(t *testing.T) {
 	}
 
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM dbo.m_mapping_cluster WITH (nolock) WHERE branch_id = ? AND customer_status = ? AND bpkb_name_type = ?")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM dbo.kmb_mapping_cluster_branch WITH (nolock) WHERE branch_id = ? AND customer_status = ? AND bpkb_name_type = ?")).
 		WithArgs(req.BranchID, req.CustomerStatus, req.BpkbNameType).
 		WillReturnRows(sqlmock.NewRows([]string{"branch_id", "customer_status", "bpkb_name_type", "cluster"}).
 			AddRow("426", "NEW", 1, "Cluster C"))
