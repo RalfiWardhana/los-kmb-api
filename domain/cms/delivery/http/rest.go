@@ -47,8 +47,9 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.GET("/cms/approval/inquiry", handler.ApprovalInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/approval/reason", handler.ApprovalReason, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/approval/submit-approval", handler.SubmitApproval, middlewares.AccessMiddleware())
-	cmsroute.GET("/cms/mapping-cluster/list", handler.MappingClusterList, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/mapping-cluster/inquiry", handler.MappingClusterInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/mapping-cluster/download", handler.DownloadMappingCluster, middlewares.AccessMiddleware())
+	cmsroute.POST("/cms/mapping-cluster/upload", handler.UploadMappingCluster, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
@@ -767,11 +768,11 @@ func (c *handlerCMS) SubmitApproval(ctx echo.Context) (err error) {
 // @Param bpkb_name_type query string false "bpkb_name_type"
 // @Param cluster query string false "cluster"
 // @Param page query string false "page"
-// @Success 200 {object} response.ApiResponse{data=response.MappingClusterRow}
+// @Success 200 {object} response.ApiResponse{data=response.InquiryRow}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
 // @Router /api/v3/kmb/cms/mapping-cluster/list [get]
-func (c *handlerCMS) MappingClusterList(ctx echo.Context) (err error) {
+func (c *handlerCMS) MappingClusterInquiry(ctx echo.Context) (err error) {
 
 	var accessToken = middlewares.UserInfoData.AccessToken
 
@@ -797,18 +798,18 @@ func (c *handlerCMS) MappingClusterList(ctx echo.Context) (err error) {
 		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Mapping Cluster List", req, err)
 	}
 
-	data, rowTotal, err := c.usecase.GetListMappingCluster(ctx.Request().Context(), req, pagination)
+	data, rowTotal, err := c.usecase.GetInquiryMappingCluster(ctx.Request().Context(), req, pagination)
 
 	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
-		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Mapping Cluster List", req, response.MappingClusterRow{MappingCluster: data})
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Mapping Cluster List", req, response.InquiryRow{Inquiry: data})
 	}
 
 	if err != nil {
 		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Mapping Cluster List", req, err)
 	}
 
-	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Mapping Cluster List", req, response.MappingClusterRow{
-		MappingCluster: data,
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Mapping Cluster List", req, response.InquiryRow{
+		Inquiry:        data,
 		RecordFiltered: len(data),
 		RecordTotal:    rowTotal,
 	})
@@ -834,11 +835,61 @@ func (c *handlerCMS) DownloadMappingCluster(ctx echo.Context) (err error) {
 		}
 	}()
 
-	genName, filename, err := c.usecase.GetExcelMappingCluster(ctx.Request().Context())
+	genName, filename, err := c.usecase.GenerateExcelMappingCluster(ctx.Request().Context())
 
 	if err != nil {
 		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Mapping Cluster", nil, err)
 	}
 
 	return ctx.Attachment(fmt.Sprintf("./%s.xlsx", genName), filename+".xlsx")
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Mapping Cluster
+// @Tags Mapping Cluster
+// @Produce json
+// @Param excel_file formData file true "upload file"
+// @Success 200 {object} response.Api{}
+// @Failure 400 {object} response.Api{error=response.ErrorValidation}
+// @Failure 500 {object} response.Api{}
+// @Router /api/v3/kmb/cms/mapping-cluster/upload [post]
+func (c *handlerCMS) UploadMappingCluster(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		req         request.ReqUploadMappingCluster
+	)
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Mapping Cluster", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Mapping Cluster", req, err)
+	}
+
+	file, err := ctx.FormFile("excel_file")
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "Silakan unggah file excel yang valid", nil, errors.New(constant.ERROR_BAD_REQUEST+" - "))
+	}
+
+	src, err := file.Open()
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "Silakan unggah file excel yang valid", nil, errors.New(constant.ERROR_BAD_REQUEST+" - "))
+	}
+	defer src.Close()
+
+	mime := file.Header.Get("Content-Type")
+	if mime != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" &&
+		mime != "application/vnd.ms-excel" {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "Silakan unggah file excel yang valid", nil, errors.New(constant.ERROR_BAD_REQUEST+" - "))
+	}
+
+	err = c.usecase.UpdateMappingCluster(ctx.Request().Context(), req, src)
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Mapping Cluster", nil, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Mapping Cluster Upload Success", nil, nil)
 }

@@ -13,6 +13,7 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
+	"mime/multipart"
 	"os"
 	"strconv"
 	"strings"
@@ -1894,10 +1895,10 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 	return
 }
 
-func (u usecase) GetListMappingCluster(ctx context.Context, req request.ReqListMappingCluster, pagination interface{}) (data []entity.MappingClusterBranch, rowTotal int, err error) {
+func (u usecase) GetInquiryMappingCluster(ctx context.Context, req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error) {
 
 	// get list mapping cluster branch
-	data, rowTotal, err = u.repository.GetMappingClusterBranch(req, pagination)
+	data, rowTotal, err = u.repository.GetInquiryMappingCluster(req, pagination)
 
 	if err != nil {
 		return
@@ -1906,19 +1907,24 @@ func (u usecase) GetListMappingCluster(ctx context.Context, req request.ReqListM
 	return
 }
 
-func (u usecase) GetExcelMappingCluster(ctx context.Context) (genName, fileName string, err error) {
+func (u usecase) GenerateExcelMappingCluster(ctx context.Context) (genName, fileName string, err error) {
 
 	var (
-		mappingClusterBranchs []entity.MappingClusterBranch
+		mappingClusterBranchs []entity.InquiryMappingCluster
 	)
 
-	mappingClusterBranchs, _, err = u.repository.GetMappingClusterBranch(request.ReqListMappingCluster{}, nil)
+	mappingClusterBranchs, _, err = u.repository.GetInquiryMappingCluster(request.ReqListMappingCluster{}, nil)
 	if err != nil && err.Error() != constant.RECORD_NOT_FOUND {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping cluster branch error")
 		return
 	}
 
 	xlsx := excelize.NewFile()
+	defer func() {
+		if err := xlsx.Close(); err != nil {
+			return
+		}
+	}()
 
 	sheetName := "Mapping Cluster Branch"
 
@@ -1995,6 +2001,94 @@ func (u usecase) GetExcelMappingCluster(ctx context.Context) (genName, fileName 
 	if err = xlsx.SaveAs(fmt.Sprintf("./%s.xlsx", genName)); err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Save excel mapping cluster error")
 		return
+	}
+
+	return
+}
+
+func (u usecase) UpdateMappingCluster(ctx context.Context, req request.ReqUploadMappingCluster, file multipart.File) (err error) {
+
+	var (
+		dataClusterBefore string
+		dataClusterAfter  string
+		history           entity.HistoryConfigChanges
+		cluster           []entity.MasterMappingCluster
+	)
+
+	f, err := excelize.OpenReader(file)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Open file excel mapping cluster error")
+		return
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			return
+		}
+	}()
+
+	sheetName := f.GetSheetName(0)
+	rows, err := f.GetRows(sheetName)
+	if err != nil {
+		return
+	}
+
+	for i, row := range rows {
+		if i == 0 {
+			continue
+		} else {
+			bpkbName, _ := strconv.Atoi(row[3])
+			cluster = append(cluster, entity.MasterMappingCluster{
+				BranchID:       row[0],
+				CustomerStatus: row[2],
+				BpkbNameType:   bpkbName,
+				Cluster:        row[4],
+			})
+		}
+
+	}
+
+	if len(cluster) > 0 {
+		existingCluster, err := u.repository.GetMappingClusterBranch()
+		if err != nil && err.Error() != constant.RECORD_NOT_FOUND {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get existing mapping cluster branch error")
+			return err
+		}
+
+		jsonDataBefore, err := json.MarshalIndent(existingCluster, "", "    ")
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Error converting to JSON mapping cluster before")
+			return err
+		}
+
+		dataClusterBefore = string(jsonDataBefore)
+
+		jsonDataAfter, err := json.MarshalIndent(cluster, "", "    ")
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Error converting to JSON mapping cluster after")
+			return err
+		}
+
+		dataClusterAfter = string(jsonDataAfter)
+
+		history = entity.HistoryConfigChanges{
+			ID:         utils.GenerateUUID(),
+			ConfigID:   "kmb_mapping_cluster_branch",
+			ObjectName: "kmb_mapping_cluster_branch",
+			Action:     "UPDATE",
+			DataBefore: dataClusterBefore,
+			DataAfter:  dataClusterAfter,
+			CreatedBy:  req.UserID,
+			CreatedAt:  time.Now(),
+		}
+
+		err = u.repository.BatchUpdateMappingCluster(cluster, history)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Update mapping cluster branch error, periksa kembali file excel")
+			return err
+		}
+	} else {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Mapping cluster branch dalam file excel kosong")
+		return err
 	}
 
 	return

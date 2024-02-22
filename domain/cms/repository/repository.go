@@ -3024,7 +3024,29 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 	})
 }
 
-func (r repoHandler) GetMappingClusterBranch(req request.ReqListMappingCluster, pagination interface{}) (data []entity.MappingClusterBranch, rowTotal int, err error) {
+func (r repoHandler) GetMappingClusterBranch() (record []entity.MasterMappingCluster, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.losDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.losDB.Raw("SELECT * FROM kmb_mapping_cluster_branch WITH (nolock) ORDER BY branch_id ASC").Scan(&record).Error; err != nil {
+
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error) {
 
 	var (
 		filterBuilder  strings.Builder
@@ -3112,4 +3134,39 @@ func (r repoHandler) GetMappingClusterBranch(req request.ReqListMappingCluster, 
 		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
 	}
 	return
+}
+
+func (r repoHandler) BatchUpdateMappingCluster(data []entity.MasterMappingCluster, history entity.HistoryConfigChanges) (err error) {
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+	txOptions := &sql.TxOptions{}
+
+	db := r.losDB.BeginTx(ctx, txOptions)
+	defer db.Commit()
+
+	defer func() {
+		if r := recover(); r != nil || err != nil {
+			db.Rollback()
+		}
+	}()
+
+	var cluster entity.MasterMappingCluster
+	if err = db.Delete(&cluster).Error; err != nil {
+		return err
+	}
+
+	for _, val := range data {
+		if err = db.Create(&val).Error; err != nil {
+			return err
+		}
+	}
+
+	if err = db.Create(&history).Error; err != nil {
+		return err
+	}
+
+	return err
 }

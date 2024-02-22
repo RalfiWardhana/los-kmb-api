@@ -816,3 +816,7 @@ type ReqListMappingCluster struct {
 	BPKBNameType   string `json:"bpkb_name_type" validate:"max=1" example:"0"`
 	Cluster        string `json:"cluster" validate:"max=20" example:"Cluster A"`
 }
+
+type ReqUploadMappingCluster struct {
+	UserID string `form:"user_id" validate:"required,max=20"`
+}
