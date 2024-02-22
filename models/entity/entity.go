@@ -2278,3 +2278,11 @@ type STG_CUST_FAM struct {
 func (c *STG_CUST_FAM) TableName() string {
 	return "STG_CUST_FAM"
 }
+
+type MappingClusterBranch struct {
+	BranchID       string `gorm:"column:branch_id"`
+	BranchName     string `gorm:"column:branch_name"`
+	CustomerStatus string `gorm:"column:customer_status"`
+	BpkbNameType   int    `gorm:"column:bpkb_name_type"`
+	Cluster        string `gorm:"column:cluster"`
+}

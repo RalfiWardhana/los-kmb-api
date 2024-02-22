@@ -2,6 +2,7 @@ package http
 
 import (
 	"errors"
+	"fmt"
 	"los-kmb-api/domain/cms/interfaces"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
@@ -46,6 +47,8 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.GET("/cms/approval/inquiry", handler.ApprovalInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/approval/reason", handler.ApprovalReason, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/approval/submit-approval", handler.SubmitApproval, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/mapping-cluster/list", handler.MappingClusterList, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/mapping-cluster/download", handler.DownloadMappingCluster, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
@@ -752,4 +755,90 @@ func (c *handlerCMS) SubmitApproval(ctx echo.Context) (err error) {
 	}
 
 	return ctxJson
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Mapping Cluster
+// @Tags Mapping Cluster
+// @Produce json
+// @Param search query string false "search"
+// @Param branch_id query string false "branch_id"
+// @Param customer_status query string false "customer_status"
+// @Param bpkb_name_type query string false "bpkb_name_type"
+// @Param cluster query string false "cluster"
+// @Param page query string false "page"
+// @Success 200 {object} response.ApiResponse{data=response.MappingClusterRow}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/mapping-cluster/list [get]
+func (c *handlerCMS) MappingClusterList(ctx echo.Context) (err error) {
+
+	var accessToken = middlewares.UserInfoData.AccessToken
+
+	req := request.ReqListMappingCluster{
+		Search:         ctx.QueryParam("search"),
+		BranchID:       ctx.QueryParam("branch_id"),
+		CustomerStatus: ctx.QueryParam("customer_status"),
+		BPKBNameType:   ctx.QueryParam("bpkb_name_type"),
+		Cluster:        ctx.QueryParam("cluster"),
+	}
+
+	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	pagination := request.RequestPagination{
+		Page:  page,
+		Limit: 10,
+	}
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Mapping Cluster List", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Mapping Cluster List", req, err)
+	}
+
+	data, rowTotal, err := c.usecase.GetListMappingCluster(ctx.Request().Context(), req, pagination)
+
+	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Mapping Cluster List", req, response.MappingClusterRow{MappingCluster: data})
+	}
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Mapping Cluster List", req, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Mapping Cluster List", req, response.MappingClusterRow{
+		MappingCluster: data,
+		RecordFiltered: len(data),
+		RecordTotal:    rowTotal,
+	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Mapping Cluster
+// @Tags Mapping Cluster
+// @Produce json
+// @Success 200 {object} response.Api{}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/mapping-cluster/download [get]
+func (c *handlerCMS) DownloadMappingCluster(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		genName     string
+	)
+
+	defer func() {
+		if genName != "" {
+			os.Remove(fmt.Sprintf("./%s.xlsx", genName))
+		}
+	}()
+
+	genName, filename, err := c.usecase.GetExcelMappingCluster(ctx.Request().Context())
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Mapping Cluster", nil, err)
+	}
+
+	return ctx.Attachment(fmt.Sprintf("./%s.xlsx", genName), filename+".xlsx")
 }

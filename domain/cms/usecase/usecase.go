@@ -20,6 +20,7 @@ import (
 
 	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/xuri/excelize/v2"
 )
 
 type (
@@ -1888,6 +1889,112 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 		Note:           req.Note,
 		IsFinal:        approvalScheme.IsFinal,
 		NeedEscalation: approvalScheme.IsEscalation,
+	}
+
+	return
+}
+
+func (u usecase) GetListMappingCluster(ctx context.Context, req request.ReqListMappingCluster, pagination interface{}) (data []entity.MappingClusterBranch, rowTotal int, err error) {
+
+	// get list mapping cluster branch
+	data, rowTotal, err = u.repository.GetMappingClusterBranch(req, pagination)
+
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (u usecase) GetExcelMappingCluster(ctx context.Context) (genName, fileName string, err error) {
+
+	var (
+		mappingClusterBranchs []entity.MappingClusterBranch
+	)
+
+	mappingClusterBranchs, _, err = u.repository.GetMappingClusterBranch(request.ReqListMappingCluster{}, nil)
+	if err != nil && err.Error() != constant.RECORD_NOT_FOUND {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping cluster branch error")
+		return
+	}
+
+	xlsx := excelize.NewFile()
+
+	sheetName := "Mapping Cluster Branch"
+
+	index := xlsx.NewSheet("Sheet1")
+	xlsx.SetActiveSheet(index)
+	xlsx.SetSheetName("Sheet1", sheetName)
+
+	rowHeader := []string{"branch_id", "branch_name", "customer_status", "bpkb_name_type", "cluster"}
+
+	colSize := []float64{13, 34, 18, 20, 14}
+
+	centerAlignment := &excelize.Alignment{
+		Horizontal: "center",
+	}
+
+	boldFont := &excelize.Font{
+		Bold: true, Family: "Calibri", Size: 11, Color: "000000",
+	}
+
+	border := []excelize.Border{
+		{Type: "left", Color: "000000", Style: 1}, {Type: "top", Color: "000000", Style: 1}, {Type: "bottom", Color: "000000", Style: 1}, {Type: "right", Color: "000000", Style: 1},
+	}
+
+	colorHeader := excelize.Fill{
+		Type: "pattern", Color: []string{"#BCBCBC"}, Pattern: 1,
+	}
+
+	styleHeader, _ := xlsx.NewStyle(&excelize.Style{
+		Alignment: centerAlignment,
+		Font:      boldFont,
+		Border:    border,
+		Fill:      colorHeader,
+	})
+
+	styleBody, _ := xlsx.NewStyle(&excelize.Style{
+		Alignment: centerAlignment,
+		Border:    border,
+	})
+
+	streamWriter, err := xlsx.NewStreamWriter(sheetName)
+	if err != nil {
+		return
+	}
+
+	for rowID := 1; rowID <= len(mappingClusterBranchs)+1; rowID++ {
+		row := make([]interface{}, 5)
+		if rowID == 1 {
+			for idx, val := range rowHeader {
+				row[idx] = excelize.Cell{StyleID: styleHeader, Value: val}
+				streamWriter.SetColWidth(idx+1, idx+2, colSize[idx])
+			}
+		} else {
+			row[0] = excelize.Cell{StyleID: styleBody, Value: mappingClusterBranchs[rowID-2].BranchID}
+			row[1] = excelize.Cell{StyleID: styleBody, Value: mappingClusterBranchs[rowID-2].BranchName}
+			row[2] = excelize.Cell{StyleID: styleBody, Value: mappingClusterBranchs[rowID-2].CustomerStatus}
+			row[3] = excelize.Cell{StyleID: styleBody, Value: mappingClusterBranchs[rowID-2].BpkbNameType}
+			row[4] = excelize.Cell{StyleID: styleBody, Value: mappingClusterBranchs[rowID-2].Cluster}
+		}
+
+		cell, _ := excelize.CoordinatesToCellName(1, rowID)
+		if err = streamWriter.SetRow(cell, row); err != nil {
+			return
+		}
+	}
+
+	if err = streamWriter.Flush(); err != nil {
+		return
+	}
+
+	now := time.Now()
+	fileName = "MappingCluster_" + now.Format("20060102150405") + ".xlsx"
+	genName = utils.GenerateUUID()
+
+	if err = xlsx.SaveAs(fmt.Sprintf("./%s.xlsx", genName)); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Save excel mapping cluster error")
+		return
 	}
 
 	return

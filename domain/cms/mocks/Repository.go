@@ -352,6 +352,36 @@ func (_m *Repository) GetLimitApproval(ntf float64) (entity.MappingLimitApproval
 	return r0, r1
 }
 
+// GetMappingClusterBranch provides a mock function with given fields: req, pagination
+func (_m *Repository) GetMappingClusterBranch(req request.ReqListMappingCluster, pagination interface{}) ([]entity.MappingClusterBranch, int, error) {
+	ret := _m.Called(req, pagination)
+
+	var r0 []entity.MappingClusterBranch
+	if rf, ok := ret.Get(0).(func(request.ReqListMappingCluster, interface{}) []entity.MappingClusterBranch); ok {
+		r0 = rf(req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.MappingClusterBranch)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(request.ReqListMappingCluster, interface{}) int); ok {
+		r1 = rf(req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(request.ReqListMappingCluster, interface{}) error); ok {
+		r2 = rf(req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // GetReasonPrescreening provides a mock function with given fields: req, pagination
 func (_m *Repository) GetReasonPrescreening(req request.ReqReasonPrescreening, pagination interface{}) ([]entity.ReasonMessage, int, error) {
 	ret := _m.Called(req, pagination)

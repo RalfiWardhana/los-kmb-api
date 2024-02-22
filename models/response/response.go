@@ -850,3 +850,9 @@ type SubmitRecalculateResponse struct {
 	RequestID  string      `json:"request_id"`
 	ServerTime string      `json:"timestamp"`
 }
+
+type MappingClusterRow struct {
+	MappingCluster interface{} `json:"mappingCluster"`
+	RecordFiltered int         `json:"recordsFiltered"`
+	RecordTotal    int         `json:"recordsTotal"`
+}
