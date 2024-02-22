@@ -3024,7 +3024,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 	})
 }
 
-func (r repoHandler) GetMappingClusterBranch() (record []entity.MasterMappingCluster, err error) {
+func (r repoHandler) GetMappingCluster() (data []entity.MasterMappingCluster, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
@@ -3035,7 +3035,7 @@ func (r repoHandler) GetMappingClusterBranch() (record []entity.MasterMappingClu
 	db := r.losDB.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.losDB.Raw("SELECT * FROM kmb_mapping_cluster_branch WITH (nolock) ORDER BY branch_id ASC").Scan(&record).Error; err != nil {
+	if err = r.losDB.Raw("SELECT * FROM kmb_mapping_cluster_branch WITH (nolock) ORDER BY branch_id ASC").Scan(&data).Error; err != nil {
 
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
@@ -3169,4 +3169,33 @@ func (r repoHandler) BatchUpdateMappingCluster(data []entity.MasterMappingCluste
 	}
 
 	return err
+}
+
+func (r repoHandler) GetMappingClusterBranch() (data []entity.Branch, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.losDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.losDB.Raw(`SELECT DISTINCT 
+		kmcb.branch_id, 
+		CASE 
+			WHEN kmcb.branch_id = '000' THEN 'PRIME PRIORITY'
+			ELSE cb.BranchName 
+		END AS branch_name 
+		FROM kmb_mapping_cluster_branch kmcb WITH (NOLOCK) 
+		LEFT JOIN confins_branch cb ON cb.BranchID = kmcb.branch_id 
+		ORDER BY kmcb.branch_id ASC`).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
 }

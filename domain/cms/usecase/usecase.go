@@ -1895,9 +1895,8 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 	return
 }
 
-func (u usecase) GetInquiryMappingCluster(ctx context.Context, req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error) {
+func (u usecase) GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error) {
 
-	// get list mapping cluster branch
 	data, rowTotal, err = u.repository.GetInquiryMappingCluster(req, pagination)
 
 	if err != nil {
@@ -1907,7 +1906,7 @@ func (u usecase) GetInquiryMappingCluster(ctx context.Context, req request.ReqLi
 	return
 }
 
-func (u usecase) GenerateExcelMappingCluster(ctx context.Context) (genName, fileName string, err error) {
+func (u usecase) GenerateExcelMappingCluster() (genName, fileName string, err error) {
 
 	var (
 		mappingClusterBranchs []entity.InquiryMappingCluster
@@ -2006,7 +2005,7 @@ func (u usecase) GenerateExcelMappingCluster(ctx context.Context) (genName, file
 	return
 }
 
-func (u usecase) UpdateMappingCluster(ctx context.Context, req request.ReqUploadMappingCluster, file multipart.File) (err error) {
+func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file multipart.File) (err error) {
 
 	var (
 		dataClusterBefore string
@@ -2048,7 +2047,7 @@ func (u usecase) UpdateMappingCluster(ctx context.Context, req request.ReqUpload
 	}
 
 	if len(cluster) > 0 {
-		existingCluster, err := u.repository.GetMappingClusterBranch()
+		existingCluster, err := u.repository.GetMappingCluster()
 		if err != nil && err.Error() != constant.RECORD_NOT_FOUND {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Get existing mapping cluster branch error")
 			return err
@@ -2089,6 +2088,17 @@ func (u usecase) UpdateMappingCluster(ctx context.Context, req request.ReqUpload
 	} else {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Mapping cluster branch dalam file excel kosong")
 		return err
+	}
+
+	return
+}
+
+func (u usecase) GetMappingClusterBranch() (data []entity.Branch, err error) {
+
+	data, err = u.repository.GetMappingClusterBranch()
+
+	if err != nil {
+		return
 	}
 
 	return

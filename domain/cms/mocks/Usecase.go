@@ -41,27 +41,27 @@ func (_m *Usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) 
 	return r0, r1
 }
 
-// GenerateExcelMappingCluster provides a mock function with given fields: ctx
-func (_m *Usecase) GenerateExcelMappingCluster(ctx context.Context) (string, string, error) {
-	ret := _m.Called(ctx)
+// GenerateExcelMappingCluster provides a mock function with given fields:
+func (_m *Usecase) GenerateExcelMappingCluster() (string, string, error) {
+	ret := _m.Called()
 
 	var r0 string
-	if rf, ok := ret.Get(0).(func(context.Context) string); ok {
-		r0 = rf(ctx)
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
 	} else {
 		r0 = ret.Get(0).(string)
 	}
 
 	var r1 string
-	if rf, ok := ret.Get(1).(func(context.Context) string); ok {
-		r1 = rf(ctx)
+	if rf, ok := ret.Get(1).(func() string); ok {
+		r1 = rf()
 	} else {
 		r1 = ret.Get(1).(string)
 	}
 
 	var r2 error
-	if rf, ok := ret.Get(2).(func(context.Context) error); ok {
-		r2 = rf(ctx)
+	if rf, ok := ret.Get(2).(func() error); ok {
+		r2 = rf()
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -210,13 +210,13 @@ func (_m *Usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, p
 	return r0, r1, r2
 }
 
-// GetInquiryMappingCluster provides a mock function with given fields: ctx, req, pagination
-func (_m *Usecase) GetInquiryMappingCluster(ctx context.Context, req request.ReqListMappingCluster, pagination interface{}) ([]entity.InquiryMappingCluster, int, error) {
-	ret := _m.Called(ctx, req, pagination)
+// GetInquiryMappingCluster provides a mock function with given fields: req, pagination
+func (_m *Usecase) GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) ([]entity.InquiryMappingCluster, int, error) {
+	ret := _m.Called(req, pagination)
 
 	var r0 []entity.InquiryMappingCluster
-	if rf, ok := ret.Get(0).(func(context.Context, request.ReqListMappingCluster, interface{}) []entity.InquiryMappingCluster); ok {
-		r0 = rf(ctx, req, pagination)
+	if rf, ok := ret.Get(0).(func(request.ReqListMappingCluster, interface{}) []entity.InquiryMappingCluster); ok {
+		r0 = rf(req, pagination)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]entity.InquiryMappingCluster)
@@ -224,15 +224,15 @@ func (_m *Usecase) GetInquiryMappingCluster(ctx context.Context, req request.Req
 	}
 
 	var r1 int
-	if rf, ok := ret.Get(1).(func(context.Context, request.ReqListMappingCluster, interface{}) int); ok {
-		r1 = rf(ctx, req, pagination)
+	if rf, ok := ret.Get(1).(func(request.ReqListMappingCluster, interface{}) int); ok {
+		r1 = rf(req, pagination)
 	} else {
 		r1 = ret.Get(1).(int)
 	}
 
 	var r2 error
-	if rf, ok := ret.Get(2).(func(context.Context, request.ReqListMappingCluster, interface{}) error); ok {
-		r2 = rf(ctx, req, pagination)
+	if rf, ok := ret.Get(2).(func(request.ReqListMappingCluster, interface{}) error); ok {
+		r2 = rf(req, pagination)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -268,6 +268,29 @@ func (_m *Usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqIn
 	}
 
 	return r0, r1, r2
+}
+
+// GetMappingClusterBranch provides a mock function with given fields:
+func (_m *Usecase) GetMappingClusterBranch() ([]entity.Branch, error) {
+	ret := _m.Called()
+
+	var r0 []entity.Branch
+	if rf, ok := ret.Get(0).(func() []entity.Branch); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.Branch)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetReasonPrescreening provides a mock function with given fields: ctx, req, pagination
@@ -456,13 +479,13 @@ func (_m *Usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDeci
 	return r0, r1
 }
 
-// UpdateMappingCluster provides a mock function with given fields: ctx, req, file
-func (_m *Usecase) UpdateMappingCluster(ctx context.Context, req request.ReqUploadMappingCluster, file multipart.File) error {
-	ret := _m.Called(ctx, req, file)
+// UpdateMappingCluster provides a mock function with given fields: req, file
+func (_m *Usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file multipart.File) error {
+	ret := _m.Called(req, file)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, request.ReqUploadMappingCluster, multipart.File) error); ok {
-		r0 = rf(ctx, req, file)
+	if rf, ok := ret.Get(0).(func(request.ReqUploadMappingCluster, multipart.File) error); ok {
+		r0 = rf(req, file)
 	} else {
 		r0 = ret.Error(0)
 	}

@@ -2300,3 +2300,8 @@ type HistoryConfigChanges struct {
 func (c *HistoryConfigChanges) TableName() string {
 	return "history_config_changes"
 }
+
+type Branch struct {
+	BranchID   string `json:"branch_id"`
+	BranchName string `json:"branch_name"`
+}

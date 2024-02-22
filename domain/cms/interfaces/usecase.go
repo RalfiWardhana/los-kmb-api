@@ -24,7 +24,8 @@ type Usecase interface {
 	GetInquiryApproval(ctx context.Context, req request.ReqInquiryApproval, pagination interface{}) (data []entity.InquiryDataApproval, rowTotal int, err error)
 	GetApprovalReason(ctx context.Context, req request.ReqApprovalReason, pagination interface{}) (data []entity.ApprovalReason, rowTotal int, err error)
 	SubmitApproval(ctx context.Context, req request.ReqSubmitApproval) (data response.ApprovalResponse, err error)
-	GetInquiryMappingCluster(ctx context.Context, req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error)
-	GenerateExcelMappingCluster(ctx context.Context) (genName, fileName string, err error)
-	UpdateMappingCluster(ctx context.Context, req request.ReqUploadMappingCluster, file multipart.File) (err error)
+	GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error)
+	GenerateExcelMappingCluster() (genName, fileName string, err error)
+	UpdateMappingCluster(req request.ReqUploadMappingCluster, file multipart.File) (err error)
+	GetMappingClusterBranch() (data []entity.Branch, err error)
 }
