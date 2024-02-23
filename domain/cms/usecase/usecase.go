@@ -2053,7 +2053,7 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 			return err
 		}
 
-		jsonDataBefore, err := json.MarshalIndent(existingCluster, "", "    ")
+		jsonDataBefore, err := json.Marshal(existingCluster)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Error converting to JSON mapping cluster before")
 			return err
@@ -2061,7 +2061,7 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 
 		dataClusterBefore = string(jsonDataBefore)
 
-		jsonDataAfter, err := json.MarshalIndent(cluster, "", "    ")
+		jsonDataAfter, err := json.Marshal(cluster)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Error converting to JSON mapping cluster after")
 			return err
@@ -2082,7 +2082,7 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 
 		err = u.repository.BatchUpdateMappingCluster(cluster, history)
 		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Update mapping cluster branch error, periksa kembali file excel")
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Update mapping cluster branch error, periksa kembali file excel")
 			return err
 		}
 	} else {
@@ -2096,6 +2096,17 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 func (u usecase) GetMappingClusterBranch() (data []entity.Branch, err error) {
 
 	data, err = u.repository.GetMappingClusterBranch()
+
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (u usecase) GetMappingClusterChangeLog(pagination interface{}) (data []entity.MappingClusterChangeLog, rowTotal int, err error) {
+
+	data, rowTotal, err = u.repository.GetMappingClusterChangeLog(pagination)
 
 	if err != nil {
 		return

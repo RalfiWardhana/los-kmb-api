@@ -3106,14 +3106,13 @@ func (r repoHandler) GetInquiryMappingCluster(req request.ReqListMappingCluster,
 
 		var row entity.TotalRow
 
-		if err = r.losDB.Raw(fmt.Sprintf(`
-		SELECT
-			COUNT(*) AS totalRow
-		FROM (
-			SELECT kmcb.*, cb.BranchName AS branch_name 
-			FROM kmb_mapping_cluster_branch kmcb 
-			LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID %s
-		) AS y`, filter)).Scan(&row).Error; err != nil {
+		if err = r.losDB.Raw(fmt.Sprintf(`SELECT
+				COUNT(*) AS totalRow
+			FROM (
+				SELECT kmcb.*, cb.BranchName AS branch_name 
+				FROM kmb_mapping_cluster_branch kmcb 
+				LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID %s
+			) AS y`, filter)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -3197,5 +3196,50 @@ func (r repoHandler) GetMappingClusterBranch() (data []entity.Branch, err error)
 		return
 	}
 
+	return
+}
+
+func (r repoHandler) GetMappingClusterChangeLog(pagination interface{}) (data []entity.MappingClusterChangeLog, rowTotal int, err error) {
+
+	var filterPaginate string
+
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.losDB.Raw(`SELECT 
+				COUNT(*) AS totalRow
+			FROM history_config_changes hcc 
+			LEFT JOIN user_details ud ON ud.user_id = hcc.created_by 
+			WHERE hcc.config_id = 'kmb_mapping_cluster_branch'
+		`).Scan(&row).Error; err != nil {
+			return
+		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
+	}
+
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT
+			hcc.id, hcc.data_before, hcc.data_after, hcc.created_at, ud.name AS user_name
+		FROM history_config_changes hcc 
+		LEFT JOIN user_details ud ON ud.user_id = hcc.created_by 
+		WHERE hcc.config_id = 'kmb_mapping_cluster_branch'
+		ORDER BY hcc.created_at DESC %s`, filterPaginate)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	if len(data) == 0 {
+		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
 	return
 }

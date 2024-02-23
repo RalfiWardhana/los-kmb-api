@@ -28,4 +28,5 @@ type Usecase interface {
 	GenerateExcelMappingCluster() (genName, fileName string, err error)
 	UpdateMappingCluster(req request.ReqUploadMappingCluster, file multipart.File) (err error)
 	GetMappingClusterBranch() (data []entity.Branch, err error)
+	GetMappingClusterChangeLog(pagination interface{}) (data []entity.MappingClusterChangeLog, rowTotal int, err error)
 }

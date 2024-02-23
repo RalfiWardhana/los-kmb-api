@@ -442,6 +442,36 @@ func (_m *Repository) GetMappingClusterBranch() ([]entity.Branch, error) {
 	return r0, r1
 }
 
+// GetMappingClusterChangeLog provides a mock function with given fields: pagination
+func (_m *Repository) GetMappingClusterChangeLog(pagination interface{}) ([]entity.MappingClusterChangeLog, int, error) {
+	ret := _m.Called(pagination)
+
+	var r0 []entity.MappingClusterChangeLog
+	if rf, ok := ret.Get(0).(func(interface{}) []entity.MappingClusterChangeLog); ok {
+		r0 = rf(pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.MappingClusterChangeLog)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(interface{}) int); ok {
+		r1 = rf(pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(interface{}) error); ok {
+		r2 = rf(pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // GetReasonPrescreening provides a mock function with given fields: req, pagination
 func (_m *Repository) GetReasonPrescreening(req request.ReqReasonPrescreening, pagination interface{}) ([]entity.ReasonMessage, int, error) {
 	ret := _m.Called(req, pagination)

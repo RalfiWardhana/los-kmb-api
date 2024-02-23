@@ -2305,3 +2305,11 @@ type Branch struct {
 	BranchID   string `json:"branch_id"`
 	BranchName string `json:"branch_name"`
 }
+
+type MappingClusterChangeLog struct {
+	ID         string `json:"id"`
+	DataBefore string `json:"data_before"`
+	DataAfter  string `json:"data_after"`
+	UserName   string `json:"user_name"`
+	CreatedAt  string `json:"created_at"`
+}

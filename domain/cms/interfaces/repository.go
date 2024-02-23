@@ -36,4 +36,5 @@ type Repository interface {
 	GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error)
 	BatchUpdateMappingCluster(data []entity.MasterMappingCluster, history entity.HistoryConfigChanges) (err error)
 	GetMappingClusterBranch() (data []entity.Branch, err error)
+	GetMappingClusterChangeLog(pagination interface{}) (data []entity.MappingClusterChangeLog, rowTotal int, err error)
 }
