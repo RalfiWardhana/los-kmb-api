@@ -3167,3 +3167,24 @@ func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface
 	}
 	return
 }
+
+func (r repoHandler) GetInquiryNEDetail(prospectID string) (data entity.NewEntry, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.NewKmb.Raw("SELECT payload_ne FROM trx_new_entry WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
