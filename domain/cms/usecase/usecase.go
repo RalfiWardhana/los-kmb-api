@@ -1972,7 +1972,7 @@ func (u usecase) GetInquiryNE(ctx context.Context, req request.ReqInquiryNE, pag
 	result, rowTotal, err := u.repository.GetInquiryNE(req, pagination)
 
 	if err != nil {
-		return []entity.InquiryDataNE{}, 0, err
+		return
 	}
 
 	data = result
