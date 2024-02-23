@@ -4,9 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"los-kmb-api/domain/filtering_new/interfaces"
 	"los-kmb-api/models/entity"
+	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
 	"strconv"
@@ -72,6 +74,41 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 			if err = db.Create(&v).Error; err != nil {
 				return
 			}
+		}
+	}
+
+	// insert worker ne
+	if err == nil {
+		var trxNewEntry entity.NewEntry
+		if err = db.Raw("SELECT * FROM trx_new_entry WITH (nolock) WHERE ProspectID = ?", data.ProspectID).Scan(&trxNewEntry).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				err = errors.New(constant.RECORD_NOT_FOUND)
+			}
+			return
+		}
+
+		newKpLos := r.KpLos.Transaction(func(tx *gorm.DB) error {
+			// elaborate
+			if err := tx.Create(&entity.TrxWorker{
+				ProspectID:      data.ProspectID,
+				Category:        "LTV",
+				Action:          "ELABOREATE_LTV",
+				APIType:         "RAW",
+				EndPointTarget:  fmt.Sprintf("%s/%s", os.Getenv("INSERT_STAGING_URL"), data.ProspectID),
+				EndPointMethod:  constant.METHOD_POST,
+				ResponseTimeout: 30,
+				MaxRetry:        6,
+				CountRetry:      0,
+				Activity:        constant.ACTIVITY_UNPROCESS,
+			}).Error; err != nil {
+				return err
+			}
+
+			return nil
+		})
+
+		if newKpLos != nil {
+			db.Rollback()
 		}
 	}
 
