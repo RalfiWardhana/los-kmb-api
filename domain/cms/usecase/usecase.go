@@ -2082,7 +2082,7 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 
 		err = u.repository.BatchUpdateMappingCluster(cluster, history)
 		if err != nil {
-			err = errors.New(constant.ERROR_BAD_REQUEST + " - Update mapping cluster branch error, periksa kembali file excel")
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - " + err.Error())
 			return err
 		}
 	} else {
@@ -2093,7 +2093,7 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 	return
 }
 
-func (u usecase) GetMappingClusterBranch() (data []entity.Branch, err error) {
+func (u usecase) GetMappingClusterBranch() (data []entity.ConfinsBranch, err error) {
 
 	data, err = u.repository.GetMappingClusterBranch()
 

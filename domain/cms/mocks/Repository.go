@@ -420,15 +420,15 @@ func (_m *Repository) GetMappingCluster() ([]entity.MasterMappingCluster, error)
 }
 
 // GetMappingClusterBranch provides a mock function with given fields:
-func (_m *Repository) GetMappingClusterBranch() ([]entity.Branch, error) {
+func (_m *Repository) GetMappingClusterBranch() ([]entity.ConfinsBranch, error) {
 	ret := _m.Called()
 
-	var r0 []entity.Branch
-	if rf, ok := ret.Get(0).(func() []entity.Branch); ok {
+	var r0 []entity.ConfinsBranch
+	if rf, ok := ret.Get(0).(func() []entity.ConfinsBranch); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.Branch)
+			r0 = ret.Get(0).([]entity.ConfinsBranch)
 		}
 	}
 

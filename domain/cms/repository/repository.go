@@ -13,6 +13,7 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -3157,7 +3158,42 @@ func (r repoHandler) BatchUpdateMappingCluster(data []entity.MasterMappingCluste
 		return err
 	}
 
-	for _, val := range data {
+	branchIDMap := make(map[string]bool)
+	branchIDMap["000"] = true
+
+	rows, err := db.Model(&entity.ConfinsBranch{}).Select("BranchID").Rows()
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var branchID string
+		if err := rows.Scan(&branchID); err != nil {
+			return err
+		}
+		branchIDMap[strings.TrimSpace(branchID)] = true
+	}
+
+	var clusterRegex = regexp.MustCompile(`^Cluster [A-Z]$`)
+	for i, val := range data {
+		val.BranchID = strings.TrimSpace(val.BranchID)
+		if _, exists := branchIDMap[val.BranchID]; !exists {
+			return errors.New("row " + strconv.Itoa(i+2) + ", nilai branch_id " + val.BranchID + " tidak ditemukan dalam tabel confins_branch")
+		}
+
+		if val.CustomerStatus != constant.STATUS_KONSUMEN_NEW && val.CustomerStatus != "AO/RO" {
+			return errors.New("row " + strconv.Itoa(i+2) + ", nilai customer_status harus " + constant.STATUS_KONSUMEN_NEW + " atau AO/RO")
+		}
+
+		if val.BpkbNameType != 0 && val.BpkbNameType != 1 {
+			return errors.New("row " + strconv.Itoa(i+2) + ", nilai bpkb_name_type harus 0 atau 1")
+		}
+
+		if val.Cluster != constant.CLUSTER_PRIME_PRIORITY && !clusterRegex.MatchString(val.Cluster) {
+			return errors.New("row " + strconv.Itoa(i+2) + ", nilai cluster tidak sesuai ketentuan")
+		}
+
 		if err = db.Create(&val).Error; err != nil {
 			return err
 		}
@@ -3170,7 +3206,7 @@ func (r repoHandler) BatchUpdateMappingCluster(data []entity.MasterMappingCluste
 	return err
 }
 
-func (r repoHandler) GetMappingClusterBranch() (data []entity.Branch, err error) {
+func (r repoHandler) GetMappingClusterBranch() (data []entity.ConfinsBranch, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))

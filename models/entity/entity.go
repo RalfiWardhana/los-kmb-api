@@ -2301,9 +2301,13 @@ func (c *HistoryConfigChanges) TableName() string {
 	return "history_config_changes"
 }
 
-type Branch struct {
-	BranchID   string `json:"branch_id"`
-	BranchName string `json:"branch_name"`
+type ConfinsBranch struct {
+	BranchID   string `gorm:"type:varchar(10);column:BranchID" json:"branch_id"`
+	BranchName string `gorm:"type:varchar(200);column:BranchName" json:"branch_name"`
+}
+
+func (c *ConfinsBranch) TableName() string {
+	return "confins_branch"
 }
 
 type MappingClusterChangeLog struct {
