@@ -3159,7 +3159,7 @@ func (r repoHandler) BatchUpdateMappingCluster(data []entity.MasterMappingCluste
 	}
 
 	branchIDMap := make(map[string]bool)
-	branchIDMap["000"] = true
+	branchIDMap[constant.BRANCH_ID_PRIME_PRIORITY] = true
 
 	rows, err := db.Model(&entity.ConfinsBranch{}).Select("BranchID").Rows()
 	if err != nil {
@@ -3218,11 +3218,11 @@ func (r repoHandler) GetMappingClusterBranch() (data []entity.ConfinsBranch, err
 	defer db.Commit()
 
 	if err = r.losDB.Raw(`SELECT DISTINCT 
-		kmcb.branch_id, 
+		kmcb.branch_id AS BranchID, 
 		CASE 
 			WHEN kmcb.branch_id = '000' THEN 'PRIME PRIORITY'
 			ELSE cb.BranchName 
-		END AS branch_name 
+		END AS BranchName 
 		FROM kmb_mapping_cluster_branch kmcb WITH (NOLOCK) 
 		LEFT JOIN confins_branch cb ON cb.BranchID = kmcb.branch_id 
 		ORDER BY kmcb.branch_id ASC`).Scan(&data).Error; err != nil {
