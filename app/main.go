@@ -32,6 +32,7 @@ import (
 	authRepository "los-kmb-api/shared/authorization/repository"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/json"
+	"los-kmb-api/shared/common/platformcache"
 	"los-kmb-api/shared/common/platformlog"
 	"los-kmb-api/shared/config"
 	"los-kmb-api/shared/constant"
@@ -196,6 +197,7 @@ func main() {
 	}
 
 	producer := platformevent.NewPlatformEvent()
+	platformCache := platformcache.NewPlatformCache()
 
 	// define kmb filtering domain
 	kmbFilteringRepo := filteringRepository.NewRepository(minilosKMB, kpLos, kpLosLogs)
@@ -211,7 +213,7 @@ func main() {
 	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs, newKMB)
 	newKmbFilteringCase := newKmbFilteringUsecase.NewUsecase(newKmbFilteringRepo, httpClient)
 	newKmbFilteringMultiCase := newKmbFilteringUsecase.NewMultiUsecase(newKmbFilteringRepo, httpClient, newKmbFilteringCase)
-	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken, producer)
+	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken, producer, platformCache)
 
 	// define new kmb elaborate domain
 	newElaborateLTVRepo := elaborateLTVRepository.NewRepository(kpLosLogs, newKMB)
@@ -252,7 +254,7 @@ func main() {
 		}
 	})
 
-	eventhandlers.NewServiceFiltering(consumerRouter, newKmbFilteringRepo, newKmbFilteringCase, newKmbFilteringMultiCase, validator, producer, jsonResponse)
+	eventhandlers.NewServiceFiltering(consumerRouter, newKmbFilteringRepo, newKmbFilteringCase, newKmbFilteringMultiCase, validator, producer, jsonResponse, platformCache)
 
 	if err := consumerRouter.StartConsume(); err != nil {
 		panic(err)

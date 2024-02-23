@@ -99,10 +99,10 @@ func (r repoHandler) MasterMappingCluster(req entity.MasterMappingCluster) (data
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
 
-	db := r.NewKmb.BeginTx(ctx, &x)
+	db := r.KpLos.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = db.Raw("SELECT * FROM dbo.m_mapping_cluster WITH (nolock) WHERE branch_id = ? AND customer_status = ? AND bpkb_name_type = ?", req.BranchID, req.CustomerStatus, req.BpkbNameType).Scan(&data).Error; err != nil {
+	if err = db.Raw("SELECT * FROM dbo.kmb_mapping_cluster_branch WITH (nolock) WHERE branch_id = ? AND customer_status = ? AND bpkb_name_type = ?", req.BranchID, req.CustomerStatus, req.BpkbNameType).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
@@ -130,5 +130,26 @@ func (r repoHandler) SaveLogOrchestrator(header, request, response interface{}, 
 	}).Error; err != nil {
 		return
 	}
+	return
+}
+
+func (r repoHandler) GetResultFiltering(prospectID string) (data []entity.ResultFiltering, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = db.Raw(`SELECT tf.prospect_id, tf.decision, tf.reason, tf.customer_status, tf.customer_segment, tf.is_blacklist, tf.next_process,
+	tf.total_baki_debet_non_collateral_biro, tdb.url_pdf_report, tdb.subject FROM trx_filtering tf 
+	LEFT JOIN trx_detail_biro tdb ON tf.prospect_id = tdb.prospect_id 
+	WHERE tf.prospect_id = ?`, prospectID).Scan(&data).Error; err != nil {
+		return
+	}
+
 	return
 }

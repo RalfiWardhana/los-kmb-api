@@ -293,6 +293,11 @@ const (
 	MSG_CONSUME_DATA_STREAM = "CONSUME_DATA_STREAM"
 	MSG_MEDIA_API           = "PLATFORM_MEDIA_API"
 
+	//Platform Cache
+	DOC_FILTERING      = "nkmb_filtering_%s"
+	MSG_SET_DATA_CACHE = "SET_DATA_CACHE"
+	MSG_GET_DATA_CACHE = "GET_DATA_CACHE"
+
 	//Platform Event
 	KEY_PREFIX_FILTERING               = "filtering"
 	KEY_PREFIX_UPDATE_STATUS_FILTERING = "update_status_filtering"
