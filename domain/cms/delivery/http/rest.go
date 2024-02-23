@@ -778,7 +778,7 @@ func (c *handlerCMS) SubmitNE(ctx echo.Context) (err error) {
 	// Save Log Orchestrator
 	defer func() {
 		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
-		go c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/ne/submit", constant.METHOD_POST, req.Transaction.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
+		c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/ne/submit", constant.METHOD_POST, req.Transaction.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
 	}()
 
 	if err := ctx.Bind(&req); err != nil {
@@ -791,14 +791,17 @@ func (c *handlerCMS) SubmitNE(ctx echo.Context) (err error) {
 		return ctxJson
 	}
 
-	data, err := c.usecase.SubmitNE(ctx.Request().Context(), req)
+	payloadFiltering, err := c.usecase.SubmitNE(ctx.Request().Context(), req)
 
 	if err != nil {
 		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Error", req, err)
 		return ctxJson
 	}
 
-	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Success", req, data)
+	//produce filtering for NE
+	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_FILTERING, req.Transaction.ProspectID, utils.StructToMap(payloadFiltering), 0)
+
+	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Success", req, request.MetricsNE{})
 
 	return ctxJson
 }

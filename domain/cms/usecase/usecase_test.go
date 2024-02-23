@@ -2694,15 +2694,14 @@ func TestSubmitNE(t *testing.T) {
 	}{
 		{
 			name:             "test submit ne success",
-			payloadFiltering: `{"prospect_id":"NE-KMB40023112200005","branch_id":"400","id_number":"XiR05mWunJWqDC7Bd7Nj9QhpKlfxoQ3gg3O8w7vrgoY=","legal_name":"4itLRJZqYnTMsxZBJiclMLgHjnbK","birth_date":"1988-04-30","gender":"M","surgate_mother_name":"hYG+p2u1wq24HpMDaJK3CVHRaYjKk3K2Chvcb/I=","bpkb_name":"K","spouse":{"spouse_id_number":"uIwO5jB15AiiKy03sITjzhyJjm/o0uDwgLIUkVc4C/0=","spouse_legal_name":"ecViJcpAqUEns1XQ4cS4l2NvB2GvPZRqBHVOZxM=","spouse_birth_date":"1999-12-12","spouse_gender":"F","spouse_surgate_mother_name":"//MxG4R06HCdqlyi0qoixCKOEsKihmACJ1EUaDgM3xx8gwUYmomzbuEr8ug="}}`,
+			payloadFiltering: `{"prospect_id":"NE-KMB40023112200005","branch_id":"400","id_number":"","legal_name":"","birth_date":"1988-04-30","gender":"M","surgate_mother_name":"","bpkb_name":"K","spouse":{"spouse_id_number":"","spouse_legal_name":"","spouse_birth_date":"1999-12-12","spouse_gender":"F","spouse_surgate_mother_name":""}}`,
 			payloadLTV:       `{"prospect_id":"NE-KMB40023112200005","tenor":16,"manufacturing_year":"2018"}`,
 		},
 		{
-			name:             "test submit ne error",
-			errSubmitNe:      errors.New("invalid query"),
-			errFinal:         errors.New(constant.ERROR_UPSTREAM + " - invalid query"),
-			payloadFiltering: `{"prospect_id":"NE-KMB40023112200005","branch_id":"400","id_number":"XiR05mWunJWqDC7Bd7Nj9QhpKlfxoQ3gg3O8w7vrgoY=","legal_name":"4itLRJZqYnTMsxZBJiclMLgHjnbK","birth_date":"1988-04-30","gender":"M","surgate_mother_name":"hYG+p2u1wq24HpMDaJK3CVHRaYjKk3K2Chvcb/I=","bpkb_name":"K","spouse":{"spouse_id_number":"uIwO5jB15AiiKy03sITjzhyJjm/o0uDwgLIUkVc4C/0=","spouse_legal_name":"ecViJcpAqUEns1XQ4cS4l2NvB2GvPZRqBHVOZxM=","spouse_birth_date":"1999-12-12","spouse_gender":"F","spouse_surgate_mother_name":"//MxG4R06HCdqlyi0qoixCKOEsKihmACJ1EUaDgM3xx8gwUYmomzbuEr8ug="}}`,
-			payloadLTV:       `{"prospect_id":"NE-KMB40023112200005","tenor":16,"manufacturing_year":"2018"}`,
+			name:        "test submit ne error",
+			errSubmitNe: errors.New("invalid query"),
+			errFinal:    errors.New(constant.ERROR_UPSTREAM + " - invalid query"),
+			payloadLTV:  `{"prospect_id":"NE-KMB40023112200005","tenor":16,"manufacturing_year":"2018"}`,
 		},
 	}
 
@@ -2713,6 +2712,7 @@ func TestSubmitNE(t *testing.T) {
 				journey   request.Metrics
 				filtering request.Filtering
 				ltv       request.ElaborateLTV
+				data      interface{}
 			)
 
 			copier.Copy(&journey, &req)
@@ -2727,8 +2727,11 @@ func TestSubmitNE(t *testing.T) {
 
 			result, err := usecase.SubmitNE(context.Background(), req)
 
+			if tc.payloadFiltering != "" {
+				data = filtering
+			}
 			assert.Equal(t, tc.errFinal, err)
-			assert.Equal(t, nil, result)
+			assert.Equal(t, data, result)
 		})
 	}
 }

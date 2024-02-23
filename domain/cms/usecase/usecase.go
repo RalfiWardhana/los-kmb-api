@@ -1964,6 +1964,9 @@ func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data inte
 		return
 	}
 
+	// the func will return the payload of filtering and produce it later
+	data = filtering
+
 	return
 }
 

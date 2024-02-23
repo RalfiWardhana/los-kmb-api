@@ -65,7 +65,7 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 	// Save Log Orchestrator
 	defer func() {
 		headers := map[string]string{constant.HeaderXRequestID: ctx.Value(constant.HeaderXRequestID).(string)}
-		go h.repository.SaveLogOrchestrator(headers, reqEncrypted, resp, "/api/v3/kmb/consume/filtering", constant.METHOD_POST, req.ProspectID, ctx.Value(constant.HeaderXRequestID).(string))
+		h.repository.SaveLogOrchestrator(headers, reqEncrypted, resp, "/api/v3/kmb/consume/filtering", constant.METHOD_POST, req.ProspectID, ctx.Value(constant.HeaderXRequestID).(string))
 	}()
 
 	err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(body, &reqEncrypted)
@@ -138,7 +138,12 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 	check, errCheck := h.usecase.FilteringProspectID(req.ProspectID)
 	if errCheck != nil {
 		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, errCheck)
-		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+
+		// if the order is not from NE then produce event
+		if req.ProspectID[0:2] != "NE" {
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+		}
+
 		return nil
 	}
 	if err := h.validator.Validate(&check); err != nil {
@@ -152,10 +157,16 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 				h.platformCache.SetCache(ctx, middlewares.UserInfoData.AccessToken, os.Getenv("CACHE_COLLECTION_NAME"), fmt.Sprintf(constant.DOC_FILTERING, req.ProspectID), resp, os.Getenv("CACHE_FILTERING_EXPIRED"))
 			}
 		}
+
 		var rs response.ApiResponse
 		resp, _ := json.Marshal(resp)
 		json.Unmarshal(resp, &rs)
-		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(rs), 0)
+
+		// if the order is not from NE then produce event
+		if req.ProspectID[0:2] != "NE" {
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(rs), 0)
+		}
+
 		return nil
 	}
 
@@ -167,7 +178,10 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 		h.platformCache.SetCache(ctx, middlewares.UserInfoData.AccessToken, os.Getenv("CACHE_COLLECTION_NAME"), fmt.Sprintf(constant.DOC_FILTERING, req.ProspectID), resp, os.Getenv("CACHE_FILTERING_EXPIRED"))
 	}
 
-	h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+	// if the order is not from NE then produce event
+	if req.ProspectID[0:2] != "NE" {
+		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_UPDATE_STATUS_FILTERING, req.ProspectID, utils.StructToMap(resp), 0)
+	}
 
 	return nil
 }
