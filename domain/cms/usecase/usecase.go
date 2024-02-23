@@ -1979,3 +1979,24 @@ func (u usecase) GetInquiryNE(ctx context.Context, req request.ReqInquiryNE, pag
 
 	return
 }
+
+func (u usecase) GetInquiryNEDetail(ctx context.Context, prospectID string) (data request.MetricsNE, err error) {
+
+	var (
+		trxNewEntry entity.NewEntry
+	)
+
+	trxNewEntry, err = u.repository.GetInquiryNEDetail(prospectID)
+	if err != nil {
+		if err.Error() == constant.RECORD_NOT_FOUND {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - " + err.Error())
+		} else {
+			err = errors.New(constant.ERROR_UPSTREAM + " - " + err.Error())
+		}
+		return
+	}
+
+	json.Unmarshal([]byte(trxNewEntry.PayloadNE), &data)
+
+	return
+}

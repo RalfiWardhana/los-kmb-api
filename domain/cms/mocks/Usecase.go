@@ -210,6 +210,27 @@ func (_m *Usecase) GetInquiryNE(ctx context.Context, req request.ReqInquiryNE, p
 	return r0, r1, r2
 }
 
+// GetInquiryNEDetail provides a mock function with given fields: ctx, prospectID
+func (_m *Usecase) GetInquiryNEDetail(ctx context.Context, prospectID string) (request.MetricsNE, error) {
+	ret := _m.Called(ctx, prospectID)
+
+	var r0 request.MetricsNE
+	if rf, ok := ret.Get(0).(func(context.Context, string) request.MetricsNE); ok {
+		r0 = rf(ctx, prospectID)
+	} else {
+		r0 = ret.Get(0).(request.MetricsNE)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetInquiryPrescreening provides a mock function with given fields: ctx, req, pagination
 func (_m *Usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInquiryPrescreening, pagination interface{}) ([]entity.InquiryData, int, error) {
 	ret := _m.Called(ctx, req, pagination)
