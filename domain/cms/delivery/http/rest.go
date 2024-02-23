@@ -820,8 +820,8 @@ func (c *handlerCMS) MappingClusterInquiry(ctx echo.Context) (err error) {
 // CMS NEW KMB Tools godoc
 // @Description Api Mapping Cluster
 // @Tags Mapping Cluster
-// @Produce json
-// @Success 200 {object} response.Api{}
+// @Produce octet-stream
+// @Success 200 {file} file "application/octet-stream"
 // @Failure 500 {object} response.ApiResponse{}
 // @Router /api/v3/kmb/cms/mapping-cluster/download [get]
 func (c *handlerCMS) DownloadMappingCluster(ctx echo.Context) (err error) {
@@ -851,9 +851,10 @@ func (c *handlerCMS) DownloadMappingCluster(ctx echo.Context) (err error) {
 // @Tags Mapping Cluster
 // @Produce json
 // @Param excel_file formData file true "upload file"
-// @Success 200 {object} response.Api{}
-// @Failure 400 {object} response.Api{error=response.ErrorValidation}
-// @Failure 500 {object} response.Api{}
+// @Param user_id formData string true "user id"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
 // @Router /api/v3/kmb/cms/mapping-cluster/upload [post]
 func (c *handlerCMS) UploadMappingCluster(ctx echo.Context) (err error) {
 
@@ -900,7 +901,7 @@ func (c *handlerCMS) UploadMappingCluster(ctx echo.Context) (err error) {
 // @Description Api Mapping Cluster
 // @Tags Mapping Cluster
 // @Produce json
-// @Success 200 {object} response.ApiResponse{data=response.ApiResponse}
+// @Success 200 {object} response.ApiResponse{data=response.InquiryRow}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
 // @Router /api/v3/kmb/cms/mapping-cluster/branch [get]

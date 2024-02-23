@@ -1773,6 +1773,178 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - CA
+  /api/v3/kmb/cms/mapping-cluster/branch:
+    get:
+      description: Api Mapping Cluster
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.InquiryRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Mapping Cluster
+  /api/v3/kmb/cms/mapping-cluster/change-log:
+    get:
+      description: Api Mapping Cluster
+      parameters:
+      - description: page
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.InquiryRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Mapping Cluster
+  /api/v3/kmb/cms/mapping-cluster/download:
+    get:
+      description: Api Mapping Cluster
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: application/octet-stream
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Mapping Cluster
+  /api/v3/kmb/cms/mapping-cluster/inquiry:
+    get:
+      description: Api Mapping Cluster
+      parameters:
+      - description: search
+        in: query
+        name: search
+        type: string
+      - description: branch_id
+        in: query
+        name: branch_id
+        type: string
+      - description: customer_status
+        in: query
+        name: customer_status
+        type: string
+      - description: bpkb_name_type
+        in: query
+        name: bpkb_name_type
+        type: string
+      - description: cluster
+        in: query
+        name: cluster
+        type: string
+      - description: page
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.InquiryRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Mapping Cluster
+  /api/v3/kmb/cms/mapping-cluster/upload:
+    post:
+      description: Api Mapping Cluster
+      parameters:
+      - description: upload file
+        in: formData
+        name: excel_file
+        required: true
+        type: file
+      - description: user id
+        in: formData
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Mapping Cluster
   /api/v3/kmb/cms/prescreening/inquiry:
     get:
       description: Api Prescreening
