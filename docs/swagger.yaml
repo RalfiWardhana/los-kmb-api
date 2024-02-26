@@ -1776,6 +1776,15 @@ paths:
   /api/v3/kmb/cms/mapping-cluster/branch:
     get:
       description: Api Mapping Cluster
+      parameters:
+      - description: branch_id
+        in: query
+        name: branch_id
+        type: string
+      - description: branch_name
+        in: query
+        name: branch_name
+        type: string
       produces:
       - application/json
       responses:

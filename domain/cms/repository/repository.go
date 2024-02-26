@@ -3111,7 +3111,7 @@ func (r repoHandler) GetInquiryMappingCluster(req request.ReqListMappingCluster,
 				COUNT(*) AS totalRow
 			FROM (
 				SELECT kmcb.*, cb.BranchName AS branch_name 
-				FROM kmb_mapping_cluster_branch kmcb 
+				FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
 				LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID %s
 			) AS y`, filter)).Scan(&row).Error; err != nil {
 			return
@@ -3125,7 +3125,7 @@ func (r repoHandler) GetInquiryMappingCluster(req request.ReqListMappingCluster,
 	if err = r.losDB.Raw(fmt.Sprintf(`SELECT
 		kmcb.*, 
 		cb.BranchName AS branch_name
-		FROM kmb_mapping_cluster_branch kmcb 
+		FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
 		LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID %s ORDER BY kmcb.branch_id ASC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
 		return
 	}
@@ -3167,7 +3167,7 @@ func (r repoHandler) BatchUpdateMappingCluster(data []entity.MasterMappingCluste
 			val.BranchID = constant.BRANCH_ID_PRIME_PRIORITY
 		}
 
-		val.CustomerStatus = strings.TrimSpace(val.CustomerStatus)
+		val.CustomerStatus = strings.ToUpper(strings.TrimSpace(val.CustomerStatus))
 		if val.CustomerStatus != constant.STATUS_KONSUMEN_NEW && val.CustomerStatus != "AO/RO" {
 			return errors.New("row " + strconv.Itoa(i+2) + ", nilai customer_status harus " + constant.STATUS_KONSUMEN_NEW + " atau AO/RO")
 		}
@@ -3177,6 +3177,12 @@ func (r repoHandler) BatchUpdateMappingCluster(data []entity.MasterMappingCluste
 		}
 
 		val.Cluster = strings.TrimSpace(val.Cluster)
+		if strings.EqualFold(val.Cluster, constant.CLUSTER_PRIME_PRIORITY) {
+			val.Cluster = strings.ToUpper(val.Cluster)
+		} else {
+			val.Cluster = strings.Title(val.Cluster)
+		}
+
 		if val.Cluster != constant.CLUSTER_PRIME_PRIORITY && !clusterRegex.MatchString(val.Cluster) {
 			return errors.New("row " + strconv.Itoa(i+2) + ", nilai cluster tidak sesuai ketentuan")
 		}
@@ -3193,8 +3199,31 @@ func (r repoHandler) BatchUpdateMappingCluster(data []entity.MasterMappingCluste
 	return err
 }
 
-func (r repoHandler) GetMappingClusterBranch() (data []entity.ConfinsBranch, err error) {
-	var x sql.TxOptions
+func (r repoHandler) GetMappingClusterBranch(req request.ReqListMappingClusterBranch) (data []entity.ConfinsBranch, err error) {
+	var (
+		filterBuilder strings.Builder
+		conditions    []string
+		x             sql.TxOptions
+	)
+
+	if req.BranchID != "" {
+		numbers := strings.Split(req.BranchID, ",")
+		for i, number := range numbers {
+			numbers[i] = "'" + number + "'"
+		}
+		conditions = append(conditions, fmt.Sprintf("kmcb.branch_id IN (%s)", strings.Join(numbers, ",")))
+	}
+
+	if req.BranchName != "" {
+		conditions = append(conditions, fmt.Sprintf("cb.BranchName LIKE '%%%[1]s%%'", req.BranchName))
+	}
+
+	if len(conditions) > 0 {
+		filterBuilder.WriteString("WHERE ")
+		filterBuilder.WriteString(strings.Join(conditions, " AND "))
+	}
+
+	filter := filterBuilder.String()
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
@@ -3204,15 +3233,15 @@ func (r repoHandler) GetMappingClusterBranch() (data []entity.ConfinsBranch, err
 	db := r.losDB.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.losDB.Raw(`SELECT DISTINCT 
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT DISTINCT 
 		kmcb.branch_id AS BranchID, 
 		CASE 
 			WHEN kmcb.branch_id = '000' THEN 'PRIME PRIORITY'
 			ELSE cb.BranchName 
 		END AS BranchName 
-		FROM kmb_mapping_cluster_branch kmcb WITH (NOLOCK) 
-		LEFT JOIN confins_branch cb ON cb.BranchID = kmcb.branch_id 
-		ORDER BY kmcb.branch_id ASC`).Scan(&data).Error; err != nil {
+		FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+		LEFT JOIN confins_branch cb ON cb.BranchID = kmcb.branch_id %s 
+		ORDER BY kmcb.branch_id ASC`, filter)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
 		}

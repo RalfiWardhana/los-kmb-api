@@ -872,6 +872,20 @@ var doc = `{
                 "tags": [
                     "Mapping Cluster"
                 ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "branch_id",
+                        "name": "branch_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "branch_name",
+                        "name": "branch_name",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",

@@ -900,6 +900,8 @@ func (c *handlerCMS) UploadMappingCluster(ctx echo.Context) (err error) {
 // @Description Api Mapping Cluster
 // @Tags Mapping Cluster
 // @Produce json
+// @Param branch_id query string false "branch_id"
+// @Param branch_name query string false "branch_name"
 // @Success 200 {object} response.ApiResponse{data=response.InquiryRow}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
@@ -908,7 +910,12 @@ func (c *handlerCMS) MappingClusterBranch(ctx echo.Context) (err error) {
 
 	var accessToken = middlewares.UserInfoData.AccessToken
 
-	data, err := c.usecase.GetMappingClusterBranch()
+	req := request.ReqListMappingClusterBranch{
+		BranchID:   ctx.QueryParam("branch_id"),
+		BranchName: ctx.QueryParam("branch_name"),
+	}
+
+	data, err := c.usecase.GetMappingClusterBranch(req)
 
 	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
 		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Mapping Cluster Branch", nil, response.InquiryRow{Inquiry: data})
@@ -918,7 +925,11 @@ func (c *handlerCMS) MappingClusterBranch(ctx echo.Context) (err error) {
 		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Mapping Cluster Branch", nil, err)
 	}
 
-	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Mapping Cluster Branch", nil, data)
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Mapping Cluster Branch", nil, response.InquiryRow{
+		Inquiry:        data,
+		RecordFiltered: len(data),
+		RecordTotal:    len(data),
+	})
 }
 
 // CMS NEW KMB Tools godoc

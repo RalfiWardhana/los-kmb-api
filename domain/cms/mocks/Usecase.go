@@ -270,13 +270,13 @@ func (_m *Usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqIn
 	return r0, r1, r2
 }
 
-// GetMappingClusterBranch provides a mock function with given fields:
-func (_m *Usecase) GetMappingClusterBranch() ([]entity.ConfinsBranch, error) {
-	ret := _m.Called()
+// GetMappingClusterBranch provides a mock function with given fields: req
+func (_m *Usecase) GetMappingClusterBranch(req request.ReqListMappingClusterBranch) ([]entity.ConfinsBranch, error) {
+	ret := _m.Called(req)
 
 	var r0 []entity.ConfinsBranch
-	if rf, ok := ret.Get(0).(func() []entity.ConfinsBranch); ok {
-		r0 = rf()
+	if rf, ok := ret.Get(0).(func(request.ReqListMappingClusterBranch) []entity.ConfinsBranch); ok {
+		r0 = rf(req)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]entity.ConfinsBranch)
@@ -284,8 +284,8 @@ func (_m *Usecase) GetMappingClusterBranch() ([]entity.ConfinsBranch, error) {
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
+	if rf, ok := ret.Get(1).(func(request.ReqListMappingClusterBranch) error); ok {
+		r1 = rf(req)
 	} else {
 		r1 = ret.Error(1)
 	}

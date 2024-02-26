@@ -2101,9 +2101,9 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 	return
 }
 
-func (u usecase) GetMappingClusterBranch() (data []entity.ConfinsBranch, err error) {
+func (u usecase) GetMappingClusterBranch(req request.ReqListMappingClusterBranch) (data []entity.ConfinsBranch, err error) {
 
-	data, err = u.repository.GetMappingClusterBranch()
+	data, err = u.repository.GetMappingClusterBranch(req)
 
 	if err != nil {
 		return

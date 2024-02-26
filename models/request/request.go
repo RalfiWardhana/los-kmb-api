@@ -820,3 +820,8 @@ type ReqListMappingCluster struct {
 type ReqUploadMappingCluster struct {
 	UserID string `form:"user_id" validate:"required,max=20"`
 }
+
+type ReqListMappingClusterBranch struct {
+	BranchID   string `json:"branch_id" example:"400"`
+	BranchName string `json:"customer_status" example:"BEKASI"`
+}
