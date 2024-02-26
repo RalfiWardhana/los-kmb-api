@@ -2035,7 +2035,15 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 		if i == 0 {
 			continue
 		} else {
-			bpkbName, _ := strconv.Atoi(row[3])
+			if len(row) < 5 {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+2) + ", nilai cluster tidak boleh kosong")
+			}
+
+			bpkbName, err := strconv.Atoi(row[3])
+			if err != nil {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+2) + ", nilai bpkb_name_type harus 0 atau 1")
+			}
+
 			cluster = append(cluster, entity.MasterMappingCluster{
 				BranchID:       row[0],
 				CustomerStatus: row[2],
