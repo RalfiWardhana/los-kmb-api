@@ -843,7 +843,7 @@ func (c *handlerCMS) DownloadMappingCluster(ctx echo.Context) (err error) {
 		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Mapping Cluster", nil, err)
 	}
 
-	return ctx.Attachment(fmt.Sprintf("./%s.xlsx", genName), filename+".xlsx")
+	return ctx.Attachment(fmt.Sprintf("./%s.xlsx", genName), filename)
 }
 
 // CMS NEW KMB Tools godoc
@@ -883,9 +883,8 @@ func (c *handlerCMS) UploadMappingCluster(ctx echo.Context) (err error) {
 	defer src.Close()
 
 	mime := file.Header.Get("Content-Type")
-	if mime != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" &&
-		mime != "application/vnd.ms-excel" {
-		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Mapping Cluster", nil, errors.New(constant.ERROR_BAD_REQUEST+" - Silakan unggah file excel yang valid"))
+	if mime != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Mapping Cluster", nil, errors.New(constant.ERROR_BAD_REQUEST+" - Silakan unggah file berformat .xlsx"))
 	}
 
 	err = c.usecase.UpdateMappingCluster(req, src)
