@@ -2035,7 +2035,9 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 	var clusterRegex = regexp.MustCompile(`^Cluster [A-Z]$`)
 	for i, row := range rows {
 		if i == 0 {
-			if row[0] != "branch_id" {
+			if len(row) == 0 {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "format file excel tidak sesuai: kolom pertama harus berjudul 'branch_id'")
+			} else if row[0] != "branch_id" {
 				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "format file excel tidak sesuai: kolom pertama harus berjudul 'branch_id'")
 			} else if row[2] != "customer_status" {
 				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "format file excel tidak sesuai: kolom ketiga harus berjudul 'customer_status'")
@@ -2045,8 +2047,8 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "format file excel tidak sesuai: kolom kelima harus berjudul 'cluster'")
 			}
 		} else {
-			if len(row) < 5 {
-				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai cluster tidak boleh kosong")
+			if len(row) == 0 {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai branch_id tidak boleh kosong")
 			}
 
 			branchID := strings.TrimSpace(row[0])
@@ -2068,6 +2070,10 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 
 			if bpkbName != 0 && bpkbName != 1 {
 				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai bpkb_name_type harus 0 atau 1")
+			}
+
+			if len(row) < 5 {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai cluster tidak boleh kosong")
 			}
 
 			clusterStr := strings.TrimSpace(row[4])
