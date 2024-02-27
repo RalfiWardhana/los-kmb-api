@@ -78,7 +78,7 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 	}
 
 	// insert worker ne
-	if err == nil {
+	if data.ProspectID[0:2] == "NE" {
 		var trxNewEntry entity.NewEntry
 		if err = db.Raw("SELECT * FROM trx_new_entry WITH (nolock) WHERE ProspectID = ?", data.ProspectID).Scan(&trxNewEntry).Error; err != nil {
 			if err == gorm.ErrRecordNotFound {
@@ -92,14 +92,34 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 			if err := tx.Create(&entity.TrxWorker{
 				ProspectID:      data.ProspectID,
 				Category:        "LTV",
-				Action:          "ELABOREATE_LTV",
+				Action:          "ELABORATE_LTV",
 				APIType:         "RAW",
-				EndPointTarget:  fmt.Sprintf("%s/%s", os.Getenv("INSERT_STAGING_URL"), data.ProspectID),
+				EndPointTarget:  os.Getenv("URL_ELABORATE"),
 				EndPointMethod:  constant.METHOD_POST,
+				Payload:         trxNewEntry.PayloadLTV,
 				ResponseTimeout: 30,
 				MaxRetry:        6,
 				CountRetry:      0,
 				Activity:        constant.ACTIVITY_UNPROCESS,
+				Sequence:        1,
+			}).Error; err != nil {
+				return err
+			}
+
+			// submit to los
+			if err := tx.Create(&entity.TrxWorker{
+				ProspectID:      data.ProspectID,
+				Category:        "JOURNEY_KMB",
+				Action:          "SUBMIT_TO_LOS",
+				APIType:         "RAW",
+				EndPointTarget:  os.Getenv("URL_SUBMIT_TO_LOS"),
+				EndPointMethod:  constant.METHOD_POST,
+				Payload:         trxNewEntry.PayloadJourney,
+				ResponseTimeout: 30,
+				MaxRetry:        6,
+				CountRetry:      0,
+				Activity:        constant.ACTIVITY_UNPROCESS,
+				Sequence:        2,
 			}).Error; err != nil {
 				return err
 			}
@@ -109,6 +129,8 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 
 		if newKpLos != nil {
 			db.Rollback()
+			err = newKpLos
+			return
 		}
 	}
 
