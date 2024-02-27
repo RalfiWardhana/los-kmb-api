@@ -19,6 +19,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jinzhu/copier"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -1889,6 +1890,116 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 		IsFinal:        approvalScheme.IsFinal,
 		NeedEscalation: approvalScheme.IsEscalation,
 	}
+
+	return
+}
+
+func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data interface{}, err error) {
+
+	filtering := request.Filtering{
+		ProspectID: req.Transaction.ProspectID,
+		BranchID:   req.Transaction.BranchID,
+		BirthDate:  req.CustomerPersonal.BirthDate,
+		Gender:     req.CustomerPersonal.Gender,
+		BPKBName:   req.Item.BPKBName,
+	}
+
+	filtering.IDNumber, _ = utils.PlatformEncryptText(req.CustomerPersonal.IDNumber)
+	filtering.LegalName, _ = utils.PlatformEncryptText(req.CustomerPersonal.LegalName)
+	filtering.MotherName, _ = utils.PlatformEncryptText(req.CustomerPersonal.SurgateMotherName)
+
+	if req.CustomerSpouse != nil {
+		IDNumber, _ := utils.PlatformEncryptText(req.CustomerSpouse.IDNumber)
+		LegalName, _ := utils.PlatformEncryptText(req.CustomerSpouse.LegalName)
+		MotherName, _ := utils.PlatformEncryptText(req.CustomerSpouse.SurgateMotherName)
+
+		filtering.Spouse = &request.FilteringSpouse{
+			IDNumber:   IDNumber,
+			LegalName:  LegalName,
+			MotherName: MotherName,
+			BirthDate:  req.CustomerSpouse.BirthDate,
+			Gender:     req.CustomerSpouse.Gender,
+		}
+
+	}
+
+	elaborateLTV := request.ElaborateLTV{
+		ProspectID:        req.Transaction.ProspectID,
+		Tenor:             req.Apk.Tenor,
+		ManufacturingYear: req.Item.ManufactureYear,
+	}
+
+	var journey request.Metrics
+	err = copier.Copy(&journey, &req)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Submit NE error")
+		return
+	}
+
+	journey.CustomerPersonal.IDNumber = filtering.IDNumber
+	journey.CustomerPersonal.LegalName = filtering.LegalName
+	journey.CustomerPersonal.FullName = filtering.LegalName
+	journey.CustomerPersonal.SurgateMotherName = filtering.MotherName
+
+	if req.CustomerSpouse != nil {
+		IDNumber, _ := utils.PlatformEncryptText(req.CustomerSpouse.IDNumber)
+		LegalName, _ := utils.PlatformEncryptText(req.CustomerSpouse.LegalName)
+		MotherName, _ := utils.PlatformEncryptText(req.CustomerSpouse.SurgateMotherName)
+
+		spouse := &request.CustomerSpouse{
+			IDNumber:          IDNumber,
+			LegalName:         LegalName,
+			SurgateMotherName: MotherName,
+		}
+
+		journey.CustomerSpouse.IDNumber = spouse.IDNumber
+		journey.CustomerSpouse.LegalName = spouse.LegalName
+		journey.CustomerSpouse.FullName = spouse.LegalName
+		journey.CustomerSpouse.SurgateMotherName = spouse.SurgateMotherName
+	}
+
+	err = u.repository.SubmitNE(req, filtering, elaborateLTV, journey)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - " + err.Error())
+		return
+	}
+
+	// the func will return the payload of filtering and produce it later
+	data = filtering
+
+	return
+}
+
+func (u usecase) GetInquiryNE(ctx context.Context, req request.ReqInquiryNE, pagination interface{}) (data []entity.InquiryDataNE, rowTotal int, err error) {
+
+	result, rowTotal, err := u.repository.GetInquiryNE(req, pagination)
+
+	if err != nil {
+		return
+	}
+
+	data = result
+
+	return
+}
+
+func (u usecase) GetInquiryNEDetail(ctx context.Context, prospectID string) (data request.MetricsNE, err error) {
+
+	var (
+		trxNewEntry entity.NewEntry
+	)
+
+	trxNewEntry, err = u.repository.GetInquiryNEDetail(prospectID)
+	if err != nil {
+		if err.Error() == constant.RECORD_NOT_FOUND {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - " + err.Error())
+		} else {
+			err = errors.New(constant.ERROR_UPSTREAM + " - " + err.Error())
+		}
+		return
+	}
+
+	json.Unmarshal([]byte(trxNewEntry.PayloadNE), &data)
 
 	return
 }
