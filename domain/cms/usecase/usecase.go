@@ -15,6 +15,7 @@ import (
 	"los-kmb-api/shared/utils"
 	"mime/multipart"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -2031,24 +2032,60 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 		return
 	}
 
+	var clusterRegex = regexp.MustCompile(`^Cluster [A-Z]$`)
 	for i, row := range rows {
 		if i == 0 {
-			continue
+			if row[0] != "branch_id" {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "format file excel tidak sesuai: kolom pertama harus berjudul 'branch_id'")
+			} else if row[2] != "customer_status" {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "format file excel tidak sesuai: kolom ketiga harus berjudul 'customer_status'")
+			} else if row[3] != "bpkb_name_type" {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "format file excel tidak sesuai: kolom keempat harus berjudul 'bpkb_name_type'")
+			} else if len(row) < 5 {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "format file excel tidak sesuai: kolom kelima harus berjudul 'cluster'")
+			}
 		} else {
 			if len(row) < 5 {
-				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+2) + ", nilai cluster tidak boleh kosong")
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai cluster tidak boleh kosong")
+			}
+
+			branchID := strings.TrimSpace(row[0])
+			if branchID == "" {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai branch_id tidak boleh kosong")
+			} else if branchID == "0" {
+				branchID = constant.BRANCH_ID_PRIME_PRIORITY
+			}
+
+			customerStatus := strings.ToUpper(strings.TrimSpace(row[2]))
+			if customerStatus != constant.STATUS_KONSUMEN_NEW && customerStatus != "AO/RO" {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai customer_status harus " + constant.STATUS_KONSUMEN_NEW + " atau AO/RO")
 			}
 
 			bpkbName, err := strconv.Atoi(row[3])
 			if err != nil {
-				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+2) + ", nilai bpkb_name_type harus 0 atau 1")
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai bpkb_name_type harus 0 atau 1")
+			}
+
+			if bpkbName != 0 && bpkbName != 1 {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai bpkb_name_type harus 0 atau 1")
+			}
+
+			clusterStr := strings.TrimSpace(row[4])
+			if strings.EqualFold(clusterStr, constant.CLUSTER_PRIME_PRIORITY) {
+				clusterStr = strings.ToUpper(clusterStr)
+			} else {
+				clusterStr = strings.Title(clusterStr)
+			}
+
+			if clusterStr != constant.CLUSTER_PRIME_PRIORITY && !clusterRegex.MatchString(clusterStr) {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai cluster tidak sesuai ketentuan")
 			}
 
 			cluster = append(cluster, entity.MasterMappingCluster{
-				BranchID:       row[0],
-				CustomerStatus: row[2],
+				BranchID:       branchID,
+				CustomerStatus: customerStatus,
 				BpkbNameType:   bpkbName,
-				Cluster:        row[4],
+				Cluster:        clusterStr,
 			})
 		}
 

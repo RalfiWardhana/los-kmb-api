@@ -13,7 +13,6 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -3158,35 +3157,7 @@ func (r repoHandler) BatchUpdateMappingCluster(data []entity.MasterMappingCluste
 		return err
 	}
 
-	var clusterRegex = regexp.MustCompile(`^Cluster [A-Z]$`)
-	for i, val := range data {
-		val.BranchID = strings.TrimSpace(val.BranchID)
-		if val.BranchID == "" {
-			return errors.New("row " + strconv.Itoa(i+2) + ", nilai branch_id tidak boleh kosong")
-		} else if val.BranchID == "0" {
-			val.BranchID = constant.BRANCH_ID_PRIME_PRIORITY
-		}
-
-		val.CustomerStatus = strings.ToUpper(strings.TrimSpace(val.CustomerStatus))
-		if val.CustomerStatus != constant.STATUS_KONSUMEN_NEW && val.CustomerStatus != "AO/RO" {
-			return errors.New("row " + strconv.Itoa(i+2) + ", nilai customer_status harus " + constant.STATUS_KONSUMEN_NEW + " atau AO/RO")
-		}
-
-		if val.BpkbNameType != 0 && val.BpkbNameType != 1 {
-			return errors.New("row " + strconv.Itoa(i+2) + ", nilai bpkb_name_type harus 0 atau 1")
-		}
-
-		val.Cluster = strings.TrimSpace(val.Cluster)
-		if strings.EqualFold(val.Cluster, constant.CLUSTER_PRIME_PRIORITY) {
-			val.Cluster = strings.ToUpper(val.Cluster)
-		} else {
-			val.Cluster = strings.Title(val.Cluster)
-		}
-
-		if val.Cluster != constant.CLUSTER_PRIME_PRIORITY && !clusterRegex.MatchString(val.Cluster) {
-			return errors.New("row " + strconv.Itoa(i+2) + ", nilai cluster tidak sesuai ketentuan")
-		}
-
+	for _, val := range data {
 		if err = db.Create(&val).Error; err != nil {
 			return err
 		}
