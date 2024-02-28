@@ -23,4 +23,7 @@ type Usecase interface {
 	GetInquiryApproval(ctx context.Context, req request.ReqInquiryApproval, pagination interface{}) (data []entity.InquiryDataApproval, rowTotal int, err error)
 	GetApprovalReason(ctx context.Context, req request.ReqApprovalReason, pagination interface{}) (data []entity.ApprovalReason, rowTotal int, err error)
 	SubmitApproval(ctx context.Context, req request.ReqSubmitApproval) (data response.ApprovalResponse, err error)
+	SubmitNE(ctx context.Context, req request.MetricsNE) (data interface{}, err error)
+	GetInquiryNE(ctx context.Context, req request.ReqInquiryNE, pagination interface{}) (data []entity.InquiryDataNE, rowTotal int, err error)
+	GetInquiryNEDetail(ctx context.Context, prospectID string) (data request.MetricsNE, err error)
 }

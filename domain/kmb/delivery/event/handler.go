@@ -96,11 +96,13 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 	ctx = context.WithValue(ctx, constant.CTX_KEY_INCOMING_REQUEST_URL, fmt.Sprintf("%s/api/v3/kmb/consume/journey", constant.LOS_KMB_BASE_URL))
 	ctx = context.WithValue(ctx, constant.CTX_KEY_INCOMING_REQUEST_METHOD, constant.METHOD_POST)
 
-	err = h.validator.Validate(req)
-	if err != nil {
-		resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
-		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
-		return nil
+	if req.Transaction.ProspectID[0:2] != "NE" {
+		err = h.validator.Validate(req)
+		if err != nil {
+			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
+			return nil
+		}
 	}
 
 	// decrypt request
@@ -130,21 +132,22 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 		}
 	}
 
-	if req.CustomerEmployment.ProfessionID == constant.PROFESSION_ID_WRST || req.CustomerEmployment.ProfessionID == constant.PROFESSION_ID_PRO {
-		var newOmset []request.CustomerOmset
-		if req.CustomerOmset != nil {
-			omset, _ := json.Marshal(*req.CustomerOmset)
-			json.Unmarshal(omset, &newOmset)
-		}
+	if req.Transaction.ProspectID[0:2] != "NE" {
+		if req.CustomerEmployment.ProfessionID == constant.PROFESSION_ID_WRST || req.CustomerEmployment.ProfessionID == constant.PROFESSION_ID_PRO {
+			var newOmset []request.CustomerOmset
+			if req.CustomerOmset != nil {
+				omset, _ := json.Marshal(*req.CustomerOmset)
+				json.Unmarshal(omset, &newOmset)
+			}
 
-		var validateOmset request.ValidateOmset
-		validateOmset.CustomerOmset = newOmset
-		if err := h.validator.Validate(&validateOmset); err != nil {
-			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
-			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
-			return nil
+			var validateOmset request.ValidateOmset
+			validateOmset.CustomerOmset = newOmset
+			if err := h.validator.Validate(&validateOmset); err != nil {
+				resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
+				h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
+				return nil
+			}
 		}
-
 	}
 
 	if req.CustomerPersonal.MaritalStatus == constant.MARRIED {
@@ -270,11 +273,13 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 	ctx = context.WithValue(ctx, constant.CTX_KEY_INCOMING_REQUEST_URL, fmt.Sprintf("%s/api/v3/kmb/consume/journey-after-prescreening", constant.LOS_KMB_BASE_URL))
 	ctx = context.WithValue(ctx, constant.CTX_KEY_INCOMING_REQUEST_METHOD, constant.METHOD_POST)
 
-	err = h.validator.Validate(req)
-	if err != nil {
-		resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
-		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
-		return nil
+	if req.Transaction.ProspectID[0:2] != "NE" {
+		err = h.validator.Validate(req)
+		if err != nil {
+			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
+			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
+			return nil
+		}
 	}
 
 	// decrypt request
@@ -304,21 +309,22 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 		}
 	}
 
-	if req.CustomerEmployment.ProfessionID == constant.PROFESSION_ID_WRST || req.CustomerEmployment.ProfessionID == constant.PROFESSION_ID_PRO {
-		var newOmset []request.CustomerOmset
-		if req.CustomerOmset != nil {
-			omset, _ := json.Marshal(*req.CustomerOmset)
-			json.Unmarshal(omset, &newOmset)
-		}
+	if req.Transaction.ProspectID[0:2] != "NE" {
+		if req.CustomerEmployment.ProfessionID == constant.PROFESSION_ID_WRST || req.CustomerEmployment.ProfessionID == constant.PROFESSION_ID_PRO {
+			var newOmset []request.CustomerOmset
+			if req.CustomerOmset != nil {
+				omset, _ := json.Marshal(*req.CustomerOmset)
+				json.Unmarshal(omset, &newOmset)
+			}
 
-		var validateOmset request.ValidateOmset
-		validateOmset.CustomerOmset = newOmset
-		if err := h.validator.Validate(&validateOmset); err != nil {
-			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
-			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
-			return nil
+			var validateOmset request.ValidateOmset
+			validateOmset.CustomerOmset = newOmset
+			if err := h.validator.Validate(&validateOmset); err != nil {
+				resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
+				h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
+				return nil
+			}
 		}
-
 	}
 
 	if req.CustomerPersonal.MaritalStatus == constant.MARRIED {

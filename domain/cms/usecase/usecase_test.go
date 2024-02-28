@@ -20,6 +20,7 @@ import (
 	"github.com/allegro/bigcache/v3"
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
+	"github.com/jinzhu/copier"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -2482,6 +2483,536 @@ func TestGetInquiryApproval(t *testing.T) {
 			assert.Equal(t, tc.errFinal, err)
 			assert.Equal(t, tc.rowInquiry, rowTotal)
 			assert.Equal(t, tc.data, result)
+		})
+	}
+}
+
+func TestSubmitNE(t *testing.T) {
+	payloadNE := `{
+		"transaction": {
+			"prospect_id": "NE-KMB40023112200005",
+			"branch_id": "400",
+			"application_source": "H",
+			"channel": "OFF",
+			"lob": "KMB",
+			"order_at": "2023-11-23 17:40:54",
+			"incoming_source": "LOS"
+		},
+		"apk": {
+			"tenor": 16,
+			"otr": 5760000,
+			"down_payment_amount": 2760000,
+			"ntf": 3813010, 
+			"af": 3000000,
+			"admin_fee": 350000,
+			"installment_amount": 274000,
+			"down_payment_rate": 47.92,
+			"premium_amount_to_customer": 38010,
+			"insurance_amount": 38010,
+			"provision_fee": 300000,
+			"finance_purpose": "Multiguna Pembayaran dengan Cara Fasilitas Dana",
+			"loan_amount": 3000000,
+			"dealer": "NON PSA"
+		},
+		"customer_personal": {
+			"id_type": "KTP",
+			"id_number": "3171234567890123",
+			"full_name": "ERIKO",
+			"legal_name": "ERIKO",
+			"birth_place": "DEPOK",
+			"birth_date": "1988-04-30",
+			"surgate_mother_name": "MIRA SETIAWAN",
+			"gender": "M",
+			"mobile_phone": "081818941175",
+			"email": "CITRAPP02@GMAIL.COM",
+			"stay_since_year": "2020",
+			"stay_since_month": "03",
+			"home_status": "KL",
+			"npwp": "",
+			"education": "S1",
+			"marital_status": "M",
+			"num_of_dependence": 0
+		},
+		"customer_employment": {
+			"profession_id": "KRYSW",
+			"employment_since_year": "2019",
+			"employment_since_month": "03",
+			"monthly_fixed_income": 100000000,
+			"job_type": "004",
+			"job_position": "V",
+			"monthly_variable_income": 0,
+			"spouse_income": 0,
+			"company_name": "VDHDHDHJD",
+			"industry_type_id": "SE_e03219"
+		},
+		"address": [
+			{
+				"type": "RESIDENCE",
+				"address": "GANDARIA",
+				"rt": "11",
+				"rw": "12",
+				"kelurahan": "LUBUK LANGKAP",
+				"kecamatan": "BANG HAJI",
+				"city": "KAB. BENGKULU TENGAH",
+				"zip_code": "38372",
+				"area_phone": "0000",
+				"phone": "00000"
+			},
+			{
+				"type": "LEGAL",
+				"address": "GANDARIA",
+				"rt": "11",
+				"rw": "12",
+				"kelurahan": "LUBUK LANGKAP",
+				"kecamatan": "BANG HAJI",
+				"city": "KAB. BENGKULU TENGAH",
+				"zip_code": "38372",
+				"area_phone": "0000",
+				"phone": "00000"
+			},
+			{
+				"type": "COMPANY",
+				"address": "SENOPATI",
+				"rt": "12",
+				"rw": "13",
+				"kelurahan": "TIRTO MARTANI",
+				"kecamatan": "KALASAN",
+				"city": "KAB. SLEMAN",
+				"zip_code": "55571",
+				"area_phone": "021",
+				"phone": "9494949461"
+			},
+			{
+				"type": "EMERGENCY",
+				"address": "KERINCI",
+				"rt": "12",
+				"rw": "23",
+				"kelurahan": "KADU",
+				"kecamatan": "CURUG",
+				"city": "KAB. TANGERANG",
+				"zip_code": "15810",
+				"area_phone": "021",
+				"phone": "85665"
+			},
+			{
+				"type": "OWNER",
+				"address": "GANDARIA",
+				"rt": "11",
+				"rw": "12",
+				"kelurahan": "LUBUK LANGKAP",
+				"kecamatan": "BANG HAJI",
+				"city": "KAB. BENGKULU TENGAH",
+				"zip_code": "38372",
+				"area_phone": "0000",
+				"phone": "00000"
+			},
+			{
+				"type": "LOCATION",
+				"address": "GANDARIA",
+				"rt": "11",
+				"rw": "12",
+				"kelurahan": "LUBUK LANGKAP",
+				"kecamatan": "BANG HAJI",
+				"city": "KAB. BENGKULU TENGAH",
+				"zip_code": "38372",
+				"area_phone": "021",
+				"phone": "646565959"
+			},
+			{
+				"type": "MAILING",
+				"address": "GANDARIA",
+				"rt": "11",
+				"rw": "12",
+				"kelurahan": "LUBUK LANGKAP",
+				"kecamatan": "BANG HAJI",
+				"city": "KAB. BENGKULU TENGAH",
+				"zip_code": "38372",
+				"area_phone": "021",
+				"phone": "646565959"
+			}
+		],
+		"customer_photo": [
+			{
+				"id": "KTP",
+				"url": "https://dev-platform-media.kreditplus.com/media/reference/40000/SAL-1140023082100011/ktp_SAL-1140023082100011.png"
+			},
+			{
+				"id": "SELFIE",
+				"url": "https://dev-platform-media.kreditplus.com/media/reference/60000/SAL-1140023112200155/selfie_SAL-1140023112200155.jpg"
+			}
+		],
+		"customer_emcon": {
+			"name": "GGG",
+			"relationship": "FM",
+			"mobile_phone": "0855126655",
+			"emergency_area_phone_office": "000",
+			"emergency_phone_office": "00000"
+		},
+		"customer_spouse": {
+			"id_number": "3234012211433333",
+			"full_name": "WAHYUNI ELLIS",
+			"legal_name": "WAHYUNI ELLIS",
+			"birth_date": "1999-12-12",
+			"gender": "F",
+			"surgate_mother_name": "SALSABILA SALSABILA AGUSTINA"
+		},
+		"customer_omset": null,
+		"item": {
+			"asset_code": "K-HND.MOTOR.ABSOLUTE REVO",
+			"manufacture_year": "2018",
+			"chassis_number": "VDHDHJSJD",
+			"engine_number": "BDHEHEJEJJEJEJ",
+			"qty": 1,
+			"condition": "U",
+			"category_id": "BEBEK",
+			"asset_description": "K-HND.MOTOR.ABSOLUTE REVO",
+			"bpkb_name": "K",
+			"owner_asset": "SANDY SUSILOWATI",
+			"color": "PINK",
+			"brand": "HONDA",
+			"premium_amount_to_customer": 0
+		},
+		"agent": {
+			"cmo_recom": "1",
+			"cmo_name": "DIAN GUNTUR ANSARI HASIBUAN",
+			"recom_date": "2023-11-23"
+		},
+		"created_by": {
+			"created_by_id": "12345678",
+			"created_by_name": "ANSARI"
+		}
+	}`
+
+	var req request.MetricsNE
+	json.Unmarshal([]byte(payloadNE), &req)
+	testcases := []struct {
+		name             string
+		payloadFiltering string
+		payloadLTV       string
+		errSubmitNe      error
+		errFinal         error
+	}{
+		{
+			name:             "test submit ne success",
+			payloadFiltering: `{"prospect_id":"NE-KMB40023112200005","branch_id":"400","id_number":"","legal_name":"","birth_date":"1988-04-30","gender":"M","surgate_mother_name":"","bpkb_name":"K","spouse":{"spouse_id_number":"","spouse_legal_name":"","spouse_birth_date":"1999-12-12","spouse_gender":"F","spouse_surgate_mother_name":""}}`,
+			payloadLTV:       `{"prospect_id":"NE-KMB40023112200005","tenor":16,"manufacturing_year":"2018"}`,
+		},
+		{
+			name:        "test submit ne error",
+			errSubmitNe: errors.New("invalid query"),
+			errFinal:    errors.New(constant.ERROR_UPSTREAM + " - invalid query"),
+			payloadLTV:  `{"prospect_id":"NE-KMB40023112200005","tenor":16,"manufacturing_year":"2018"}`,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			var (
+				journey   request.Metrics
+				filtering request.Filtering
+				ltv       request.ElaborateLTV
+				data      interface{}
+			)
+
+			copier.Copy(&journey, &req)
+			json.Unmarshal([]byte(tc.payloadFiltering), &filtering)
+			json.Unmarshal([]byte(tc.payloadLTV), &ltv)
+
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+			mocksCache := &mocksCache.Repository{}
+			usecase := NewUsecase(mockRepository, mockHttpClient, mocksCache)
+			mockRepository.On("SubmitNE", req, mock.Anything, ltv, mock.Anything).Return(tc.errSubmitNe).Once()
+
+			result, err := usecase.SubmitNE(context.Background(), req)
+
+			if tc.payloadFiltering != "" {
+				data = filtering
+			}
+			assert.Equal(t, tc.errFinal, err)
+			assert.Equal(t, data, result)
+		})
+	}
+}
+
+func TestGetInquiryNE(t *testing.T) {
+
+	testcases := []struct {
+		name       string
+		row        int
+		req        request.ReqInquiryNE
+		data       []entity.InquiryDataNE
+		resulquery []entity.InquiryDataNE
+		errGet     error
+		errFinal   error
+	}{
+		{
+			name: "test get inquiry",
+		},
+		{
+			name:     "test get inquiry error",
+			errGet:   errors.New("invalid query"),
+			errFinal: errors.New("invalid query"),
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+			mocksCache := &mocksCache.Repository{}
+			usecase := NewUsecase(mockRepository, mockHttpClient, mocksCache)
+			mockRepository.On("GetInquiryNE", tc.req, mock.Anything).Return(tc.resulquery, tc.row, tc.errGet).Once()
+
+			result, rowTotal, err := usecase.GetInquiryNE(context.Background(), tc.req, nil)
+
+			assert.Equal(t, tc.errFinal, err)
+			assert.Equal(t, tc.row, rowTotal)
+			assert.Equal(t, tc.data, result)
+
+		})
+	}
+}
+
+func TestGetInquiryNEDetail(t *testing.T) {
+
+	testcases := []struct {
+		name        string
+		prospectID  string
+		trxNewEntry entity.NewEntry
+		errGet      error
+		errFinal    error
+	}{
+		{
+			name:       "test get inquiry",
+			prospectID: "NE-KMB40023112200005",
+			trxNewEntry: entity.NewEntry{
+				PayloadNE: `{
+					"transaction": {
+						"prospect_id": "NE-KMB40023112200005",
+						"branch_id": "400",
+						"application_source": "H",
+						"channel": "OFF",
+						"lob": "KMB",
+						"order_at": "2023-11-23 17:40:54",
+						"incoming_source": "LOS"
+					},
+					"apk": {
+						"tenor": 16,
+						"otr": 5760000,
+						"down_payment_amount": 2760000,
+						"ntf": 3813010, 
+						"af": 3000000,
+						"admin_fee": 350000,
+						"installment_amount": 274000,
+						"down_payment_rate": 47.92,
+						"premium_amount_to_customer": 38010,
+						"insurance_amount": 38010,
+						"provision_fee": 300000,
+						"finance_purpose": "Multiguna Pembayaran dengan Cara Fasilitas Dana",
+						"loan_amount": 3000000,
+						"dealer": "NON PSA"
+					},
+					"customer_personal": {
+						"id_type": "KTP",
+						"id_number": "3171234567890123",
+						"full_name": "ERIKO",
+						"legal_name": "ERIKO",
+						"birth_place": "DEPOK",
+						"birth_date": "1988-04-30",
+						"surgate_mother_name": "MIRA SETIAWAN",
+						"gender": "M",
+						"mobile_phone": "081818941175",
+						"email": "CITRAPP02@GMAIL.COM",
+						"stay_since_year": "2020",
+						"stay_since_month": "03",
+						"home_status": "KL",
+						"npwp": "",
+						"education": "S1",
+						"marital_status": "M",
+						"num_of_dependence": 0
+					},
+					"customer_employment": {
+						"profession_id": "KRYSW",
+						"employment_since_year": "2019",
+						"employment_since_month": "03",
+						"monthly_fixed_income": 100000000,
+						"job_type": "004",
+						"job_position": "V",
+						"monthly_variable_income": 0,
+						"spouse_income": 0,
+						"company_name": "VDHDHDHJD",
+						"industry_type_id": "SE_e03219"
+					},
+					"address": [
+						{
+							"type": "RESIDENCE",
+							"address": "GANDARIA",
+							"rt": "11",
+							"rw": "12",
+							"kelurahan": "LUBUK LANGKAP",
+							"kecamatan": "BANG HAJI",
+							"city": "KAB. BENGKULU TENGAH",
+							"zip_code": "38372",
+							"area_phone": "0000",
+							"phone": "00000"
+						},
+						{
+							"type": "LEGAL",
+							"address": "GANDARIA",
+							"rt": "11",
+							"rw": "12",
+							"kelurahan": "LUBUK LANGKAP",
+							"kecamatan": "BANG HAJI",
+							"city": "KAB. BENGKULU TENGAH",
+							"zip_code": "38372",
+							"area_phone": "0000",
+							"phone": "00000"
+						},
+						{
+							"type": "COMPANY",
+							"address": "SENOPATI",
+							"rt": "12",
+							"rw": "13",
+							"kelurahan": "TIRTO MARTANI",
+							"kecamatan": "KALASAN",
+							"city": "KAB. SLEMAN",
+							"zip_code": "55571",
+							"area_phone": "021",
+							"phone": "9494949461"
+						},
+						{
+							"type": "EMERGENCY",
+							"address": "KERINCI",
+							"rt": "12",
+							"rw": "23",
+							"kelurahan": "KADU",
+							"kecamatan": "CURUG",
+							"city": "KAB. TANGERANG",
+							"zip_code": "15810",
+							"area_phone": "021",
+							"phone": "85665"
+						},
+						{
+							"type": "OWNER",
+							"address": "GANDARIA",
+							"rt": "11",
+							"rw": "12",
+							"kelurahan": "LUBUK LANGKAP",
+							"kecamatan": "BANG HAJI",
+							"city": "KAB. BENGKULU TENGAH",
+							"zip_code": "38372",
+							"area_phone": "0000",
+							"phone": "00000"
+						},
+						{
+							"type": "LOCATION",
+							"address": "GANDARIA",
+							"rt": "11",
+							"rw": "12",
+							"kelurahan": "LUBUK LANGKAP",
+							"kecamatan": "BANG HAJI",
+							"city": "KAB. BENGKULU TENGAH",
+							"zip_code": "38372",
+							"area_phone": "021",
+							"phone": "646565959"
+						},
+						{
+							"type": "MAILING",
+							"address": "GANDARIA",
+							"rt": "11",
+							"rw": "12",
+							"kelurahan": "LUBUK LANGKAP",
+							"kecamatan": "BANG HAJI",
+							"city": "KAB. BENGKULU TENGAH",
+							"zip_code": "38372",
+							"area_phone": "021",
+							"phone": "646565959"
+						}
+					],
+					"customer_photo": [
+						{
+							"id": "KTP",
+							"url": "https://dev-platform-media.kreditplus.com/media/reference/40000/SAL-1140023082100011/ktp_SAL-1140023082100011.png"
+						},
+						{
+							"id": "SELFIE",
+							"url": "https://dev-platform-media.kreditplus.com/media/reference/60000/SAL-1140023112200155/selfie_SAL-1140023112200155.jpg"
+						}
+					],
+					"customer_emcon": {
+						"name": "GGG",
+						"relationship": "FM",
+						"mobile_phone": "0855126655",
+						"emergency_area_phone_office": "000",
+						"emergency_phone_office": "00000"
+					},
+					"customer_spouse": {
+						"id_number": "3234012211433333",
+						"full_name": "WAHYUNI ELLIS",
+						"legal_name": "WAHYUNI ELLIS",
+						"birth_date": "1999-12-12",
+						"gender": "F",
+						"surgate_mother_name": "SALSABILA SALSABILA AGUSTINA"
+					},
+					"customer_omset": null,
+					"item": {
+						"asset_code": "K-HND.MOTOR.ABSOLUTE REVO",
+						"manufacture_year": "2018",
+						"chassis_number": "VDHDHJSJD",
+						"engine_number": "BDHEHEJEJJEJEJ",
+						"qty": 1,
+						"condition": "U",
+						"category_id": "BEBEK",
+						"asset_description": "K-HND.MOTOR.ABSOLUTE REVO",
+						"bpkb_name": "K",
+						"owner_asset": "SANDY SUSILOWATI",
+						"color": "PINK",
+						"brand": "HONDA",
+						"premium_amount_to_customer": 0
+					},
+					"agent": {
+						"cmo_recom": "1",
+						"cmo_name": "DIAN GUNTUR ANSARI HASIBUAN",
+						"recom_date": "2023-11-23"
+					},
+					"created_by": {
+						"created_by_id": "12345678",
+						"created_by_name": "ANSARI"
+					}
+				}`,
+			},
+		},
+		{
+			name:       "test get inquiry err not found",
+			prospectID: "NE-KMB40023112200005",
+			errGet:     errors.New(constant.RECORD_NOT_FOUND),
+			errFinal:   errors.New(constant.ERROR_BAD_REQUEST + " - " + constant.RECORD_NOT_FOUND),
+		},
+		{
+			name:       "test get inquiry err db",
+			prospectID: "NE-KMB40023112200005",
+			errGet:     errors.New("invalid query"),
+			errFinal:   errors.New(constant.ERROR_UPSTREAM + " - invalid query"),
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+			mocksCache := &mocksCache.Repository{}
+			usecase := NewUsecase(mockRepository, mockHttpClient, mocksCache)
+			mockRepository.On("GetInquiryNEDetail", tc.prospectID).Return(tc.trxNewEntry, tc.errGet).Once()
+
+			result, err := usecase.GetInquiryNEDetail(context.Background(), tc.prospectID)
+
+			var data request.MetricsNE
+			json.Unmarshal([]byte(tc.trxNewEntry.PayloadNE), &data)
+			assert.Equal(t, tc.errFinal, err)
+			assert.Equal(t, data, result)
+
 		})
 	}
 }
