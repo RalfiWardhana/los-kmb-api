@@ -29,9 +29,7 @@ type (
 	}
 )
 
-func NewMultiUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient) (interfaces.MultiUsecase, interfaces.Usecase) {
-	usecase := NewUsecase(repository, httpclient)
-
+func NewMultiUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient, usecase interfaces.Usecase) (interfaces.MultiUsecase, interfaces.Usecase) {
 	return &multiUsecase{
 		usecase:    usecase,
 		repository: repository,
