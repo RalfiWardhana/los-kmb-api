@@ -8,6 +8,7 @@ import (
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/common"
 	mocksJson "los-kmb-api/shared/common/json/mocks"
+	mockplatformcache "los-kmb-api/shared/common/platformcache/mocks"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
@@ -59,11 +60,14 @@ func TestFiltering(t *testing.T) {
 	os.Setenv("NAMA_BEDA", "O,KK")
 
 	testcases := []struct {
-		name         string
-		reqbody      string
-		checkPpid    string
-		errCheckPpid error
-		errFiltering error
+		name                  string
+		reqbody               string
+		checkPpid             string
+		errCheckPpid          error
+		errFiltering          error
+		errCheckCache         error
+		errGetResultFiltering error
+		resultFiltering       response.Filtering
 	}{
 		{
 			name: "test err bind",
@@ -245,6 +249,51 @@ func TestFiltering(t *testing.T) {
 			checkPpid: "EFM0TST0020230809013 - false",
 		},
 		{
+			name:                  "test err errValidatePpid errCheckPpid errGetCache errGetResultFiltering",
+			errCheckCache:         errors.New("error"),
+			errGetResultFiltering: errors.New("error"),
+			reqbody: `{
+				"prospect_id": "EFM0TST0020230809013",
+				"branch_id": "426",
+				"id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
+				"legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
+				"birth_date": "1971-04-15",
+				"gender": "M",
+				"surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g==",
+				"bpkb_name": "K",
+				"spouse": {
+					"spouse_id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
+					"spouse_legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
+					"spouse_birth_date": "1971-04-15",
+					"spouse_gender": "F",
+					"spouse_surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g=="
+				}
+			}`,
+			checkPpid: "EFM0TST0020230809013 - false",
+		},
+		{
+			name:          "test err errValidatePpid errCheckPpid errGetCache ",
+			errCheckCache: errors.New("error"),
+			reqbody: `{
+				"prospect_id": "EFM0TST0020230809013",
+				"branch_id": "426",
+				"id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
+				"legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
+				"birth_date": "1971-04-15",
+				"gender": "M",
+				"surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g==",
+				"bpkb_name": "K",
+				"spouse": {
+					"spouse_id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
+					"spouse_legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
+					"spouse_birth_date": "1971-04-15",
+					"spouse_gender": "F",
+					"spouse_surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g=="
+				}
+			}`,
+			checkPpid: "EFM0TST0020230809013 - false",
+		},
+		{
 			name: "test err errCheckPpid",
 			reqbody: `{
 				"prospect_id": "EFM0TST0020230809013",
@@ -299,13 +348,15 @@ func TestFiltering(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockJson := new(mocksJson.JSON)
 			mockEvent := new(MockEvent)
+			mockPlatformCache := new(mockplatformcache.PlatformCacheInterface)
 
 			handler := &handlers{
-				multiusecase: mockMultiUsecase,
-				usecase:      mockUsecase,
-				repository:   mockRepository,
-				validator:    validator,
-				Json:         mockJson,
+				multiusecase:  mockMultiUsecase,
+				usecase:       mockUsecase,
+				repository:    mockRepository,
+				validator:     validator,
+				Json:          mockJson,
+				platformCache: mockPlatformCache,
 			}
 			ctx := context.Background()
 			startTime := utils.GenerateTimeInMilisecond()
@@ -323,6 +374,10 @@ func TestFiltering(t *testing.T) {
 			mockJson.On("EventServiceError", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{})
 			mockJson.On("EventBadRequestErrorValidation", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{})
 			mockJson.On("EventSuccess", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{})
+			mockPlatformCache.On("SetCache", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, nil)
+			mockPlatformCache.On("GetCache", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, tc.errCheckCache).Once()
+			mockUsecase.On("GetResultFiltering", "EFM0TST0020230809013").Return(tc.resultFiltering, tc.errGetResultFiltering).Once()
+
 			err := handler.Filtering(ctx, mockEvent)
 			if err != nil {
 				t.Errorf("error '%s' was not expected, but got: ", err)

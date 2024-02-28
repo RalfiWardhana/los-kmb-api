@@ -3008,3 +3008,75 @@ func TestDupcheckIntegrator(t *testing.T) {
 		})
 	}
 }
+
+func TestGetResultFiltering(t *testing.T) {
+	testcases := []struct {
+		name                  string
+		prospectID            string
+		getResultFiltering    []entity.ResultFiltering
+		errgetResultFiltering error
+		errFinal              error
+		respFiltering         response.Filtering
+	}{
+		{
+			name:       "test_get_result_filtering_err",
+			prospectID: "SAL-1234567890",
+			errFinal:   errors.New(constant.ERROR_UPSTREAM + " - Get Result Filtering Error"),
+		},
+		{
+			name:       "test_get_result_filtering_success",
+			prospectID: "SAL-1234567890",
+			getResultFiltering: []entity.ResultFiltering{
+				{
+					ProspectID:                      "SAL-1234567890",
+					TotalBakiDebetNonCollateralBiro: 100000,
+					Subject:                         "CUSTOMER",
+					UrlPdfReport:                    "http://urlpdf.com/customer.pdf",
+				},
+				{
+					ProspectID:                      "SAL-1234567890",
+					TotalBakiDebetNonCollateralBiro: 100000,
+					Subject:                         "SPOUSE",
+					UrlPdfReport:                    "http://urlpdf.com/spouse.pdf",
+				},
+			},
+			respFiltering: response.Filtering{
+				ProspectID:        "SAL-1234567890",
+				TotalBakiDebet:    float64(100000),
+				PbkReportCustomer: "http://urlpdf.com/customer.pdf",
+				PbkReportSpouse:   "http://urlpdf.com/spouse.pdf",
+			},
+		},
+		{
+			name:       "test_get_result_filtering_err_conv_float",
+			prospectID: "SAL-1234567890",
+			getResultFiltering: []entity.ResultFiltering{
+				{
+					ProspectID:                      "SAL-1234567890",
+					TotalBakiDebetNonCollateralBiro: "abcd",
+					Subject:                         "CUSTOMER",
+					UrlPdfReport:                    "http://urlpdf.com/customer.pdf",
+				},
+			},
+			respFiltering: response.Filtering{
+				ProspectID: "SAL-1234567890",
+			},
+			errFinal: errors.New(constant.ERROR_UPSTREAM + " - GetResultFiltering GetFloat Error"),
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			mockRepository.On("GetResultFiltering", tc.prospectID).Return(tc.getResultFiltering, tc.errgetResultFiltering)
+
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			result, err := usecase.GetResultFiltering(tc.prospectID)
+			require.Equal(t, tc.respFiltering, result)
+			require.Equal(t, tc.errFinal, err)
+		})
+	}
+}

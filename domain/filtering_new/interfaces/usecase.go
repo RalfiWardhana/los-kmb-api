@@ -13,6 +13,7 @@ type Usecase interface {
 	BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerByID) (data response.UsecaseApi, customerType string)
 	SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro) (err error)
 	FilteringProspectID(prospectID string) (data request.OrderIDCheck, err error)
+	GetResultFiltering(prospectID string) (respFiltering response.Filtering, err error)
 }
 
 type MultiUsecase interface {

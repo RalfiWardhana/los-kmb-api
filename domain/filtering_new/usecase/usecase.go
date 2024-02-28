@@ -765,3 +765,43 @@ func (u usecase) FilteringProspectID(prospectID string) (data request.OrderIDChe
 
 	return
 }
+
+func (u usecase) GetResultFiltering(prospectID string) (respFiltering response.Filtering, err error) {
+
+	getResultFiltering, err := u.repository.GetResultFiltering(prospectID)
+	if err != nil || len(getResultFiltering) == 0 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Result Filtering Error")
+		return
+	}
+
+	respFiltering = response.Filtering{
+		ProspectID:      getResultFiltering[0].ProspectID,
+		Decision:        getResultFiltering[0].Decision,
+		Reason:          getResultFiltering[0].Reason,
+		CustomerStatus:  getResultFiltering[0].CustomerStatus,
+		CustomerSegment: getResultFiltering[0].CustomerSegment,
+		IsBlacklist:     getResultFiltering[0].IsBlacklist,
+		NextProcess:     getResultFiltering[0].NextProcess,
+	}
+
+	if getResultFiltering[0].TotalBakiDebetNonCollateralBiro != nil {
+		var totalBakiDebet float64
+		totalBakiDebet, err = utils.GetFloat(getResultFiltering[0].TotalBakiDebetNonCollateralBiro)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - GetResultFiltering GetFloat Error")
+			return
+		}
+		respFiltering.TotalBakiDebet = totalBakiDebet
+	}
+
+	for _, v := range getResultFiltering {
+		if v.Subject == "CUSTOMER" {
+			respFiltering.PbkReportCustomer = v.UrlPdfReport
+		}
+		if v.Subject == "SPOUSE" {
+			respFiltering.PbkReportSpouse = v.UrlPdfReport
+		}
+	}
+
+	return
+}

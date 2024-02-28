@@ -13,43 +13,34 @@ import (
 )
 
 func TestRejectTenor36(t *testing.T) {
+	responseAppConfig := entity.AppConfig{
+		Value: `{"data":["Cluster A", "Cluster B"]}`,
+	}
 	testcases := []struct {
 		name              string
-		idNumber          string
+		cluster           string
 		result            response.UsecaseApi
 		errResult         error
-		errEnc            error
-		encryptedIDNumber entity.EncryptedString
-		errGetTrx         error
+		responseAppConfig error
 		trxStatus         entity.TrxStatus
 	}{
 		{
-			name:              "handling tenor error encrypt",
-			idNumber:          "198091461892",
-			errEnc:            errors.New("Encrypt Error"),
-			encryptedIDNumber: entity.EncryptedString{MyString: "e6FXjuesjmzPsQlG+JRkm28vK9NoqXY3NQg7qJn4nFI="},
-			errResult:         errors.New(constant.ERROR_UPSTREAM + " - GetEncB64 ID Number Error"),
+			name:              "handling tenor error config",
+			cluster:           "Cluster A",
+			responseAppConfig: errors.New(constant.ERROR_UPSTREAM + " - GetConfig exclusion_tenor36 Error"),
+			errResult:         errors.New(constant.ERROR_UPSTREAM + " - GetConfig exclusion_tenor36 Error"),
 		},
 		{
-			name:              "handling tenor error Trx",
-			idNumber:          "198091461892",
-			errGetTrx:         errors.New("Get Trx Error"),
-			encryptedIDNumber: entity.EncryptedString{MyString: "e6FXjuesjmzPsQlG+JRkm28vK9NoqXY3NQg7qJn4nFI="},
-			errResult:         errors.New(constant.ERROR_UPSTREAM + " - GetCurrentTrxWithRejectDSR Error"),
-		},
-		{
-			name:              "handling tenor reject",
-			idNumber:          "198091461892",
-			encryptedIDNumber: entity.EncryptedString{MyString: "e6FXjuesjmzPsQlG+JRkm28vK9NoqXY3NQg7qJn4nFI="},
+			name:    "handling tenor reject",
+			cluster: "Cluster C",
 			result: response.UsecaseApi{
 				Code:   constant.CODE_REJECT_TENOR,
 				Result: constant.DECISION_REJECT,
 				Reason: constant.REASON_REJECT_TENOR},
 		},
 		{
-			name:              "handling tenor pass",
-			idNumber:          "198091461892",
-			encryptedIDNumber: entity.EncryptedString{MyString: "e6FXjuesjmzPsQlG+JRkm28vK9NoqXY3NQg7qJn4nFI="},
+			name:    "handling tenor pass",
+			cluster: "Cluster A",
 			result: response.UsecaseApi{
 				Code:   constant.CODE_PASS_TENOR,
 				Result: constant.DECISION_PASS,
@@ -66,12 +57,11 @@ func TestRejectTenor36(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
-			mockRepository.On("GetEncB64", tc.idNumber).Return(tc.encryptedIDNumber, tc.errEnc)
-			mockRepository.On("GetCurrentTrxWithRejectDSR", tc.encryptedIDNumber.MyString).Return(tc.trxStatus, tc.errGetTrx)
+			mockRepository.On("GetConfig", "tenor36", "KMB-OFF", "exclusion_tenor36").Return(responseAppConfig, tc.responseAppConfig)
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
-			result, err := usecase.RejectTenor36(tc.idNumber)
+			result, err := usecase.RejectTenor36(tc.cluster)
 			require.Equal(t, tc.result, result)
 			require.Equal(t, tc.errResult, err)
 		})

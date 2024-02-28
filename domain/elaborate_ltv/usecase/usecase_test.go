@@ -12,6 +12,7 @@ import (
 	"los-kmb-api/shared/utils"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -345,7 +346,7 @@ func TestElaborate(t *testing.T) {
 			reqs: request.ElaborateLTV{
 				ProspectID:        "EFM0TST0020230809011",
 				Tenor:             36,
-				ManufacturingYear: "2014",
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
 			},
 			filteringKMB: entity.FilteringKMB{
 				Decision:                        constant.DECISION_PASS,
@@ -432,7 +433,7 @@ func TestElaborate(t *testing.T) {
 			reqs: request.ElaborateLTV{
 				ProspectID:        "EFM0TST0020230809011",
 				Tenor:             9,
-				ManufacturingYear: "2014",
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
 			},
 			filteringKMB: entity.FilteringKMB{
 				Decision:                        constant.DECISION_PASS,
@@ -519,7 +520,7 @@ func TestElaborate(t *testing.T) {
 			reqs: request.ElaborateLTV{
 				ProspectID:        "EFM0TST0020230809011",
 				Tenor:             9,
-				ManufacturingYear: "2014",
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
 			},
 			filteringKMB: entity.FilteringKMB{
 				Decision:                        constant.DECISION_PASS,
@@ -608,7 +609,7 @@ func TestElaborate(t *testing.T) {
 			reqs: request.ElaborateLTV{
 				ProspectID:        "EFM0TST0020230809011",
 				Tenor:             9,
-				ManufacturingYear: "2014",
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
 			},
 			filteringKMB: entity.FilteringKMB{
 				Decision:                        constant.DECISION_REJECT,

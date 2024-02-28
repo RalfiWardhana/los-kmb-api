@@ -55,6 +55,29 @@ func (_m *Repository) GetFilteringByID(prospectID string) (int, error) {
 	return r0, r1
 }
 
+// GetResultFiltering provides a mock function with given fields: prospectID
+func (_m *Repository) GetResultFiltering(prospectID string) ([]entity.ResultFiltering, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 []entity.ResultFiltering
+	if rf, ok := ret.Get(0).(func(string) []entity.ResultFiltering); ok {
+		r0 = rf(prospectID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.ResultFiltering)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // MasterMappingCluster provides a mock function with given fields: req
 func (_m *Repository) MasterMappingCluster(req entity.MasterMappingCluster) (entity.MasterMappingCluster, error) {
 	ret := _m.Called(req)

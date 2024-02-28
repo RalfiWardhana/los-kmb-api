@@ -341,6 +341,8 @@ type SpDupcheckMap struct {
 	InstallmentTopup                 float64     `json:"installment_topup"`
 	StatusKonsumen                   string      `json:"status_konsumen"`
 	DetailsDSR                       interface{} `json:"details_dsr"`
+	ConfigMaxDSR                     float64     `json:"config_max_dsr"`
+	Cluster                          interface{} `json:"cluster"`
 }
 
 type SpDupCekCustomerByID struct {
@@ -698,12 +700,14 @@ type Config struct {
 }
 
 type InfoEkyc struct {
-	Vd      interface{} `json:"vd"`
-	VdError interface{} `json:"vd_error"`
-	Fr      interface{} `json:"fr"`
-	FrError interface{} `json:"fr_error"`
-	Asliri  interface{} `json:"asliri"`
-	Ktp     interface{} `json:"ktp"`
+	Vd        interface{} `json:"vd"`
+	VdService interface{} `json:"vd_service"`
+	VdError   interface{} `json:"vd_error"`
+	Fr        interface{} `json:"fr"`
+	FrService interface{} `json:"fr_service"`
+	FrError   interface{} `json:"fr_error"`
+	Asliri    interface{} `json:"asliri"`
+	Ktp       interface{} `json:"ktp"`
 }
 
 type Ekyc struct {

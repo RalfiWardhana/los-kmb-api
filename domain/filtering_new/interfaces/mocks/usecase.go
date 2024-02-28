@@ -118,6 +118,27 @@ func (_m *Usecase) FilteringProspectID(prospectID string) (request.OrderIDCheck,
 	return r0, r1
 }
 
+// GetResultFiltering provides a mock function with given fields: prospectID
+func (_m *Usecase) GetResultFiltering(prospectID string) (response.Filtering, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 response.Filtering
+	if rf, ok := ret.Get(0).(func(string) response.Filtering); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(response.Filtering)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // SaveFiltering provides a mock function with given fields: transaction, trxDetailBiro
 func (_m *Usecase) SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro) error {
 	ret := _m.Called(transaction, trxDetailBiro)

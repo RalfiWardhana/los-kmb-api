@@ -473,20 +473,20 @@ func (_m *Usecase) Recalculate(ctx context.Context, req request.Recalculate) (re
 	return r0, r1
 }
 
-// RejectTenor36 provides a mock function with given fields: idNumber
-func (_m *Usecase) RejectTenor36(idNumber string) (response.UsecaseApi, error) {
-	ret := _m.Called(idNumber)
+// RejectTenor36 provides a mock function with given fields: cluster
+func (_m *Usecase) RejectTenor36(cluster string) (response.UsecaseApi, error) {
+	ret := _m.Called(cluster)
 
 	var r0 response.UsecaseApi
 	if rf, ok := ret.Get(0).(func(string) response.UsecaseApi); ok {
-		r0 = rf(idNumber)
+		r0 = rf(cluster)
 	} else {
 		r0 = ret.Get(0).(response.UsecaseApi)
 	}
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(idNumber)
+		r1 = rf(cluster)
 	} else {
 		r1 = ret.Error(1)
 	}

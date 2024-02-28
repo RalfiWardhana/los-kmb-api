@@ -387,11 +387,33 @@ type AsliriConfig struct {
 type ConfigThresholdDukcapil struct {
 	Data struct {
 		VerifyData struct {
-			NamaLengkap float64 `json:"nama_lgkp"`
-			Alamat      float64 `json:"alamat"`
+			Service    string     `json:"service_on"`
+			VDIziData  VDIziData  `json:"izidata"`
+			VDDukcapil VDDukcapil `json:"dukcapil"`
 		} `json:"verify_data"`
-		FaceRecognition float64 `json:"face_recognition"`
+		FaceRecognition struct {
+			Service    string     `json:"service_on"`
+			FRIziData  FRIziData  `json:"izidata"`
+			FRDukcapil FRDukcapil `json:"dukcapil"`
+		} `json:"face_recognition"`
 	} `json:"data"`
+}
+
+type VDDukcapil struct {
+	NamaLengkap float64 `json:"nama_lengkap"`
+	Alamat      float64 `json:"alamat"`
+}
+
+type VDIziData struct {
+	NamaLengkap float64 `json:"nama_lengkap"`
+}
+
+type FRDukcapil struct {
+	Threshold float64 `json:"threshold"`
+}
+
+type FRIziData struct {
+	Threshold float64 `json:"threshold"`
 }
 
 type MappingResultDukcapilVD struct {
@@ -804,6 +826,19 @@ func (c *FilteringKMB) TableName() string {
 	return "trx_filtering"
 }
 
+type ResultFiltering struct {
+	ProspectID                      string      `gorm:"column:prospect_id;type:varchar(20)" json:"prospect_id"`
+	Decision                        string      `gorm:"column:decision;type:varchar(20)" json:"decision"`
+	CustomerStatus                  interface{} `gorm:"column:customer_status;type:varchar(5)" json:"customer_status"`
+	CustomerSegment                 interface{} `gorm:"column:customer_segment;type:varchar(20)" json:"customer_segment"`
+	IsBlacklist                     bool        `gorm:"column:is_blacklist" json:"is_blacklist"`
+	NextProcess                     bool        `gorm:"column:next_process" json:"next_process"`
+	UrlPdfReport                    interface{} `gorm:"column:url_pdf_report" json:"url_pdf_report"`
+	TotalBakiDebetNonCollateralBiro interface{} `gorm:"column:total_baki_debet_non_collateral_biro" json:"total_baki_debet_non_collateral_biro"`
+	Reason                          string      `gorm:"column:reason;type:varchar(250)" json:"reason"`
+	Subject                         string      `gorm:"type:varchar(10);column:subject" json:"subject"`
+}
+
 type TrxDetail struct {
 	ProspectID     string      `gorm:"type:varchar(20);column:ProspectID;primary_key:true" json:"-"`
 	StatusProcess  string      `gorm:"type:varchar(3);column:status_process" json:"-"`
@@ -860,6 +895,15 @@ type MasterMappingCluster struct {
 
 func (c *MasterMappingCluster) TableName() string {
 	return "m_mapping_cluster"
+}
+
+type MasterMappingMaxDSR struct {
+	Cluster      string  `gorm:"column:cluster"`
+	DSRThreshold float64 `gorm:"column:dsr_threshold"`
+}
+
+func (c *MasterMappingMaxDSR) TableName() string {
+	return "kmb_mapping_cluster_dsr"
 }
 
 type TrxAgreement struct {
