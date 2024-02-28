@@ -91,10 +91,10 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 			// elaborate
 			if err := tx.Create(&entity.TrxWorker{
 				ProspectID:      data.ProspectID,
-				Category:        "LTV",
-				Action:          "ELABORATE_LTV",
+				Category:        "NE_KMB",
+				Action:          "NE_ELABORATE",
 				APIType:         "RAW",
-				EndPointTarget:  os.Getenv("URL_ELABORATE"),
+				EndPointTarget:  os.Getenv("NE_ELABORATE_URL"),
 				EndPointMethod:  constant.METHOD_POST,
 				Payload:         trxNewEntry.PayloadLTV,
 				ResponseTimeout: 30,
@@ -109,10 +109,10 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 			// submit to los
 			if err := tx.Create(&entity.TrxWorker{
 				ProspectID:      data.ProspectID,
-				Category:        "JOURNEY_KMB",
-				Action:          "SUBMIT_TO_LOS",
+				Category:        "NE_KMB",
+				Action:          "NE_JOURNEY",
 				APIType:         "RAW",
-				EndPointTarget:  os.Getenv("URL_SUBMIT_TO_LOS"),
+				EndPointTarget:  os.Getenv("NE_JOURNEY_URL"),
 				EndPointMethod:  constant.METHOD_POST,
 				Payload:         trxNewEntry.PayloadJourney,
 				ResponseTimeout: 30,
