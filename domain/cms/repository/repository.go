@@ -3223,8 +3223,18 @@ func (r repoHandler) GetMappingClusterBranch(req request.ReqListMappingClusterBr
 }
 
 func (r repoHandler) GetMappingClusterChangeLog(pagination interface{}) (data []entity.MappingClusterChangeLog, rowTotal int, err error) {
+	var (
+		filterPaginate string
+		x              sql.TxOptions
+	)
 
-	var filterPaginate string
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.losDB.BeginTx(ctx, &x)
+	defer db.Commit()
 
 	if pagination != nil {
 		page, _ := json.Marshal(pagination)
