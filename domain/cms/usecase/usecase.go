@@ -2033,6 +2033,7 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 	}
 
 	var clusterRegex = regexp.MustCompile(`^Cluster [A-Z]$`)
+	var uniqueMappingData = make(map[string]int)
 	for i, row := range rows {
 		if i == 0 {
 			if len(row) == 0 {
@@ -2087,6 +2088,14 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai cluster tidak sesuai ketentuan")
 			}
 
+			uniqueKey := fmt.Sprintf("%s-%s-%d", branchID, customerStatus, bpkbName)
+
+			if rowIndex, exists := uniqueMappingData[uniqueKey]; exists {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + " dan row " + strconv.Itoa(rowIndex+1) + ", entri duplikat untuk nilai branch_id, customer_status, dan bpkb_name_type")
+			}
+
+			uniqueMappingData[uniqueKey] = i
+
 			cluster = append(cluster, entity.MasterMappingCluster{
 				BranchID:       branchID,
 				CustomerStatus: customerStatus,
@@ -2094,7 +2103,6 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 				Cluster:        clusterStr,
 			})
 		}
-
 	}
 
 	if len(cluster) > 0 {
