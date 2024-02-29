@@ -886,11 +886,10 @@ func (c *TrxDetailBiro) TableName() string {
 }
 
 type MasterMappingCluster struct {
-	BranchID       string    `gorm:"column:branch_id"`
-	CustomerStatus string    `gorm:"column:customer_status"`
-	BpkbNameType   int       `gorm:"column:bpkb_name_type"`
-	Cluster        string    `gorm:"column:cluster"`
-	CreatedAt      time.Time `gorm:"column:created_at"`
+	BranchID       string `gorm:"column:branch_id"`
+	CustomerStatus string `gorm:"column:customer_status"`
+	BpkbNameType   int    `gorm:"column:bpkb_name_type"`
+	Cluster        string `gorm:"column:cluster"`
 }
 
 func (c *MasterMappingCluster) TableName() string {
@@ -2277,4 +2276,44 @@ type STG_CUST_FAM struct {
 
 func (c *STG_CUST_FAM) TableName() string {
 	return "STG_CUST_FAM"
+}
+
+type InquiryMappingCluster struct {
+	BranchID       string `gorm:"column:branch_id" json:"branch_id"`
+	BranchName     string `gorm:"column:branch_name" json:"branch_name"`
+	CustomerStatus string `gorm:"column:customer_status" json:"customer_status"`
+	BpkbNameType   int    `gorm:"column:bpkb_name_type" json:"bpkb_name_type"`
+	Cluster        string `gorm:"column:cluster" json:"cluster"`
+}
+
+type HistoryConfigChanges struct {
+	ID         string    `gorm:"type:varchar(50);column:id"`
+	ConfigID   string    `gorm:"type:varchar(50);column:config_id"`
+	ObjectName string    `gorm:"type:varchar(50);column:object_name"`
+	Action     string    `gorm:"type:varchar(10);column:action"`
+	DataBefore string    `gorm:"type:text;column:data_before"`
+	DataAfter  string    `gorm:"type:text;column:data_after"`
+	CreatedBy  string    `gorm:"type:varchar(20);column:created_by"`
+	CreatedAt  time.Time `gorm:"column:created_at"`
+}
+
+func (c *HistoryConfigChanges) TableName() string {
+	return "history_config_changes"
+}
+
+type ConfinsBranch struct {
+	BranchID   string `gorm:"type:varchar(10);column:BranchID" json:"branch_id"`
+	BranchName string `gorm:"type:varchar(200);column:BranchName" json:"branch_name"`
+}
+
+func (c *ConfinsBranch) TableName() string {
+	return "confins_branch"
+}
+
+type MappingClusterChangeLog struct {
+	ID         string `json:"id"`
+	DataBefore string `json:"data_before"`
+	DataAfter  string `json:"data_after"`
+	UserName   string `json:"user_name"`
+	CreatedAt  string `json:"created_at"`
 }

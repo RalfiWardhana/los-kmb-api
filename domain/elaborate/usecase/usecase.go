@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"los-kmb-api/domain/elaborate/interfaces"
 	"los-kmb-api/models/entity"
@@ -84,6 +85,10 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 
 	// get the result elaborated scheme
 	resultElaborate, err := u.usecase.ResultElaborate(ctx, reqs)
+	if err != nil {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - " + err.Error())
+		return
+	}
 
 	updateElaborate.IsMapping = 1 //default, for mapping is exist
 
@@ -94,12 +99,6 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 		updateElaborate.Decision = constant.DECISION_PASS
 		updateElaborate.Reason = constant.REASON_PASS_ELABORATE
 	} else {
-
-		if err != nil {
-			err = fmt.Errorf("failed get result elaborate")
-			return
-		}
-
 		if resultElaborate.Decision == constant.DECISION_REJECT {
 			max_ltv = resultElaborate.LTV
 		}
