@@ -168,7 +168,7 @@ func TestElaborate(t *testing.T) {
 				LTV:      50,
 			},
 			errResultElaborate: errors.New("failed get result elaborate"),
-			errFinal:           errors.New("failed get result elaborate"),
+			errFinal:           errors.New(constant.ERROR_BAD_REQUEST + " - failed get result elaborate"),
 		},
 		{
 			name: "TEST_ERROR_Elaborate_UpdateData",

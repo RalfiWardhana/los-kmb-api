@@ -382,7 +382,7 @@ func TestGetResultElaborate(t *testing.T) {
 		testFailed := false
 		t.Run(tc.name, func(t *testing.T) {
 			mock.ExpectBegin()
-			mock.ExpectQuery(regexp.QuoteMeta("SELECT mcb.cluster, mes.decision, mes.ltv_start FROM kmb_mapping_cluster_branch mcb JOIN kmb_mapping_elaborate_scheme mes ON mcb.cluster = mes.cluster WHERE mcb.branch_id = ? AND mcb.customer_status = ? AND mcb.bpkb_name_type = ? AND mes.result_pefindo = ? "+tc.queryAdd)).
+			mock.ExpectQuery(regexp.QuoteMeta(`SELECT mcb.cluster, mes.decision, mes.ltv_start FROM kmb_mapping_cluster_branch mcb WITH (nolock) JOIN kmb_mapping_elaborate_scheme mes ON mcb.cluster = mes.cluster WHERE mcb.branch_id = ? AND mcb.customer_status = ? AND mcb.bpkb_name_type = ? AND mes.result_pefindo = ? `+tc.queryAdd)).
 				WithArgs(tc.branch_id, tc.cust_status, tc.bpkb, tc.result_pefindo).
 				WillReturnRows(sqlmock.NewRows([]string{"cluster", "decision", "ltv_start"}).
 					AddRow("Cluster A", constant.DECISION_PASS, 0))
