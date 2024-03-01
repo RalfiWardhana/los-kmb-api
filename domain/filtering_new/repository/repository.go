@@ -126,7 +126,7 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 				ResponseTimeout: 30,
 				MaxRetry:        6,
 				CountRetry:      0,
-				Activity:        constant.ACTIVITY_UNPROCESS,
+				Activity:        constant.ACTIVITY_IDLE,
 				Sequence:        2,
 			}).Error; err != nil {
 				return err
