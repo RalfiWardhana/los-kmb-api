@@ -355,7 +355,7 @@ type Metrics struct {
 }
 
 type MetricsNE struct {
-	Transaction        Transaction        `json:"transaction" validate:"required"`
+	Transaction        TransactionNE      `json:"transaction" validate:"required"`
 	Apk                ApkNE              `json:"apk" validate:"required"`
 	CustomerPersonal   CustomerPersonalNE `json:"customer_personal" validate:"required"`
 	CustomerEmployment CustomerEmployment `json:"customer_employment" validate:"required"`
@@ -402,6 +402,17 @@ type Surveyor struct {
 type Transaction struct {
 	ProspectID        string `json:"prospect_id" validate:"prospect_id" example:"SAL042600001"`
 	BranchID          string `json:"branch_id" validate:"branch_id" example:"426"`
+	ApplicationSource string `json:"application_source" validate:"required,max=10" example:"H"`
+	Channel           string `json:"channel" validate:"channel" example:"OFF"`
+	Lob               string `json:"lob" validate:"lob" example:"KMB"`
+	OrderAt           string `json:"order_at" validate:"required" example:"2021-07-15T11:44:05+07:00"`
+	IncomingSource    string `json:"incoming_source" validate:"incoming" example:"SLY"`
+}
+
+type TransactionNE struct {
+	ProspectID        string `json:"prospect_id" validate:"prospect_id" example:"SAL042600001"`
+	BranchID          string `json:"branch_id" validate:"branch_id" example:"426"`
+	BranchName        string `json:"branch_name" validate:"required" example:"BANDUNG"`
 	ApplicationSource string `json:"application_source" validate:"required,max=10" example:"H"`
 	Channel           string `json:"channel" validate:"channel" example:"OFF"`
 	Lob               string `json:"lob" validate:"lob" example:"KMB"`
