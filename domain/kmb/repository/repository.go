@@ -508,9 +508,14 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				}
 			}
 
-			var living_cost_amount float64
+			var livingCostAmount float64
 			if data.CustomerPersonal.LivingCostAmount != nil {
-				living_cost_amount = *data.CustomerPersonal.LivingCostAmount
+				livingCostAmount = *data.CustomerPersonal.LivingCostAmount
+			}
+
+			var counterpart int
+			if data.CustomerPersonal.Counterpart != nil {
+				counterpart = *data.CustomerPersonal.Counterpart
 			}
 
 			personal := entity.CustomerPersonal{
@@ -533,7 +538,7 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				StaySinceYear:              data.CustomerPersonal.StaySinceYear,
 				StaySinceMonth:             data.CustomerPersonal.StaySinceMonth,
 				ExpiredDate:                formatIDExpired,
-				LivingCostAmount:           living_cost_amount,
+				LivingCostAmount:           livingCostAmount,
 				ExtCompanyPhone:            data.CustomerEmployment.ExtCompanyPhone,
 				SourceOtherIncome:          data.CustomerEmployment.SourceOtherIncome,
 				EmergencyOfficeAreaPhone:   data.CustomerEmcon.AreaPhone,
@@ -547,7 +552,7 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				BankID:                     data.CustomerPersonal.BankID,
 				AccountNo:                  data.CustomerPersonal.AccountNo,
 				AccountName:                data.CustomerPersonal.AccountName,
-				Counterpart:                *data.CustomerPersonal.Counterpart,
+				Counterpart:                counterpart,
 				DebtBusinessScale:          data.CustomerPersonal.DebtBusinessScale,
 				DebtGroup:                  data.CustomerPersonal.DebtGroup,
 				IsAffiliateWithPP:          data.CustomerPersonal.IsAffiliateWithPP,
@@ -572,6 +577,16 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				return err
 			}
 
+			var monthlyVariableIncome float64
+			if data.CustomerEmployment.MonthlyVariableIncome != nil {
+				monthlyVariableIncome = *data.CustomerEmployment.MonthlyVariableIncome
+			}
+
+			var spouseIncome float64
+			if data.CustomerEmployment.SpouseIncome != nil {
+				spouseIncome = *data.CustomerEmployment.SpouseIncome
+			}
+
 			employment := entity.CustomerEmployment{
 				ProspectID:            data.Transaction.ProspectID,
 				ProfessionID:          data.CustomerEmployment.ProfessionID,
@@ -582,8 +597,8 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				EmploymentSinceYear:   data.CustomerEmployment.EmploymentSinceYear,
 				EmploymentSinceMonth:  data.CustomerEmployment.EmploymentSinceMonth,
 				MonthlyFixedIncome:    data.CustomerEmployment.MonthlyFixedIncome,
-				MonthlyVariableIncome: *data.CustomerEmployment.MonthlyVariableIncome,
-				SpouseIncome:          *data.CustomerEmployment.SpouseIncome,
+				MonthlyVariableIncome: monthlyVariableIncome,
+				SpouseIncome:          spouseIncome,
 			}
 
 			logInfo = employment
