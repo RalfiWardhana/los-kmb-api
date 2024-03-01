@@ -562,7 +562,7 @@ type Apk struct {
 	FidusiaFee                  *float64 `json:"fidusia_fee" validate:"max=999999999999" example:"0"`
 	InterestRate                *float64 `json:"interest_rate" validate:"required,max=99" example:"2.2"`
 	InterestAmount              *float64 `json:"interest_amount" validate:"required,max=999999999999" example:"66528000"`
-	InsuranceAmount             float64  `json:"insurance_amount" validate:"required,max=999999999999" example:"3150000"`
+	InsuranceAmount             float64  `json:"insurance_amount" validate:"max=999999999999" example:"3150000"`
 	FirstInstallment            string   `json:"first_installment" validate:"required,max=2" example:"AR"`
 	PaymentMethod               string   `json:"payment_method" validate:"required,max=2" example:"CR"`
 	SurveyFee                   *float64 `json:"survey_fee" validate:"required,max=999999999999" example:"0"`
@@ -592,7 +592,7 @@ type ApkNE struct {
 	InstallmentAmount       float64  `json:"installment_amount" validate:"required,max=999999999999" example:"4181333"`
 	PercentDP               *float64 `json:"down_payment_rate" validate:"required,max=99" example:"20.95"`
 	PremiumAmountToCustomer float64  `json:"premium_amount_to_customer" validate:"min=0,max=999999999999" example:"2184000"`
-	InsuranceAmount         float64  `json:"insurance_amount" validate:"required,max=999999999999" example:"3150000"`
+	InsuranceAmount         float64  `json:"insurance_amount" validate:"max=999999999999" example:"3150000"`
 	ProvisionFee            *float64 `json:"provision_fee" validate:"required,max=999999999999" example:"2475000"`
 	FinancePurpose          string   `json:"finance_purpose" validate:"required,max=100"`
 	Dealer                  string   `json:"dealer" validate:"omitempty,max=50"`
