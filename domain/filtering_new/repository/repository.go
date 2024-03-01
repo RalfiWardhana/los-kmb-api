@@ -88,6 +88,13 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 		}
 
 		newKpLos := r.KpLos.Transaction(func(tx *gorm.DB) error {
+			// header los kmb api
+			callbackHeaderLos, _ := json.Marshal(
+				map[string]string{
+					"X-Client-ID":   os.Getenv("CLIENT_LOS"),
+					"Authorization": os.Getenv("AUTH_LOS"),
+				})
+
 			// elaborate
 			if err := tx.Create(&entity.TrxWorker{
 				ProspectID:      data.ProspectID,
@@ -96,6 +103,7 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 				APIType:         "RAW",
 				EndPointTarget:  os.Getenv("NE_ELABORATE_URL"),
 				EndPointMethod:  constant.METHOD_POST,
+				Header:          string(callbackHeaderLos),
 				Payload:         trxNewEntry.PayloadLTV,
 				ResponseTimeout: 30,
 				MaxRetry:        6,
