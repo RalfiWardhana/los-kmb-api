@@ -3023,3 +3023,168 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 		return nil
 	})
 }
+
+func (r repoHandler) SubmitNE(req request.MetricsNE, filtering request.Filtering, elaboreateLTV request.ElaborateLTV, journey request.Metrics) (err error) {
+	err = r.NewKmb.Transaction(func(tx *gorm.DB) error {
+		var encrypted entity.Encrypted
+
+		if err := tx.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS LegalName,  SCP.dbo.ENC_B64('SEC','%s') AS IDNumber`,
+			req.CustomerPersonal.LegalName, req.CustomerPersonal.IDNumber)).Scan(&encrypted).Error; err != nil {
+			return err
+		}
+
+		PayloadNE, _ := json.Marshal(req)
+		PayloadFiltering, _ := json.Marshal(filtering)
+		PayloadLTV, _ := json.Marshal(elaboreateLTV)
+		PayloadJourney, _ := json.Marshal(journey)
+		ne := entity.NewEntry{
+			ProspectID:       req.Transaction.ProspectID,
+			BranchID:         req.Transaction.BranchID,
+			IDNumber:         encrypted.IDNumber,
+			LegalName:        encrypted.LegalName,
+			BirthDate:        req.CustomerPersonal.BirthDate,
+			CreatedByID:      req.CreatedBy.CreatedByID,
+			CreatedByName:    req.CreatedBy.CreatedByName,
+			PayloadNE:        utils.SafeJsonReplacer(string(PayloadNE)),
+			PayloadFiltering: utils.SafeJsonReplacer(string(PayloadFiltering)),
+			PayloadLTV:       utils.SafeJsonReplacer(string(PayloadLTV)),
+			PayloadJourney:   utils.SafeJsonReplacer(string(PayloadJourney)),
+		}
+
+		if err := tx.Create(&ne).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+
+	return
+}
+
+func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface{}) (data []entity.InquiryDataNE, rowTotal int, err error) {
+
+	var (
+		filter         string
+		filterBranch   string
+		filterPaginate string
+		getRegion      []entity.RegionBranch
+	)
+
+	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
+
+	if req.MultiBranch == "1" {
+		getRegion, _ = r.GetRegionBranch(req.UserID)
+
+		if len(getRegion) > 0 {
+			extractBranchIDUser := ""
+			userAllRegion := false
+			for _, value := range getRegion {
+				if strings.ToUpper(value.RegionName) == constant.REGION_ALL {
+					userAllRegion = true
+					break
+				} else if value.BranchMember != "" {
+					branch := strings.Trim(strings.ReplaceAll(value.BranchMember, `"`, `'`), "'")
+					replace := strings.ReplaceAll(branch, `[`, ``)
+					branchMember := strings.ReplaceAll(replace, `]`, ``)
+					extractBranchIDUser += branchMember
+					if value != getRegion[len(getRegion)-1] {
+						extractBranchIDUser += ","
+					}
+				}
+			}
+			if userAllRegion {
+				filterBranch += ""
+			} else {
+				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
+			}
+		} else {
+			filterBranch += ""
+			if req.BranchID != "999" {
+				filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+			}
+		}
+	} else {
+		filterBranch = utils.GenerateBranchFilter(req.BranchID)
+	}
+
+	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
+
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.NewKmb.Raw(fmt.Sprintf(`
+		SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			tm.BranchID,
+			tm.ProspectID,
+			tm.created_at,
+			scp.dbo.DEC_B64('SEC', tm.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tm.LegalName) AS LegalName
+		FROM
+		trx_new_entry tm WITH (nolock)
+		) AS tt %s`, filter)).Scan(&row).Error; err != nil {
+			return
+		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
+	}
+
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT tt.* FROM (
+	SELECT
+	tm.ProspectID,
+	tm.BranchID,
+	tm.created_at,
+	scp.dbo.DEC_B64('SEC', tm.IDNumber) AS IDNumber,
+	scp.dbo.DEC_B64('SEC', tm.LegalName) AS LegalName,
+	tm.BirthDate,
+	CASE
+	WHEN tf.next_process = 1 THEN 'PASS'
+	WHEN tf.next_process = 0 THEN 'REJECT'
+	ELSE NULL END AS ResultFiltering,
+	tf.reason as Reason
+  	FROM
+	trx_new_entry tm WITH (nolock)
+	LEFT JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+	) AS tt %s ORDER BY tt.created_at DESC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	if len(data) == 0 {
+		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
+	return
+}
+
+func (r repoHandler) GetInquiryNEDetail(prospectID string) (data entity.NewEntry, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.NewKmb.Raw("SELECT payload_ne FROM trx_new_entry WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}

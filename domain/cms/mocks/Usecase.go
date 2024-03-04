@@ -180,6 +180,57 @@ func (_m *Usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, p
 	return r0, r1, r2
 }
 
+// GetInquiryNE provides a mock function with given fields: ctx, req, pagination
+func (_m *Usecase) GetInquiryNE(ctx context.Context, req request.ReqInquiryNE, pagination interface{}) ([]entity.InquiryDataNE, int, error) {
+	ret := _m.Called(ctx, req, pagination)
+
+	var r0 []entity.InquiryDataNE
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqInquiryNE, interface{}) []entity.InquiryDataNE); ok {
+		r0 = rf(ctx, req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.InquiryDataNE)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqInquiryNE, interface{}) int); ok {
+		r1 = rf(ctx, req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, request.ReqInquiryNE, interface{}) error); ok {
+		r2 = rf(ctx, req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// GetInquiryNEDetail provides a mock function with given fields: ctx, prospectID
+func (_m *Usecase) GetInquiryNEDetail(ctx context.Context, prospectID string) (request.MetricsNE, error) {
+	ret := _m.Called(ctx, prospectID)
+
+	var r0 request.MetricsNE
+	if rf, ok := ret.Get(0).(func(context.Context, string) request.MetricsNE); ok {
+		r0 = rf(ctx, prospectID)
+	} else {
+		r0 = ret.Get(0).(request.MetricsNE)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
+		r1 = rf(ctx, prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetInquiryPrescreening provides a mock function with given fields: ctx, req, pagination
 func (_m *Usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInquiryPrescreening, pagination interface{}) ([]entity.InquiryData, int, error) {
 	ret := _m.Called(ctx, req, pagination)
@@ -388,6 +439,29 @@ func (_m *Usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDeci
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, request.ReqSubmitDecision) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SubmitNE provides a mock function with given fields: ctx, req
+func (_m *Usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (interface{}, error) {
+	ret := _m.Called(ctx, req)
+
+	var r0 interface{}
+	if rf, ok := ret.Get(0).(func(context.Context, request.MetricsNE) interface{}); ok {
+		r0 = rf(ctx, req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(interface{})
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.MetricsNE) error); ok {
 		r1 = rf(ctx, req)
 	} else {
 		r1 = ret.Error(1)

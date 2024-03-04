@@ -43,6 +43,7 @@ const (
 	TAG_RELATION                     = "relation"
 	TAG_BPKB_NAME                    = "bpkbname"
 	ACTIVITY_UNPROCESS               = "UNPR"
+	ACTIVITY_IDLE                    = "IDLE"
 	PRESCREENING                     = "PSI"
 	ACTIVITY_STOP                    = "STOP"
 	ACTIVITY_PROCESS                 = "PRCD"
