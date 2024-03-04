@@ -2081,7 +2081,7 @@ func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file 
 			if strings.EqualFold(clusterStr, constant.CLUSTER_PRIME_PRIORITY) {
 				clusterStr = strings.ToUpper(clusterStr)
 			} else {
-				clusterStr = strings.Title(clusterStr)
+				clusterStr = strings.Title(strings.ToLower(clusterStr))
 			}
 
 			if clusterStr != constant.CLUSTER_PRIME_PRIORITY && !clusterRegex.MatchString(clusterStr) {
