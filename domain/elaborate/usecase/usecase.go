@@ -269,7 +269,7 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 
 	// Get Result from Mapping Elaborate
 	resultElaborate, err := u.repository.GetResultElaborate(branchId, statusKonsumen, bpkbNameType, resultPefindo, tenor, ageVehicle, ltv, bakiDebet)
-	if err != nil {
+	if err != nil && err.Error() != constant.RECORD_NOT_FOUND {
 		err = fmt.Errorf("failed get mapping elaborate ltv")
 		return
 	}
