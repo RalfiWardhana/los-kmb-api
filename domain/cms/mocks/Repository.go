@@ -17,6 +17,20 @@ type Repository struct {
 	mock.Mock
 }
 
+// BatchUpdateMappingCluster provides a mock function with given fields: data, history
+func (_m *Repository) BatchUpdateMappingCluster(data []entity.MasterMappingCluster, history entity.HistoryConfigChanges) error {
+	ret := _m.Called(data, history)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func([]entity.MasterMappingCluster, entity.HistoryConfigChanges) error); ok {
+		r0 = rf(data, history)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetAFMobilePhone provides a mock function with given fields: prospectID
 func (_m *Repository) GetAFMobilePhone(prospectID string) (entity.AFMobilePhone, error) {
 	ret := _m.Called(prospectID)
@@ -248,55 +262,34 @@ func (_m *Repository) GetInquiryCa(req request.ReqInquiryCa, pagination interfac
 	return r0, r1, r2
 }
 
-// GetInquiryNE provides a mock function with given fields: req, pagination
-func (_m *Repository) GetInquiryNE(req request.ReqInquiryNE, pagination interface{}) ([]entity.InquiryDataNE, int, error) {
+// GetInquiryMappingCluster provides a mock function with given fields: req, pagination
+func (_m *Repository) GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) ([]entity.InquiryMappingCluster, int, error) {
 	ret := _m.Called(req, pagination)
 
-	var r0 []entity.InquiryDataNE
-	if rf, ok := ret.Get(0).(func(request.ReqInquiryNE, interface{}) []entity.InquiryDataNE); ok {
+	var r0 []entity.InquiryMappingCluster
+	if rf, ok := ret.Get(0).(func(request.ReqListMappingCluster, interface{}) []entity.InquiryMappingCluster); ok {
 		r0 = rf(req, pagination)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.InquiryDataNE)
+			r0 = ret.Get(0).([]entity.InquiryMappingCluster)
 		}
 	}
 
 	var r1 int
-	if rf, ok := ret.Get(1).(func(request.ReqInquiryNE, interface{}) int); ok {
+	if rf, ok := ret.Get(1).(func(request.ReqListMappingCluster, interface{}) int); ok {
 		r1 = rf(req, pagination)
 	} else {
 		r1 = ret.Get(1).(int)
 	}
 
 	var r2 error
-	if rf, ok := ret.Get(2).(func(request.ReqInquiryNE, interface{}) error); ok {
+	if rf, ok := ret.Get(2).(func(request.ReqListMappingCluster, interface{}) error); ok {
 		r2 = rf(req, pagination)
 	} else {
 		r2 = ret.Error(2)
 	}
 
 	return r0, r1, r2
-}
-
-// GetInquiryNEDetail provides a mock function with given fields: prospectID
-func (_m *Repository) GetInquiryNEDetail(prospectID string) (entity.NewEntry, error) {
-	ret := _m.Called(prospectID)
-
-	var r0 entity.NewEntry
-	if rf, ok := ret.Get(0).(func(string) entity.NewEntry); ok {
-		r0 = rf(prospectID)
-	} else {
-		r0 = ret.Get(0).(entity.NewEntry)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(prospectID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
 }
 
 // GetInquiryPrescreening provides a mock function with given fields: req, pagination
@@ -401,6 +394,82 @@ func (_m *Repository) GetLimitApproval(ntf float64) (entity.MappingLimitApproval
 	}
 
 	return r0, r1
+}
+
+// GetMappingCluster provides a mock function with given fields:
+func (_m *Repository) GetMappingCluster() ([]entity.MasterMappingCluster, error) {
+	ret := _m.Called()
+
+	var r0 []entity.MasterMappingCluster
+	if rf, ok := ret.Get(0).(func() []entity.MasterMappingCluster); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.MasterMappingCluster)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMappingClusterBranch provides a mock function with given fields: req
+func (_m *Repository) GetMappingClusterBranch(req request.ReqListMappingClusterBranch) ([]entity.ConfinsBranch, error) {
+	ret := _m.Called(req)
+
+	var r0 []entity.ConfinsBranch
+	if rf, ok := ret.Get(0).(func(request.ReqListMappingClusterBranch) []entity.ConfinsBranch); ok {
+		r0 = rf(req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.ConfinsBranch)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(request.ReqListMappingClusterBranch) error); ok {
+		r1 = rf(req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMappingClusterChangeLog provides a mock function with given fields: pagination
+func (_m *Repository) GetMappingClusterChangeLog(pagination interface{}) ([]entity.MappingClusterChangeLog, int, error) {
+	ret := _m.Called(pagination)
+
+	var r0 []entity.MappingClusterChangeLog
+	if rf, ok := ret.Get(0).(func(interface{}) []entity.MappingClusterChangeLog); ok {
+		r0 = rf(pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.MappingClusterChangeLog)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(interface{}) int); ok {
+		r1 = rf(pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(interface{}) error); ok {
+		r2 = rf(pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // GetReasonPrescreening provides a mock function with given fields: req, pagination

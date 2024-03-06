@@ -15,8 +15,11 @@ import (
 	platformEventMockery "los-kmb-api/shared/common/platformevent/mocks"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"net/textproto"
+	"net/url"
 	"strings"
 	"testing"
 
@@ -1431,5 +1434,469 @@ func TestGetAkkk(t *testing.T) {
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
 		}
+	})
+}
+
+func TestMappingClusterInquiry(t *testing.T) {
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	mockJson := new(mocksJson.JSON)
+
+	handler := &handlerCMS{
+		usecase:    mockUsecase,
+		repository: mockRepository,
+		Json:       mockJson,
+	}
+	t.Run("success mapping cluster inquiry", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		reqURL := "/api/v3/kmb/cms/mapping-cluster/inquiry?page=2&search=mal&branch_id=400&customer_status=AO/RO&cluster=" + url.QueryEscape("Cluster D") + "&bpkb_name_type=1"
+		req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		mockUsecase.On("GetInquiryMappingCluster", mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryMappingCluster{}, 0, nil).Once()
+
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.MappingClusterInquiry(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	})
+
+	t.Run("error binding request", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/mapping-cluster/inquiry", strings.NewReader("error"))
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		err := handler.MappingClusterInquiry(ctx)
+		assert.Nil(t, err)
+	})
+
+	t.Run("success record not found", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		reqURL := "/api/v3/kmb/cms/mapping-cluster/inquiry?page=2&search=mal&branch_id=400&customer_status=AO/RO&cluster=" + url.QueryEscape("Cluster D") + "&bpkb_name_type=1"
+		req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		reqID := utils.GenerateUUID()
+
+		ctx := e.NewContext(req, rec)
+		ctx.Set(constant.HeaderXRequestID, reqID)
+
+		mockResponse := []entity.InquiryMappingCluster{}
+		statusCode := http.StatusOK
+		mockUsecase.On("GetInquiryMappingCluster", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.MappingClusterInquiry(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	})
+
+	t.Run("error server side inquiry", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		reqURL := "/api/v3/kmb/cms/mapping-cluster/inquiry?page=2&search=mal&branch_id=400&customer_status=AO/RO&cluster=" + url.QueryEscape("Cluster D") + "&bpkb_name_type=1"
+		req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		testError := errors.New("internal server error")
+		mockUsecase.On("GetInquiryMappingCluster", mock.Anything, mock.Anything, mock.Anything).Return(nil, 0, testError).Once()
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, testError).Return(nil).Once()
+
+		err := handler.MappingClusterInquiry(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, testError)
+	})
+
+	t.Run("error bad request mapping cluster", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/mapping-cluster/inquiry?page=2&search=mal&branch_id=400", nil)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		mockResponse := []entity.InquiryMappingCluster{}
+		statusCode := http.StatusBadRequest
+		mockUsecase.On("GetInquiryMappingCluster", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
+
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		err := handler.MappingClusterInquiry(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+		mockJson.AssertCalled(t, "ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	})
+}
+
+func TestDownloadMappingCluster(t *testing.T) {
+	e := echo.New()
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/mapping-cluster/download", nil)
+	rec := httptest.NewRecorder()
+	ctx := e.NewContext(req, rec)
+
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	mockJson := new(mocksJson.JSON)
+
+	handler := &handlerCMS{
+		usecase:    mockUsecase,
+		repository: mockRepository,
+		Json:       mockJson,
+	}
+
+	t.Run("success", func(t *testing.T) {
+		mockUsecase.On("GenerateExcelMappingCluster").Return("generated_name", "MappingCluster_20240228205009.xlsx", nil).Once()
+
+		handler.DownloadMappingCluster(ctx)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		contentDisposition := rec.Header().Get("Content-Disposition")
+		assert.Contains(t, contentDisposition, `attachment; filename="MappingCluster_20240228205009.xlsx"`)
+	})
+
+	t.Run("error", func(t *testing.T) {
+		testError := errors.New("internal server error")
+		mockUsecase.On("GenerateExcelMappingCluster").Return("", "", testError).Once()
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(testError).Once()
+
+		err := handler.DownloadMappingCluster(ctx)
+
+		assert.Error(t, err)
+
+		mockUsecase.AssertExpectations(t)
+		mockJson.AssertExpectations(t)
+	})
+}
+
+func TestUploadMappingCluster(t *testing.T) {
+	e := echo.New()
+	e.Validator = common.NewValidator()
+
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	mockJson := new(mocksJson.JSON)
+
+	handler := &handlerCMS{
+		usecase:    mockUsecase,
+		repository: mockRepository,
+		Json:       mockJson,
+	}
+
+	t.Run("success", func(t *testing.T) {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+
+		_ = writer.WriteField("user_id", "valid_user_id")
+
+		fileHeader := make(textproto.MIMEHeader)
+		fileHeader.Set("Content-Disposition", `form-data; name="excel_file"; filename="test.xlsx"`)
+		fileHeader.Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+		excelContent := []byte{0x50, 0x4b, 0x3, 0x4, 0x14}
+
+		part, _ := writer.CreatePart(fileHeader)
+		part.Write(excelContent)
+
+		writer.Close()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/mapping-cluster/upload", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockUsecase.On("UpdateMappingCluster", mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.UploadMappingCluster(ctx)
+
+		assert.NoError(t, err)
+		mockUsecase.AssertExpectations(t)
+		mockJson.AssertExpectations(t)
+	})
+
+	t.Run("error binding request", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/mapping-cluster/upload", strings.NewReader("error"))
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		handler.UploadMappingCluster(ctx)
+
+		mockJson.AssertExpectations(t)
+	})
+
+	t.Run("error validate request", func(t *testing.T) {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/mapping-cluster/upload", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		handler.UploadMappingCluster(ctx)
+
+		mockJson.AssertExpectations(t)
+	})
+
+	t.Run("error invalid excel file", func(t *testing.T) {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+
+		_ = writer.WriteField("user_id", "valid_user_id")
+		writer.Close()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/mapping-cluster/upload", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.MatchedBy(func(err error) bool {
+			return strings.Contains(err.Error(), constant.ERROR_BAD_REQUEST+" - Silakan unggah file excel yang valid")
+		})).Return(nil).Once()
+
+		err := handler.UploadMappingCluster(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertExpectations(t)
+	})
+
+	t.Run("error file type", func(t *testing.T) {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+
+		_ = writer.WriteField("user_id", "valid_user_id")
+
+		fileHeader := make(textproto.MIMEHeader)
+		fileHeader.Set("Content-Disposition", `form-data; name="excel_file"; filename="test.xlsx"`)
+		fileHeader.Set("Content-Type", "application/zip")
+
+		excelContent := []byte{0x50, 0x4b, 0x3, 0x4, 0x14}
+
+		part, _ := writer.CreatePart(fileHeader)
+		part.Write(excelContent)
+
+		writer.Close()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/mapping-cluster/upload", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.MatchedBy(func(err error) bool {
+			return strings.Contains(err.Error(), constant.ERROR_BAD_REQUEST+" - Silakan unggah file berformat .xlsx")
+		})).Return(nil).Once()
+
+		err := handler.UploadMappingCluster(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertExpectations(t)
+	})
+
+	t.Run("error updating mapping cluster", func(t *testing.T) {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+
+		_ = writer.WriteField("user_id", "valid_user_id")
+
+		fileHeader := make(textproto.MIMEHeader)
+		fileHeader.Set("Content-Disposition", `form-data; name="excel_file"; filename="test.xlsx"`)
+		fileHeader.Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+		excelContent := []byte{0x50, 0x4b, 0x3, 0x4, 0x14}
+
+		part, _ := writer.CreatePart(fileHeader)
+		part.Write(excelContent)
+
+		writer.Close()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/mapping-cluster/upload", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		mockUsecase.On("UpdateMappingCluster", mock.Anything, mock.Anything).Return(errors.New("update error")).Once()
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.MatchedBy(func(err error) bool {
+			return strings.Contains(err.Error(), "update error")
+		})).Return(nil).Once()
+
+		err := handler.UploadMappingCluster(ctx)
+
+		assert.NoError(t, err)
+		mockUsecase.AssertExpectations(t)
+		mockJson.AssertExpectations(t)
+	})
+}
+
+func TestMappingClusterBranch(t *testing.T) {
+	mockUsecase := new(mocks.Usecase)
+	mockJson := new(mocksJson.JSON)
+
+	handler := &handlerCMS{
+		usecase: mockUsecase,
+		Json:    mockJson,
+	}
+
+	e := echo.New()
+	e.Validator = common.NewValidator()
+
+	t.Run("success with data", func(t *testing.T) {
+		reqURL := "/api/v3/kmb/cms/mapping-cluster/branch?branch_id=1&branch_name=MainBranch"
+		req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		mockData := []entity.ConfinsBranch{
+			{
+				BranchID:   "400",
+				BranchName: "BEKASI",
+			},
+		}
+		mockUsecase.On("GetMappingClusterBranch", mock.AnythingOfType("request.ReqListMappingClusterBranch")).Return(mockData, nil).Once()
+
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.MappingClusterBranch(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "SuccessV2", mock.Anything, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Get Mapping Cluster Branch", nil, mock.Anything)
+	})
+
+	t.Run("success record not found", func(t *testing.T) {
+		reqURL := "/api/v3/kmb/cms/mapping-cluster/branch/?branch_id=2&branch_name=SecondaryBranch"
+		req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		mockUsecase.On("GetMappingClusterBranch", mock.AnythingOfType("request.ReqListMappingClusterBranch")).Return(nil, errors.New(constant.RECORD_NOT_FOUND)).Once()
+
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.MappingClusterBranch(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "SuccessV2", mock.Anything, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Get Mapping Cluster Branch", nil, mock.Anything)
+	})
+
+	t.Run("error usecase", func(t *testing.T) {
+		reqURL := "/api/v3/kmb/cms/mapping-cluster/branch/?branch_id=3&branch_name=ErrorBranch"
+		req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		mockUsecase.On("GetMappingClusterBranch", mock.AnythingOfType("request.ReqListMappingClusterBranch")).Return(nil, errors.New("some error")).Once()
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.MappingClusterBranch(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "ServerSideErrorV2", mock.Anything, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Get Mapping Cluster Branch", nil, mock.Anything)
+	})
+}
+
+func TestMappingClusterChangeLog(t *testing.T) {
+	mockUsecase := new(mocks.Usecase)
+	mockJson := new(mocksJson.JSON)
+
+	handler := &handlerCMS{
+		usecase: mockUsecase,
+		Json:    mockJson,
+	}
+
+	e := echo.New()
+
+	t.Run("success with data", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/mapping-cluster/change-log/?page=1", nil)
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		expectedData := []entity.MappingClusterChangeLog{
+			{
+				ID:         "041b02ab-19b7-4670-8a98-df612a6a93f6",
+				DataBefore: `[{"branch_id":"400","customer_status":"AO/RO","bpkb_name_type":1,"cluster":"Cluster C"}]`,
+				DataAfter:  `[{"branch_id":"400","customer_status":"AO/RO","bpkb_name_type":1,"cluster":"Cluster A"}]`,
+				UserName:   "user",
+				CreatedAt:  "2024-02-28 08:04:05",
+			},
+		}
+
+		mockUsecase.On("GetMappingClusterChangeLog", mock.Anything).Return(expectedData, len(expectedData), nil).Once()
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.MappingClusterChangeLog(ctx)
+
+		assert.NoError(t, err)
+		mockUsecase.AssertExpectations(t)
+		mockJson.AssertExpectations(t)
+	})
+
+	t.Run("success record not found", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/mapping-cluster/change-log/?page=1", nil)
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		mockUsecase.On("GetMappingClusterChangeLog", mock.Anything).Return(nil, 0, errors.New(constant.RECORD_NOT_FOUND)).Once()
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.MappingClusterChangeLog(ctx)
+
+		assert.NoError(t, err)
+		mockUsecase.AssertExpectations(t)
+		mockJson.AssertExpectations(t)
+	})
+
+	t.Run("error usecase", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/mapping-cluster/change-log/?page=1", nil)
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		mockUsecase.On("GetMappingClusterChangeLog", mock.Anything).Return(nil, 0, errors.New("some error")).Once()
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.MappingClusterChangeLog(ctx)
+
+		assert.NoError(t, err)
+		mockUsecase.AssertExpectations(t)
+		mockJson.AssertExpectations(t)
 	})
 }

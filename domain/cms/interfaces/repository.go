@@ -35,4 +35,9 @@ type Repository interface {
 	SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, trxRecalculate entity.TrxRecalculate, approval response.RespApprovalScheme) (err error)
 	GetAFMobilePhone(prospectID string) (data entity.AFMobilePhone, err error)
 	GetRegionBranch(userId string) (data []entity.RegionBranch, err error)
+	GetMappingCluster() (data []entity.MasterMappingCluster, err error)
+	GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error)
+	BatchUpdateMappingCluster(data []entity.MasterMappingCluster, history entity.HistoryConfigChanges) (err error)
+	GetMappingClusterBranch(req request.ReqListMappingClusterBranch) (data []entity.ConfinsBranch, err error)
+	GetMappingClusterChangeLog(pagination interface{}) (data []entity.MappingClusterChangeLog, rowTotal int, err error)
 }

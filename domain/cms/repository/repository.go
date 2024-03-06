@@ -3188,3 +3188,256 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 		return nil
 	})
 }
+
+func (r repoHandler) GetMappingCluster() (data []entity.MasterMappingCluster, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.losDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.losDB.Raw("SELECT * FROM kmb_mapping_cluster_branch WITH (nolock) ORDER BY branch_id ASC").Scan(&data).Error; err != nil {
+
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error) {
+
+	var (
+		filterBuilder  strings.Builder
+		conditions     []string
+		filterPaginate string
+		x              sql.TxOptions
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.losDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if req.Search != "" {
+		conditions = append(conditions, fmt.Sprintf("(kmcb.branch_id LIKE '%%%[1]s%%' OR cb.BranchName LIKE '%%%[1]s%%')", req.Search))
+	}
+
+	if req.BranchID != "" {
+		numbers := strings.Split(req.BranchID, ",")
+		for i, number := range numbers {
+			numbers[i] = "'" + number + "'"
+		}
+		conditions = append(conditions, fmt.Sprintf("kmcb.branch_id IN (%s)", strings.Join(numbers, ",")))
+	}
+
+	if req.CustomerStatus != "" {
+		conditions = append(conditions, fmt.Sprintf("kmcb.customer_status = '%s'", req.CustomerStatus))
+	}
+
+	if req.BPKBNameType != "" {
+		conditions = append(conditions, fmt.Sprintf("kmcb.bpkb_name_type = '%s'", req.BPKBNameType))
+	}
+
+	if req.Cluster != "" {
+		conditions = append(conditions, fmt.Sprintf("kmcb.cluster = '%s'", req.Cluster))
+	}
+
+	if len(conditions) > 0 {
+		filterBuilder.WriteString("WHERE ")
+		filterBuilder.WriteString(strings.Join(conditions, " AND "))
+	}
+
+	filter := filterBuilder.String()
+
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.losDB.Raw(fmt.Sprintf(`SELECT
+				COUNT(*) AS totalRow
+			FROM (
+				SELECT kmcb.*, cb.BranchName AS branch_name 
+				FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+				LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID %s
+			) AS y`, filter)).Scan(&row).Error; err != nil {
+			return
+		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
+	}
+
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT
+		kmcb.*, 
+		cb.BranchName AS branch_name
+		FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+		LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID %s ORDER BY kmcb.branch_id ASC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	if len(data) == 0 {
+		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
+	return
+}
+
+func (r repoHandler) BatchUpdateMappingCluster(data []entity.MasterMappingCluster, history entity.HistoryConfigChanges) (err error) {
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+	txOptions := &sql.TxOptions{}
+
+	db := r.losDB.BeginTx(ctx, txOptions)
+	defer db.Commit()
+
+	defer func() {
+		if r := recover(); r != nil || err != nil {
+			db.Rollback()
+		}
+	}()
+
+	var cluster entity.MasterMappingCluster
+	if err = db.Delete(&cluster).Error; err != nil {
+		return err
+	}
+
+	for _, val := range data {
+		if err = db.Create(&val).Error; err != nil {
+			return err
+		}
+	}
+
+	if err = db.Create(&history).Error; err != nil {
+		return err
+	}
+
+	return err
+}
+
+func (r repoHandler) GetMappingClusterBranch(req request.ReqListMappingClusterBranch) (data []entity.ConfinsBranch, err error) {
+	var (
+		filterBuilder strings.Builder
+		conditions    []string
+		x             sql.TxOptions
+	)
+
+	if req.BranchID != "" {
+		numbers := strings.Split(req.BranchID, ",")
+		for i, number := range numbers {
+			numbers[i] = "'" + number + "'"
+		}
+		conditions = append(conditions, fmt.Sprintf("kmcb.branch_id IN (%s)", strings.Join(numbers, ",")))
+	}
+
+	if req.BranchName != "" {
+		conditions = append(conditions, fmt.Sprintf("cb.BranchName LIKE '%%%[1]s%%'", req.BranchName))
+	}
+
+	if len(conditions) > 0 {
+		filterBuilder.WriteString("WHERE ")
+		filterBuilder.WriteString(strings.Join(conditions, " AND "))
+	}
+
+	filter := filterBuilder.String()
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.losDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT DISTINCT 
+		kmcb.branch_id AS BranchID, 
+		CASE 
+			WHEN kmcb.branch_id = '000' THEN 'PRIME PRIORITY'
+			ELSE cb.BranchName 
+		END AS BranchName 
+		FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+		LEFT JOIN confins_branch cb ON cb.BranchID = kmcb.branch_id %s 
+		ORDER BY kmcb.branch_id ASC`, filter)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetMappingClusterChangeLog(pagination interface{}) (data []entity.MappingClusterChangeLog, rowTotal int, err error) {
+	var (
+		filterPaginate string
+		x              sql.TxOptions
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.losDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.losDB.Raw(`SELECT 
+				COUNT(*) AS totalRow
+			FROM history_config_changes hcc 
+			LEFT JOIN user_details ud ON ud.user_id = hcc.created_by 
+			WHERE hcc.config_id = 'kmb_mapping_cluster_branch'
+		`).Scan(&row).Error; err != nil {
+			return
+		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
+	}
+
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT
+			hcc.id, hcc.data_before, hcc.data_after, hcc.created_at, ud.name AS user_name
+		FROM history_config_changes hcc 
+		LEFT JOIN user_details ud ON ud.user_id = hcc.created_by 
+		WHERE hcc.config_id = 'kmb_mapping_cluster_branch'
+		ORDER BY hcc.created_at DESC %s`, filterPaginate)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	if len(data) == 0 {
+		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
+	return
+}

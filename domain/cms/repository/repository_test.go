@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"database/sql"
 	"database/sql/driver"
 	"encoding/json"
 	"errors"
@@ -10689,4 +10690,717 @@ func TestSubmitApproval(t *testing.T) {
 		}
 	})
 
+}
+
+func TestGetMappingCluster(t *testing.T) {
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	// Expected input and output
+	expectedData := []entity.MasterMappingCluster{
+		{
+			BranchID:       "400",
+			CustomerStatus: "AO/RO",
+			BpkbNameType:   1,
+			Cluster:        "Cluster A",
+		},
+	}
+
+	t.Run("success", func(t *testing.T) {
+
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(`SELECT \* FROM kmb_mapping_cluster_branch WITH \(nolock\) ORDER BY branch_id ASC`).
+			WillReturnRows(sqlmock.NewRows([]string{"branch_id", "customer_status", "bpkb_name_type", "cluster"}).
+				AddRow("400", "AO/RO", 1, "Cluster A"))
+		mock.ExpectCommit()
+
+		// Call the function
+		data, err := repo.GetMappingCluster()
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+
+		// Mock SQL query to simulate record not found
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(`SELECT \* FROM kmb_mapping_cluster_branch WITH \(nolock\) ORDER BY branch_id ASC`).
+			WillReturnError(gorm.ErrRecordNotFound)
+		mock.ExpectCommit()
+
+		// Call the function
+		_, err := repo.GetMappingCluster()
+
+		// Verify the error message
+		expectedErr := errors.New(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestGetInquiryMappingCluster(t *testing.T) {
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	expectedInquiry := []entity.InquiryMappingCluster{
+		{
+			BranchID:       "400",
+			BranchName:     "BEKASI",
+			CustomerStatus: "AO/RO",
+			BpkbNameType:   1,
+			Cluster:        "Cluster A",
+		},
+	}
+
+	t.Run("success with search", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqListMappingCluster{
+			Search: "abranchname",
+		}
+
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+				COUNT(*) AS totalRow
+			FROM (
+				SELECT kmcb.*, cb.BranchName AS branch_name 
+				FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+				LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID 
+				WHERE (kmcb.branch_id LIKE '%abranchname%' OR cb.BranchName LIKE '%abranchname%')
+			) AS y`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+			kmcb.*, 
+			cb.BranchName AS branch_name
+			FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+			LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID 
+			WHERE (kmcb.branch_id LIKE '%abranchname%' OR cb.BranchName LIKE '%abranchname%') ORDER BY kmcb.branch_id ASC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"branch_id", "branch_name", "customer_status", "bpkb_name_type", "cluster"}).AddRow("400", "BEKASI", "AO/RO", 1, "Cluster A"))
+
+		mock.ExpectCommit()
+
+		// Call the function
+		reason, _, err := repo.GetInquiryMappingCluster(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success with filter", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqListMappingCluster{
+			BranchID:       "400,401,403",
+			CustomerStatus: "NEW",
+			BPKBNameType:   "1",
+			Cluster:        "Cluster A",
+		}
+
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+				COUNT(*) AS totalRow
+			FROM (
+				SELECT kmcb.*, cb.BranchName AS branch_name 
+				FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+				LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID 
+				WHERE kmcb.branch_id IN ('400','401','403') AND kmcb.customer_status = 'NEW' AND kmcb.bpkb_name_type = '1' AND kmcb.cluster = 'Cluster A'
+			) AS y`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+			kmcb.*, 
+			cb.BranchName AS branch_name
+			FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+			LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID 
+			WHERE kmcb.branch_id IN ('400','401','403') AND kmcb.customer_status = 'NEW' AND kmcb.bpkb_name_type = '1' AND kmcb.cluster = 'Cluster A' ORDER BY kmcb.branch_id ASC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"branch_id", "branch_name", "customer_status", "bpkb_name_type", "cluster"}).AddRow("400", "BEKASI", "AO/RO", 1, "Cluster A"))
+
+		mock.ExpectCommit()
+
+		// Call the function
+		reason, _, err := repo.GetInquiryMappingCluster(req, 1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqListMappingCluster{}
+
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+				COUNT(*) AS totalRow
+			FROM (
+				SELECT kmcb.*, cb.BranchName AS branch_name 
+				FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+				LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID 
+			) AS y`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+			kmcb.*, 
+			cb.BranchName AS branch_name
+			FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+			LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID 
+			ORDER BY kmcb.branch_id ASC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"branch_id", "branch_name", "customer_status", "bpkb_name_type", "cluster"}))
+
+		mock.ExpectCommit()
+
+		// Call the function
+		_, _, err := repo.GetInquiryMappingCluster(req, 1)
+
+		// Verify the error message
+		expectedErr := errors.New(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("error get count data", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqListMappingCluster{}
+
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+				COUNT(*) AS totalRow
+			FROM (
+				SELECT kmcb.*, cb.BranchName AS branch_name 
+				FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+				LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID 
+			) AS y`)).
+			WillReturnError(sql.ErrNoRows)
+
+		mock.ExpectCommit()
+
+		// Call the function
+		_, _, err := repo.GetInquiryMappingCluster(req, 1)
+
+		// Verify that an error was returned as expected
+		if err == nil {
+			t.Fatalf("Expected an error, got nil")
+		}
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("error get data", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqListMappingCluster{}
+
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+				COUNT(*) AS totalRow
+			FROM (
+				SELECT kmcb.*, cb.BranchName AS branch_name 
+				FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+				LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID 
+			) AS y`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+			kmcb.*, 
+			cb.BranchName AS branch_name
+			FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+			LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID 
+			ORDER BY kmcb.branch_id ASC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnError(sql.ErrNoRows)
+
+		mock.ExpectCommit()
+
+		// Call the function
+		_, _, err := repo.GetInquiryMappingCluster(req, 1)
+
+		// Verify that an error was returned as expected
+		if err == nil {
+			t.Fatalf("Expected an error, got nil")
+		}
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestBatchUpdateMappingCluster(t *testing.T) {
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	// Expected input and output
+	mapping := []entity.MasterMappingCluster{
+		{
+			BranchID:       "400",
+			CustomerStatus: "AO/RO",
+			BpkbNameType:   1,
+			Cluster:        "Cluster A",
+		},
+	}
+
+	history := entity.HistoryConfigChanges{
+		ID:         utils.GenerateUUID(),
+		ConfigID:   "kmb_mapping_cluster_branch",
+		ObjectName: "kmb_mapping_cluster_branch",
+		Action:     "UPDATE",
+		DataBefore: `[{"branch_id":"400","customer_status":"AO/RO","bpkb_name_type":1,"cluster":"Cluster C"}]`,
+		DataAfter:  `[{"branch_id":"400","customer_status":"AO/RO","bpkb_name_type":1,"cluster":"Cluster A"}]`,
+		CreatedBy:  "1234567",
+		CreatedAt:  time.Now(),
+	}
+
+	t.Run("success without rollback", func(t *testing.T) {
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectExec(regexp.QuoteMeta(
+			`DELETE FROM "kmb_mapping_cluster_branch"`)).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		for _, val := range mapping {
+			mock.ExpectExec(regexp.QuoteMeta(
+				`INSERT INTO "kmb_mapping_cluster_branch" ("branch_id","customer_status","bpkb_name_type","cluster") VALUES (?,?,?,?)`)).
+				WithArgs(val.BranchID, val.CustomerStatus, val.BpkbNameType, val.Cluster).
+				WillReturnResult(sqlmock.NewResult(1, 1))
+		}
+
+		mock.ExpectExec(regexp.QuoteMeta(
+			`INSERT INTO "history_config_changes" ("id","config_id","object_name","action","data_before","data_after","created_by","created_at") VALUES (?,?,?,?,?,?,?,?)`)).
+			WithArgs(history.ID, history.ConfigID, history.ObjectName, history.Action, history.DataBefore, history.DataAfter, history.CreatedBy, history.CreatedAt).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectCommit()
+
+		// Call the function
+		err := repo.BatchUpdateMappingCluster(mapping, history)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("error delete rollback", func(t *testing.T) {
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectExec(regexp.QuoteMeta(
+			`DELETE FROM "kmb_mapping_cluster_branch"`)).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		mock.ExpectRollback()
+
+		// Call the function
+		err := repo.BatchUpdateMappingCluster(mapping, history)
+
+		// Verify that an error was returned as expected
+		if err == nil {
+			t.Fatalf("Expected an error, got nil")
+		}
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("error insert mapping cluster rollback", func(t *testing.T) {
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectExec(regexp.QuoteMeta(
+			`DELETE FROM "kmb_mapping_cluster_branch"`)).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		for _, val := range mapping {
+			mock.ExpectExec(regexp.QuoteMeta(
+				`INSERT INTO "kmb_mapping_cluster_branch" ("branch_id","customer_status","bpkb_name_type","cluster") VALUES (?,?,?,?)`)).
+				WithArgs(val.BranchID, val.CustomerStatus, val.BpkbNameType, val.Cluster).
+				WillReturnError(gorm.ErrInvalidTransaction)
+		}
+
+		mock.ExpectRollback()
+
+		// Call the function
+		err := repo.BatchUpdateMappingCluster(mapping, history)
+
+		// Verify that an error was returned as expected
+		if err == nil {
+			t.Fatalf("Expected an error, got nil")
+		}
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("error insert history change log rollback", func(t *testing.T) {
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectExec(regexp.QuoteMeta(
+			`DELETE FROM "kmb_mapping_cluster_branch"`)).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		for _, val := range mapping {
+			mock.ExpectExec(regexp.QuoteMeta(
+				`INSERT INTO "kmb_mapping_cluster_branch" ("branch_id","customer_status","bpkb_name_type","cluster") VALUES (?,?,?,?)`)).
+				WithArgs(val.BranchID, val.CustomerStatus, val.BpkbNameType, val.Cluster).
+				WillReturnResult(sqlmock.NewResult(1, 1))
+		}
+
+		mock.ExpectExec(regexp.QuoteMeta(
+			`INSERT INTO "history_config_changes" ("id","config_id","object_name","action","data_before","data_after","created_by","created_at") VALUES (?,?,?,?,?,?,?,?)`)).
+			WithArgs(history.ID, history.ConfigID, history.ObjectName, history.Action, history.DataBefore, history.DataAfter, history.CreatedBy, history.CreatedAt).
+			WillReturnError(gorm.ErrInvalidTransaction)
+
+		mock.ExpectRollback()
+
+		// Call the function
+		err := repo.BatchUpdateMappingCluster(mapping, history)
+
+		// Verify that an error was returned as expected
+		if err == nil {
+			t.Fatalf("Expected an error, got nil")
+		}
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestGetMappingClusterBranch(t *testing.T) {
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	expectedInquiry := []entity.ConfinsBranch{
+		{
+			BranchID:   "400",
+			BranchName: "BEKASI",
+		},
+	}
+
+	t.Run("success with filter", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqListMappingClusterBranch{
+			BranchID:   "400,401,403",
+			BranchName: "BEKASI",
+		}
+
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT DISTINCT 
+			kmcb.branch_id AS BranchID, 
+			CASE 
+				WHEN kmcb.branch_id = '000' THEN 'PRIME PRIORITY'
+				ELSE cb.BranchName 
+			END AS BranchName 
+			FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+			LEFT JOIN confins_branch cb ON cb.BranchID = kmcb.branch_id 
+			WHERE kmcb.branch_id IN ('400','401','403') AND cb.BranchName LIKE '%BEKASI%'
+			ORDER BY kmcb.branch_id ASC`)).
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).AddRow("400", "BEKASI"))
+
+		mock.ExpectCommit()
+
+		// Call the function
+		reason, err := repo.GetMappingClusterBranch(req)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqListMappingClusterBranch{}
+
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT DISTINCT 
+			kmcb.branch_id AS BranchID, 
+			CASE 
+				WHEN kmcb.branch_id = '000' THEN 'PRIME PRIORITY'
+				ELSE cb.BranchName 
+			END AS BranchName 
+			FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+			LEFT JOIN confins_branch cb ON cb.BranchID = kmcb.branch_id 
+			ORDER BY kmcb.branch_id ASC`)).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		mock.ExpectCommit()
+
+		// Call the function
+		_, err := repo.GetMappingClusterBranch(req)
+
+		// Verify the error message
+		expectedErr := errors.New(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestGetMappingClusterChangeLog(t *testing.T) {
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	expectedInquiry := []entity.MappingClusterChangeLog{
+		{
+			ID:         "041b02ab-19b7-4670-8a98-df612a6a93f6",
+			DataBefore: `[{"branch_id":"400","customer_status":"AO/RO","bpkb_name_type":1,"cluster":"Cluster C"}]`,
+			DataAfter:  `[{"branch_id":"400","customer_status":"AO/RO","bpkb_name_type":1,"cluster":"Cluster A"}]`,
+			UserName:   "user",
+			CreatedAt:  "2024-02-28 08:04:05",
+		},
+	}
+
+	t.Run("success", func(t *testing.T) {
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT 
+				COUNT(*) AS totalRow
+			FROM history_config_changes hcc 
+			LEFT JOIN user_details ud ON ud.user_id = hcc.created_by 
+			WHERE hcc.config_id = 'kmb_mapping_cluster_branch'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+				hcc.id, hcc.data_before, hcc.data_after, hcc.created_at, ud.name AS user_name
+			FROM history_config_changes hcc 
+			LEFT JOIN user_details ud ON ud.user_id = hcc.created_by 
+			WHERE hcc.config_id = 'kmb_mapping_cluster_branch'
+			ORDER BY hcc.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "data_before", "data_after", "created_at", "user_name"}).AddRow("041b02ab-19b7-4670-8a98-df612a6a93f6", `[{"branch_id":"400","customer_status":"AO/RO","bpkb_name_type":1,"cluster":"Cluster C"}]`, `[{"branch_id":"400","customer_status":"AO/RO","bpkb_name_type":1,"cluster":"Cluster A"}]`, "2024-02-28 08:04:05", "user"))
+
+		mock.ExpectCommit()
+
+		// Call the function
+		reason, _, err := repo.GetMappingClusterChangeLog(1)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedInquiry, reason, "Expected reason slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT 
+				COUNT(*) AS totalRow
+			FROM history_config_changes hcc 
+			LEFT JOIN user_details ud ON ud.user_id = hcc.created_by 
+			WHERE hcc.config_id = 'kmb_mapping_cluster_branch'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+				hcc.id, hcc.data_before, hcc.data_after, hcc.created_at, ud.name AS user_name
+			FROM history_config_changes hcc 
+			LEFT JOIN user_details ud ON ud.user_id = hcc.created_by 
+			WHERE hcc.config_id = 'kmb_mapping_cluster_branch'
+			ORDER BY hcc.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "data_before", "data_after", "created_at", "user_name"}))
+
+		mock.ExpectCommit()
+
+		// Call the function
+		_, _, err := repo.GetMappingClusterChangeLog(1)
+
+		// Verify the error message
+		expectedErr := errors.New(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("error get count data", func(t *testing.T) {
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT 
+				COUNT(*) AS totalRow
+			FROM history_config_changes hcc 
+			LEFT JOIN user_details ud ON ud.user_id = hcc.created_by 
+			WHERE hcc.config_id = 'kmb_mapping_cluster_branch'`)).
+			WillReturnError(sql.ErrNoRows)
+
+		mock.ExpectCommit()
+
+		// Call the function
+		_, _, err := repo.GetMappingClusterChangeLog(1)
+
+		// Verify that an error was returned as expected
+		if err == nil {
+			t.Fatalf("Expected an error, got nil")
+		}
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("error get data", func(t *testing.T) {
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT 
+				COUNT(*) AS totalRow
+			FROM history_config_changes hcc 
+			LEFT JOIN user_details ud ON ud.user_id = hcc.created_by 
+			WHERE hcc.config_id = 'kmb_mapping_cluster_branch'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+				hcc.id, hcc.data_before, hcc.data_after, hcc.created_at, ud.name AS user_name
+			FROM history_config_changes hcc 
+			LEFT JOIN user_details ud ON ud.user_id = hcc.created_by 
+			WHERE hcc.config_id = 'kmb_mapping_cluster_branch'
+			ORDER BY hcc.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			WillReturnError(sql.ErrNoRows)
+
+		mock.ExpectCommit()
+
+		// Call the function
+		_, _, err := repo.GetMappingClusterChangeLog(1)
+
+		// Verify that an error was returned as expected
+		if err == nil {
+			t.Fatalf("Expected an error, got nil")
+		}
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
 }

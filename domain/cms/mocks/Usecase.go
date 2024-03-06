@@ -8,6 +8,8 @@ import (
 
 	mock "github.com/stretchr/testify/mock"
 
+	multipart "mime/multipart"
+
 	request "los-kmb-api/models/request"
 
 	response "los-kmb-api/models/response"
@@ -37,6 +39,34 @@ func (_m *Usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) 
 	}
 
 	return r0, r1
+}
+
+// GenerateExcelMappingCluster provides a mock function with given fields:
+func (_m *Usecase) GenerateExcelMappingCluster() (string, string, error) {
+	ret := _m.Called()
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	var r1 string
+	if rf, ok := ret.Get(1).(func() string); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Get(1).(string)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func() error); ok {
+		r2 = rf()
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // GetAkkk provides a mock function with given fields: prospectID
@@ -180,55 +210,34 @@ func (_m *Usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, p
 	return r0, r1, r2
 }
 
-// GetInquiryNE provides a mock function with given fields: ctx, req, pagination
-func (_m *Usecase) GetInquiryNE(ctx context.Context, req request.ReqInquiryNE, pagination interface{}) ([]entity.InquiryDataNE, int, error) {
-	ret := _m.Called(ctx, req, pagination)
+// GetInquiryMappingCluster provides a mock function with given fields: req, pagination
+func (_m *Usecase) GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) ([]entity.InquiryMappingCluster, int, error) {
+	ret := _m.Called(req, pagination)
 
-	var r0 []entity.InquiryDataNE
-	if rf, ok := ret.Get(0).(func(context.Context, request.ReqInquiryNE, interface{}) []entity.InquiryDataNE); ok {
-		r0 = rf(ctx, req, pagination)
+	var r0 []entity.InquiryMappingCluster
+	if rf, ok := ret.Get(0).(func(request.ReqListMappingCluster, interface{}) []entity.InquiryMappingCluster); ok {
+		r0 = rf(req, pagination)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]entity.InquiryDataNE)
+			r0 = ret.Get(0).([]entity.InquiryMappingCluster)
 		}
 	}
 
 	var r1 int
-	if rf, ok := ret.Get(1).(func(context.Context, request.ReqInquiryNE, interface{}) int); ok {
-		r1 = rf(ctx, req, pagination)
+	if rf, ok := ret.Get(1).(func(request.ReqListMappingCluster, interface{}) int); ok {
+		r1 = rf(req, pagination)
 	} else {
 		r1 = ret.Get(1).(int)
 	}
 
 	var r2 error
-	if rf, ok := ret.Get(2).(func(context.Context, request.ReqInquiryNE, interface{}) error); ok {
-		r2 = rf(ctx, req, pagination)
+	if rf, ok := ret.Get(2).(func(request.ReqListMappingCluster, interface{}) error); ok {
+		r2 = rf(req, pagination)
 	} else {
 		r2 = ret.Error(2)
 	}
 
 	return r0, r1, r2
-}
-
-// GetInquiryNEDetail provides a mock function with given fields: ctx, prospectID
-func (_m *Usecase) GetInquiryNEDetail(ctx context.Context, prospectID string) (request.MetricsNE, error) {
-	ret := _m.Called(ctx, prospectID)
-
-	var r0 request.MetricsNE
-	if rf, ok := ret.Get(0).(func(context.Context, string) request.MetricsNE); ok {
-		r0 = rf(ctx, prospectID)
-	} else {
-		r0 = ret.Get(0).(request.MetricsNE)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, prospectID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
 }
 
 // GetInquiryPrescreening provides a mock function with given fields: ctx, req, pagination
@@ -254,6 +263,59 @@ func (_m *Usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqIn
 	var r2 error
 	if rf, ok := ret.Get(2).(func(context.Context, request.ReqInquiryPrescreening, interface{}) error); ok {
 		r2 = rf(ctx, req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// GetMappingClusterBranch provides a mock function with given fields: req
+func (_m *Usecase) GetMappingClusterBranch(req request.ReqListMappingClusterBranch) ([]entity.ConfinsBranch, error) {
+	ret := _m.Called(req)
+
+	var r0 []entity.ConfinsBranch
+	if rf, ok := ret.Get(0).(func(request.ReqListMappingClusterBranch) []entity.ConfinsBranch); ok {
+		r0 = rf(req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.ConfinsBranch)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(request.ReqListMappingClusterBranch) error); ok {
+		r1 = rf(req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMappingClusterChangeLog provides a mock function with given fields: pagination
+func (_m *Usecase) GetMappingClusterChangeLog(pagination interface{}) ([]entity.MappingClusterChangeLog, int, error) {
+	ret := _m.Called(pagination)
+
+	var r0 []entity.MappingClusterChangeLog
+	if rf, ok := ret.Get(0).(func(interface{}) []entity.MappingClusterChangeLog); ok {
+		r0 = rf(pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.MappingClusterChangeLog)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(interface{}) int); ok {
+		r1 = rf(pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(interface{}) error); ok {
+		r2 = rf(pagination)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -447,25 +509,16 @@ func (_m *Usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDeci
 	return r0, r1
 }
 
-// SubmitNE provides a mock function with given fields: ctx, req
-func (_m *Usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (interface{}, error) {
-	ret := _m.Called(ctx, req)
+// UpdateMappingCluster provides a mock function with given fields: req, file
+func (_m *Usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file multipart.File) error {
+	ret := _m.Called(req, file)
 
-	var r0 interface{}
-	if rf, ok := ret.Get(0).(func(context.Context, request.MetricsNE) interface{}); ok {
-		r0 = rf(ctx, req)
+	var r0 error
+	if rf, ok := ret.Get(0).(func(request.ReqUploadMappingCluster, multipart.File) error); ok {
+		r0 = rf(req, file)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(interface{})
-		}
+		r0 = ret.Error(0)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, request.MetricsNE) error); ok {
-		r1 = rf(ctx, req)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
