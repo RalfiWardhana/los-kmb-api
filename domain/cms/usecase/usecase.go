@@ -13,7 +13,9 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
+	"mime/multipart"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -21,6 +23,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jinzhu/copier"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/xuri/excelize/v2"
 )
 
 type (
@@ -143,6 +146,116 @@ func (u usecase) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 	if data.EkycSimiliarity != nil {
 		data.EkycSimiliarity, _ = utils.GetFloat(data.EkycSimiliarity)
 	}
+
+	return
+}
+
+func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data interface{}, err error) {
+
+	filtering := request.Filtering{
+		ProspectID: req.Transaction.ProspectID,
+		BranchID:   req.Transaction.BranchID,
+		BirthDate:  req.CustomerPersonal.BirthDate,
+		Gender:     req.CustomerPersonal.Gender,
+		BPKBName:   req.Item.BPKBName,
+	}
+
+	filtering.IDNumber, _ = utils.PlatformEncryptText(req.CustomerPersonal.IDNumber)
+	filtering.LegalName, _ = utils.PlatformEncryptText(req.CustomerPersonal.LegalName)
+	filtering.MotherName, _ = utils.PlatformEncryptText(req.CustomerPersonal.SurgateMotherName)
+
+	if req.CustomerSpouse != nil {
+		IDNumber, _ := utils.PlatformEncryptText(req.CustomerSpouse.IDNumber)
+		LegalName, _ := utils.PlatformEncryptText(req.CustomerSpouse.LegalName)
+		MotherName, _ := utils.PlatformEncryptText(req.CustomerSpouse.SurgateMotherName)
+
+		filtering.Spouse = &request.FilteringSpouse{
+			IDNumber:   IDNumber,
+			LegalName:  LegalName,
+			MotherName: MotherName,
+			BirthDate:  req.CustomerSpouse.BirthDate,
+			Gender:     req.CustomerSpouse.Gender,
+		}
+
+	}
+
+	elaborateLTV := request.ElaborateLTV{
+		ProspectID:        req.Transaction.ProspectID,
+		Tenor:             req.Apk.Tenor,
+		ManufacturingYear: req.Item.ManufactureYear,
+	}
+
+	var journey request.Metrics
+	err = copier.Copy(&journey, &req)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Submit NE error")
+		return
+	}
+
+	journey.CustomerPersonal.IDNumber = filtering.IDNumber
+	journey.CustomerPersonal.LegalName = filtering.LegalName
+	journey.CustomerPersonal.FullName = filtering.LegalName
+	journey.CustomerPersonal.SurgateMotherName = filtering.MotherName
+
+	if req.CustomerSpouse != nil {
+		IDNumber, _ := utils.PlatformEncryptText(req.CustomerSpouse.IDNumber)
+		LegalName, _ := utils.PlatformEncryptText(req.CustomerSpouse.LegalName)
+		MotherName, _ := utils.PlatformEncryptText(req.CustomerSpouse.SurgateMotherName)
+
+		spouse := &request.CustomerSpouse{
+			IDNumber:          IDNumber,
+			LegalName:         LegalName,
+			SurgateMotherName: MotherName,
+		}
+
+		journey.CustomerSpouse.IDNumber = spouse.IDNumber
+		journey.CustomerSpouse.LegalName = spouse.LegalName
+		journey.CustomerSpouse.FullName = spouse.LegalName
+		journey.CustomerSpouse.SurgateMotherName = spouse.SurgateMotherName
+	}
+
+	err = u.repository.SubmitNE(req, filtering, elaborateLTV, journey)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - " + err.Error())
+		return
+	}
+
+	// the func will return the payload of filtering and produce it later
+	data = filtering
+
+	return
+}
+
+func (u usecase) GetInquiryNE(ctx context.Context, req request.ReqInquiryNE, pagination interface{}) (data []entity.InquiryDataNE, rowTotal int, err error) {
+
+	result, rowTotal, err := u.repository.GetInquiryNE(req, pagination)
+
+	if err != nil {
+		return
+	}
+
+	data = result
+
+	return
+}
+
+func (u usecase) GetInquiryNEDetail(ctx context.Context, prospectID string) (data request.MetricsNE, err error) {
+
+	var (
+		trxNewEntry entity.NewEntry
+	)
+
+	trxNewEntry, err = u.repository.GetInquiryNEDetail(prospectID)
+	if err != nil {
+		if err.Error() == constant.RECORD_NOT_FOUND {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - " + err.Error())
+		} else {
+			err = errors.New(constant.ERROR_UPSTREAM + " - " + err.Error())
+		}
+		return
+	}
+
+	json.Unmarshal([]byte(trxNewEntry.PayloadNE), &data)
 
 	return
 }
@@ -1894,112 +2007,280 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 	return
 }
 
-func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data interface{}, err error) {
+func (u usecase) GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error) {
 
-	filtering := request.Filtering{
-		ProspectID: req.Transaction.ProspectID,
-		BranchID:   req.Transaction.BranchID,
-		BirthDate:  req.CustomerPersonal.BirthDate,
-		Gender:     req.CustomerPersonal.Gender,
-		BPKBName:   req.Item.BPKBName,
-	}
+	data, rowTotal, err = u.repository.GetInquiryMappingCluster(req, pagination)
 
-	filtering.IDNumber, _ = utils.PlatformEncryptText(req.CustomerPersonal.IDNumber)
-	filtering.LegalName, _ = utils.PlatformEncryptText(req.CustomerPersonal.LegalName)
-	filtering.MotherName, _ = utils.PlatformEncryptText(req.CustomerPersonal.SurgateMotherName)
-
-	if req.CustomerSpouse != nil {
-		IDNumber, _ := utils.PlatformEncryptText(req.CustomerSpouse.IDNumber)
-		LegalName, _ := utils.PlatformEncryptText(req.CustomerSpouse.LegalName)
-		MotherName, _ := utils.PlatformEncryptText(req.CustomerSpouse.SurgateMotherName)
-
-		filtering.Spouse = &request.FilteringSpouse{
-			IDNumber:   IDNumber,
-			LegalName:  LegalName,
-			MotherName: MotherName,
-			BirthDate:  req.CustomerSpouse.BirthDate,
-			Gender:     req.CustomerSpouse.Gender,
-		}
-
-	}
-
-	elaborateLTV := request.ElaborateLTV{
-		ProspectID:        req.Transaction.ProspectID,
-		Tenor:             req.Apk.Tenor,
-		ManufacturingYear: req.Item.ManufactureYear,
-	}
-
-	var journey request.Metrics
-	err = copier.Copy(&journey, &req)
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Submit NE error")
 		return
 	}
-
-	journey.CustomerPersonal.IDNumber = filtering.IDNumber
-	journey.CustomerPersonal.LegalName = filtering.LegalName
-	journey.CustomerPersonal.FullName = filtering.LegalName
-	journey.CustomerPersonal.SurgateMotherName = filtering.MotherName
-
-	if req.CustomerSpouse != nil {
-		IDNumber, _ := utils.PlatformEncryptText(req.CustomerSpouse.IDNumber)
-		LegalName, _ := utils.PlatformEncryptText(req.CustomerSpouse.LegalName)
-		MotherName, _ := utils.PlatformEncryptText(req.CustomerSpouse.SurgateMotherName)
-
-		spouse := &request.CustomerSpouse{
-			IDNumber:          IDNumber,
-			LegalName:         LegalName,
-			SurgateMotherName: MotherName,
-		}
-
-		journey.CustomerSpouse.IDNumber = spouse.IDNumber
-		journey.CustomerSpouse.LegalName = spouse.LegalName
-		journey.CustomerSpouse.FullName = spouse.LegalName
-		journey.CustomerSpouse.SurgateMotherName = spouse.SurgateMotherName
-	}
-
-	err = u.repository.SubmitNE(req, filtering, elaborateLTV, journey)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - " + err.Error())
-		return
-	}
-
-	// the func will return the payload of filtering and produce it later
-	data = filtering
 
 	return
 }
 
-func (u usecase) GetInquiryNE(ctx context.Context, req request.ReqInquiryNE, pagination interface{}) (data []entity.InquiryDataNE, rowTotal int, err error) {
-
-	result, rowTotal, err := u.repository.GetInquiryNE(req, pagination)
-
-	if err != nil {
-		return
-	}
-
-	data = result
-
-	return
-}
-
-func (u usecase) GetInquiryNEDetail(ctx context.Context, prospectID string) (data request.MetricsNE, err error) {
+func (u usecase) GenerateExcelMappingCluster() (genName, fileName string, err error) {
 
 	var (
-		trxNewEntry entity.NewEntry
+		mappingClusterBranchs []entity.InquiryMappingCluster
 	)
 
-	trxNewEntry, err = u.repository.GetInquiryNEDetail(prospectID)
-	if err != nil {
-		if err.Error() == constant.RECORD_NOT_FOUND {
-			err = errors.New(constant.ERROR_BAD_REQUEST + " - " + err.Error())
-		} else {
-			err = errors.New(constant.ERROR_UPSTREAM + " - " + err.Error())
-		}
+	mappingClusterBranchs, _, err = u.repository.GetInquiryMappingCluster(request.ReqListMappingCluster{}, nil)
+	if err != nil && err.Error() != constant.RECORD_NOT_FOUND {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping cluster branch error")
 		return
 	}
 
-	json.Unmarshal([]byte(trxNewEntry.PayloadNE), &data)
+	xlsx := excelize.NewFile()
+	defer func() {
+		if err := xlsx.Close(); err != nil {
+			return
+		}
+	}()
+
+	sheetName := "Mapping Cluster Branch"
+
+	index := xlsx.NewSheet("Sheet1")
+	xlsx.SetActiveSheet(index)
+	xlsx.SetSheetName("Sheet1", sheetName)
+
+	rowHeader := []string{"branch_id", "branch_name", "customer_status", "bpkb_name_type", "cluster"}
+
+	colSize := []float64{13, 34, 18, 20, 14}
+
+	centerAlignment := &excelize.Alignment{
+		Horizontal: "center",
+	}
+
+	boldFont := &excelize.Font{
+		Bold: true, Family: "Calibri", Size: 11, Color: "000000",
+	}
+
+	border := []excelize.Border{
+		{Type: "left", Color: "000000", Style: 1}, {Type: "top", Color: "000000", Style: 1}, {Type: "bottom", Color: "000000", Style: 1}, {Type: "right", Color: "000000", Style: 1},
+	}
+
+	colorHeader := excelize.Fill{
+		Type: "pattern", Color: []string{"#BCBCBC"}, Pattern: 1,
+	}
+
+	styleHeader, _ := xlsx.NewStyle(&excelize.Style{
+		Alignment: centerAlignment,
+		Font:      boldFont,
+		Border:    border,
+		Fill:      colorHeader,
+	})
+
+	styleBody, _ := xlsx.NewStyle(&excelize.Style{
+		Alignment: centerAlignment,
+		Border:    border,
+	})
+
+	streamWriter, err := xlsx.NewStreamWriter(sheetName)
+	if err != nil {
+		return
+	}
+
+	for rowID := 1; rowID <= len(mappingClusterBranchs)+1; rowID++ {
+		row := make([]interface{}, 5)
+		if rowID == 1 {
+			for idx, val := range rowHeader {
+				row[idx] = excelize.Cell{StyleID: styleHeader, Value: val}
+				streamWriter.SetColWidth(idx+1, idx+2, colSize[idx])
+			}
+		} else {
+			row[0] = excelize.Cell{StyleID: styleBody, Value: mappingClusterBranchs[rowID-2].BranchID}
+			row[1] = excelize.Cell{StyleID: styleBody, Value: mappingClusterBranchs[rowID-2].BranchName}
+			row[2] = excelize.Cell{StyleID: styleBody, Value: mappingClusterBranchs[rowID-2].CustomerStatus}
+			row[3] = excelize.Cell{StyleID: styleBody, Value: mappingClusterBranchs[rowID-2].BpkbNameType}
+			row[4] = excelize.Cell{StyleID: styleBody, Value: mappingClusterBranchs[rowID-2].Cluster}
+		}
+
+		cell, _ := excelize.CoordinatesToCellName(1, rowID)
+		if err = streamWriter.SetRow(cell, row); err != nil {
+			return
+		}
+	}
+
+	if err = streamWriter.Flush(); err != nil {
+		return
+	}
+
+	now := time.Now()
+	fileName = "MappingCluster_" + now.Format("20060102150405") + ".xlsx"
+	genName = utils.GenerateUUID()
+
+	if err = xlsx.SaveAs(fmt.Sprintf("./%s.xlsx", genName)); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Save excel mapping cluster error")
+		return
+	}
+
+	return
+}
+
+func (u usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, file multipart.File) (err error) {
+
+	var (
+		dataClusterBefore string
+		dataClusterAfter  string
+		history           entity.HistoryConfigChanges
+		cluster           []entity.MasterMappingCluster
+	)
+
+	f, err := excelize.OpenReader(file)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Open file excel mapping cluster error")
+		return
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			return
+		}
+	}()
+
+	sheetName := f.GetSheetName(0)
+	rows, err := f.GetRows(sheetName)
+	if err != nil {
+		return
+	}
+
+	var clusterRegex = regexp.MustCompile(`^Cluster [A-Z]$`)
+	var uniqueMappingData = make(map[string]int)
+	for i, row := range rows {
+		if i == 0 {
+			if len(row) == 0 {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "format file excel tidak sesuai: kolom pertama harus berjudul 'branch_id'")
+			} else if row[0] != "branch_id" {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "format file excel tidak sesuai: kolom pertama harus berjudul 'branch_id'")
+			} else if row[2] != "customer_status" {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "format file excel tidak sesuai: kolom ketiga harus berjudul 'customer_status'")
+			} else if row[3] != "bpkb_name_type" {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "format file excel tidak sesuai: kolom keempat harus berjudul 'bpkb_name_type'")
+			} else if len(row) < 5 {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "format file excel tidak sesuai: kolom kelima harus berjudul 'cluster'")
+			}
+		} else {
+			if len(row) == 0 {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai branch_id tidak boleh kosong")
+			}
+
+			branchID := strings.TrimSpace(row[0])
+			if branchID == "" {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai branch_id tidak boleh kosong")
+			} else if branchID == "0" {
+				branchID = constant.BRANCH_ID_PRIME_PRIORITY
+			}
+
+			customerStatus := strings.ToUpper(strings.TrimSpace(row[2]))
+			if customerStatus != constant.STATUS_KONSUMEN_NEW && customerStatus != "AO/RO" {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai customer_status harus " + constant.STATUS_KONSUMEN_NEW + " atau AO/RO")
+			}
+
+			bpkbName, err := strconv.Atoi(row[3])
+			if err != nil {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai bpkb_name_type harus 0 atau 1")
+			}
+
+			if bpkbName != 0 && bpkbName != 1 {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai bpkb_name_type harus 0 atau 1")
+			}
+
+			if len(row) < 5 {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai cluster tidak boleh kosong")
+			}
+
+			clusterStr := strings.TrimSpace(row[4])
+			if strings.EqualFold(clusterStr, constant.CLUSTER_PRIME_PRIORITY) {
+				clusterStr = strings.ToUpper(clusterStr)
+			} else {
+				clusterStr = strings.Title(strings.ToLower(clusterStr))
+			}
+
+			if clusterStr != constant.CLUSTER_PRIME_PRIORITY && !clusterRegex.MatchString(clusterStr) {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + ", nilai cluster tidak sesuai ketentuan")
+			}
+
+			uniqueKey := fmt.Sprintf("%s-%s-%d", branchID, customerStatus, bpkbName)
+
+			if rowIndex, exists := uniqueMappingData[uniqueKey]; exists {
+				return errors.New(constant.ERROR_BAD_REQUEST + " - " + "row " + strconv.Itoa(i+1) + " dan row " + strconv.Itoa(rowIndex+1) + ", entri duplikat untuk nilai branch_id, customer_status, dan bpkb_name_type")
+			}
+
+			uniqueMappingData[uniqueKey] = i
+
+			cluster = append(cluster, entity.MasterMappingCluster{
+				BranchID:       branchID,
+				CustomerStatus: customerStatus,
+				BpkbNameType:   bpkbName,
+				Cluster:        clusterStr,
+			})
+		}
+	}
+
+	if len(cluster) > 0 {
+		existingCluster, err := u.repository.GetMappingCluster()
+		if err != nil && err.Error() != constant.RECORD_NOT_FOUND {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get existing mapping cluster branch error")
+			return err
+		}
+
+		jsonDataBefore, err := json.Marshal(existingCluster)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Error converting to JSON mapping cluster before")
+			return err
+		}
+
+		dataClusterBefore = string(jsonDataBefore)
+
+		jsonDataAfter, err := json.Marshal(cluster)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Error converting to JSON mapping cluster after")
+			return err
+		}
+
+		dataClusterAfter = string(jsonDataAfter)
+
+		history = entity.HistoryConfigChanges{
+			ID:         utils.GenerateUUID(),
+			ConfigID:   "kmb_mapping_cluster_branch",
+			ObjectName: "kmb_mapping_cluster_branch",
+			Action:     "UPDATE",
+			DataBefore: dataClusterBefore,
+			DataAfter:  dataClusterAfter,
+			CreatedBy:  req.UserID,
+			CreatedAt:  time.Now(),
+		}
+
+		err = u.repository.BatchUpdateMappingCluster(cluster, history)
+		if err != nil {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - " + err.Error())
+			return err
+		}
+	} else {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Mapping cluster branch dalam file excel kosong")
+		return err
+	}
+
+	return
+}
+
+func (u usecase) GetMappingClusterBranch(req request.ReqListMappingClusterBranch) (data []entity.ConfinsBranch, err error) {
+
+	data, err = u.repository.GetMappingClusterBranch(req)
+
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (u usecase) GetMappingClusterChangeLog(pagination interface{}) (data []entity.MappingClusterChangeLog, rowTotal int, err error) {
+
+	data, rowTotal, err = u.repository.GetMappingClusterChangeLog(pagination)
+
+	if err != nil {
+		return
+	}
 
 	return
 }

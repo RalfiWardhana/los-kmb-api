@@ -1120,6 +1120,171 @@ func (r repoHandler) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 	return
 }
 
+func (r repoHandler) SubmitNE(req request.MetricsNE, filtering request.Filtering, elaboreateLTV request.ElaborateLTV, journey request.Metrics) (err error) {
+	err = r.NewKmb.Transaction(func(tx *gorm.DB) error {
+		var encrypted entity.Encrypted
+
+		if err := tx.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS LegalName,  SCP.dbo.ENC_B64('SEC','%s') AS IDNumber`,
+			req.CustomerPersonal.LegalName, req.CustomerPersonal.IDNumber)).Scan(&encrypted).Error; err != nil {
+			return err
+		}
+
+		PayloadNE, _ := json.Marshal(req)
+		PayloadFiltering, _ := json.Marshal(filtering)
+		PayloadLTV, _ := json.Marshal(elaboreateLTV)
+		PayloadJourney, _ := json.Marshal(journey)
+		ne := entity.NewEntry{
+			ProspectID:       req.Transaction.ProspectID,
+			BranchID:         req.Transaction.BranchID,
+			IDNumber:         encrypted.IDNumber,
+			LegalName:        encrypted.LegalName,
+			BirthDate:        req.CustomerPersonal.BirthDate,
+			CreatedByID:      req.CreatedBy.CreatedByID,
+			CreatedByName:    req.CreatedBy.CreatedByName,
+			PayloadNE:        utils.SafeJsonReplacer(string(PayloadNE)),
+			PayloadFiltering: utils.SafeJsonReplacer(string(PayloadFiltering)),
+			PayloadLTV:       utils.SafeJsonReplacer(string(PayloadLTV)),
+			PayloadJourney:   utils.SafeJsonReplacer(string(PayloadJourney)),
+		}
+
+		if err := tx.Create(&ne).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+
+	return
+}
+
+func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface{}) (data []entity.InquiryDataNE, rowTotal int, err error) {
+
+	var (
+		filter         string
+		filterBranch   string
+		filterPaginate string
+		getRegion      []entity.RegionBranch
+	)
+
+	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
+
+	if req.MultiBranch == "1" {
+		getRegion, _ = r.GetRegionBranch(req.UserID)
+
+		if len(getRegion) > 0 {
+			extractBranchIDUser := ""
+			userAllRegion := false
+			for _, value := range getRegion {
+				if strings.ToUpper(value.RegionName) == constant.REGION_ALL {
+					userAllRegion = true
+					break
+				} else if value.BranchMember != "" {
+					branch := strings.Trim(strings.ReplaceAll(value.BranchMember, `"`, `'`), "'")
+					replace := strings.ReplaceAll(branch, `[`, ``)
+					branchMember := strings.ReplaceAll(replace, `]`, ``)
+					extractBranchIDUser += branchMember
+					if value != getRegion[len(getRegion)-1] {
+						extractBranchIDUser += ","
+					}
+				}
+			}
+			if userAllRegion {
+				filterBranch += ""
+			} else {
+				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
+			}
+		} else {
+			filterBranch += ""
+			if req.BranchID != "999" {
+				filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+			}
+		}
+	} else {
+		filterBranch = utils.GenerateBranchFilter(req.BranchID)
+	}
+
+	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
+
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.NewKmb.Raw(fmt.Sprintf(`
+		SELECT
+		COUNT(tt.ProspectID) AS totalRow
+		FROM
+		(
+			SELECT
+			tm.BranchID,
+			tm.ProspectID,
+			tm.created_at,
+			scp.dbo.DEC_B64('SEC', tm.IDNumber) AS IDNumber,
+			scp.dbo.DEC_B64('SEC', tm.LegalName) AS LegalName
+		FROM
+		trx_new_entry tm WITH (nolock)
+		) AS tt %s`, filter)).Scan(&row).Error; err != nil {
+			return
+		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
+	}
+
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT tt.* FROM (
+	SELECT
+	tm.ProspectID,
+	tm.BranchID,
+	tm.created_at,
+	scp.dbo.DEC_B64('SEC', tm.IDNumber) AS IDNumber,
+	scp.dbo.DEC_B64('SEC', tm.LegalName) AS LegalName,
+	tm.BirthDate,
+	CASE
+	WHEN tf.next_process = 1 THEN 'PASS'
+	WHEN tf.next_process = 0 THEN 'REJECT'
+	ELSE NULL END AS ResultFiltering,
+	tf.reason as Reason
+  	FROM
+	trx_new_entry tm WITH (nolock)
+	LEFT JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
+	) AS tt %s ORDER BY tt.created_at DESC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	if len(data) == 0 {
+		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
+	return
+}
+
+func (r repoHandler) GetInquiryNEDetail(prospectID string) (data entity.NewEntry, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.NewKmb.Raw("SELECT payload_ne FROM trx_new_entry WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) GetInternalRecord(prospectID string) (record []entity.TrxInternalRecord, err error) {
 	var x sql.TxOptions
 
@@ -3024,89 +3189,75 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 	})
 }
 
-func (r repoHandler) SubmitNE(req request.MetricsNE, filtering request.Filtering, elaboreateLTV request.ElaborateLTV, journey request.Metrics) (err error) {
-	err = r.NewKmb.Transaction(func(tx *gorm.DB) error {
-		var encrypted entity.Encrypted
+func (r repoHandler) GetMappingCluster() (data []entity.MasterMappingCluster, err error) {
+	var x sql.TxOptions
 
-		if err := tx.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS LegalName,  SCP.dbo.ENC_B64('SEC','%s') AS IDNumber`,
-			req.CustomerPersonal.LegalName, req.CustomerPersonal.IDNumber)).Scan(&encrypted).Error; err != nil {
-			return err
-		}
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
-		PayloadNE, _ := json.Marshal(req)
-		PayloadFiltering, _ := json.Marshal(filtering)
-		PayloadLTV, _ := json.Marshal(elaboreateLTV)
-		PayloadJourney, _ := json.Marshal(journey)
-		ne := entity.NewEntry{
-			ProspectID:       req.Transaction.ProspectID,
-			BranchID:         req.Transaction.BranchID,
-			IDNumber:         encrypted.IDNumber,
-			LegalName:        encrypted.LegalName,
-			BirthDate:        req.CustomerPersonal.BirthDate,
-			CreatedByID:      req.CreatedBy.CreatedByID,
-			CreatedByName:    req.CreatedBy.CreatedByName,
-			PayloadNE:        utils.SafeJsonReplacer(string(PayloadNE)),
-			PayloadFiltering: utils.SafeJsonReplacer(string(PayloadFiltering)),
-			PayloadLTV:       utils.SafeJsonReplacer(string(PayloadLTV)),
-			PayloadJourney:   utils.SafeJsonReplacer(string(PayloadJourney)),
-		}
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
 
-		if err := tx.Create(&ne).Error; err != nil {
-			return err
+	db := r.losDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.losDB.Raw("SELECT * FROM kmb_mapping_cluster_branch WITH (nolock) ORDER BY branch_id ASC").Scan(&data).Error; err != nil {
+
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
 		}
-		return nil
-	})
+		return
+	}
 
 	return
 }
 
-func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface{}) (data []entity.InquiryDataNE, rowTotal int, err error) {
+func (r repoHandler) GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error) {
 
 	var (
-		filter         string
-		filterBranch   string
+		filterBuilder  strings.Builder
+		conditions     []string
 		filterPaginate string
-		getRegion      []entity.RegionBranch
+		x              sql.TxOptions
 	)
 
-	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
-	if req.MultiBranch == "1" {
-		getRegion, _ = r.GetRegionBranch(req.UserID)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
 
-		if len(getRegion) > 0 {
-			extractBranchIDUser := ""
-			userAllRegion := false
-			for _, value := range getRegion {
-				if strings.ToUpper(value.RegionName) == constant.REGION_ALL {
-					userAllRegion = true
-					break
-				} else if value.BranchMember != "" {
-					branch := strings.Trim(strings.ReplaceAll(value.BranchMember, `"`, `'`), "'")
-					replace := strings.ReplaceAll(branch, `[`, ``)
-					branchMember := strings.ReplaceAll(replace, `]`, ``)
-					extractBranchIDUser += branchMember
-					if value != getRegion[len(getRegion)-1] {
-						extractBranchIDUser += ","
-					}
-				}
-			}
-			if userAllRegion {
-				filterBranch += ""
-			} else {
-				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
-			}
-		} else {
-			filterBranch += ""
-			if req.BranchID != "999" {
-				filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
-			}
-		}
-	} else {
-		filterBranch = utils.GenerateBranchFilter(req.BranchID)
+	db := r.losDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if req.Search != "" {
+		conditions = append(conditions, fmt.Sprintf("(kmcb.branch_id LIKE '%%%[1]s%%' OR cb.BranchName LIKE '%%%[1]s%%')", req.Search))
 	}
 
-	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
+	if req.BranchID != "" {
+		numbers := strings.Split(req.BranchID, ",")
+		for i, number := range numbers {
+			numbers[i] = "'" + number + "'"
+		}
+		conditions = append(conditions, fmt.Sprintf("kmcb.branch_id IN (%s)", strings.Join(numbers, ",")))
+	}
+
+	if req.CustomerStatus != "" {
+		conditions = append(conditions, fmt.Sprintf("kmcb.customer_status = '%s'", req.CustomerStatus))
+	}
+
+	if req.BPKBNameType != "" {
+		conditions = append(conditions, fmt.Sprintf("kmcb.bpkb_name_type = '%s'", req.BPKBNameType))
+	}
+
+	if req.Cluster != "" {
+		conditions = append(conditions, fmt.Sprintf("kmcb.cluster = '%s'", req.Cluster))
+	}
+
+	if len(conditions) > 0 {
+		filterBuilder.WriteString("WHERE ")
+		filterBuilder.WriteString(strings.Join(conditions, " AND "))
+	}
+
+	filter := filterBuilder.String()
 
 	if pagination != nil {
 		page, _ := json.Marshal(pagination)
@@ -3120,20 +3271,13 @@ func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface
 
 		var row entity.TotalRow
 
-		if err = r.NewKmb.Raw(fmt.Sprintf(`
-		SELECT
-		COUNT(tt.ProspectID) AS totalRow
-		FROM
-		(
-			SELECT
-			tm.BranchID,
-			tm.ProspectID,
-			tm.created_at,
-			scp.dbo.DEC_B64('SEC', tm.IDNumber) AS IDNumber,
-			scp.dbo.DEC_B64('SEC', tm.LegalName) AS LegalName
-		FROM
-		trx_new_entry tm WITH (nolock)
-		) AS tt %s`, filter)).Scan(&row).Error; err != nil {
+		if err = r.losDB.Raw(fmt.Sprintf(`SELECT
+				COUNT(*) AS totalRow
+			FROM (
+				SELECT kmcb.*, cb.BranchName AS branch_name 
+				FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+				LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID %s
+			) AS y`, filter)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -3142,23 +3286,11 @@ func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface
 		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
 	}
 
-	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT tt.* FROM (
-	SELECT
-	tm.ProspectID,
-	tm.BranchID,
-	tm.created_at,
-	scp.dbo.DEC_B64('SEC', tm.IDNumber) AS IDNumber,
-	scp.dbo.DEC_B64('SEC', tm.LegalName) AS LegalName,
-	tm.BirthDate,
-	CASE
-	WHEN tf.next_process = 1 THEN 'PASS'
-	WHEN tf.next_process = 0 THEN 'REJECT'
-	ELSE NULL END AS ResultFiltering,
-	tf.reason as Reason
-  	FROM
-	trx_new_entry tm WITH (nolock)
-	LEFT JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
-	) AS tt %s ORDER BY tt.created_at DESC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT
+		kmcb.*, 
+		cb.BranchName AS branch_name
+		FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+		LEFT JOIN confins_branch cb ON kmcb.branch_id = cb.BranchID %s ORDER BY kmcb.branch_id ASC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
 		return
 	}
 
@@ -3168,23 +3300,144 @@ func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface
 	return
 }
 
-func (r repoHandler) GetInquiryNEDetail(prospectID string) (data entity.NewEntry, err error) {
-	var x sql.TxOptions
+func (r repoHandler) BatchUpdateMappingCluster(data []entity.MasterMappingCluster, history entity.HistoryConfigChanges) (err error) {
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+	txOptions := &sql.TxOptions{}
+
+	db := r.losDB.BeginTx(ctx, txOptions)
+	defer db.Commit()
+
+	defer func() {
+		if r := recover(); r != nil || err != nil {
+			db.Rollback()
+		}
+	}()
+
+	var cluster entity.MasterMappingCluster
+	if err = db.Delete(&cluster).Error; err != nil {
+		return err
+	}
+
+	for _, val := range data {
+		if err = db.Create(&val).Error; err != nil {
+			return err
+		}
+	}
+
+	if err = db.Create(&history).Error; err != nil {
+		return err
+	}
+
+	return err
+}
+
+func (r repoHandler) GetMappingClusterBranch(req request.ReqListMappingClusterBranch) (data []entity.ConfinsBranch, err error) {
+	var (
+		filterBuilder strings.Builder
+		conditions    []string
+		x             sql.TxOptions
+	)
+
+	if req.BranchID != "" {
+		numbers := strings.Split(req.BranchID, ",")
+		for i, number := range numbers {
+			numbers[i] = "'" + number + "'"
+		}
+		conditions = append(conditions, fmt.Sprintf("kmcb.branch_id IN (%s)", strings.Join(numbers, ",")))
+	}
+
+	if req.BranchName != "" {
+		conditions = append(conditions, fmt.Sprintf("cb.BranchName LIKE '%%%[1]s%%'", req.BranchName))
+	}
+
+	if len(conditions) > 0 {
+		filterBuilder.WriteString("WHERE ")
+		filterBuilder.WriteString(strings.Join(conditions, " AND "))
+	}
+
+	filter := filterBuilder.String()
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
 
-	db := r.NewKmb.BeginTx(ctx, &x)
+	db := r.losDB.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.NewKmb.Raw("SELECT payload_ne FROM trx_new_entry WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&data).Error; err != nil {
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT DISTINCT 
+		kmcb.branch_id AS BranchID, 
+		CASE 
+			WHEN kmcb.branch_id = '000' THEN 'PRIME PRIORITY'
+			ELSE cb.BranchName 
+		END AS BranchName 
+		FROM kmb_mapping_cluster_branch kmcb WITH (nolock)
+		LEFT JOIN confins_branch cb ON cb.BranchID = kmcb.branch_id %s 
+		ORDER BY kmcb.branch_id ASC`, filter)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
 		}
 		return
 	}
 
+	return
+}
+
+func (r repoHandler) GetMappingClusterChangeLog(pagination interface{}) (data []entity.MappingClusterChangeLog, rowTotal int, err error) {
+	var (
+		filterPaginate string
+		x              sql.TxOptions
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.losDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.losDB.Raw(`SELECT 
+				COUNT(*) AS totalRow
+			FROM history_config_changes hcc 
+			LEFT JOIN user_details ud ON ud.user_id = hcc.created_by 
+			WHERE hcc.config_id = 'kmb_mapping_cluster_branch'
+		`).Scan(&row).Error; err != nil {
+			return
+		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
+	}
+
+	if err = r.losDB.Raw(fmt.Sprintf(`SELECT
+			hcc.id, hcc.data_before, hcc.data_after, hcc.created_at, ud.name AS user_name
+		FROM history_config_changes hcc 
+		LEFT JOIN user_details ud ON ud.user_id = hcc.created_by 
+		WHERE hcc.config_id = 'kmb_mapping_cluster_branch'
+		ORDER BY hcc.created_at DESC %s`, filterPaginate)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	if len(data) == 0 {
+		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
 	return
 }

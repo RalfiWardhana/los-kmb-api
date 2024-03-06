@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"los-kmb-api/domain/elaborate/interfaces"
 	"los-kmb-api/models/entity"
@@ -29,9 +30,7 @@ type (
 	}
 )
 
-func NewMultiUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient) (interfaces.MultiUsecase, interfaces.Usecase) {
-	usecase := NewUsecase(repository, httpclient)
-
+func NewMultiUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient, usecase interfaces.Usecase) (interfaces.MultiUsecase, interfaces.Usecase) {
 	return &multiUsecase{
 		usecase:    usecase,
 		repository: repository,
@@ -86,6 +85,10 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 
 	// get the result elaborated scheme
 	resultElaborate, err := u.usecase.ResultElaborate(ctx, reqs)
+	if err != nil {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - " + err.Error())
+		return
+	}
 
 	updateElaborate.IsMapping = 1 //default, for mapping is exist
 
@@ -96,12 +99,6 @@ func (u multiUsecase) Elaborate(ctx context.Context, reqs request.BodyRequestEla
 		updateElaborate.Decision = constant.DECISION_PASS
 		updateElaborate.Reason = constant.REASON_PASS_ELABORATE
 	} else {
-
-		if err != nil {
-			err = fmt.Errorf("failed get result elaborate")
-			return
-		}
-
 		if resultElaborate.Decision == constant.DECISION_REJECT {
 			max_ltv = resultElaborate.LTV
 		}
@@ -272,7 +269,7 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 
 	// Get Result from Mapping Elaborate
 	resultElaborate, err := u.repository.GetResultElaborate(branchId, statusKonsumen, bpkbNameType, resultPefindo, tenor, ageVehicle, ltv, bakiDebet)
-	if err != nil {
+	if err != nil && err.Error() != constant.RECORD_NOT_FOUND {
 		err = fmt.Errorf("failed get mapping elaborate ltv")
 		return
 	}
