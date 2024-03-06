@@ -292,6 +292,57 @@ func (_m *Repository) GetInquiryMappingCluster(req request.ReqListMappingCluster
 	return r0, r1, r2
 }
 
+// GetInquiryNE provides a mock function with given fields: req, pagination
+func (_m *Repository) GetInquiryNE(req request.ReqInquiryNE, pagination interface{}) ([]entity.InquiryDataNE, int, error) {
+	ret := _m.Called(req, pagination)
+
+	var r0 []entity.InquiryDataNE
+	if rf, ok := ret.Get(0).(func(request.ReqInquiryNE, interface{}) []entity.InquiryDataNE); ok {
+		r0 = rf(req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.InquiryDataNE)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(request.ReqInquiryNE, interface{}) int); ok {
+		r1 = rf(req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(request.ReqInquiryNE, interface{}) error); ok {
+		r2 = rf(req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// GetInquiryNEDetail provides a mock function with given fields: prospectID
+func (_m *Repository) GetInquiryNEDetail(prospectID string) (entity.NewEntry, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 entity.NewEntry
+	if rf, ok := ret.Get(0).(func(string) entity.NewEntry); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.NewEntry)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetInquiryPrescreening provides a mock function with given fields: req, pagination
 func (_m *Repository) GetInquiryPrescreening(req request.ReqInquiryPrescreening, pagination interface{}) ([]entity.InquiryPrescreening, int, error) {
 	ret := _m.Called(req, pagination)
