@@ -26,5 +26,6 @@ require (
 	github.com/stretchr/testify v1.7.1
 	github.com/swaggo/echo-swagger v1.0.0
 	github.com/swaggo/swag v1.6.9
+	github.com/xuri/excelize/v2 v2.6.1
 	gopkg.in/go-playground/validator.v9 v9.31.0
 )

@@ -808,3 +808,20 @@ type ReqInquiryApproval struct {
 	UserID      string `json:"user_id" validate:"required,max=20"`
 	Alias       string `json:"alias" validate:"required,max=3"`
 }
+
+type ReqListMappingCluster struct {
+	Search         string `json:"search"`
+	BranchID       string `json:"branch_id" example:"400"`
+	CustomerStatus string `json:"customer_status" validate:"max=10" example:"AO/RO"`
+	BPKBNameType   string `json:"bpkb_name_type" validate:"max=1" example:"0"`
+	Cluster        string `json:"cluster" validate:"max=20" example:"Cluster A"`
+}
+
+type ReqUploadMappingCluster struct {
+	UserID string `form:"user_id" validate:"required,max=20"`
+}
+
+type ReqListMappingClusterBranch struct {
+	BranchID   string `json:"branch_id" example:"400"`
+	BranchName string `json:"customer_status" example:"BEKASI"`
+}
