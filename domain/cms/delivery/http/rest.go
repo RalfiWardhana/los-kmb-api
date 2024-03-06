@@ -423,6 +423,141 @@ func (c *handlerCMS) GetAkkk(ctx echo.Context) (err error) {
 }
 
 // CMS NEW KMB Tools godoc
+// @Description Api Submit NE
+// @Tags Submit NE
+// @Produce json
+// @Param body body request.MetricsNE true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.ApiResponse}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/ne/submit [post]
+func (c *handlerCMS) SubmitNE(ctx echo.Context) (err error) {
+
+	var (
+		resp        interface{}
+		accessToken = middlewares.UserInfoData.AccessToken
+		req         request.MetricsNE
+		ctxJson     error
+	)
+
+	// Save Log Orchestrator
+	defer func() {
+		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
+		c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/ne/submit", constant.METHOD_POST, req.Transaction.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
+	}()
+
+	if err := ctx.Bind(&req); err != nil {
+		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Error", err)
+		return ctxJson
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Error", req, err)
+		return ctxJson
+	}
+
+	payloadFiltering, err := c.usecase.SubmitNE(ctx.Request().Context(), req)
+
+	if err != nil {
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Error", req, err)
+		return ctxJson
+	}
+
+	//produce filtering for NE
+	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_FILTERING, req.Transaction.ProspectID, utils.StructToMap(payloadFiltering), 0)
+
+	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Success", req, nil)
+
+	return ctxJson
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api CA
+// @Tags CA
+// @Produce json
+// @Param body body request.ReqInquiryCa true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.InquiryRow}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/ne/inquiry [get]
+func (c *handlerCMS) NEInquiry(ctx echo.Context) (err error) {
+
+	var accessToken = middlewares.UserInfoData.AccessToken
+
+	req := request.ReqInquiryNE{
+		Search:      ctx.QueryParam("search"),
+		BranchID:    ctx.QueryParam("branch_id"),
+		MultiBranch: ctx.QueryParam("multi_branch"),
+		Filter:      ctx.QueryParam("filter"),
+		UserID:      ctx.QueryParam("user_id"),
+	}
+
+	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	pagination := request.RequestPagination{
+		Page:  page,
+		Limit: 10,
+	}
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", req, err)
+	}
+
+	data, rowTotal, err := c.usecase.GetInquiryNE(ctx.Request().Context(), req, pagination)
+
+	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", req, response.InquiryRow{Inquiry: data})
+	}
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", req, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", req, response.InquiryRow{
+		Inquiry:        data,
+		RecordFiltered: len(data),
+		RecordTotal:    rowTotal,
+	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api CA
+// @Tags CA
+// @Produce json
+// @Param prospect_id path string true "Prospect ID"
+// @Success 200 {object} response.ApiResponse{data=request.MetricsNE}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/ne/inquiry/{prospect_id} [get]
+func (c *handlerCMS) NEInquiryDetail(ctx echo.Context) (err error) {
+
+	var (
+		ctxJson error
+	)
+
+	prospectID := ctx.Param("prospect_id")
+
+	if prospectID == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID does not exist")
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry Detail", prospectID, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.GetInquiryNEDetail(ctx.Request().Context(), prospectID)
+
+	if err != nil {
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry Detail", prospectID, err)
+		return ctxJson
+	}
+
+	ctxJson, _ = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry Detail", prospectID, data)
+	return ctxJson
+}
+
+// CMS NEW KMB Tools godoc
 // @Description Api CA
 // @Tags CA
 // @Produce json
@@ -754,140 +889,5 @@ func (c *handlerCMS) SubmitApproval(ctx echo.Context) (err error) {
 		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(responseEvent), 0)
 	}
 
-	return ctxJson
-}
-
-// CMS NEW KMB Tools godoc
-// @Description Api Submit NE
-// @Tags Submit NE
-// @Produce json
-// @Param body body request.MetricsNE true "Body payload"
-// @Success 200 {object} response.ApiResponse{data=response.ApiResponse}
-// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
-// @Failure 500 {object} response.ApiResponse{}
-// @Router /api/v3/kmb/cms/ne/submit [post]
-func (c *handlerCMS) SubmitNE(ctx echo.Context) (err error) {
-
-	var (
-		resp        interface{}
-		accessToken = middlewares.UserInfoData.AccessToken
-		req         request.MetricsNE
-		ctxJson     error
-	)
-
-	// Save Log Orchestrator
-	defer func() {
-		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
-		c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/ne/submit", constant.METHOD_POST, req.Transaction.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
-	}()
-
-	if err := ctx.Bind(&req); err != nil {
-		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Error", err)
-		return ctxJson
-	}
-
-	if err := ctx.Validate(&req); err != nil {
-		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Error", req, err)
-		return ctxJson
-	}
-
-	payloadFiltering, err := c.usecase.SubmitNE(ctx.Request().Context(), req)
-
-	if err != nil {
-		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Error", req, err)
-		return ctxJson
-	}
-
-	//produce filtering for NE
-	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_FILTERING, req.Transaction.ProspectID, utils.StructToMap(payloadFiltering), 0)
-
-	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Success", req, nil)
-
-	return ctxJson
-}
-
-// CMS NEW KMB Tools godoc
-// @Description Api CA
-// @Tags CA
-// @Produce json
-// @Param body body request.ReqInquiryCa true "Body payload"
-// @Success 200 {object} response.ApiResponse{data=response.InquiryRow}
-// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
-// @Failure 500 {object} response.ApiResponse{}
-// @Router /api/v3/kmb/cms/ne/inquiry [get]
-func (c *handlerCMS) NEInquiry(ctx echo.Context) (err error) {
-
-	var accessToken = middlewares.UserInfoData.AccessToken
-
-	req := request.ReqInquiryNE{
-		Search:      ctx.QueryParam("search"),
-		BranchID:    ctx.QueryParam("branch_id"),
-		MultiBranch: ctx.QueryParam("multi_branch"),
-		Filter:      ctx.QueryParam("filter"),
-		UserID:      ctx.QueryParam("user_id"),
-	}
-
-	page, _ := strconv.Atoi(ctx.QueryParam("page"))
-	pagination := request.RequestPagination{
-		Page:  page,
-		Limit: 10,
-	}
-
-	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", err)
-	}
-
-	if err := ctx.Validate(&req); err != nil {
-		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", req, err)
-	}
-
-	data, rowTotal, err := c.usecase.GetInquiryNE(ctx.Request().Context(), req, pagination)
-
-	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
-		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", req, response.InquiryRow{Inquiry: data})
-	}
-
-	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", req, err)
-	}
-
-	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", req, response.InquiryRow{
-		Inquiry:        data,
-		RecordFiltered: len(data),
-		RecordTotal:    rowTotal,
-	})
-}
-
-// CMS NEW KMB Tools godoc
-// @Description Api CA
-// @Tags CA
-// @Produce json
-// @Param prospect_id path string true "Prospect ID"
-// @Success 200 {object} response.ApiResponse{data=request.MetricsNE}
-// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
-// @Failure 500 {object} response.ApiResponse{}
-// @Router /api/v3/kmb/cms/ne/inquiry/{prospect_id} [get]
-func (c *handlerCMS) NEInquiryDetail(ctx echo.Context) (err error) {
-
-	var (
-		ctxJson error
-	)
-
-	prospectID := ctx.Param("prospect_id")
-
-	if prospectID == "" {
-		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID does not exist")
-		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry Detail", prospectID, err)
-		return ctxJson
-	}
-
-	data, err := c.usecase.GetInquiryNEDetail(ctx.Request().Context(), prospectID)
-
-	if err != nil {
-		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry Detail", prospectID, err)
-		return ctxJson
-	}
-
-	ctxJson, _ = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry Detail", prospectID, data)
 	return ctxJson
 }
