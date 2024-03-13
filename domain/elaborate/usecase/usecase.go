@@ -235,11 +235,6 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 			data.Decision = constant.DECISION_REJECT
 			return
 		}
-	} else if bakiDebet > constant.BAKI_DEBET { //This should be reject in Filtering tho
-		data.Code = constant.CODE_REJECT_ELABORATE
-		data.Reason = constant.REASON_REJECT_ELABORATE
-		data.Decision = constant.DECISION_REJECT
-		return
 	}
 
 	// Set Result Pefindo for HIT/NO HIT based on Filtering Result
