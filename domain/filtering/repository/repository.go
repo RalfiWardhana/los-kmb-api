@@ -30,24 +30,6 @@ func NewRepository(minilosKmb, KpLos, dummy *gorm.DB) interfaces.Repository {
 	}
 }
 
-func (r repoHandler) DummyDataPbk(noktp string) (data entity.DummyPBK, err error) {
-	var x sql.TxOptions
-
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.dummy.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	if err = r.dummy.Raw("SELECT * FROM dbo.dummy_pefindo_kmb WHERE IDNumber = ?", noktp).Scan(&data).Error; err != nil {
-		return
-	}
-
-	return
-}
-
 func (r repoHandler) DataGetMappingDp(branchID, statusKonsumen string) (data []entity.RangeBranchDp, err error) {
 	var x sql.TxOptions
 
