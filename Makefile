@@ -7,6 +7,10 @@ coverage:
 	@go tool cover -html="unit_test/coverage.out"
 run:
 	@go run app/main.go
+mock_filtering:
+	@mockery --all --dir=domain/filtering/interfaces --output domain/filtering/interfaces/mocks --case underscore
+mock_elaborate:
+	@mockery --all --dir=domain/elaborate/interfaces --output domain/elaborate/interfaces/mocks --case underscore
 mock_kmb:
 	@mockery --all --dir=domain/kmb/interfaces --output domain/kmb/interfaces/mocks --case underscore
 mock_filtering_new:

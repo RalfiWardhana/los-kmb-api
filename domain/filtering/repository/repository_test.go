@@ -32,32 +32,6 @@ func structToSlice(data interface{}) []driver.Value {
 	return values
 }
 
-func TestDummyDataPbk(t *testing.T) {
-	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
-
-	sqlDB, mock, _ := sqlmock.New()
-	defer sqlDB.Close()
-
-	gormDB, _ := gorm.Open("sqlite3", sqlDB)
-	gormDB.LogMode(true)
-
-	gormDB = gormDB.Debug()
-
-	newDB := NewRepository(gormDB, gormDB, gormDB)
-
-	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM dbo.dummy_pefindo_kmb WHERE IDNumber = ?")).
-		WithArgs("TST001").
-		WillReturnRows(sqlmock.NewRows([]string{"prospect_id"}).
-			AddRow("TST001"))
-	mock.ExpectCommit()
-
-	_, err := newDB.DummyDataPbk("TST001")
-	if err != nil {
-		t.Errorf("error '%s' was not expected, but got: ", err)
-	}
-}
-
 func TestGetMappingDp(t *testing.T) {
 	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 

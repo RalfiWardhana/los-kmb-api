@@ -233,6 +233,7 @@ type PefindoResult struct {
 	WoContract                    bool        `json:"wo_contract"`
 	WoAdaAgunan                   bool        `json:"wo_ada_agunan"`
 	TotalBakiDebetNonAgunan       float64     `json:"total_baki_debet_non_agunan"`
+	TotalBakiDebetBermasalah      float64     `json:"total_baki_debet_bermasalah"`
 	DetailReport                  string      `json:"detail_report"`
 	Category                      interface{} `json:"category"`
 	MaxOverdueKORules             interface{} `json:"max_overdue_ko_rules"`
@@ -249,6 +250,7 @@ type PefindoResultKonsumen struct {
 	WoContract                             int         `json:"wo_contract"`
 	WoAdaAgunan                            int         `json:"wo_ada_agunan"`
 	BakiDebetNonAgunan                     float64     `json:"baki_debet_non_agunan"`
+	TotalBakiDebetBermasalah               float64     `json:"total_baki_debet_bermasalah"`
 	DetailReport                           string      `json:"detail_report"`
 	Plafon                                 float64     `json:"plafon"`
 	FasilitasAktif                         int         `json:"fasilitas_aktif"`
@@ -276,6 +278,7 @@ type PefindoResultPasangan struct {
 	WoContract                             int         `json:"wo_contract"`
 	WoAdaAgunan                            int         `json:"wo_ada_agunan"`
 	BakiDebetNonAgunan                     float64     `json:"baki_debet_non_agunan"`
+	TotalBakiDebetBermasalah               float64     `json:"total_baki_debet_bermasalah"`
 	DetailReport                           string      `json:"detail_report"`
 	Plafon                                 float64     `json:"plafon"`
 	FasilitasAktif                         int         `json:"fasilitas_aktif"`

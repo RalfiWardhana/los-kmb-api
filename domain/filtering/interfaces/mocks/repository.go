@@ -57,27 +57,6 @@ func (_m *Repository) DataGetMappingDp(branchID string, statusKonsumen string) (
 	return r0, r1
 }
 
-// DummyDataPbk provides a mock function with given fields: query
-func (_m *Repository) DummyDataPbk(query string) (entity.DummyPBK, error) {
-	ret := _m.Called(query)
-
-	var r0 entity.DummyPBK
-	if rf, ok := ret.Get(0).(func(string) entity.DummyPBK); ok {
-		r0 = rf(query)
-	} else {
-		r0 = ret.Get(0).(entity.DummyPBK)
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(query)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // SaveData provides a mock function with given fields: data
 func (_m *Repository) SaveData(data entity.ApiDupcheckKmb) error {
 	ret := _m.Called(data)
