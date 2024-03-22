@@ -256,7 +256,9 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 		if filteringResult == (entity.ApiDupcheckKmbUpdate{}) {
 			resultPefindo = reqs.Data.ResultPefindo
 		} else {
-			if resultPefindo == constant.DECISION_PASS {
+			if filteringResult.ResultPefindoIncludeAll != "" {
+				resultPefindo = filteringResult.ResultPefindoIncludeAll
+			} else {
 				if *filteringResult.PefindoScore == constant.UNSCORE_PBK {
 					resultPefindo = constant.DECISION_PBK_NO_HIT
 				} else {

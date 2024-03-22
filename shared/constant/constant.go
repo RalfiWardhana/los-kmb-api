@@ -328,10 +328,12 @@ const (
 	CODE_PASS_ELABORATE              = 9601
 	CODE_REJECT_ELABORATE            = 9602
 	CODE_REJECT_NTF_ELABORATE        = 9603
+	CODE_REJECT_CLUSTER_E_F          = 9604
 	RANGE_CLUSTER_BAKI_DEBET_REJECT  = 3000000
 	REASON_PASS_ELABORATE            = "PASS - Elaborated Scheme"
 	REASON_REJECT_ELABORATE          = "REJECT - Elaborated Scheme"
 	REASON_REJECT_NTF_ELABORATE      = "REJECT - NTF Tidak Sesuai Threshold"
+	REASON_REJECT_CLUSTER_E_F        = "%s, Baki Debet > 3 Juta - 20 Juta & Tidak dapat dibiayai"
 	CLUSTER_C                        = "Cluster C"
 	CLUSTER_E                        = "Cluster E"
 	CLUSTER_F                        = "Cluster F"
