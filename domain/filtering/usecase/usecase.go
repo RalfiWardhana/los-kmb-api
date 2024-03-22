@@ -757,7 +757,6 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 					// BPKB Nama Sama
 					if bpkbName == constant.NAMA_SAMA {
 						if pefindoResult.WoContract { //Wo Contract Yes
-							data.TotalBakiDebet = pefindoResult.TotalBakiDebetNonAgunan
 
 							if pefindoResult.WoAdaAgunan { //Wo Agunan Yes
 
@@ -807,10 +806,8 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 								}
 							}
 						} else { //Wo Contract No
-							data.TotalBakiDebet = pefindoResult.TotalBakiDebetBermasalah
-
 							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
-								if pefindoResult.TotalBakiDebetBermasalah <= constant.BAKI_DEBET {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = 1
 									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 								} else {
@@ -819,7 +816,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 								}
 
 							} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
-								if pefindoResult.TotalBakiDebetBermasalah <= constant.BAKI_DEBET {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = 1
 									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 								} else {
@@ -837,7 +834,6 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 					// BPKB Nama Beda
 					if bpkbName == constant.NAMA_BEDA {
 						if pefindoResult.WoContract { //Wo Contract Yes
-							data.TotalBakiDebet = pefindoResult.TotalBakiDebetNonAgunan
 
 							if pefindoResult.WoAdaAgunan { //Wo Agunan Yes
 
@@ -892,10 +888,8 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 								}
 							}
 						} else { //Wo Contract No
-							data.TotalBakiDebet = pefindoResult.TotalBakiDebetBermasalah
-
 							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
-								if pefindoResult.TotalBakiDebetBermasalah <= constant.BAKI_DEBET {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									if resultPefindo == constant.DECISION_PASS {
 										data.NextProcess = 1
 										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
@@ -909,7 +903,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 								}
 
 							} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
-								if pefindoResult.TotalBakiDebetBermasalah <= constant.BAKI_DEBET {
+								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = 1
 									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 								} else {
@@ -933,6 +927,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 				}
 
 				data.PbkReport = pefindoResult.DetailReport
+				data.TotalBakiDebet = pefindoResult.TotalBakiDebetNonAgunan
 
 				updateFiltering.PefindoScore = &pefindoResult.Score
 			} else {
