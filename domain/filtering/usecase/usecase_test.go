@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	elaborateMock "los-kmb-api/domain/elaborate/interfaces/mocks"
 	filteringMock "los-kmb-api/domain/filtering/interfaces/mocks"
+	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
@@ -349,7 +351,7 @@ func TestFiltering(t *testing.T) {
 			mockRepository.On("SaveData", mock.Anything, mock.Anything).Return(tc.errSaveData)
 			mockUsecase.On("FilteringBlackList", ctx, tc.req, accessToken).Return(tc.resFilteringBlackList, tc.errFilteringBlackList).Once()
 			mockUsecase.On("CheckStatusCategory", ctx, tc.req, tc.resFilteringBlackList.StatusKonsumen, accessToken).Return(tc.resCheckStatusCategory, tc.errCheckStatusCategory).Once()
-			mockUsecase.On("FilteringPefindo", ctx, tc.req, tc.resCheckStatusCategory.StatusKonsumen, tc.resCheckStatusCategory.KategoriStatusKonsumen, accessToken).Return(tc.resFilteringPefindo, tc.errFilteringPefindo).Once()
+			mockUsecase.On("FilteringPefindo", ctx, tc.req, tc.resCheckStatusCategory.StatusKonsumen, tc.resCheckStatusCategory.KategoriStatusKonsumen, accessToken).Return(tc.resFilteringPefindo, false, tc.errFilteringPefindo).Once()
 			mockRepository.On("UpdateData", mock.Anything).Return(tc.errUpdateData)
 
 			rst := resty.New()
@@ -7278,6 +7280,7 @@ func TestFilteringBlackList(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(filteringMock.Repository)
+			mockElaborateRepository := new(elaborateMock.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
 			rst := resty.New()
@@ -7301,7 +7304,7 @@ func TestFilteringBlackList(t *testing.T) {
 
 			mockRepository.On("UpdateData", mock.Anything).Return(tc.errUpdateDataSpouse).Once()
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockElaborateRepository, mockHttpClient)
 
 			result, err := usecase.FilteringBlackList(ctx, tc.req, accessToken)
 
@@ -8328,6 +8331,7 @@ func TestCheckStatusCategory(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(filteringMock.Repository)
+			mockElaborateRepository := new(elaborateMock.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
 			rst := resty.New()
@@ -8341,7 +8345,7 @@ func TestCheckStatusCategory(t *testing.T) {
 
 			mockRepository.On("UpdateData", mock.Anything).Return(tc.errUpdateData).Once()
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockElaborateRepository, mockHttpClient)
 
 			result, err := usecase.CheckStatusCategory(ctx, tc.req, tc.statusKonsumen, accessToken)
 
@@ -12200,6 +12204,7 @@ func TestFilteringPefindo(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(filteringMock.Repository)
+			mockElaborateRepository := new(elaborateMock.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
 			rst := resty.New()
@@ -12212,6 +12217,7 @@ func TestFilteringPefindo(t *testing.T) {
 			mockHttpClient.On("EngineAPI", ctx, constant.FILTERING_LOG, os.Getenv("PBK_URL"), mock.Anything, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, tc.req.Data.ProspectID, accessToken).Return(resp, tc.errPefindo).Once()
 
 			mockRepository.On("UpdateData", mock.Anything).Return(tc.errUpdateData).Once()
+			mockElaborateRepository.On("GetClusterBranchElaborate", mock.Anything, mock.Anything, mock.Anything).Return(entity.ClusterBranch{Cluster: "Cluster A"}, nil).Once()
 
 			if tc.name == "TEST_PASS_FilteringPefindo_PBKNoHit" {
 				os.Setenv("ACTIVE_PBK", "false")
@@ -12219,9 +12225,9 @@ func TestFilteringPefindo(t *testing.T) {
 				os.Setenv("ACTIVE_PBK", "true")
 			}
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockElaborateRepository, mockHttpClient)
 
-			result, err := usecase.FilteringPefindo(ctx, tc.req, tc.statusKonsumen, tc.kategoriStatusKonsumen, accessToken)
+			result, _, err := usecase.FilteringPefindo(ctx, tc.req, tc.statusKonsumen, tc.kategoriStatusKonsumen, accessToken)
 
 			require.Equal(t, tc.resFinal, result)
 			require.Equal(t, tc.errFinal, err)

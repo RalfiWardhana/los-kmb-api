@@ -760,9 +760,15 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 
 				resultPefindoExcludeBNPL = data.Decision
 				updateFiltering.ResultPefindoExcludeBNPL = resultPefindoExcludeBNPL
-				updateFiltering.CategoryExcludeBNPL = checkNullCategory(pefindoResult.Category)
-				updateFiltering.OverdueCurrentExcludeBNPL = checkNullMaxOverdue(pefindoResult.MaxOverdueKORules)
-				updateFiltering.OverdueCurrentIncludeAll = checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules)
+				if pefindoResult.Category != nil {
+					updateFiltering.CategoryExcludeBNPL = checkNullCategory(pefindoResult.Category)
+				}
+				if pefindoResult.MaxOverdueKORules != nil {
+					updateFiltering.OverdueCurrentExcludeBNPL = checkNullMaxOverdue(pefindoResult.MaxOverdueKORules)
+				}
+				if pefindoResult.MaxOverdueLast12MonthsKORules != nil {
+					updateFiltering.OverdueLast12MonthsExcludeBNPL = checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules)
+				}
 
 				resultPefindo := data.Decision
 
@@ -958,6 +964,8 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 
 				updateFiltering.PefindoScore = new(string)
 				*updateFiltering.PefindoScore = constant.UNSCORE_PBK
+
+				updateFiltering.ResultPefindoExcludeBNPL = constant.DECISION_PASS
 			}
 
 			updateFiltering.PefindoID = &checkPefindo.Konsumen.PefindoID
@@ -1001,8 +1009,12 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 			}
 
 			updateFiltering.ResultPefindoIncludeAll = resultPefindoIncludeAll
-			updateFiltering.OverdueCurrentIncludeAll = checkNullMaxOverdue(pefindoResult.MaxOverdue)
-			updateFiltering.OverdueLast12MonthsIncludeAll = checkNullMaxOverdue(pefindoResult.MaxOverdueLast12Months)
+			if pefindoResult.MaxOverdue != nil {
+				updateFiltering.OverdueCurrentIncludeAll = checkNullMaxOverdue(pefindoResult.MaxOverdue)
+			}
+			if pefindoResult.MaxOverdueLast12Months != nil {
+				updateFiltering.OverdueLast12MonthsIncludeAll = checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12Months)
+			}
 
 			// Check Reject Cluster E & F
 			namaSama := utils.AizuArrayString(os.Getenv("NAMA_SAMA"))

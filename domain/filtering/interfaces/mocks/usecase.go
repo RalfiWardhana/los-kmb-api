@@ -60,7 +60,7 @@ func (_m *Usecase) FilteringBlackList(ctx context.Context, reqs request.Filterin
 }
 
 // FilteringPefindo provides a mock function with given fields: ctx, reqs, status_konsumen, kategoriStatusKonsumen, request_id
-func (_m *Usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringRequest, status_konsumen string, kategoriStatusKonsumen string, request_id string) (response.DupcheckResult, error) {
+func (_m *Usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringRequest, status_konsumen string, kategoriStatusKonsumen string, request_id string) (response.DupcheckResult, bool, error) {
 	ret := _m.Called(ctx, reqs, status_konsumen, kategoriStatusKonsumen, request_id)
 
 	var r0 response.DupcheckResult
@@ -70,12 +70,19 @@ func (_m *Usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringR
 		r0 = ret.Get(0).(response.DupcheckResult)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, request.FilteringRequest, string, string, string) error); ok {
+	var r1 bool
+	if rf, ok := ret.Get(1).(func(context.Context, request.FilteringRequest, string, string, string) bool); ok {
 		r1 = rf(ctx, reqs, status_konsumen, kategoriStatusKonsumen, request_id)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(bool)
 	}
 
-	return r0, r1
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, request.FilteringRequest, string, string, string) error); ok {
+		r2 = rf(ctx, reqs, status_konsumen, kategoriStatusKonsumen, request_id)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
