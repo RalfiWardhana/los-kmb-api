@@ -108,7 +108,7 @@ func (u multiUsecase) Filtering(ctx context.Context, reqs request.FilteringReque
 		check_prime_priority, _ := utils.ItemExists(konsumen.KategoriStatusKonsumen, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
 
 		// hit ke pefindo
-		pefindo, isRejectClusterEF, err := u.usecase.FilteringPefindo(ctx, reqs, konsumen.StatusKonsumen, accessToken)
+		pefindo, isRejectClusterEF, err := u.usecase.FilteringPefindo(ctx, reqs, konsumen.StatusKonsumen, konsumen.KategoriStatusKonsumen, accessToken)
 		if err != nil {
 			err = fmt.Errorf("failed fetching data pefindo")
 			return pefindo, err
@@ -573,7 +573,7 @@ func (u usecase) CheckStatusCategory(ctx context.Context, reqs request.Filtering
 	return
 }
 
-func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringRequest, status_konsumen, accessToken string) (data response.DupcheckResult, isRejectClusterEF bool, err error) {
+func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringRequest, status_konsumen, kategoriStatusKonsumen, accessToken string) (data response.DupcheckResult, isRejectClusterEF bool, err error) {
 
 	timeOut, _ := strconv.Atoi(os.Getenv("DUPCHECK_API_TIMEOUT"))
 
@@ -604,7 +604,6 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 	}
 
 	active, _ := strconv.ParseBool(os.Getenv("ACTIVE_PBK"))
-	dummy, _ := strconv.ParseBool(os.Getenv("DUMMY_PBK"))
 
 	if active {
 		var (
@@ -613,90 +612,55 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 			responsePefindo interface{}
 		)
 
-		if dummy {
+		var resp *resty.Response
 
-			var getData entity.DummyPBK
+		param, _ := json.Marshal(map[string]string{
+			"ClientKey":         os.Getenv("CLIENTKEY_CORE_PBK"),
+			"IDMember":          constant.USER_PBK_KMB_FILTEERING,
+			"user":              constant.USER_PBK_KMB_FILTEERING,
+			"IDNumber":          reqs.Data.IDNumber,
+			"ProspectID":        reqs.Data.ProspectID,
+			"LegalName":         reqs.Data.LegalName,
+			"BirthDate":         reqs.Data.BirthDate,
+			"SurgateMotherName": reqs.Data.SurgateMotherName,
+			"Gender":            reqs.Data.Gender,
+			"MaritalStatus":     reqs.Data.MaritalStatus,
+		})
 
-			getData, err = u.repository.DummyDataPbk(reqs.Data.IDNumber)
+		if reqs.Data.MaritalStatus == constant.MARRIED {
 
-			if getData == (entity.DummyPBK{}) {
-				checkPefindo.Code = "201"
-				checkPefindo.Result = constant.RESPONSE_PEFINDO_DUMMY_NOT_FOUND
-
-				resp := map[string]string{
-					"code":   checkPefindo.Code,
-					"result": constant.RESPONSE_PEFINDO_DUMMY_NOT_FOUND,
-				}
-				responsePefindo, _ = json.Marshal(resp)
-
-			} else {
-				if err != nil {
-					err = fmt.Errorf("failed get data dummy pefindo")
-					return
-				}
-
-				if err = json.Unmarshal([]byte(getData.Response), &checkPefindo); err != nil {
-					err = fmt.Errorf("error unmarshal data pefindo dummy")
-					return
-				}
-
-				responsePefindo, _ = json.Marshal(checkPefindo)
-
-			}
-
-		} else {
-
-			var resp *resty.Response
-
-			param, _ := json.Marshal(map[string]string{
-				"ClientKey":         os.Getenv("CLIENTKEY_CORE_PBK"),
-				"IDMember":          constant.USER_PBK_KMB_FILTEERING,
-				"user":              constant.USER_PBK_KMB_FILTEERING,
-				"IDNumber":          reqs.Data.IDNumber,
-				"ProspectID":        reqs.Data.ProspectID,
-				"LegalName":         reqs.Data.LegalName,
-				"BirthDate":         reqs.Data.BirthDate,
-				"SurgateMotherName": reqs.Data.SurgateMotherName,
-				"Gender":            reqs.Data.Gender,
-				"MaritalStatus":     reqs.Data.MaritalStatus,
+			param, _ = json.Marshal(map[string]string{
+				"ClientKey":                os.Getenv("CLIENTKEY_CORE_PBK"),
+				"IDMember":                 constant.USER_PBK_KMB_FILTEERING,
+				"user":                     constant.USER_PBK_KMB_FILTEERING,
+				"IDNumber":                 reqs.Data.IDNumber,
+				"ProspectID":               reqs.Data.ProspectID,
+				"LegalName":                reqs.Data.LegalName,
+				"BirthDate":                reqs.Data.BirthDate,
+				"SurgateMotherName":        reqs.Data.SurgateMotherName,
+				"Gender":                   reqs.Data.Gender,
+				"MaritalStatus":            reqs.Data.MaritalStatus,
+				"Spouse_IDNumber":          reqs.Data.Spouse.IDNumber,
+				"Spouse_LegalName":         reqs.Data.Spouse.LegalName,
+				"Spouse_BirthDate":         reqs.Data.Spouse.BirthDate,
+				"Spouse_SurgateMotherName": reqs.Data.Spouse.SurgateMotherName,
+				"Spouse_Gender":            reqs.Data.Spouse.Gender,
 			})
-
-			if reqs.Data.MaritalStatus == constant.MARRIED {
-
-				param, _ = json.Marshal(map[string]string{
-					"ClientKey":                os.Getenv("CLIENTKEY_CORE_PBK"),
-					"IDMember":                 constant.USER_PBK_KMB_FILTEERING,
-					"user":                     constant.USER_PBK_KMB_FILTEERING,
-					"IDNumber":                 reqs.Data.IDNumber,
-					"ProspectID":               reqs.Data.ProspectID,
-					"LegalName":                reqs.Data.LegalName,
-					"BirthDate":                reqs.Data.BirthDate,
-					"SurgateMotherName":        reqs.Data.SurgateMotherName,
-					"Gender":                   reqs.Data.Gender,
-					"MaritalStatus":            reqs.Data.MaritalStatus,
-					"Spouse_IDNumber":          reqs.Data.Spouse.IDNumber,
-					"Spouse_LegalName":         reqs.Data.Spouse.LegalName,
-					"Spouse_BirthDate":         reqs.Data.Spouse.BirthDate,
-					"Spouse_SurgateMotherName": reqs.Data.Spouse.SurgateMotherName,
-					"Spouse_Gender":            reqs.Data.Spouse.Gender,
-				})
-			}
-
-			resp, err = u.httpclient.EngineAPI(ctx, constant.FILTERING_LOG, os.Getenv("PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, reqs.Data.ProspectID, accessToken)
-
-			if err != nil || resp.StatusCode() != 200 && resp.StatusCode() != 400 {
-				err = fmt.Errorf("failed get data pefindo")
-				return
-			}
-
-			if err = json.Unmarshal(resp.Body(), &checkPefindo); err != nil {
-				err = fmt.Errorf("error unmarshal data pefindo")
-				return
-			}
-
-			responsePefindo = string(resp.Body())
-
 		}
+
+		resp, err = u.httpclient.EngineAPI(ctx, constant.FILTERING_LOG, os.Getenv("PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, reqs.Data.ProspectID, accessToken)
+
+		if err != nil || resp.StatusCode() != 200 && resp.StatusCode() != 400 {
+			err = fmt.Errorf("failed get data pefindo")
+			return
+		}
+
+		if err = json.Unmarshal(resp.Body(), &checkPefindo); err != nil {
+			err = fmt.Errorf("error unmarshal data pefindo")
+			return
+		}
+
+		responsePefindo = string(resp.Body())
 
 		updateFiltering.ResultPefindo = responsePefindo
 
@@ -800,11 +764,15 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 				updateFiltering.OverdueCurrentExcludeBNPL = checkNullMaxOverdue(pefindoResult.MaxOverdueKORules)
 				updateFiltering.OverdueCurrentIncludeAll = checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules)
 
-				if data.Decision == constant.DECISION_REJECT {
+				resultPefindo := data.Decision
 
-					data.StatusKonsumen = status_konsumen
-					data.Code = constant.WO_AGUNAN_REJECT_CODE
+				if resultPefindo == constant.DECISION_PASS {
+					data.NextProcess = 1
+				}
 
+				check_prime_priority, _ := utils.ItemExists(kategoriStatusKonsumen, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
+
+				if !check_prime_priority {
 					// BPKB Nama Sama
 					if bpkbName == constant.NAMA_SAMA {
 						if pefindoResult.WoContract { //Wo Contract Yes
@@ -821,8 +789,13 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 									}
 								} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
 									if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-										data.NextProcess = 1
-										data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+										if resultPefindo == constant.DECISION_PASS {
+											data.NextProcess = 0
+											data.Reason = fmt.Sprintf("NAMA SAMA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
+										} else {
+											data.NextProcess = 1
+											data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+										}
 									} else {
 										data.NextProcess = 0
 										data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
@@ -893,8 +866,13 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 									}
 								} else if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {
 									if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-										data.NextProcess = 1
-										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+										if resultPefindo == constant.DECISION_PASS {
+											data.NextProcess = 0
+											data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
+										} else {
+											data.NextProcess = 1
+											data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+										}
 									} else {
 										data.NextProcess = 0
 										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
@@ -907,8 +885,13 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 							} else { //Wo Agunan No
 								if status_konsumen == constant.STATUS_KONSUMEN_NEW {
 									if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-										data.NextProcess = 0
-										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+										if resultPefindo == constant.DECISION_PASS {
+											data.NextProcess = 1
+											data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+										} else {
+											data.NextProcess = 0
+											data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
+										}
 									} else {
 										data.NextProcess = 0
 										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
@@ -926,8 +909,13 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 						} else { //Wo Contract No
 							if status_konsumen == constant.STATUS_KONSUMEN_NEW {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-									data.NextProcess = 0
-									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									if resultPefindo == constant.DECISION_PASS {
+										data.NextProcess = 1
+										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									} else {
+										data.NextProcess = 0
+										data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
+									}
 								} else {
 									data.NextProcess = 0
 									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
@@ -947,6 +935,13 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 								data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
 							}
 						}
+					}
+
+					data.StatusKonsumen = status_konsumen
+					if data.Decision == constant.DECISION_REJECT {
+						data.Code = constant.WO_AGUNAN_REJECT_CODE
+					} else {
+						data.Code = constant.WO_AGUNAN_PASS_CODE
 					}
 				}
 
@@ -1058,11 +1053,13 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 				data.StatusKonsumen = status_konsumen
 				data.Decision = constant.DECISION_PASS
 				data.Reason = "PBK Tidak Ditemukan - " + status_konsumen
+				data.NextProcess = 1
 			} else if status_konsumen == constant.STATUS_KONSUMEN_NEW {
 				data.Code = constant.NAMA_SAMA_UNSCORE_NEW_CODE
 				data.StatusKonsumen = status_konsumen
 				data.Decision = constant.DECISION_PASS
 				data.Reason = "PBK Tidak Ditemukan - " + status_konsumen
+				data.NextProcess = 1
 			}
 
 			updateFiltering.PefindoID = &checkPefindo.Konsumen.PefindoID
@@ -1091,6 +1088,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 			data.Reason = constant.REASON_FILTERING_PBK_DOWN
 			data.StatusKonsumen = status_konsumen
 			data.Decision = constant.DECISION_PASS
+			data.NextProcess = 1
 
 			unscore := constant.PEFINDO_UNSCORE
 			updateFiltering.PefindoScore = &unscore
@@ -1101,10 +1099,6 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 		data.StatusKonsumen = status_konsumen
 		data.Reason = "Akses ke PBK ditutup"
 
-	}
-
-	if data.Decision == constant.DECISION_PASS {
-		data.NextProcess = 1
 	}
 
 	if err = u.repository.UpdateData(updateFiltering); err != nil {
