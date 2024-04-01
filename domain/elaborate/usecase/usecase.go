@@ -228,15 +228,6 @@ func (u usecase) ResultElaborate(ctx context.Context, reqs request.BodyRequestEl
 		data.Cluster = clusterBranch.Cluster
 	}
 
-	if bakiDebet > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && bakiDebet <= constant.BAKI_DEBET {
-		if clusterBranch.Cluster == constant.CLUSTER_E || clusterBranch.Cluster == constant.CLUSTER_F {
-			data.Code = constant.CODE_REJECT_ELABORATE
-			data.Reason = constant.REASON_REJECT_ELABORATE
-			data.Decision = constant.DECISION_REJECT
-			return
-		}
-	}
-
 	// Set Result Pefindo for HIT/NO HIT based on Filtering Result
 	kategoriStatusKonsumen := reqs.Data.CategoryCustomer
 	checkPrimePriority, _ := utils.ItemExists(kategoriStatusKonsumen, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})

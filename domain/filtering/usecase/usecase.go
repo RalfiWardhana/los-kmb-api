@@ -1042,19 +1042,22 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 			}
 
 			if clusterBranch != (entity.ClusterBranch{}) {
-				if resultPefindoIncludeAll == constant.DECISION_REJECT && pefindoResult.TotalBakiDebetNonAgunan > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+
+				if pefindoResult.TotalBakiDebetNonAgunan > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 					if clusterBranch.Cluster == constant.CLUSTER_E || clusterBranch.Cluster == constant.CLUSTER_F {
-						isRejectClusterEF = true
+						if (resultPefindoIncludeAll == constant.DECISION_PASS && !(checkNullMaxOverdue(pefindoResult.MaxOverdue) == 0 && checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12Months) <= 10)) || resultPefindoIncludeAll == constant.DECISION_REJECT {
+							isRejectClusterEF = true
 
-						data.Code = constant.CODE_REJECT_CLUSTER_E_F
-						data.Decision = constant.DECISION_REJECT
-						data.NextProcess = 0
+							data.Code = constant.CODE_REJECT_CLUSTER_E_F
+							data.Decision = constant.DECISION_REJECT
+							data.NextProcess = 0
 
-						bpkbNamePrefix := "NAMA SAMA"
-						if bpkbName == constant.NAMA_BEDA {
-							bpkbNamePrefix = "NAMA BEDA"
+							bpkbNamePrefix := "NAMA SAMA"
+							if bpkbName == constant.NAMA_BEDA {
+								bpkbNamePrefix = "NAMA BEDA"
+							}
+							data.Reason = fmt.Sprintf("%s "+constant.REASON_REJECT_CLUSTER_E_F, bpkbNamePrefix, getReasonCategoryRoman(pefindoResult.Category))
 						}
-						data.Reason = fmt.Sprintf("%s "+constant.REASON_REJECT_CLUSTER_E_F, bpkbNamePrefix, getReasonCategoryRoman(pefindoResult.Category))
 					}
 				}
 			}
