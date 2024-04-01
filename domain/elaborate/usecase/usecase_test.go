@@ -537,7 +537,7 @@ func TestResultElaborate(t *testing.T) {
 			errFinal: errors.New("failed retrieve filtering result"),
 		},
 		{
-			name: "TEST_PASS_ResultElaborate",
+			name: "TEST_PASS_ResultElaborate_ResultPefindoIncludeAllPass",
 			req: request.BodyRequestElaborate{
 				ClientKey: "$2y$10$5X1gt1p11.CWbm.Gtgg7E.bATsMup..KhU2HeY/RJRteoW7UwT9N6",
 				Data: request.DataElaborate{
@@ -558,9 +558,60 @@ func TestResultElaborate(t *testing.T) {
 				Cluster: "Cluster A",
 			},
 			resGetFilteringResult: entity.ApiDupcheckKmbUpdate{
-				RequestID:    "TEST123",
-				PefindoID:    "1676593952",
-				PefindoScore: &pefindoNotMatchValue,
+				RequestID:               "TEST123",
+				PefindoID:               "1676593952",
+				PefindoScore:            &pefindoNotMatchValue,
+				ResultPefindoIncludeAll: constant.DECISION_PASS,
+			},
+			resGetResultElaborate: entity.ResultElaborate{
+				Decision: constant.DECISION_PASS,
+				LTV:      0,
+			},
+			resGetMappingLtvOvd: entity.ResultElaborate{
+				Cluster:  "Cluster D",
+				Decision: constant.DECISION_PASS,
+				LTV:      60,
+			},
+			resFinal: response.ElaborateResult{
+				Code:           constant.CODE_PASS_ELABORATE,
+				Decision:       constant.DECISION_PASS,
+				Reason:         constant.REASON_PASS_ELABORATE,
+				ResultPefindo:  constant.DECISION_PASS,
+				Cluster:        "Cluster A",
+				BPKBNameType:   0,
+				AgeVehicle:     ">12",
+				LTVOrigin:      67,
+				LTV:            0,
+				TotalBakiDebet: 11000000.00,
+				IsMappingOvd:   true,
+			},
+		},
+		{
+			name: "TEST_PASS_ResultElaborate_ResultPefindoIncludeAllEmpty",
+			req: request.BodyRequestElaborate{
+				ClientKey: "$2y$10$5X1gt1p11.CWbm.Gtgg7E.bATsMup..KhU2HeY/RJRteoW7UwT9N6",
+				Data: request.DataElaborate{
+					ProspectID:        "NE65499A4AA35CF",
+					BranchID:          "426",
+					BPKBName:          "O",
+					CustomerStatus:    constant.STATUS_KONSUMEN_RO_AO,
+					CategoryCustomer:  "",
+					ResultPefindo:     constant.DECISION_PASS,
+					TotalBakiDebet:    11000000.00,
+					Tenor:             12,
+					ManufacturingYear: "2010",
+					OTR:               35355000,
+					NTF:               23571178,
+				},
+			},
+			resGetClusterBranchElaborate: entity.ClusterBranch{
+				Cluster: "Cluster A",
+			},
+			resGetFilteringResult: entity.ApiDupcheckKmbUpdate{
+				RequestID:               "TEST123",
+				PefindoID:               "1676593952",
+				PefindoScore:            &pefindoNotMatchValue,
+				ResultPefindoIncludeAll: "",
 			},
 			resGetResultElaborate: entity.ResultElaborate{
 				Decision: constant.DECISION_PASS,

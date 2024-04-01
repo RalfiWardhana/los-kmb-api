@@ -38,6 +38,7 @@ func TestFiltering(t *testing.T) {
 		errCheckStatusCategory error
 		resFilteringPefindo    response.DupcheckResult
 		errFilteringPefindo    error
+		isRejectClusterEF      bool
 		errUpdateData          error
 		resFinal               response.DupcheckResult
 		errFinal               error
@@ -292,6 +293,51 @@ func TestFiltering(t *testing.T) {
 			},
 		},
 		{
+			name: "TEST_REJECT_Filtering_FilteringPefindo_ClusterEF_BakiDebet3-20jt",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "K",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "M",
+					ProfessionID:      "WRST",
+					Spouse: &request.Spouse{
+						IDNumber:          "3345270510910123",
+						LegalName:         "TEST SPOUSE LEGAL NAME",
+						BirthPlace:        "JAKARTA",
+						BirthDate:         "1995-08-28",
+						SurgateMotherName: "TEST SPOUSE MOTHER NAME",
+						Gender:            "F",
+					},
+					MobilePhone: "085720230309",
+				},
+			},
+			resFilteringBlackList: response.DupcheckResult{
+				Code:     constant.CODE_NEW_CUSTOMER_SPOSE_BERSIH,
+				Decision: constant.DECISION_PASS,
+				Reason:   constant.REASON_NEW_CUSTOMER + " & " + constant.REASON_SPOSE_BERSIH,
+			},
+			resFilteringPefindo: response.DupcheckResult{
+				Code:        constant.CODE_REJECT_CLUSTER_E_F,
+				Decision:    constant.DECISION_REJECT,
+				NextProcess: 0,
+				Reason:      fmt.Sprintf("%s "+constant.REASON_REJECT_CLUSTER_E_F, "NAMA SAMA", "(I)"),
+			},
+			isRejectClusterEF: true,
+			resFinal: response.DupcheckResult{
+				Code:        constant.CODE_REJECT_CLUSTER_E_F,
+				Decision:    constant.DECISION_REJECT,
+				Reason:      fmt.Sprintf("%s "+constant.REASON_REJECT_CLUSTER_E_F, "NAMA SAMA", "(I)"),
+				NextProcess: 0,
+			},
+		},
+		{
 			name: "TEST_ERROR_Filtering_UpdateData",
 			req: request.FilteringRequest{
 				Data: request.Data{
@@ -351,7 +397,7 @@ func TestFiltering(t *testing.T) {
 			mockRepository.On("SaveData", mock.Anything, mock.Anything).Return(tc.errSaveData)
 			mockUsecase.On("FilteringBlackList", ctx, tc.req, accessToken).Return(tc.resFilteringBlackList, tc.errFilteringBlackList).Once()
 			mockUsecase.On("CheckStatusCategory", ctx, tc.req, tc.resFilteringBlackList.StatusKonsumen, accessToken).Return(tc.resCheckStatusCategory, tc.errCheckStatusCategory).Once()
-			mockUsecase.On("FilteringPefindo", ctx, tc.req, tc.resCheckStatusCategory.StatusKonsumen, tc.resCheckStatusCategory.KategoriStatusKonsumen, accessToken).Return(tc.resFilteringPefindo, false, tc.errFilteringPefindo).Once()
+			mockUsecase.On("FilteringPefindo", ctx, tc.req, tc.resCheckStatusCategory.StatusKonsumen, tc.resCheckStatusCategory.KategoriStatusKonsumen, accessToken).Return(tc.resFilteringPefindo, tc.isRejectClusterEF, tc.errFilteringPefindo).Once()
 			mockRepository.On("UpdateData", mock.Anything).Return(tc.errUpdateData)
 
 			rst := resty.New()
@@ -8368,16 +8414,18 @@ func TestFilteringPefindo(t *testing.T) {
 	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
 
 	testCases := []struct {
-		name                   string
-		req                    request.FilteringRequest
-		kategoriStatusKonsumen string
-		statusKonsumen         string
-		resPefindoCode         int
-		resPefindoBody         string
-		errPefindo             error
-		errUpdateData          error
-		resFinal               response.DupcheckResult
-		errFinal               error
+		name                         string
+		req                          request.FilteringRequest
+		kategoriStatusKonsumen       string
+		statusKonsumen               string
+		resPefindoCode               int
+		resPefindoBody               string
+		errPefindo                   error
+		resGetClusterBranchElaborate entity.ClusterBranch
+		errGetClusterBranchElaborate error
+		errUpdateData                error
+		resFinal                     response.DupcheckResult
+		errFinal                     error
 	}{
 		{
 			name: "TEST_ERROR_FilteringPefindo_PefindoAPI",
@@ -11981,7 +12029,25 @@ func TestFilteringPefindo(t *testing.T) {
 					"kualitas_kredit_terakhir": null,
 					"bulan_kualitas_kredit_terakhir": null
 				},
-				"pasangan": null,
+				"pasangan": {
+					"search_id": "kp_653f2dcd17888",
+					"pefindo_id": null,
+					"score": null,
+					"max_overdue": null,
+					"max_overdue_last12months": null,
+					"angsuran_aktif_pbk": null,
+					"wo_contract": null,
+					"wo_ada_agunan": null,
+					"baki_debet_non_agunan": null,
+					"detail_report": null,
+					"plafon": null,
+					"fasilitas_aktif": null,
+					"kualitas_kredit_terburuk": null,
+					"bulan_kualitas_terburuk": null,
+					"baki_debet_kualitas_terburuk": null,
+					"kualitas_kredit_terakhir": null,
+					"bulan_kualitas_kredit_terakhir": null
+				},
 				"server_time": "2023-10-30T11:15:10+07:00",
 				"duration_time": "1000 ms"
 			}`,
@@ -12199,6 +12265,227 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 			errFinal: errors.New("failed update data filtering"),
 		},
+		{
+			name: "TEST_ERROR_FilteringPefindo_GetClusterBranchElaborate",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "K",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "S",
+					ProfessionID:      "WRST",
+					MobilePhone:       "085720230309",
+				},
+			},
+			resPefindoCode: 200,
+			resPefindoBody: `{
+				"code": "200",
+				"status": "SUCCESS",
+				"result": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": null,
+					"max_overdue_last12months": null,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": false,
+					"wo_ada_agunan": true,
+					"total_baki_debet_non_agunan": 20873675,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"category": 1,
+					"max_overdue_ko_rules": null,
+					"max_overdue_last12months_ko_rules": null
+				},
+				"konsumen": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 50,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": 0,
+					"wo_ada_agunan": 1,
+					"baki_debet_non_agunan": 20873675,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"plafon": 7928083,
+					"fasilitas_aktif": 7,
+					"kualitas_kredit_terburuk": "COLL 5",
+					"bulan_kualitas_terburuk": "2023-10-31",
+					"baki_debet_kualitas_terburuk": 6000000,
+					"kualitas_kredit_terakhir": "COLL 5",
+					"bulan_kualitas_kredit_terakhir": "2022-11-30"
+				},
+				"pasangan": null,
+				"server_time": "2023-12-04T13:15:46+07:00",
+				"duration_time": "78000 ms"
+			}`,
+			errGetClusterBranchElaborate: errors.New("failed get cluster branch"),
+			resFinal: response.DupcheckResult{
+				Code:           constant.WO_AGUNAN_PASS_CODE,
+				Decision:       constant.DECISION_PASS,
+				Reason:         fmt.Sprintf("NAMA SAMA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, "(I)"),
+				NextProcess:    1,
+				TotalBakiDebet: 20873675,
+				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+			},
+			errFinal: errors.New("failed get cluster branch"),
+		},
+		{
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_ClusterEF_BakiDebet3-20jt",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "K",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "S",
+					ProfessionID:      "WRST",
+					MobilePhone:       "085720230309",
+				},
+			},
+			resPefindoCode: 200,
+			resPefindoBody: `{
+				"code": "200",
+				"status": "SUCCESS",
+				"result": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 61,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": false,
+					"wo_ada_agunan": true,
+					"total_baki_debet_non_agunan": 3100000,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"category": 1,
+					"max_overdue_ko_rules": null,
+					"max_overdue_last12months_ko_rules": null
+				},
+				"konsumen": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 61,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": 0,
+					"wo_ada_agunan": 1,
+					"baki_debet_non_agunan": 3100000,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"plafon": 7928083,
+					"fasilitas_aktif": 7,
+					"kualitas_kredit_terburuk": "COLL 5",
+					"bulan_kualitas_terburuk": "2023-10-31",
+					"baki_debet_kualitas_terburuk": 6000000,
+					"kualitas_kredit_terakhir": "COLL 5",
+					"bulan_kualitas_kredit_terakhir": "2022-11-30"
+				},
+				"pasangan": null,
+				"server_time": "2023-12-04T13:15:46+07:00",
+				"duration_time": "78000 ms"
+			}`,
+			resGetClusterBranchElaborate: entity.ClusterBranch{
+				BranchID:       "594",
+				CustomerStatus: "NEW",
+				BPKBNameType:   1,
+				Cluster:        "Cluster E",
+			},
+			resFinal: response.DupcheckResult{
+				Code:           constant.CODE_REJECT_CLUSTER_E_F,
+				Decision:       constant.DECISION_REJECT,
+				Reason:         fmt.Sprintf("%s "+constant.REASON_REJECT_CLUSTER_E_F, "NAMA SAMA", "(I)"),
+				NextProcess:    0,
+				TotalBakiDebet: 3100000,
+				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+			},
+		},
+		{
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_ClusterEF_BakiDebet3-20jt",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "KK",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "S",
+					ProfessionID:      "WRST",
+					MobilePhone:       "085720230309",
+				},
+			},
+			resPefindoCode: 200,
+			resPefindoBody: `{
+				"code": "200",
+				"status": "SUCCESS",
+				"result": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 61,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": false,
+					"wo_ada_agunan": true,
+					"total_baki_debet_non_agunan": 3100000,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"category": 1,
+					"max_overdue_ko_rules": null,
+					"max_overdue_last12months_ko_rules": null
+				},
+				"konsumen": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 61,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": 0,
+					"wo_ada_agunan": 1,
+					"baki_debet_non_agunan": 3100000,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"plafon": 7928083,
+					"fasilitas_aktif": 7,
+					"kualitas_kredit_terburuk": "COLL 5",
+					"bulan_kualitas_terburuk": "2023-10-31",
+					"baki_debet_kualitas_terburuk": 6000000,
+					"kualitas_kredit_terakhir": "COLL 5",
+					"bulan_kualitas_kredit_terakhir": "2022-11-30"
+				},
+				"pasangan": null,
+				"server_time": "2023-12-04T13:15:46+07:00",
+				"duration_time": "78000 ms"
+			}`,
+			resGetClusterBranchElaborate: entity.ClusterBranch{
+				BranchID:       "594",
+				CustomerStatus: "NEW",
+				BPKBNameType:   1,
+				Cluster:        "Cluster E",
+			},
+			resFinal: response.DupcheckResult{
+				Code:           constant.CODE_REJECT_CLUSTER_E_F,
+				Decision:       constant.DECISION_REJECT,
+				Reason:         fmt.Sprintf("%s "+constant.REASON_REJECT_CLUSTER_E_F, "NAMA BEDA", "(I)"),
+				NextProcess:    0,
+				TotalBakiDebet: 3100000,
+				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -12217,7 +12504,7 @@ func TestFilteringPefindo(t *testing.T) {
 			mockHttpClient.On("EngineAPI", ctx, constant.FILTERING_LOG, os.Getenv("PBK_URL"), mock.Anything, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, tc.req.Data.ProspectID, accessToken).Return(resp, tc.errPefindo).Once()
 
 			mockRepository.On("UpdateData", mock.Anything).Return(tc.errUpdateData).Once()
-			mockElaborateRepository.On("GetClusterBranchElaborate", mock.Anything, mock.Anything, mock.Anything).Return(entity.ClusterBranch{Cluster: "Cluster A"}, nil).Once()
+			mockElaborateRepository.On("GetClusterBranchElaborate", mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetClusterBranchElaborate, tc.errGetClusterBranchElaborate).Once()
 
 			if tc.name == "TEST_PASS_FilteringPefindo_PBKNoHit" {
 				os.Setenv("ACTIVE_PBK", "false")
