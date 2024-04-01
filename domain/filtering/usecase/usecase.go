@@ -1045,7 +1045,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 
 				if pefindoResult.TotalBakiDebetNonAgunan > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 					if clusterBranch.Cluster == constant.CLUSTER_E || clusterBranch.Cluster == constant.CLUSTER_F {
-						if (resultPefindoIncludeAll == constant.DECISION_PASS && !(checkNullMaxOverdue(pefindoResult.MaxOverdue) == 0 && checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12Months) <= 10)) || resultPefindoIncludeAll == constant.DECISION_REJECT {
+						if resultPefindoIncludeAll == constant.DECISION_REJECT {
 							isRejectClusterEF = true
 
 							data.Code = constant.CODE_REJECT_CLUSTER_E_F
