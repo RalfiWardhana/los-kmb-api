@@ -58,6 +58,7 @@ type ApiDupcheckKmbUpdate struct {
 	ResultKreditmu               interface{} `gorm:"type:text;column:ResultKreditmu"`
 	ResultPefindo                interface{} `gorm:"type:text;column:ResultPefindo"`
 	Response                     interface{} `gorm:"type:text;column:Response"`
+	CustomerStatus               interface{} `gorm:"type:text;column:CustomerStatus"`
 	CustomerType                 interface{} `gorm:"type:text;column:CustomerType"`
 	DtmResponse                  time.Time   `gorm:"column:DtmResponse"`
 	Code                         interface{} `gorm:"type:varchar(50);column:Code"`
