@@ -502,7 +502,7 @@ type Apk struct {
 	FidusiaFee                  *float64 `json:"fidusia_fee" validate:"max=999999999999" example:"0"`
 	InterestRate                *float64 `json:"interest_rate" validate:"required,max=99" example:"2.2"`
 	InterestAmount              *float64 `json:"interest_amount" validate:"required,max=999999999999" example:"66528000"`
-	InsuranceAmount             float64  `json:"insurance_amount" validate:"required,max=999999999999" example:"3150000"`
+	InsuranceAmount             float64  `json:"insurance_amount" validate:"max=999999999999" example:"3150000"`
 	FirstInstallment            string   `json:"first_installment" validate:"required,max=2" example:"AR"`
 	PaymentMethod               string   `json:"payment_method" validate:"required,max=2" example:"CR"`
 	SurveyFee                   *float64 `json:"survey_fee" validate:"required,max=999999999999" example:"0"`
