@@ -1016,51 +1016,52 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringReq
 				updateFiltering.OverdueLast12MonthsIncludeAll = checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12Months)
 			}
 
-			// Check Reject Cluster E & F
-			namaSama := utils.AizuArrayString(os.Getenv("NAMA_SAMA"))
-			namaBeda := utils.AizuArrayString(os.Getenv("NAMA_BEDA"))
+			if resultPefindoIncludeAll == constant.DECISION_REJECT {
+				// Check Reject Cluster E & F
+				namaSama := utils.AizuArrayString(os.Getenv("NAMA_SAMA"))
+				namaBeda := utils.AizuArrayString(os.Getenv("NAMA_BEDA"))
 
-			bpkbNamaSama, _ := utils.ItemExists(reqs.Data.BPKBName, namaSama)
-			bpkbNamaBeda, _ := utils.ItemExists(reqs.Data.BPKBName, namaBeda)
+				bpkbNamaSama, _ := utils.ItemExists(reqs.Data.BPKBName, namaSama)
+				bpkbNamaBeda, _ := utils.ItemExists(reqs.Data.BPKBName, namaBeda)
 
-			var (
-				bpkbNameType  int
-				clusterBranch entity.ClusterBranch
-			)
+				var (
+					bpkbNameType  int
+					clusterBranch entity.ClusterBranch
+				)
 
-			if bpkbNamaSama {
-				bpkbNameType = 1
-			} else if bpkbNamaBeda {
-				bpkbNameType = 0
-			}
+				if bpkbNamaSama {
+					bpkbNameType = 1
+				} else if bpkbNamaBeda {
+					bpkbNameType = 0
+				}
 
-			// Get Cluster Branch
-			clusterBranch, err = u.elaborateRepository.GetClusterBranchElaborate(reqs.Data.BranchID, status_konsumen, bpkbNameType)
-			if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
-				err = fmt.Errorf("failed get cluster branch")
-				return
-			}
+				// Get Cluster Branch
+				clusterBranch, err = u.elaborateRepository.GetClusterBranchElaborate(reqs.Data.BranchID, status_konsumen, bpkbNameType)
+				if err != nil && err.Error() != constant.ERROR_NOT_FOUND {
+					err = fmt.Errorf("failed get cluster branch")
+					return
+				}
 
-			if clusterBranch != (entity.ClusterBranch{}) {
+				if clusterBranch != (entity.ClusterBranch{}) &&
+					(clusterBranch.Cluster == constant.CLUSTER_E || clusterBranch.Cluster == constant.CLUSTER_F) &&
+					(pefindoResult.TotalBakiDebetNonAgunan > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET) {
+					isRejectClusterEF = true
 
-				if pefindoResult.TotalBakiDebetNonAgunan > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-					if clusterBranch.Cluster == constant.CLUSTER_E || clusterBranch.Cluster == constant.CLUSTER_F {
-						if resultPefindoIncludeAll == constant.DECISION_REJECT {
-							isRejectClusterEF = true
+					data.Code = constant.CODE_REJECT_CLUSTER_E_F
+					data.NextProcess = 0
 
-							data.Code = constant.CODE_REJECT_CLUSTER_E_F
-							data.Decision = constant.DECISION_REJECT
-							data.NextProcess = 0
-
-							bpkbNamePrefix := "NAMA SAMA"
-							if bpkbName == constant.NAMA_BEDA {
-								bpkbNamePrefix = "NAMA BEDA"
-							}
-							data.Reason = fmt.Sprintf("%s "+constant.REASON_REJECT_CLUSTER_E_F, bpkbNamePrefix, getReasonCategoryRoman(pefindoResult.Category))
-						}
+					bpkbNamePrefix := "NAMA SAMA"
+					if bpkbName == constant.NAMA_BEDA {
+						bpkbNamePrefix = "NAMA BEDA"
 					}
+					data.Reason = fmt.Sprintf("%s "+constant.REASON_REJECT_CLUSTER_E_F, bpkbNamePrefix, getReasonCategoryRoman(pefindoResult.Category))
+				} else if bpkbName == constant.NAMA_BEDA && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+					data.Code = constant.NAMA_BEDA_PBK_ALL_REJECT_CODE
+					data.NextProcess = 0
+					data.Reason = constant.NAMA_BEDA_PBK_ALL_REJECT_REASON
 				}
 			}
+
 		} else if checkPefindo.Code == "201" || pefindoResult.Score == constant.PEFINDO_UNSCORE {
 
 			if status_konsumen == constant.STATUS_KONSUMEN_RO_AO {

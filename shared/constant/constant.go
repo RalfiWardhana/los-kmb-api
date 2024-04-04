@@ -232,6 +232,7 @@ const (
 	NAMA_BEDA_CURRENT_OVD_OVER_LIMIT_CODE                        = "9097"
 	NAMA_BEDA_12_OVD_OVER_LIMIT_CODE                             = "9099"
 	NAMA_BEDA_12_OVD_NULL_CODE                                   = "9095"
+	NAMA_BEDA_PBK_ALL_REJECT_CODE                                = "9094"
 	NAMA_SAMA_CURRENT_OVD_NULL_CODE                              = "9102"
 	NAMA_SAMA_CURRENT_OVD_UNDER_LIMIT_CODE                       = "9103"
 	NAMA_SAMA_CURRENT_OVD_OVER_LIMIT_CODE                        = "9105"
@@ -260,6 +261,7 @@ const (
 	ADA_FASILITAS_WO_AGUNAN                                      = "Ada Fasilitas WO Agunan"
 	TIDAK_ADA_FASILITAS_WO_AGUNAN                                = "Tidak Ada Fasilitas WO Agunan"
 	REASON_FILTERING_PBK_DOWN                                    = "No Hit PBK"
+	NAMA_BEDA_PBK_ALL_REJECT_REASON                              = "BPKB Nama Beda Baki Debet > Threshold"
 
 	// Error Message
 	INTERNAL_SERVER_ERROR     = "internal_server_error"
