@@ -55,6 +55,14 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 				err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat MaxOverdueBiro Pefindo Error")
 				return
 			}
+		} else {
+			if filtering.MaxOverdueBiro != nil {
+				maxOverdueDays, err = utils.GetFloat(filtering.MaxOverdueBiro)
+				if err != nil {
+					err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat MaxOverdueBiro Pefindo Error")
+					return
+				}
+			}
 		}
 
 		if filtering.MaxOverdueLast12MonthsKORules != nil {
@@ -62,6 +70,14 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 			if err != nil {
 				err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat MaxOverdueLast12monthsBiro Pefindo Error")
 				return
+			}
+		} else {
+			if filtering.MaxOverdueLast12monthsBiro != nil {
+				maxOverdueLast12Months, err = utils.GetFloat(filtering.MaxOverdueLast12monthsBiro)
+				if err != nil {
+					err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat MaxOverdueLast12monthsBiro Pefindo Error")
+					return
+				}
 			}
 		}
 
