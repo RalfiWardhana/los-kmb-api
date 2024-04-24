@@ -279,7 +279,18 @@ func (u usecase) FilteringBlackList(ctx context.Context, reqs request.FilteringR
 
 	// Konsumen
 	if getdupcheck != (response.DataDupcheck{}) {
-		result.StatusKonsumen = "RO/AO"
+		if (getdupcheck.TotalInstallment < 1 && getdupcheck.RrdDate != "") ||
+			(getdupcheck.TotalInstallment == 0 && getdupcheck.RrdDate != "") ||
+			(getdupcheck.TotalInstallment > 0 && getdupcheck.RrdDate != "" && getdupcheck.SisaJumlahAngsuran == 0) {
+			updateFiltering.CustomerStatus = constant.STATUS_KONSUMEN_RO
+			result.StatusKonsumen = constant.STATUS_KONSUMEN_RO_AO
+		} else if getdupcheck.TotalInstallment > 0 && getdupcheck.SisaJumlahAngsuran >= 0 {
+			updateFiltering.CustomerStatus = constant.STATUS_KONSUMEN_AO
+			result.StatusKonsumen = constant.STATUS_KONSUMEN_RO_AO
+		} else {
+			updateFiltering.CustomerStatus = constant.STATUS_KONSUMEN_NEW
+			result.StatusKonsumen = constant.STATUS_KONSUMEN_NEW
+		}
 
 		if getdupcheck.BadType == constant.BADTYPE_B {
 			if spouse_flag == 1 {
@@ -440,7 +451,8 @@ func (u usecase) FilteringBlackList(ctx context.Context, reqs request.FilteringR
 		}
 
 	} else {
-		result.StatusKonsumen = "NEW"
+		updateFiltering.CustomerStatus = constant.STATUS_KONSUMEN_NEW
+		result.StatusKonsumen = constant.STATUS_KONSUMEN_NEW
 
 		if spouse_flag == 1 {
 			if spouse_result.Code == constant.CODE_SPOSE_BADTYPE_B {
@@ -475,6 +487,12 @@ func (u usecase) FilteringBlackList(ctx context.Context, reqs request.FilteringR
 		}
 
 	}
+
+	if err = u.repository.UpdateData(updateFiltering); err != nil {
+		err = fmt.Errorf("failed process update data filtering customer status")
+		return
+	}
+
 	result.IsBlacklist = 1
 	result.NextProcess = 0
 	if result.Decision == constant.DECISION_PASS {

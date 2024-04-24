@@ -65,6 +65,7 @@ type ApiDupcheckKmbUpdate struct {
 	OverdueLast12MonthsIncludeAll  float64     `gorm:"type:text;column:OverdueLast12MonthsIncludeAll"`
 	ResultPefindoIncludeAll        string      `gorm:"type:text;column:ResultPefindoIncludeAll"`
 	Response                       interface{} `gorm:"type:text;column:Response"`
+	CustomerStatus                 interface{} `gorm:"type:text;column:CustomerStatus"`
 	CustomerType                   interface{} `gorm:"type:text;column:CustomerType"`
 	DtmResponse                    time.Time   `gorm:"column:DtmResponse"`
 	Code                           interface{} `gorm:"type:varchar(50);column:Code"`
