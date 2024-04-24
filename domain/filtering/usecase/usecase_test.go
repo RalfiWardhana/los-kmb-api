@@ -4,7 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	elaborateMock "los-kmb-api/domain/elaborate/interfaces/mocks"
 	filteringMock "los-kmb-api/domain/filtering/interfaces/mocks"
+	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
@@ -36,6 +38,7 @@ func TestFiltering(t *testing.T) {
 		errCheckStatusCategory error
 		resFilteringPefindo    response.DupcheckResult
 		errFilteringPefindo    error
+		isRejectClusterEF      bool
 		errUpdateData          error
 		resFinal               response.DupcheckResult
 		errFinal               error
@@ -290,6 +293,51 @@ func TestFiltering(t *testing.T) {
 			},
 		},
 		{
+			name: "TEST_REJECT_Filtering_FilteringPefindo_ClusterEF_BakiDebet3-20jt",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "K",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "M",
+					ProfessionID:      "WRST",
+					Spouse: &request.Spouse{
+						IDNumber:          "3345270510910123",
+						LegalName:         "TEST SPOUSE LEGAL NAME",
+						BirthPlace:        "JAKARTA",
+						BirthDate:         "1995-08-28",
+						SurgateMotherName: "TEST SPOUSE MOTHER NAME",
+						Gender:            "F",
+					},
+					MobilePhone: "085720230309",
+				},
+			},
+			resFilteringBlackList: response.DupcheckResult{
+				Code:     constant.CODE_NEW_CUSTOMER_SPOSE_BERSIH,
+				Decision: constant.DECISION_PASS,
+				Reason:   constant.REASON_NEW_CUSTOMER + " & " + constant.REASON_SPOSE_BERSIH,
+			},
+			resFilteringPefindo: response.DupcheckResult{
+				Code:        constant.CODE_REJECT_CLUSTER_E_F,
+				Decision:    constant.DECISION_REJECT,
+				NextProcess: 0,
+				Reason:      fmt.Sprintf("%s "+constant.REASON_REJECT_CLUSTER_E_F, "NAMA SAMA", "(I)"),
+			},
+			isRejectClusterEF: true,
+			resFinal: response.DupcheckResult{
+				Code:        constant.CODE_REJECT_CLUSTER_E_F,
+				Decision:    constant.DECISION_REJECT,
+				Reason:      fmt.Sprintf("%s "+constant.REASON_REJECT_CLUSTER_E_F, "NAMA SAMA", "(I)"),
+				NextProcess: 0,
+			},
+		},
+		{
 			name: "TEST_ERROR_Filtering_UpdateData",
 			req: request.FilteringRequest{
 				Data: request.Data{
@@ -349,7 +397,7 @@ func TestFiltering(t *testing.T) {
 			mockRepository.On("SaveData", mock.Anything, mock.Anything).Return(tc.errSaveData)
 			mockUsecase.On("FilteringBlackList", ctx, tc.req, accessToken).Return(tc.resFilteringBlackList, tc.errFilteringBlackList).Once()
 			mockUsecase.On("CheckStatusCategory", ctx, tc.req, tc.resFilteringBlackList.StatusKonsumen, accessToken).Return(tc.resCheckStatusCategory, tc.errCheckStatusCategory).Once()
-			mockUsecase.On("FilteringPefindo", ctx, tc.req, tc.resCheckStatusCategory.StatusKonsumen, tc.resCheckStatusCategory.KategoriStatusKonsumen, accessToken).Return(tc.resFilteringPefindo, tc.errFilteringPefindo).Once()
+			mockUsecase.On("FilteringPefindo", ctx, tc.req, tc.resCheckStatusCategory.StatusKonsumen, tc.resCheckStatusCategory.KategoriStatusKonsumen, accessToken).Return(tc.resFilteringPefindo, tc.isRejectClusterEF, tc.errFilteringPefindo).Once()
 			mockRepository.On("UpdateData", mock.Anything).Return(tc.errUpdateData)
 
 			rst := resty.New()
@@ -378,18 +426,19 @@ func TestFilteringBlackList(t *testing.T) {
 	timeOut, _ := strconv.Atoi(os.Getenv("DUPCHECK_API_TIMEOUT"))
 
 	testCases := []struct {
-		name                  string
-		req                   request.FilteringRequest
-		resDupcheckCode       int
-		resDupcheckBody       string
-		errDupcheck           error
-		resDupcheckCodeSpouse int
-		resDupcheckBodySpouse string
-		errDupcheckSpouse     error
-		errUpdateData         error
-		errUpdateDataSpouse   error
-		resFinal              response.DupcheckResult
-		errFinal              error
+		name                        string
+		req                         request.FilteringRequest
+		resDupcheckCode             int
+		resDupcheckBody             string
+		errDupcheck                 error
+		resDupcheckCodeSpouse       int
+		resDupcheckBodySpouse       string
+		errDupcheckSpouse           error
+		errUpdateData               error
+		errUpdateDataSpouse         error
+		errUpdateDataCustomerStatus error
+		resFinal                    response.DupcheckResult
+		errFinal                    error
 	}{
 		{
 			name: "TEST_ERROR_FilteringBlackList_ProcessDupcheck",
@@ -1261,7 +1310,7 @@ func TestFilteringBlackList(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringBlackList_KonsumenNew_PasanganBlacklist_NumOfAssetInventoried>0",
+			name: "TEST_REJECT_FilteringBlackList_KonsumenNew_PasanganBlacklist_NumOfAssetInventoried>0_1",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -1416,6 +1465,166 @@ func TestFilteringBlackList(t *testing.T) {
 				Code:           constant.CODE_NEW_CUSTOMER_SPOSE_NUM_OF_ASSET_INVENTORIED,
 				Decision:       constant.DECISION_REJECT,
 				Reason:         constant.REASON_NEW_CUSTOMER + " & " + constant.REASON_SPOSE_NUM_OF_ASSET_INVENTORIED,
+				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
+				IsBlacklist:    1,
+			},
+		},
+		{
+			name: "TEST_REJECT_FilteringBlackList_KonsumenNew_PasanganBersih_NumOfAssetInventoried>0_2",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "K",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "M",
+					ProfessionID:      "WRST",
+					Spouse: &request.Spouse{
+						IDNumber:          "3345270510910123",
+						LegalName:         "TEST SPOUSE LEGAL NAME",
+						BirthPlace:        "JAKARTA",
+						BirthDate:         "1995-08-28",
+						SurgateMotherName: "TEST SPOUSE MOTHER NAME",
+						Gender:            "F",
+					},
+					MobilePhone: "085720230309",
+				},
+			},
+			resDupcheckCode: 200,
+			resDupcheckBody: `{
+				"messages": "LOS DUPCHECK",
+				"errors": null,
+				"data": {
+					"customer_id": null,
+					"id_number": "3503001101000001",
+					"full_name": "",
+					"birth_date": "",
+					"surgate_mother_name": "",
+					"birth_place": "",
+					"gender": "",
+					"emergency_contact_address": "",
+					"legal_address": "",
+					"legal_kelurahan": "",
+					"legal_kecamatan": "",
+					"legal_city": "",
+					"lagal_zipcode": "",
+					"residence_address": "",
+					"residence_kelurahan": "",
+					"residence_kecamatan": "",
+					"residence_city": "",
+					"residence_zipcode": "",
+					"company_address": "",
+					"company_kelurahan": "",
+					"company_kecamatan": "",
+					"company_city": "",
+					"company_zipcode": "",
+					"personal_npwp": "",
+					"education": "",
+					"marital_status": "",
+					"num_of_dependence": 0,
+					"home_status": "",
+					"profession_id": "",
+					"job_type_id": "",
+					"job_pos": null,
+					"monthly_fixed_income": 0,
+					"spouse_income": null,
+					"monthly_variable_income": 0,
+					"total_installment": 0,
+					"total_installment_nap": 0,
+					"bad_type": null,
+					"max_overduedays": 0,
+					"max_overduedays_roao": null,
+					"num_of_asset_inventoried": 0,
+					"overduedays_aging": null,
+					"max_overduedays_for_active_agreement": null,
+					"max_overduedays_for_prev_eom": null,
+					"sisa_jumlah_angsuran": null,
+					"rrd_date": null,
+					"number_of_agreement": 0,
+					"work_since_year": null,
+					"outstanding_principal": 0,
+					"os_installmentdue": 0,
+					"is_restructure": 0,
+					"is_similiar": 0,
+					"customer_status": "",
+					"customer_segment": "",
+					"customer_transaction_type": ""
+				},
+				"server_time": "2023-12-01T20:20:56+07:00",
+				"request_id": ""
+			}`,
+			resDupcheckCodeSpouse: 200,
+			resDupcheckBodySpouse: `{
+				"messages": "LOS DUPCHECK",
+				"errors": null,
+				"data": {
+					"customer_id": null,
+					"id_number": "",
+					"full_name": "",
+					"birth_date": "",
+					"surgate_mother_name": "",
+					"birth_place": "",
+					"gender": "",
+					"emergency_contact_address": "",
+					"legal_address": "",
+					"legal_kelurahan": "",
+					"legal_kecamatan": "",
+					"legal_city": "",
+					"lagal_zipcode": "",
+					"residence_address": "",
+					"residence_kelurahan": "",
+					"residence_kecamatan": "",
+					"residence_city": "",
+					"residence_zipcode": "",
+					"company_address": "",
+					"company_kelurahan": "",
+					"company_kecamatan": "",
+					"company_city": "",
+					"company_zipcode": "",
+					"personal_npwp": "",
+					"education": "",
+					"marital_status": "",
+					"num_of_dependence": 0,
+					"home_status": "",
+					"profession_id": "",
+					"job_type_id": "",
+					"job_pos": null,
+					"monthly_fixed_income": 0,
+					"spouse_income": null,
+					"monthly_variable_income": 0,
+					"total_installment": 0,
+					"total_installment_nap": 0,
+					"bad_type": null,
+					"max_overduedays": 90,
+					"max_overduedays_roao": null,
+					"num_of_asset_inventoried": 1,
+					"overduedays_aging": null,
+					"max_overduedays_for_active_agreement": null,
+					"max_overduedays_for_prev_eom": null,
+					"sisa_jumlah_angsuran": null,
+					"rrd_date": null,
+					"number_of_agreement": 0,
+					"work_since_year": null,
+					"outstanding_principal": 0,
+					"os_installmentdue": 0,
+					"is_restructure": 0,
+					"is_similiar": 0,
+					"customer_status": "",
+					"customer_segment": "",
+					"customer_transaction_type": ""
+				},
+				"server_time": "2023-12-01T20:20:56+07:00",
+				"request_id": ""
+			}`,
+			resFinal: response.DupcheckResult{
+				Code:           constant.CODE_BERSIH_SPOSE_NUM_OF_ASSET_INVENTORIED,
+				Decision:       constant.DECISION_REJECT,
+				Reason:         constant.REASON_BERSIH + " & " + constant.REASON_SPOSE_NUM_OF_ASSET_INVENTORIED,
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 				IsBlacklist:    1,
 			},
@@ -2068,7 +2277,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -2229,7 +2438,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -2390,7 +2599,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -2551,7 +2760,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -2712,7 +2921,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -2873,7 +3082,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -3026,7 +3235,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -3123,8 +3332,8 @@ func TestFilteringBlackList(t *testing.T) {
 					"overduedays_aging": null,
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
-					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"sisa_jumlah_angsuran": 0,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -3285,7 +3494,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -3446,7 +3655,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -3607,7 +3816,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -3768,7 +3977,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -3929,7 +4138,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -4082,7 +4291,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -4180,7 +4389,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -4341,7 +4550,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -4502,7 +4711,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -4663,7 +4872,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -4824,7 +5033,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -4985,7 +5194,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -5138,7 +5347,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -5236,7 +5445,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -5397,7 +5606,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -5558,7 +5767,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -5719,7 +5928,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -5880,7 +6089,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -6041,7 +6250,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -6194,7 +6403,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -6292,7 +6501,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -6453,7 +6662,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -6614,7 +6823,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -6775,7 +6984,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -6936,7 +7145,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -7087,7 +7296,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"monthly_fixed_income": 0,
 					"spouse_income": null,
 					"monthly_variable_income": 0,
-					"total_installment": 0,
+					"total_installment": 5,
 					"total_installment_nap": 0,
 					"bad_type": null,
 					"max_overduedays": 90,
@@ -7096,7 +7305,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"overduedays_aging": null,
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
-					"sisa_jumlah_angsuran": null,
+					"sisa_jumlah_angsuran": 2,
 					"rrd_date": null,
 					"number_of_agreement": 0,
 					"work_since_year": null,
@@ -7250,7 +7459,7 @@ func TestFilteringBlackList(t *testing.T) {
 					"max_overduedays_for_active_agreement": null,
 					"max_overduedays_for_prev_eom": null,
 					"sisa_jumlah_angsuran": null,
-					"rrd_date": null,
+					"rrd_date": "2023-12-01T20:20:56+07:00",
 					"number_of_agreement": 0,
 					"work_since_year": null,
 					"outstanding_principal": 0,
@@ -7273,11 +7482,175 @@ func TestFilteringBlackList(t *testing.T) {
 				NextProcess:    0,
 			},
 		},
+		{
+			name: "TEST_ERROR_FilteringBlackList_UpdateData_CustomerStatus",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "K",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "M",
+					ProfessionID:      "WRST",
+					Spouse: &request.Spouse{
+						IDNumber:          "3345270510910123",
+						LegalName:         "TEST SPOUSE LEGAL NAME",
+						BirthPlace:        "JAKARTA",
+						BirthDate:         "1995-08-28",
+						SurgateMotherName: "TEST SPOUSE MOTHER NAME",
+						Gender:            "F",
+					},
+					MobilePhone: "085720230309",
+				},
+			},
+			resDupcheckCode: 200,
+			resDupcheckBody: `{
+				"messages": "LOS DUPCHECK",
+				"errors": null,
+				"data": {
+					"customer_id": null,
+					"id_number": "",
+					"full_name": "",
+					"birth_date": "",
+					"surgate_mother_name": "",
+					"birth_place": "",
+					"gender": "",
+					"emergency_contact_address": "",
+					"legal_address": "",
+					"legal_kelurahan": "",
+					"legal_kecamatan": "",
+					"legal_city": "",
+					"lagal_zipcode": "",
+					"residence_address": "",
+					"residence_kelurahan": "",
+					"residence_kecamatan": "",
+					"residence_city": "",
+					"residence_zipcode": "",
+					"company_address": "",
+					"company_kelurahan": "",
+					"company_kecamatan": "",
+					"company_city": "",
+					"company_zipcode": "",
+					"personal_npwp": "",
+					"education": "",
+					"marital_status": "",
+					"num_of_dependence": 0,
+					"home_status": "",
+					"profession_id": "",
+					"job_type_id": "",
+					"job_pos": null,
+					"monthly_fixed_income": 0,
+					"spouse_income": null,
+					"monthly_variable_income": 0,
+					"total_installment": 0,
+					"total_installment_nap": 0,
+					"bad_type": null,
+					"max_overduedays": 0,
+					"max_overduedays_roao": null,
+					"num_of_asset_inventoried": 0,
+					"overduedays_aging": null,
+					"max_overduedays_for_active_agreement": null,
+					"max_overduedays_for_prev_eom": null,
+					"sisa_jumlah_angsuran": null,
+					"rrd_date": null,
+					"number_of_agreement": 0,
+					"work_since_year": null,
+					"outstanding_principal": 0,
+					"os_installmentdue": 0,
+					"is_restructure": 0,
+					"is_similiar": 0,
+					"customer_status": "",
+					"customer_segment": "",
+					"customer_transaction_type": ""
+				},
+				"server_time": "2023-12-01T20:20:56+07:00",
+				"request_id": ""
+			}`,
+			resDupcheckCodeSpouse: 200,
+			resDupcheckBodySpouse: `{
+				"messages": "LOS DUPCHECK",
+				"errors": null,
+				"data": {
+					"customer_id": null,
+					"id_number": "",
+					"full_name": "",
+					"birth_date": "",
+					"surgate_mother_name": "",
+					"birth_place": "",
+					"gender": "",
+					"emergency_contact_address": "",
+					"legal_address": "",
+					"legal_kelurahan": "",
+					"legal_kecamatan": "",
+					"legal_city": "",
+					"lagal_zipcode": "",
+					"residence_address": "",
+					"residence_kelurahan": "",
+					"residence_kecamatan": "",
+					"residence_city": "",
+					"residence_zipcode": "",
+					"company_address": "",
+					"company_kelurahan": "",
+					"company_kecamatan": "",
+					"company_city": "",
+					"company_zipcode": "",
+					"personal_npwp": "",
+					"education": "",
+					"marital_status": "",
+					"num_of_dependence": 0,
+					"home_status": "",
+					"profession_id": "",
+					"job_type_id": "",
+					"job_pos": null,
+					"monthly_fixed_income": 0,
+					"spouse_income": null,
+					"monthly_variable_income": 0,
+					"total_installment": 0,
+					"total_installment_nap": 0,
+					"bad_type": null,
+					"max_overduedays": 90,
+					"max_overduedays_roao": null,
+					"num_of_asset_inventoried": 0,
+					"overduedays_aging": null,
+					"max_overduedays_for_active_agreement": null,
+					"max_overduedays_for_prev_eom": null,
+					"sisa_jumlah_angsuran": null,
+					"rrd_date": null,
+					"number_of_agreement": 0,
+					"work_since_year": null,
+					"outstanding_principal": 0,
+					"os_installmentdue": 0,
+					"is_restructure": 1,
+					"is_similiar": 0,
+					"customer_status": "",
+					"customer_segment": "",
+					"customer_transaction_type": ""
+				},
+				"server_time": "2023-12-01T20:20:56+07:00",
+				"request_id": ""
+			}`,
+			errUpdateDataCustomerStatus: errors.New("failed process update data filtering customer status"),
+			resFinal: response.DupcheckResult{
+				Code:           constant.CODE_NEW_CUSTOMER_SPOSE,
+				Decision:       constant.DECISION_PASS,
+				Reason:         constant.REASON_NEW_CUSTOMER + " & " + constant.REASON_IS_RESTRUCTURE,
+				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
+				IsBlacklist:    0,
+				NextProcess:    0,
+			},
+			errFinal: errors.New("failed process update data filtering customer status"),
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(filteringMock.Repository)
+			mockElaborateRepository := new(elaborateMock.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
 			rst := resty.New()
@@ -7301,7 +7674,9 @@ func TestFilteringBlackList(t *testing.T) {
 
 			mockRepository.On("UpdateData", mock.Anything).Return(tc.errUpdateDataSpouse).Once()
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			mockRepository.On("UpdateData", mock.Anything).Return(tc.errUpdateDataCustomerStatus).Once()
+
+			usecase := NewUsecase(mockRepository, mockElaborateRepository, mockHttpClient)
 
 			result, err := usecase.FilteringBlackList(ctx, tc.req, accessToken)
 
@@ -8328,6 +8703,7 @@ func TestCheckStatusCategory(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(filteringMock.Repository)
+			mockElaborateRepository := new(elaborateMock.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
 			rst := resty.New()
@@ -8341,7 +8717,7 @@ func TestCheckStatusCategory(t *testing.T) {
 
 			mockRepository.On("UpdateData", mock.Anything).Return(tc.errUpdateData).Once()
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockElaborateRepository, mockHttpClient)
 
 			result, err := usecase.CheckStatusCategory(ctx, tc.req, tc.statusKonsumen, accessToken)
 
@@ -8364,16 +8740,18 @@ func TestFilteringPefindo(t *testing.T) {
 	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
 
 	testCases := []struct {
-		name                   string
-		req                    request.FilteringRequest
-		kategoriStatusKonsumen string
-		statusKonsumen         string
-		resPefindoCode         int
-		resPefindoBody         string
-		errPefindo             error
-		errUpdateData          error
-		resFinal               response.DupcheckResult
-		errFinal               error
+		name                         string
+		req                          request.FilteringRequest
+		kategoriStatusKonsumen       string
+		statusKonsumen               string
+		resPefindoCode               int
+		resPefindoBody               string
+		errPefindo                   error
+		resGetClusterBranchElaborate entity.ClusterBranch
+		errGetClusterBranchElaborate error
+		errUpdateData                error
+		resFinal                     response.DupcheckResult
+		errFinal                     error
 	}{
 		{
 			name: "TEST_ERROR_FilteringPefindo_PefindoAPI",
@@ -10614,7 +10992,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"search_id": "kp_656d6e44a6bf8",
 					"pefindo_id": "1676593952",
 					"score": "VERY HIGH RISK",
-					"max_overdue": 31,
+					"max_overdue": 20,
 					"max_overdue_last12months": 50,
 					"angsuran_aktif_pbk": 4407662,
 					"wo_contract": true,
@@ -10827,7 +11205,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"search_id": "kp_656d6e44a6bf8",
 					"pefindo_id": "1676593952",
 					"score": "VERY HIGH RISK",
-					"max_overdue": 31,
+					"max_overdue": 20,
 					"max_overdue_last12months": 50,
 					"angsuran_aktif_pbk": 4407662,
 					"wo_contract": true,
@@ -10969,7 +11347,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"search_id": "kp_656d6e44a6bf8",
 					"pefindo_id": "1676593952",
 					"score": "VERY HIGH RISK",
-					"max_overdue": 31,
+					"max_overdue": 20,
 					"max_overdue_last12months": 50,
 					"angsuran_aktif_pbk": 4407662,
 					"wo_contract": true,
@@ -11111,7 +11489,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"search_id": "kp_656d6e44a6bf8",
 					"pefindo_id": "1676593952",
 					"score": "VERY HIGH RISK",
-					"max_overdue": 31,
+					"max_overdue": 20,
 					"max_overdue_last12months": 50,
 					"angsuran_aktif_pbk": 4407662,
 					"wo_contract": true,
@@ -11393,7 +11771,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"search_id": "kp_656d6e44a6bf8",
 					"pefindo_id": "1676593952",
 					"score": "VERY HIGH RISK",
-					"max_overdue": 31,
+					"max_overdue": 20,
 					"max_overdue_last12months": 50,
 					"angsuran_aktif_pbk": 4407662,
 					"wo_contract": false,
@@ -11606,7 +11984,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"search_id": "kp_656d6e44a6bf8",
 					"pefindo_id": "1676593952",
 					"score": "VERY HIGH RISK",
-					"max_overdue": 31,
+					"max_overdue": 20,
 					"max_overdue_last12months": 50,
 					"angsuran_aktif_pbk": 4407662,
 					"wo_contract": false,
@@ -11836,7 +12214,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"pefindo_id": "1676593952",
 					"score": "VERY HIGH RISK",
 					"max_overdue": null,
-					"max_overdue_last12months": 61,
+					"max_overdue_last12months": 50,
 					"angsuran_aktif_pbk": 4407662,
 					"wo_contract": true,
 					"wo_ada_agunan": false,
@@ -11977,7 +12355,25 @@ func TestFilteringPefindo(t *testing.T) {
 					"kualitas_kredit_terakhir": null,
 					"bulan_kualitas_kredit_terakhir": null
 				},
-				"pasangan": null,
+				"pasangan": {
+					"search_id": "kp_653f2dcd17888",
+					"pefindo_id": null,
+					"score": null,
+					"max_overdue": null,
+					"max_overdue_last12months": null,
+					"angsuran_aktif_pbk": null,
+					"wo_contract": null,
+					"wo_ada_agunan": null,
+					"baki_debet_non_agunan": null,
+					"detail_report": null,
+					"plafon": null,
+					"fasilitas_aktif": null,
+					"kualitas_kredit_terburuk": null,
+					"bulan_kualitas_terburuk": null,
+					"baki_debet_kualitas_terburuk": null,
+					"kualitas_kredit_terakhir": null,
+					"bulan_kualitas_kredit_terakhir": null
+				},
 				"server_time": "2023-10-30T11:15:10+07:00",
 				"duration_time": "1000 ms"
 			}`,
@@ -12195,11 +12591,308 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 			errFinal: errors.New("failed update data filtering"),
 		},
+		{
+			name: "TEST_ERROR_FilteringPefindo_GetClusterBranchElaborate",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "K",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "S",
+					ProfessionID:      "WRST",
+					MobilePhone:       "085720230309",
+				},
+			},
+			resPefindoCode: 200,
+			resPefindoBody: `{
+				"code": "200",
+				"status": "SUCCESS",
+				"result": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 61,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": false,
+					"wo_ada_agunan": true,
+					"total_baki_debet_non_agunan": 20873675,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"category": 1,
+					"max_overdue_ko_rules": null,
+					"max_overdue_last12months_ko_rules": null
+				},
+				"konsumen": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 50,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": 0,
+					"wo_ada_agunan": 1,
+					"baki_debet_non_agunan": 20873675,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"plafon": 7928083,
+					"fasilitas_aktif": 7,
+					"kualitas_kredit_terburuk": "COLL 5",
+					"bulan_kualitas_terburuk": "2023-10-31",
+					"baki_debet_kualitas_terburuk": 6000000,
+					"kualitas_kredit_terakhir": "COLL 5",
+					"bulan_kualitas_kredit_terakhir": "2022-11-30"
+				},
+				"pasangan": null,
+				"server_time": "2023-12-04T13:15:46+07:00",
+				"duration_time": "78000 ms"
+			}`,
+			errGetClusterBranchElaborate: errors.New("failed get cluster branch"),
+			resFinal: response.DupcheckResult{
+				Code:           constant.WO_AGUNAN_PASS_CODE,
+				Decision:       constant.DECISION_PASS,
+				Reason:         fmt.Sprintf("NAMA SAMA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, "(I)"),
+				NextProcess:    1,
+				TotalBakiDebet: 20873675,
+				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+			},
+			errFinal: errors.New("failed get cluster branch"),
+		},
+		{
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_ClusterEF_BakiDebet3-20jt_ResultPefindoReject",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "K",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "S",
+					ProfessionID:      "WRST",
+					MobilePhone:       "085720230309",
+				},
+			},
+			resPefindoCode: 200,
+			resPefindoBody: `{
+				"code": "200",
+				"status": "SUCCESS",
+				"result": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 61,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": false,
+					"wo_ada_agunan": false,
+					"total_baki_debet_non_agunan": 3100000,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"category": 3,
+					"max_overdue_ko_rules": 31,
+					"max_overdue_last12months_ko_rules": 61
+				},
+				"konsumen": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 61,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": 0,
+					"wo_ada_agunan": 1,
+					"baki_debet_non_agunan": 3100000,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"plafon": 7928083,
+					"fasilitas_aktif": 7,
+					"kualitas_kredit_terburuk": "COLL 5",
+					"bulan_kualitas_terburuk": "2023-10-31",
+					"baki_debet_kualitas_terburuk": 6000000,
+					"kualitas_kredit_terakhir": "COLL 5",
+					"bulan_kualitas_kredit_terakhir": "2022-11-30"
+				},
+				"pasangan": null,
+				"server_time": "2023-12-04T13:15:46+07:00",
+				"duration_time": "78000 ms"
+			}`,
+			resGetClusterBranchElaborate: entity.ClusterBranch{
+				BranchID:       "594",
+				CustomerStatus: "NEW",
+				BPKBNameType:   1,
+				Cluster:        "Cluster E",
+			},
+			resFinal: response.DupcheckResult{
+				Code:           constant.CODE_REJECT_CLUSTER_E_F,
+				Decision:       constant.DECISION_REJECT,
+				Reason:         fmt.Sprintf("%s "+constant.REASON_REJECT_CLUSTER_E_F, "NAMA SAMA", "(III)"),
+				NextProcess:    0,
+				TotalBakiDebet: 3100000,
+				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+			},
+		},
+		{
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_ClusterEF_BakiDebet3-20jt",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "KK",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "S",
+					ProfessionID:      "WRST",
+					MobilePhone:       "085720230309",
+				},
+			},
+			resPefindoCode: 200,
+			resPefindoBody: `{
+				"code": "200",
+				"status": "SUCCESS",
+				"result": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 61,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": false,
+					"wo_ada_agunan": true,
+					"total_baki_debet_non_agunan": 3100000,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"category": 1,
+					"max_overdue_ko_rules": 31,
+					"max_overdue_last12months_ko_rules": 61
+				},
+				"konsumen": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 61,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": 0,
+					"wo_ada_agunan": 1,
+					"baki_debet_non_agunan": 3100000,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"plafon": 7928083,
+					"fasilitas_aktif": 7,
+					"kualitas_kredit_terburuk": "COLL 5",
+					"bulan_kualitas_terburuk": "2023-10-31",
+					"baki_debet_kualitas_terburuk": 6000000,
+					"kualitas_kredit_terakhir": "COLL 5",
+					"bulan_kualitas_kredit_terakhir": "2022-11-30"
+				},
+				"pasangan": null,
+				"server_time": "2023-12-04T13:15:46+07:00",
+				"duration_time": "78000 ms"
+			}`,
+			resGetClusterBranchElaborate: entity.ClusterBranch{
+				BranchID:       "594",
+				CustomerStatus: "NEW",
+				BPKBNameType:   1,
+				Cluster:        "Cluster E",
+			},
+			resFinal: response.DupcheckResult{
+				Code:           constant.CODE_REJECT_CLUSTER_E_F,
+				Decision:       constant.DECISION_REJECT,
+				Reason:         fmt.Sprintf("%s "+constant.REASON_REJECT_CLUSTER_E_F, "NAMA BEDA", "(I)"),
+				NextProcess:    0,
+				TotalBakiDebet: 3100000,
+				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+			},
+		},
+		{
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_ResultPefindoReject",
+			req: request.FilteringRequest{
+				Data: request.Data{
+					BPKBName:          "KK",
+					ProspectID:        "SAL02400020230727002",
+					BranchID:          "426",
+					IDNumber:          "3275066006789999",
+					LegalName:         "TEST LEGAL NAME",
+					BirthPlace:        "JAKARTA",
+					BirthDate:         "1971-04-15",
+					SurgateMotherName: "TEST MOTHER NAME",
+					Gender:            "M",
+					MaritalStatus:     "S",
+					ProfessionID:      "WRST",
+					MobilePhone:       "085720230309",
+				},
+			},
+			resPefindoCode: 200,
+			resPefindoBody: `{
+				"code": "200",
+				"status": "SUCCESS",
+				"result": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 61,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": false,
+					"wo_ada_agunan": false,
+					"total_baki_debet_non_agunan": 3100000,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"category": 3,
+					"max_overdue_ko_rules": 31,
+					"max_overdue_last12months_ko_rules": 61
+				},
+				"konsumen": {
+					"search_id": "kp_656d6e44a6bf8",
+					"pefindo_id": "1676593952",
+					"score": "VERY HIGH RISK",
+					"max_overdue": 31,
+					"max_overdue_last12months": 61,
+					"angsuran_aktif_pbk": 4407662,
+					"wo_contract": 0,
+					"wo_ada_agunan": 1,
+					"baki_debet_non_agunan": 3100000,
+					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+					"plafon": 7928083,
+					"fasilitas_aktif": 7,
+					"kualitas_kredit_terburuk": "COLL 5",
+					"bulan_kualitas_terburuk": "2023-10-31",
+					"baki_debet_kualitas_terburuk": 6000000,
+					"kualitas_kredit_terakhir": "COLL 5",
+					"bulan_kualitas_kredit_terakhir": "2022-11-30"
+				},
+				"pasangan": null,
+				"server_time": "2023-12-04T13:15:46+07:00",
+				"duration_time": "78000 ms"
+			}`,
+			resGetClusterBranchElaborate: entity.ClusterBranch{
+				BranchID:       "426",
+				CustomerStatus: "NEW",
+				BPKBNameType:   1,
+				Cluster:        "Cluster A",
+			},
+			resFinal: response.DupcheckResult{
+				Code:           constant.NAMA_BEDA_PBK_ALL_REJECT_CODE,
+				Decision:       constant.DECISION_REJECT,
+				Reason:         constant.NAMA_BEDA_PBK_ALL_REJECT_REASON,
+				NextProcess:    0,
+				TotalBakiDebet: 3100000,
+				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
+			},
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(filteringMock.Repository)
+			mockElaborateRepository := new(elaborateMock.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
 			rst := resty.New()
@@ -12212,6 +12905,7 @@ func TestFilteringPefindo(t *testing.T) {
 			mockHttpClient.On("EngineAPI", ctx, constant.FILTERING_LOG, os.Getenv("PBK_URL"), mock.Anything, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, tc.req.Data.ProspectID, accessToken).Return(resp, tc.errPefindo).Once()
 
 			mockRepository.On("UpdateData", mock.Anything).Return(tc.errUpdateData).Once()
+			mockElaborateRepository.On("GetClusterBranchElaborate", mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetClusterBranchElaborate, tc.errGetClusterBranchElaborate).Once()
 
 			if tc.name == "TEST_PASS_FilteringPefindo_PBKNoHit" {
 				os.Setenv("ACTIVE_PBK", "false")
@@ -12219,9 +12913,9 @@ func TestFilteringPefindo(t *testing.T) {
 				os.Setenv("ACTIVE_PBK", "true")
 			}
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockElaborateRepository, mockHttpClient)
 
-			result, err := usecase.FilteringPefindo(ctx, tc.req, tc.statusKonsumen, tc.kategoriStatusKonsumen, accessToken)
+			result, _, err := usecase.FilteringPefindo(ctx, tc.req, tc.statusKonsumen, tc.kategoriStatusKonsumen, accessToken)
 
 			require.Equal(t, tc.resFinal, result)
 			require.Equal(t, tc.errFinal, err)

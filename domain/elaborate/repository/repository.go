@@ -87,6 +87,7 @@ func (r repoHandler) GetFilteringResult(prospect_id string) (filtering entity.Ap
 	if err = r.minilosKmb.Raw(`SELECT
 			PefindoID,
 			PefindoIDSpouse,
+			ResultPefindoIncludeAll,
 			CASE
 			 WHEN PefindoScore IS NULL then 'UNSCORE'
 			 ELSE PefindoScore

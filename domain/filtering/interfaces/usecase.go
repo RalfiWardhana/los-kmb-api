@@ -8,7 +8,7 @@ import (
 
 type Usecase interface {
 	FilteringBlackList(ctx context.Context, reqs request.FilteringRequest, request_id string) (result response.DupcheckResult, err error)
-	FilteringPefindo(ctx context.Context, reqs request.FilteringRequest, status_konsumen, kategoriStatusKonsumen, request_id string) (data response.DupcheckResult, err error)
+	FilteringPefindo(ctx context.Context, reqs request.FilteringRequest, status_konsumen, kategoriStatusKonsumen, request_id string) (data response.DupcheckResult, isRejectClusterEF bool, err error)
 	CheckStatusCategory(ctx context.Context, reqs request.FilteringRequest, status_konsumen, accessToken string) (data response.DupcheckResult, err error)
 }
 

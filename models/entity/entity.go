@@ -51,26 +51,34 @@ func (c *ApiDupcheckKmb) TableName() string {
 }
 
 type ApiDupcheckKmbUpdate struct {
-	RequestID                    string      `gorm:"type:varchar(100);column:RequestID;primaryKey"`
-	ProspectID                   string      `gorm:"type:varchar(100);column:ProspectID"`
-	ResultDupcheckKonsumen       interface{} `gorm:"type:text;column:ResultDupcheckKonsumen"`
-	ResultDupcheckPasangan       interface{} `gorm:"type:text;column:ResultDupcheckPasangan"`
-	ResultKreditmu               interface{} `gorm:"type:text;column:ResultKreditmu"`
-	ResultPefindo                interface{} `gorm:"type:text;column:ResultPefindo"`
-	Response                     interface{} `gorm:"type:text;column:Response"`
-	CustomerType                 interface{} `gorm:"type:text;column:CustomerType"`
-	DtmResponse                  time.Time   `gorm:"column:DtmResponse"`
-	Code                         interface{} `gorm:"type:varchar(50);column:Code"`
-	Decision                     string      `gorm:"type:varchar(50);column:Decision"`
-	Reason                       string      `gorm:"type:varchar(200);column:Reason"`
-	Timestamp                    time.Time   `gorm:"column:Timestamp"`
-	PefindoID                    interface{} `gorm:"column:PefindoID"`
-	PefindoIDSpouse              interface{} `gorm:"column:PefindoIDSpouse"`
-	PefindoScore                 *string     `gorm:"column:PefindoScore"`
-	MaxOverdue                   int         `gorm:"column:MaxOverdue"`
-	MaxOverdueLast12Months       int         `gorm:"column:MaxOverdueLast12Months"`
-	IsNullMaxOverdue             bool        `gorm:"column:IsNullMaxOverdue"`
-	IsNullMaxOverdueLast12Months bool        `gorm:"column:IsNullMaxOverdueLast12Months"`
+	RequestID                      string      `gorm:"type:varchar(100);column:RequestID;primaryKey"`
+	ProspectID                     string      `gorm:"type:varchar(100);column:ProspectID"`
+	ResultDupcheckKonsumen         interface{} `gorm:"type:text;column:ResultDupcheckKonsumen"`
+	ResultDupcheckPasangan         interface{} `gorm:"type:text;column:ResultDupcheckPasangan"`
+	ResultKreditmu                 interface{} `gorm:"type:text;column:ResultKreditmu"`
+	ResultPefindo                  interface{} `gorm:"type:text;column:ResultPefindo"`
+	CategoryExcludeBNPL            float64     `gorm:"type:text;column:CategoryExcludeBNPL"`
+	OverdueCurrentExcludeBNPL      float64     `gorm:"type:text;column:OverdueCurrentExcludeBNPL"`
+	OverdueLast12MonthsExcludeBNPL float64     `gorm:"type:text;column:OverdueLast12MonthsExcludeBNPL"`
+	ResultPefindoExcludeBNPL       string      `gorm:"type:text;column:ResultPefindoExcludeBNPL"`
+	OverdueCurrentIncludeAll       float64     `gorm:"type:text;column:OverdueCurrentIncludeAll"`
+	OverdueLast12MonthsIncludeAll  float64     `gorm:"type:text;column:OverdueLast12MonthsIncludeAll"`
+	ResultPefindoIncludeAll        string      `gorm:"type:text;column:ResultPefindoIncludeAll"`
+	Response                       interface{} `gorm:"type:text;column:Response"`
+	CustomerStatus                 interface{} `gorm:"type:text;column:CustomerStatus"`
+	CustomerType                   interface{} `gorm:"type:text;column:CustomerType"`
+	DtmResponse                    time.Time   `gorm:"column:DtmResponse"`
+	Code                           interface{} `gorm:"type:varchar(50);column:Code"`
+	Decision                       string      `gorm:"type:varchar(50);column:Decision"`
+	Reason                         string      `gorm:"type:varchar(200);column:Reason"`
+	Timestamp                      time.Time   `gorm:"column:Timestamp"`
+	PefindoID                      interface{} `gorm:"column:PefindoID"`
+	PefindoIDSpouse                interface{} `gorm:"column:PefindoIDSpouse"`
+	PefindoScore                   *string     `gorm:"column:PefindoScore"`
+	MaxOverdue                     int         `gorm:"column:MaxOverdue"`
+	MaxOverdueLast12Months         int         `gorm:"column:MaxOverdueLast12Months"`
+	IsNullMaxOverdue               bool        `gorm:"column:IsNullMaxOverdue"`
+	IsNullMaxOverdueLast12Months   bool        `gorm:"column:IsNullMaxOverdueLast12Months"`
 }
 
 func (c *ApiDupcheckKmbUpdate) TableName() string {
