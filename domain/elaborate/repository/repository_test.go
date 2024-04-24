@@ -177,6 +177,7 @@ func TestGetFilteringResult(t *testing.T) {
 	query := `SELECT
 				PefindoID,
 				PefindoIDSpouse,
+				ResultPefindoIncludeAll,
 				CASE
 				WHEN PefindoScore IS NULL then 'UNSCORE'
 				ELSE PefindoScore
