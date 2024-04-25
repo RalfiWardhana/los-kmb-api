@@ -181,6 +181,16 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 		entityFiltering.TotalInstallmentAmountBiro = resPefindo.AngsuranAktifPbk
 		entityFiltering.TotalBakiDebetNonCollateralBiro = resPefindo.TotalBakiDebetNonAgunan
+
+		if resPefindo.Category != nil {
+			entityFiltering.Category = resPefindo.Category
+		}
+		if resPefindo.MaxOverdueKORules != nil {
+			entityFiltering.MaxOverdueKORules = resPefindo.MaxOverdueKORules
+		}
+		if resPefindo.MaxOverdueLast12MonthsKORules != nil {
+			entityFiltering.MaxOverdueLast12MonthsKORules = resPefindo.MaxOverdueLast12MonthsKORules
+		}
 	}
 
 	entityFiltering.Reason = respFiltering.Reason
@@ -204,6 +214,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 	dummy, _ := strconv.ParseBool(os.Getenv("DUMMY_PBK"))
 
 	data.ProspectID = reqs.ProspectID
+	data.CustomerStatus = customerStatus
 
 	if active {
 		var (
@@ -248,10 +259,10 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 		var mappingCluster entity.MasterMappingCluster
 		mappingCluster.BranchID = reqs.BranchID
 		mappingCluster.CustomerStatus = constant.STATUS_KONSUMEN_NEW
-		bpkbString := "Nama Beda"
+		bpkbString := "NAMA BEDA"
 
 		if bpkbName {
-			bpkbString = "Nama Sama"
+			bpkbString = "NAMA SAMA"
 			mappingCluster.BpkbNameType = 1
 		}
 		if strings.Contains(constant.STATUS_KONSUMEN_RO_AO, customerStatus) {
@@ -283,76 +294,90 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 		}
 
 		if checkPefindo.Code == "200" && pefindoResult.Score != constant.PEFINDO_UNSCORE {
-			if !bpkbName {
-				if pefindoResult.MaxOverdueLast12Months != nil {
-					if checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12Months) <= constant.PBK_OVD_LAST_12 {
-						if pefindoResult.MaxOverdue == nil {
-							data.Code = constant.NAMA_BEDA_CURRENT_OVD_NULL_CODE
-							data.CustomerStatus = customerStatus
-							data.Decision = constant.DECISION_PASS
-							data.Reason = fmt.Sprintf("Nama Beda & PBK OVD 12 Bulan Terakhir <= %d", constant.PBK_OVD_LAST_12)
-						} else if checkNullMaxOverdue(pefindoResult.MaxOverdue) <= constant.PBK_OVD_CURRENT {
-							data.Code = constant.NAMA_BEDA_CURRENT_OVD_UNDER_LIMIT_CODE
-							data.CustomerStatus = customerStatus
-							data.Decision = constant.DECISION_PASS
-							data.Reason = fmt.Sprintf("Nama Beda & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
-						} else if checkNullMaxOverdue(pefindoResult.MaxOverdue) > constant.PBK_OVD_CURRENT {
-							data.Code = constant.NAMA_BEDA_CURRENT_OVD_OVER_LIMIT_CODE
-							data.CustomerStatus = customerStatus
-							data.Decision = constant.DECISION_REJECT
-							data.Reason = fmt.Sprintf("Nama Beda & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
-						}
-					} else {
-						data.Code = constant.NAMA_BEDA_12_OVD_OVER_LIMIT_CODE
-						data.CustomerStatus = customerStatus
-						data.Decision = constant.DECISION_REJECT
-						data.Reason = fmt.Sprintf("Nama Beda & PBK OVD 12 Bulan Terakhir > %d", constant.PBK_OVD_LAST_12)
-					}
-				} else {
-					data.Code = constant.NAMA_BEDA_12_OVD_NULL_CODE
-					data.CustomerStatus = customerStatus
-					data.Decision = constant.DECISION_PASS
-					data.Reason = "Nama Beda & PBK OVD 12 Bulan Terakhir Null"
-				}
-			} else if bpkbName {
-				if pefindoResult.MaxOverdueLast12Months != nil {
-					if checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12Months) <= constant.PBK_OVD_LAST_12 {
-						if pefindoResult.MaxOverdue == nil {
-							data.Code = constant.NAMA_SAMA_CURRENT_OVD_NULL_CODE
-							data.CustomerStatus = customerStatus
-							data.Decision = constant.DECISION_PASS
-							data.Reason = fmt.Sprintf("Nama Sama & PBK OVD 12 Bulan Terakhir <= %d", constant.PBK_OVD_LAST_12)
-						} else if checkNullMaxOverdue(pefindoResult.MaxOverdue) <= constant.PBK_OVD_CURRENT {
-							data.Code = constant.NAMA_SAMA_CURRENT_OVD_UNDER_LIMIT_CODE
-							data.CustomerStatus = customerStatus
-							data.Decision = constant.DECISION_PASS
-							data.Reason = fmt.Sprintf("Nama Sama & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
-						} else if checkNullMaxOverdue(pefindoResult.MaxOverdue) > constant.PBK_OVD_CURRENT {
-							data.Code = constant.NAMA_SAMA_CURRENT_OVD_OVER_LIMIT_CODE
+			if pefindoResult.Category != nil {
+				if !bpkbName {
+					if pefindoResult.MaxOverdueLast12MonthsKORules != nil {
+						if checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12 {
+							if pefindoResult.MaxOverdueKORules == nil {
+								data.Code = constant.NAMA_BEDA_CURRENT_OVD_NULL_CODE
+								data.CustomerStatus = customerStatus
+								data.Decision = constant.DECISION_PASS
+								data.Reason = fmt.Sprintf("NAMA BEDA %s & PBK OVD 12 Bulan Terakhir <= %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
+							} else if checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) <= constant.PBK_OVD_CURRENT {
+								data.Code = constant.NAMA_BEDA_CURRENT_OVD_UNDER_LIMIT_CODE
+								data.CustomerStatus = customerStatus
+								data.Decision = constant.DECISION_PASS
+								data.Reason = fmt.Sprintf("NAMA BEDA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+							} else if checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) > constant.PBK_OVD_CURRENT {
+								data.Code = constant.NAMA_BEDA_CURRENT_OVD_OVER_LIMIT_CODE
+								data.CustomerStatus = customerStatus
+								data.Decision = constant.DECISION_REJECT
+								data.Reason = fmt.Sprintf("NAMA BEDA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+							}
+						} else {
+							data.Code = constant.NAMA_BEDA_12_OVD_OVER_LIMIT_CODE
 							data.CustomerStatus = customerStatus
 							data.Decision = constant.DECISION_REJECT
-							data.NextProcess = false
-							data.Reason = fmt.Sprintf("Nama Sama & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+							data.Reason = fmt.Sprintf("NAMA BEDA %s & OVD 12 Bulan Terakhir > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
 						}
 					} else {
-						data.Code = constant.NAMA_SAMA_12_OVD_OVER_LIMIT_CODE
+						data.Code = constant.NAMA_BEDA_12_OVD_NULL_CODE
 						data.CustomerStatus = customerStatus
-						data.Decision = constant.DECISION_REJECT
-						data.NextProcess = false
-						data.Reason = fmt.Sprintf("Nama Sama & PBK OVD 12 Bulan Terakhir > %d", constant.PBK_OVD_LAST_12)
+						data.Decision = constant.DECISION_PASS
+						data.Reason = fmt.Sprintf("NAMA BEDA %s & OVD 12 Bulan Terakhir Null", getReasonCategoryRoman(pefindoResult.Category))
 					}
-				} else {
-					data.Code = constant.NAMA_SAMA_12_OVD_NULL_CODE
-					data.CustomerStatus = customerStatus
-					data.Decision = constant.DECISION_PASS
-					data.Reason = "Nama Sama & PBK OVD 12 Bulan Terakhir Null"
+				} else if bpkbName {
+					if pefindoResult.MaxOverdueLast12MonthsKORules != nil {
+						if checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12 {
+							if pefindoResult.MaxOverdueKORules == nil {
+								data.Code = constant.NAMA_SAMA_CURRENT_OVD_NULL_CODE
+								data.CustomerStatus = customerStatus
+								data.Decision = constant.DECISION_PASS
+								data.Reason = fmt.Sprintf("NAMA SAMA %s & PBK OVD 12 Bulan Terakhir <= %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
+							} else if checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) <= constant.PBK_OVD_CURRENT {
+								data.Code = constant.NAMA_SAMA_CURRENT_OVD_UNDER_LIMIT_CODE
+								data.CustomerStatus = customerStatus
+								data.Decision = constant.DECISION_PASS
+								data.Reason = fmt.Sprintf("NAMA SAMA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current <= %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+							} else if checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) > constant.PBK_OVD_CURRENT {
+								data.Code = constant.NAMA_SAMA_CURRENT_OVD_OVER_LIMIT_CODE
+								data.CustomerStatus = customerStatus
+								data.Reason = fmt.Sprintf("NAMA SAMA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+
+								data.Decision = func() string {
+									if checkNullCategory(pefindoResult.Category) == 3 {
+										return constant.DECISION_REJECT
+									}
+									return constant.DECISION_PASS
+								}()
+							}
+						} else {
+							data.Code = constant.NAMA_SAMA_12_OVD_OVER_LIMIT_CODE
+							data.CustomerStatus = customerStatus
+							data.Reason = fmt.Sprintf("NAMA SAMA %s & OVD 12 Bulan Terakhir > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
+
+							data.Decision = func() string {
+								if checkNullCategory(pefindoResult.Category) == 3 {
+									return constant.DECISION_REJECT
+								}
+								return constant.DECISION_PASS
+							}()
+						}
+					} else {
+						data.Code = constant.NAMA_SAMA_12_OVD_NULL_CODE
+						data.CustomerStatus = customerStatus
+						data.Decision = constant.DECISION_PASS
+						data.Reason = fmt.Sprintf("NAMA SAMA %s & OVD 12 Bulan Terakhir Null", getReasonCategoryRoman(pefindoResult.Category))
+					}
 				}
-			}
 
-			if data.Decision == constant.DECISION_REJECT {
+				if data.Decision == constant.DECISION_PASS {
+					data.NextProcess = true
+				}
 
-				data.CustomerStatus = customerStatus
-				data.Code = constant.WO_AGUNAN_REJECT_CODE
+				if data.Decision == constant.DECISION_REJECT {
+					data.Code = constant.WO_AGUNAN_REJECT_CODE
+				}
 
 				// BPKB Nama Sama
 				if bpkbName {
@@ -363,40 +388,45 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 							if customerStatus == constant.STATUS_KONSUMEN_NEW {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = false
-									data.Reason = "Nama Sama & " + constant.ADA_FASILITAS_WO_AGUNAN
+									data.Reason = fmt.Sprintf("NAMA SAMA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
 								} else {
 									data.NextProcess = false
-									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 								}
 							} else if customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-									data.NextProcess = true
-									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_SESUAI
+									if data.Decision == constant.DECISION_PASS {
+										data.NextProcess = false
+										data.Reason = fmt.Sprintf("NAMA SAMA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
+									} else {
+										data.NextProcess = true
+										data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									}
 								} else {
 									data.NextProcess = false
-									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 								}
 							} else {
 								data.NextProcess = false
-								data.Reason = constant.ADA_FASILITAS_WO_AGUNAN
+								data.Reason = fmt.Sprintf("NAMA SAMA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
 							}
 
 						} else { //Wo Agunan No
 							if customerStatus == constant.STATUS_KONSUMEN_NEW {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = true
-									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_SESUAI
+									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 								} else {
 									data.NextProcess = false
-									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 								}
 							} else if customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = true
-									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_SESUAI
+									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 								} else {
 									data.NextProcess = false
-									data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 								}
 							}
 						}
@@ -404,24 +434,24 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 						if customerStatus == constant.STATUS_KONSUMEN_NEW {
 							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 								data.NextProcess = true
-								data.Reason = constant.NAMA_SAMA_BAKI_DEBET_SESUAI
+								data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 							} else {
 								data.NextProcess = false
-								data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+								data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 							}
 
 						} else if customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO {
 							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 								data.NextProcess = true
-								data.Reason = constant.NAMA_SAMA_BAKI_DEBET_SESUAI
+								data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 							} else {
 								data.NextProcess = false
-								data.Reason = constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+								data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 							}
 						} else {
 							data.NextProcess = true
 							data.Code = constant.WO_AGUNAN_PASS_CODE
-							data.Reason = constant.TIDAK_ADA_FASILITAS_WO_AGUNAN
+							data.Reason = fmt.Sprintf("NAMA SAMA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
 						}
 					}
 				}
@@ -435,135 +465,185 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 							if customerStatus == constant.STATUS_KONSUMEN_NEW {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = false
-									data.Reason = "Nama Beda & " + constant.ADA_FASILITAS_WO_AGUNAN
+									data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
 								} else {
 									data.NextProcess = false
-									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
+									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 								}
 							} else if customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-									data.NextProcess = true
-									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
+									if data.Decision == constant.DECISION_PASS {
+										data.NextProcess = false
+										data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
+									} else {
+										data.NextProcess = true
+										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									}
 								} else {
 									data.NextProcess = false
-									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
+									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 								}
 							} else {
 								data.NextProcess = false
-								data.Reason = constant.ADA_FASILITAS_WO_AGUNAN
+								data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
 							}
 
 						} else { //Wo Agunan No
 							if customerStatus == constant.STATUS_KONSUMEN_NEW {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-									data.NextProcess = true
-									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
+									if data.Decision == constant.DECISION_PASS {
+										data.NextProcess = true
+										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									} else {
+										data.NextProcess = false
+										data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
+									}
 								} else {
 									data.NextProcess = false
-									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
+									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 								}
 							} else if customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO {
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = true
-									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
+									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 								} else {
 									data.NextProcess = false
-									data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
+									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 								}
 							}
 						}
 					} else { //Wo Contract No
 						if customerStatus == constant.STATUS_KONSUMEN_NEW {
 							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-								data.NextProcess = true
-								data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
+								if data.Decision == constant.DECISION_PASS {
+									data.NextProcess = true
+									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+								} else {
+									data.NextProcess = false
+									data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
+								}
 							} else {
 								data.NextProcess = false
-								data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
+								data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 							}
 
 						} else if customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO {
 							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 								data.NextProcess = true
-								data.Reason = constant.NAMA_BEDA_BAKI_DEBET_SESUAI
+								data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 							} else {
 								data.NextProcess = false
-								data.Reason = constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
+								data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
 							}
 						} else {
 							data.NextProcess = true
 							data.Code = constant.WO_AGUNAN_PASS_CODE
-							data.Reason = constant.TIDAK_ADA_FASILITAS_WO_AGUNAN
+							data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
 						}
 					}
 				}
-			}
 
-			// Reason Baki Debet, Reject Cluster E, F
-			if data.Decision == constant.DECISION_REJECT && data.NextProcess == true {
-				if pefindoResult.TotalBakiDebetNonAgunan <= 3000000 {
-					data.Reason = bpkbString + " & Baki Debet <= 3 Juta"
+				// Reason Baki Debet
+				if data.Decision == constant.DECISION_REJECT && data.NextProcess {
+					if pefindoResult.TotalBakiDebetNonAgunan <= 3000000 {
+						data.Reason = fmt.Sprintf("%s %s & Baki Debet <= 3 Juta", bpkbString, getReasonCategoryRoman(pefindoResult.Category))
+					}
+					if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+						data.Reason = fmt.Sprintf("%s %s & Baki Debet > 3 - 20 Juta", bpkbString, getReasonCategoryRoman(pefindoResult.Category))
+					}
 				}
-				if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-					data.Reason = bpkbString + " & Baki Debet > 3 - 20 Juta"
-				}
-				if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET && strings.Contains("Cluster E Cluster F", mappingCluster.Cluster) {
-					data.NextProcess = false
-				}
-			}
 
-			if checkPefindo.Konsumen != (response.PefindoResultKonsumen{}) {
-				trxDetailBiroC := entity.TrxDetailBiro{
-					ProspectID:                  reqs.ProspectID,
-					Subject:                     "CUSTOMER",
-					Source:                      "PBK",
-					BiroID:                      checkPefindo.Konsumen.PefindoID,
-					Score:                       checkPefindo.Konsumen.Score,
-					MaxOverdue:                  checkPefindo.Konsumen.MaxOverdue,
-					MaxOverdueLast12months:      checkPefindo.Konsumen.MaxOverdueLast12Months,
-					InstallmentAmount:           checkPefindo.Konsumen.AngsuranAktifPbk,
-					WoContract:                  checkPefindo.Konsumen.WoContract,
-					WoWithCollateral:            checkPefindo.Konsumen.WoAdaAgunan,
-					BakiDebetNonCollateral:      checkPefindo.Konsumen.BakiDebetNonAgunan,
-					UrlPdfReport:                checkPefindo.Konsumen.DetailReport,
-					Plafon:                      checkPefindo.Konsumen.Plafon,
-					FasilitasAktif:              checkPefindo.Konsumen.FasilitasAktif,
-					KualitasKreditTerburuk:      checkPefindo.Konsumen.KualitasKreditTerburuk,
-					BulanKualitasTerburuk:       checkPefindo.Konsumen.BulanKualitasTerburuk,
-					BakiDebetKualitasTerburuk:   checkPefindo.Konsumen.BakiDebetKualitasTerburuk,
-					KualitasKreditTerakhir:      checkPefindo.Konsumen.KualitasKreditTerakhir,
-					BulanKualitasKreditTerakhir: checkPefindo.Konsumen.BulanKualitasKreditTerakhir,
-				}
-				trxDetailBiro = append(trxDetailBiro, trxDetailBiroC)
-				data.PbkReportCustomer = &checkPefindo.Konsumen.DetailReport
-			}
-			if checkPefindo.Pasangan != (response.PefindoResultPasangan{}) {
-				trxDetailBiroC := entity.TrxDetailBiro{
-					ProspectID:                  reqs.ProspectID,
-					Subject:                     "SPOUSE",
-					Source:                      "PBK",
-					BiroID:                      checkPefindo.Pasangan.PefindoID,
-					Score:                       checkPefindo.Pasangan.Score,
-					MaxOverdue:                  checkPefindo.Pasangan.MaxOverdue,
-					MaxOverdueLast12months:      checkPefindo.Pasangan.MaxOverdueLast12Months,
-					InstallmentAmount:           checkPefindo.Pasangan.AngsuranAktifPbk,
-					WoContract:                  checkPefindo.Pasangan.WoContract,
-					WoWithCollateral:            checkPefindo.Pasangan.WoAdaAgunan,
-					BakiDebetNonCollateral:      checkPefindo.Pasangan.BakiDebetNonAgunan,
-					UrlPdfReport:                checkPefindo.Pasangan.DetailReport,
-					Plafon:                      checkPefindo.Pasangan.Plafon,
-					FasilitasAktif:              checkPefindo.Pasangan.FasilitasAktif,
-					KualitasKreditTerburuk:      checkPefindo.Pasangan.KualitasKreditTerburuk,
-					BulanKualitasTerburuk:       checkPefindo.Pasangan.BulanKualitasTerburuk,
-					BakiDebetKualitasTerburuk:   checkPefindo.Pasangan.BakiDebetKualitasTerburuk,
-					KualitasKreditTerakhir:      checkPefindo.Pasangan.KualitasKreditTerakhir,
-					BulanKualitasKreditTerakhir: checkPefindo.Pasangan.BulanKualitasKreditTerakhir,
-				}
-				trxDetailBiro = append(trxDetailBiro, trxDetailBiroC)
-				data.PbkReportSpouse = &checkPefindo.Pasangan.DetailReport
-			}
+				// Reject ovd include all Cluster E, F and bpkbname false
+				if (pefindoResult.MaxOverdueLast12Months != nil && checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12Months) > constant.PBK_OVD_LAST_12) ||
+					(pefindoResult.MaxOverdue != nil && checkNullMaxOverdue(pefindoResult.MaxOverdue) > constant.PBK_OVD_CURRENT) {
 
-			data.TotalBakiDebet = pefindoResult.TotalBakiDebetNonAgunan
+					if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET && strings.Contains("Cluster E Cluster F", mappingCluster.Cluster) {
+						data.Reason = fmt.Sprintf("%s %s & Baki Debet > 3 - 20 Juta & Tidak dapat dibiayai", bpkbString, getReasonCategoryRoman(pefindoResult.Category))
+						data.NextProcess = false
+						data.Decision = constant.DECISION_REJECT
+					}
+
+					if !bpkbName {
+						data.Reason = fmt.Sprintf("%s & Baki Debet > Threshold", bpkbString)
+						data.NextProcess = false
+						data.Decision = constant.DECISION_REJECT
+					}
+				}
+
+				if checkPefindo.Konsumen != (response.PefindoResultKonsumen{}) {
+					trxDetailBiroC := entity.TrxDetailBiro{
+						ProspectID:                             reqs.ProspectID,
+						Subject:                                "CUSTOMER",
+						Source:                                 "PBK",
+						BiroID:                                 checkPefindo.Konsumen.PefindoID,
+						Score:                                  checkPefindo.Konsumen.Score,
+						MaxOverdue:                             checkPefindo.Konsumen.MaxOverdue,
+						MaxOverdueLast12months:                 checkPefindo.Konsumen.MaxOverdueLast12Months,
+						InstallmentAmount:                      checkPefindo.Konsumen.AngsuranAktifPbk,
+						WoContract:                             checkPefindo.Konsumen.WoContract,
+						WoWithCollateral:                       checkPefindo.Konsumen.WoAdaAgunan,
+						BakiDebetNonCollateral:                 checkPefindo.Konsumen.BakiDebetNonAgunan,
+						UrlPdfReport:                           checkPefindo.Konsumen.DetailReport,
+						Plafon:                                 checkPefindo.Konsumen.Plafon,
+						FasilitasAktif:                         checkPefindo.Konsumen.FasilitasAktif,
+						KualitasKreditTerburuk:                 checkPefindo.Konsumen.KualitasKreditTerburuk,
+						BulanKualitasTerburuk:                  checkPefindo.Konsumen.BulanKualitasTerburuk,
+						BakiDebetKualitasTerburuk:              checkPefindo.Konsumen.BakiDebetKualitasTerburuk,
+						KualitasKreditTerakhir:                 checkPefindo.Konsumen.KualitasKreditTerakhir,
+						BulanKualitasKreditTerakhir:            checkPefindo.Konsumen.BulanKualitasKreditTerakhir,
+						OverdueLastKORules:                     checkPefindo.Konsumen.OverdueLastKORules,
+						OverdueLast12MonthsKORules:             checkPefindo.Konsumen.OverdueLast12MonthsKORules,
+						Category:                               checkPefindo.Konsumen.Category,
+						MaxOverdueAgunanKORules:                checkPefindo.Konsumen.MaxOverdueAgunanKORules,
+						MaxOverdueAgunanLast12MonthsKORules:    checkPefindo.Konsumen.MaxOverdueAgunanLast12MonthsKORules,
+						MaxOverdueNonAgunanKORules:             checkPefindo.Konsumen.MaxOverdueNonAgunanKORules,
+						MaxOverdueNonAgunanLast12MonthsKORules: checkPefindo.Konsumen.MaxOverdueNonAgunanLast12MonthsKORules,
+					}
+					trxDetailBiro = append(trxDetailBiro, trxDetailBiroC)
+					data.PbkReportCustomer = &checkPefindo.Konsumen.DetailReport
+				}
+				if checkPefindo.Pasangan != (response.PefindoResultPasangan{}) {
+					trxDetailBiroC := entity.TrxDetailBiro{
+						ProspectID:                             reqs.ProspectID,
+						Subject:                                "SPOUSE",
+						Source:                                 "PBK",
+						BiroID:                                 checkPefindo.Pasangan.PefindoID,
+						Score:                                  checkPefindo.Pasangan.Score,
+						MaxOverdue:                             checkPefindo.Pasangan.MaxOverdue,
+						MaxOverdueLast12months:                 checkPefindo.Pasangan.MaxOverdueLast12Months,
+						InstallmentAmount:                      checkPefindo.Pasangan.AngsuranAktifPbk,
+						WoContract:                             checkPefindo.Pasangan.WoContract,
+						WoWithCollateral:                       checkPefindo.Pasangan.WoAdaAgunan,
+						BakiDebetNonCollateral:                 checkPefindo.Pasangan.BakiDebetNonAgunan,
+						UrlPdfReport:                           checkPefindo.Pasangan.DetailReport,
+						Plafon:                                 checkPefindo.Pasangan.Plafon,
+						FasilitasAktif:                         checkPefindo.Pasangan.FasilitasAktif,
+						KualitasKreditTerburuk:                 checkPefindo.Pasangan.KualitasKreditTerburuk,
+						BulanKualitasTerburuk:                  checkPefindo.Pasangan.BulanKualitasTerburuk,
+						BakiDebetKualitasTerburuk:              checkPefindo.Pasangan.BakiDebetKualitasTerburuk,
+						KualitasKreditTerakhir:                 checkPefindo.Pasangan.KualitasKreditTerakhir,
+						BulanKualitasKreditTerakhir:            checkPefindo.Pasangan.BulanKualitasKreditTerakhir,
+						OverdueLastKORules:                     checkPefindo.Pasangan.OverdueLastKORules,
+						OverdueLast12MonthsKORules:             checkPefindo.Pasangan.OverdueLast12MonthsKORules,
+						Category:                               checkPefindo.Pasangan.Category,
+						MaxOverdueAgunanKORules:                checkPefindo.Pasangan.MaxOverdueAgunanKORules,
+						MaxOverdueAgunanLast12MonthsKORules:    checkPefindo.Pasangan.MaxOverdueAgunanLast12MonthsKORules,
+						MaxOverdueNonAgunanKORules:             checkPefindo.Pasangan.MaxOverdueNonAgunanKORules,
+						MaxOverdueNonAgunanLast12MonthsKORules: checkPefindo.Pasangan.MaxOverdueNonAgunanLast12MonthsKORules,
+					}
+					trxDetailBiro = append(trxDetailBiro, trxDetailBiroC)
+					data.PbkReportSpouse = &checkPefindo.Pasangan.DetailReport
+				}
+
+				data.TotalBakiDebet = pefindoResult.TotalBakiDebetNonAgunan
+
+			} else {
+				data.Code = constant.PBK_NO_HIT
+				data.CustomerStatus = customerStatus
+				data.Decision = constant.DECISION_PASS
+				data.Reason = "PBK No Hit - Kategori Konsumen Null"
+				data.NextProcess = true
+			}
 
 		} else if checkPefindo.Code == "201" || pefindoResult.Score == constant.PEFINDO_UNSCORE {
 
@@ -572,11 +652,13 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 				data.CustomerStatus = customerStatus
 				data.Decision = constant.DECISION_PASS
 				data.Reason = "PBK Tidak Ditemukan - " + customerStatus
+				data.NextProcess = true
 			} else {
 				data.Code = constant.NAMA_SAMA_UNSCORE_NEW_CODE
 				data.CustomerStatus = customerStatus
 				data.Decision = constant.DECISION_PASS
 				data.Reason = "PBK Tidak Ditemukan - " + customerStatus
+				data.NextProcess = true
 			}
 
 		} else if checkPefindo.Code == "202" {
@@ -584,6 +666,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 			data.CustomerStatus = customerStatus
 			data.Decision = constant.DECISION_PASS
 			data.Reason = "No Hit PBK"
+			data.NextProcess = true
 		}
 
 		responsePefindo = pefindoResult
@@ -593,10 +676,6 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 		data.CustomerStatus = customerStatus
 		data.Decision = constant.DECISION_PASS
 		data.Reason = "No Hit PBK"
-
-	}
-
-	if data.Decision == constant.DECISION_PASS {
 		data.NextProcess = true
 	}
 
@@ -804,4 +883,30 @@ func (u usecase) GetResultFiltering(prospectID string) (respFiltering response.F
 	}
 
 	return
+}
+
+func checkNullCategory(Category interface{}) float64 {
+	var category float64
+
+	if utils.CheckVriable(Category) == reflect.String.String() {
+		category = utils.StrConvFloat64(Category.(string))
+	} else {
+		category = Category.(float64)
+	}
+
+	return category
+}
+
+// function to map reason category values to Roman numerals
+func getReasonCategoryRoman(category interface{}) string {
+	switch category.(float64) {
+	case 1:
+		return "(I)"
+	case 2:
+		return "(II)"
+	case 3:
+		return "(III)"
+	default:
+		return ""
+	}
 }

@@ -65,6 +65,18 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		}
 	}
 
+	// KO Rules Include All
+	if filteringKMB.MaxOverdueBiro != nil || filteringKMB.MaxOverdueLast12monthsBiro != nil {
+		ovdCurrent, _ := filteringKMB.MaxOverdueBiro.(int64)
+		ovd12, _ := filteringKMB.MaxOverdueLast12monthsBiro.(int64)
+
+		resultPefindo = constant.DECISION_PASS
+		if ovdCurrent > constant.PBK_OVD_CURRENT || ovd12 > constant.PBK_OVD_LAST_12 {
+			resultPefindo = constant.DECISION_REJECT
+		}
+
+	}
+
 	if strings.Contains(os.Getenv("NAMA_SAMA"), filteringKMB.BpkbName) {
 		bpkbNameType = 1
 	}
