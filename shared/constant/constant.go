@@ -28,6 +28,7 @@ const (
 	TAG_LOB                          = "lob"
 	TAG_INCOMING                     = "incoming"
 	TAG_HOME                         = "home"
+	TAG_NPWP                         = "npwp"
 	TAG_KTP                          = "ktp"
 	TAG_ADDRESS                      = "address"
 	TAG_MARITAL                      = "marital"

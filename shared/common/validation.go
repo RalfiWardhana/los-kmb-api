@@ -69,6 +69,7 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("incoming", incomingValidation)
 	v.validator.RegisterValidation("ktp", ktpValidation)
 	v.validator.RegisterValidation("home", homeValidation)
+	v.validator.RegisterValidation("npwp", npwpValidation)
 	v.validator.RegisterValidation("address", addressValidation)
 	v.validator.RegisterValidation("education", educationValidation)
 	v.validator.RegisterValidation("marital", maritalValidation)
@@ -416,6 +417,21 @@ func homeValidation(fl validator.FieldLevel) bool {
 	validator := contains(arrHome, fl.Field().String())
 
 	Home = home.Value
+
+	return validator
+}
+
+func npwpValidation(fl validator.FieldLevel) (validator bool) {
+
+	s := fl.Field().String()
+	validator = true
+	if s != "" {
+		if !regexp.MustCompile(`^[0-9]*$`).MatchString(s) {
+			validator = false
+		} else if len(s) < 15 || len(s) > 16 {
+			validator = false
+		}
+	}
 
 	return validator
 }
