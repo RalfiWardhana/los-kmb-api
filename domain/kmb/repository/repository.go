@@ -1844,12 +1844,9 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 				expiredDate = time.Now().AddDate(4, 0, 0)
 			}
 		}
-		npwp := "000000000000000"
+		npwp := ""
 		if personal.PersonalNPWP != nil {
-			personalNPWP := *personal.PersonalNPWP
-			if personalNPWP != "" {
-				npwp = personalNPWP
-			}
+			npwp = *personal.PersonalNPWP
 		}
 
 		if err := tx.Create(&entity.STG_CUST_H{
