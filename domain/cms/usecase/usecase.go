@@ -1735,7 +1735,7 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 		birthDate := inq.BirthDate.Format("02-01-2006")
 
 		if len(inq.ProspectID) > 2 && inq.ProspectID[0:2] == "NE" {
-			inq.HasReturn = false
+			inq.HasReturn = true
 		}
 
 		row := entity.InquiryDataApproval{
