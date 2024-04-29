@@ -3155,7 +3155,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 				return err
 			}
 
-			if err == nil {
+			if err == nil && (len(req.ProspectID) > 2 && req.ProspectID[0:2] != "NE") {
 				return r.losDB.Transaction(func(tx2 *gorm.DB) error {
 					// worker insert staging
 					callbackHeaderLos, _ := json.Marshal(
