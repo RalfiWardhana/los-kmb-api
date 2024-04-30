@@ -474,7 +474,7 @@ type CustomerPersonalNE struct {
 	StaySinceYear     string  `json:"stay_since_year" validate:"len=4" example:"2018"`
 	StaySinceMonth    string  `json:"stay_since_month" validate:"len=2" example:"03"`
 	HomeStatus        string  `json:"home_status" validate:"home" example:"KL"`
-	NPWP              *string `json:"npwp" validate:"max=25" example:"994646808XXX895"`
+	NPWP              *string `json:"npwp" validate:"omitempty,npwp" example:"994646808XXX895"`
 	Education         string  `json:"education" validate:"education"  example:"S1"`
 	MaritalStatus     string  `json:"marital_status" validate:"marital"  example:"M"`
 	NumOfDependence   *int    `json:"num_of_dependence" validate:"required,max=50"  example:"1"`
