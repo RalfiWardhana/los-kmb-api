@@ -51,26 +51,34 @@ func (c *ApiDupcheckKmb) TableName() string {
 }
 
 type ApiDupcheckKmbUpdate struct {
-	RequestID                    string      `gorm:"type:varchar(100);column:RequestID;primaryKey"`
-	ProspectID                   string      `gorm:"type:varchar(100);column:ProspectID"`
-	ResultDupcheckKonsumen       interface{} `gorm:"type:text;column:ResultDupcheckKonsumen"`
-	ResultDupcheckPasangan       interface{} `gorm:"type:text;column:ResultDupcheckPasangan"`
-	ResultKreditmu               interface{} `gorm:"type:text;column:ResultKreditmu"`
-	ResultPefindo                interface{} `gorm:"type:text;column:ResultPefindo"`
-	Response                     interface{} `gorm:"type:text;column:Response"`
-	CustomerType                 interface{} `gorm:"type:text;column:CustomerType"`
-	DtmResponse                  time.Time   `gorm:"column:DtmResponse"`
-	Code                         interface{} `gorm:"type:varchar(50);column:Code"`
-	Decision                     string      `gorm:"type:varchar(50);column:Decision"`
-	Reason                       string      `gorm:"type:varchar(200);column:Reason"`
-	Timestamp                    time.Time   `gorm:"column:Timestamp"`
-	PefindoID                    interface{} `gorm:"column:PefindoID"`
-	PefindoIDSpouse              interface{} `gorm:"column:PefindoIDSpouse"`
-	PefindoScore                 *string     `gorm:"column:PefindoScore"`
-	MaxOverdue                   int         `gorm:"column:MaxOverdue"`
-	MaxOverdueLast12Months       int         `gorm:"column:MaxOverdueLast12Months"`
-	IsNullMaxOverdue             bool        `gorm:"column:IsNullMaxOverdue"`
-	IsNullMaxOverdueLast12Months bool        `gorm:"column:IsNullMaxOverdueLast12Months"`
+	RequestID                      string      `gorm:"type:varchar(100);column:RequestID;primaryKey"`
+	ProspectID                     string      `gorm:"type:varchar(100);column:ProspectID"`
+	ResultDupcheckKonsumen         interface{} `gorm:"type:text;column:ResultDupcheckKonsumen"`
+	ResultDupcheckPasangan         interface{} `gorm:"type:text;column:ResultDupcheckPasangan"`
+	ResultKreditmu                 interface{} `gorm:"type:text;column:ResultKreditmu"`
+	ResultPefindo                  interface{} `gorm:"type:text;column:ResultPefindo"`
+	CategoryExcludeBNPL            float64     `gorm:"type:text;column:CategoryExcludeBNPL"`
+	OverdueCurrentExcludeBNPL      float64     `gorm:"type:text;column:OverdueCurrentExcludeBNPL"`
+	OverdueLast12MonthsExcludeBNPL float64     `gorm:"type:text;column:OverdueLast12MonthsExcludeBNPL"`
+	ResultPefindoExcludeBNPL       string      `gorm:"type:text;column:ResultPefindoExcludeBNPL"`
+	OverdueCurrentIncludeAll       float64     `gorm:"type:text;column:OverdueCurrentIncludeAll"`
+	OverdueLast12MonthsIncludeAll  float64     `gorm:"type:text;column:OverdueLast12MonthsIncludeAll"`
+	ResultPefindoIncludeAll        string      `gorm:"type:text;column:ResultPefindoIncludeAll"`
+	Response                       interface{} `gorm:"type:text;column:Response"`
+	CustomerStatus                 interface{} `gorm:"type:text;column:CustomerStatus"`
+	CustomerType                   interface{} `gorm:"type:text;column:CustomerType"`
+	DtmResponse                    time.Time   `gorm:"column:DtmResponse"`
+	Code                           interface{} `gorm:"type:varchar(50);column:Code"`
+	Decision                       string      `gorm:"type:varchar(50);column:Decision"`
+	Reason                         string      `gorm:"type:varchar(200);column:Reason"`
+	Timestamp                      time.Time   `gorm:"column:Timestamp"`
+	PefindoID                      interface{} `gorm:"column:PefindoID"`
+	PefindoIDSpouse                interface{} `gorm:"column:PefindoIDSpouse"`
+	PefindoScore                   *string     `gorm:"column:PefindoScore"`
+	MaxOverdue                     int         `gorm:"column:MaxOverdue"`
+	MaxOverdueLast12Months         int         `gorm:"column:MaxOverdueLast12Months"`
+	IsNullMaxOverdue               bool        `gorm:"column:IsNullMaxOverdue"`
+	IsNullMaxOverdueLast12Months   bool        `gorm:"column:IsNullMaxOverdueLast12Months"`
 }
 
 func (c *ApiDupcheckKmbUpdate) TableName() string {
@@ -819,6 +827,9 @@ type FilteringKMB struct {
 	ScoreBiro                       interface{} `gorm:"column:score_biro;type:varchar(20)" json:"score_biro"`
 	Cluster                         interface{} `gorm:"column:cluster;type:varchar(20)" json:"cluster"`
 	Reason                          interface{} `gorm:"column:reason;type:varchar(250)" json:"reason"`
+	Category                        interface{} `gorm:"column:category" json:"category"`
+	MaxOverdueKORules               interface{} `gorm:"column:max_overdue_ko_rules" json:"max_overdue_ko_rules"`
+	MaxOverdueLast12MonthsKORules   interface{} `gorm:"column:max_overdue_last12months_ko_rules" json:"max_overdue_last12months_ko_rules"`
 	CreatedAt                       time.Time   `gorm:"column:created_at" json:"created_at"`
 }
 
@@ -859,26 +870,33 @@ func (c *TrxDetail) TableName() string {
 }
 
 type TrxDetailBiro struct {
-	ProspectID                  string      `gorm:"type:varchar(20);column:prospect_id;primary_key:true"`
-	Subject                     string      `gorm:"type:varchar(10);column:subject"`
-	Source                      string      `gorm:"type:varchar(5);column:source"`
-	BiroID                      string      `gorm:"type:varchar(20);column:biro_id"`
-	Score                       string      `gorm:"type:varchar(20);column:score"`
-	MaxOverdue                  interface{} `gorm:"column:max_overdue"`
-	MaxOverdueLast12months      interface{} `gorm:"column:max_overdue_last12months"`
-	InstallmentAmount           interface{} `gorm:"column:installment_amount"`
-	WoContract                  int         `gorm:"column:wo_contract"`
-	WoWithCollateral            int         `gorm:"column:wo_with_collateral"`
-	BakiDebetNonCollateral      float64     `gorm:"column:baki_debet_non_collateral"`
-	UrlPdfReport                string      `gorm:"type:varchar(200);column:url_pdf_report"`
-	CreatedAt                   time.Time   `gorm:"column:created_at"`
-	Plafon                      interface{} `gorm:"column:plafon"`
-	FasilitasAktif              interface{} `gorm:"column:fasilitas_aktif"`
-	KualitasKreditTerburuk      interface{} `gorm:"column:kualitas_kredit_terburuk"`
-	BulanKualitasTerburuk       interface{} `gorm:"column:bulan_kualitas_terburuk"`
-	BakiDebetKualitasTerburuk   interface{} `gorm:"column:baki_debet_kualitas_terburuk"`
-	KualitasKreditTerakhir      interface{} `gorm:"column:kualitas_kredit_terakhir"`
-	BulanKualitasKreditTerakhir interface{} `gorm:"column:bulan_kualitas_kredit_terakhir"`
+	ProspectID                             string      `gorm:"type:varchar(20);column:prospect_id;primary_key:true"`
+	Subject                                string      `gorm:"type:varchar(10);column:subject"`
+	Source                                 string      `gorm:"type:varchar(5);column:source"`
+	BiroID                                 string      `gorm:"type:varchar(20);column:biro_id"`
+	Score                                  string      `gorm:"type:varchar(20);column:score"`
+	MaxOverdue                             interface{} `gorm:"column:max_overdue"`
+	MaxOverdueLast12months                 interface{} `gorm:"column:max_overdue_last12months"`
+	InstallmentAmount                      interface{} `gorm:"column:installment_amount"`
+	WoContract                             int         `gorm:"column:wo_contract"`
+	WoWithCollateral                       int         `gorm:"column:wo_with_collateral"`
+	BakiDebetNonCollateral                 float64     `gorm:"column:baki_debet_non_collateral"`
+	UrlPdfReport                           string      `gorm:"type:varchar(200);column:url_pdf_report"`
+	CreatedAt                              time.Time   `gorm:"column:created_at"`
+	Plafon                                 interface{} `gorm:"column:plafon"`
+	FasilitasAktif                         interface{} `gorm:"column:fasilitas_aktif"`
+	KualitasKreditTerburuk                 interface{} `gorm:"column:kualitas_kredit_terburuk"`
+	BulanKualitasTerburuk                  interface{} `gorm:"column:bulan_kualitas_terburuk"`
+	BakiDebetKualitasTerburuk              interface{} `gorm:"column:baki_debet_kualitas_terburuk"`
+	KualitasKreditTerakhir                 interface{} `gorm:"column:kualitas_kredit_terakhir"`
+	BulanKualitasKreditTerakhir            interface{} `gorm:"column:bulan_kualitas_kredit_terakhir"`
+	OverdueLastKORules                     interface{} `gorm:"column:overdue_last_ko_rules"`
+	OverdueLast12MonthsKORules             interface{} `gorm:"column:overdue_last_12month_ko_rules"`
+	Category                               interface{} `gorm:"column:category"`
+	MaxOverdueAgunanKORules                interface{} `gorm:"column:max_ovd_agunan_ko_rules"`
+	MaxOverdueAgunanLast12MonthsKORules    interface{} `gorm:"column:max_ovd_agunan_last_12month_ko_rules"`
+	MaxOverdueNonAgunanKORules             interface{} `gorm:"column:max_ovd_non_agunan_ko_rules"`
+	MaxOverdueNonAgunanLast12MonthsKORules interface{} `gorm:"column:max_ovd_non_agunan_last_12month_ko_rules"`
 }
 
 func (c *TrxDetailBiro) TableName() string {

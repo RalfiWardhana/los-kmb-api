@@ -59,23 +59,30 @@ func (_m *Usecase) FilteringBlackList(ctx context.Context, reqs request.Filterin
 	return r0, r1
 }
 
-// FilteringPefindo provides a mock function with given fields: ctx, reqs, status_konsumen, request_id
-func (_m *Usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringRequest, status_konsumen string, request_id string) (response.DupcheckResult, error) {
-	ret := _m.Called(ctx, reqs, status_konsumen, request_id)
+// FilteringPefindo provides a mock function with given fields: ctx, reqs, status_konsumen, kategoriStatusKonsumen, request_id
+func (_m *Usecase) FilteringPefindo(ctx context.Context, reqs request.FilteringRequest, status_konsumen string, kategoriStatusKonsumen string, request_id string) (response.DupcheckResult, bool, error) {
+	ret := _m.Called(ctx, reqs, status_konsumen, kategoriStatusKonsumen, request_id)
 
 	var r0 response.DupcheckResult
-	if rf, ok := ret.Get(0).(func(context.Context, request.FilteringRequest, string, string) response.DupcheckResult); ok {
-		r0 = rf(ctx, reqs, status_konsumen, request_id)
+	if rf, ok := ret.Get(0).(func(context.Context, request.FilteringRequest, string, string, string) response.DupcheckResult); ok {
+		r0 = rf(ctx, reqs, status_konsumen, kategoriStatusKonsumen, request_id)
 	} else {
 		r0 = ret.Get(0).(response.DupcheckResult)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, request.FilteringRequest, string, string) error); ok {
-		r1 = rf(ctx, reqs, status_konsumen, request_id)
+	var r1 bool
+	if rf, ok := ret.Get(1).(func(context.Context, request.FilteringRequest, string, string, string) bool); ok {
+		r1 = rf(ctx, reqs, status_konsumen, kategoriStatusKonsumen, request_id)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(bool)
 	}
 
-	return r0, r1
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, request.FilteringRequest, string, string, string) error); ok {
+		r2 = rf(ctx, reqs, status_konsumen, kategoriStatusKonsumen, request_id)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
