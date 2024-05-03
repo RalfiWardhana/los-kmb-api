@@ -587,6 +587,7 @@ type Filtering struct {
 	Gender     string           `json:"gender" validate:"required,gender" example:"M"`
 	MotherName string           `json:"surgate_mother_name" validate:"required,allow_name" example:"ENCRYPTED SURGATE MOTHER NAME"`
 	BPKBName   string           `json:"bpkb_name" validate:"required,bpkbname" example:"K"`
+	CMOID      string           `json:"cmo_id" validate:"required,number,max=20" example:"123456"`
 	Spouse     *FilteringSpouse `json:"spouse" validate:"omitempty"`
 }
 
