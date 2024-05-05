@@ -29,4 +29,5 @@ type Usecase interface {
 	UpdateMappingCluster(req request.ReqUploadMappingCluster, file multipart.File) (err error)
 	GetMappingClusterBranch(req request.ReqListMappingClusterBranch) (data []entity.ConfinsBranch, err error)
 	GetMappingClusterChangeLog(pagination interface{}) (data []entity.MappingClusterChangeLog, rowTotal int, err error)
+	GetEmployeeData(ctx context.Context, employeeID string, accessToken string, hrisAccessToken string) (data response.EmployeeResponse, err error)
 }

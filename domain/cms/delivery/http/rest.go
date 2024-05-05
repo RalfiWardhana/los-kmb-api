@@ -52,6 +52,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.POST("/cms/mapping-cluster/upload", handler.UploadMappingCluster, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/mapping-cluster/branch", handler.MappingClusterBranch, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/mapping-cluster/change-log", handler.MappingClusterChangeLog, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/employee-data/:employee_id", handler.GetEmployeeData, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
@@ -966,4 +967,31 @@ func (c *handlerCMS) MappingClusterChangeLog(ctx echo.Context) (err error) {
 		RecordFiltered: len(data),
 		RecordTotal:    rowTotal,
 	})
+}
+
+func (c *handlerCMS) GetEmployeeData(ctx echo.Context) (err error) {
+
+	var (
+		accessToken     = middlewares.UserInfoData.AccessToken
+		hrisAccessToken = middlewares.HrisApiData.Token
+		ctxJson         error
+	)
+
+	employeeID := ctx.Param("employee_id")
+
+	if employeeID == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - EmployeeID does not exist")
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - GET EMPLOYEE DATA", employeeID, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.GetEmployeeData(ctx.Request().Context(), employeeID, accessToken, hrisAccessToken)
+
+	if err != nil {
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - GET EMPLOYEE DATA", employeeID, err)
+		return ctxJson
+	}
+
+	ctxJson, _ = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - GET EMPLOYEE DATA", employeeID, data)
+	return ctxJson
 }
