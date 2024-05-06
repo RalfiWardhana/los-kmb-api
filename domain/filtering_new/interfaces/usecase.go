@@ -14,6 +14,7 @@ type Usecase interface {
 	SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro) (err error)
 	FilteringProspectID(prospectID string) (data request.OrderIDCheck, err error)
 	GetResultFiltering(prospectID string) (respFiltering response.Filtering, err error)
+	GetEmployeeData(ctx context.Context, employeeID string, accessToken string, hrisAccessToken string) (data response.EmployeeResponse, err error)
 }
 
 type MultiUsecase interface {
