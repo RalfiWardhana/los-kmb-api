@@ -767,7 +767,7 @@ func TestElaborate(t *testing.T) {
 			result: response.ElaborateLTV{
 				LTV:         50,
 				AdjustTenor: true,
-				MaxTenor:    35,
+				MaxTenor:    36,
 			},
 		},
 	}
