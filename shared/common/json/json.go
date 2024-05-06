@@ -309,6 +309,8 @@ func formatMessage(err validator.FieldError) string {
 		message = fmt.Sprintf("accepted:value=%s", common.Incoming)
 	case constant.TAG_HOME:
 		message = fmt.Sprintf("accepted:value=%s", common.Home)
+	case constant.TAG_NPWP:
+		message = "accepted:value=0-9 or null, min=15, max=16"
 	case constant.TAG_BPKB_NAME:
 		message = "accepted:value=K,P,O,KK"
 	case constant.TAG_KTP:
