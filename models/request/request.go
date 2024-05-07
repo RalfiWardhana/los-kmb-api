@@ -664,6 +664,7 @@ type Agent struct {
 type AgentNE struct {
 	CmoRecom  string `json:"cmo_recom" validate:"recom" example:"1"`
 	CmoName   string `json:"cmo_name" validate:"required" example:"SETO MULYA"`
+	CmoNik    string `json:"cmo_nik" validate:"required" example:"93510"`
 	RecomDate string `json:"recom_date" validate:"required" example:"2021-07-15"`
 }
 
