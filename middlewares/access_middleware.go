@@ -30,6 +30,17 @@ func (m *UserInfo) IsStructureEmpty() bool {
 	return reflect.DeepEqual(m, UserInfo{})
 }
 
+var HrisApiData HrisApiInfo
+
+type HrisApiInfo struct {
+	Token       string `json:"token"`
+	ExpiredTime int    `json:"expired_time"`
+}
+
+func (m *HrisApiInfo) IsStructureEmpty() bool {
+	return reflect.DeepEqual(m, HrisApiInfo{})
+}
+
 func NewAccessMiddleware() *AccessMiddleware {
 	return &AccessMiddleware{}
 }
@@ -89,12 +100,73 @@ func GetPlatformAuth() (userInfo UserInfo, err error) {
 	return
 }
 
+func GetTokenHris() (hrisApiInfo HrisApiInfo, err error) {
+
+	client := resty.New()
+	if os.Getenv("APP_ENV") != "production" {
+		client.SetDebug(true)
+	}
+	if HrisApiData.Token == "" {
+		body := map[string]interface{}{
+			"api_key": os.Getenv("HRIS_API_KEY"),
+		}
+
+		resp, err := client.R().SetBody(body).Post(os.Getenv("HRIS_GET_TOKEN_URL"))
+		if err != nil || resp.StatusCode() != 200 {
+			err = fmt.Errorf("error get access token hris")
+			return hrisApiInfo, err
+		}
+
+		hrisApiInfo := new(HrisApiInfo)
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), hrisApiInfo)
+
+		HrisApiData = *hrisApiInfo
+		return HrisApiData, err
+
+	} else {
+
+		expired := time.Now().Add(time.Second * time.Duration(HrisApiData.ExpiredTime))
+		expired5Minute := expired.Add(-5 * time.Minute)
+
+		if utils.DiffTwoDate(expired5Minute).Seconds() > 0 {
+
+			body := map[string]interface{}{
+				"api_key": os.Getenv("HRIS_API_KEY"),
+			}
+
+			resp, err := client.R().SetBody(body).Post(os.Getenv("HRIS_GET_TOKEN_URL"))
+
+			if err != nil || resp.StatusCode() != 200 {
+				err = fmt.Errorf("error get access token hris")
+				return HrisApiData, err
+			}
+
+			hrisApiInfo := new(HrisApiInfo)
+			jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), hrisApiInfo)
+
+			HrisApiData = *hrisApiInfo
+			return HrisApiData, err
+
+		}
+	}
+
+	return
+}
+
 func (m *AccessMiddleware) AccessMiddleware() echo.MiddlewareFunc {
 	return func(handlerFunc echo.HandlerFunc) echo.HandlerFunc {
 		return func(context echo.Context) error {
 
 			var err error
+
+			// platform token
 			_, err = GetPlatformAuth()
+			if err != nil {
+				return m.BadGateway(context, err.Error())
+			}
+
+			// hris token
+			_, err = GetTokenHris()
 			if err != nil {
 				return m.BadGateway(context, err.Error())
 			}
