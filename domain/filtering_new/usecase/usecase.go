@@ -544,7 +544,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 				}
 
 				// Reason Baki Debet
-				if data.Decision == constant.DECISION_REJECT && data.NextProcess {
+				if (data.Decision == constant.DECISION_REJECT && data.NextProcess) || (data.Reason == fmt.Sprintf("%s %s & Baki Debet Sesuai Ketentuan", bpkbString, getReasonCategoryRoman(pefindoResult.Category))) {
 					if pefindoResult.TotalBakiDebetNonAgunan <= 3000000 {
 						data.Reason = fmt.Sprintf("%s %s & Baki Debet <= 3 Juta", bpkbString, getReasonCategoryRoman(pefindoResult.Category))
 					}
