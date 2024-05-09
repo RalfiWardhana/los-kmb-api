@@ -826,3 +826,11 @@ type ReqListMappingClusterBranch struct {
 	BranchID   string `json:"branch_id" example:"400"`
 	BranchName string `json:"customer_status" example:"BEKASI"`
 }
+
+type ReqHrisCareerHistory struct {
+	Limit     string `json:"limit"`
+	Page      int    `json:"page"`
+	Column    string `json:"column"`
+	Ascending bool   `json:"ascending"`
+	Query     string `json:"query"`
+}

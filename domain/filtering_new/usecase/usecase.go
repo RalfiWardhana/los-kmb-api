@@ -16,6 +16,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
@@ -911,7 +912,7 @@ func getReasonCategoryRoman(category interface{}) string {
 	}
 }
 
-func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessToken string, hrisAccessToken string) (data response.EmployeeResponse, err error) {
+func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessToken string, hrisAccessToken string) (data response.EmployeeCMOResponse, err error) {
 
 	var (
 		respGetEmployeeData response.GetEmployeeByID
@@ -923,10 +924,16 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 		"Authorization": "Bearer " + hrisAccessToken,
 	}
 
-	param, _ := json.Marshal(map[string]interface{}{
-		"employee_id": employeeID,
-	})
+	positionGroupCode := "AO"
+	payload := request.ReqHrisCareerHistory{
+		Limit:     "100",
+		Page:      1,
+		Column:    "",
+		Ascending: false,
+		Query:     "position_group_code==" + positionGroupCode + ", employee_id==" + employeeID,
+	}
 
+	param, _ := json.Marshal(payload)
 	getDataEmployee, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), param, header, constant.METHOD_POST, false, 0, timeout, "", accessToken)
 
 	if getDataEmployee.StatusCode() == 504 || getDataEmployee.StatusCode() == 502 {
@@ -940,13 +947,64 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 	}
 
 	if err == nil && getDataEmployee.StatusCode() == 200 {
-		json.Unmarshal([]byte(jsoniter.Get(getDataEmployee.Body(), "data").ToString()), &respGetEmployeeData)
+		json.Unmarshal([]byte(jsoniter.Get(getDataEmployee.Body()).ToString()), &respGetEmployeeData)
 
-		data = response.EmployeeResponse{
-			EmployeeID:         respGetEmployeeData.EmployeeID,
-			EmployeeName:       respGetEmployeeData.EmployeeName,
-			EmployeeIDWithName: respGetEmployeeData.EmployeeIDWithName,
-			JoinDate:           respGetEmployeeData.JoinDate,
+		// Mencari index terakhir yang mengandung position_group_code "AO"
+		var lastIndex int = -1
+		for i, emp := range respGetEmployeeData.Data {
+			if emp.PositionGroupCode == "AO" {
+				lastIndex = i
+			}
+		}
+
+		if lastIndex == -1 {
+			// Jika tidak ada data dengan position_group_code "AO"
+			data = response.EmployeeCMOResponse{}
+		} else {
+			dataEmployee := respGetEmployeeData.Data[lastIndex]
+			if dataEmployee.RealCareerDate == "" {
+				err = errors.New(constant.ERROR_UPSTREAM + " - RealCareerDate Empty")
+			}
+
+			parsedTime, err := time.Parse("2006-01-02T15:04:05", dataEmployee.RealCareerDate)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error Parse RealCareerDate")
+			}
+
+			dataEmployee.RealCareerDate = parsedTime.Format("2006-01-02")
+
+			today := time.Now().Format("2006-01-02")
+			// memvalidasi bulan+tahun yang diberikan tidak lebih besar dari bulan+tahun hari ini
+			err = utils.ValidateDiffMonthYear(dataEmployee.RealCareerDate, today)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error Validate MonthYear of RealCareerDate")
+			}
+
+			todayDate, err := time.Parse("2006-01-02", today)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error Parse todayDate")
+			}
+
+			givenDate, err := time.Parse("2006-01-02", dataEmployee.RealCareerDate)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error Parse givenDate")
+			}
+
+			diffOfMonths := utils.DiffInMonths(todayDate, givenDate)
+			var cmoCategory string = "NEW"
+			if diffOfMonths > 3 {
+				cmoCategory = "OLD"
+			}
+
+			data = response.EmployeeCMOResponse{
+				EmployeeID:         dataEmployee.EmployeeID,
+				EmployeeName:       dataEmployee.EmployeeName,
+				EmployeeIDWithName: dataEmployee.EmployeeID + " - " + dataEmployee.EmployeeName,
+				JoinDate:           dataEmployee.RealCareerDate,
+				PositionGroupCode:  dataEmployee.PositionGroupCode,
+				PositionGroupName:  dataEmployee.PositionGroupName,
+				CMOCategory:        cmoCategory,
+			}
 		}
 	} else {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Get Employee Data Error")

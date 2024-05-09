@@ -868,38 +868,32 @@ type SubmitRecalculateResponse struct {
 	ServerTime string      `json:"timestamp"`
 }
 
-type EmployeeResponse struct {
+type EmployeeCMOResponse struct {
 	EmployeeID         string `json:"employee_id"`
 	EmployeeName       string `json:"employee_name"`
 	EmployeeIDWithName string `json:"employee_id_with_name"`
 	JoinDate           string `json:"join_date"`
+	PositionGroupCode  string `json:"position_group_code"`
+	PositionGroupName  string `json:"position_group_name"`
+	CMOCategory        string `json:"cmo_category"`
+}
+
+type EmployeeCareerHistory struct {
+	EmployeeID        string `json:"employee_id"`
+	EmployeeName      string `json:"name"`
+	RealCareerDate    string `json:"real_career_date"`
+	RegistrationDate  string `json:"registration_date"`
+	RegistrationNo    string `json:"registration_no"`
+	PositionGroupCode string `json:"position_group_code"`
+	PositionGroupName string `json:"position_group_name"`
+	PositionCodeOld   string `json:"position_code_old"`
+	PositionNameOld   string `json:"position_name_old"`
+	PositionCodeNew   string `json:"position_code_new"`
+	PositionNameNew   string `json:"position_name_new"`
 }
 
 type GetEmployeeByID struct {
-	EmployeeID             string      `json:"employee_id"`
-	EmployeeName           string      `json:"name"`
-	EmployeeIDWithName     string      `json:"name_with_employee_id"`
-	JoinDate               string      `json:"join_date"`
-	ResignDate             interface{} `json:"resign_date"`
-	PersonalEmail          string      `json:"personal_email"`
-	CorporateEmail         string      `json:"corporate_email"`
-	EmployeeStatus         string      `json:"employee_status"`
-	DivisionCode           string      `json:"division_code"`
-	DivisionName           string      `json:"division_name"`
-	DepartmentCode         string      `json:"department_code"`
-	DepartmentName         string      `json:"department_name"`
-	SubDepartmentGroupCode string      `json:"sub_department_group_code"`
-	SubDepartmentGroupName string      `json:"sub_department_group_name"`
-	SubDepartmentCode      string      `json:"sub_department_code"`
-	SubDepartmentName      string      `json:"sub_department_name"`
-	PosCode                string      `json:"pos_code"`
-	PosName                string      `json:"pos_name"`
-	SectionCode            string      `json:"section_code"`
-	SectionName            string      `json:"section_name"`
-	PositionGroupCode      string      `json:"position_group_code"`
-	PositionGroupName      string      `json:"position_group_name"`
-	PositionCode           string      `json:"position_code"`
-	PositionName           string      `json:"position_name"`
-	SpvId                  string      `json:"spv_id"`
-	IsResign               interface{} `json:"is_resign"`
+	Error   interface{}             `json:"error"`
+	Message string                  `json:"message"`
+	Data    []EmployeeCareerHistory `json:"data"`
 }

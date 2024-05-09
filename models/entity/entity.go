@@ -828,7 +828,9 @@ type FilteringKMB struct {
 	Cluster                         interface{} `gorm:"column:cluster;type:varchar(20)" json:"cluster"`
 	CMOID                           interface{} `gorm:"column:cmo_id;type:varchar(20)" json:"cmo_id"`
 	CMOJoinDate                     interface{} `gorm:"column:cmo_join_date" json:"cmo_join_date"`
+	CMOCategory                     interface{} `gorm:"column:cmo_category;type:char(10)" json:"cmo_category"`
 	CMOFPD                          interface{} `gorm:"column:cmo_fpd" json:"cmo_fpd"`
+	CMOAccSales                     interface{} `gorm:"column:cmo_acc_sales" json:"cmo_acc_sales"`
 	CMOCluster                      interface{} `gorm:"column:cmo_cluster;type:varchar(20)" json:"cmo_cluster"`
 	Reason                          interface{} `gorm:"column:reason;type:varchar(250)" json:"reason"`
 	Category                        interface{} `gorm:"column:category" json:"category"`
