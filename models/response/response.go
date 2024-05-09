@@ -897,3 +897,24 @@ type GetEmployeeByID struct {
 	Message string                  `json:"message"`
 	Data    []EmployeeCareerHistory `json:"data"`
 }
+
+type FpdCMOResponse struct {
+	FpdExist    bool    `json:"fpd_exist"`
+	CmoFpd      float64 `json:"cmo_fpd"`
+	CmoAccSales int     `json:"cmo_acc_sales"`
+}
+
+type FpdData struct {
+	CmoID        string  `json:"cmo_id"`
+	BpkbNameType string  `json:"bpkb_name_type"`
+	Fpd          float64 `json:"fpd"`
+	AccSales     int     `json:"acc_sales"`
+}
+
+type GetFPDCmoByID struct {
+	Code     string      `json:"code"`
+	Message  string      `json:"message"`
+	Data     []FpdData   `json:"data"`
+	Errors   interface{} `json:"errors"`
+	Metadata interface{} `json:"metadata"`
+}

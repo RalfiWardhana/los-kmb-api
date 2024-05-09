@@ -15,6 +15,7 @@ type Usecase interface {
 	FilteringProspectID(prospectID string) (data request.OrderIDCheck, err error)
 	GetResultFiltering(prospectID string) (respFiltering response.Filtering, err error)
 	GetEmployeeData(ctx context.Context, employeeID string, accessToken string, hrisAccessToken string) (data response.EmployeeCMOResponse, err error)
+	GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType string, accessToken string) (data response.FpdCMOResponse, err error)
 }
 
 type MultiUsecase interface {

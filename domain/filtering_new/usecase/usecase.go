@@ -1013,3 +1013,85 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 
 	return
 }
+
+func (u usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType string, accessToken string) (data response.FpdCMOResponse, err error) {
+	var (
+		respGetFPD response.GetFPDCmoByID
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	lobID := constant.LOBID_KMB
+	cmoID := CmoID
+	endpointURL := fmt.Sprintf(os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=%s&cmo_id=%s", lobID, cmoID)
+
+	getDataFpd, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointURL, nil, map[string]string{}, constant.METHOD_GET, false, 0, timeout, "", accessToken)
+
+	if getDataFpd.StatusCode() == 504 || getDataFpd.StatusCode() == 502 {
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get FPD Data Timeout")
+		return
+	}
+
+	if getDataFpd.StatusCode() != 200 && getDataFpd.StatusCode() != 504 && getDataFpd.StatusCode() != 502 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get FPD Data Error")
+		return
+	}
+
+	if err == nil && getDataFpd.StatusCode() == 200 {
+		json.Unmarshal([]byte(jsoniter.Get(getDataFpd.Body()).ToString()), &respGetFPD)
+
+		// Mencari nilai fpd untuk bpkb_name_type "NAMA BEDA"
+		var fpdNamaBeda float64 = 0
+		var accSalesNamaBeda int = 0
+		for _, item := range respGetFPD.Data {
+			if item.BpkbNameType == "NAMA BEDA" {
+				fpdNamaBeda = item.Fpd
+				accSalesNamaBeda = item.AccSales
+				break
+			}
+		}
+
+		// Mencari nilai fpd untuk bpkb_name_type "NAMA SAMA"
+		var fpdNamaSama float64 = 0
+		var accSalesNamaSama int = 0
+		for _, item := range respGetFPD.Data {
+			if item.BpkbNameType == "NAMA SAMA" {
+				fpdNamaSama = item.Fpd
+				accSalesNamaSama = item.AccSales
+				break
+			}
+		}
+
+		if fpdNamaBeda <= 0 && accSalesNamaBeda <= 0 && fpdNamaSama <= 0 && accSalesNamaSama <= 0 {
+			// Ini pertanda CMO tidak punya SALES SAMA SEKALI,
+			// maka nantinya di usecase akan diarahkan ke Cluster Default sesuai jenis BPKBNameType nya,
+			// setelah itu dilakukan proses penyimpanan ke table "trx_cmo_no_fpd" sebagai data penampung rentang tanggal kapan hingga kapan CMO_ID tersebut diarahkan sebagai Default Cluster
+			data = response.FpdCMOResponse{}
+		} else {
+			if BPKBNameType == "NAMA BEDA" {
+				data = response.FpdCMOResponse{
+					FpdExist:    true,
+					CmoFpd:      fpdNamaBeda,
+					CmoAccSales: accSalesNamaBeda,
+				}
+			}
+
+			if BPKBNameType == "NAMA SAMA" {
+				data = response.FpdCMOResponse{
+					FpdExist:    true,
+					CmoFpd:      fpdNamaSama,
+					CmoAccSales: accSalesNamaSama,
+				}
+			}
+
+			if BPKBNameType != "NAMA BEDA" && BPKBNameType != "NAMA SAMA" {
+				data = response.FpdCMOResponse{}
+			}
+		}
+	} else {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Get FPD Data Error")
+		return
+	}
+
+	return
+}
