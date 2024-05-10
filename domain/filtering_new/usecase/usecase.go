@@ -1202,6 +1202,8 @@ func (u usecase) SaveCmoNoFPD(prospectID string, cmoID string, cmoCategory strin
 			// CMO_ID sudah ada dan masih di dalam rentang tanggal `DefaultClusterStartDate` dan `DefaultClusterEndDate`
 			defaultCluster = TrxCmoNoFpd.DefaultCluster
 			clusterCMOSaved = defaultCluster
+		} else {
+			today = currentDate
 		}
 	}
 
