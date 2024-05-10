@@ -828,7 +828,7 @@ type FilteringKMB struct {
 	Cluster                         interface{} `gorm:"column:cluster;type:varchar(20)" json:"cluster"`
 	CMOID                           interface{} `gorm:"column:cmo_id;type:varchar(20)" json:"cmo_id"`
 	CMOJoinDate                     interface{} `gorm:"column:cmo_join_date" json:"cmo_join_date"`
-	CMOCategory                     interface{} `gorm:"column:cmo_category;type:char(10)" json:"cmo_category"`
+	CMOCategory                     interface{} `gorm:"column:cmo_category;type:char(3)" json:"cmo_category"`
 	CMOFPD                          interface{} `gorm:"column:cmo_fpd" json:"cmo_fpd"`
 	CMOAccSales                     interface{} `gorm:"column:cmo_acc_sales" json:"cmo_acc_sales"`
 	CMOCluster                      interface{} `gorm:"column:cmo_cluster;type:varchar(20)" json:"cmo_cluster"`
@@ -2340,4 +2340,30 @@ type MappingClusterChangeLog struct {
 	DataAfter  string `json:"data_after"`
 	UserName   string `json:"user_name"`
 	CreatedAt  string `json:"created_at"`
+}
+
+type MasterMappingFpdCluster struct {
+	Cluster     string    `gorm:"column:cluster"`
+	FpdStartHte float64   `gorm:"column:fpd_start_hte"`
+	FpdEndLt    float64   `gorm:"column:fpd_end_lt"`
+	CreatedAt   time.Time `gorm:"column:created_at"`
+}
+
+func (c *MasterMappingFpdCluster) TableName() string {
+	return "m_mapping_fpd_cluster"
+}
+
+type TrxCmoNoFPD struct {
+	ProspectID              string    `gorm:"column:prospect_id;type:varchar(20)" json:"prospect_id"`
+	CMOID                   string    `gorm:"column:cmo_id;type:varchar(20)" json:"cmo_id"`
+	CmoCategory             string    `gorm:"column:cmo_category;char(3)" json:"cmo_category"`
+	CmoJoinDate             string    `gorm:"column:cmo_join_date" json:"cmo_join_date"`
+	DefaultCluster          string    `gorm:"column:default_cluster;type:varchar(20)" json:"default_cluster"`
+	DefaultClusterStartDate string    `gorm:"column:default_cluster_start_date" json:"default_cluster_start_date"`
+	DefaultClusterEndDate   string    `gorm:"column:default_cluster_end_date" json:"default_cluster_end_date"`
+	CreatedAt               time.Time `gorm:"column:created_at" json:"created_at"`
+}
+
+func (c *TrxCmoNoFPD) TableName() string {
+	return "trx_cmo_no_fpd"
 }

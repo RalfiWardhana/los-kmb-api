@@ -9,4 +9,7 @@ type Repository interface {
 	MasterMappingCluster(req entity.MasterMappingCluster) (data entity.MasterMappingCluster, err error)
 	SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error)
 	GetResultFiltering(prospectID string) (data []entity.ResultFiltering, err error)
+	MasterMappingFpdCluster(FpdValue float64) (data entity.MasterMappingFpdCluster, err error)
+	SaveTrxCmoNoFPD(data entity.TrxCmoNoFPD) (err error)
+	CheckCMONoFPD(cmoID string, currentDate string) (data entity.TrxCmoNoFPD, err error)
 }

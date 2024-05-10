@@ -276,6 +276,7 @@ func TestBlacklistCheck(t *testing.T) {
 
 func TestFiltering(t *testing.T) {
 	accessToken := "token"
+	hrisAccessToken := "hristoken"
 	ctx := context.Background()
 	reqID := utils.GenerateUUID()
 	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
@@ -486,7 +487,7 @@ func TestFiltering(t *testing.T) {
 
 			multiUsecase := NewMultiUsecase(mockRepository, mockHttpClient, mockUsecase)
 
-			result, err := multiUsecase.Filtering(ctx, tc.req, tc.married, accessToken)
+			result, err := multiUsecase.Filtering(ctx, tc.req, tc.married, accessToken, hrisAccessToken)
 
 			require.Equal(t, tc.resFinal, result)
 			require.Equal(t, tc.errFinal, err)
@@ -513,6 +514,7 @@ func TestFilteringPefindo(t *testing.T) {
 		checkPefindo         response.ResponsePefindo
 		pefindoResult        response.PefindoResult
 		customerStatus       string
+		clusterCMO           string
 		reqPefindo           request.Pefindo
 		respFilteringPefindo response.Filtering
 		resPefindo           response.PefindoResult
@@ -2079,7 +2081,7 @@ func TestFilteringPefindo(t *testing.T) {
 			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("NEW_KMB_PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, tc.reqPefindo.ProspectID, accessToken).Return(resp, tc.errPefindo).Once()
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
-			rFilteringPefindo, rPefindo, _, err := usecase.FilteringPefindo(ctx, tc.reqPefindo, tc.customerStatus, accessToken)
+			rFilteringPefindo, rPefindo, _, err := usecase.FilteringPefindo(ctx, tc.reqPefindo, tc.customerStatus, tc.clusterCMO, accessToken)
 			require.Equal(t, tc.respFilteringPefindo, rFilteringPefindo)
 			require.Equal(t, tc.resPefindo, rPefindo)
 			require.Equal(t, tc.errFinal, err)

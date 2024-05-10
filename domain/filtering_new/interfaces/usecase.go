@@ -8,7 +8,7 @@ import (
 )
 
 type Usecase interface {
-	FilteringPefindo(ctx context.Context, reqPefindo request.Pefindo, customerStatus, accessToken string) (data response.Filtering, responsePefindo response.PefindoResult, trxDetailBiro []entity.TrxDetailBiro, err error)
+	FilteringPefindo(ctx context.Context, reqPefindo request.Pefindo, customerStatus, clusterCMO string, accessToken string) (data response.Filtering, responsePefindo response.PefindoResult, trxDetailBiro []entity.TrxDetailBiro, err error)
 	DupcheckIntegrator(ctx context.Context, prospectID, idNumber, legalName, birthDate, surgateName, accessToken string) (spDupcheck response.SpDupCekCustomerByID, err error)
 	BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerByID) (data response.UsecaseApi, customerType string)
 	SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro) (err error)
@@ -16,8 +16,9 @@ type Usecase interface {
 	GetResultFiltering(prospectID string) (respFiltering response.Filtering, err error)
 	GetEmployeeData(ctx context.Context, employeeID string, accessToken string, hrisAccessToken string) (data response.EmployeeCMOResponse, err error)
 	GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType string, accessToken string) (data response.FpdCMOResponse, err error)
+	SaveCmoNoFPD(prospectID string, cmoID string, cmoCategory string, cmoJoinDate string, defaultCluster string) (clusterCMOSaved string, err error)
 }
 
 type MultiUsecase interface {
-	Filtering(ctx context.Context, reqFiltering request.Filtering, married bool, accessToken string) (data response.Filtering, err error)
+	Filtering(ctx context.Context, reqFiltering request.Filtering, married bool, accessToken string, hrisAccessToken string) (data response.Filtering, err error)
 }

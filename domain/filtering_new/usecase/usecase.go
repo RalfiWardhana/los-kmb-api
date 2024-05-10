@@ -50,7 +50,7 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 	}
 }
 
-func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, married bool, accessToken string) (respFiltering response.Filtering, err error) {
+func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, married bool, accessToken string, hrisAccessToken string) (respFiltering response.Filtering, err error) {
 
 	var (
 		customer             []request.SpouseDupcheck
@@ -62,6 +62,12 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		reqPefindo           request.Pefindo
 		trxDetailBiro        []entity.TrxDetailBiro
 		respFilteringPefindo response.Filtering
+		resCMO               response.EmployeeCMOResponse
+		resFPD               response.FpdCMOResponse
+		bpkbName             bool
+		clusterCmo           string
+		savedCluster         string
+		useDefaultCluster    bool
 	)
 
 	requestID := ctx.Value(echo.HeaderXRequestID).(string)
@@ -131,8 +137,81 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		mainCustomer.CustomerSegment = constant.RO_AO_REGULAR
 	}
 
+	/* Process Get Cluster based on CMO_ID starts here */
+
+	resCMO, err = u.usecase.GetEmployeeData(ctx, req.CMOID, accessToken, hrisAccessToken)
+	if err != nil {
+		return
+	}
+
+	if resCMO.CMOCategory == "" {
+		respFiltering.NextProcess = false
+	} else {
+		bpkbName = strings.Contains(os.Getenv("NAMA_SAMA"), req.BPKBName)
+		bpkbString := "NAMA BEDA"
+		defaultCluster := constant.CLUSTER_C
+		if bpkbName {
+			bpkbString = "NAMA SAMA"
+			defaultCluster = constant.CLUSTER_B
+		}
+
+		if resCMO.CMOCategory == "NEW" {
+			clusterCmo = defaultCluster
+			// set cluster menggunakan Default Cluster selama 3 bulan, terhitung sejak bulan join_date nya
+			useDefaultCluster = true
+		} else {
+			// Mendapatkan value FPD dari masing-masing jenis BPKB
+			resFPD, err = u.usecase.GetFpdCMO(ctx, req.CMOID, bpkbString, accessToken)
+			if err != nil {
+				return
+			}
+
+			if !resFPD.FpdExist {
+				clusterCmo = defaultCluster
+				// set cluster menggunakan Default Cluster selama 3 bulan, terhitung sejak tanggal hit filtering nya (assume: today)
+				useDefaultCluster = true
+			} else {
+				// Check Cluster
+				var mappingFpdCluster entity.MasterMappingFpdCluster
+				mappingFpdCluster, err = u.repository.MasterMappingFpdCluster(resFPD.CmoFpd)
+				if err != nil {
+					return
+				}
+
+				if mappingFpdCluster.Cluster == "" {
+					clusterCmo = defaultCluster
+					// set cluster menggunakan Default Cluster selama 3 bulan, terhitung sejak tanggal hit filtering nya (assume: today)
+					useDefaultCluster = true
+				} else {
+					clusterCmo = mappingFpdCluster.Cluster
+				}
+			}
+		}
+
+		if useDefaultCluster == true {
+			savedCluster, err = u.usecase.SaveCmoNoFPD(req.ProspectID, req.CMOID, resCMO.CMOCategory, resCMO.JoinDate, clusterCmo)
+			if err != nil {
+				return
+			}
+			if savedCluster != "" {
+				clusterCmo = savedCluster
+			}
+		}
+	}
+
+	respFiltering.ClusterCMO = clusterCmo
+
+	entityFiltering.CMOID = req.CMOID
+	entityFiltering.CMOJoinDate = resCMO.JoinDate
+	entityFiltering.CMOCategory = resCMO.CMOCategory
+	entityFiltering.CMOFPD = resFPD.CmoFpd
+	entityFiltering.CMOAccSales = resFPD.CmoAccSales
+	entityFiltering.CMOCluster = respFiltering.ClusterCMO
+
+	/* Process Get Cluster based on CMO_ID ends here */
+
 	// hit ke pefindo
-	respFilteringPefindo, resPefindo, trxDetailBiro, err = u.usecase.FilteringPefindo(ctx, reqPefindo, mainCustomer.CustomerStatus, accessToken)
+	respFilteringPefindo, resPefindo, trxDetailBiro, err = u.usecase.FilteringPefindo(ctx, reqPefindo, mainCustomer.CustomerStatus, clusterCmo, accessToken)
 	if err != nil {
 		return
 	}
@@ -141,6 +220,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	respFiltering.ProspectID = req.ProspectID
 	respFiltering.CustomerSegment = mainCustomer.CustomerSegment
+
 	entityFiltering.Cluster = respFiltering.Cluster
 
 	primePriority, _ := utils.ItemExists(mainCustomer.CustomerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
@@ -201,7 +281,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	return
 }
 
-func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, customerStatus, accessToken string) (data response.Filtering, responsePefindo response.PefindoResult, trxDetailBiro []entity.TrxDetailBiro, err error) {
+func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, customerStatus, clusterCMO string, accessToken string) (data response.Filtering, responsePefindo response.PefindoResult, trxDetailBiro []entity.TrxDetailBiro, err error) {
 
 	timeOut, _ := strconv.Atoi(os.Getenv("DUPCHECK_API_TIMEOUT"))
 
@@ -558,7 +638,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 				if (pefindoResult.MaxOverdueLast12Months != nil && checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12Months) > constant.PBK_OVD_LAST_12) ||
 					(pefindoResult.MaxOverdue != nil && checkNullMaxOverdue(pefindoResult.MaxOverdue) > constant.PBK_OVD_CURRENT) {
 
-					if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET && strings.Contains("Cluster E Cluster F", mappingCluster.Cluster) {
+					if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET && strings.Contains("Cluster E Cluster F", clusterCMO) {
 						data.Reason = fmt.Sprintf("%s %s & Baki Debet > 3 - 20 Juta & Tidak dapat dibiayai", bpkbString, getReasonCategoryRoman(pefindoResult.Category))
 						data.NextProcess = false
 						data.Decision = constant.DECISION_REJECT
@@ -1091,6 +1171,74 @@ func (u usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType strin
 	} else {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Get FPD Data Error")
 		return
+	}
+
+	return
+}
+
+func (u usecase) SaveCmoNoFPD(prospectID string, cmoID string, cmoCategory string, cmoJoinDate string, defaultCluster string) (clusterCMOSaved string, err error) {
+	var today string
+
+	currentDate := time.Now().Format("2006-01-02")
+
+	if cmoCategory == "OLD" {
+		today = currentDate
+	} else {
+		today = cmoJoinDate
+	}
+
+	// Cek apakah CMO_ID sudah pernah tersimpan di dalam table `trx_cmo_no_fpd`
+	var TrxCmoNoFpd entity.TrxCmoNoFPD
+	TrxCmoNoFpd, err = u.repository.CheckCMONoFPD(cmoID, currentDate)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Check CMO No FPD error")
+		return
+	}
+
+	clusterCMOSaved = "" // init data for default response
+	// Jika CMO_ID sudah ada
+	if TrxCmoNoFpd.CMOID != "" {
+		if currentDate >= TrxCmoNoFpd.DefaultClusterStartDate && currentDate <= TrxCmoNoFpd.DefaultClusterEndDate {
+			// CMO_ID sudah ada dan masih di dalam rentang tanggal `DefaultClusterStartDate` dan `DefaultClusterEndDate`
+			defaultCluster = TrxCmoNoFpd.DefaultCluster
+			clusterCMOSaved = defaultCluster
+		}
+	}
+
+	if clusterCMOSaved == "" {
+		// Parsing tanggal hari ini ke dalam format time.Time
+		todayTime, err := time.Parse("2006-01-02", today)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - todayTime parse error")
+		}
+
+		// Menambahkan 3 bulan
+		threeMonthsLater := todayTime.AddDate(0, 3, 0)
+		// Mengambil tanggal terakhir dari bulan tersebut
+		threeMonthsLater = time.Date(threeMonthsLater.Year(), threeMonthsLater.Month(), 0, 0, 0, 0, 0, threeMonthsLater.Location())
+		// Parsing threeMonthsLater ke dalam format "yyyy-mm-dd" sebagai string
+		threeMonthsLaterString := threeMonthsLater.Format("2006-01-02")
+
+		entitySaveTrxNoFPd := entity.TrxCmoNoFPD{
+			ProspectID:              prospectID,
+			CMOID:                   cmoID,
+			CmoCategory:             cmoCategory,
+			CmoJoinDate:             cmoJoinDate,
+			DefaultCluster:          defaultCluster,
+			DefaultClusterStartDate: today,
+			DefaultClusterEndDate:   threeMonthsLaterString,
+			CreatedAt:               time.Time{},
+		}
+
+		err = u.repository.SaveTrxCmoNoFPD(entitySaveTrxNoFPd)
+
+		if err != nil {
+			if strings.Contains(err.Error(), "deadline") {
+				err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Save Trx CMO No FPD Timeout")
+			}
+
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Save Trx CMO No FPD Error ProspectID Already Exist")
+		}
 	}
 
 	return

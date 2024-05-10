@@ -43,6 +43,7 @@ type Filtering struct {
 	PbkReportSpouse   interface{} `json:"pbk_report_spouse"`
 	TotalBakiDebet    interface{} `json:"total_baki_debet"`
 	Cluster           interface{} `json:"-"`
+	ClusterCMO        interface{} `json:"-"`
 }
 
 type PefindoIDX struct {
