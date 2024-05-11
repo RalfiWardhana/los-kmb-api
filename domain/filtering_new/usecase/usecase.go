@@ -155,7 +155,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 			defaultCluster = constant.CLUSTER_B
 		}
 
-		if resCMO.CMOCategory == "NEW" {
+		if resCMO.CMOCategory == constant.CMO_BARU {
 			clusterCmo = defaultCluster
 			// set cluster menggunakan Default Cluster selama 3 bulan, terhitung sejak bulan join_date nya
 			useDefaultCluster = true
@@ -1071,9 +1071,11 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 			}
 
 			diffOfMonths := utils.DiffInMonths(todayDate, givenDate)
-			var cmoCategory string = "NEW"
-			if diffOfMonths > 3 {
-				cmoCategory = "OLD"
+
+			cmoJoinedAge, _ := strconv.Atoi(os.Getenv("CMO_JOINED_AGE"))
+			var cmoCategory string = constant.CMO_BARU
+			if diffOfMonths > cmoJoinedAge {
+				cmoCategory = constant.CMO_LAMA
 			}
 
 			data = response.EmployeeCMOResponse{
@@ -1181,7 +1183,7 @@ func (u usecase) SaveCmoNoFPD(prospectID string, cmoID string, cmoCategory strin
 
 	currentDate := time.Now().Format("2006-01-02")
 
-	if cmoCategory == "OLD" {
+	if cmoCategory == constant.CMO_LAMA {
 		today = currentDate
 	} else {
 		today = cmoJoinDate
@@ -1215,7 +1217,8 @@ func (u usecase) SaveCmoNoFPD(prospectID string, cmoID string, cmoCategory strin
 		}
 
 		// Menambahkan 3 bulan
-		threeMonthsLater := todayTime.AddDate(0, 3, 0)
+		defaultClusterMonthsDuration, _ := strconv.Atoi(os.Getenv("DEFAULT_CLUSTER_MONTHS_DURATION"))
+		threeMonthsLater := todayTime.AddDate(0, defaultClusterMonthsDuration, 0)
 		// Mengambil tanggal terakhir dari bulan tersebut
 		threeMonthsLater = time.Date(threeMonthsLater.Year(), threeMonthsLater.Month(), 0, 0, 0, 0, 0, threeMonthsLater.Location())
 		// Parsing threeMonthsLater ke dalam format "yyyy-mm-dd" sebagai string

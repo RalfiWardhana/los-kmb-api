@@ -636,4 +636,8 @@ const (
 
 	// CREDIT APPROVAL
 	CODE_CBM = 3741
+
+	// CMO CLUSTER
+	CMO_LAMA = "OLD"
+	CMO_BARU = "NEW"
 )
