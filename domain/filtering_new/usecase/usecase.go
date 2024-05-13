@@ -1004,13 +1004,12 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 		"Authorization": "Bearer " + hrisAccessToken,
 	}
 
-	positionGroupCode := "AO"
 	payload := request.ReqHrisCareerHistory{
 		Limit:     "100",
 		Page:      1,
-		Column:    "",
+		Column:    "real_career_date",
 		Ascending: false,
-		Query:     "position_group_code==" + positionGroupCode + ", employee_id==" + employeeID,
+		Query:     "employee_id==" + employeeID,
 	}
 
 	param, _ := json.Marshal(payload)
