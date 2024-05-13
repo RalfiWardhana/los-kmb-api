@@ -379,6 +379,8 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 					data.Code = constant.WO_AGUNAN_REJECT_CODE
 				}
 
+				var isReasonBakiDebet bool
+
 				// BPKB Nama Sama
 				if bpkbName {
 					if pefindoResult.WoContract { //Wo Contract Yes
@@ -401,6 +403,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 									} else {
 										data.NextProcess = true
 										data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+										isReasonBakiDebet = true
 									}
 								} else {
 									data.NextProcess = false
@@ -416,6 +419,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = true
 									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									isReasonBakiDebet = true
 								} else {
 									data.NextProcess = false
 									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
@@ -424,6 +428,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = true
 									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									isReasonBakiDebet = true
 								} else {
 									data.NextProcess = false
 									data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
@@ -435,6 +440,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 								data.NextProcess = true
 								data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+								isReasonBakiDebet = true
 							} else {
 								data.NextProcess = false
 								data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
@@ -444,6 +450,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 								data.NextProcess = true
 								data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+								isReasonBakiDebet = true
 							} else {
 								data.NextProcess = false
 								data.Reason = fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
@@ -478,6 +485,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 									} else {
 										data.NextProcess = true
 										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+										isReasonBakiDebet = true
 									}
 								} else {
 									data.NextProcess = false
@@ -494,6 +502,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 									if data.Decision == constant.DECISION_PASS {
 										data.NextProcess = true
 										data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+										isReasonBakiDebet = true
 									} else {
 										data.NextProcess = false
 										data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
@@ -506,6 +515,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 								if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 									data.NextProcess = true
 									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									isReasonBakiDebet = true
 								} else {
 									data.NextProcess = false
 									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
@@ -518,6 +528,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 								if data.Decision == constant.DECISION_PASS {
 									data.NextProcess = true
 									data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+									isReasonBakiDebet = true
 								} else {
 									data.NextProcess = false
 									data.Reason = fmt.Sprintf("NAMA BEDA %s & "+constant.TIDAK_ADA_FASILITAS_WO_AGUNAN, getReasonCategoryRoman(pefindoResult.Category))
@@ -531,6 +542,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 							if pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
 								data.NextProcess = true
 								data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
+								isReasonBakiDebet = true
 							} else {
 								data.NextProcess = false
 								data.Reason = fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, getReasonCategoryRoman(pefindoResult.Category))
@@ -544,7 +556,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 				}
 
 				// Reason Baki Debet
-				if (data.Decision == constant.DECISION_REJECT && data.NextProcess) || (data.Reason == fmt.Sprintf("%s %s & Baki Debet Sesuai Ketentuan", bpkbString, getReasonCategoryRoman(pefindoResult.Category))) {
+				if (data.Decision == constant.DECISION_REJECT && data.NextProcess) || isReasonBakiDebet {
 					if pefindoResult.TotalBakiDebetNonAgunan <= 3000000 {
 						data.Reason = fmt.Sprintf("%s %s & Baki Debet <= 3 Juta", bpkbString, getReasonCategoryRoman(pefindoResult.Category))
 					}
