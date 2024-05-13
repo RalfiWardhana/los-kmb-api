@@ -27,7 +27,7 @@ func ToolsHandler(kmbroute *echo.Group, json common.JSON, middlewares *middlewar
 		producer: producer,
 	}
 	kmbroute.POST("/encrypt-decrypt", handler.EncryptDecrypt, middlewares.AccessMiddleware())
-	kmbroute.POST("/core-customer/produce/update-customer/:prospect_id", handler.UpdateCustomer, middlewares.AccessMiddleware())
+	kmbroute.POST("/produce/update-customer/:prospect_id", handler.UpdateCustomer, middlewares.AccessMiddleware())
 }
 
 // Encrypt Decrypt Tools godoc
@@ -73,7 +73,7 @@ func (c *handlerTools) EncryptDecrypt(ctx echo.Context) (err error) {
 // @Success 200 {object} response.ApiResponse{data=response.ReasonMessageRow}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
-// @Router /api/v3/kmb/core-customer/produce/update-customer/{prospect_id} [post]
+// @Router /api/v3/kmb/produce/update-customer/{prospect_id} [post]
 func (c *handlerTools) UpdateCustomer(ctx echo.Context) (err error) {
 	var (
 		ctxJson error
