@@ -607,6 +607,8 @@ func TestBlacklistCheck(t *testing.T) {
 
 func TestVehicleCheck(t *testing.T) {
 
+	os.Setenv("NAMA_SAMA", "K,P")
+
 	config := entity.AppConfig{
 		Key:   "parameterize",
 		Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35}}`,
@@ -620,8 +622,10 @@ func TestVehicleCheck(t *testing.T) {
 		err, errExpected error
 		dupcheckConfig   entity.AppConfig
 		year             string
-		label            string
+		cmoCluster       string
+		bpkbName         string
 		tenor            int
+		label            string
 	}{
 		{
 			dupcheckConfig: config,
@@ -643,6 +647,110 @@ func TestVehicleCheck(t *testing.T) {
 			year:  yearReject,
 			label: "TEST_VEHICLE_REJECT",
 		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+				Code:   constant.CODE_VEHICLE_SESUAI,
+				Reason: constant.REASON_VEHICLE_SESUAI,
+			},
+			year:       time.Now().AddDate(-10, 0, 0).Format("2006"),
+			cmoCluster: "Cluster C",
+			bpkbName:   "KK",
+			tenor:      12,
+			label:      "test pass vehicle age 11-12 cluster A-C tenor <24",
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+				Code:   constant.CODE_VEHICLE_SESUAI,
+				Reason: constant.REASON_VEHICLE_SESUAI,
+			},
+			year:       time.Now().AddDate(-9, 0, 0).Format("2006"),
+			cmoCluster: "Cluster A",
+			bpkbName:   "K",
+			tenor:      24,
+			label:      "test pass vehicle age 11-12 cluster A-C tenor >=24",
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_REJECT,
+				Code:   constant.CODE_VEHICLE_AGE_MAX,
+				Reason: fmt.Sprintf("%s Ketentuan", constant.REASON_VEHICLE_AGE_MAX),
+			},
+			year:       time.Now().AddDate(-8, 0, 0).Format("2006"),
+			cmoCluster: "Cluster B",
+			bpkbName:   "KK",
+			tenor:      36,
+			label:      "test reject vehicle age 11-12 cluster A-C tenor >=24",
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_REJECT,
+				Code:   constant.CODE_VEHICLE_AGE_MAX,
+				Reason: fmt.Sprintf("%s Ketentuan", constant.REASON_VEHICLE_AGE_MAX),
+			},
+			year:       time.Now().AddDate(-11, 0, 0).Format("2006"),
+			cmoCluster: "Cluster D",
+			bpkbName:   "K",
+			tenor:      1,
+			label:      "test reject vehicle age 11-12 cluster D-F all tenor",
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+				Code:   constant.CODE_VEHICLE_SESUAI,
+				Reason: constant.REASON_VEHICLE_SESUAI,
+			},
+			year:       time.Now().AddDate(-12, 0, 0).Format("2006"),
+			cmoCluster: "Cluster B",
+			bpkbName:   "KK",
+			tenor:      12,
+			label:      "test pass vehicle age 13 cluster A-C tenor <24",
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+				Code:   constant.CODE_VEHICLE_SESUAI,
+				Reason: constant.REASON_VEHICLE_SESUAI,
+			},
+			year:       time.Now().AddDate(-11, 0, 0).Format("2006"),
+			cmoCluster: "Cluster A",
+			bpkbName:   "K",
+			tenor:      24,
+			label:      "test pass vehicle age 13 cluster A-C tenor >=24",
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_REJECT,
+				Code:   constant.CODE_VEHICLE_AGE_MAX,
+				Reason: fmt.Sprintf("%s Ketentuan", constant.REASON_VEHICLE_AGE_MAX),
+			},
+			year:       time.Now().AddDate(-11, 0, 0).Format("2006"),
+			cmoCluster: "Cluster C",
+			bpkbName:   "KK",
+			tenor:      24,
+			label:      "test reject vehicle age 13 cluster A-C tenor >=24",
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_REJECT,
+				Code:   constant.CODE_VEHICLE_AGE_MAX,
+				Reason: fmt.Sprintf("%s Ketentuan", constant.REASON_VEHICLE_AGE_MAX),
+			},
+			year:       time.Now().AddDate(-13, 0, 0).Format("2006"),
+			cmoCluster: "Cluster F",
+			bpkbName:   "K",
+			tenor:      1,
+			label:      "test reject vehicle age 13 cluster D-F all tenor",
+		},
 	}
 
 	for _, test := range testcase {
@@ -654,7 +762,7 @@ func TestVehicleCheck(t *testing.T) {
 			json.Unmarshal([]byte(test.dupcheckConfig.Value), &configValue)
 
 			service := NewUsecase(mockRepository, mockHttpClient)
-			result, err := service.VehicleCheck(test.year, test.tenor, configValue)
+			result, err := service.VehicleCheck(test.year, test.cmoCluster, test.bpkbName, test.tenor, configValue)
 
 			require.Equal(t, test.errExpected, err)
 			require.Equal(t, test.vehicle.Result, result.Result)
