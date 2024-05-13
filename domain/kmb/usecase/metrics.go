@@ -36,6 +36,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		trxFMFDupcheck    response.TrxFMF
 		trxDetailDupcheck []entity.TrxDetail
 		cbFound           bool
+		cmoCluster        string
 	)
 
 	// cek trx_master
@@ -273,6 +274,10 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		customerSegment = filtering.CustomerSegment.(string)
 	}
 
+	if clusterName, ok := filtering.CMOCluster.(string); ok {
+		cmoCluster = clusterName
+	}
+
 	reqDupcheck = request.DupcheckApi{
 		ProspectID:            reqMetrics.Transaction.ProspectID,
 		BranchID:              reqMetrics.Transaction.BranchID,
@@ -310,6 +315,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		CustomerSegment:       customerSegment,
 		Dealer:                reqMetrics.Apk.Dealer,
 		AdminFee:              reqMetrics.Apk.AdminFee,
+		CMOCluster:            cmoCluster,
 	}
 
 	if reqMetrics.CustomerSpouse != nil {
