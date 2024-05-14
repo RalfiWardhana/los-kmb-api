@@ -1120,7 +1120,8 @@ func (u usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType strin
 
 	lobID := constant.LOBID_KMB
 	cmoID := CmoID
-	endpointURL := fmt.Sprintf(os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=%s&cmo_id=%s", lobID, cmoID)
+	endpointURL := fmt.Sprintf(os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=%d&cmo_id=%s", lobID, cmoID)
+	fmt.Printf("isi dari endpointURL getFPD : %v\n", endpointURL)
 
 	getDataFpd, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointURL, nil, header, constant.METHOD_GET, false, 0, timeout, "", accessToken)
 
