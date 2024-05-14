@@ -1102,11 +1102,15 @@ func (u usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType strin
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
+	header := map[string]string{
+		"Authorization": accessToken,
+	}
+
 	lobID := constant.LOBID_KMB
 	cmoID := CmoID
 	endpointURL := fmt.Sprintf(os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=%s&cmo_id=%s", lobID, cmoID)
 
-	getDataFpd, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointURL, nil, map[string]string{}, constant.METHOD_GET, false, 0, timeout, "", accessToken)
+	getDataFpd, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointURL, nil, header, constant.METHOD_GET, false, 0, timeout, "", accessToken)
 
 	if getDataFpd.StatusCode() == 504 || getDataFpd.StatusCode() == 502 {
 		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get FPD Data Timeout")
