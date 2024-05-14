@@ -69,8 +69,10 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 		return
 	}
 
-	if err = db.Create(&dataCMOnoFPD).Error; err != nil {
-		return
+	if dataCMOnoFPD.CMOID != "" {
+		if err = db.Create(&dataCMOnoFPD).Error; err != nil {
+			return
+		}
 	}
 
 	if len(trxDetailBiro) > 0 {
