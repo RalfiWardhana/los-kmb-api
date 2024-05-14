@@ -578,20 +578,20 @@ func (_m *Usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome float64, newI
 	return r0, r1, r2
 }
 
-// VehicleCheck provides a mock function with given fields: manufactureYear, tenor, configValue
-func (_m *Usecase) VehicleCheck(manufactureYear string, tenor int, configValue response.DupcheckConfig) (response.UsecaseApi, error) {
-	ret := _m.Called(manufactureYear, tenor, configValue)
+// VehicleCheck provides a mock function with given fields: manufactureYear, cmoCluster, bpkbName, tenor, configValue
+func (_m *Usecase) VehicleCheck(manufactureYear string, cmoCluster string, bpkbName string, tenor int, configValue response.DupcheckConfig) (response.UsecaseApi, error) {
+	ret := _m.Called(manufactureYear, cmoCluster, bpkbName, tenor, configValue)
 
 	var r0 response.UsecaseApi
-	if rf, ok := ret.Get(0).(func(string, int, response.DupcheckConfig) response.UsecaseApi); ok {
-		r0 = rf(manufactureYear, tenor, configValue)
+	if rf, ok := ret.Get(0).(func(string, string, string, int, response.DupcheckConfig) response.UsecaseApi); ok {
+		r0 = rf(manufactureYear, cmoCluster, bpkbName, tenor, configValue)
 	} else {
 		r0 = ret.Get(0).(response.UsecaseApi)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, int, response.DupcheckConfig) error); ok {
-		r1 = rf(manufactureYear, tenor, configValue)
+	if rf, ok := ret.Get(1).(func(string, string, string, int, response.DupcheckConfig) error); ok {
+		r1 = rf(manufactureYear, cmoCluster, bpkbName, tenor, configValue)
 	} else {
 		r1 = ret.Error(1)
 	}
