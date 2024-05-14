@@ -53,7 +53,7 @@ func (r repoHandler) DummyDataPbk(noktp string) (data entity.DummyPBK, err error
 	return
 }
 
-func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro) (err error) {
+func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, dataCMOnoFPD entity.TrxCmoNoFPD) (err error) {
 
 	var x sql.TxOptions
 
@@ -66,6 +66,10 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 	defer db.Commit()
 
 	if err = db.Create(&data).Error; err != nil {
+		return
+	}
+
+	if err = db.Create(&dataCMOnoFPD).Error; err != nil {
 		return
 	}
 
@@ -238,25 +242,6 @@ func (r repoHandler) MasterMappingFpdCluster(FpdValue float64) (data entity.Mast
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
-		return
-	}
-
-	return
-}
-
-func (r repoHandler) SaveTrxCmoNoFPD(data entity.TrxCmoNoFPD) (err error) {
-
-	var x sql.TxOptions
-
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.NewKmb.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	if err = db.Create(&data).Error; err != nil {
 		return
 	}
 

@@ -53,21 +53,22 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, married bool, accessToken string, hrisAccessToken string) (respFiltering response.Filtering, err error) {
 
 	var (
-		customer             []request.SpouseDupcheck
-		dataCustomer         []response.SpDupCekCustomerByID
-		blackList            response.UsecaseApi
-		sp                   response.SpDupCekCustomerByID
-		isBlacklist          bool
-		resPefindo           response.PefindoResult
-		reqPefindo           request.Pefindo
-		trxDetailBiro        []entity.TrxDetailBiro
-		respFilteringPefindo response.Filtering
-		resCMO               response.EmployeeCMOResponse
-		resFPD               response.FpdCMOResponse
-		bpkbName             bool
-		clusterCmo           string
-		savedCluster         string
-		useDefaultCluster    bool
+		customer                  []request.SpouseDupcheck
+		dataCustomer              []response.SpDupCekCustomerByID
+		blackList                 response.UsecaseApi
+		sp                        response.SpDupCekCustomerByID
+		isBlacklist               bool
+		resPefindo                response.PefindoResult
+		reqPefindo                request.Pefindo
+		trxDetailBiro             []entity.TrxDetailBiro
+		respFilteringPefindo      response.Filtering
+		resCMO                    response.EmployeeCMOResponse
+		resFPD                    response.FpdCMOResponse
+		bpkbName                  bool
+		clusterCmo                string
+		savedCluster              string
+		useDefaultCluster         bool
+		entityTransactionCMOnoFPD entity.TrxCmoNoFPD
 	)
 
 	requestID := ctx.Value(echo.HeaderXRequestID).(string)
@@ -102,7 +103,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 			entityFiltering.Reason = blackList.Reason
 			entityFiltering.IsBlacklist = 1
 
-			err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro)
+			err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD)
 
 			return
 		}
@@ -145,57 +146,58 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	}
 
 	if resCMO.CMOCategory == "" {
-		respFiltering.NextProcess = false
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - CMO_ID " + req.CMOID + " not found on HRIS API")
+		return
+	}
+
+	bpkbName = strings.Contains(os.Getenv("NAMA_SAMA"), req.BPKBName)
+	bpkbString := "NAMA BEDA"
+	defaultCluster := constant.CLUSTER_C
+	if bpkbName {
+		bpkbString = "NAMA SAMA"
+		defaultCluster = constant.CLUSTER_B
+	}
+
+	if resCMO.CMOCategory == constant.CMO_BARU {
+		clusterCmo = defaultCluster
+		// set cluster menggunakan Default Cluster selama 3 bulan, terhitung sejak bulan join_date nya
+		useDefaultCluster = true
 	} else {
-		bpkbName = strings.Contains(os.Getenv("NAMA_SAMA"), req.BPKBName)
-		bpkbString := "NAMA BEDA"
-		defaultCluster := constant.CLUSTER_C
-		if bpkbName {
-			bpkbString = "NAMA SAMA"
-			defaultCluster = constant.CLUSTER_B
+		// Mendapatkan value FPD dari masing-masing jenis BPKB
+		resFPD, err = u.usecase.GetFpdCMO(ctx, req.CMOID, bpkbString, accessToken)
+		if err != nil {
+			return
 		}
 
-		if resCMO.CMOCategory == constant.CMO_BARU {
+		if !resFPD.FpdExist {
 			clusterCmo = defaultCluster
-			// set cluster menggunakan Default Cluster selama 3 bulan, terhitung sejak bulan join_date nya
+			// set cluster menggunakan Default Cluster selama 3 bulan, terhitung sejak tanggal hit filtering nya (assume: today)
 			useDefaultCluster = true
 		} else {
-			// Mendapatkan value FPD dari masing-masing jenis BPKB
-			resFPD, err = u.usecase.GetFpdCMO(ctx, req.CMOID, bpkbString, accessToken)
+			// Check Cluster
+			var mappingFpdCluster entity.MasterMappingFpdCluster
+			mappingFpdCluster, err = u.repository.MasterMappingFpdCluster(resFPD.CmoFpd)
 			if err != nil {
 				return
 			}
 
-			if !resFPD.FpdExist {
+			if mappingFpdCluster.Cluster == "" {
 				clusterCmo = defaultCluster
 				// set cluster menggunakan Default Cluster selama 3 bulan, terhitung sejak tanggal hit filtering nya (assume: today)
 				useDefaultCluster = true
 			} else {
-				// Check Cluster
-				var mappingFpdCluster entity.MasterMappingFpdCluster
-				mappingFpdCluster, err = u.repository.MasterMappingFpdCluster(resFPD.CmoFpd)
-				if err != nil {
-					return
-				}
-
-				if mappingFpdCluster.Cluster == "" {
-					clusterCmo = defaultCluster
-					// set cluster menggunakan Default Cluster selama 3 bulan, terhitung sejak tanggal hit filtering nya (assume: today)
-					useDefaultCluster = true
-				} else {
-					clusterCmo = mappingFpdCluster.Cluster
-				}
+				clusterCmo = mappingFpdCluster.Cluster
 			}
 		}
+	}
 
-		if useDefaultCluster == true {
-			savedCluster, err = u.usecase.SaveCmoNoFPD(req.ProspectID, req.CMOID, resCMO.CMOCategory, resCMO.JoinDate, clusterCmo)
-			if err != nil {
-				return
-			}
-			if savedCluster != "" {
-				clusterCmo = savedCluster
-			}
+	if useDefaultCluster == true {
+		savedCluster, entityTransactionCMOnoFPD, err = u.usecase.CheckCmoNoFPD(req.ProspectID, req.CMOID, resCMO.CMOCategory, resCMO.JoinDate, clusterCmo)
+		if err != nil {
+			return
+		}
+		if savedCluster != "" {
+			clusterCmo = savedCluster
 		}
 	}
 
@@ -276,7 +278,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	entityFiltering.Reason = respFiltering.Reason
 
-	err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro)
+	err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD)
 
 	return
 }
@@ -904,9 +906,9 @@ func (u usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerB
 	return
 }
 
-func (u usecase) SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro) (err error) {
+func (u usecase) SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, transactionCMOnoFPD entity.TrxCmoNoFPD) (err error) {
 
-	err = u.repository.SaveFiltering(transaction, trxDetailBiro)
+	err = u.repository.SaveFiltering(transaction, trxDetailBiro, transactionCMOnoFPD)
 
 	if err != nil {
 
@@ -1121,7 +1123,6 @@ func (u usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType strin
 	lobID := constant.LOBID_KMB
 	cmoID := CmoID
 	endpointURL := fmt.Sprintf(os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=%d&cmo_id=%s", lobID, cmoID)
-	fmt.Printf("isi dari endpointURL getFPD : %v\n", endpointURL)
 
 	getDataFpd, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointURL, nil, header, constant.METHOD_GET, false, 0, timeout, "", accessToken)
 
@@ -1194,7 +1195,7 @@ func (u usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType strin
 	return
 }
 
-func (u usecase) SaveCmoNoFPD(prospectID string, cmoID string, cmoCategory string, cmoJoinDate string, defaultCluster string) (clusterCMOSaved string, err error) {
+func (u usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory string, cmoJoinDate string, defaultCluster string) (clusterCMOSaved string, entitySaveTrxNoFPd entity.TrxCmoNoFPD, err error) {
 	var today string
 
 	currentDate := time.Now().Format("2006-01-02")
@@ -1240,7 +1241,7 @@ func (u usecase) SaveCmoNoFPD(prospectID string, cmoID string, cmoCategory strin
 		// Parsing threeMonthsLater ke dalam format "yyyy-mm-dd" sebagai string
 		threeMonthsLaterString := threeMonthsLater.Format("2006-01-02")
 
-		entitySaveTrxNoFPd := entity.TrxCmoNoFPD{
+		SaveTrxNoFPd := entity.TrxCmoNoFPD{
 			ProspectID:              prospectID,
 			CMOID:                   cmoID,
 			CmoCategory:             cmoCategory,
@@ -1251,7 +1252,7 @@ func (u usecase) SaveCmoNoFPD(prospectID string, cmoID string, cmoCategory strin
 			CreatedAt:               time.Time{},
 		}
 
-		err = u.repository.SaveTrxCmoNoFPD(entitySaveTrxNoFPd)
+		entitySaveTrxNoFPd = SaveTrxNoFPd
 
 		if err != nil {
 			if strings.Contains(err.Error(), "deadline") {
