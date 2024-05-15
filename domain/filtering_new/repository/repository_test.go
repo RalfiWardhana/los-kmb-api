@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jinzhu/gorm"
@@ -83,16 +84,30 @@ func TestSaveFiltering(t *testing.T) {
 		},
 	}
 	detailBiro := structToSlice(trxDetailBiro)
+	trxCmoNoFPD := entity.TrxCmoNoFPD{
+		ProspectID:              "TST001",
+		CMOID:                   "105394",
+		CmoCategory:             "OLD",
+		CmoJoinDate:             "2020-06-12",
+		DefaultCluster:          "Cluster C",
+		DefaultClusterStartDate: "2024-05-14",
+		DefaultClusterEndDate:   "2024-07-31",
+		CreatedAt:               time.Time{},
+	}
+	cmoNoFPD := structToSlice(trxCmoNoFPD)
 	mock.ExpectBegin()
 	mock.ExpectExec(`INSERT INTO "trx_filtering" (.*)`).
 		WithArgs(filtering...).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(`INSERT INTO "trx_cmo_no_fpd" (.*)`).
+		WithArgs(cmoNoFPD...).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec(`INSERT INTO "trx_detail_biro" (.*)`).
 		WithArgs(detailBiro...).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
-	err := newDB.SaveFiltering(trxFiltering, trxDetailBiro)
+	err := newDB.SaveFiltering(trxFiltering, trxDetailBiro, trxCmoNoFPD)
 	if err != nil {
 		t.Errorf("error '%s' was not expected, but got: ", err)
 	}

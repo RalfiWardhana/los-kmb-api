@@ -192,7 +192,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	}
 
 	if useDefaultCluster == true {
-		savedCluster, entityTransactionCMOnoFPD, err = u.usecase.CheckCmoNoFPD(req.ProspectID, req.CMOID, resCMO.CMOCategory, resCMO.JoinDate, clusterCmo)
+		savedCluster, entityTransactionCMOnoFPD, err = u.usecase.CheckCmoNoFPD(req.ProspectID, req.CMOID, resCMO.CMOCategory, resCMO.JoinDate, clusterCmo, bpkbString)
 		if err != nil {
 			return
 		}
@@ -201,14 +201,12 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		}
 	}
 
-	respFiltering.ClusterCMO = clusterCmo
-
 	entityFiltering.CMOID = req.CMOID
 	entityFiltering.CMOJoinDate = resCMO.JoinDate
 	entityFiltering.CMOCategory = resCMO.CMOCategory
 	entityFiltering.CMOFPD = resFPD.CmoFpd
 	entityFiltering.CMOAccSales = resFPD.CmoAccSales
-	entityFiltering.CMOCluster = respFiltering.ClusterCMO
+	entityFiltering.CMOCluster = clusterCmo
 
 	/* Process Get Cluster based on CMO_ID ends here */
 
@@ -219,6 +217,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	}
 
 	respFiltering = respFilteringPefindo
+	respFiltering.ClusterCMO = clusterCmo
 
 	respFiltering.ProspectID = req.ProspectID
 	respFiltering.CustomerSegment = mainCustomer.CustomerSegment
@@ -409,7 +408,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 						data.Decision = constant.DECISION_PASS
 						data.Reason = fmt.Sprintf("NAMA BEDA %s & OVD 12 Bulan Terakhir Null", getReasonCategoryRoman(pefindoResult.Category))
 					}
-				} else if bpkbName {
+				} else {
 					if pefindoResult.MaxOverdueLast12MonthsKORules != nil {
 						if checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12 {
 							if pefindoResult.MaxOverdueKORules == nil {
@@ -1195,7 +1194,7 @@ func (u usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType strin
 	return
 }
 
-func (u usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory string, cmoJoinDate string, defaultCluster string) (clusterCMOSaved string, entitySaveTrxNoFPd entity.TrxCmoNoFPD, err error) {
+func (u usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory string, cmoJoinDate string, defaultCluster string, bpkbName string) (clusterCMOSaved string, entitySaveTrxNoFPd entity.TrxCmoNoFPD, err error) {
 	var today string
 
 	currentDate := time.Now().Format("2006-01-02")
@@ -1208,7 +1207,7 @@ func (u usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory stri
 
 	// Cek apakah CMO_ID sudah pernah tersimpan di dalam table `trx_cmo_no_fpd`
 	var TrxCmoNoFpd entity.TrxCmoNoFPD
-	TrxCmoNoFpd, err = u.repository.CheckCMONoFPD(cmoID, currentDate)
+	TrxCmoNoFpd, err = u.repository.CheckCMONoFPD(cmoID, bpkbName)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Check CMO No FPD error")
 		return
@@ -1243,6 +1242,7 @@ func (u usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory stri
 
 		SaveTrxNoFPd := entity.TrxCmoNoFPD{
 			ProspectID:              prospectID,
+			BPKBName:                bpkbName,
 			CMOID:                   cmoID,
 			CmoCategory:             cmoCategory,
 			CmoJoinDate:             cmoJoinDate,

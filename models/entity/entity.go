@@ -2386,6 +2386,7 @@ func (c *MasterMappingFpdCluster) TableName() string {
 type TrxCmoNoFPD struct {
 	ProspectID              string    `gorm:"column:prospect_id;type:varchar(20)" json:"prospect_id"`
 	CMOID                   string    `gorm:"column:cmo_id;type:varchar(20)" json:"cmo_id"`
+	BPKBName                string    `gorm:"column:bpkb_name;type:varchar(9)" json:"bpkb_name"`
 	CmoCategory             string    `gorm:"column:cmo_category;char(3)" json:"cmo_category"`
 	CmoJoinDate             string    `gorm:"column:cmo_join_date" json:"cmo_join_date"`
 	DefaultCluster          string    `gorm:"column:default_cluster;type:varchar(20)" json:"default_cluster"`

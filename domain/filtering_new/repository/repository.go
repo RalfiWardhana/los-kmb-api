@@ -250,7 +250,7 @@ func (r repoHandler) MasterMappingFpdCluster(FpdValue float64) (data entity.Mast
 	return
 }
 
-func (r repoHandler) CheckCMONoFPD(cmoID string, currentDate string) (data entity.TrxCmoNoFPD, err error) {
+func (r repoHandler) CheckCMONoFPD(cmoID string, bpkbName string) (data entity.TrxCmoNoFPD, err error) {
 
 	var x sql.TxOptions
 
@@ -268,8 +268,8 @@ func (r repoHandler) CheckCMONoFPD(cmoID string, currentDate string) (data entit
 							FORMAT(CONVERT(datetime, default_cluster_start_date, 127), 'yyyy-MM-dd') AS default_cluster_start_date, 
 							FORMAT(CONVERT(datetime, default_cluster_end_date, 127), 'yyyy-MM-dd') AS default_cluster_end_date
 						  FROM dbo.trx_cmo_no_fpd WITH (nolock) 
-						  WHERE cmo_id = ?
-						  ORDER BY created_at DESC`, cmoID).Scan(&data).Error; err != nil {
+						  WHERE cmo_id = ? AND bpkb_name = ?
+						  ORDER BY created_at DESC`, cmoID, bpkbName).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}

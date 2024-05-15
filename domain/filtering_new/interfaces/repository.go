@@ -10,5 +10,5 @@ type Repository interface {
 	SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error)
 	GetResultFiltering(prospectID string) (data []entity.ResultFiltering, err error)
 	MasterMappingFpdCluster(FpdValue float64) (data entity.MasterMappingFpdCluster, err error)
-	CheckCMONoFPD(cmoID string, currentDate string) (data entity.TrxCmoNoFPD, err error)
+	CheckCMONoFPD(cmoID string, bpkbName string) (data entity.TrxCmoNoFPD, err error)
 }

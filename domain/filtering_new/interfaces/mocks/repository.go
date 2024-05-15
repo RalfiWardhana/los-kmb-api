@@ -13,20 +13,20 @@ type Repository struct {
 	mock.Mock
 }
 
-// CheckCMONoFPD provides a mock function with given fields: cmoID, currentDate
-func (_m *Repository) CheckCMONoFPD(cmoID string, currentDate string) (entity.TrxCmoNoFPD, error) {
-	ret := _m.Called(cmoID, currentDate)
+// CheckCMONoFPD provides a mock function with given fields: cmoID, bpkbName
+func (_m *Repository) CheckCMONoFPD(cmoID string, bpkbName string) (entity.TrxCmoNoFPD, error) {
+	ret := _m.Called(cmoID, bpkbName)
 
 	var r0 entity.TrxCmoNoFPD
 	if rf, ok := ret.Get(0).(func(string, string) entity.TrxCmoNoFPD); ok {
-		r0 = rf(cmoID, currentDate)
+		r0 = rf(cmoID, bpkbName)
 	} else {
 		r0 = ret.Get(0).(entity.TrxCmoNoFPD)
 	}
 
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(cmoID, currentDate)
+		r1 = rf(cmoID, bpkbName)
 	} else {
 		r1 = ret.Error(1)
 	}
