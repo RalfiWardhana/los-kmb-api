@@ -485,6 +485,27 @@ func (_m *Repository) GetMappingElaborateIncome(mappingElaborateIncome entity.Ma
 	return r0, r1
 }
 
+// GetMappingVehicleAge provides a mock function with given fields: vehicleAge, cluster, bpkbNameType, tenor
+func (_m *Repository) GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNameType int, tenor int) (entity.MappingVehicleAge, error) {
+	ret := _m.Called(vehicleAge, cluster, bpkbNameType, tenor)
+
+	var r0 entity.MappingVehicleAge
+	if rf, ok := ret.Get(0).(func(int, string, int, int) entity.MappingVehicleAge); ok {
+		r0 = rf(vehicleAge, cluster, bpkbNameType, tenor)
+	} else {
+		r0 = ret.Get(0).(entity.MappingVehicleAge)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int, string, int, int) error); ok {
+		r1 = rf(vehicleAge, cluster, bpkbNameType, tenor)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetMasterBranch provides a mock function with given fields: branchID
 func (_m *Repository) GetMasterBranch(branchID string) (entity.MasterBranch, error) {
 	ret := _m.Called(branchID)
