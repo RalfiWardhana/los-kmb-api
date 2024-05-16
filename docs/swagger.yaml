@@ -198,7 +198,6 @@ definitions:
     - ins_asset_paid_by
     - ins_asset_period
     - installment_amount
-    - insurance_amount
     - interest_amount
     - interest_rate
     - is_fidusia_covered
@@ -610,6 +609,9 @@ definitions:
       branch_id:
         example: "426"
         type: string
+      cmo_id:
+        example: "123456"
+        type: string
       gender:
         example: M
         type: string
@@ -631,6 +633,7 @@ definitions:
     - birth_date
     - bpkb_name
     - branch_id
+    - cmo_id
     - gender
     - id_number
     - legal_name
@@ -1259,6 +1262,17 @@ definitions:
         type: string
       total_balki_debet:
         type: number
+    type: object
+  response.EmployeeResponse:
+    properties:
+      employee_id:
+        type: string
+      employee_id_with_name:
+        type: string
+      employee_name:
+        type: string
+      join_date:
+        type: string
     type: object
   response.ErrorValidation:
     properties:
@@ -2184,6 +2198,42 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Filtering
+  /api/v3/kmb/employee/employee-data/{employee_id}:
+    get:
+      description: Api Get Employee Data
+      parameters:
+      - description: Employee ID
+        in: path
+        name: employee_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.EmployeeResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Employee
   /api/v3/kmb/encrypt-decrypt:
     post:
       description: Encrypt Decrypt

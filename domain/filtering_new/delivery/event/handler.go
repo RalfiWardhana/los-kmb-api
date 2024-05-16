@@ -170,7 +170,7 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 		return nil
 	}
 
-	resultFiltering, err = h.multiusecase.Filtering(ctx, req, married, middlewares.UserInfoData.AccessToken)
+	resultFiltering, err = h.multiusecase.Filtering(ctx, req, married, middlewares.UserInfoData.AccessToken, middlewares.HrisApiData.Token)
 	if err != nil {
 		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 	} else {
