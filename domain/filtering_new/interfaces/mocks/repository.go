@@ -13,6 +13,27 @@ type Repository struct {
 	mock.Mock
 }
 
+// CheckCMONoFPD provides a mock function with given fields: cmoID, bpkbName
+func (_m *Repository) CheckCMONoFPD(cmoID string, bpkbName string) (entity.TrxCmoNoFPD, error) {
+	ret := _m.Called(cmoID, bpkbName)
+
+	var r0 entity.TrxCmoNoFPD
+	if rf, ok := ret.Get(0).(func(string, string) entity.TrxCmoNoFPD); ok {
+		r0 = rf(cmoID, bpkbName)
+	} else {
+		r0 = ret.Get(0).(entity.TrxCmoNoFPD)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(cmoID, bpkbName)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // DummyDataPbk provides a mock function with given fields: query
 func (_m *Repository) DummyDataPbk(query string) (entity.DummyPBK, error) {
 	ret := _m.Called(query)
@@ -99,13 +120,34 @@ func (_m *Repository) MasterMappingCluster(req entity.MasterMappingCluster) (ent
 	return r0, r1
 }
 
-// SaveFiltering provides a mock function with given fields: data, trxDetailBiro
-func (_m *Repository) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro) error {
-	ret := _m.Called(data, trxDetailBiro)
+// MasterMappingFpdCluster provides a mock function with given fields: FpdValue
+func (_m *Repository) MasterMappingFpdCluster(FpdValue float64) (entity.MasterMappingFpdCluster, error) {
+	ret := _m.Called(FpdValue)
+
+	var r0 entity.MasterMappingFpdCluster
+	if rf, ok := ret.Get(0).(func(float64) entity.MasterMappingFpdCluster); ok {
+		r0 = rf(FpdValue)
+	} else {
+		r0 = ret.Get(0).(entity.MasterMappingFpdCluster)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(float64) error); ok {
+		r1 = rf(FpdValue)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// SaveFiltering provides a mock function with given fields: data, trxDetailBiro, dataCMOnoFPD
+func (_m *Repository) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, dataCMOnoFPD entity.TrxCmoNoFPD) error {
+	ret := _m.Called(data, trxDetailBiro, dataCMOnoFPD)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(entity.FilteringKMB, []entity.TrxDetailBiro) error); ok {
-		r0 = rf(data, trxDetailBiro)
+	if rf, ok := ret.Get(0).(func(entity.FilteringKMB, []entity.TrxDetailBiro, entity.TrxCmoNoFPD) error); ok {
+		r0 = rf(data, trxDetailBiro, dataCMOnoFPD)
 	} else {
 		r0 = ret.Error(0)
 	}

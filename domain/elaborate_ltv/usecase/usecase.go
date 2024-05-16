@@ -40,6 +40,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		bpkbNameType        int
 		manufacturingYear   time.Time
 		mappingElaborateLTV []entity.MappingElaborateLTV
+		cluster             string
 	)
 
 	filteringKMB, err = u.repository.GetFilteringResult(reqs.ProspectID)
@@ -110,7 +111,13 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		ManufacturingYear: reqs.ManufacturingYear,
 	}
 
-	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, filteringKMB.CMOCluster.(string))
+	if strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string)) {
+		cluster = constant.CLUSTER_PRIME_PRIORITY
+	} else {
+		cluster = filteringKMB.CMOCluster.(string)
+	}
+
+	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, cluster)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
 		return
@@ -156,7 +163,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		}
 
 		// max tenor
-		if resultPefindo == constant.DECISION_REJECT && int(bakiDebet) > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && strings.Contains("Cluster E Cluster F", filteringKMB.CMOCluster.(string)) {
+		if resultPefindo == constant.DECISION_REJECT && int(bakiDebet) > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && strings.Contains("Cluster E Cluster F", cluster) {
 			data.LTV = 0
 			data.MaxTenor = 0
 			data.AdjustTenor = false

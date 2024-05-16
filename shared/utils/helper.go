@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"los-kmb-api/models/entity"
@@ -448,4 +449,39 @@ func ApprovalScheme(req request.ReqSubmitApproval) (result response.RespApproval
 		}
 	}
 	return
+}
+
+func ValidateDiffMonthYear(given, today string) error {
+	// Fungsi untuk memvalidasi bulan+tahun yang diberikan tidak lebih besar dari bulan+tahun hari ini
+
+	givenDate, err := time.Parse("2006-01-02", given)
+	if err != nil {
+		return err
+	}
+	todayDate, err := time.Parse("2006-01-02", today)
+	if err != nil {
+		return err
+	}
+
+	if givenDate.Year() > todayDate.Year() || (givenDate.Year() == todayDate.Year() && givenDate.Month() > todayDate.Month()) {
+		return errors.New("given monthYear greater than today monthYear")
+	}
+
+	return nil
+}
+
+func DiffInMonths(t1, t2 time.Time) int {
+	// Fungsi untuk menghitung selisih bulan antara dua tanggal
+
+	y1, m1, _ := t1.Date()
+	y2, m2, _ := t2.Date()
+
+	// Konversi tanggal ke bulan
+	months := (y1-y2)*12 + int(m1-m2)
+
+	return months + 1 // Tambahkan 1 karena perhitungan dimulai dari bulan berikutnya setelah t1
+	// Contoh :
+	// t1 08-05-2024
+	// t2 10-03-2024
+	// maka selisih dari 2 tanggal ini adalah 3 bulan
 }
