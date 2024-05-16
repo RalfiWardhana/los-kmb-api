@@ -759,19 +759,28 @@ func (u usecase) VehicleCheck(manufactureYear, cmoCluster, bkpbName string, teno
 	ageVehicle += int(tenor / 12)
 
 	if ageVehicle <= configValue.Data.VehicleAge {
-		bpkbNameType := strings.Contains(os.Getenv("NAMA_SAMA"), bkpbName)
+		bpkbNameType := 0
+		if strings.Contains(os.Getenv("NAMA_SAMA"), bkpbName) {
+			bpkbNameType = 1
+		}
 
-		if (ageVehicle >= 11 && ageVehicle <= 13) && ((strings.Contains("Cluster A Cluster B Cluster C", cmoCluster) && tenor >= 24 && !bpkbNameType) || (strings.Contains("Cluster D Cluster E Cluster F", cmoCluster))) {
+		mapping, err := u.repository.GetMappingVehicleAge(ageVehicle, cmoCluster, bpkbNameType, tenor)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Vehicle Age Error")
+			return data, err
+		}
+
+		if mapping.Decision == constant.DECISION_REJECT {
 			data.Result = constant.DECISION_REJECT
 			data.Code = constant.CODE_VEHICLE_AGE_MAX
 			data.Reason = fmt.Sprintf("%s Ketentuan", constant.REASON_VEHICLE_AGE_MAX)
-			return
+			return data, nil
 		}
 
 		data.Result = constant.DECISION_PASS
 		data.Code = constant.CODE_VEHICLE_SESUAI
 		data.Reason = constant.REASON_VEHICLE_SESUAI
-		return
+		return data, nil
 
 	} else {
 		data.Result = constant.DECISION_REJECT
