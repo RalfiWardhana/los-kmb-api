@@ -39,8 +39,8 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		bakiDebet           float64
 		bpkbNameType        int
 		manufacturingYear   time.Time
-		getMappingLtvOvd    []entity.MappingElaborateLTV
 		mappingElaborateLTV []entity.MappingElaborateLTV
+		cluster             string
 	)
 
 	filteringKMB, err = u.repository.GetFilteringResult(reqs.ProspectID)
@@ -111,26 +111,16 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		ManufacturingYear: reqs.ManufacturingYear,
 	}
 
-	maxOvd := filteringKMB.MaxOverdueBiro
-	maxOvd12 := filteringKMB.MaxOverdueLast12monthsBiro
-
-	maxOverdueBiro, _ := maxOvd.(int64)
-	maxOverdueLast12, _ := maxOvd12.(int64)
-
-	// Check max OVD 12 & max OVD current
-	if (maxOvd != nil && maxOvd12 != nil) && (maxOverdueLast12 <= 10 && maxOverdueBiro == 0) {
-		// Get Mapping LTV OVD
-		getMappingLtvOvd, _ = u.repository.GetMappingElaborateLTVOvd(resultPefindo, filteringKMB.Cluster.(string))
+	if strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string)) {
+		cluster = constant.CLUSTER_PRIME_PRIORITY
+	} else {
+		cluster = filteringKMB.CMOCluster.(string)
 	}
 
-	if len(getMappingLtvOvd) > 0 && (maxOvd != nil && maxOvd12 != nil) && (maxOverdueLast12 <= 10 && maxOverdueBiro == 0) {
-		mappingElaborateLTV = getMappingLtvOvd
-	} else {
-		mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, filteringKMB.Cluster.(string))
-		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
-			return
-		}
+	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, cluster)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
+		return
 	}
 
 	for _, m := range mappingElaborateLTV {
@@ -173,7 +163,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		}
 
 		// max tenor
-		if resultPefindo == constant.DECISION_REJECT && int(bakiDebet) > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && strings.Contains("Cluster E Cluster F", filteringKMB.Cluster.(string)) {
+		if resultPefindo == constant.DECISION_REJECT && int(bakiDebet) > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && strings.Contains("Cluster E Cluster F", cluster) {
 			data.LTV = 0
 			data.MaxTenor = 0
 			data.AdjustTenor = false

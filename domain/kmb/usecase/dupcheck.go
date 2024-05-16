@@ -128,7 +128,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	mapping.SpouseType = spMap.SpouseType
 
 	//Check vehicle age
-	ageVehicle, err := u.usecase.VehicleCheck(req.ManufactureYear, req.Tenor, configValue)
+	ageVehicle, err := u.usecase.VehicleCheck(req.ManufactureYear, req.CMOCluster, req.BPKBName, req.Tenor, configValue)
 
 	if err != nil {
 		return
@@ -747,7 +747,7 @@ func (u usecase) CustomerKMB(spDupcheck response.SpDupCekCustomerByID) (statusKo
 
 }
 
-func (u usecase) VehicleCheck(manufactureYear string, tenor int, configValue response.DupcheckConfig) (data response.UsecaseApi, err error) {
+func (u usecase) VehicleCheck(manufactureYear, cmoCluster, bkpbName string, tenor int, configValue response.DupcheckConfig) (data response.UsecaseApi, err error) {
 
 	data.SourceDecision = constant.SOURCE_DECISION_PMK
 
@@ -759,6 +759,15 @@ func (u usecase) VehicleCheck(manufactureYear string, tenor int, configValue res
 	ageVehicle += int(tenor / 12)
 
 	if ageVehicle <= configValue.Data.VehicleAge {
+		bpkbNameType := strings.Contains(os.Getenv("NAMA_SAMA"), bkpbName)
+
+		if (ageVehicle >= 11 && ageVehicle <= 13) && ((strings.Contains("Cluster A Cluster B Cluster C", cmoCluster) && tenor >= 24 && !bpkbNameType) || (strings.Contains("Cluster D Cluster E Cluster F", cmoCluster))) {
+			data.Result = constant.DECISION_REJECT
+			data.Code = constant.CODE_VEHICLE_AGE_MAX
+			data.Reason = fmt.Sprintf("%s Ketentuan", constant.REASON_VEHICLE_AGE_MAX)
+			return
+		}
+
 		data.Result = constant.DECISION_PASS
 		data.Code = constant.CODE_VEHICLE_SESUAI
 		data.Reason = constant.REASON_VEHICLE_SESUAI
