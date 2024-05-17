@@ -1041,11 +1041,19 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 	if err == nil && getDataEmployee.StatusCode() == 200 {
 		json.Unmarshal([]byte(jsoniter.Get(getDataEmployee.Body()).ToString()), &respGetEmployeeData)
 
-		// Mencari index terakhir yang mengandung position_group_code "AO"
+		isCmoActive := false
+		if len(respGetEmployeeData.Data) > 0 && respGetEmployeeData.Data[0].PositionGroupCode == "AO" {
+			isCmoActive = true
+		}
+
 		var lastIndex int = -1
-		for i, emp := range respGetEmployeeData.Data {
-			if emp.PositionGroupCode == "AO" {
-				lastIndex = i
+		// Cek dulu apakah saat ini employee tersebut adalah berposisi sebagai "CMO"
+		if isCmoActive {
+			// Mencari index terakhir yang mengandung position_group_code "AO"
+			for i, emp := range respGetEmployeeData.Data {
+				if emp.PositionGroupCode == "AO" {
+					lastIndex = i
+				}
 			}
 		}
 
