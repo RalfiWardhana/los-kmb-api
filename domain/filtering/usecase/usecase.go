@@ -1181,14 +1181,23 @@ func checkNullCategory(Category interface{}) float64 {
 
 // function to map reason category values to Roman numerals
 func getReasonCategoryRoman(category interface{}) string {
-	switch category.(float64) {
-	case 1:
-		return "(I)"
-	case 2:
-		return "(II)"
-	case 3:
-		return "(III)"
-	default:
-		return ""
-	}
+	if category == nil {
+        return ""
+    }
+
+    value, ok := category.(float64)
+    if !ok {
+        return ""
+    }
+
+    switch value {
+    case 1:
+        return "(I)"
+    case 2:
+        return "(II)"
+    case 3:
+        return "(III)"
+    default:
+        return ""
+    }
 }
