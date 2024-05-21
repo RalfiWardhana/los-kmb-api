@@ -3,6 +3,7 @@ package constant
 var LOS_KMB_BASE_URL string
 var TOPIC_SUBMISSION string
 var TOPIC_SUBMISSION_LOS string
+var TOPIC_INSERT_CUSTOMER string
 
 const (
 	FLAG_LOS                         = "LOS"
@@ -313,6 +314,7 @@ const (
 	KEY_PREFIX_AFTER_PRESCREENING      = "after_prescreening_los_kmb"
 	KEY_PREFIX_CALLBACK                = "callback_los_kmb"
 	KEY_PREFIX_CALLBACK_GOLIVE         = "callback_golive_kmb"
+	KEY_PREFIX_UPDATE_CUSTOMER         = "update_customer"
 
 	MAX_RETRY_PUBLISH = 3
 
