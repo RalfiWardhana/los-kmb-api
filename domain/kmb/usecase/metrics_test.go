@@ -420,6 +420,50 @@ func TestMetrics(t *testing.T) {
 			errRejectTenor36: errors.New("error reject tenor 36"),
 		},
 		{
+			name: "test metrics tenor 36 err cluster CMO",
+			reqMetrics: request.Metrics{
+				Transaction: request.Transaction{
+					ProspectID: "TEST1",
+				},
+				Apk: request.Apk{
+					Tenor: 36,
+				},
+				CustomerPersonal: request.CustomerPersonal{
+					IDNumber: "123456",
+				},
+			},
+			trxMaster: 0,
+			countTrx:  1,
+			filtering: entity.FilteringKMB{
+				NextProcess:    1,
+				ScoreBiro:      "AVERAGE RISK",
+				CustomerStatus: "NEW",
+				CMOCluster:     "Cluster C",
+			},
+			details: []entity.TrxDetail{
+				{
+					ProspectID:     "TEST1",
+					StatusProcess:  constant.STATUS_ONPROCESS,
+					Activity:       constant.ACTIVITY_PROCESS,
+					Decision:       constant.DB_DECISION_PASS,
+					RuleCode:       constant.CODE_CMO_RECOMMENDED,
+					Reason:         constant.REASON_CMO_RECOMMENDED,
+					SourceDecision: constant.CMO_AGENT,
+					NextStep:       constant.PRESCREENING,
+				},
+				{},
+			},
+			trxPrescreening: entity.TrxPrescreening{
+				ProspectID: "TEST1",
+				Decision:   constant.DB_DECISION_REJECT,
+				Reason:     constant.REASON_CMO_NOT_RECOMMENDED,
+				CreatedBy:  constant.SYSTEM_CREATED,
+				DecisionBy: constant.SYSTEM_CREATED,
+			},
+			err:              errors.New("error reject tenor 36"),
+			errRejectTenor36: errors.New("error reject tenor 36"),
+		},
+		{
 			name: "test metrics tenor 36 reject errsave",
 			reqMetrics: request.Metrics{
 				Transaction: request.Transaction{
@@ -462,6 +506,49 @@ func TestMetrics(t *testing.T) {
 			errSaveTransaction: errors.New("error save"),
 		},
 		{
+			name: "test metrics tenor 36 reject errsave Cluster CMO",
+			reqMetrics: request.Metrics{
+				Transaction: request.Transaction{
+					ProspectID: "TEST1",
+				},
+				Apk: request.Apk{
+					Tenor: 36,
+				},
+				CustomerPersonal: request.CustomerPersonal{
+					IDNumber: "123456",
+				},
+			},
+			trxMaster: 0,
+			countTrx:  1,
+			filtering: entity.FilteringKMB{
+				NextProcess:    1,
+				ScoreBiro:      "AVERAGE RISK",
+				CustomerStatus: "NEW",
+				CMOCluster:     "Cluster C",
+			},
+			details: []entity.TrxDetail{
+				{
+					ProspectID:     "TEST1",
+					StatusProcess:  constant.STATUS_FINAL,
+					Activity:       constant.ACTIVITY_STOP,
+					Decision:       constant.DB_DECISION_REJECT,
+					RuleCode:       "123",
+					SourceDecision: constant.SOURCE_DECISION_TENOR,
+					CreatedBy:      constant.SYSTEM_CREATED,
+					Reason:         "REJECT TENOR 36",
+					Info:           fmt.Sprintf("Cluster : "),
+				},
+			},
+			trxTenor: response.UsecaseApi{
+				Code:   "123",
+				Result: constant.DECISION_REJECT,
+				Reason: "REJECT TENOR 36",
+			},
+			resultMetrics:      response.Metrics{},
+			err:                errors.New("error save"),
+			errSaveTransaction: errors.New("error save"),
+		},
+		{
 			name: "test metrics tenor 36 reject",
 			reqMetrics: request.Metrics{
 				Transaction: request.Transaction{
@@ -480,6 +567,47 @@ func TestMetrics(t *testing.T) {
 				NextProcess:    1,
 				ScoreBiro:      "AVERAGE RISK",
 				CustomerStatus: "NEW",
+			},
+			details: []entity.TrxDetail{
+				{
+					ProspectID:     "TEST1",
+					StatusProcess:  constant.STATUS_FINAL,
+					Activity:       constant.ACTIVITY_STOP,
+					Decision:       constant.DB_DECISION_REJECT,
+					RuleCode:       "013",
+					SourceDecision: constant.SOURCE_DECISION_TENOR,
+					CreatedBy:      constant.SYSTEM_CREATED,
+					Reason:         constant.REASON_REJECT_TENOR,
+					Info:           fmt.Sprintf("Cluster : "),
+				},
+			},
+			trxTenor: response.UsecaseApi{
+				Code:   "013",
+				Result: constant.DECISION_REJECT,
+				Reason: constant.REASON_REJECT_TENOR,
+			},
+			resultMetrics: response.Metrics{},
+		},
+		{
+			name: "test metrics tenor 36 reject Cluster CMO",
+			reqMetrics: request.Metrics{
+				Transaction: request.Transaction{
+					ProspectID: "TEST1",
+				},
+				Apk: request.Apk{
+					Tenor: 48,
+				},
+				CustomerPersonal: request.CustomerPersonal{
+					IDNumber: "123456",
+				},
+			},
+			trxMaster: 0,
+			countTrx:  1,
+			filtering: entity.FilteringKMB{
+				NextProcess:    1,
+				ScoreBiro:      "AVERAGE RISK",
+				CustomerStatus: "NEW",
+				CMOCluster:     "Cluster C",
 			},
 			details: []entity.TrxDetail{
 				{
@@ -547,6 +675,75 @@ func TestMetrics(t *testing.T) {
 				NextProcess:    1,
 				ScoreBiro:      "AVERAGE RISK",
 				CustomerStatus: "NEW",
+			},
+			details: []entity.TrxDetail{
+				{
+					ProspectID:     "TEST1",
+					StatusProcess:  constant.STATUS_ONPROCESS,
+					Activity:       constant.ACTIVITY_PROCESS,
+					Decision:       constant.DB_DECISION_PASS,
+					RuleCode:       "123",
+					SourceDecision: constant.SOURCE_DECISION_TENOR,
+					NextStep:       constant.SOURCE_DECISION_DUPCHECK,
+					CreatedBy:      constant.SYSTEM_CREATED,
+					Reason:         "PASS TENOR 36",
+				},
+			},
+			trxTenor: response.UsecaseApi{
+				Code:   "123",
+				Result: constant.DECISION_PASS,
+				Reason: "PASS TENOR 36",
+			},
+			err:          errors.New(constant.ERROR_UPSTREAM + " - Get Dupcheck Config Error"),
+			errGetConfig: errors.New(constant.ERROR_UPSTREAM + " - Get Dupcheck Config Error"),
+		},
+		{
+			name: "test metrics tenor errGetConfig Cluster CMO",
+			reqMetrics: request.Metrics{
+				Transaction: request.Transaction{
+					ProspectID: "TEST1",
+				},
+				Apk: request.Apk{
+					Tenor: 36,
+				},
+				CustomerPersonal: request.CustomerPersonal{
+					IDNumber: "123456",
+				},
+				CustomerSpouse: &request.CustomerSpouse{
+					IDNumber:  "123456",
+					LegalName: "SPOUSE",
+				},
+				CustomerPhoto: []request.CustomerPhoto{
+					{
+						ID:  constant.TAG_KTP_PHOTO,
+						Url: "URL KTP",
+					},
+					{
+						ID:  constant.TAG_SELFIE_PHOTO,
+						Url: "URL SELFIE",
+					},
+				},
+				Address: []request.Address{
+					{
+						Type:    constant.ADDRESS_TYPE_LEGAL,
+						ZipCode: "12345",
+					},
+					{
+						Type: constant.ADDRESS_TYPE_COMPANY,
+					},
+				},
+				CustomerEmployment: request.CustomerEmployment{
+					MonthlyVariableIncome: &MonthlyVariableIncome,
+					SpouseIncome:          &SpouseIncome,
+				},
+			},
+			trxMaster: 0,
+			countTrx:  1,
+			filtering: entity.FilteringKMB{
+				NextProcess:    1,
+				ScoreBiro:      "AVERAGE RISK",
+				CustomerStatus: "NEW",
+				CMOCluster:     "Cluster C",
 			},
 			details: []entity.TrxDetail{
 				{
