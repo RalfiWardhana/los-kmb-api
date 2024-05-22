@@ -113,6 +113,7 @@ func main() {
 	//topic kafka
 	constant.TOPIC_SUBMISSION = os.Getenv("TOPIC_SUBMISSION")
 	constant.TOPIC_SUBMISSION_LOS = os.Getenv("TOPIC_SUBMISSION_LOS")
+	constant.TOPIC_INSERT_CUSTOMER = os.Getenv("TOPIC_INSERT_CUSTOMER")
 
 	var minilosWG *gorm.DB
 
@@ -235,7 +236,7 @@ func main() {
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
 	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, authorization, jsonResponse, accessToken, producer)
 
-	toolsDelivery.ToolsHandler(apiGroupv3, jsonResponse, accessToken)
+	toolsDelivery.ToolsHandler(apiGroupv3, jsonResponse, accessToken, producer)
 
 	auth := map[string]interface{}{
 		"secret_key":         os.Getenv("PLATFORM_SECRET_KEY"),
