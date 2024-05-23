@@ -536,7 +536,7 @@ func TestMetrics(t *testing.T) {
 					SourceDecision: constant.SOURCE_DECISION_TENOR,
 					CreatedBy:      constant.SYSTEM_CREATED,
 					Reason:         "REJECT TENOR 36",
-					Info:           fmt.Sprintf("Cluster : "),
+					Info:           fmt.Sprintf("Cluster : Cluster C"),
 				},
 			},
 			trxTenor: response.UsecaseApi{
@@ -619,7 +619,7 @@ func TestMetrics(t *testing.T) {
 					SourceDecision: constant.SOURCE_DECISION_TENOR,
 					CreatedBy:      constant.SYSTEM_CREATED,
 					Reason:         constant.REASON_REJECT_TENOR,
-					Info:           fmt.Sprintf("Cluster : "),
+					Info:           fmt.Sprintf("Cluster : Cluster C"),
 				},
 			},
 			trxTenor: response.UsecaseApi{
