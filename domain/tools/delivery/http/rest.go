@@ -4,6 +4,7 @@ import (
 	"errors"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/shared/common"
+	"los-kmb-api/shared/common/platformevent"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 
@@ -11,7 +12,8 @@ import (
 )
 
 type handlerTools struct {
-	Json common.JSON
+	Json     common.JSON
+	producer platformevent.PlatformEvent
 }
 
 type RequestEncryption struct {
@@ -19,11 +21,13 @@ type RequestEncryption struct {
 	Decrypt []string `json:"decrypt" example:"6gs+t7lBQTYM5SPuqJTNonWLjvmmmc9FaWIj"`
 }
 
-func ToolsHandler(kmbroute *echo.Group, json common.JSON, middlewares *middlewares.AccessMiddleware) {
+func ToolsHandler(kmbroute *echo.Group, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEvent) {
 	handler := handlerTools{
-		Json: json,
+		Json:     json,
+		producer: producer,
 	}
 	kmbroute.POST("/encrypt-decrypt", handler.EncryptDecrypt, middlewares.AccessMiddleware())
+	kmbroute.POST("/produce/update-customer/:prospect_id", handler.UpdateCustomer, middlewares.AccessMiddleware())
 }
 
 // Encrypt Decrypt Tools godoc
@@ -59,4 +63,40 @@ func (c *handlerTools) EncryptDecrypt(ctx echo.Context) (err error) {
 	}
 
 	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Encrypt-Decrypt", req, data)
+}
+
+// Produce Messages Update Customer Tools godoc
+// @Description Api Produce Messages Update Customer
+// @Tags Update Customer
+// @Produce json
+// @Param prospect_id path string true "Prospect ID"
+// @Success 200 {object} response.ApiResponse{data=response.ReasonMessageRow}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/produce/update-customer/{prospect_id} [post]
+func (c *handlerTools) UpdateCustomer(ctx echo.Context) (err error) {
+	var (
+		ctxJson error
+	)
+
+	prospectID := ctx.Param("prospect_id")
+	if prospectID == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID does not exist")
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS KMB - Produce Messages - Error", prospectID, err)
+		return ctxJson
+	}
+
+	req := map[string]interface{}{
+		"prospect_id": prospectID,
+	}
+
+	err = c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_INSERT_CUSTOMER, constant.KEY_PREFIX_UPDATE_CUSTOMER, prospectID, req, 0)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Failed to produce messages with error: " + err.Error())
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS KMB - Produce Messages - Error", prospectID, err)
+		return ctxJson
+	}
+
+	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS KMB - Produce Messages - Success", prospectID, nil)
+
 }

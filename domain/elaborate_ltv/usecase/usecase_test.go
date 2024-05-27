@@ -76,9 +76,10 @@ func TestElaborate(t *testing.T) {
 			},
 			filteringKMB: entity.FilteringKMB{
 				Decision:                        constant.DECISION_REJECT,
-				Cluster:                         "Cluster A",
+				CMOCluster:                      "Cluster A",
 				TotalBakiDebetNonCollateralBiro: 30000,
 				NextProcess:                     1,
+				CustomerSegment:                 constant.RO_AO_REGULAR,
 			},
 			errMapping: errors.New("error"),
 			errFinal:   errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error"),
@@ -91,9 +92,10 @@ func TestElaborate(t *testing.T) {
 				ManufacturingYear: "2000",
 			},
 			filteringKMB: entity.FilteringKMB{
-				Decision:    constant.DECISION_PASS,
-				Cluster:     "Cluster A",
-				NextProcess: 1,
+				Decision:        constant.DECISION_PASS,
+				CMOCluster:      "Cluster A",
+				NextProcess:     1,
+				CustomerSegment: constant.RO_AO_REGULAR,
 			},
 			mappingElaborateLTV: []entity.MappingElaborateLTV{
 				{
@@ -179,9 +181,10 @@ func TestElaborate(t *testing.T) {
 				ManufacturingYear: "2019",
 			},
 			filteringKMB: entity.FilteringKMB{
-				Decision:    constant.DECISION_PASS,
-				Cluster:     "Cluster A",
-				NextProcess: 1,
+				Decision:        constant.DECISION_PASS,
+				CMOCluster:      "Cluster A",
+				NextProcess:     1,
+				CustomerSegment: constant.RO_AO_REGULAR,
 			},
 			mappingElaborateLTV: []entity.MappingElaborateLTV{
 				{
@@ -268,10 +271,11 @@ func TestElaborate(t *testing.T) {
 			},
 			filteringKMB: entity.FilteringKMB{
 				Decision:                        constant.DECISION_REJECT,
-				Cluster:                         "Cluster A",
+				CMOCluster:                      "Cluster A",
 				NextProcess:                     1,
 				TotalBakiDebetNonCollateralBiro: 3000000,
 				ScoreBiro:                       "VERY HIGH RISK",
+				CustomerSegment:                 constant.RO_AO_REGULAR,
 			},
 			mappingElaborateLTV: []entity.MappingElaborateLTV{
 				{
@@ -350,11 +354,12 @@ func TestElaborate(t *testing.T) {
 			},
 			filteringKMB: entity.FilteringKMB{
 				Decision:                        constant.DECISION_PASS,
-				Cluster:                         "Cluster A",
+				CMOCluster:                      "Cluster A",
 				NextProcess:                     1,
 				TotalBakiDebetNonCollateralBiro: 3000000,
 				ScoreBiro:                       "HIGH RISK",
 				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_REGULAR,
 			},
 			mappingElaborateLTV: []entity.MappingElaborateLTV{
 				{
@@ -437,11 +442,12 @@ func TestElaborate(t *testing.T) {
 			},
 			filteringKMB: entity.FilteringKMB{
 				Decision:                        constant.DECISION_PASS,
-				Cluster:                         "Cluster A",
+				CMOCluster:                      "Cluster A",
 				NextProcess:                     1,
 				TotalBakiDebetNonCollateralBiro: 3000000,
 				ScoreBiro:                       "HIGH RISK",
 				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_REGULAR,
 			},
 			mappingElaborateLTV: []entity.MappingElaborateLTV{
 				{
@@ -524,11 +530,12 @@ func TestElaborate(t *testing.T) {
 			},
 			filteringKMB: entity.FilteringKMB{
 				Decision:                        constant.DECISION_PASS,
-				Cluster:                         "Cluster A",
+				CMOCluster:                      "Cluster A",
 				NextProcess:                     1,
 				TotalBakiDebetNonCollateralBiro: 3000000,
 				ScoreBiro:                       "HIGH RISK",
 				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_REGULAR,
 			},
 			mappingElaborateLTV: []entity.MappingElaborateLTV{
 				{
@@ -613,11 +620,12 @@ func TestElaborate(t *testing.T) {
 			},
 			filteringKMB: entity.FilteringKMB{
 				Decision:                        constant.DECISION_REJECT,
-				Cluster:                         "Cluster E",
+				CMOCluster:                      "Cluster E",
 				NextProcess:                     1,
 				TotalBakiDebetNonCollateralBiro: 3000001,
 				ScoreBiro:                       "HIGH RISK",
 				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_REGULAR,
 			},
 			mappingElaborateLTV: []entity.MappingElaborateLTV{
 				{
@@ -663,6 +671,150 @@ func TestElaborate(t *testing.T) {
 			},
 			result: response.ElaborateLTV{
 				Reason: "REJECT - Elaborated Scheme",
+			},
+		},
+		{
+			name: "test elaborate pbk no hit tenor 36",
+			reqs: request.ElaborateLTV{
+				ProspectID:        "EFM0TST0020230809011",
+				Tenor:             36,
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        constant.DECISION_PBK_NO_HIT,
+				CMOCluster:                      "Cluster E",
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: 3000001,
+				ScoreBiro:                       "HIGH RISK",
+				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_REGULAR,
+			},
+			mappingElaborateLTV: []entity.MappingElaborateLTV{
+				{
+					ID:                  1,
+					ResultPefindo:       constant.DECISION_PBK_NO_HIT,
+					Cluster:             "Cluster E",
+					TotalBakiDebetStart: 0,
+					TotalBakiDebetEnd:   3000000,
+					TenorStart:          36,
+					TenorEnd:            36,
+					BPKBNameType:        1,
+					AgeVehicle:          "<=12",
+					LTV:                 50,
+				},
+			},
+			result: response.ElaborateLTV{
+				LTV:         50,
+				AdjustTenor: true,
+				MaxTenor:    36,
+			},
+		},
+		{
+			name: "test elaborate pbk no hit tenor <36",
+			reqs: request.ElaborateLTV{
+				ProspectID:        "EFM0TST0020230809011",
+				Tenor:             24,
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        constant.DECISION_PBK_NO_HIT,
+				CMOCluster:                      "Cluster E",
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: 3000001,
+				ScoreBiro:                       "HIGH RISK",
+				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_REGULAR,
+			},
+			mappingElaborateLTV: []entity.MappingElaborateLTV{
+				{
+					ID:                  1,
+					ResultPefindo:       constant.DECISION_PBK_NO_HIT,
+					Cluster:             "Cluster E",
+					TotalBakiDebetStart: 0,
+					TotalBakiDebetEnd:   3000000,
+					TenorStart:          24,
+					TenorEnd:            35,
+					BPKBNameType:        1,
+					AgeVehicle:          "<=12",
+					LTV:                 50,
+				},
+			},
+			result: response.ElaborateLTV{
+				LTV:         50,
+				AdjustTenor: true,
+				MaxTenor:    35,
+			},
+		},
+		{
+			name: "test elaborate pbk reject tenor 36",
+			reqs: request.ElaborateLTV{
+				ProspectID:        "EFM0TST0020230809011",
+				Tenor:             36,
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        constant.DECISION_REJECT,
+				CMOCluster:                      "Cluster E",
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: 3000000,
+				ScoreBiro:                       "HIGH RISK",
+				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_REGULAR,
+			},
+			mappingElaborateLTV: []entity.MappingElaborateLTV{
+				{
+					ID:                  1,
+					ResultPefindo:       constant.DECISION_REJECT,
+					Cluster:             "Cluster E",
+					TotalBakiDebetStart: 0,
+					TotalBakiDebetEnd:   3000000,
+					TenorStart:          36,
+					TenorEnd:            36,
+					BPKBNameType:        1,
+					AgeVehicle:          "<=12",
+					LTV:                 50,
+				},
+			},
+			result: response.ElaborateLTV{
+				LTV:         50,
+				AdjustTenor: true,
+				MaxTenor:    36,
+			},
+		},
+		{
+			name: "test elaborate pbk reject prime priority",
+			reqs: request.ElaborateLTV{
+				ProspectID:        "EFM0TST0020230809011",
+				Tenor:             36,
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        constant.DECISION_REJECT,
+				CMOCluster:                      "Cluster E",
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: 3000000,
+				ScoreBiro:                       "HIGH RISK",
+				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_PRIORITY,
+			},
+			mappingElaborateLTV: []entity.MappingElaborateLTV{
+				{
+					ID:                  1,
+					ResultPefindo:       constant.DECISION_REJECT,
+					Cluster:             constant.CLUSTER_PRIME_PRIORITY,
+					TotalBakiDebetStart: 0,
+					TotalBakiDebetEnd:   3000000,
+					TenorStart:          36,
+					TenorEnd:            36,
+					BPKBNameType:        1,
+					AgeVehicle:          "<=12",
+					LTV:                 50,
+				},
+			},
+			result: response.ElaborateLTV{
+				LTV:         50,
+				AdjustTenor: true,
+				MaxTenor:    36,
 			},
 		},
 	}

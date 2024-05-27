@@ -3,6 +3,7 @@ package constant
 var LOS_KMB_BASE_URL string
 var TOPIC_SUBMISSION string
 var TOPIC_SUBMISSION_LOS string
+var TOPIC_INSERT_CUSTOMER string
 
 const (
 	FLAG_LOS                         = "LOS"
@@ -313,6 +314,7 @@ const (
 	KEY_PREFIX_AFTER_PRESCREENING      = "after_prescreening_los_kmb"
 	KEY_PREFIX_CALLBACK                = "callback_los_kmb"
 	KEY_PREFIX_CALLBACK_GOLIVE         = "callback_golive_kmb"
+	KEY_PREFIX_UPDATE_CUSTOMER         = "update_customer"
 
 	MAX_RETRY_PUBLISH = 3
 
@@ -338,6 +340,7 @@ const (
 	REASON_REJECT_ELABORATE          = "REJECT - Elaborated Scheme"
 	REASON_REJECT_NTF_ELABORATE      = "REJECT - NTF Tidak Sesuai Threshold"
 	REASON_REJECT_CLUSTER_E_F        = "%s, Baki Debet > 3 Juta - 20 Juta & Tidak dapat dibiayai"
+	CLUSTER_B                        = "Cluster B"
 	CLUSTER_C                        = "Cluster C"
 	CLUSTER_E                        = "Cluster E"
 	CLUSTER_F                        = "Cluster F"
@@ -637,4 +640,8 @@ const (
 
 	// CREDIT APPROVAL
 	CODE_CBM = 3741
+
+	// CMO CLUSTER
+	CMO_LAMA = "OLD"
+	CMO_BARU = "NEW"
 )
