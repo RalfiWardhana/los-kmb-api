@@ -19,6 +19,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -4821,6 +4822,123 @@ func TestGetResultFiltering(t *testing.T) {
 			result, err := usecase.GetResultFiltering(tc.prospectID)
 			require.Equal(t, tc.respFiltering, result)
 			require.Equal(t, tc.errFinal, err)
+		})
+	}
+}
+
+func TestGetEmployeeData(t *testing.T) {
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	accessToken := "token"
+	hrisAccessToken := "hris-access-token"
+
+	testCases := []struct {
+		name            string
+		employeeID      string
+		accessToken     string
+		hrisAccessToken string
+		mockResponse    response.GetEmployeeByID
+		mockStatusCode  int
+		mockError       error
+		expectedError   error
+		expectedData    response.EmployeeCMOResponse
+	}{
+		{
+			name:            "Success - Active CMO",
+			employeeID:      "123",
+			accessToken:     "access-token",
+			hrisAccessToken: "hris-access-token",
+			mockResponse: response.GetEmployeeByID{
+				Data: []response.EmployeeCareerHistory{
+					{
+						EmployeeID:        "123",
+						EmployeeName:      "John Doe",
+						PositionGroupCode: "AO",
+						PositionGroupName: "Credit Marketing Officer",
+						RealCareerDate:    "2022-01-01T00:00:00",
+					},
+				},
+			},
+			mockStatusCode: 200,
+			expectedError:  nil,
+			expectedData: response.EmployeeCMOResponse{
+				EmployeeID:         "123",
+				EmployeeName:       "John Doe",
+				EmployeeIDWithName: "123 - John Doe",
+				JoinDate:           "2022-01-01",
+				PositionGroupCode:  "AO",
+				PositionGroupName:  "Credit Marketing Officer",
+				CMOCategory:        constant.CMO_LAMA,
+			},
+		},
+		{
+			name:            "Error - Employee Data Timeout",
+			employeeID:      "123",
+			accessToken:     "access-token",
+			hrisAccessToken: "hris-access-token",
+			mockResponse:    response.GetEmployeeByID{},
+			mockStatusCode:  504,
+			expectedError:   errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get Employee Data Timeout"),
+			expectedData:    response.EmployeeCMOResponse{},
+			mockError:       errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get Employee Data Timeout"),
+		},
+		{
+			name:            "Error - Employee Data Not Found",
+			employeeID:      "123",
+			accessToken:     "access-token",
+			hrisAccessToken: "hris-access-token",
+			mockResponse:    response.GetEmployeeByID{},
+			mockStatusCode:  404,
+			expectedError:   errors.New(constant.ERROR_UPSTREAM + " - Get Employee Data Error"),
+			expectedData:    response.EmployeeCMOResponse{},
+			mockError:       errors.New(constant.ERROR_UPSTREAM + " - Get Employee Data Error"),
+		},
+		{
+			name:            "Error - RealCareerDate Empty",
+			employeeID:      "123",
+			accessToken:     "access-token",
+			hrisAccessToken: "hris-access-token",
+			mockResponse: response.GetEmployeeByID{
+				Data: []response.EmployeeCareerHistory{
+					{
+						EmployeeID:        "123",
+						EmployeeName:      "John Doe",
+						PositionGroupCode: "AO",
+						RealCareerDate:    "",
+					},
+				},
+			},
+			mockStatusCode: 200,
+			expectedError:  errors.New(constant.ERROR_BAD_REQUEST + " - Get Employee Data Error"),
+			expectedData:   response.EmployeeCMOResponse{},
+			mockError:      errors.New(constant.ERROR_BAD_REQUEST + " - Get Employee Data Error"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			mockResponseBody, err := jsoniter.MarshalToString(tc.mockResponse)
+			if err != nil {
+				t.Fatalf("failed to marshal mock response: %v", err)
+			}
+
+			rst := resty.New()
+			httpmock.ActivateNonDefault(rst.GetClient())
+			defer httpmock.DeactivateAndReset()
+
+			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), httpmock.NewStringResponder(tc.mockStatusCode, mockResponseBody))
+			resp, _ := rst.R().Post(os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"))
+
+			mockHttpClient.On("EngineAPI", mock.Anything, constant.NEW_KMB_LOG, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), mock.Anything, map[string]string{"Authorization": "Bearer hris-access-token"}, constant.METHOD_POST, false, 0, timeout, "", accessToken).Return(resp, tc.mockError).Once()
+
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			data, err := usecase.GetEmployeeData(context.Background(), tc.employeeID, accessToken, hrisAccessToken)
+
+			require.Equal(t, tc.expectedError, err)
+			require.Equal(t, tc.expectedData, data)
 		})
 	}
 }
