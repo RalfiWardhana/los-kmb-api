@@ -4944,72 +4944,160 @@ func TestGetEmployeeData(t *testing.T) {
 }
 
 func TestGetFpdCMO(t *testing.T) {
-	testcases := []struct {
-		name         string
-		CmoID        string
-		BPKBNameType string
-		accessToken  string
-		mockResponse response.FpdCMOResponse
-		mockError    error
-		expectedData response.FpdCMOResponse
-		expectedErr  error
+	os.Setenv("AGREEMENT_LTV_FPD", "http://10.9.100.122:8181/api/v1/agreement/ltv-fpd")
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	ctx := context.Background()
+	reqID := utils.GenerateUUID()
+	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
+	accessToken := "token"
+
+	testCases := []struct {
+		name           string
+		cmoID          string
+		bpkbNameType   string
+		accessToken    string
+		mockResponse   response.GetFPDCmoByID
+		mockStatusCode int
+		mockError      error
+		expectedError  error
+		expectedData   response.FpdCMOResponse
 	}{
 		{
-			name:         "test success NAMA BEDA",
-			CmoID:        "CMO123",
-			BPKBNameType: "NAMA BEDA",
-			accessToken:  "token123",
-			mockResponse: response.FpdCMOResponse{
-				FpdExist:    true,
-				CmoFpd:      1.5,
-				CmoAccSales: 10,
+			name:         "Success - FPD Data for NAMA BEDA",
+			cmoID:        "CMO01",
+			bpkbNameType: "NAMA BEDA",
+			accessToken:  "access-token",
+			mockResponse: response.GetFPDCmoByID{
+				Data: []response.FpdData{
+					{
+						BpkbNameType: "NAMA BEDA",
+						Fpd:          1.5,
+						AccSales:     10,
+					},
+				},
 			},
-			mockError: nil,
+			mockStatusCode: 200,
+			expectedError:  nil,
 			expectedData: response.FpdCMOResponse{
 				FpdExist:    true,
 				CmoFpd:      1.5,
 				CmoAccSales: 10,
 			},
-			expectedErr: nil,
 		},
 		{
-			name:         "test success NAMA SAMA",
-			CmoID:        "CMO123",
-			BPKBNameType: "NAMA SAMA",
-			accessToken:  "token123",
-			mockResponse: response.FpdCMOResponse{
-				FpdExist:    true,
-				CmoFpd:      2.0,
-				CmoAccSales: 20,
+			name:         "Success - FPD Data for NAMA SAMA",
+			cmoID:        "CMO02",
+			bpkbNameType: "NAMA SAMA",
+			accessToken:  "access-token",
+			mockResponse: response.GetFPDCmoByID{
+				Data: []response.FpdData{
+					{
+						BpkbNameType: "NAMA SAMA",
+						Fpd:          2.0,
+						AccSales:     15,
+					},
+				},
 			},
-			mockError: nil,
+			mockStatusCode: 200,
+			expectedError:  nil,
 			expectedData: response.FpdCMOResponse{
 				FpdExist:    true,
 				CmoFpd:      2.0,
-				CmoAccSales: 20,
+				CmoAccSales: 15,
 			},
-			expectedErr: nil,
 		},
 		{
-			name:         "test error",
-			CmoID:        "CMO123",
-			BPKBNameType: "NAMA BEDA",
-			accessToken:  "token123",
-			mockResponse: response.FpdCMOResponse{},
-			mockError:    errors.New(constant.ERROR_BAD_REQUEST + " - Get FPD Data Error"),
-			expectedData: response.FpdCMOResponse{},
-			expectedErr:  errors.New(constant.ERROR_BAD_REQUEST + " - Get FPD Data Error"),
+			name:         "Success - FPD Data for NAMA BEDA and NAMA SAMA kosong",
+			cmoID:        "CMO11",
+			bpkbNameType: "NAMA BEDA",
+			accessToken:  "access-token",
+			mockResponse: response.GetFPDCmoByID{
+				Data: []response.FpdData{},
+			},
+			mockStatusCode: 200,
+			expectedError:  nil,
+			expectedData: response.FpdCMOResponse{
+				FpdExist:    false,
+				CmoFpd:      0,
+				CmoAccSales: 0,
+			},
+		},
+		{
+			name:         "Success - FPD Data for BPKB NAMA AGAK LAEN",
+			cmoID:        "CMO12",
+			bpkbNameType: "NAMA AGAK LAEN",
+			accessToken:  "access-token",
+			mockResponse: response.GetFPDCmoByID{
+				Data: []response.FpdData{
+					{
+						BpkbNameType: "NAMA BEDA",
+						Fpd:          1.5,
+						AccSales:     10,
+					},
+					{
+						BpkbNameType: "NAMA SAMA",
+						Fpd:          2.0,
+						AccSales:     15,
+					},
+				},
+			},
+			mockStatusCode: 200,
+			expectedError:  nil,
+			expectedData: response.FpdCMOResponse{
+				FpdExist:    false,
+				CmoFpd:      0,
+				CmoAccSales: 0,
+			},
+		},
+		{
+			name:           "Error - FPD Data Timeout",
+			cmoID:          "CMO03",
+			bpkbNameType:   "NAMA BEDA",
+			accessToken:    "access-token",
+			mockResponse:   response.GetFPDCmoByID{},
+			mockStatusCode: 504,
+			expectedError:  errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get FPD Data Timeout"),
+			expectedData:   response.FpdCMOResponse{},
+			mockError:      errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get FPD Data Timeout"),
+		},
+		{
+			name:           "Error - FPD Data Not Found",
+			cmoID:          "CMO04",
+			bpkbNameType:   "NAMA SAMA",
+			accessToken:    "access-token",
+			mockResponse:   response.GetFPDCmoByID{},
+			mockStatusCode: 404,
+			expectedError:  errors.New(constant.ERROR_UPSTREAM + " - Get FPD Data Error"),
+			expectedData:   response.FpdCMOResponse{},
+			mockError:      errors.New(constant.ERROR_UPSTREAM + " - Get FPD Data Error"),
 		},
 	}
 
-	for _, tc := range testcases {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			mockUsecase := new(mocks.Usecase)
-			mockUsecase.On("GetFpdCMO", mock.Anything, tc.CmoID, tc.BPKBNameType, tc.accessToken).Return(tc.mockResponse, tc.mockError)
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
 
-			data, err := mockUsecase.GetFpdCMO(context.Background(), tc.CmoID, tc.BPKBNameType, tc.accessToken)
+			mockResponseBody, err := jsoniter.MarshalToString(tc.mockResponse)
+			if err != nil {
+				t.Fatalf("failed to marshal mock response: %v", err)
+			}
+
+			rst := resty.New()
+			httpmock.ActivateNonDefault(rst.GetClient())
+			defer httpmock.DeactivateAndReset()
+
+			httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=2&cmo_id="+tc.cmoID, httpmock.NewStringResponder(tc.mockStatusCode, mockResponseBody))
+			resp, _ := rst.R().SetHeaders(map[string]string{"Content-Type": "application/json", "Authorization": accessToken}).Get(os.Getenv("AGREEMENT_LTV_FPD") + "?lob_id=2&cmo_id=" + tc.cmoID)
+
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=2&cmo_id="+tc.cmoID, []byte(nil), map[string]string{"Authorization": accessToken}, constant.METHOD_GET, false, 0, timeout, "", accessToken).Return(resp, tc.mockError).Once()
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			data, err := usecase.GetFpdCMO(ctx, tc.cmoID, tc.bpkbNameType, accessToken)
+
+			require.Equal(t, tc.expectedError, err)
 			require.Equal(t, tc.expectedData, data)
-			require.Equal(t, tc.expectedErr, err)
 		})
 	}
 }
