@@ -4942,3 +4942,171 @@ func TestGetEmployeeData(t *testing.T) {
 		})
 	}
 }
+
+func TestGetFpdCMO(t *testing.T) {
+	testcases := []struct {
+		name         string
+		CmoID        string
+		BPKBNameType string
+		accessToken  string
+		mockResponse response.FpdCMOResponse
+		mockError    error
+		expectedData response.FpdCMOResponse
+		expectedErr  error
+	}{
+		{
+			name:         "test success NAMA BEDA",
+			CmoID:        "CMO123",
+			BPKBNameType: "NAMA BEDA",
+			accessToken:  "token123",
+			mockResponse: response.FpdCMOResponse{
+				FpdExist:    true,
+				CmoFpd:      1.5,
+				CmoAccSales: 10,
+			},
+			mockError: nil,
+			expectedData: response.FpdCMOResponse{
+				FpdExist:    true,
+				CmoFpd:      1.5,
+				CmoAccSales: 10,
+			},
+			expectedErr: nil,
+		},
+		{
+			name:         "test success NAMA SAMA",
+			CmoID:        "CMO123",
+			BPKBNameType: "NAMA SAMA",
+			accessToken:  "token123",
+			mockResponse: response.FpdCMOResponse{
+				FpdExist:    true,
+				CmoFpd:      2.0,
+				CmoAccSales: 20,
+			},
+			mockError: nil,
+			expectedData: response.FpdCMOResponse{
+				FpdExist:    true,
+				CmoFpd:      2.0,
+				CmoAccSales: 20,
+			},
+			expectedErr: nil,
+		},
+		{
+			name:         "test error",
+			CmoID:        "CMO123",
+			BPKBNameType: "NAMA BEDA",
+			accessToken:  "token123",
+			mockResponse: response.FpdCMOResponse{},
+			mockError:    errors.New(constant.ERROR_BAD_REQUEST + " - Get FPD Data Error"),
+			expectedData: response.FpdCMOResponse{},
+			expectedErr:  errors.New(constant.ERROR_BAD_REQUEST + " - Get FPD Data Error"),
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockUsecase := new(mocks.Usecase)
+			mockUsecase.On("GetFpdCMO", mock.Anything, tc.CmoID, tc.BPKBNameType, tc.accessToken).Return(tc.mockResponse, tc.mockError)
+
+			data, err := mockUsecase.GetFpdCMO(context.Background(), tc.CmoID, tc.BPKBNameType, tc.accessToken)
+			require.Equal(t, tc.expectedData, data)
+			require.Equal(t, tc.expectedErr, err)
+		})
+	}
+}
+
+func TestCheckCmoNoFPD(t *testing.T) {
+	testcases := []struct {
+		name               string
+		prospectID         string
+		cmoID              string
+		cmoCategory        string
+		cmoJoinDate        string
+		defaultCluster     string
+		bpkbName           string
+		mockReturnData     entity.TrxCmoNoFPD
+		mockReturnError    error
+		expectedCluster    string
+		expectedEntitySave entity.TrxCmoNoFPD
+		expectedError      error
+	}{
+		{
+			name:           "test existing CMO within date range",
+			prospectID:     "SAL0001",
+			cmoID:          "CMO01",
+			cmoCategory:    constant.CMO_LAMA,
+			cmoJoinDate:    "2023-10-01",
+			defaultCluster: "Cluster B",
+			bpkbName:       "NAMA SAMA",
+			mockReturnData: entity.TrxCmoNoFPD{
+				CMOID:                   "CMO01",
+				DefaultCluster:          "Cluster B",
+				DefaultClusterStartDate: "2023-10-01",
+				DefaultClusterEndDate:   "2023-12-31",
+			},
+			expectedCluster: "",
+			expectedEntitySave: entity.TrxCmoNoFPD{
+				ProspectID:              "SAL0001",
+				CMOID:                   "CMO01",
+				BPKBName:                "NAMA SAMA",
+				CmoCategory:             constant.CMO_LAMA,
+				CmoJoinDate:             "2023-10-01",
+				DefaultCluster:          "Cluster B",
+				DefaultClusterStartDate: "2024-05-29",
+				DefaultClusterEndDate:   "2024-04-30",
+			},
+			expectedError: nil,
+		},
+		{
+			name:            "test new CMO",
+			prospectID:      "SAL0002",
+			cmoID:           "CMO02",
+			cmoCategory:     constant.CMO_BARU,
+			cmoJoinDate:     "2024-05-28",
+			defaultCluster:  "Cluster C",
+			bpkbName:        "NAMA BEDA",
+			mockReturnData:  entity.TrxCmoNoFPD{},
+			expectedCluster: "",
+			expectedEntitySave: entity.TrxCmoNoFPD{
+				ProspectID:              "SAL0002",
+				BPKBName:                "NAMA BEDA",
+				CMOID:                   "CMO02",
+				CmoCategory:             constant.CMO_BARU,
+				CmoJoinDate:             "2024-05-28",
+				DefaultCluster:          "Cluster C",
+				DefaultClusterStartDate: "2024-05-28",
+				DefaultClusterEndDate:   "2024-04-30",
+			},
+			expectedError: nil,
+		},
+		{
+			name:               "test error in repository",
+			prospectID:         "SAL0003",
+			cmoID:              "CMO03",
+			cmoCategory:        constant.CMO_LAMA,
+			cmoJoinDate:        "2023-01-01",
+			defaultCluster:     "Cluster B",
+			bpkbName:           "NAMA SAMA",
+			mockReturnData:     entity.TrxCmoNoFPD{},
+			mockReturnError:    errors.New("repository error"),
+			expectedCluster:    "",
+			expectedEntitySave: entity.TrxCmoNoFPD{},
+			expectedError:      errors.New(constant.ERROR_UPSTREAM + " - Check CMO No FPD error"),
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			mockRepository.On("CheckCMONoFPD", tc.cmoID, tc.bpkbName).Return(tc.mockReturnData, tc.mockReturnError)
+
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			clusterCMOSaved, entitySaveTrxNoFPd, err := usecase.CheckCmoNoFPD(tc.prospectID, tc.cmoID, tc.cmoCategory, tc.cmoJoinDate, tc.defaultCluster, tc.bpkbName)
+			require.Equal(t, tc.expectedCluster, clusterCMOSaved)
+			require.Equal(t, tc.expectedEntitySave, entitySaveTrxNoFPd)
+			require.Equal(t, tc.expectedError, err)
+		})
+	}
+}

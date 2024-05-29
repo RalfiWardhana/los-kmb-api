@@ -1265,9 +1265,9 @@ func (u usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory stri
 		if err != nil {
 			if strings.Contains(err.Error(), "deadline") {
 				err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Save Trx CMO No FPD Timeout")
+			} else {
+				err = errors.New(constant.ERROR_BAD_REQUEST + " - Save Trx CMO No FPD Error ProspectID Already Exist")
 			}
-
-			err = errors.New(constant.ERROR_BAD_REQUEST + " - Save Trx CMO No FPD Error ProspectID Already Exist")
 		}
 	}
 
