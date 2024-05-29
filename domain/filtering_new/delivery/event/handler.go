@@ -49,10 +49,11 @@ func NewServiceFiltering(app *platformevent.ConsumerRouter, repository interface
 func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) {
 	middlewares.GetPlatformAuth()
 
-	getBody := string(event.GetBody())
-	getBody = utils.SafeJsonReplacer(getBody)
+	// getBody := string(event.GetBody())
+	// getBody = utils.SafeJsonReplacer(getBody)
 
-	body := []byte(getBody)
+	// body := []byte(getBody)
+	body := event.GetBody()
 
 	var (
 		married         bool
