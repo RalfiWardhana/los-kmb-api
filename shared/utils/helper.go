@@ -308,7 +308,6 @@ func SafeJsonReplacer(myString string) string {
 		"\\u003c", "<",
 		"\\u003e", ">",
 		"\\n", "",
-		"  ", "",
 		"\r", "",
 		"\t", "",
 		"\"{", "{",
