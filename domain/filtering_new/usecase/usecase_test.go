@@ -5139,7 +5139,7 @@ func TestCheckCmoNoFPD(t *testing.T) {
 				CmoCategory:             constant.CMO_LAMA,
 				CmoJoinDate:             "2023-10-01",
 				DefaultCluster:          "Cluster B",
-				DefaultClusterStartDate: "2024-05-29",
+				DefaultClusterStartDate: time.Now().Format("2006-01-02"),
 				DefaultClusterEndDate:   "2024-04-30",
 			},
 			expectedError: nil,
