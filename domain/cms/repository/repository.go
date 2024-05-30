@@ -1475,7 +1475,85 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
 	}
 
-	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT
+	if err = r.NewKmb.Raw(fmt.Sprintf(`WITH 
+		cte_trx_ca_decision AS (
+			SELECT
+				ProspectID,
+				decision,
+				note,
+				created_at,
+				created_by
+			FROM
+				trx_ca_decision WITH (nolock)
+		),
+		cte_trx_draft_ca_decision AS (
+			SELECT
+				x.ProspectID,
+				x.decision,
+				x.slik_result,
+				x.note,
+				x.created_at,
+				x.created_by,
+				x.decision_by
+			FROM
+				trx_draft_ca_decision x WITH (nolock)
+			WHERE
+				x.created_at = (
+					SELECT
+						MAX(created_at)
+					FROM
+						trx_draft_ca_decision WITH (NOLOCK)
+					WHERE
+						ProspectID = x.ProspectID
+				)
+		),
+		cte_trx_detail_biro AS (
+			SELECT
+				prospect_id,
+				MAX(CASE [subject] WHEN 'CUSTOMER' THEN url_pdf_report END) AS BiroCustomerResult,
+				MAX(CASE [subject] WHEN 'SPOUSE' THEN url_pdf_report END) AS BiroSpouseResult
+			FROM
+				trx_detail_biro
+			GROUP BY
+				prospect_id
+		),
+		cte_trx_history_approval_scheme AS (
+			SELECT
+				ProspectID,
+				decision AS decision_rtn
+			FROM
+				trx_history_approval_scheme WITH (nolock)
+			WHERE
+				decision = 'RTN'
+		),
+		cte_trx_history_approval_scheme_sdp AS (
+			SELECT
+				ProspectID,
+				decision AS decision_sdp
+			FROM
+				trx_history_approval_scheme WITH (nolock)
+			WHERE
+				decision = 'SDP'
+		),
+		cte_app_config_mn AS (
+			SELECT
+				[key],
+				value
+			FROM
+				app_config ap WITH (nolock)
+			WHERE
+				group_name = 'MonthName'
+		),
+		cte_app_config_pr AS (
+			SELECT
+				[key],
+				value
+			FROM
+				app_config ap WITH (nolock)
+			WHERE
+				group_name = 'ProfessionID'
+		)
+		SELECT
 		tt.*
 		FROM
 		(
@@ -1515,14 +1593,12 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		  WHEN tm.incoming_source = 'SLY' THEN 'SALLY'
 		  ELSE 'NE'
 		END AS incoming_source,
-		
 		tdd.decision AS draft_decision,
 		tdd.slik_result AS draft_slik_result,
 		tdd.note AS draft_note,
 		tdd.created_at AS draft_created_at,
 		tdd.created_by AS draft_created_by,
 		tdd.decision_by AS draft_decision_by,
-
 		tcp.CustomerID,
 		tcp.CustomerStatus,
 		tcp.SurveyResult,
@@ -1625,11 +1701,10 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tdb.BiroCustomerResult,
 		tdb.BiroSpouseResult,
 		CASE
-		 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL AND tst.status_process<>'FIN' THEN 1
+		 WHEN rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN' THEN 1
 		 ELSE 0
 		END AS ActionEditData
-
-	  FROM
+	  	FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
 		INNER JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
@@ -1642,26 +1717,14 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
-		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
-		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
-		LEFT JOIN (
-		  SELECT
-			ProspectID,
-			decision,
-			note,
-			created_at,
-			created_by
-		  FROM
-			trx_ca_decision WITH (nolock)
-		) tcd ON tm.ProspectID = tcd.ProspectID
-		LEFT JOIN (
-			SELECT prospect_id, 
-			MAX(Case [subject] When 'CUSTOMER' Then url_pdf_report End) BiroCustomerResult,
-			MAX(Case [subject] When 'SPOUSE' Then url_pdf_report End) BiroSpouseResult
-			FROM trx_detail_biro
-			GROUP BY prospect_id
-		) tdb ON tm.ProspectID = tdb.prospect_id 
-
+		LEFT JOIN
+			cte_trx_history_approval_scheme rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN
+			cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
+		LEFT JOIN
+			cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN
+			cte_trx_detail_biro tdb ON tm.ProspectID = tdb.prospect_id
 		INNER JOIN (
 			SELECT
 			  ProspectID,
@@ -1726,7 +1789,6 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 			WHERE
 			  "Type" = 'EMERGENCY'
 		  ) cae ON tm.ProspectID = cae.ProspectID
-
 		INNER JOIN trx_customer_emcon em WITH (nolock) ON tm.ProspectID = em.ProspectID
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN (
@@ -1756,24 +1818,8 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		  WHERE
 			group_name = 'HomeStatus'
 		) hst ON tcp.HomeStatus = hst.[key]
-		LEFT JOIN (
-		  SELECT
-			[key],
-			value
-		  FROM
-			app_config ap WITH (nolock)
-		  WHERE
-			group_name = 'MonthName'
-		) mn ON tcp.StaySinceMonth = mn.[key]
-		LEFT JOIN (
-		  SELECT
-			[key],
-			value
-		  FROM
-			app_config ap WITH (nolock)
-		  WHERE
-			group_name = 'ProfessionID'
-		) pr ON tce.ProfessionID = pr.[key]
+		LEFT JOIN cte_app_config_mn mn ON tcp.StaySinceMonth = mn.[key]
+		LEFT JOIN cte_app_config_pr pr ON tce.ProfessionID = pr.[key]
 		LEFT JOIN (
 		  SELECT
 			[key],
@@ -1792,46 +1838,11 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		  WHERE
 			group_name = 'JobPosition'
 		) jb ON tce.JobPosition = jb.[key]
-		LEFT JOIN (
-		  SELECT
-			[key],
-			value
-		  FROM
-			app_config ap WITH (nolock)
-		  WHERE
-			group_name = 'MonthName'
-		) mn2 ON tce.EmploymentSinceMonth = mn2.[key]
-		LEFT JOIN (
-		  SELECT
-			[key],
-			value
-		  FROM
-			app_config ap WITH (nolock)
-		  WHERE
-			group_name = 'ProfessionID'
-		) pr2 ON tcs.ProfessionID = pr2.[key]
-		LEFT JOIN (
-		  SELECT
-			x.ProspectID,
-			x.decision,
-			x.slik_result,
-			x.note,
-			x.created_at,
-			x.created_by,
-			x.decision_by
-		  FROM
-			trx_draft_ca_decision x WITH (nolock)
-		  WHERE
-			x.created_at = (
-			  SELECT
-				max(created_at)
-			  from
-				trx_draft_ca_decision WITH (NOLOCK)
-			  WHERE
-				ProspectID = x.ProspectID
-			)
-		) tdd ON tm.ProspectID = tdd.ProspectID
-	) AS tt %s AND tt.source_decision<>'%s' ORDER BY tt.created_at DESC %s`, filter, constant.PRESCREENING, filterPaginate)).Scan(&data).Error; err != nil {
+		LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
+		LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
+		LEFT JOIN
+			cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
+		) AS tt %s AND tt.source_decision<>'%s' ORDER BY tt.created_at DESC %s`, filter, constant.PRESCREENING, filterPaginate)).Scan(&data).Error; err != nil {
 		return
 	}
 
