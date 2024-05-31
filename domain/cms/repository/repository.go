@@ -1503,13 +1503,19 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		),
 		cte_trx_detail_biro AS (
 			SELECT
-				prospect_id,
-				MAX(CASE [subject] WHEN 'CUSTOMER' THEN url_pdf_report END) AS BiroCustomerResult,
-				MAX(CASE [subject] WHEN 'SPOUSE' THEN url_pdf_report END) AS BiroSpouseResult
+				prospect_id, url_pdf_report AS BiroCustomerResult
 			FROM
-				trx_detail_biro
-			GROUP BY
-				prospect_id
+				trx_detail_biro WITH (nolock)
+			WHERE
+				[subject] = 'CUSTOMER'
+		),
+		cte_trx_detail_biro2 AS (
+			SELECT
+				prospect_id, url_pdf_report AS BiroSpouseResult
+			FROM
+				trx_detail_biro WITH (nolock)
+			WHERE
+				[subject] = 'SPOUSE'
 		),
 		cte_trx_history_approval_scheme AS (
 			SELECT
@@ -1693,7 +1699,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
-		tdb.BiroSpouseResult,
+		tdb2.BiroSpouseResult,
 		CASE
 		 WHEN rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN' THEN 1
 		 ELSE 0
@@ -1719,6 +1725,8 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 			cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
 		LEFT JOIN
 			cte_trx_detail_biro tdb ON tm.ProspectID = tdb.prospect_id
+		LEFT JOIN
+			cte_trx_detail_biro2 tdb2 ON tm.ProspectID = tdb2.prospect_id
 		INNER JOIN (
 			SELECT
 			  ProspectID,
