@@ -753,15 +753,6 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	  WHERE
 		group_name = 'HomeStatus'
 	) hst ON tcp.HomeStatus = hst.[key]
-	LEFT JOIN (
-	  SELECT
-		[key],
-		value
-	  FROM
-		app_config ap WITH (nolock)
-	  WHERE
-		group_name = 'JobPosition'
-	) jb ON tce.JobPosition = jb.[key]
 	LEFT JOIN cte_app_config_mn mn ON tcp.StaySinceMonth = mn.[key]
 	LEFT JOIN cte_app_config_pr pr ON tce.ProfessionID = pr.[key]
 	LEFT JOIN (
@@ -773,6 +764,15 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	  WHERE
 		group_name = 'JobType'
 	) jt ON tce.JobType = jt.[key]
+	LEFT JOIN (
+	  SELECT
+		[key],
+		value
+	  FROM
+		app_config ap WITH (nolock)
+	  WHERE
+		group_name = 'JobPosition'
+	) jb ON tce.JobPosition = jb.[key]
 	LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
 	LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key] ) AS tt %s ORDER BY tt.created_at DESC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
 		return
