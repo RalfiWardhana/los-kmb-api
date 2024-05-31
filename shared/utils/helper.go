@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -382,12 +383,21 @@ func GenerateBranchFilter(branchId string) string {
 
 func GenerateFilter(search, filterBranch, rangeDays string) string {
 	var filter string
+	var re = regexp.MustCompile(`SAL-|NE-`)
 
 	if search != "" {
 		if filterBranch != "" {
-			filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+			if re.MatchString(search) {
+				filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID = '%s')", search)
+			} else {
+				filter = filterBranch + fmt.Sprintf(" AND (tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search)
+			}
 		} else {
-			filter = fmt.Sprintf("WHERE (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+			if re.MatchString(search) {
+				filter = fmt.Sprintf("WHERE (tt.ProspectID = '%s')", search)
+			} else {
+				filter = fmt.Sprintf("WHERE (tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search)
+			}
 		}
 	} else {
 		if filterBranch != "" {
