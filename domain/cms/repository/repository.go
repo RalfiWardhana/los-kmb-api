@@ -1361,7 +1361,56 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 
 		var row entity.TotalRow
 
-		if err = r.NewKmb.Raw(fmt.Sprintf(`
+		if err = r.NewKmb.Raw(fmt.Sprintf(`WITH 
+		cte_trx_ca_decision AS (
+			SELECT
+				ProspectID,
+				decision,
+				note,
+				created_at,
+				created_by
+			FROM
+				trx_ca_decision WITH (nolock)
+		),
+		cte_trx_draft_ca_decision AS (
+			SELECT
+				x.ProspectID,
+				x.decision,
+				x.slik_result,
+				x.note,
+				x.created_at,
+				x.created_by,
+				x.decision_by
+			FROM
+				trx_draft_ca_decision x WITH (nolock)
+			WHERE
+				x.created_at = (
+					SELECT
+						MAX(created_at)
+					FROM
+						trx_draft_ca_decision WITH (NOLOCK)
+					WHERE
+						ProspectID = x.ProspectID
+				)
+		),
+		cte_trx_history_approval_scheme AS (
+			SELECT
+				ProspectID,
+				decision AS decision_rtn
+			FROM
+				trx_history_approval_scheme WITH (nolock)
+			WHERE
+				decision = 'RTN'
+		),
+		cte_trx_history_approval_scheme_sdp AS (
+			SELECT
+				ProspectID,
+				decision AS decision_sdp
+			FROM
+				trx_history_approval_scheme WITH (nolock)
+			WHERE
+				decision = 'SDP'
+		)
 		SELECT
 		COUNT(tt.ProspectID) AS totalRow
 		FROM
@@ -1381,7 +1430,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
 			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
 			CASE
-			 WHEN rtn.decision IS NOT NULL AND sdp.decision IS NULL AND tst.status_process<>'FIN' THEN 1
+			 WHEN rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN' THEN 1
 			 ELSE 0
 			END AS ActionEditData
 		FROM
@@ -1398,38 +1447,10 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'RTN') rtn ON rtn.ProspectID = tm.ProspectID
-		LEFT JOIN (SELECT ProspectID, decision FROM trx_history_approval_scheme has WITH (nolock) WHERE has.decision = 'SDP') sdp ON sdp.ProspectID = tm.ProspectID
-		LEFT JOIN (
-		  SELECT
-			ProspectID,
-			decision,
-			created_at,
-			created_by
-		  FROM
-			trx_ca_decision WITH (nolock)
-		) tcd ON tm.ProspectID = tcd.ProspectID
-		LEFT JOIN (
-			SELECT
-			  x.ProspectID,
-			  x.decision,
-			  x.slik_result,
-			  x.note,
-			  x.created_at,
-			  x.created_by,
-			  x.decision_by
-			FROM
-			  trx_draft_ca_decision x WITH (nolock)
-			WHERE
-			  x.created_at = (
-				SELECT
-				  max(created_at)
-				from
-				  trx_draft_ca_decision WITH (NOLOCK)
-				WHERE
-				  ProspectID = x.ProspectID
-			  )
-		) tdd ON tm.ProspectID = tdd.ProspectID
+		LEFT JOIN cte_trx_history_approval_scheme rtn ON rtn.ProspectID = tm.ProspectID
+		LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
+		LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
+		LEFT JOIN cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
 		) AS tt %s AND tt.source_decision<>'%s'`, filter, constant.PRESCREENING)).Scan(&row).Error; err != nil {
 			return
 		}
