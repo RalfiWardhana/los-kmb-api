@@ -753,6 +753,15 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	  WHERE
 		group_name = 'HomeStatus'
 	) hst ON tcp.HomeStatus = hst.[key]
+	LEFT JOIN (
+	  SELECT
+		[key],
+		value
+	  FROM
+		app_config ap WITH (nolock)
+	  WHERE
+		group_name = 'JobPosition'
+	) jb ON tce.JobPosition = jb.[key]
 	LEFT JOIN cte_app_config_mn mn ON tcp.StaySinceMonth = mn.[key]
 	LEFT JOIN cte_app_config_pr pr ON tce.ProfessionID = pr.[key]
 	LEFT JOIN (
