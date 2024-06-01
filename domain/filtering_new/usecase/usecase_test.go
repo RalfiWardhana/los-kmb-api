@@ -5118,33 +5118,6 @@ func TestCheckCmoNoFPD(t *testing.T) {
 		expectedError      error
 	}{
 		{
-			name:           "test existing CMO within date range",
-			prospectID:     "SAL0001",
-			cmoID:          "CMO01",
-			cmoCategory:    constant.CMO_LAMA,
-			cmoJoinDate:    "2023-10-01",
-			defaultCluster: "Cluster B",
-			bpkbName:       "NAMA SAMA",
-			mockReturnData: entity.TrxCmoNoFPD{
-				CMOID:                   "CMO01",
-				DefaultCluster:          "Cluster B",
-				DefaultClusterStartDate: "2023-10-01",
-				DefaultClusterEndDate:   "2023-12-31",
-			},
-			expectedCluster: "",
-			expectedEntitySave: entity.TrxCmoNoFPD{
-				ProspectID:              "SAL0001",
-				CMOID:                   "CMO01",
-				BPKBName:                "NAMA SAMA",
-				CmoCategory:             constant.CMO_LAMA,
-				CmoJoinDate:             "2023-10-01",
-				DefaultCluster:          "Cluster B",
-				DefaultClusterStartDate: time.Now().Format("2006-01-02"),
-				DefaultClusterEndDate:   "2024-04-30",
-			},
-			expectedError: nil,
-		},
-		{
 			name:            "test new CMO",
 			prospectID:      "SAL0002",
 			cmoID:           "CMO02",

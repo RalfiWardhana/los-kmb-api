@@ -1203,7 +1203,10 @@ func (u usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType strin
 }
 
 func (u usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory string, cmoJoinDate string, defaultCluster string, bpkbName string) (clusterCMOSaved string, entitySaveTrxNoFPd entity.TrxCmoNoFPD, err error) {
-	var today string
+	var (
+		today     string
+		todayTime time.Time
+	)
 
 	currentDate := time.Now().Format("2006-01-02")
 
@@ -1235,9 +1238,10 @@ func (u usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory stri
 
 	if clusterCMOSaved == "" {
 		// Parsing tanggal hari ini ke dalam format time.Time
-		todayTime, err := time.Parse("2006-01-02", today)
+		todayTime, err = time.Parse("2006-01-02", today)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - todayTime parse error")
+			return
 		}
 
 		// Menambahkan 3 bulan
@@ -1261,14 +1265,6 @@ func (u usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory stri
 		}
 
 		entitySaveTrxNoFPd = SaveTrxNoFPd
-
-		if err != nil {
-			if strings.Contains(err.Error(), "deadline") {
-				err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Save Trx CMO No FPD Timeout")
-			} else {
-				err = errors.New(constant.ERROR_BAD_REQUEST + " - Save Trx CMO No FPD Error ProspectID Already Exist")
-			}
-		}
 	}
 
 	return
