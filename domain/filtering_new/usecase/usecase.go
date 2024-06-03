@@ -1008,7 +1008,12 @@ func getReasonCategoryRoman(category interface{}) string {
 func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessToken string, hrisAccessToken string) (data response.EmployeeCMOResponse, err error) {
 
 	var (
+		dataEmployee        response.EmployeeCareerHistory
 		respGetEmployeeData response.GetEmployeeByID
+		today               string
+		parsedTime          time.Time
+		todayDate           time.Time
+		givenDate           time.Time
 	)
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
@@ -1061,33 +1066,38 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 			// Jika tidak ada data dengan position_group_code "AO"
 			data = response.EmployeeCMOResponse{}
 		} else {
-			dataEmployee := respGetEmployeeData.Data[lastIndex]
+			dataEmployee = respGetEmployeeData.Data[lastIndex]
 			if dataEmployee.RealCareerDate == "" {
 				err = errors.New(constant.ERROR_UPSTREAM + " - RealCareerDate Empty")
+				return
 			}
 
-			parsedTime, err := time.Parse("2006-01-02T15:04:05", dataEmployee.RealCareerDate)
+			parsedTime, err = time.Parse("2006-01-02T15:04:05", dataEmployee.RealCareerDate)
 			if err != nil {
 				err = errors.New(constant.ERROR_UPSTREAM + " - Error Parse RealCareerDate")
+				return
 			}
 
 			dataEmployee.RealCareerDate = parsedTime.Format("2006-01-02")
 
-			today := time.Now().Format("2006-01-02")
+			today = time.Now().Format("2006-01-02")
 			// memvalidasi bulan+tahun yang diberikan tidak lebih besar dari bulan+tahun hari ini
 			err = utils.ValidateDiffMonthYear(dataEmployee.RealCareerDate, today)
 			if err != nil {
 				err = errors.New(constant.ERROR_UPSTREAM + " - Error Validate MonthYear of RealCareerDate")
+				return
 			}
 
-			todayDate, err := time.Parse("2006-01-02", today)
+			todayDate, err = time.Parse("2006-01-02", today)
 			if err != nil {
 				err = errors.New(constant.ERROR_UPSTREAM + " - Error Parse todayDate")
+				return
 			}
 
-			givenDate, err := time.Parse("2006-01-02", dataEmployee.RealCareerDate)
+			givenDate, err = time.Parse("2006-01-02", dataEmployee.RealCareerDate)
 			if err != nil {
 				err = errors.New(constant.ERROR_UPSTREAM + " - Error Parse givenDate")
+				return
 			}
 
 			diffOfMonths := utils.DiffInMonths(todayDate, givenDate)
