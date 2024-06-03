@@ -367,7 +367,7 @@ func TestFiltering(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_err_FilteringPefindo",
+			name: "TEST_err_FilteringPefindo_01",
 			req: request.Filtering{
 				ProspectID: "SAL02400020230727001",
 				BPKBName:   "K",
@@ -430,7 +430,7 @@ func TestFiltering(t *testing.T) {
 			errFinal:   errors.New("error pefindo"),
 		},
 		{
-			name: "TEST_err_FilteringPefindo",
+			name: "TEST_err_FilteringPefindo_02",
 			req: request.Filtering{
 				ProspectID: "SAL02400020230727001",
 				BPKBName:   "K",
@@ -541,6 +541,8 @@ func TestFiltering(t *testing.T) {
 			}
 
 			mockUsecase.On("FilteringPefindo", ctx, tc.reqPefindo, mock.Anything, mock.Anything, accessToken).Return(tc.respFilteringPefindo, tc.resPefindo, tc.trxDetailBiro, tc.errpefindo).Once()
+
+			mockUsecase.On("CheckLatestPaidInstallment", ctx, tc.req.ProspectID, mock.Anything, accessToken).Return(mock.Anything, mock.Anything, mock.Anything).Once()
 
 			mockUsecase.On("GetEmployeeData", ctx, tc.req.CMOID, accessToken, hrisAccessToken).Return(tc.resEmployee, tc.errEmployee).Once()
 

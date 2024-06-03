@@ -17,6 +17,7 @@ type Usecase interface {
 	GetEmployeeData(ctx context.Context, employeeID string, accessToken string, hrisAccessToken string) (data response.EmployeeCMOResponse, err error)
 	GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType string, accessToken string) (data response.FpdCMOResponse, err error)
 	CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory string, cmoJoinDate string, defaultCluster string, bpkbName string) (clusterCMOSaved string, entitySaveTrxNoFPd entity.TrxCmoNoFPD, err error)
+	CheckLatestPaidInstallment(ctx context.Context, prospectID string, customerID interface{}, accessToken string) (respRrdDate interface{}, monthsDiff int, err error)
 }
 
 type MultiUsecase interface {

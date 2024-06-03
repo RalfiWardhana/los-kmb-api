@@ -69,9 +69,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		savedCluster              string
 		useDefaultCluster         bool
 		entityTransactionCMOnoFPD entity.TrxCmoNoFPD
-		resp                      *resty.Response
-		respLatestPaidInstallment response.LatestPaidInstallmentData
-		parsedRrddate             time.Time
+		respRrdDate               interface{}
 		monthsDiff                int
 	)
 
@@ -239,41 +237,8 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		entityFiltering.Cluster = constant.CLUSTER_PRIME_PRIORITY
 
 		if mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO {
-			resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+mainCustomer.CustomerID.(string)+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, req.ProspectID, accessToken)
-
+			respRrdDate, monthsDiff, err = u.usecase.CheckLatestPaidInstallment(ctx, req.ProspectID, mainCustomer.CustomerID, accessToken)
 			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout")
-				return
-			}
-
-			if resp.StatusCode() != 200 {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Call LatestPaidInstallmentData Error")
-				return
-			}
-
-			if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &respLatestPaidInstallment); err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal LatestPaidInstallmentData Error")
-				return
-			}
-
-			rrdDate := respLatestPaidInstallment.RRDDate
-			if rrdDate == "" {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Result LatestPaidInstallmentData rrd_date Empty String")
-				return
-			}
-
-			parsedRrddate, err = time.Parse(time.RFC3339, rrdDate)
-			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of rrd_date")
-				return
-			}
-
-			currentDate := time.Now()
-
-			// calculate months difference of expired contract
-			monthsDiff, err = utils.PreciseMonthsDifference(parsedRrddate, currentDate)
-			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Difference of months rrd_date and current_date is negative (-)")
 				return
 			}
 
@@ -291,6 +256,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	entityFiltering.CustomerStatus = mainCustomer.CustomerStatus
 	entityFiltering.CustomerSegment = mainCustomer.CustomerSegment
 	entityFiltering.CustomerID = mainCustomer.CustomerID
+	entityFiltering.RrdDate = respRrdDate
 
 	if respFiltering.NextProcess {
 		entityFiltering.NextProcess = 1
@@ -1316,6 +1282,56 @@ func (u usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory stri
 		}
 
 		entitySaveTrxNoFPd = SaveTrxNoFPd
+	}
+
+	return
+}
+
+func (u usecase) CheckLatestPaidInstallment(ctx context.Context, prospectID string, customerID interface{}, accessToken string) (respRrdDate interface{}, monthsDiff int, err error) {
+	var (
+		resp                      *resty.Response
+		respLatestPaidInstallment response.LatestPaidInstallmentData
+		parsedRrddate             time.Time
+	)
+
+	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+customerID.(string)+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout")
+		return
+	}
+
+	if resp.StatusCode() != 200 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call LatestPaidInstallmentData Error")
+		return
+	}
+
+	if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &respLatestPaidInstallment); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal LatestPaidInstallmentData Error")
+		return
+	}
+
+	rrdDate := respLatestPaidInstallment.RRDDate
+	if rrdDate == "" {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Result LatestPaidInstallmentData rrd_date Empty String")
+		return
+	}
+
+	parsedRrddate, err = time.Parse(time.RFC3339, rrdDate)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of rrd_date")
+		return
+	}
+
+	respRrdDate = parsedRrddate.Format("2006-01-02")
+
+	currentDate := time.Now()
+
+	// calculate months difference of expired contract
+	monthsDiff, err = utils.PreciseMonthsDifference(parsedRrddate, currentDate)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Difference of months rrd_date and current_date is negative (-)")
+		return
 	}
 
 	return
