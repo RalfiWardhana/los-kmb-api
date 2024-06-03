@@ -35,6 +35,7 @@ var HrisApiData HrisApiInfo
 type HrisApiInfo struct {
 	Token       string `json:"token"`
 	ExpiredTime int    `json:"expired_time"`
+	ExpiredAt   string `json:"expired_at"`
 }
 
 func (m *HrisApiInfo) IsStructureEmpty() bool {
@@ -120,12 +121,15 @@ func GetTokenHris() (hrisApiInfo HrisApiInfo, err error) {
 		hrisApiInfo := new(HrisApiInfo)
 		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), hrisApiInfo)
 
+		expired := time.Now().Add(time.Second * time.Duration(hrisApiInfo.ExpiredTime))
+		hrisApiInfo.ExpiredAt = expired.Format("2006-01-02T15:04:05Z07:00")
+
 		HrisApiData = *hrisApiInfo
 		return HrisApiData, err
 
 	} else {
 
-		expired := time.Now().Add(time.Second * time.Duration(HrisApiData.ExpiredTime))
+		expired, _ := time.Parse("2006-01-02T15:04:05Z07:00", HrisApiData.ExpiredAt)
 		expired5Minute := expired.Add(-5 * time.Minute)
 
 		if utils.DiffTwoDate(expired5Minute).Seconds() > 0 {
@@ -143,6 +147,9 @@ func GetTokenHris() (hrisApiInfo HrisApiInfo, err error) {
 
 			hrisApiInfo := new(HrisApiInfo)
 			jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), hrisApiInfo)
+
+			expired := time.Now().Add(time.Second * time.Duration(hrisApiInfo.ExpiredTime))
+			hrisApiInfo.ExpiredAt = expired.Format("2006-01-02T15:04:05Z07:00")
 
 			HrisApiData = *hrisApiInfo
 			return HrisApiData, err
