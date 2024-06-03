@@ -236,17 +236,22 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 		entityFiltering.Cluster = constant.CLUSTER_PRIME_PRIORITY
 
-		if (mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO) && (mainCustomer.CustomerID != nil) && (mainCustomer.CustomerID.(string) != "") {
-			respRrdDate, monthsDiff, err = u.usecase.CheckLatestPaidInstallment(ctx, req.ProspectID, mainCustomer.CustomerID.(string), accessToken)
-			if err != nil {
-				return
-			}
+		if mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO {
+			if (mainCustomer.CustomerID != nil) && (mainCustomer.CustomerID.(string) != "") {
+				respRrdDate, monthsDiff, err = u.usecase.CheckLatestPaidInstallment(ctx, req.ProspectID, mainCustomer.CustomerID.(string), accessToken)
+				if err != nil {
+					return
+				}
 
-			if !(monthsDiff <= 6) {
-				respFiltering.Code = respFilteringPefindo.Code
-				respFiltering.Decision = respFilteringPefindo.Decision
-				respFiltering.Reason = respFilteringPefindo.Reason
-				respFiltering.NextProcess = respFilteringPefindo.NextProcess
+				if !(monthsDiff <= 6) {
+					respFiltering.Code = respFilteringPefindo.Code
+					respFiltering.Decision = respFilteringPefindo.Decision
+					respFiltering.Reason = respFilteringPefindo.Reason
+					respFiltering.NextProcess = respFilteringPefindo.NextProcess
+				}
+			} else {
+				err = errors.New(constant.ERROR_BAD_REQUEST + " - CustomerID should not be empty")
+				return
 			}
 		}
 	}
