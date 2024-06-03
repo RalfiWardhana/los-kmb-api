@@ -288,27 +288,30 @@ func TestFiltering(t *testing.T) {
 	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
 
 	testcases := []struct {
-		name                 string
-		req                  request.Filtering
-		married              bool
-		spCustomer           response.SpDupCekCustomerByID
-		errspCustomer        error
-		spSpouse             response.SpDupCekCustomerByID
-		errspSpouse          error
-		resBlackList         response.UsecaseApi
-		respFilteringPefindo response.Filtering
-		reqPefindo           request.Pefindo
-		resPefindo           response.PefindoResult
-		errpefindo           error
-		trxDetailBiro        []entity.TrxDetailBiro
-		resEmployee          response.EmployeeCMOResponse
-		errEmployee          error
-		resFPD               response.FpdCMOResponse
-		errFPD               error
-		entityFPDCluster     entity.MasterMappingFpdCluster
-		errMapFpdCluster     error
-		resFinal             response.Filtering
-		errFinal             error
+		name                             string
+		req                              request.Filtering
+		married                          bool
+		spCustomer                       response.SpDupCekCustomerByID
+		errspCustomer                    error
+		spSpouse                         response.SpDupCekCustomerByID
+		errspSpouse                      error
+		resBlackList                     response.UsecaseApi
+		respFilteringPefindo             response.Filtering
+		reqPefindo                       request.Pefindo
+		resPefindo                       response.PefindoResult
+		errpefindo                       error
+		trxDetailBiro                    []entity.TrxDetailBiro
+		resEmployee                      response.EmployeeCMOResponse
+		errEmployee                      error
+		resFPD                           response.FpdCMOResponse
+		errFPD                           error
+		entityFPDCluster                 entity.MasterMappingFpdCluster
+		errMapFpdCluster                 error
+		resFinal                         response.Filtering
+		errFinal                         error
+		rrdDate_LatestPaidInstallment    string
+		monthsDiff_LatestPaidInstallment int
+		err_LatestPaidInstallment        error
 	}{
 		{
 			name: "TEST_ERROR_DupcheckIntegrator",
@@ -521,6 +524,9 @@ func TestFiltering(t *testing.T) {
 				Reason:          "RO PRIME",
 				ClusterCMO:      "Cluster E",
 			},
+			rrdDate_LatestPaidInstallment:    time.Now().AddDate(0, -3, 0).Format("2006-01-02"),
+			monthsDiff_LatestPaidInstallment: 3,
+			err_LatestPaidInstallment:        nil,
 		},
 	}
 	for _, tc := range testcases {
@@ -543,7 +549,12 @@ func TestFiltering(t *testing.T) {
 
 			mockUsecase.On("FilteringPefindo", ctx, tc.reqPefindo, mock.Anything, mock.Anything, accessToken).Return(tc.respFilteringPefindo, tc.resPefindo, tc.trxDetailBiro, tc.errpefindo).Once()
 
-			mockUsecase.On("CheckLatestPaidInstallment", ctx, tc.req.ProspectID, tc.spCustomer.CustomerID, accessToken).Return(mock.Anything, mock.Anything, mock.Anything).Once()
+			customerID, ok := tc.spCustomer.CustomerID.(string)
+			if !ok {
+				customerID = ""
+			}
+
+			mockUsecase.On("CheckLatestPaidInstallment", ctx, tc.req.ProspectID, customerID, accessToken).Return(tc.rrdDate_LatestPaidInstallment, tc.monthsDiff_LatestPaidInstallment, tc.err_LatestPaidInstallment).Once()
 
 			mockUsecase.On("GetEmployeeData", ctx, tc.req.CMOID, accessToken, hrisAccessToken).Return(tc.resEmployee, tc.errEmployee).Once()
 

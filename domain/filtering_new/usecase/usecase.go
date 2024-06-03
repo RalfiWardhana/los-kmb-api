@@ -236,7 +236,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 		entityFiltering.Cluster = constant.CLUSTER_PRIME_PRIORITY
 
-		if mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO {
+		if (mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO) && (mainCustomer.CustomerID != nil) && (mainCustomer.CustomerID.(string) != "") {
 			respRrdDate, monthsDiff, err = u.usecase.CheckLatestPaidInstallment(ctx, req.ProspectID, mainCustomer.CustomerID.(string), accessToken)
 			if err != nil {
 				return
