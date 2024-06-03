@@ -68,27 +68,25 @@ func (_m *Usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory st
 }
 
 // CheckLatestPaidInstallment provides a mock function with given fields: ctx, prospectID, customerID, accessToken
-func (_m *Usecase) CheckLatestPaidInstallment(ctx context.Context, prospectID string, customerID interface{}, accessToken string) (interface{}, int, error) {
+func (_m *Usecase) CheckLatestPaidInstallment(ctx context.Context, prospectID string, customerID string, accessToken string) (string, int, error) {
 	ret := _m.Called(ctx, prospectID, customerID, accessToken)
 
-	var r0 interface{}
-	if rf, ok := ret.Get(0).(func(context.Context, string, interface{}, string) interface{}); ok {
+	var r0 string
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) string); ok {
 		r0 = rf(ctx, prospectID, customerID, accessToken)
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(interface{})
-		}
+		r0 = ret.Get(0).(string)
 	}
 
 	var r1 int
-	if rf, ok := ret.Get(1).(func(context.Context, string, interface{}, string) int); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) int); ok {
 		r1 = rf(ctx, prospectID, customerID, accessToken)
 	} else {
 		r1 = ret.Get(1).(int)
 	}
 
 	var r2 error
-	if rf, ok := ret.Get(2).(func(context.Context, string, interface{}, string) error); ok {
+	if rf, ok := ret.Get(2).(func(context.Context, string, string, string) error); ok {
 		r2 = rf(ctx, prospectID, customerID, accessToken)
 	} else {
 		r2 = ret.Error(2)

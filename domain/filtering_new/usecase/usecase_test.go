@@ -491,6 +491,7 @@ func TestFiltering(t *testing.T) {
 			spCustomer: response.SpDupCekCustomerByID{
 				CustomerStatus:  constant.STATUS_KONSUMEN_RO,
 				CustomerSegment: constant.RO_AO_PRIME,
+				CustomerID:      "14045",
 			},
 			resBlackList: response.UsecaseApi{
 				Result: constant.DECISION_PASS,
@@ -542,7 +543,7 @@ func TestFiltering(t *testing.T) {
 
 			mockUsecase.On("FilteringPefindo", ctx, tc.reqPefindo, mock.Anything, mock.Anything, accessToken).Return(tc.respFilteringPefindo, tc.resPefindo, tc.trxDetailBiro, tc.errpefindo).Once()
 
-			mockUsecase.On("CheckLatestPaidInstallment", ctx, tc.req.ProspectID, mock.Anything, accessToken).Return(mock.Anything, mock.Anything, mock.Anything).Once()
+			mockUsecase.On("CheckLatestPaidInstallment", ctx, tc.req.ProspectID, tc.spCustomer.CustomerID, accessToken).Return(mock.Anything, mock.Anything, mock.Anything).Once()
 
 			mockUsecase.On("GetEmployeeData", ctx, tc.req.CMOID, accessToken, hrisAccessToken).Return(tc.resEmployee, tc.errEmployee).Once()
 

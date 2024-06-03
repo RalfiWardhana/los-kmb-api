@@ -69,7 +69,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		savedCluster              string
 		useDefaultCluster         bool
 		entityTransactionCMOnoFPD entity.TrxCmoNoFPD
-		respRrdDate               interface{}
+		respRrdDate               string
 		monthsDiff                int
 	)
 
@@ -237,7 +237,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		entityFiltering.Cluster = constant.CLUSTER_PRIME_PRIORITY
 
 		if mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO {
-			respRrdDate, monthsDiff, err = u.usecase.CheckLatestPaidInstallment(ctx, req.ProspectID, mainCustomer.CustomerID, accessToken)
+			respRrdDate, monthsDiff, err = u.usecase.CheckLatestPaidInstallment(ctx, req.ProspectID, mainCustomer.CustomerID.(string), accessToken)
 			if err != nil {
 				return
 			}
@@ -1287,14 +1287,14 @@ func (u usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory stri
 	return
 }
 
-func (u usecase) CheckLatestPaidInstallment(ctx context.Context, prospectID string, customerID interface{}, accessToken string) (respRrdDate interface{}, monthsDiff int, err error) {
+func (u usecase) CheckLatestPaidInstallment(ctx context.Context, prospectID string, customerID string, accessToken string) (respRrdDate string, monthsDiff int, err error) {
 	var (
 		resp                      *resty.Response
 		respLatestPaidInstallment response.LatestPaidInstallmentData
 		parsedRrddate             time.Time
 	)
 
-	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+customerID.(string)+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
+	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+customerID+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout")
