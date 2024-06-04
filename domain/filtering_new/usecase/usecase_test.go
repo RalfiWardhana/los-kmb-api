@@ -528,6 +528,199 @@ func TestFiltering(t *testing.T) {
 			monthsDiff_LatestPaidInstallment: 3,
 			err_LatestPaidInstallment:        nil,
 		},
+		{
+			name: "TEST_err_FilteringPefindo_02_RO_PRIME_Expired_7_months",
+			req: request.Filtering{
+				ProspectID: "SAL02400020230727001",
+				BPKBName:   "K",
+				BranchID:   "426",
+				IDNumber:   "3275066006789999",
+				LegalName:  "EMI LegalName",
+				BirthDate:  "1971-04-15",
+				Gender:     "M",
+				MotherName: "HAROEMI MotherName",
+				Spouse: &request.FilteringSpouse{
+					IDNumber:   "3345270510910123",
+					LegalName:  "DIANA LegalName",
+					BirthDate:  "1995-08-28",
+					Gender:     "F",
+					MotherName: "ELSA",
+				},
+				CMOID: "105394",
+			},
+			resEmployee: response.EmployeeCMOResponse{
+				EmployeeID:         "105394",
+				EmployeeName:       "SUSANAH",
+				EmployeeIDWithName: "105394 - SUSANAH",
+				JoinDate:           "2023-07-24",
+				PositionGroupCode:  "AO",
+				PositionGroupName:  "Marketing",
+				CMOCategory:        "OLD",
+			},
+			resFPD: response.FpdCMOResponse{
+				FpdExist:    true,
+				CmoFpd:      22,
+				CmoAccSales: 47,
+			},
+			entityFPDCluster: entity.MasterMappingFpdCluster{
+				Cluster:     "Cluster E",
+				FpdStartHte: 20,
+				FpdEndLt:    25,
+				CreatedAt:   time.Time{},
+			},
+			reqPefindo: request.Pefindo{
+				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
+				IDMember:                constant.USER_PBK_KMB_FILTEERING,
+				User:                    constant.USER_PBK_KMB_FILTEERING,
+				ProspectID:              "SAL02400020230727001",
+				BPKBName:                "K",
+				BranchID:                "426",
+				IDNumber:                "3275066006789999",
+				LegalName:               "EMI LegalName",
+				BirthDate:               "1971-04-15",
+				Gender:                  "M",
+				SurgateMotherName:       "HAROEMI MotherName",
+				SpouseIDNumber:          "3345270510910123",
+				SpouseLegalName:         "DIANA LegalName",
+				SpouseBirthDate:         "1995-08-28",
+				SpouseGender:            "F",
+				SpouseSurgateMotherName: "ELSA",
+				MaritalStatus:           "M",
+			},
+			spCustomer: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO,
+				CustomerSegment: constant.RO_AO_PRIME,
+				CustomerID:      "14045",
+			},
+			resBlackList: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+				Code:   "123",
+			},
+			married: true,
+			respFilteringPefindo: response.Filtering{
+				ProspectID:      "SAL02400020230727001",
+				Decision:        constant.DECISION_PASS,
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+				NextProcess:     true,
+				Code:            "123",
+			},
+			resPefindo: response.PefindoResult{
+				Score:       "Average Risk",
+				WoContract:  true,
+				WoAdaAgunan: true,
+			},
+			resFinal: response.Filtering{
+				ProspectID:      "SAL02400020230727001",
+				Decision:        constant.DECISION_PASS,
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO,
+				CustomerSegment: constant.RO_AO_PRIME,
+				NextProcess:     true,
+				Code:            "123",
+				Reason:          "",
+				ClusterCMO:      "Cluster E",
+			},
+			rrdDate_LatestPaidInstallment:    time.Now().AddDate(0, -7, 0).Format("2006-01-02"),
+			monthsDiff_LatestPaidInstallment: 7,
+			err_LatestPaidInstallment:        nil,
+		},
+		{
+			name: "TEST_err_Filtering_RO_PRIME",
+			req: request.Filtering{
+				ProspectID: "SAL02400020230727001",
+				BPKBName:   "K",
+				BranchID:   "426",
+				IDNumber:   "3275066006789999",
+				LegalName:  "EMI LegalName",
+				BirthDate:  "1971-04-15",
+				Gender:     "M",
+				MotherName: "HAROEMI MotherName",
+				Spouse: &request.FilteringSpouse{
+					IDNumber:   "3345270510910123",
+					LegalName:  "DIANA LegalName",
+					BirthDate:  "1995-08-28",
+					Gender:     "F",
+					MotherName: "ELSA",
+				},
+				CMOID: "105394",
+			},
+			resEmployee: response.EmployeeCMOResponse{
+				EmployeeID:         "105394",
+				EmployeeName:       "SUSANAH",
+				EmployeeIDWithName: "105394 - SUSANAH",
+				JoinDate:           "2023-07-24",
+				PositionGroupCode:  "AO",
+				PositionGroupName:  "Marketing",
+				CMOCategory:        "OLD",
+			},
+			resFPD: response.FpdCMOResponse{
+				FpdExist:    true,
+				CmoFpd:      22,
+				CmoAccSales: 47,
+			},
+			entityFPDCluster: entity.MasterMappingFpdCluster{
+				Cluster:     "Cluster E",
+				FpdStartHte: 20,
+				FpdEndLt:    25,
+				CreatedAt:   time.Time{},
+			},
+			reqPefindo: request.Pefindo{
+				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
+				IDMember:                constant.USER_PBK_KMB_FILTEERING,
+				User:                    constant.USER_PBK_KMB_FILTEERING,
+				ProspectID:              "SAL02400020230727001",
+				BPKBName:                "K",
+				BranchID:                "426",
+				IDNumber:                "3275066006789999",
+				LegalName:               "EMI LegalName",
+				BirthDate:               "1971-04-15",
+				Gender:                  "M",
+				SurgateMotherName:       "HAROEMI MotherName",
+				SpouseIDNumber:          "3345270510910123",
+				SpouseLegalName:         "DIANA LegalName",
+				SpouseBirthDate:         "1995-08-28",
+				SpouseGender:            "F",
+				SpouseSurgateMotherName: "ELSA",
+				MaritalStatus:           "M",
+			},
+			spCustomer: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO,
+				CustomerSegment: constant.RO_AO_PRIME,
+				CustomerID:      nil,
+			},
+			resBlackList: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+				Code:   "123",
+			},
+			married: true,
+			respFilteringPefindo: response.Filtering{
+				ProspectID:      "SAL02400020230727001",
+				Decision:        constant.DECISION_PASS,
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+				NextProcess:     true,
+				Code:            "123",
+			},
+			resPefindo: response.PefindoResult{
+				Score:       "Average Risk",
+				WoContract:  true,
+				WoAdaAgunan: true,
+			},
+			resFinal: response.Filtering{
+				ProspectID:      "SAL02400020230727001",
+				Decision:        constant.DECISION_PASS,
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO,
+				CustomerSegment: constant.RO_AO_PRIME,
+				NextProcess:     true,
+				Code:            "123",
+				Reason:          "RO PRIME",
+				ClusterCMO:      "Cluster E",
+			},
+			rrdDate_LatestPaidInstallment:    "",
+			monthsDiff_LatestPaidInstallment: 0,
+			err_LatestPaidInstallment:        errors.New(constant.ERROR_BAD_REQUEST + " - CustomerID should not be empty"),
+			errFinal:                         errors.New(constant.ERROR_BAD_REQUEST + " - CustomerID should not be empty"),
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -5182,6 +5375,117 @@ func TestCheckCmoNoFPD(t *testing.T) {
 			require.Equal(t, tc.expectedCluster, clusterCMOSaved)
 			require.Equal(t, tc.expectedEntitySave, entitySaveTrxNoFPd)
 			require.Equal(t, tc.expectedError, err)
+		})
+	}
+}
+
+func TestCheckLatestPaidInstallment(t *testing.T) {
+	os.Setenv("LASTEST_PAID_INSTALLMENT_URL", "http://10.9.100.231/los-int-dupcheck-v2/api/v2/mdm/installment/")
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	ctx := context.Background()
+	reqID := utils.GenerateUUID()
+	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
+	accessToken := "token"
+
+	testCases := []struct {
+		name                string
+		prospectID          string
+		customerID          string
+		accessToken         string
+		mockResponse        string
+		mockStatusCode      int
+		expectedRespRrdDate string
+		expectedMonthsDiff  int
+		expectedError       error
+	}{
+		{
+			name:                "Success case",
+			prospectID:          "prospect1",
+			customerID:          "customer1",
+			mockResponse:        `{ "data": { "rrd_date": "` + time.Now().AddDate(0, -7, 0).Format("2006-01-02") + `T00:00:00Z" } }`,
+			mockStatusCode:      200,
+			expectedRespRrdDate: time.Now().AddDate(0, -7, 0).Format("2006-01-02"),
+			expectedMonthsDiff:  7,
+			expectedError:       nil,
+		},
+		{
+			name:                "Unmarshal error case",
+			prospectID:          "prospect1",
+			customerID:          "customer1",
+			mockResponse:        `{ "datas": { "rrd_date": "` + time.Now().AddDate(0, -7, 0).Format("2006-01-02") + `T00:00:00Z" } }`,
+			mockStatusCode:      200,
+			expectedRespRrdDate: "",
+			expectedMonthsDiff:  0,
+			expectedError:       errors.New(constant.ERROR_UPSTREAM + " - Unmarshal LatestPaidInstallmentData Error"),
+		},
+		{
+			name:                "RRD Date higher than current date case",
+			prospectID:          "prospect1",
+			customerID:          "customer1",
+			mockResponse:        `{ "data": { "rrd_date": "` + time.Now().AddDate(0, +1, 0).Format("2006-01-02") + `T00:00:00Z" } }`,
+			mockStatusCode:      200,
+			expectedRespRrdDate: time.Now().AddDate(0, +1, 0).Format("2006-01-02"),
+			expectedMonthsDiff:  0,
+			expectedError:       errors.New(constant.ERROR_UPSTREAM + " - Difference of months rrd_date and current_date is negative (-)"),
+		},
+		{
+			name:                "Error case - empty RRDDate",
+			prospectID:          "prospect2",
+			customerID:          "customer2",
+			mockResponse:        `{ "data": { "rrd_date": "" } }`,
+			mockStatusCode:      200,
+			expectedRespRrdDate: "",
+			expectedMonthsDiff:  0,
+			expectedError:       errors.New(constant.ERROR_UPSTREAM + " - Result LatestPaidInstallmentData rrd_date Empty String"),
+		},
+		{
+			name:                "Error case - invalid date format",
+			prospectID:          "prospect3",
+			customerID:          "customer3",
+			mockResponse:        `{ "data": { "rrd_date": "01-01-2020" } }`,
+			mockStatusCode:      200,
+			expectedRespRrdDate: "",
+			expectedMonthsDiff:  0,
+			expectedError:       errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of rrd_date"),
+		},
+		{
+			name:                "Error case - upstream error",
+			prospectID:          "prospect4",
+			customerID:          "customer4",
+			mockResponse:        `{}`,
+			mockStatusCode:      500,
+			expectedRespRrdDate: "",
+			expectedMonthsDiff:  0,
+			expectedError:       errors.New(constant.ERROR_UPSTREAM + " - Call LatestPaidInstallmentData Error"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			rst := resty.New()
+			httpmock.ActivateNonDefault(rst.GetClient())
+			defer httpmock.DeactivateAndReset()
+
+			httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.customerID+"/2", httpmock.NewStringResponder(tc.mockStatusCode, tc.mockResponse))
+			resp, _ := rst.R().Get(os.Getenv("LASTEST_PAID_INSTALLMENT_URL") + tc.customerID + "/2")
+
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.customerID+"/2", []byte(nil), map[string]string{}, constant.METHOD_GET, false, 0, timeout, tc.prospectID, accessToken).Return(resp, nil).Once()
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			respRrdDate, monthsDiff, err := usecase.CheckLatestPaidInstallment(ctx, tc.prospectID, tc.customerID, accessToken)
+
+			require.Equal(t, tc.expectedRespRrdDate, respRrdDate)
+			require.Equal(t, tc.expectedMonthsDiff, monthsDiff)
+			if tc.expectedError != nil {
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }
