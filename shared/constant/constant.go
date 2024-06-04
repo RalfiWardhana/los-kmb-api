@@ -593,6 +593,7 @@ const (
 	// BIRO
 	SOURCE_DECISION_BIRO                    = "PBK"
 	CODE_PEFINDO_NOTFOUND                   = "897"
+	CODE_PEFINDO_NO                         = "8977"
 	REASON_PEFINDO_NOTFOUND                 = "PBK Tidak Ditemukan"
 	CODE_PEFINDO_OVD12LTE60_CURRENT_LTE30   = "938"
 	REASON_PEFINDO_OVD12LTE60_CURRENT_LTE30 = "PBK - Current OVD <= %v"
