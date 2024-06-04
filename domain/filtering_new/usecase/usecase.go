@@ -130,6 +130,10 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		mainCustomer.CustomerSegment = constant.RO_AO_REGULAR
 	}
 
+	if mainCustomer.CustomerStatusKMB == "" {
+		mainCustomer.CustomerStatusKMB = constant.STATUS_KONSUMEN_NEW
+	}
+
 	// hit ke pefindo
 	respFilteringPefindo, resPefindo, trxDetailBiro, err = u.usecase.FilteringPefindo(ctx, reqPefindo, mainCustomer.CustomerStatus, accessToken)
 	if err != nil {
@@ -140,6 +144,9 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	respFiltering.ProspectID = req.ProspectID
 	respFiltering.CustomerSegment = mainCustomer.CustomerSegment
+	respFiltering.CustomerStatusKMB = mainCustomer.CustomerStatusKMB
+
+	entityFiltering.CustomerStatusKMB = mainCustomer.CustomerStatusKMB
 	entityFiltering.Cluster = respFiltering.Cluster
 
 	primePriority, _ := utils.ItemExists(mainCustomer.CustomerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
@@ -866,13 +873,14 @@ func (u usecase) GetResultFiltering(prospectID string) (respFiltering response.F
 	}
 
 	respFiltering = response.Filtering{
-		ProspectID:      getResultFiltering[0].ProspectID,
-		Decision:        getResultFiltering[0].Decision,
-		Reason:          getResultFiltering[0].Reason,
-		CustomerStatus:  getResultFiltering[0].CustomerStatus,
-		CustomerSegment: getResultFiltering[0].CustomerSegment,
-		IsBlacklist:     getResultFiltering[0].IsBlacklist,
-		NextProcess:     getResultFiltering[0].NextProcess,
+		ProspectID:        getResultFiltering[0].ProspectID,
+		Decision:          getResultFiltering[0].Decision,
+		Reason:            getResultFiltering[0].Reason,
+		CustomerStatus:    getResultFiltering[0].CustomerStatus,
+		CustomerStatusKMB: getResultFiltering[0].CustomerStatusKMB,
+		CustomerSegment:   getResultFiltering[0].CustomerSegment,
+		IsBlacklist:       getResultFiltering[0].IsBlacklist,
+		NextProcess:       getResultFiltering[0].NextProcess,
 	}
 
 	if getResultFiltering[0].TotalBakiDebetNonCollateralBiro != nil {
