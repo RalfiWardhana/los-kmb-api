@@ -322,7 +322,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 
 	} else {
 		data = response.UsecaseApi{
-			Code:           constant.CODE_PEFINDO_NOTFOUND,
+			Code:           constant.CODE_PEFINDO_NO,
 			Reason:         constant.REASON_PEFINDO_NOTFOUND,
 			Result:         constant.DECISION_PASS,
 			SourceDecision: constant.SOURCE_DECISION_BIRO,

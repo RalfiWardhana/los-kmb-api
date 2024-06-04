@@ -219,7 +219,7 @@ func TestPefindo(t *testing.T) {
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
 			},
 			result: response.UsecaseApi{
-				Code:           constant.CODE_PEFINDO_NOTFOUND,
+				Code:           constant.CODE_PEFINDO_NO,
 				Reason:         constant.REASON_PEFINDO_NOTFOUND,
 				Result:         constant.DECISION_PASS,
 				SourceDecision: constant.SOURCE_DECISION_BIRO,
