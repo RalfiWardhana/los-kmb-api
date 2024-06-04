@@ -1102,10 +1102,10 @@ func (r repoHandler) SubmitNE(req request.MetricsNE, filtering request.Filtering
 			return err
 		}
 
-		PayloadNE, _ := json.Marshal(req)
-		PayloadFiltering, _ := json.Marshal(filtering)
-		PayloadLTV, _ := json.Marshal(elaboreateLTV)
-		PayloadJourney, _ := json.Marshal(journey)
+		PayloadNE, _ := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(req)
+		PayloadFiltering, _ := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(filtering)
+		PayloadLTV, _ := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(elaboreateLTV)
+		PayloadJourney, _ := jsoniter.ConfigCompatibleWithStandardLibrary.Marshal(journey)
 		ne := entity.NewEntry{
 			ProspectID:       req.Transaction.ProspectID,
 			BranchID:         req.Transaction.BranchID,
@@ -1114,10 +1114,10 @@ func (r repoHandler) SubmitNE(req request.MetricsNE, filtering request.Filtering
 			BirthDate:        req.CustomerPersonal.BirthDate,
 			CreatedByID:      req.CreatedBy.CreatedByID,
 			CreatedByName:    req.CreatedBy.CreatedByName,
-			PayloadNE:        utils.SafeJsonReplacer(string(PayloadNE)),
-			PayloadFiltering: utils.SafeJsonReplacer(string(PayloadFiltering)),
-			PayloadLTV:       utils.SafeJsonReplacer(string(PayloadLTV)),
-			PayloadJourney:   utils.SafeJsonReplacer(string(PayloadJourney)),
+			PayloadNE:        string(PayloadNE),
+			PayloadFiltering: string(PayloadFiltering),
+			PayloadLTV:       string(PayloadLTV),
+			PayloadJourney:   string(PayloadJourney),
 		}
 
 		if err := tx.Create(&ne).Error; err != nil {
