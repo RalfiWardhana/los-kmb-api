@@ -718,8 +718,8 @@ func TestFiltering(t *testing.T) {
 			},
 			rrdDate_LatestPaidInstallment:    "",
 			monthsDiff_LatestPaidInstallment: 0,
-			err_LatestPaidInstallment:        errors.New(constant.ERROR_BAD_REQUEST + " - CustomerID should not be empty"),
-			errFinal:                         errors.New(constant.ERROR_BAD_REQUEST + " - CustomerID should not be empty"),
+			err_LatestPaidInstallment:        errors.New(constant.ERROR_BAD_REQUEST + " - Customer RO then CustomerID should not be empty"),
+			errFinal:                         errors.New(constant.ERROR_BAD_REQUEST + " - Customer RO then CustomerID should not be empty"),
 		},
 	}
 	for _, tc := range testcases {
@@ -5448,7 +5448,7 @@ func TestCheckLatestPaidInstallment(t *testing.T) {
 			mockStatusCode:      200,
 			expectedRespRrdDate: "",
 			expectedMonthsDiff:  0,
-			expectedError:       errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of rrd_date"),
+			expectedError:       errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of response rrd_date (01-01-2020)"),
 		},
 		{
 			name:                "Error case - upstream error",

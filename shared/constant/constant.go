@@ -645,4 +645,7 @@ const (
 	// CMO CLUSTER
 	CMO_LAMA = "OLD"
 	CMO_BARU = "NEW"
+
+	// Max Months Difference for Expired Contract
+	EXPIRED_CONTRACT_LIMIT = 6
 )

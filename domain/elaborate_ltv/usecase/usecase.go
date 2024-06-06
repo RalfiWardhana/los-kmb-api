@@ -34,13 +34,18 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, accessToken string) (data response.ElaborateLTV, err error) {
 
 	var (
-		filteringKMB        entity.FilteringKMB
-		ageS                string
-		bakiDebet           float64
-		bpkbNameType        int
-		manufacturingYear   time.Time
-		mappingElaborateLTV []entity.MappingElaborateLTV
-		cluster             string
+		filteringKMB            entity.FilteringKMB
+		ageS                    string
+		bakiDebet               float64
+		bpkbNameType            int
+		manufacturingYear       time.Time
+		mappingElaborateLTV     []entity.MappingElaborateLTV
+		cluster                 string
+		RrdDateString           string
+		CreatedAtString         string
+		RrdDate                 time.Time
+		CreatedAt               time.Time
+		MonthsOfExpiredContract int
 	)
 
 	filteringKMB, err = u.repository.GetFilteringResult(reqs.ProspectID)
@@ -109,6 +114,40 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 
 	if strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string)) {
 		cluster = constant.CLUSTER_PRIME_PRIORITY
+
+		// Cek apakah customer RO PRIME/PRIORITY ini termasuk jalur `expired_contract tidak <= 6 bulan`
+		if filteringKMB.CustomerStatus == constant.STATUS_KONSUMEN_RO {
+			RrdDateString = filteringKMB.RrdDate.(string)
+			CreatedAtString = filteringKMB.CreatedAt.Format(time.RFC3339)
+
+			RrdDate, err = time.Parse(time.RFC3339, RrdDateString)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of RrdDate (" + RrdDateString + ")")
+				return
+			}
+
+			CreatedAt, err = time.Parse(time.RFC3339, CreatedAtString)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of CreatedAt (" + CreatedAtString + ")")
+				return
+			}
+
+			MonthsOfExpiredContract, err = utils.PreciseMonthsDifference(RrdDate, CreatedAt)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Difference of months RrdDate and CreatedAt is negative (-)")
+				return
+			}
+
+			if !(MonthsOfExpiredContract <= constant.EXPIRED_CONTRACT_LIMIT) {
+				// Jalur mirip seperti customer segment "REGULAR"
+				if resultPefindo == constant.DECISION_REJECT {
+					cluster = filteringKMB.CustomerStatus.(string) + " " + constant.CLUSTER_PRIME_PRIORITY
+					if (int(bakiDebet) > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT) && !(reqs.Tenor >= 36) {
+						cluster = filteringKMB.CustomerStatus.(string) + " " + filteringKMB.CustomerSegment.(string)
+					}
+				}
+			}
+		}
 	} else {
 		cluster = filteringKMB.CMOCluster.(string)
 	}

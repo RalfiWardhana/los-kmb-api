@@ -243,14 +243,15 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 					return
 				}
 
-				if !(monthsDiff <= 6) {
+				if !(monthsDiff <= constant.EXPIRED_CONTRACT_LIMIT) {
+					// Jalur mirip seperti customer segment "REGULAR"
 					respFiltering.Code = respFilteringPefindo.Code
 					respFiltering.Decision = respFilteringPefindo.Decision
 					respFiltering.Reason = respFilteringPefindo.Reason
 					respFiltering.NextProcess = respFilteringPefindo.NextProcess
 				}
 			} else {
-				err = errors.New(constant.ERROR_BAD_REQUEST + " - CustomerID should not be empty")
+				err = errors.New(constant.ERROR_BAD_REQUEST + " - Customer RO then CustomerID should not be empty")
 				return
 			}
 		}
@@ -1334,7 +1335,7 @@ func (u usecase) CheckLatestPaidInstallment(ctx context.Context, prospectID stri
 
 	parsedRrddate, err = time.Parse(time.RFC3339, rrdDate)
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of rrd_date")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of response rrd_date (" + rrdDate + ")")
 		return
 	}
 

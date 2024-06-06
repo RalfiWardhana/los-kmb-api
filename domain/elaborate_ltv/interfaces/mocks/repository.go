@@ -34,8 +34,8 @@ func (_m *Repository) GetFilteringResult(prospectID string) (entity.FilteringKMB
 	return r0, r1
 }
 
-// GetMappingElaborateLTVOvd provides a mock function with given fields: resultPefindo, cluster
-func (_m *Repository) GetMappingElaborateLTVOvd(resultPefindo string, cluster string) ([]entity.MappingElaborateLTV, error) {
+// GetMappingElaborateLTV provides a mock function with given fields: resultPefindo, cluster
+func (_m *Repository) GetMappingElaborateLTV(resultPefindo string, cluster string) ([]entity.MappingElaborateLTV, error) {
 	ret := _m.Called(resultPefindo, cluster)
 
 	var r0 []entity.MappingElaborateLTV
@@ -57,8 +57,8 @@ func (_m *Repository) GetMappingElaborateLTVOvd(resultPefindo string, cluster st
 	return r0, r1
 }
 
-// GetMappingElaborateLTV provides a mock function with given fields: resultPefindo, cluster
-func (_m *Repository) GetMappingElaborateLTV(resultPefindo string, cluster string) ([]entity.MappingElaborateLTV, error) {
+// GetMappingElaborateLTVOvd provides a mock function with given fields: resultPefindo, cluster
+func (_m *Repository) GetMappingElaborateLTVOvd(resultPefindo string, cluster string) ([]entity.MappingElaborateLTV, error) {
 	ret := _m.Called(resultPefindo, cluster)
 
 	var r0 []entity.MappingElaborateLTV
