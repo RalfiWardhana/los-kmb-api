@@ -36,6 +36,7 @@ type Filtering struct {
 	Decision          string      `json:"decision"`
 	Reason            string      `json:"reason"`
 	CustomerStatus    interface{} `json:"customer_status"`
+	CustomerStatusKMB interface{} `json:"customer_status_kmb"`
 	CustomerSegment   interface{} `json:"customer_segment"`
 	IsBlacklist       bool        `json:"is_blacklist"`
 	NextProcess       bool        `json:"next_process"`
@@ -400,6 +401,7 @@ type SpDupCekCustomerByID struct {
 	IsSimiliar                       int         `json:"is_similiar"`
 	CustomerSegment                  string      `json:"customer_segment"`
 	CustomerStatus                   string      `json:"customer_status"`
+	CustomerStatusKMB                string      `json:"customer_status_lob"`
 }
 
 type Dsr struct {

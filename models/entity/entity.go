@@ -814,6 +814,7 @@ type FilteringKMB struct {
 	BranchID                        string      `gorm:"column:branch_id;type:varchar(5)" json:"branch_id"`
 	Decision                        string      `gorm:"column:decision;type:varchar(20)" json:"decision"`
 	CustomerStatus                  interface{} `gorm:"column:customer_status;type:varchar(5)" json:"customer_status"`
+	CustomerStatusKMB               interface{} `gorm:"column:customer_status_kmb;type:varchar(5)" json:"customer_status_kmb"`
 	CustomerSegment                 interface{} `gorm:"column:customer_segment;type:varchar(20)" json:"customer_segment"`
 	CustomerID                      interface{} `gorm:"column:customer_id;type:varchar(20)" json:"customer_id"`
 	IsBlacklist                     int         `gorm:"column:is_blacklist" json:"is_blacklist"`
@@ -847,6 +848,7 @@ type ResultFiltering struct {
 	ProspectID                      string      `gorm:"column:prospect_id;type:varchar(20)" json:"prospect_id"`
 	Decision                        string      `gorm:"column:decision;type:varchar(20)" json:"decision"`
 	CustomerStatus                  interface{} `gorm:"column:customer_status;type:varchar(5)" json:"customer_status"`
+	CustomerStatusKMB               interface{} `gorm:"column:customer_status_kmb;type:varchar(5)" json:"customer_status_kmb"`
 	CustomerSegment                 interface{} `gorm:"column:customer_segment;type:varchar(20)" json:"customer_segment"`
 	IsBlacklist                     bool        `gorm:"column:is_blacklist" json:"is_blacklist"`
 	NextProcess                     bool        `gorm:"column:next_process" json:"next_process"`

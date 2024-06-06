@@ -217,7 +217,7 @@ func (r repoHandler) GetResultFiltering(prospectID string) (data []entity.Result
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = db.Raw(`SELECT tf.prospect_id, tf.decision, tf.reason, tf.customer_status, tf.customer_segment, tf.is_blacklist, tf.next_process,
+	if err = db.Raw(`SELECT tf.prospect_id, tf.decision, tf.reason, tf.customer_status, tf.customer_status_kmb, tf.customer_segment, tf.is_blacklist, tf.next_process,
 	tf.total_baki_debet_non_collateral_biro, tdb.url_pdf_report, tdb.subject FROM trx_filtering tf 
 	LEFT JOIN trx_detail_biro tdb ON tf.prospect_id = tdb.prospect_id 
 	WHERE tf.prospect_id = ?`, prospectID).Scan(&data).Error; err != nil {
