@@ -130,6 +130,10 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		mainCustomer.CustomerSegment = constant.RO_AO_REGULAR
 	}
 
+	if mainCustomer.CustomerStatusKMB == "" {
+		mainCustomer.CustomerStatusKMB = constant.STATUS_KONSUMEN_NEW
+	}
+
 	// hit ke pefindo
 	respFilteringPefindo, resPefindo, trxDetailBiro, err = u.usecase.FilteringPefindo(ctx, reqPefindo, mainCustomer.CustomerStatus, accessToken)
 	if err != nil {
@@ -140,6 +144,9 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	respFiltering.ProspectID = req.ProspectID
 	respFiltering.CustomerSegment = mainCustomer.CustomerSegment
+	respFiltering.CustomerStatusKMB = mainCustomer.CustomerStatusKMB
+
+	entityFiltering.CustomerStatusKMB = mainCustomer.CustomerStatusKMB
 	entityFiltering.Cluster = respFiltering.Cluster
 
 	primePriority, _ := utils.ItemExists(mainCustomer.CustomerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
@@ -164,7 +171,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	}
 
 	// ada data pefindo
-	if resPefindo.Score != "" {
+	if resPefindo.Score != "" && resPefindo.Category != nil {
 		entityFiltering.MaxOverdueBiro = resPefindo.MaxOverdue
 		entityFiltering.MaxOverdueLast12monthsBiro = resPefindo.MaxOverdueLast12Months
 		entityFiltering.ScoreBiro = resPefindo.Score
@@ -181,10 +188,8 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 		entityFiltering.TotalInstallmentAmountBiro = resPefindo.AngsuranAktifPbk
 		entityFiltering.TotalBakiDebetNonCollateralBiro = resPefindo.TotalBakiDebetNonAgunan
+		entityFiltering.Category = resPefindo.Category
 
-		if resPefindo.Category != nil {
-			entityFiltering.Category = resPefindo.Category
-		}
 		if resPefindo.MaxOverdueKORules != nil {
 			entityFiltering.MaxOverdueKORules = resPefindo.MaxOverdueKORules
 		}
@@ -575,7 +580,9 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 						data.Decision = constant.DECISION_REJECT
 					}
 
-					if !bpkbName {
+					// Reason ovd include all
+					if !bpkbName && (pefindoResult.MaxOverdueLast12MonthsKORules != nil && checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12) &&
+						(pefindoResult.MaxOverdueKORules != nil && checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) <= constant.PBK_OVD_CURRENT) {
 						data.Reason = fmt.Sprintf("%s & Baki Debet > Threshold", bpkbString)
 						data.NextProcess = false
 						data.Decision = constant.DECISION_REJECT
@@ -866,13 +873,14 @@ func (u usecase) GetResultFiltering(prospectID string) (respFiltering response.F
 	}
 
 	respFiltering = response.Filtering{
-		ProspectID:      getResultFiltering[0].ProspectID,
-		Decision:        getResultFiltering[0].Decision,
-		Reason:          getResultFiltering[0].Reason,
-		CustomerStatus:  getResultFiltering[0].CustomerStatus,
-		CustomerSegment: getResultFiltering[0].CustomerSegment,
-		IsBlacklist:     getResultFiltering[0].IsBlacklist,
-		NextProcess:     getResultFiltering[0].NextProcess,
+		ProspectID:        getResultFiltering[0].ProspectID,
+		Decision:          getResultFiltering[0].Decision,
+		Reason:            getResultFiltering[0].Reason,
+		CustomerStatus:    getResultFiltering[0].CustomerStatus,
+		CustomerStatusKMB: getResultFiltering[0].CustomerStatusKMB,
+		CustomerSegment:   getResultFiltering[0].CustomerSegment,
+		IsBlacklist:       getResultFiltering[0].IsBlacklist,
+		NextProcess:       getResultFiltering[0].NextProcess,
 	}
 
 	if getResultFiltering[0].TotalBakiDebetNonCollateralBiro != nil {

@@ -47,11 +47,7 @@ func NewServiceKMB(app *platformevent.ConsumerRouter, repository interfaces.Repo
 // event submit to los
 func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 	middlewares.GetPlatformAuth()
-
-	getBody := string(event.GetBody())
-	getBody = utils.SafeJsonReplacer(getBody)
-
-	body := []byte(getBody)
+	body := event.GetBody()
 
 	var (
 		req          request.Metrics
@@ -199,11 +195,7 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 // event after prescreening
 func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (err error) {
 	middlewares.GetPlatformAuth()
-
-	getBody := string(event.GetBody())
-	getBody = utils.SafeJsonReplacer(getBody)
-
-	body := []byte(getBody)
+	body := event.GetBody()
 
 	var (
 		trxJourney           entity.TrxJourney
