@@ -112,7 +112,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		ManufacturingYear: reqs.ManufacturingYear,
 	}
 
-	if strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string)) {
+	if filteringKMB.CustomerSegment != nil && strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string)) {
 		cluster = constant.CLUSTER_PRIME_PRIORITY
 
 		// Cek apakah customer RO PRIME/PRIORITY ini termasuk jalur `expired_contract tidak <= 6 bulan`
