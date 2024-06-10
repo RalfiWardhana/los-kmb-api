@@ -334,7 +334,7 @@ func TestReviewPrescreening(t *testing.T) {
 		mockResponse := response.ReviewPrescreening{
 			ProspectID: body.ProspectID,
 			Code:       constant.CODE_PASS_PRESCREENING,
-			Decision:   constant.DECISION_PASS,
+			Decision:   constant.DB_DECISION_APR,
 			Reason:     "OK",
 		}
 		mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
@@ -419,7 +419,8 @@ func TestCMSHandler(t *testing.T) {
 	mockRepository := new(mocks.Repository)
 	mockJson := new(mocksJson.JSON)
 	mockPlatformEvent := platformEventMockery.NewPlatformEventInterface(t)
-	var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
+	_ = mockPlatformEvent
+	var platformEvent platformevent.PlatformEvent
 	// Initialize the handler with mocks or stubs
 	handler := &handlerCMS{
 		usecase:    mockUsecase,
