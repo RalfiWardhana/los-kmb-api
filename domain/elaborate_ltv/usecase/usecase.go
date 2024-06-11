@@ -117,6 +117,11 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 
 		// Cek apakah customer RO PRIME/PRIORITY ini termasuk jalur `expired_contract tidak <= 6 bulan`
 		if filteringKMB.CustomerStatus == constant.STATUS_KONSUMEN_RO {
+			if filteringKMB.RrdDate == nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
+				return
+			}
+
 			RrdDateString = filteringKMB.RrdDate.(string)
 			CreatedAtString = filteringKMB.CreatedAt.Format(time.RFC3339)
 
