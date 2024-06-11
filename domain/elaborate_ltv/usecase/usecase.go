@@ -116,7 +116,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		cluster = constant.CLUSTER_PRIME_PRIORITY
 
 		// Cek apakah customer RO PRIME/PRIORITY ini termasuk jalur `expired_contract tidak <= 6 bulan`
-		if filteringKMB.CustomerStatus == constant.STATUS_KONSUMEN_RO {
+		if filteringKMB.CustomerStatus.(string) == constant.STATUS_KONSUMEN_RO {
 			if filteringKMB.RrdDate == nil {
 				err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
 				return
@@ -147,7 +147,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 				// Jalur mirip seperti customer segment "REGULAR"
 				if resultPefindo == constant.DECISION_REJECT {
 					cluster = filteringKMB.CustomerStatus.(string) + " " + constant.CLUSTER_PRIME_PRIORITY
-					if (int(bakiDebet) > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT) && !(reqs.Tenor >= 36) {
+					if int(bakiDebet) > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT {
 						cluster = filteringKMB.CustomerStatus.(string) + " " + filteringKMB.CustomerSegment.(string)
 					}
 				}
