@@ -269,7 +269,12 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	entityFiltering.CustomerStatus = mainCustomer.CustomerStatus
 	entityFiltering.CustomerSegment = mainCustomer.CustomerSegment
 	entityFiltering.CustomerID = mainCustomer.CustomerID
-	entityFiltering.RrdDate = respRrdDate
+
+	if respRrdDate == "" {
+		entityFiltering.RrdDate = nil
+	} else {
+		entityFiltering.RrdDate = respRrdDate
+	}
 
 	if respFiltering.NextProcess {
 		entityFiltering.NextProcess = 1
