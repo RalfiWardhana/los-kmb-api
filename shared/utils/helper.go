@@ -508,6 +508,11 @@ func PreciseMonthsDifference(date1, date2 time.Time) (int, error) {
 		months--
 	}
 
+	// Check if there are additional days beyond the full months
+	if day2 > day1 {
+		months++
+	}
+
 	// Return an error if the difference is negative
 	if months < 0 {
 		return 0, errors.New("upstream_service_error - Difference of months rrd_date and current_date is negative (-)")
