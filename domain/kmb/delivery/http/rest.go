@@ -18,7 +18,6 @@ import (
 
 type handlerKMB struct {
 	metrics       interfaces.Metrics
-	multiUsecase  interfaces.MultiUsecase
 	usecase       interfaces.Usecase
 	repository    interfaces.Repository
 	authorization authorization.Authorization
