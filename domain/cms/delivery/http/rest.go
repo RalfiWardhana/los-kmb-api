@@ -21,10 +21,10 @@ type handlerCMS struct {
 	usecase    interfaces.Usecase
 	repository interfaces.Repository
 	Json       common.JSON
-	producer   platformevent.PlatformEventInterface
+	producer   platformevent.PlatformEvent
 }
 
-func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, producer platformevent.PlatformEventInterface, middlewares *middlewares.AccessMiddleware) {
+func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, producer platformevent.PlatformEvent, middlewares *middlewares.AccessMiddleware) {
 	handler := handlerCMS{
 		usecase:    usecase,
 		repository: repository,
@@ -161,13 +161,13 @@ func (c *handlerCMS) ReviewPrescreening(ctx echo.Context) (err error) {
 			DecisionReason: string(data.Reason),
 		}
 		responseEvent := c.Json.EventSuccess(ctx.Request().Context(), accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, response)
-		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(responseEvent), 0)
+		go c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(responseEvent), 0)
 
 	} else if data.Decision == constant.DB_DECISION_APR {
 		reqAfterPrescreening := request.AfterPrescreening{
 			ProspectID: req.ProspectID,
 		}
-		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_AFTER_PRESCREENING, req.ProspectID, utils.StructToMap(reqAfterPrescreening), 0)
+		go c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_AFTER_PRESCREENING, req.ProspectID, utils.StructToMap(reqAfterPrescreening), 0)
 	}
 
 	return ctxJson
@@ -470,7 +470,7 @@ func (c *handlerCMS) SubmitNE(ctx echo.Context) (err error) {
 	}
 
 	//produce filtering for NE
-	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_FILTERING, req.Transaction.ProspectID, utils.StructToMap(payloadFiltering), 0)
+	go c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_FILTERING, req.Transaction.ProspectID, utils.StructToMap(payloadFiltering), 0)
 
 	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Success", req, nil)
 
@@ -653,7 +653,7 @@ func (c *handlerCMS) CancelOrder(ctx echo.Context) (err error) {
 		}
 		responseEvent := c.Json.EventSuccess(ctx.Request().Context(), accessToken, constant.NEW_KMB_LOG, "LOS - CA Cancel Order", req, response)
 
-		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(responseEvent), 0)
+		go c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(responseEvent), 0)
 	}
 
 	return ctxJson
@@ -892,7 +892,7 @@ func (c *handlerCMS) SubmitApproval(ctx echo.Context) (err error) {
 
 		responseEvent := c.Json.EventSuccess(ctx.Request().Context(), accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", req, response)
 
-		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(responseEvent), 0)
+		go c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(responseEvent), 0)
 	}
 
 	return ctxJson
