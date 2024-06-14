@@ -228,7 +228,7 @@ func (c *handlerKMB) GoLive(ctx echo.Context) (err error) {
 
 	ctxJson, resp = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Sync Go-Live", req, req)
 
-	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK_GOLIVE, req.ProspectID, utils.StructToMap(resp), 0)
+	go c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK_GOLIVE, req.ProspectID, utils.StructToMap(resp), 0)
 
 	return ctxJson
 }
