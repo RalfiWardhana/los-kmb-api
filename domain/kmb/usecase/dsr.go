@@ -89,9 +89,7 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 
 	} else {
 
-		var (
-			installment float64
-		)
+		var installment = installmentConfins
 
 		if installmentConfins > 0 {
 
