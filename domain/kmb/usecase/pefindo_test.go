@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"errors"
 	"fmt"
 	"los-kmb-api/domain/kmb/interfaces/mocks"
 	"los-kmb-api/models/entity"
@@ -10,12 +11,20 @@ import (
 	"los-kmb-api/shared/httpclient"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestPefindo(t *testing.T) {
 	os.Setenv("NAMA_SAMA", "K,P")
+
+	// Get the current time
+	currentTime := time.Now().UTC()
+
+	// Sample older date from the current time to test "RrdDate"
+	sevenMonthsAgo := currentTime.AddDate(0, -7, 0).Format("2006-01-02T15:04:05Z")
+
 	testcases := []struct {
 		name       string
 		cbFound    bool
@@ -57,6 +66,39 @@ func TestPefindo(t *testing.T) {
 				Result:         constant.DECISION_PASS,
 				SourceDecision: constant.SOURCE_DECISION_BIRO,
 			},
+		},
+		{
+			name: "Pefindo - CR Perbaikan Flow RO PrimePriority PASS",
+			filtering: entity.FilteringKMB{
+				CustomerSegment: constant.RO_AO_PRIME,
+				RrdDate:         sevenMonthsAgo,
+				CreatedAt:       currentTime,
+			},
+			spDupcheck: response.SpDupcheckMap{
+				StatusKonsumen:                   constant.STATUS_KONSUMEN_RO,
+				InstallmentTopup:                 0,
+				MaxOverdueDaysforActiveAgreement: 31,
+			},
+			result: response.UsecaseApi{
+				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
+				Reason:         fmt.Sprintf("%s %s - PBK Pass", constant.STATUS_KONSUMEN_RO, constant.RO_AO_PRIME),
+				Result:         constant.DECISION_PASS,
+				SourceDecision: constant.SOURCE_DECISION_BIRO,
+			},
+		},
+		{
+			name: "Pefindo - CR Perbaikan Flow RO PrimePriority RrdDate NULL",
+			filtering: entity.FilteringKMB{
+				CustomerSegment: constant.RO_AO_PRIME,
+				RrdDate:         nil,
+				CreatedAt:       currentTime,
+			},
+			spDupcheck: response.SpDupcheckMap{
+				StatusKonsumen:                   constant.STATUS_KONSUMEN_RO,
+				InstallmentTopup:                 0,
+				MaxOverdueDaysforActiveAgreement: 31,
+			},
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty"),
 		},
 		{
 			name:     "Pefindo Reject BPKB nama sama pass",
