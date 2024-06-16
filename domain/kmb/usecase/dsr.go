@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 	"os"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
@@ -229,7 +232,16 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 	return
 }
 
-func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment, totalInstallmentPBK float64, prospectID, customerSegment, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig) (data response.UsecaseApi, trxFMF response.TrxFMF, err error) {
+func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment, totalInstallmentPBK float64, prospectID, customerSegment, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig, filtering entity.FilteringKMB) (data response.UsecaseApi, trxFMF response.TrxFMF, err error) {
+
+	var (
+		RrdDateString           string
+		CreatedAtString         string
+		RrdDate                 time.Time
+		CreatedAt               time.Time
+		MonthsOfExpiredContract int
+		OverrideFlowLikeRegular bool
+	)
 
 	dsrPBK := totalInstallmentPBK / totalIncome * 100
 
@@ -255,97 +267,119 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 		}
 	}
 
-	if (SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO || SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO) && customerSegment == constant.RO_AO_PRIME {
-		var (
-			resp                      *resty.Response
-			respLatestPaidInstallment response.LatestPaidInstallmentData
-			latestInstallmentAmount   float64
-		)
-
-		if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO {
-			resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+SpDupcheckMap.CustomerID.(string)+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
-
-			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout")
-				return
-			}
-
-			if resp.StatusCode() != 200 {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Call LatestPaidInstallmentData Error")
-				return
-			}
-
-			err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &respLatestPaidInstallment)
-			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal LatestPaidInstallmentData Error")
-				return
-			}
-
-			latestInstallmentAmount = respLatestPaidInstallment.InstallmentAmount
-
-		} else if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
-			if SpDupcheckMap.InstallmentTopup > 0 {
-				latestInstallmentAmount = SpDupcheckMap.InstallmentTopup
-			}
+	// INTERCEPT PERBAIKAN FLOW RO PRIME/PRIORITY (NON-TOPUP) | CHECK EXPIRED_CONTRACT
+	if (customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY) && SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO && (SpDupcheckMap.InstallmentTopup <= 0 && SpDupcheckMap.MaxOverdueDaysforActiveAgreement > 30) {
+		if filtering.RrdDate == nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
+			return
 		}
 
-		installmentThreshold := latestInstallmentAmount * 1.5
+		RrdDateString = filtering.RrdDate.(string)
+		CreatedAtString = filtering.CreatedAt.Format(time.RFC3339)
 
-		trxFMF.LatestInstallmentAmount = latestInstallmentAmount
-		trxFMF.InstallmentThreshold = installmentThreshold
+		RrdDate, _ = time.Parse(time.RFC3339, RrdDateString)
+		CreatedAt, _ = time.Parse(time.RFC3339, CreatedAtString)
+		MonthsOfExpiredContract, _ = utils.PreciseMonthsDifference(RrdDate, CreatedAt)
 
-		if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO {
-			if newInstallment < installmentThreshold {
-				trxFMF.TotalDSR = SpDupcheckMap.Dsr
-				data = response.UsecaseApi{
-					Result:         constant.DECISION_PASS,
-					Code:           constant.CODE_TOTAL_DSRLTE35,
-					Reason:         fmt.Sprintf("%s", reasonCustomerStatus),
-					SourceDecision: constant.SOURCE_DECISION_DSR,
+		if !(MonthsOfExpiredContract <= constant.EXPIRED_CONTRACT_LIMIT) {
+			// Jalur mirip seperti customer segment "REGULAR"
+			OverrideFlowLikeRegular = true
+		}
+	}
+
+	if !OverrideFlowLikeRegular {
+		if (SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO || SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO) && customerSegment == constant.RO_AO_PRIME {
+			var (
+				resp                      *resty.Response
+				respLatestPaidInstallment response.LatestPaidInstallmentData
+				latestInstallmentAmount   float64
+			)
+
+			if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO {
+				resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+SpDupcheckMap.CustomerID.(string)+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
+
+				if err != nil {
+					err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout")
+					return
 				}
-				return
-			} else {
-				totalDSR = SpDupcheckMap.Dsr
-				trxFMF.TotalDSR = SpDupcheckMap.Dsr
+
+				if resp.StatusCode() != 200 {
+					err = errors.New(constant.ERROR_UPSTREAM + " - Call LatestPaidInstallmentData Error")
+					return
+				}
+
+				err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &respLatestPaidInstallment)
+				if err != nil {
+					err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal LatestPaidInstallmentData Error")
+					return
+				}
+
+				latestInstallmentAmount = respLatestPaidInstallment.InstallmentAmount // RO PRIME
+
+			} else if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
+				if SpDupcheckMap.InstallmentTopup > 0 {
+					latestInstallmentAmount = SpDupcheckMap.InstallmentTopup // RO TOP UP PRIME (secara teknis datanya adalah AO TOP UP PRIME)
+				}
 			}
-		} else if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
-			if SpDupcheckMap.InstallmentTopup > 0 {
-				if SpDupcheckMap.MaxOverdueDaysforActiveAgreement <= 30 {
-					if newInstallment < installmentThreshold {
-						trxFMF.TotalDSR = SpDupcheckMap.Dsr
-						data = response.UsecaseApi{
-							Result:         constant.DECISION_PASS,
-							Code:           constant.CODE_TOTAL_DSRLTE35,
-							Reason:         fmt.Sprintf("%s", reasonCustomerStatus),
-							SourceDecision: constant.SOURCE_DECISION_DSR,
+
+			installmentThreshold := latestInstallmentAmount * 1.5
+
+			trxFMF.LatestInstallmentAmount = latestInstallmentAmount
+			trxFMF.InstallmentThreshold = installmentThreshold
+
+			if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO {
+				if newInstallment < installmentThreshold {
+					trxFMF.TotalDSR = SpDupcheckMap.Dsr
+					data = response.UsecaseApi{
+						Result:         constant.DECISION_PASS,
+						Code:           constant.CODE_TOTAL_DSRLTE35,
+						Reason:         fmt.Sprintf("%s", reasonCustomerStatus),
+						SourceDecision: constant.SOURCE_DECISION_DSR,
+					}
+					return
+				} else {
+					totalDSR = SpDupcheckMap.Dsr
+					trxFMF.TotalDSR = SpDupcheckMap.Dsr
+				}
+			} else if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
+				if SpDupcheckMap.InstallmentTopup > 0 {
+					if SpDupcheckMap.MaxOverdueDaysforActiveAgreement <= 30 {
+						if newInstallment < installmentThreshold {
+							trxFMF.TotalDSR = SpDupcheckMap.Dsr
+							data = response.UsecaseApi{
+								Result:         constant.DECISION_PASS,
+								Code:           constant.CODE_TOTAL_DSRLTE35,
+								Reason:         fmt.Sprintf("%s", reasonCustomerStatus),
+								SourceDecision: constant.SOURCE_DECISION_DSR,
+							}
+							return
+						} else {
+							totalDSR = SpDupcheckMap.Dsr
+							trxFMF.TotalDSR = SpDupcheckMap.Dsr
 						}
-						return
-					} else {
+					}
+				} else {
+					if SpDupcheckMap.NumberOfPaidInstallment >= 6 {
 						totalDSR = SpDupcheckMap.Dsr
 						trxFMF.TotalDSR = SpDupcheckMap.Dsr
 					}
 				}
-			} else {
-				if SpDupcheckMap.NumberOfPaidInstallment >= 6 {
-					totalDSR = SpDupcheckMap.Dsr
-					trxFMF.TotalDSR = SpDupcheckMap.Dsr
-				}
 			}
-		}
-	} else if (SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO || SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO) && customerSegment == constant.RO_AO_PRIORITY {
-		if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO {
-			totalDSR = SpDupcheckMap.Dsr
-			trxFMF.TotalDSR = SpDupcheckMap.Dsr
-		} else if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
-			if SpDupcheckMap.InstallmentTopup > 0 {
-				if SpDupcheckMap.MaxOverdueDaysforActiveAgreement <= 30 {
-					totalDSR = SpDupcheckMap.Dsr
-					trxFMF.TotalDSR = SpDupcheckMap.Dsr
-				}
-			} else {
-				if SpDupcheckMap.NumberOfPaidInstallment >= 6 {
-					totalDSR = SpDupcheckMap.Dsr
-					trxFMF.TotalDSR = SpDupcheckMap.Dsr
+		} else if (SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO || SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO) && customerSegment == constant.RO_AO_PRIORITY {
+			if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO {
+				totalDSR = SpDupcheckMap.Dsr
+				trxFMF.TotalDSR = SpDupcheckMap.Dsr
+			} else if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
+				if SpDupcheckMap.InstallmentTopup > 0 {
+					if SpDupcheckMap.MaxOverdueDaysforActiveAgreement <= 30 {
+						totalDSR = SpDupcheckMap.Dsr
+						trxFMF.TotalDSR = SpDupcheckMap.Dsr
+					}
+				} else {
+					if SpDupcheckMap.NumberOfPaidInstallment >= 6 {
+						totalDSR = SpDupcheckMap.Dsr
+						trxFMF.TotalDSR = SpDupcheckMap.Dsr
+					}
 				}
 			}
 		}

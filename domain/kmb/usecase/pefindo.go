@@ -9,11 +9,21 @@ import (
 	"los-kmb-api/shared/utils"
 	"os"
 	"strings"
+	"time"
 )
 
 func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.FilteringKMB, spDupcheck response.SpDupcheckMap) (data response.UsecaseApi, err error) {
 
-	var customerSegment string
+	var (
+		customerSegment         string
+		RrdDateString           string
+		CreatedAtString         string
+		RrdDate                 time.Time
+		CreatedAt               time.Time
+		MonthsOfExpiredContract int
+		OverrideFlowLikeRegular bool
+	)
+
 	if filtering.CustomerSegment != nil {
 		customerSegment = filtering.CustomerSegment.(string)
 	}
@@ -29,7 +39,28 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 			return
 		}
 
-		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_RO || (spDupcheck.InstallmentTopup > 0 && spDupcheck.MaxOverdueDaysforActiveAgreement <= 30) {
+		// INTERCEPT PERBAIKAN FLOW RO PRIME/PRIORITY (NON-TOPUP) | CHECK EXPIRED_CONTRACT
+		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_RO && (spDupcheck.InstallmentTopup <= 0 && spDupcheck.MaxOverdueDaysforActiveAgreement > 30) {
+			if filtering.RrdDate == nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
+				return
+			}
+
+			RrdDateString = filtering.RrdDate.(string)
+			CreatedAtString = filtering.CreatedAt.Format(time.RFC3339)
+
+			RrdDate, _ = time.Parse(time.RFC3339, RrdDateString)
+			CreatedAt, _ = time.Parse(time.RFC3339, CreatedAtString)
+			MonthsOfExpiredContract, _ = utils.PreciseMonthsDifference(RrdDate, CreatedAt)
+
+			if !(MonthsOfExpiredContract <= constant.EXPIRED_CONTRACT_LIMIT) {
+				// Jalur mirip seperti customer segment "REGULAR"
+				OverrideFlowLikeRegular = true
+			}
+		}
+
+		// ADD INTERCEPT CONDITIONAL RELATED TO `PERBAIKAN RO PRIME/PRIORITY (NON-TOPUP)`
+		if ((spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_RO || (spDupcheck.InstallmentTopup > 0 && spDupcheck.MaxOverdueDaysforActiveAgreement <= 30)) && !OverrideFlowLikeRegular) || (OverrideFlowLikeRegular && !cbFound) {
 			data = response.UsecaseApi{
 				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
 				Reason:         fmt.Sprintf("%s %s - PBK Pass", spDupcheck.StatusKonsumen, customerSegment),
