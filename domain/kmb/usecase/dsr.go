@@ -115,7 +115,7 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 				return
 			}
 
-			if responseAgreementChassisNumber != (response.AgreementChassisNumber{}) {
+			if responseAgreementChassisNumber != (response.AgreementChassisNumber{}) && responseAgreementChassisNumber.InstallmentAmount > 0 {
 				reasonCustomerStatus = reasonCustomerStatus + " " + constant.TOP_UP
 
 				installmentTopup = responseAgreementChassisNumber.InstallmentAmount
