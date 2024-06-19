@@ -571,6 +571,10 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				personal.CustomerStatus = trxFMF.DupcheckData.StatusKonsumen
 			}
 
+			if data.CustomerPersonal.NumOfDependence != nil {
+				personal.NumOfDependence = *data.CustomerPersonal.NumOfDependence
+			}
+
 			logInfo = personal
 
 			if err := tx.Create(&personal).Error; err != nil {
