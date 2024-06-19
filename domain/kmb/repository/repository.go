@@ -916,16 +916,14 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 			roaoAkkk.InstallmentAmountSpouseFMF = trxFMF.DupcheckData.InstallmentAmountSpouseFMF
 
 			if trxFMF.DupcheckData.StatusKonsumen != constant.STATUS_KONSUMEN_NEW {
-				roaoAkkk = response.RoaoAkkk{
-					MaxOverdueDaysROAO:               trxFMF.DupcheckData.MaxOverdueDaysROAO,
-					MaxOverdueDaysforActiveAgreement: trxFMF.DupcheckData.MaxOverdueDaysforActiveAgreement,
-					NumberofAgreement:                trxFMF.DupcheckData.NumberofAgreement,
-					AgreementStatus:                  trxFMF.DupcheckData.AgreementStatus,
-					NumberOfPaidInstallment:          trxFMF.DupcheckData.NumberOfPaidInstallment,
-					OSInstallmentDue:                 trxFMF.DupcheckData.OSInstallmentDue,
-					InstallmentAmountFMF:             trxFMF.DupcheckData.InstallmentAmountFMF,
-					InstallmentTopup:                 trxFMF.DupcheckData.InstallmentTopup,
-				}
+				roaoAkkk.MaxOverdueDaysROAO = trxFMF.DupcheckData.MaxOverdueDaysROAO
+				roaoAkkk.MaxOverdueDaysforActiveAgreement = trxFMF.DupcheckData.MaxOverdueDaysforActiveAgreement
+				roaoAkkk.NumberofAgreement = trxFMF.DupcheckData.NumberofAgreement
+				roaoAkkk.AgreementStatus = trxFMF.DupcheckData.AgreementStatus
+				roaoAkkk.NumberOfPaidInstallment = trxFMF.DupcheckData.NumberOfPaidInstallment
+				roaoAkkk.OSInstallmentDue = trxFMF.DupcheckData.OSInstallmentDue
+				roaoAkkk.InstallmentAmountFMF = trxFMF.DupcheckData.InstallmentAmountFMF
+				roaoAkkk.InstallmentTopup = trxFMF.DupcheckData.InstallmentTopup
 			}
 
 			akkk := entity.TrxAkkk{
