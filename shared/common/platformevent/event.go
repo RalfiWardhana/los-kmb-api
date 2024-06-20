@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/constant"
@@ -15,19 +16,22 @@ import (
 	"github.com/KB-FMF/platform-library/event"
 )
 
-type PlatformEvent struct{}
+type platformEvent struct{}
 
 //counterfeiter:generate . PlatformEventInterface
 type PlatformEventInterface interface {
 	PublishEvent(ctx context.Context, accessToken, topicName, key, id string, value map[string]interface{}, countRetry int) error
 }
 
-func NewPlatformEvent() PlatformEvent {
-	return PlatformEvent{}
+func NewPlatformEvent() PlatformEventInterface {
+	return &platformEvent{}
 }
 
-func (pe PlatformEvent) PublishEvent(ctx context.Context, accessToken, topicName, key, id string, value map[string]interface{}, countRetry int) error {
-	var logEnv string
+func (pe platformEvent) PublishEvent(ctx context.Context, accessToken, topicName, key, id string, value map[string]interface{}, countRetry int) error {
+	var (
+		logEnv string
+		err    error
+	)
 
 	env := os.Getenv("APP_ENV")
 
@@ -43,20 +47,19 @@ func (pe PlatformEvent) PublishEvent(ctx context.Context, accessToken, topicName
 	keyMessage := fmt.Sprintf("%v_%v_%v", key, timestamp, id)
 
 	config := event.ProducerConfig{Topic: topicName}
-	producer, errCreateProducer := event.NewProducer(logEnv, config)
-	if errCreateProducer != nil {
-		return errCreateProducer
-	}
+	producer, err := event.NewProducer(logEnv, config)
 
 	//don't forget to close producer
 	defer producer.CloseProducer()
 
-	errPublish := producer.Publish(accessToken, keyMessage, value)
+	if err == nil {
+		err = producer.Publish(accessToken, keyMessage, value)
+	}
 
 	value["topic_key"] = keyMessage
 	value["topic_name"] = topicName
 
-	if errPublish != nil {
+	if err != nil {
 
 		// Write Error Log
 		common.CentralizeLog(ctx, accessToken, common.CentralizeLogParameter{
@@ -67,15 +70,16 @@ func (pe PlatformEvent) PublishEvent(ctx context.Context, accessToken, topicName
 			MsgLogFile: constant.MSG_PUBLISH_DATA_STREAM,
 			LevelLog:   constant.PLATFORM_LOG_LEVEL_ERROR,
 			Request:    value,
-			Response:   map[string]interface{}{"errors": errPublish.Error()},
+			Response:   map[string]interface{}{"errors": err.Error()},
 		})
 
 		if countRetry < constant.MAX_RETRY_PUBLISH {
 			countRetry = countRetry + 1
-			pe.PublishEvent(ctx, accessToken, topicName, key, id, value, countRetry)
-			return nil
+			time.Sleep(time.Second * time.Duration(countRetry*10))
+			err = pe.PublishEvent(ctx, accessToken, topicName, key, id, value, countRetry)
+			return err
 		} else {
-			return errPublish
+			return err
 		}
 
 	}
@@ -94,5 +98,5 @@ func (pe PlatformEvent) PublishEvent(ctx context.Context, accessToken, topicName
 		},
 	})
 
-	return nil
+	return err
 }

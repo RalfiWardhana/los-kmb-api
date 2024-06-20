@@ -1005,6 +1005,7 @@ func (r repoHandler) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 		(CAST(ISNULL(ta2.InstallmentAmount, 0) AS NUMERIC(17,2)) +
 		CASE 
 			WHEN ta.TotalDSR = ta.DSRFMF THEN 0
+			WHEN ta.TotalDSR IS NULL THEN 0
 			ELSE CAST(ISNULL(tf.total_installment_amount_biro, 0) AS NUMERIC(17,2))
 		END +
 		CAST(ISNULL(ta.InstallmentAmountFMF, 0) AS NUMERIC(17,2)) +
