@@ -11,7 +11,6 @@ import (
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/common"
 	mocksJson "los-kmb-api/shared/common/json/mocks"
-	"los-kmb-api/shared/common/platformevent"
 	platformEventMockery "los-kmb-api/shared/common/platformevent/mocks"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
@@ -292,12 +291,14 @@ func TestReviewPrescreening(t *testing.T) {
 	mockUsecase := new(mocks.Usecase)
 	mockRepository := new(mocks.Repository)
 	mockJson := new(mocksJson.JSON)
+	mockEvent := new(platformEventMockery.PlatformEventInterface)
 
 	// Create an instance of the handler
 	handler := &handlerCMS{
 		usecase:    mockUsecase,
 		repository: mockRepository,
 		Json:       mockJson,
+		producer:   mockEvent,
 	}
 	body := request.ReqReviewPrescreening{
 		ProspectID:     "EFM03406412522151348",
@@ -334,7 +335,7 @@ func TestReviewPrescreening(t *testing.T) {
 		mockResponse := response.ReviewPrescreening{
 			ProspectID: body.ProspectID,
 			Code:       constant.CODE_PASS_PRESCREENING,
-			Decision:   constant.DECISION_PASS,
+			Decision:   constant.DB_DECISION_APR,
 			Reason:     "OK",
 		}
 		mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
@@ -342,6 +343,7 @@ func TestReviewPrescreening(t *testing.T) {
 		mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
 		mockJson.On("EventSuccess", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(response.ApiResponse{}).Once()
+		mockEvent.On("PublishEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, 0).Return(nil).Once()
 
 		// Call the handler
 		err := handler.ReviewPrescreening(c)
@@ -363,6 +365,7 @@ func TestReviewPrescreening(t *testing.T) {
 		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 		mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+		mockEvent.On("PublishEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, 0).Return(nil).Once()
 
 		err := handler.ReviewPrescreening(ctx)
 		assert.Nil(t, err)
@@ -390,6 +393,7 @@ func TestReviewPrescreening(t *testing.T) {
 		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		mockUsecase.On("ReviewPrescreening", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
+		mockEvent.On("PublishEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, 0).Return(nil).Once()
 
 		err := handler.ReviewPrescreening(ctx)
 		assert.Nil(t, err)
@@ -419,7 +423,6 @@ func TestCMSHandler(t *testing.T) {
 	mockRepository := new(mocks.Repository)
 	mockJson := new(mocksJson.JSON)
 	mockPlatformEvent := platformEventMockery.NewPlatformEventInterface(t)
-	var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
 	// Initialize the handler with mocks or stubs
 	handler := &handlerCMS{
 		usecase:    mockUsecase,
@@ -429,7 +432,7 @@ func TestCMSHandler(t *testing.T) {
 
 	// Create a new Echo group and register the routes with the mock middleware
 	cmsRoute := e.Group("/cms")
-	CMSHandler(cmsRoute, mockUsecase, mockRepository, mockJson, platformEvent, mockMiddleware)
+	CMSHandler(cmsRoute, mockUsecase, mockRepository, mockJson, mockPlatformEvent, mockMiddleware)
 
 	mockResponse := []entity.ReasonMessage{}
 	statusCode := http.StatusOK

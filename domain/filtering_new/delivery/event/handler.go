@@ -27,12 +27,12 @@ type handlers struct {
 	usecase       interfaces.Usecase
 	repository    interfaces.Repository
 	validator     *common.Validator
-	producer      platformevent.PlatformEvent
+	producer      platformevent.PlatformEventInterface
 	Json          common.JSON
 	platformCache platformcache.PlatformCacheInterface
 }
 
-func NewServiceFiltering(app *platformevent.ConsumerRouter, repository interfaces.Repository, usecase interfaces.Usecase, multiUsecase interfaces.MultiUsecase, validator *common.Validator, producer platformevent.PlatformEvent, json common.JSON,
+func NewServiceFiltering(app *platformevent.ConsumerRouter, repository interfaces.Repository, usecase interfaces.Usecase, multiUsecase interfaces.MultiUsecase, validator *common.Validator, producer platformevent.PlatformEventInterface, json common.JSON,
 	platformCache platformcache.PlatformCacheInterface) {
 	handler := handlers{
 		multiusecase:  multiUsecase,

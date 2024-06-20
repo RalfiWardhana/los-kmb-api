@@ -18,15 +18,14 @@ import (
 
 type handlerKMB struct {
 	metrics       interfaces.Metrics
-	multiUsecase  interfaces.MultiUsecase
 	usecase       interfaces.Usecase
 	repository    interfaces.Repository
 	authorization authorization.Authorization
 	Json          common.JSON
-	producer      platformevent.PlatformEvent
+	producer      platformevent.PlatformEventInterface
 }
 
-func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, authorization authorization.Authorization, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEvent) {
+func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, authorization authorization.Authorization, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEventInterface) {
 	handler := handlerKMB{
 		metrics:       metrics,
 		usecase:       usecase,
@@ -228,7 +227,7 @@ func (c *handlerKMB) GoLive(ctx echo.Context) (err error) {
 
 	ctxJson, resp = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Sync Go-Live", req, req)
 
-	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK_GOLIVE, req.ProspectID, utils.StructToMap(resp), 0)
+	go c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK_GOLIVE, req.ProspectID, utils.StructToMap(resp), 0)
 
 	return ctxJson
 }
