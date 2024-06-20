@@ -21,10 +21,10 @@ type handlerCMS struct {
 	usecase    interfaces.Usecase
 	repository interfaces.Repository
 	Json       common.JSON
-	producer   platformevent.PlatformEvent
+	producer   platformevent.PlatformEventInterface
 }
 
-func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, producer platformevent.PlatformEvent, middlewares *middlewares.AccessMiddleware) {
+func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, producer platformevent.PlatformEventInterface, middlewares *middlewares.AccessMiddleware) {
 	handler := handlerCMS{
 		usecase:    usecase,
 		repository: repository,

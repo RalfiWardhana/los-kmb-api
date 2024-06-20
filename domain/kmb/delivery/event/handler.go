@@ -27,11 +27,11 @@ type handlers struct {
 	usecase    interfaces.Usecase
 	repository interfaces.Repository
 	validator  *common.Validator
-	producer   platformevent.PlatformEvent
+	producer   platformevent.PlatformEventInterface
 	Json       common.JSON
 }
 
-func NewServiceKMB(app *platformevent.ConsumerRouter, repository interfaces.Repository, usecase interfaces.Usecase, metrics interfaces.Metrics, validator *common.Validator, producer platformevent.PlatformEvent, json common.JSON) {
+func NewServiceKMB(app *platformevent.ConsumerRouter, repository interfaces.Repository, usecase interfaces.Usecase, metrics interfaces.Metrics, validator *common.Validator, producer platformevent.PlatformEventInterface, json common.JSON) {
 	handler := handlers{
 		metrics:    metrics,
 		usecase:    usecase,

@@ -16,18 +16,18 @@ import (
 	"github.com/KB-FMF/platform-library/event"
 )
 
-type PlatformEvent struct{}
+type platformEvent struct{}
 
 //counterfeiter:generate . PlatformEventInterface
 type PlatformEventInterface interface {
 	PublishEvent(ctx context.Context, accessToken, topicName, key, id string, value map[string]interface{}, countRetry int) error
 }
 
-func NewPlatformEvent() PlatformEvent {
-	return PlatformEvent{}
+func NewPlatformEvent() PlatformEventInterface {
+	return &platformEvent{}
 }
 
-func (pe PlatformEvent) PublishEvent(ctx context.Context, accessToken, topicName, key, id string, value map[string]interface{}, countRetry int) error {
+func (pe platformEvent) PublishEvent(ctx context.Context, accessToken, topicName, key, id string, value map[string]interface{}, countRetry int) error {
 	var (
 		logEnv string
 		err    error
