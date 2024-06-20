@@ -215,7 +215,6 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 	err = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(body, &reqAfterPrescreening)
 	if err != nil {
 		resp = h.Json.EventRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqAfterPrescreening, err)
-		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqAfterPrescreening.ProspectID, utils.StructToMap(resp), 0)
 		return nil
 	}
 
@@ -225,7 +224,6 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 		if err != nil {
 			err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID does not exist")
 			resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqAfterPrescreening, err)
-			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqAfterPrescreening.ProspectID, utils.StructToMap(resp), 0)
 			return nil
 		}
 
@@ -239,7 +237,6 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 
 	if err != nil {
 		resp = h.Json.EventRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
-		h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
 		return nil
 	}
 
@@ -269,7 +266,6 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 		err = h.validator.Validate(req)
 		if err != nil {
 			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
-			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
 			return nil
 		}
 	}
@@ -296,7 +292,6 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 
 		if err := h.validator.Validate(&genderSpouse); err != nil {
 			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
-			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
 			return nil
 		}
 	}
@@ -313,7 +308,6 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 			validateOmset.CustomerOmset = newOmset
 			if err := h.validator.Validate(&validateOmset); err != nil {
 				resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
-				h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
 				return nil
 			}
 		}
@@ -328,7 +322,6 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 
 		if err := h.validator.Validate(&spouseVal); err != nil {
 			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
-			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
 			return nil
 		}
 	} else {
@@ -340,7 +333,6 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 
 		if err := h.validator.Validate(&spouseVal); err != nil {
 			resp = h.Json.EventBadRequestErrorValidation(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
-			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
 			return nil
 		}
 	}
