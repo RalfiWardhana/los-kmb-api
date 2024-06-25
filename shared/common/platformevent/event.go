@@ -46,6 +46,9 @@ func (pe platformEvent) PublishEvent(ctx context.Context, accessToken, topicName
 	timestamp := utils.GenerateUnixTimeNow()
 	keyMessage := fmt.Sprintf("%v_%v_%v", key, timestamp, id)
 
+	value["topic_key"] = keyMessage
+	value["topic_name"] = topicName
+
 	config := event.ProducerConfig{Topic: topicName}
 	producer, err := event.NewProducer(logEnv, config)
 
@@ -55,9 +58,6 @@ func (pe platformEvent) PublishEvent(ctx context.Context, accessToken, topicName
 	if err == nil {
 		err = producer.Publish(accessToken, keyMessage, value)
 	}
-
-	value["topic_key"] = keyMessage
-	value["topic_name"] = topicName
 
 	if err != nil {
 
