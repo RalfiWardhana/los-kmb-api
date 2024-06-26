@@ -2023,13 +2023,13 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 	search := req.Search
 
 	if search != "" {
-		query = fmt.Sprintf("WHERE (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+		query = fmt.Sprintf("WHERE (tt.ProspectID = '%s' OR tt.IDNumber = '%s' OR tt.LegalName = '%s')", search, search, search)
 	}
 
 	if filter == "" {
 		filter = query
 	} else {
-		filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+		filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID = '%s' OR tt.IDNumber = '%s' OR tt.LegalName = '%s')", search, search, search)
 	}
 
 	if pagination != nil {
