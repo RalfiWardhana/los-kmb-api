@@ -1493,6 +1493,7 @@ type InquiryCa struct {
 	ShowAction         bool    `gorm:"column:ShowAction"`
 	ActionDate         string  `gorm:"column:ActionDate"`
 	ActionFormAkk      bool    `gorm:"column:ActionFormAkk"`
+	UrlFormAkkk        string  `gorm:"column:UrlFormAkkk"`
 	ActionEditData     bool    `gorm:"column:ActionEditData"`
 	AdditionalDP       float64 `gorm:"column:additional_dp"`
 	Activity           string  `gorm:"column:activity"`
@@ -1699,6 +1700,7 @@ type InquirySearch struct {
 	ActionReturn   bool   `gorm:"column:ActionReturn"`
 	ActionCancel   bool   `gorm:"column:ActionCancel"`
 	ActionFormAkk  bool   `gorm:"column:ActionFormAkk"`
+	UrlFormAkkk    string `gorm:"column:UrlFormAkkk"`
 	ProspectID     string `gorm:"column:ProspectID"`
 	FinalStatus    string `gorm:"column:FinalStatus"`
 	BranchName     string `gorm:"column:BranchName"`
@@ -1843,6 +1845,7 @@ type ActionSearch struct {
 	ActionReturn  bool   `gorm:"column:ActionReturn" json:"action_return"`
 	ActionCancel  bool   `gorm:"column:ActionCancel" json:"action_cancel"`
 	ActionFormAkk bool   `gorm:"column:ActionFormAkk" json:"action_form_akk"`
+	UrlFormAkkk   string `gorm:"column:UrlFormAkkk" json:"url_form_akkk"`
 }
 
 type HistoryApproval struct {
@@ -1881,6 +1884,7 @@ type InquiryDataApproval struct {
 type DataApproval struct {
 	ShowAction         bool   `gorm:"column:ShowAction" json:"show_action"`
 	ActionFormAkk      bool   `gorm:"column:ActionFormAkk" json:"action_form_akk"`
+	UrlFormAkkk        string `gorm:"column:UrlFormAkkk" json:"url_form_akkk"`
 	IsLastApproval     bool   `gorm:"column:IsLastApproval" json:"is_last_approval"`
 	HasReturn          bool   `gorm:"column:HasReturn" json:"has_return"`
 	StatusDecision     string `gorm:"column:decision" json:"status_decision"`
