@@ -6152,7 +6152,8 @@ func TestGetInquirySearch(t *testing.T) {
 		cae.City AS EmergencyCity,
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
-		tce.IndustryTypeID
+		tce.IndustryTypeID,
+		tak.UrlFormAkkk
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -6164,6 +6165,7 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -6532,7 +6534,8 @@ func TestGetInquirySearch(t *testing.T) {
 		cae.City AS EmergencyCity,
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
-		tce.IndustryTypeID
+		tce.IndustryTypeID,
+		tak.UrlFormAkkk
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -6544,6 +6547,7 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -6911,7 +6915,8 @@ func TestGetInquirySearch(t *testing.T) {
 		cae.City AS EmergencyCity,
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
-		tce.IndustryTypeID
+		tce.IndustryTypeID,
+		tak.UrlFormAkkk
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -6923,6 +6928,7 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -7280,7 +7286,8 @@ func TestGetInquirySearch(t *testing.T) {
 		cae.City AS EmergencyCity,
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
-		tce.IndustryTypeID
+		tce.IndustryTypeID,
+		tak.UrlFormAkkk
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -7292,6 +7299,7 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -8297,7 +8305,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
-		tdb.BiroSpouseResult
+		tdb.BiroSpouseResult,
+		tak.UrlFormAkkk
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -8737,7 +8746,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
-		tdb.BiroSpouseResult
+		tdb.BiroSpouseResult,
+		tak.UrlFormAkkk
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -9175,7 +9185,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
-		tdb.BiroSpouseResult
+		tdb.BiroSpouseResult,
+		tak.UrlFormAkkk
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -9624,7 +9635,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
-		tdb.BiroSpouseResult
+		tdb.BiroSpouseResult,
+		tak.UrlFormAkkk
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -10073,7 +10085,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
-		tdb.BiroSpouseResult
+		tdb.BiroSpouseResult,
+		tak.UrlFormAkkk
 
 	  FROM
 		trx_master tm WITH (nolock)

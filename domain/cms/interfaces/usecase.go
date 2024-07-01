@@ -32,4 +32,5 @@ type Usecase interface {
 	UpdateMappingCluster(req request.ReqUploadMappingCluster, file multipart.File) (err error)
 	GetMappingClusterBranch(req request.ReqListMappingClusterBranch) (data []entity.ConfinsBranch, err error)
 	GetMappingClusterChangeLog(pagination interface{}) (data []entity.MappingClusterChangeLog, rowTotal int, err error)
+	GenerateFormAKKK(ctx context.Context, req request.RequestGenerateFormAKKK, accessToken string) (data interface{}, err error)
 }

@@ -278,7 +278,7 @@ func main() {
 		}
 	})
 
-	eventHandler.NewServiceKMB(consumerJourneyRouter, kmbRepositories, kmbUsecases, kmbMetrics, validator, producer, jsonResponse)
+	eventHandler.NewServiceKMB(consumerJourneyRouter, kmbRepositories, kmbUsecases, kmbMetrics, validator, producer, jsonResponse, cmsUsecases)
 
 	if err := consumerJourneyRouter.StartConsume(); err != nil {
 		panic(err)

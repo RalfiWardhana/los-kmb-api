@@ -10,6 +10,7 @@ import (
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
+	"los-kmb-api/shared/config"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
@@ -3401,6 +3402,40 @@ func (r repoHandler) GetMappingClusterBranch(req request.ReqListMappingClusterBr
 		return
 	}
 
+	return
+}
+
+func (r repoHandler) SaveWorker(trxworker entity.TrxWorker) (err error) {
+	err = r.losDB.Create(&trxworker).Error
+	return
+}
+
+func (r repoHandler) SaveUrlFormAKKK(prospectID, urlFormAKKK string) (err error) {
+
+	var (
+		data entity.TrxAkkk
+		x    sql.TxOptions
+	)
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	result := db.Model(&data).Where("ProspectID = ?", prospectID).Updates(entity.TrxAkkk{
+		UrlFormAkkk: urlFormAKKK,
+	})
+
+	if err = result.Error; err != nil {
+		return
+	}
+
+	if result.RowsAffected == 0 {
+		err = errors.New("RowsAffected 0")
+	}
 	return
 }
 

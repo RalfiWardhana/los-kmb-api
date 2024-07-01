@@ -1045,6 +1045,7 @@ type TrxAkkk struct {
 	InstallmentAmountOtherSpouse interface{} `gorm:"column:InstallmentAmountOtherSpouse"`
 	InstallmentTopup             interface{} `gorm:"column:InstallmentTopup"`
 	LatestInstallment            interface{} `gorm:"column:LatestInstallment"`
+	UrlFormAkkk                  interface{} `gorm:"column:UrlFormAkkk"`
 	CreatedAt                    time.Time   `gorm:"column:created_at"`
 }
 
