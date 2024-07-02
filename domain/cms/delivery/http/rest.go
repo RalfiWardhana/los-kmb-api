@@ -663,6 +663,14 @@ func (c *handlerCMS) CancelOrder(ctx echo.Context) (err error) {
 		}
 		responseEvent := c.Json.EventSuccess(ctx.Request().Context(), accessToken, constant.NEW_KMB_LOG, "LOS - CA Cancel Order", req, response)
 
+		// generate form akkk
+		reqGenAkkk := request.RequestGenerateFormAKKK{
+			ProspectID: data.ProspectID,
+			LOB:        strings.ToLower(constant.LOB_NEW_KMB),
+			Source:     constant.SYSTEM,
+		}
+		c.usecase.GenerateFormAKKK(ctx.Request().Context(), reqGenAkkk, accessToken)
+
 		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(responseEvent), 0)
 	}
 
