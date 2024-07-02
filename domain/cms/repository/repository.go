@@ -2454,6 +2454,16 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 			return err
 		}
 
+		// if stop insert trx_akkk
+		if trxStatus.Activity == constant.ACTIVITY_STOP {
+			trxAkkk := entity.TrxAkkk{
+				ProspectID: trxStatus.ProspectID,
+			}
+			if err = tx.Create(&trxAkkk).Error; err != nil {
+				return err
+			}
+		}
+
 		return nil
 	})
 }
