@@ -834,6 +834,16 @@ func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detai
 			return err
 		}
 
+		// if stop insert trx_akkk
+		if status.Activity == constant.ACTIVITY_STOP {
+			trxAkkk := entity.TrxAkkk{
+				ProspectID: status.ProspectID,
+			}
+			if err = tx.Create(&trxAkkk).Error; err != nil {
+				return err
+			}
+		}
+
 		// insert trx_prescreening
 		if err = tx.Create(&prescreening).Error; err != nil {
 			return err
