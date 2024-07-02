@@ -998,9 +998,10 @@ func (c *LogOrchestrator) TableName() string {
 }
 
 type TrxJourney struct {
-	ProspectID string    `gorm:"type:varchar(20);column:ProspectID"`
-	Request    string    `gorm:"type:varchar(8000);column:request"`
-	CreatedAt  time.Time `gorm:"column:created_at"`
+	ProspectID string      `gorm:"type:varchar(20);column:ProspectID"`
+	Request    string      `gorm:"type:varchar(8000);column:request"`
+	Request2   interface{} `gorm:"type:varchar(8000);column:request2"`
+	CreatedAt  time.Time   `gorm:"column:created_at"`
 }
 
 func (c *TrxJourney) TableName() string {
