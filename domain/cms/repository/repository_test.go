@@ -2630,6 +2630,9 @@ func TestSavePrescreening(t *testing.T) {
 		mock.ExpectExec(`INSERT INTO "trx_details" (.*)`).
 			WithArgs(detail...).
 			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_akkk" ("ProspectID","ScsDate","ScsScore","ScsStatus","CustomerType","SpouseType","AgreementStatus","TotalAgreementAktif","MaxOVDAgreementAktif","LastMaxOVDAgreement","DSRFMF","DSRPBK","TotalDSR","EkycSource","EkycSimiliarity","EkycReason","NumberOfPaidInstallment","OSInstallmentDue","InstallmentAmountFMF","InstallmentAmountSpouseFMF","InstallmentAmountOther","InstallmentAmountOtherSpouse","InstallmentTopup","LatestInstallment","UrlFormAkkk","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxStatus.ProspectID, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, sqlmock.AnyArg()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_prescreening" ("ProspectID","decision","reason","created_at","created_by","decision_by") VALUES (?,?,?,?,?,?)`)).
 			WithArgs(trxPrescreening.ProspectID, trxPrescreening.Decision, trxPrescreening.Reason, sqlmock.AnyArg(), trxPrescreening.CreatedBy, trxPrescreening.DecisionBy).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -2653,6 +2656,9 @@ func TestSavePrescreening(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`INSERT INTO "trx_details" (.*)`).
 			WithArgs(detail...).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_akkk" ("ProspectID","ScsDate","ScsScore","ScsStatus","CustomerType","SpouseType","AgreementStatus","TotalAgreementAktif","MaxOVDAgreementAktif","LastMaxOVDAgreement","DSRFMF","DSRPBK","TotalDSR","EkycSource","EkycSimiliarity","EkycReason","NumberOfPaidInstallment","OSInstallmentDue","InstallmentAmountFMF","InstallmentAmountSpouseFMF","InstallmentAmountOther","InstallmentAmountOtherSpouse","InstallmentTopup","LatestInstallment","UrlFormAkkk","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxStatus.ProspectID, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_prescreening" ("ProspectID","decision","reason","created_at","created_by","decision_by") VALUES (?,?,?,?,?,?)`)).
 			WithArgs(trxPrescreening.ProspectID, trxPrescreening.Decision, trxPrescreening.Reason, sqlmock.AnyArg(), trxPrescreening.CreatedBy, trxPrescreening.DecisionBy).
