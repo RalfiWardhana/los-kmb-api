@@ -44,6 +44,7 @@ type Filtering struct {
 	PbkReportSpouse   interface{} `json:"pbk_report_spouse"`
 	TotalBakiDebet    interface{} `json:"total_baki_debet"`
 	Cluster           interface{} `json:"-"`
+	ClusterCMO        interface{} `json:"-"`
 }
 
 type PefindoIDX struct {
@@ -873,4 +874,55 @@ type SubmitRecalculateResponse struct {
 	Errors     interface{} `json:"errors"`
 	RequestID  string      `json:"request_id"`
 	ServerTime string      `json:"timestamp"`
+}
+
+type EmployeeCMOResponse struct {
+	EmployeeID         string `json:"employee_id"`
+	EmployeeName       string `json:"employee_name"`
+	EmployeeIDWithName string `json:"employee_id_with_name"`
+	JoinDate           string `json:"join_date"`
+	PositionGroupCode  string `json:"position_group_code"`
+	PositionGroupName  string `json:"position_group_name"`
+	CMOCategory        string `json:"cmo_category"`
+}
+
+type EmployeeCareerHistory struct {
+	EmployeeID        string `json:"employee_id"`
+	EmployeeName      string `json:"name"`
+	RealCareerDate    string `json:"real_career_date"`
+	RegistrationDate  string `json:"registration_date"`
+	RegistrationNo    string `json:"registration_no"`
+	PositionGroupCode string `json:"position_group_code"`
+	PositionGroupName string `json:"position_group_name"`
+	PositionCodeOld   string `json:"position_code_old"`
+	PositionNameOld   string `json:"position_name_old"`
+	PositionCodeNew   string `json:"position_code_new"`
+	PositionNameNew   string `json:"position_name_new"`
+}
+
+type GetEmployeeByID struct {
+	Error   interface{}             `json:"error"`
+	Message string                  `json:"message"`
+	Data    []EmployeeCareerHistory `json:"data"`
+}
+
+type FpdCMOResponse struct {
+	FpdExist    bool    `json:"fpd_exist"`
+	CmoFpd      float64 `json:"cmo_fpd"`
+	CmoAccSales int     `json:"cmo_acc_sales"`
+}
+
+type FpdData struct {
+	CmoID        string  `json:"cmo_id"`
+	BpkbNameType string  `json:"bpkb_name_type"`
+	Fpd          float64 `json:"fpd"`
+	AccSales     int     `json:"acc_sales"`
+}
+
+type GetFPDCmoByID struct {
+	Code     string      `json:"code"`
+	Message  string      `json:"message"`
+	Data     []FpdData   `json:"data"`
+	Errors   interface{} `json:"errors"`
+	Metadata interface{} `json:"metadata"`
 }

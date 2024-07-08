@@ -36,6 +36,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		trxFMFDupcheck    response.TrxFMF
 		trxDetailDupcheck []entity.TrxDetail
 		cbFound           bool
+		cmoCluster        string
 	)
 
 	// cek trx_master
@@ -191,11 +192,17 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		return
 	}
 
+	if clusterName, ok := filtering.CMOCluster.(string); ok {
+		cmoCluster = clusterName
+	} else {
+		cmoCluster = mappingCluster.Cluster
+	}
+
 	//  STEP 3 tenor 36
 	if reqMetrics.Apk.Tenor >= 36 {
 		var trxTenor response.UsecaseApi
 		if reqMetrics.Apk.Tenor == 36 {
-			trxTenor, err = u.usecase.RejectTenor36(mappingCluster.Cluster)
+			trxTenor, err = u.usecase.RejectTenor36(cmoCluster)
 			if err != nil {
 				return
 			}
@@ -217,7 +224,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 				SourceDecision: constant.SOURCE_DECISION_TENOR,
 				CreatedBy:      constant.SYSTEM_CREATED,
 				Reason:         trxTenor.Reason,
-				Info:           fmt.Sprintf("Cluster : %s", mappingCluster.Cluster),
+				Info:           fmt.Sprintf("Cluster : %s", cmoCluster),
 			})
 
 			resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, trxTenor.Reason)
@@ -237,7 +244,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			NextStep:       constant.SOURCE_DECISION_DUPCHECK,
 			CreatedBy:      constant.SYSTEM_CREATED,
 			Reason:         trxTenor.Reason,
-			Info:           fmt.Sprintf("Cluster : %s", mappingCluster.Cluster),
+			Info:           fmt.Sprintf("Cluster : %s", cmoCluster),
 		})
 	}
 
@@ -310,6 +317,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		CustomerSegment:       customerSegment,
 		Dealer:                reqMetrics.Apk.Dealer,
 		AdminFee:              reqMetrics.Apk.AdminFee,
+		CMOCluster:            cmoCluster,
 	}
 
 	if reqMetrics.CustomerSpouse != nil {

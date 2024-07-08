@@ -341,6 +341,7 @@ const (
 	REASON_REJECT_ELABORATE          = "REJECT - Elaborated Scheme"
 	REASON_REJECT_NTF_ELABORATE      = "REJECT - NTF Tidak Sesuai Threshold"
 	REASON_REJECT_CLUSTER_E_F        = "%s, Baki Debet > 3 Juta - 20 Juta & Tidak dapat dibiayai"
+	CLUSTER_B                        = "Cluster B"
 	CLUSTER_C                        = "Cluster C"
 	CLUSTER_E                        = "Cluster E"
 	CLUSTER_F                        = "Cluster F"
@@ -641,4 +642,8 @@ const (
 
 	// CREDIT APPROVAL
 	CODE_CBM = 3741
+
+	// CMO CLUSTER
+	CMO_LAMA = "OLD"
+	CMO_BARU = "NEW"
 )

@@ -130,6 +130,7 @@ type DupcheckApi struct {
 	Dealer                string             `json:"dealer"`
 	AdminFee              *float64           `json:"admin_fee" validate:"required,max=999999999999" example:"1500000"`
 	Cluster               string             `json:"-"`
+	CMOCluster            string             `json:"-"`
 }
 
 type SpouseDupcheck struct {
@@ -664,6 +665,7 @@ type Agent struct {
 type AgentNE struct {
 	CmoRecom  string `json:"cmo_recom" validate:"recom" example:"1"`
 	CmoName   string `json:"cmo_name" validate:"required" example:"SETO MULYA"`
+	CmoNik    string `json:"cmo_nik" validate:"required" example:"93510"`
 	RecomDate string `json:"recom_date" validate:"required" example:"2021-07-15"`
 }
 
@@ -702,6 +704,7 @@ type Filtering struct {
 	Gender     string           `json:"gender" validate:"required,gender" example:"M"`
 	MotherName string           `json:"surgate_mother_name" validate:"required,allow_name" example:"ENCRYPTED SURGATE MOTHER NAME"`
 	BPKBName   string           `json:"bpkb_name" validate:"required,bpkbname" example:"K"`
+	CMOID      string           `json:"cmo_id" validate:"required,max=20" example:"123456"`
 	Spouse     *FilteringSpouse `json:"spouse" validate:"omitempty"`
 }
 
@@ -947,4 +950,12 @@ type ReqUploadMappingCluster struct {
 type ReqListMappingClusterBranch struct {
 	BranchID   string `json:"branch_id" example:"400"`
 	BranchName string `json:"customer_status" example:"BEKASI"`
+}
+
+type ReqHrisCareerHistory struct {
+	Limit     string `json:"limit"`
+	Page      int    `json:"page"`
+	Column    string `json:"column"`
+	Ascending bool   `json:"ascending"`
+	Query     string `json:"query"`
 }

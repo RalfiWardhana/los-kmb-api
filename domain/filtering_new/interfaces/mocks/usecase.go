@@ -39,6 +39,34 @@ func (_m *Usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustome
 	return r0, r1
 }
 
+// CheckCmoNoFPD provides a mock function with given fields: prospectID, cmoID, cmoCategory, cmoJoinDate, defaultCluster, bpkbName
+func (_m *Usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory string, cmoJoinDate string, defaultCluster string, bpkbName string) (string, entity.TrxCmoNoFPD, error) {
+	ret := _m.Called(prospectID, cmoID, cmoCategory, cmoJoinDate, defaultCluster, bpkbName)
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func(string, string, string, string, string, string) string); ok {
+		r0 = rf(prospectID, cmoID, cmoCategory, cmoJoinDate, defaultCluster, bpkbName)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	var r1 entity.TrxCmoNoFPD
+	if rf, ok := ret.Get(1).(func(string, string, string, string, string, string) entity.TrxCmoNoFPD); ok {
+		r1 = rf(prospectID, cmoID, cmoCategory, cmoJoinDate, defaultCluster, bpkbName)
+	} else {
+		r1 = ret.Get(1).(entity.TrxCmoNoFPD)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(string, string, string, string, string, string) error); ok {
+		r2 = rf(prospectID, cmoID, cmoCategory, cmoJoinDate, defaultCluster, bpkbName)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // DupcheckIntegrator provides a mock function with given fields: ctx, prospectID, idNumber, legalName, birthDate, surgateName, accessToken
 func (_m *Usecase) DupcheckIntegrator(ctx context.Context, prospectID string, idNumber string, legalName string, birthDate string, surgateName string, accessToken string) (response.SpDupCekCustomerByID, error) {
 	ret := _m.Called(ctx, prospectID, idNumber, legalName, birthDate, surgateName, accessToken)
@@ -60,27 +88,27 @@ func (_m *Usecase) DupcheckIntegrator(ctx context.Context, prospectID string, id
 	return r0, r1
 }
 
-// FilteringPefindo provides a mock function with given fields: ctx, reqPefindo, customerStatus, accessToken
-func (_m *Usecase) FilteringPefindo(ctx context.Context, reqPefindo request.Pefindo, customerStatus string, accessToken string) (response.Filtering, response.PefindoResult, []entity.TrxDetailBiro, error) {
-	ret := _m.Called(ctx, reqPefindo, customerStatus, accessToken)
+// FilteringPefindo provides a mock function with given fields: ctx, reqPefindo, customerStatus, clusterCMO, accessToken
+func (_m *Usecase) FilteringPefindo(ctx context.Context, reqPefindo request.Pefindo, customerStatus string, clusterCMO string, accessToken string) (response.Filtering, response.PefindoResult, []entity.TrxDetailBiro, error) {
+	ret := _m.Called(ctx, reqPefindo, customerStatus, clusterCMO, accessToken)
 
 	var r0 response.Filtering
-	if rf, ok := ret.Get(0).(func(context.Context, request.Pefindo, string, string) response.Filtering); ok {
-		r0 = rf(ctx, reqPefindo, customerStatus, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, request.Pefindo, string, string, string) response.Filtering); ok {
+		r0 = rf(ctx, reqPefindo, customerStatus, clusterCMO, accessToken)
 	} else {
 		r0 = ret.Get(0).(response.Filtering)
 	}
 
 	var r1 response.PefindoResult
-	if rf, ok := ret.Get(1).(func(context.Context, request.Pefindo, string, string) response.PefindoResult); ok {
-		r1 = rf(ctx, reqPefindo, customerStatus, accessToken)
+	if rf, ok := ret.Get(1).(func(context.Context, request.Pefindo, string, string, string) response.PefindoResult); ok {
+		r1 = rf(ctx, reqPefindo, customerStatus, clusterCMO, accessToken)
 	} else {
 		r1 = ret.Get(1).(response.PefindoResult)
 	}
 
 	var r2 []entity.TrxDetailBiro
-	if rf, ok := ret.Get(2).(func(context.Context, request.Pefindo, string, string) []entity.TrxDetailBiro); ok {
-		r2 = rf(ctx, reqPefindo, customerStatus, accessToken)
+	if rf, ok := ret.Get(2).(func(context.Context, request.Pefindo, string, string, string) []entity.TrxDetailBiro); ok {
+		r2 = rf(ctx, reqPefindo, customerStatus, clusterCMO, accessToken)
 	} else {
 		if ret.Get(2) != nil {
 			r2 = ret.Get(2).([]entity.TrxDetailBiro)
@@ -88,8 +116,8 @@ func (_m *Usecase) FilteringPefindo(ctx context.Context, reqPefindo request.Pefi
 	}
 
 	var r3 error
-	if rf, ok := ret.Get(3).(func(context.Context, request.Pefindo, string, string) error); ok {
-		r3 = rf(ctx, reqPefindo, customerStatus, accessToken)
+	if rf, ok := ret.Get(3).(func(context.Context, request.Pefindo, string, string, string) error); ok {
+		r3 = rf(ctx, reqPefindo, customerStatus, clusterCMO, accessToken)
 	} else {
 		r3 = ret.Error(3)
 	}
@@ -118,6 +146,48 @@ func (_m *Usecase) FilteringProspectID(prospectID string) (request.OrderIDCheck,
 	return r0, r1
 }
 
+// GetEmployeeData provides a mock function with given fields: ctx, employeeID, accessToken, hrisAccessToken
+func (_m *Usecase) GetEmployeeData(ctx context.Context, employeeID string, accessToken string, hrisAccessToken string) (response.EmployeeCMOResponse, error) {
+	ret := _m.Called(ctx, employeeID, accessToken, hrisAccessToken)
+
+	var r0 response.EmployeeCMOResponse
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) response.EmployeeCMOResponse); ok {
+		r0 = rf(ctx, employeeID, accessToken, hrisAccessToken)
+	} else {
+		r0 = ret.Get(0).(response.EmployeeCMOResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, employeeID, accessToken, hrisAccessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetFpdCMO provides a mock function with given fields: ctx, CmoID, BPKBNameType, accessToken
+func (_m *Usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType string, accessToken string) (response.FpdCMOResponse, error) {
+	ret := _m.Called(ctx, CmoID, BPKBNameType, accessToken)
+
+	var r0 response.FpdCMOResponse
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) response.FpdCMOResponse); ok {
+		r0 = rf(ctx, CmoID, BPKBNameType, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.FpdCMOResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, CmoID, BPKBNameType, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetResultFiltering provides a mock function with given fields: prospectID
 func (_m *Usecase) GetResultFiltering(prospectID string) (response.Filtering, error) {
 	ret := _m.Called(prospectID)
@@ -139,13 +209,13 @@ func (_m *Usecase) GetResultFiltering(prospectID string) (response.Filtering, er
 	return r0, r1
 }
 
-// SaveFiltering provides a mock function with given fields: transaction, trxDetailBiro
-func (_m *Usecase) SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro) error {
-	ret := _m.Called(transaction, trxDetailBiro)
+// SaveFiltering provides a mock function with given fields: transaction, trxDetailBiro, transactionCMOnoFPD
+func (_m *Usecase) SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, transactionCMOnoFPD entity.TrxCmoNoFPD) error {
+	ret := _m.Called(transaction, trxDetailBiro, transactionCMOnoFPD)
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(entity.FilteringKMB, []entity.TrxDetailBiro) error); ok {
-		r0 = rf(transaction, trxDetailBiro)
+	if rf, ok := ret.Get(0).(func(entity.FilteringKMB, []entity.TrxDetailBiro, entity.TrxCmoNoFPD) error); ok {
+		r0 = rf(transaction, trxDetailBiro, transactionCMOnoFPD)
 	} else {
 		r0 = ret.Error(0)
 	}

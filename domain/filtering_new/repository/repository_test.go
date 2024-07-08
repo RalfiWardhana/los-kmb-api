@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/jinzhu/gorm"
@@ -57,7 +58,6 @@ func TestDummyDataPbk(t *testing.T) {
 	if err != nil {
 		t.Errorf("error '%s' was not expected, but got: ", err)
 	}
-
 }
 
 func TestSaveFiltering(t *testing.T) {
@@ -83,20 +83,33 @@ func TestSaveFiltering(t *testing.T) {
 		},
 	}
 	detailBiro := structToSlice(trxDetailBiro)
+	trxCmoNoFPD := entity.TrxCmoNoFPD{
+		ProspectID:              "TST001",
+		CMOID:                   "105394",
+		CmoCategory:             "OLD",
+		CmoJoinDate:             "2020-06-12",
+		DefaultCluster:          "Cluster C",
+		DefaultClusterStartDate: "2024-05-14",
+		DefaultClusterEndDate:   "2024-07-31",
+		CreatedAt:               time.Time{},
+	}
+	cmoNoFPD := structToSlice(trxCmoNoFPD)
 	mock.ExpectBegin()
 	mock.ExpectExec(`INSERT INTO "trx_filtering" (.*)`).
 		WithArgs(filtering...).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(`INSERT INTO "trx_cmo_no_fpd" (.*)`).
+		WithArgs(cmoNoFPD...).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectExec(`INSERT INTO "trx_detail_biro" (.*)`).
 		WithArgs(detailBiro...).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 	mock.ExpectCommit()
 
-	err := newDB.SaveFiltering(trxFiltering, trxDetailBiro)
+	err := newDB.SaveFiltering(trxFiltering, trxDetailBiro, trxCmoNoFPD)
 	if err != nil {
 		t.Errorf("error '%s' was not expected, but got: ", err)
 	}
-
 }
 
 func TestGetFilteringByID(t *testing.T) {
@@ -118,7 +131,6 @@ func TestGetFilteringByID(t *testing.T) {
 	if err != nil {
 		t.Errorf("error '%s' was not expected, but got: ", err)
 	}
-
 }
 
 func TestMasterMappingCluster(t *testing.T) {
@@ -150,7 +162,6 @@ func TestMasterMappingCluster(t *testing.T) {
 	if err != nil {
 		t.Errorf("error '%s' was not expected, but got: ", err)
 	}
-
 }
 
 func TestSaveLogOrchestrator(t *testing.T) {
@@ -186,5 +197,113 @@ func TestSaveLogOrchestrator(t *testing.T) {
 	if err != nil {
 		t.Errorf("error '%s' was not expected, but got: ", err)
 	}
+}
 
+func TestMasterMappingFpdCluster(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	newDB := NewRepository(gormDB, gormDB, gormDB)
+	FpdValue := 5.0
+
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT cluster FROM m_mapping_fpd_cluster WITH (nolock) 
+                            WHERE (fpd_start_hte <= ? OR fpd_start_hte IS NULL) 
+                            AND (fpd_end_lt > ? OR fpd_end_lt IS NULL)`)).
+		WithArgs(FpdValue, FpdValue).
+		WillReturnRows(sqlmock.NewRows([]string{"cluster"}).
+			AddRow("Cluster A"))
+	mock.ExpectCommit()
+
+	_, err := newDB.MasterMappingFpdCluster(FpdValue)
+	if err != nil {
+		t.Errorf("error '%s' was not expected, but got: ", err)
+	}
+}
+
+func TestCheckCMONoFPD(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	newDB := NewRepository(gormDB, gormDB, gormDB)
+	cmoID := "CMO001"
+	bpkbName := "NAMA SAMA"
+
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 prospect_id, cmo_id, cmo_category, 
+                            FORMAT(CONVERT(datetime, cmo_join_date, 127), 'yyyy-MM-dd') AS cmo_join_date, 
+                            default_cluster, 
+                            FORMAT(CONVERT(datetime, default_cluster_start_date, 127), 'yyyy-MM-dd') AS default_cluster_start_date, 
+                            FORMAT(CONVERT(datetime, default_cluster_end_date, 127), 'yyyy-MM-dd') AS default_cluster_end_date
+                          FROM dbo.trx_cmo_no_fpd WITH (nolock) 
+                          WHERE cmo_id = ? AND bpkb_name = ?
+                          ORDER BY created_at DESC`)).
+		WithArgs(cmoID, bpkbName).
+		WillReturnRows(sqlmock.NewRows([]string{"prospect_id", "cmo_id", "cmo_category", "cmo_join_date", "default_cluster", "default_cluster_start_date", "default_cluster_end_date"}).
+			AddRow("TST001", cmoID, "CAT1", "2023-01-01", "Cluster1", "2023-01-01", "2023-03-31"))
+	mock.ExpectCommit()
+
+	data, err := newDB.CheckCMONoFPD(cmoID, bpkbName)
+	if err != nil {
+		t.Errorf("unexpected error: %s", err)
+	}
+
+	expected := entity.TrxCmoNoFPD{
+		ProspectID:              "TST001",
+		CMOID:                   cmoID,
+		CmoCategory:             "CAT1",
+		CmoJoinDate:             "2023-01-01",
+		DefaultCluster:          "Cluster1",
+		DefaultClusterStartDate: "2023-01-01",
+		DefaultClusterEndDate:   "2023-03-31",
+	}
+
+	if data != expected {
+		t.Errorf("expected %v, got %v", expected, data)
+	}
+}
+
+func TestGetResultFiltering(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB)
+
+	prospectID := "TST001"
+
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT tf.prospect_id, tf.decision, tf.reason, tf.customer_status, tf.customer_status_kmb, tf.customer_segment, tf.is_blacklist, tf.next_process,
+										tf.total_baki_debet_non_collateral_biro, tdb.url_pdf_report, tdb.subject FROM trx_filtering tf 
+										LEFT JOIN trx_detail_biro tdb ON tf.prospect_id = tdb.prospect_id 
+										WHERE tf.prospect_id = ?`)).
+		WithArgs(prospectID).
+		WillReturnRows(sqlmock.NewRows([]string{"prospect_id", "decision", "reason", "customer_status", "customer_segment", "is_blacklist", "next_process", "total_baki_debet_non_collateral_biro", "url_pdf_report", "subject"}).
+			AddRow("TST001", "APPROVE", "Good Credit", "Active", "Premium", false, true, 1000000, "http://example.com/report.pdf", "Credit Report"))
+	mock.ExpectCommit()
+
+	_, err := repo.GetResultFiltering(prospectID)
+	if err != nil {
+		t.Errorf("error '%s' was not expected, but got: ", err)
+	}
 }

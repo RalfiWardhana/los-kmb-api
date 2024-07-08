@@ -17,20 +17,20 @@ type MultiUsecase struct {
 	mock.Mock
 }
 
-// Filtering provides a mock function with given fields: ctx, reqFiltering, married, accessToken
-func (_m *MultiUsecase) Filtering(ctx context.Context, reqFiltering request.Filtering, married bool, accessToken string) (response.Filtering, error) {
-	ret := _m.Called(ctx, reqFiltering, married, accessToken)
+// Filtering provides a mock function with given fields: ctx, reqFiltering, married, accessToken, hrisAccessToken
+func (_m *MultiUsecase) Filtering(ctx context.Context, reqFiltering request.Filtering, married bool, accessToken string, hrisAccessToken string) (response.Filtering, error) {
+	ret := _m.Called(ctx, reqFiltering, married, accessToken, hrisAccessToken)
 
 	var r0 response.Filtering
-	if rf, ok := ret.Get(0).(func(context.Context, request.Filtering, bool, string) response.Filtering); ok {
-		r0 = rf(ctx, reqFiltering, married, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, request.Filtering, bool, string, string) response.Filtering); ok {
+		r0 = rf(ctx, reqFiltering, married, accessToken, hrisAccessToken)
 	} else {
 		r0 = ret.Get(0).(response.Filtering)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(context.Context, request.Filtering, bool, string) error); ok {
-		r1 = rf(ctx, reqFiltering, married, accessToken)
+	if rf, ok := ret.Get(1).(func(context.Context, request.Filtering, bool, string, string) error); ok {
+		r1 = rf(ctx, reqFiltering, married, accessToken, hrisAccessToken)
 	} else {
 		r1 = ret.Error(1)
 	}

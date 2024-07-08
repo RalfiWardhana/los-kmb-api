@@ -53,7 +53,7 @@ func (r repoHandler) DummyDataPbk(noktp string) (data entity.DummyPBK, err error
 	return
 }
 
-func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro) (err error) {
+func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, dataCMOnoFPD entity.TrxCmoNoFPD) (err error) {
 
 	var x sql.TxOptions
 
@@ -67,6 +67,12 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 
 	if err = db.Create(&data).Error; err != nil {
 		return
+	}
+
+	if dataCMOnoFPD.CMOID != "" {
+		if err = db.Create(&dataCMOnoFPD).Error; err != nil {
+			return
+		}
 	}
 
 	if len(trxDetailBiro) > 0 {
@@ -218,5 +224,56 @@ func (r repoHandler) GetResultFiltering(prospectID string) (data []entity.Result
 		return
 	}
 
+	return
+}
+
+func (r repoHandler) MasterMappingFpdCluster(FpdValue float64) (data entity.MasterMappingFpdCluster, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = db.Raw(`SELECT cluster FROM m_mapping_fpd_cluster WITH (nolock) 
+							WHERE (fpd_start_hte <= ? OR fpd_start_hte IS NULL) 
+							AND (fpd_end_lt > ? OR fpd_end_lt IS NULL)`, FpdValue, FpdValue).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) CheckCMONoFPD(cmoID string, bpkbName string) (data entity.TrxCmoNoFPD, err error) {
+
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = db.Raw(`SELECT TOP 1 prospect_id, cmo_id, cmo_category, 
+							FORMAT(CONVERT(datetime, cmo_join_date, 127), 'yyyy-MM-dd') AS cmo_join_date, 
+							default_cluster, 
+							FORMAT(CONVERT(datetime, default_cluster_start_date, 127), 'yyyy-MM-dd') AS default_cluster_start_date, 
+							FORMAT(CONVERT(datetime, default_cluster_end_date, 127), 'yyyy-MM-dd') AS default_cluster_end_date
+						  FROM dbo.trx_cmo_no_fpd WITH (nolock) 
+						  WHERE cmo_id = ? AND bpkb_name = ?
+						  ORDER BY created_at DESC`, cmoID, bpkbName).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
 	return
 }

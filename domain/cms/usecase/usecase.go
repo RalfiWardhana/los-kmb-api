@@ -158,6 +158,7 @@ func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data inte
 		BirthDate:  req.CustomerPersonal.BirthDate,
 		Gender:     req.CustomerPersonal.Gender,
 		BPKBName:   req.Item.BPKBName,
+		CMOID:      req.Agent.CmoNik,
 	}
 
 	filtering.IDNumber, _ = utils.PlatformEncryptText(req.CustomerPersonal.IDNumber)
