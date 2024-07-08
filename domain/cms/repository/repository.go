@@ -10,6 +10,7 @@ import (
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
+	"los-kmb-api/shared/config"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
@@ -831,6 +832,16 @@ func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detai
 		// insert trx_details
 		if err = tx.Create(&detail).Error; err != nil {
 			return err
+		}
+
+		// if stop insert trx_akkk
+		if status.Activity == constant.ACTIVITY_STOP {
+			trxAkkk := entity.TrxAkkk{
+				ProspectID: status.ProspectID,
+			}
+			if err = tx.Create(&trxAkkk).Error; err != nil {
+				return err
+			}
 		}
 
 		// insert trx_prescreening
@@ -2023,13 +2034,13 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 	search := req.Search
 
 	if search != "" {
-		query = fmt.Sprintf("WHERE (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+		query = fmt.Sprintf("WHERE (tt.ProspectID = '%s' OR tt.IDNumber = '%s' OR tt.LegalName = '%s')", search, search, search)
 	}
 
 	if filter == "" {
 		filter = query
 	} else {
-		filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+		filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID = '%s' OR tt.IDNumber = '%s' OR tt.LegalName = '%s')", search, search, search)
 	}
 
 	if pagination != nil {
@@ -2221,7 +2232,8 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		cae.City AS EmergencyCity,
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
-		tce.IndustryTypeID
+		tce.IndustryTypeID,
+		tak.UrlFormAkkk
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -2233,6 +2245,7 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -2439,6 +2452,16 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 		var draft entity.TrxDraftCaDecision
 		if err := tx.Where("ProspectID = ?", trxCaDecision.ProspectID).Delete(&draft).Error; err != nil {
 			return err
+		}
+
+		// if stop insert trx_akkk
+		if trxStatus.Activity == constant.ACTIVITY_STOP {
+			trxAkkk := entity.TrxAkkk{
+				ProspectID: trxStatus.ProspectID,
+			}
+			if err = tx.Create(&trxAkkk).Error; err != nil {
+				return err
+			}
 		}
 
 		return nil
@@ -2844,7 +2867,8 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
-		tdb.BiroSpouseResult
+		tdb.BiroSpouseResult,
+		tak.UrlFormAkkk
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -3398,6 +3422,40 @@ func (r repoHandler) GetMappingClusterBranch(req request.ReqListMappingClusterBr
 		return
 	}
 
+	return
+}
+
+func (r repoHandler) SaveWorker(trxworker entity.TrxWorker) (err error) {
+	err = r.losDB.Create(&trxworker).Error
+	return
+}
+
+func (r repoHandler) SaveUrlFormAKKK(prospectID, urlFormAKKK string) (err error) {
+
+	var (
+		data entity.TrxAkkk
+		x    sql.TxOptions
+	)
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	result := db.Model(&data).Where("ProspectID = ?", prospectID).Updates(entity.TrxAkkk{
+		UrlFormAkkk: urlFormAKKK,
+	})
+
+	if err = result.Error; err != nil {
+		return
+	}
+
+	if result.RowsAffected == 0 {
+		err = errors.New("RowsAffected 0")
+	}
 	return
 }
 

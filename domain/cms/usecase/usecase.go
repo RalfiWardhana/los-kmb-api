@@ -1230,6 +1230,7 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 				ActionReturn:  inq.ActionReturn,
 				ActionCancel:  inq.ActionCancel,
 				ActionFormAkk: inq.ActionFormAkk,
+				UrlFormAkkk:   inq.UrlFormAkkk,
 			},
 			HistoryProcess: historyData,
 			General: entity.DataGeneral{
@@ -1738,6 +1739,7 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 			CA: entity.DataApproval{
 				ShowAction:         inq.ShowAction,
 				ActionFormAkk:      inq.ActionFormAkk,
+				UrlFormAkkk:        inq.UrlFormAkkk,
 				IsLastApproval:     inq.IsLastApproval,
 				HasReturn:          inq.HasReturn,
 				StatusDecision:     statusDecision,
