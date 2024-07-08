@@ -809,6 +809,11 @@ type BiroAkkk struct {
 	PefindoSpouseAgunan              interface{} `json:"pefindo_spouse_agunan"`
 }
 
+type ResponseGenerateFormAKKK struct {
+	MediaUrl string `json:"media_url"`
+	Path     string `json:"path"`
+}
+
 type InquiryRow struct {
 	Inquiry        interface{} `json:"inquiry"`
 	RecordFiltered int         `json:"recordsFiltered"`
