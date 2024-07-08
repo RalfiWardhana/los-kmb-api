@@ -110,7 +110,11 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 	if strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string)) {
 		cluster = constant.CLUSTER_PRIME_PRIORITY
 	} else {
-		cluster = filteringKMB.CMOCluster.(string)
+		if filteringKMB.CMOCluster == nil {
+			cluster = filteringKMB.Cluster.(string)
+		} else {
+			cluster = filteringKMB.CMOCluster.(string)
+		}
 	}
 
 	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, cluster)
