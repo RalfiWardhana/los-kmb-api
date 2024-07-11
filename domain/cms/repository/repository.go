@@ -2459,9 +2459,7 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 			trxAkkk := entity.TrxAkkk{
 				ProspectID: trxStatus.ProspectID,
 			}
-			if err = tx.Create(&trxAkkk).Error; err != nil {
-				return err
-			}
+			tx.Create(&trxAkkk)
 		}
 
 		return nil
