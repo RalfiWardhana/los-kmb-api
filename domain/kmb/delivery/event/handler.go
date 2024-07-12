@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	cmsInterfaces "los-kmb-api/domain/cms/interfaces"
 	"los-kmb-api/domain/kmb/interfaces"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/entity"
@@ -17,6 +18,7 @@ import (
 	"los-kmb-api/shared/utils"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/KB-FMF/platform-library/event"
 	jsoniter "github.com/json-iterator/go"
@@ -29,9 +31,10 @@ type handlers struct {
 	validator  *common.Validator
 	producer   platformevent.PlatformEventInterface
 	Json       common.JSON
+	cmsUsecase cmsInterfaces.Usecase
 }
 
-func NewServiceKMB(app *platformevent.ConsumerRouter, repository interfaces.Repository, usecase interfaces.Usecase, metrics interfaces.Metrics, validator *common.Validator, producer platformevent.PlatformEventInterface, json common.JSON) {
+func NewServiceKMB(app *platformevent.ConsumerRouter, repository interfaces.Repository, usecase interfaces.Usecase, metrics interfaces.Metrics, validator *common.Validator, producer platformevent.PlatformEventInterface, json common.JSON, cmsUsecase cmsInterfaces.Usecase) {
 	handler := handlers{
 		metrics:    metrics,
 		usecase:    usecase,
@@ -39,6 +42,7 @@ func NewServiceKMB(app *platformevent.ConsumerRouter, repository interfaces.Repo
 		validator:  validator,
 		producer:   producer,
 		Json:       json,
+		cmsUsecase: cmsUsecase,
 	}
 	app.Handle(constant.KEY_PREFIX_SUBMIT_TO_LOS, handler.KMBIndex)
 	app.Handle(constant.KEY_PREFIX_AFTER_PRESCREENING, handler.KMBAfterPrescreening)
@@ -350,6 +354,16 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 
 		// callback
 		if result.Decision == constant.DECISION_APPROVE || result.Decision == constant.DECISION_REJECT || result.Decision == constant.DECISION_CANCEL {
+			if result.Decision == constant.DECISION_REJECT || result.Decision == constant.DECISION_CANCEL {
+				// generate form akkk
+				reqGenAkkk := request.RequestGenerateFormAKKK{
+					ProspectID: reqEncrypted.Transaction.ProspectID,
+					LOB:        strings.ToLower(constant.LOB_NEW_KMB),
+					Source:     constant.SYSTEM,
+				}
+				h.cmsUsecase.GenerateFormAKKK(ctx, reqGenAkkk, middlewares.UserInfoData.AccessToken)
+			}
+
 			h.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, reqEncrypted.Transaction.ProspectID, utils.StructToMap(resp), 0)
 		}
 	}
