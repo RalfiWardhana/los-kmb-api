@@ -648,5 +648,6 @@ const (
 	CMO_BARU = "NEW"
 
 	// Max Months Difference for Expired Contract
-	EXPIRED_CONTRACT_LIMIT = 6
+	EXPIRED_CONTRACT_LIMIT              = 6
+	EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS = "Expired Contract > 6 bln | "
 )

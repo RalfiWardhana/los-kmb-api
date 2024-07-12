@@ -528,6 +528,8 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 		trxFMF                                           response.TrxFMF
 		filtering                                        entity.FilteringKMB
 		errResult                                        error
+		config                                           entity.AppConfig
+		errGetConfig                                     error
 	}{
 		{
 			name:                "TotalDsrFmfPbk reject",
@@ -653,7 +655,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
 				Code:           constant.CODE_TOTAL_DSRLTE35,
-				Reason:         "RO PRIME - DSR <= Threshold",
+				Reason:         constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + "RO PRIME - DSR <= Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 			},
 			trxFMF: response.TrxFMF{
@@ -664,6 +666,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
 			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 1000000, "contract_status": "", "outstanding_principal": 0, 
 			"rrd_date": "" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
 		},
 		{
 			name:                "TotalDsrFmfPbk CR perbaikan flow RO PrimePriority RrdDate NULL",
@@ -1032,6 +1038,8 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 
 			httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("LASTEST_PAID_INSTALLMENT_URL"), httpmock.NewStringResponder(tc.codeLatestInstallment, tc.bodyLatestInstallment))
 			resp, _ := rst.R().Get(os.Getenv("LASTEST_PAID_INSTALLMENT_URL"))
+
+			mockRepository.On("GetConfig", "expired_contract", "KMB-OFF", "expired_contract_check").Return(tc.config, tc.errGetConfig)
 
 			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.SpDupcheckMap.CustomerID.(string)+"/2", mock.Anything, mock.Anything, constant.METHOD_GET, false, 0, 30, tc.prospectID, tc.accessToken).Return(resp, tc.errLatestInstallment).Once()
 

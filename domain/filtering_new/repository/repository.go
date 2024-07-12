@@ -277,3 +277,11 @@ func (r repoHandler) CheckCMONoFPD(cmoID string, bpkbName string) (data entity.T
 	}
 	return
 }
+
+func (r *repoHandler) GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig, err error) {
+	if err := r.KpLos.Raw(fmt.Sprintf("SELECT [value] FROM app_config WITH (nolock) WHERE group_name = '%s' AND lob = '%s' AND [key]= '%s' AND is_active = 1", groupName, lob, key)).Scan(&appConfig).Error; err != nil {
+		return appConfig, err
+	}
+
+	return appConfig, err
+}

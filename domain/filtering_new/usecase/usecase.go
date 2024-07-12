@@ -71,6 +71,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		entityTransactionCMOnoFPD entity.TrxCmoNoFPD
 		respRrdDate               string
 		monthsDiff                int
+		expiredContractConfig     entity.AppConfig
 	)
 
 	requestID := ctx.Value(echo.HeaderXRequestID).(string)
@@ -250,11 +251,21 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 					return
 				}
 
-				if !(monthsDiff <= constant.EXPIRED_CONTRACT_LIMIT) {
+				// Get config expired_contract
+				expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+				if err != nil {
+					err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
+					return
+				}
+
+				var configValueExpContract response.ExpiredContractConfig
+				json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+
+				if configValueExpContract.Data.ExpiredContractCheckEnabled && !(monthsDiff <= configValueExpContract.Data.ExpiredContractMaxMonths) {
 					// Jalur mirip seperti customer segment "REGULAR"
 					respFiltering.Code = respFilteringPefindo.Code
 					respFiltering.Decision = respFilteringPefindo.Decision
-					respFiltering.Reason = respFilteringPefindo.Reason
+					respFiltering.Reason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + respFilteringPefindo.Reason
 					respFiltering.NextProcess = respFilteringPefindo.NextProcess
 				}
 			} else {

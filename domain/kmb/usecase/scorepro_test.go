@@ -63,6 +63,8 @@ func TestScorepro(t *testing.T) {
 		err                error
 		result             response.ScorePro
 		errResult          error
+		config             entity.AppConfig
+		errGetConfig       error
 	}{
 		{
 			name: "scorepro jabo",
@@ -540,6 +542,10 @@ func TestScorepro(t *testing.T) {
 			},
 			codeScoreproIDX: 200,
 			bodyScoreproIDX: `{"messages":"OK","data":{"prospect_id":"EFMTESTAKKK0161109","score":800,"result":"PASS","score_result":"HIGH","status":"ASSCB-HIGH","phone_number":"085716728933","segmen":"12","is_tsi":false,"score_band":"","score_bin":""},"errors":null,"server_time":"2023-10-30T14:26:17+07:00"}`,
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
 			result: response.ScorePro{
 				Result: constant.DECISION_PASS,
 				Code:   constant.CODE_SCOREPRO_GTEMIN_THRESHOLD,
@@ -1043,6 +1049,7 @@ func TestScorepro(t *testing.T) {
 			mockRepository.On("GetActiveLoanTypeLast6M", tc.spDupcheck.CustomerID.(string)).Return(entity.GetActiveLoanTypeLast6M{}, nil)
 			mockRepository.On("GetActiveLoanTypeLast24M", tc.spDupcheck.CustomerID.(string)).Return(entity.GetActiveLoanTypeLast24M{}, nil)
 			mockRepository.On("GetMoblast", tc.spDupcheck.CustomerID.(string)).Return(entity.GetMoblast{}, nil)
+			mockRepository.On("GetConfig", "expired_contract", "KMB-OFF", "expired_contract_check").Return(tc.config, tc.errGetConfig)
 
 			rst := resty.New()
 			httpmock.ActivateNonDefault(rst.GetClient())

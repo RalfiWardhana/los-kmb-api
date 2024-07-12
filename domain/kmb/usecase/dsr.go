@@ -239,6 +239,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 		CreatedAt               time.Time
 		MonthsOfExpiredContract int
 		OverrideFlowLikeRegular bool
+		expiredContractConfig   entity.AppConfig
 	)
 
 	dsrPBK := totalInstallmentPBK / totalIncome * 100
@@ -279,10 +280,24 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 		CreatedAt, _ = time.Parse(time.RFC3339, CreatedAtString)
 		MonthsOfExpiredContract, _ = utils.PreciseMonthsDifference(RrdDate, CreatedAt)
 
-		if !(MonthsOfExpiredContract <= constant.EXPIRED_CONTRACT_LIMIT) {
+		// Get config expired_contract
+		expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
+			return
+		}
+
+		var configValueExpContract response.ExpiredContractConfig
+		json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+
+		if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
 			// Jalur mirip seperti customer segment "REGULAR"
 			OverrideFlowLikeRegular = true
 		}
+	}
+
+	if OverrideFlowLikeRegular && SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO && customerSegment == constant.RO_AO_PRIME {
+		reasonCustomerStatus = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + reasonCustomerStatus
 	}
 
 	if !OverrideFlowLikeRegular {

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"los-kmb-api/domain/elaborate_ltv/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/shared/config"
@@ -21,12 +22,14 @@ var (
 )
 
 type repoHandler struct {
+	KpLos     *gorm.DB
 	KpLosLogs *gorm.DB
 	NewKmb    *gorm.DB
 }
 
-func NewRepository(KpLosLogs, NewKmb *gorm.DB) interfaces.Repository {
+func NewRepository(kpLos, KpLosLogs, NewKmb *gorm.DB) interfaces.Repository {
 	return &repoHandler{
+		KpLos:     kpLos,
 		KpLosLogs: KpLosLogs,
 		NewKmb:    NewKmb,
 	}
@@ -140,4 +143,12 @@ func (r repoHandler) SaveLogOrchestrator(header, request, response interface{}, 
 		return
 	}
 	return
+}
+
+func (r *repoHandler) GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig, err error) {
+	if err := r.KpLos.Raw(fmt.Sprintf("SELECT [value] FROM app_config WITH (nolock) WHERE group_name = '%s' AND lob = '%s' AND [key]= '%s' AND is_active = 1", groupName, lob, key)).Scan(&appConfig).Error; err != nil {
+		return appConfig, err
+	}
+
+	return appConfig, err
 }

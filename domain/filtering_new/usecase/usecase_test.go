@@ -312,6 +312,8 @@ func TestFiltering(t *testing.T) {
 		rrdDate_LatestPaidInstallment    string
 		monthsDiff_LatestPaidInstallment int
 		err_LatestPaidInstallment        error
+		config                           entity.AppConfig
+		errGetConfig                     error
 	}{
 		{
 			name: "TEST_ERROR_DupcheckIntegrator",
@@ -525,6 +527,10 @@ func TestFiltering(t *testing.T) {
 				Reason:            "RO PRIME",
 				ClusterCMO:        "Cluster E",
 			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
 			rrdDate_LatestPaidInstallment:    time.Now().AddDate(0, -3, 0).Format("2006-01-02"),
 			monthsDiff_LatestPaidInstallment: 3,
 			err_LatestPaidInstallment:        nil,
@@ -602,7 +608,8 @@ func TestFiltering(t *testing.T) {
 				ProspectID:      "SAL02400020230727001",
 				Decision:        constant.DECISION_PASS,
 				CustomerStatus:  constant.STATUS_KONSUMEN_RO,
-				CustomerSegment: constant.RO_AO_REGULAR,
+				CustomerSegment: constant.RO_AO_PRIME,
+				Reason:          constant.STATUS_KONSUMEN_RO + constant.RO_AO_PRIME,
 				NextProcess:     true,
 				Code:            "123",
 			},
@@ -619,8 +626,12 @@ func TestFiltering(t *testing.T) {
 				CustomerSegment:   constant.RO_AO_PRIME,
 				NextProcess:       true,
 				Code:              "123",
-				Reason:            "",
+				Reason:            constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + constant.STATUS_KONSUMEN_RO + constant.RO_AO_PRIME,
 				ClusterCMO:        "Cluster E",
+			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
 			},
 			rrdDate_LatestPaidInstallment:    time.Now().AddDate(0, -7, 0).Format("2006-01-02"),
 			monthsDiff_LatestPaidInstallment: 7,
@@ -749,6 +760,8 @@ func TestFiltering(t *testing.T) {
 			if !ok {
 				customerID = ""
 			}
+
+			mockRepository.On("GetConfig", "expired_contract", "KMB-OFF", "expired_contract_check").Return(tc.config, tc.errGetConfig)
 
 			mockUsecase.On("CheckLatestPaidInstallment", ctx, tc.req.ProspectID, customerID, accessToken).Return(tc.rrdDate_LatestPaidInstallment, tc.monthsDiff_LatestPaidInstallment, tc.err_LatestPaidInstallment).Once()
 

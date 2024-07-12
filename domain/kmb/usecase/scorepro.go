@@ -33,6 +33,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 		CreatedAt                     time.Time
 		MonthsOfExpiredContract       int
 		OverrideFlowLikeRegular       bool
+		expiredContractConfig         entity.AppConfig
 	)
 
 	// DEFAULT
@@ -308,7 +309,17 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 			CreatedAt, _ = time.Parse(time.RFC3339, CreatedAtString)
 			MonthsOfExpiredContract, _ = utils.PreciseMonthsDifference(RrdDate, CreatedAt)
 
-			if !(MonthsOfExpiredContract <= constant.EXPIRED_CONTRACT_LIMIT) {
+			// Get config expired_contract
+			expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
+				return
+			}
+
+			var configValueExpContract response.ExpiredContractConfig
+			json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+
+			if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
 				// Jalur mirip seperti customer segment "REGULAR"
 				OverrideFlowLikeRegular = true
 			}

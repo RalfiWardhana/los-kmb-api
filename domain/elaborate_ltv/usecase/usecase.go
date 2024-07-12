@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"los-kmb-api/domain/elaborate_ltv/interfaces"
 	"los-kmb-api/models/entity"
@@ -47,6 +48,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		CreatedAt               time.Time
 		MonthsOfExpiredContract int
 		OverrideFlowLikeRegular bool
+		expiredContractConfig   entity.AppConfig
 	)
 
 	filteringKMB, err = u.repository.GetFilteringResult(reqs.ProspectID)
@@ -97,7 +99,17 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 				return
 			}
 
-			if !(MonthsOfExpiredContract <= constant.EXPIRED_CONTRACT_LIMIT) {
+			// Get config expired_contract
+			expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
+				return
+			}
+
+			var configValueExpContract response.ExpiredContractConfig
+			json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+
+			if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
 				// Jalur mirip seperti customer segment "REGULAR"
 				OverrideFlowLikeRegular = true
 			}
@@ -212,6 +224,9 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 			data.MaxTenor = 0
 			data.AdjustTenor = false
 			data.Reason = constant.REASON_REJECT_ELABORATE
+			if OverrideFlowLikeRegular {
+				data.Reason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + constant.REASON_REJECT_ELABORATE
+			}
 		} else {
 			if m.TenorEnd >= data.MaxTenor && m.LTV > 0 {
 				if m.BPKBNameType == 1 && m.AgeVehicle != "" {

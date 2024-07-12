@@ -26,14 +26,16 @@ func TestPefindo(t *testing.T) {
 	sevenMonthsAgo := currentTime.AddDate(0, -7, 0).Format("2006-01-02T15:04:05Z")
 
 	testcases := []struct {
-		name       string
-		cbFound    bool
-		bpkbName   string
-		filtering  entity.FilteringKMB
-		spDupcheck response.SpDupcheckMap
-		req        request.Metrics
-		result     response.UsecaseApi
-		errResult  error
+		name         string
+		cbFound      bool
+		bpkbName     string
+		filtering    entity.FilteringKMB
+		spDupcheck   response.SpDupcheckMap
+		req          request.Metrics
+		result       response.UsecaseApi
+		errResult    error
+		config       entity.AppConfig
+		errGetConfig error
 	}{
 		{
 			name: "Pefindo prime",
@@ -79,9 +81,13 @@ func TestPefindo(t *testing.T) {
 				InstallmentTopup:                 0,
 				MaxOverdueDaysforActiveAgreement: 31,
 			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
 			result: response.UsecaseApi{
 				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
-				Reason:         fmt.Sprintf("%s %s - PBK Pass", constant.STATUS_KONSUMEN_RO, constant.RO_AO_PRIME),
+				Reason:         constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + fmt.Sprintf("%s %s - PBK Pass", constant.STATUS_KONSUMEN_RO, constant.RO_AO_PRIME),
 				Result:         constant.DECISION_PASS,
 				SourceDecision: constant.SOURCE_DECISION_BIRO,
 			},
@@ -276,6 +282,7 @@ func TestPefindo(t *testing.T) {
 			mockHttpClient := new(httpclient.MockHttpClient)
 
 			// mockRepository.On("GetElaborateLtv", tc.req.Transaction.ProspectID).Return(tc.trxElaborateLtv, tc.errTrxElaborateLtv)
+			mockRepository.On("GetConfig", "expired_contract", "KMB-OFF", "expired_contract_check").Return(tc.config, tc.errGetConfig)
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 

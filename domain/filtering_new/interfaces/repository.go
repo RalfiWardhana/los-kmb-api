@@ -11,4 +11,5 @@ type Repository interface {
 	GetResultFiltering(prospectID string) (data []entity.ResultFiltering, err error)
 	MasterMappingFpdCluster(FpdValue float64) (data entity.MasterMappingFpdCluster, err error)
 	CheckCMONoFPD(cmoID string, bpkbName string) (data entity.TrxCmoNoFPD, err error)
+	GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig, err error)
 }
