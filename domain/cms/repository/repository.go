@@ -14,6 +14,7 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -2033,14 +2034,21 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 
 	search := req.Search
 
+	qSearch := fmt.Sprintf("(tt.ProspectID = '%s' OR tt.IDNumber = '%s' OR tt.LegalName = '%s')", search, search, search)
+	var regexpPpid = regexp.MustCompile(`SAL-|NE-`)
+
+	if regexpPpid.MatchString(search) {
+		qSearch = fmt.Sprintf("(tt.ProspectID = '%s')", search)
+	}
+
 	if search != "" {
-		query = fmt.Sprintf("WHERE (tt.ProspectID = '%s' OR tt.IDNumber = '%s' OR tt.LegalName = '%s')", search, search, search)
+		query = fmt.Sprintf("WHERE %s", qSearch)
 	}
 
 	if filter == "" {
 		filter = query
 	} else {
-		filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID = '%s' OR tt.IDNumber = '%s' OR tt.LegalName = '%s')", search, search, search)
+		filter = filterBranch + fmt.Sprintf(" AND %s", qSearch)
 	}
 
 	if pagination != nil {
