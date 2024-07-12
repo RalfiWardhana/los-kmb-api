@@ -97,6 +97,7 @@ const (
 	NG_APPLICATION_TYPE              = "NG"
 	CODE_SPOUSE                      = "SP"
 	CU                               = "CU"
+	SYSTEM                           = "SYSTEM"
 
 	CMO_AGENT                  = "CMO"
 	CODE_CMO_RECOMMENDED       = "1410"

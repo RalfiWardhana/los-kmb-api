@@ -1048,11 +1048,21 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 func (r repoHandler) SaveTrxJourney(prospectID string, request interface{}) (err error) {
 
 	requestByte, _ := json.Marshal(request)
+	payload := string(utils.SafeEncoding(requestByte))
 
-	if err = r.newKmbDB.Model(&entity.TrxJourney{}).Create(&entity.TrxJourney{
+	trxJourney := entity.TrxJourney{
 		ProspectID: prospectID,
-		Request:    string(utils.SafeEncoding(requestByte)),
-	}).Error; err != nil {
+	}
+
+	asRunes := []rune(payload)
+	if len(asRunes) > 7900 {
+		trxJourney.Request = string(asRunes[:7900])
+		trxJourney.Request2 = string(asRunes[7900:])
+	} else {
+		trxJourney.Request = payload
+	}
+
+	if err = r.newKmbDB.Model(&entity.TrxJourney{}).Create(&trxJourney).Error; err != nil {
 		return
 	}
 	return
@@ -1060,7 +1070,11 @@ func (r repoHandler) SaveTrxJourney(prospectID string, request interface{}) (err
 
 func (r repoHandler) GetTrxJourney(prospectID string) (trxJourney entity.TrxJourney, err error) {
 
-	if err = r.newKmbDB.Raw(fmt.Sprintf("SELECT ProspectID, request from trx_journey with (nolock) where ProspectID = '%s'", prospectID)).Scan(&trxJourney).Error; err != nil {
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT ProspectID, 
+		CASE WHEN
+			request2 IS NOT NULL THEN request+request2
+			ELSE request
+		END AS request from trx_journey with (nolock) where ProspectID = '%s'`, prospectID)).Scan(&trxJourney).Error; err != nil {
 		return
 	}
 
