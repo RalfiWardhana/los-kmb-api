@@ -727,6 +727,34 @@ func (_m *Repository) SavePrescreening(prescreening entity.TrxPrescreening, deta
 	return r0
 }
 
+// SaveUrlFormAKKK provides a mock function with given fields: prospectID, urlFormAKKK
+func (_m *Repository) SaveUrlFormAKKK(prospectID string, urlFormAKKK string) error {
+	ret := _m.Called(prospectID, urlFormAKKK)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+		r0 = rf(prospectID, urlFormAKKK)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SaveWorker provides a mock function with given fields: trxworker
+func (_m *Repository) SaveWorker(trxworker entity.TrxWorker) error {
+	ret := _m.Called(trxworker)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(entity.TrxWorker) error); ok {
+		r0 = rf(trxworker)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // SubmitApproval provides a mock function with given fields: req, trxStatus, trxDetail, trxRecalculate, approval
 func (_m *Repository) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, trxRecalculate entity.TrxRecalculate, approval response.RespApprovalScheme) error {
 	ret := _m.Called(req, trxStatus, trxDetail, trxRecalculate, approval)

@@ -2630,6 +2630,9 @@ func TestSavePrescreening(t *testing.T) {
 		mock.ExpectExec(`INSERT INTO "trx_details" (.*)`).
 			WithArgs(detail...).
 			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_akkk" ("ProspectID","ScsDate","ScsScore","ScsStatus","CustomerType","SpouseType","AgreementStatus","TotalAgreementAktif","MaxOVDAgreementAktif","LastMaxOVDAgreement","DSRFMF","DSRPBK","TotalDSR","EkycSource","EkycSimiliarity","EkycReason","NumberOfPaidInstallment","OSInstallmentDue","InstallmentAmountFMF","InstallmentAmountSpouseFMF","InstallmentAmountOther","InstallmentAmountOtherSpouse","InstallmentTopup","LatestInstallment","UrlFormAkkk","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxStatus.ProspectID, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, sqlmock.AnyArg()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_prescreening" ("ProspectID","decision","reason","created_at","created_by","decision_by") VALUES (?,?,?,?,?,?)`)).
 			WithArgs(trxPrescreening.ProspectID, trxPrescreening.Decision, trxPrescreening.Reason, sqlmock.AnyArg(), trxPrescreening.CreatedBy, trxPrescreening.DecisionBy).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -2653,6 +2656,9 @@ func TestSavePrescreening(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(`INSERT INTO "trx_details" (.*)`).
 			WithArgs(detail...).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_akkk" ("ProspectID","ScsDate","ScsScore","ScsStatus","CustomerType","SpouseType","AgreementStatus","TotalAgreementAktif","MaxOVDAgreementAktif","LastMaxOVDAgreement","DSRFMF","DSRPBK","TotalDSR","EkycSource","EkycSimiliarity","EkycReason","NumberOfPaidInstallment","OSInstallmentDue","InstallmentAmountFMF","InstallmentAmountSpouseFMF","InstallmentAmountOther","InstallmentAmountOtherSpouse","InstallmentTopup","LatestInstallment","UrlFormAkkk","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxStatus.ProspectID, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_prescreening" ("ProspectID","decision","reason","created_at","created_by","decision_by") VALUES (?,?,?,?,?,?)`)).
 			WithArgs(trxPrescreening.ProspectID, trxPrescreening.Decision, trxPrescreening.Reason, sqlmock.AnyArg(), trxPrescreening.CreatedBy, trxPrescreening.DecisionBy).
@@ -6009,7 +6015,7 @@ func TestGetInquirySearch(t *testing.T) {
 			LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 			LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 			LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-			) AS tt WHERE (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
+			) AS tt WHERE (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid')`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -6152,7 +6158,8 @@ func TestGetInquirySearch(t *testing.T) {
 		cae.City AS EmergencyCity,
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
-		tce.IndustryTypeID
+		tce.IndustryTypeID,
+		tak.UrlFormAkkk
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -6164,6 +6171,7 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -6321,7 +6329,7 @@ func TestGetInquirySearch(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt WHERE (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	) AS tt WHERE (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
 				AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
@@ -6389,7 +6397,7 @@ func TestGetInquirySearch(t *testing.T) {
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-		) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
+		) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid')`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -6532,7 +6540,8 @@ func TestGetInquirySearch(t *testing.T) {
 		cae.City AS EmergencyCity,
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
-		tce.IndustryTypeID
+		tce.IndustryTypeID,
+		tak.UrlFormAkkk
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -6544,6 +6553,7 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -6701,7 +6711,7 @@ func TestGetInquirySearch(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
 				AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
@@ -6768,7 +6778,7 @@ func TestGetInquirySearch(t *testing.T) {
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-		) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%')`)).
+		) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid')`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -6911,7 +6921,8 @@ func TestGetInquirySearch(t *testing.T) {
 		cae.City AS EmergencyCity,
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
-		tce.IndustryTypeID
+		tce.IndustryTypeID,
+		tak.UrlFormAkkk
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -6923,6 +6934,7 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -7080,7 +7092,7 @@ func TestGetInquirySearch(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
 				AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
@@ -7137,7 +7149,7 @@ func TestGetInquirySearch(t *testing.T) {
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-		) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') `)).
+		) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid') `)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -7280,7 +7292,8 @@ func TestGetInquirySearch(t *testing.T) {
 		cae.City AS EmergencyCity,
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
-		tce.IndustryTypeID
+		tce.IndustryTypeID,
+		tak.UrlFormAkkk
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -7292,6 +7305,7 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -7449,7 +7463,7 @@ func TestGetInquirySearch(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID LIKE '%aprospectid%' OR tt.IDNumber LIKE '%aprospectid%' OR tt.LegalName LIKE '%aprospectid%') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
 				AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
@@ -8297,7 +8311,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
-		tdb.BiroSpouseResult
+		tdb.BiroSpouseResult,
+		tak.UrlFormAkkk
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -8737,7 +8752,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
-		tdb.BiroSpouseResult
+		tdb.BiroSpouseResult,
+		tak.UrlFormAkkk
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -9175,7 +9191,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
-		tdb.BiroSpouseResult
+		tdb.BiroSpouseResult,
+		tak.UrlFormAkkk
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -9624,7 +9641,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
-		tdb.BiroSpouseResult
+		tdb.BiroSpouseResult,
+		tak.UrlFormAkkk
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -10073,7 +10091,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
-		tdb.BiroSpouseResult
+		tdb.BiroSpouseResult,
+		tak.UrlFormAkkk
 
 	  FROM
 		trx_master tm WITH (nolock)

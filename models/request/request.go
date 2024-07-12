@@ -689,6 +689,12 @@ type Recalculate struct {
 	LoanAmount                   float64 `json:"loan_amount" validate:"max=999999999999" example:"105000000"`
 }
 
+type RequestGenerateFormAKKK struct {
+	ProspectID string `json:"prospect_id" validate:"required" example:"TEST-DEV"`
+	LOB        string `json:"lob" validate:"required" example:"new-kmb"`
+	Source     string `json:"source" example:"SYSTEM"`
+}
+
 type Filtering struct {
 	ProspectID string           `json:"prospect_id" validate:"prospect_id" example:"SAL042600001"`
 	BranchID   string           `json:"branch_id" validate:"required,branch_id" example:"426"`
