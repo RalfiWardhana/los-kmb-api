@@ -67,8 +67,11 @@ func (u usecase) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 
 		for _, description := range industry {
 			u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
+
+			if strings.ToUpper(data.IndustryTypeID.(string)) == strings.ToUpper(strings.ReplaceAll(description.IndustryTypeID, " ", "")) {
+				industryType = []byte(description.Description)
+			}
 		}
-		industryType, _ = u.cache.Get(data.IndustryTypeID.(string))
 	}
 
 	if industryType != nil {
@@ -325,10 +328,13 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 
 			for _, description := range industry {
 				u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
-			}
-		}
 
-		industryType, _ = u.cache.Get(inq.IndustryTypeID)
+				if strings.ToUpper(inq.IndustryTypeID) == strings.ToUpper(strings.ReplaceAll(description.IndustryTypeID, " ", "")) {
+					industryType = []byte(description.Description)
+				}
+			}
+
+		}
 
 		// get trx_customer_photo
 		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
@@ -670,10 +676,12 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 
 			for _, description := range industry {
 				u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
+
+				if strings.ToUpper(inq.IndustryTypeID) == strings.ToUpper(strings.ReplaceAll(description.IndustryTypeID, " ", "")) {
+					industryType = []byte(description.Description)
+				}
 			}
 		}
-
-		industryType, _ = u.cache.Get(inq.IndustryTypeID)
 
 		// get trx_customer_photo
 		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
@@ -1132,10 +1140,12 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 
 			for _, description := range industry {
 				u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
+
+				if strings.ToUpper(inq.IndustryTypeID) == strings.ToUpper(strings.ReplaceAll(description.IndustryTypeID, " ", "")) {
+					industryType = []byte(description.Description)
+				}
 			}
 		}
-
-		industryType, _ = u.cache.Get(inq.IndustryTypeID)
 
 		// get trx_customer_photo
 		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
@@ -1604,10 +1614,12 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 
 			for _, description := range industry {
 				u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
+
+				if strings.ToUpper(inq.IndustryTypeID) == strings.ToUpper(strings.ReplaceAll(description.IndustryTypeID, " ", "")) {
+					industryType = []byte(description.Description)
+				}
 			}
 		}
-
-		industryType, _ = u.cache.Get(inq.IndustryTypeID)
 
 		// get trx_customer_photo
 		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
