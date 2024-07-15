@@ -14,6 +14,7 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -2033,14 +2034,33 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 
 	search := req.Search
 
+	var qSearch string
+	var regexpPpid = regexp.MustCompile(`SAL-|NE-`)
+	var regexpIDNumber = regexp.MustCompile(`^[0-9]*$`)
+	var regexpLegalName = regexp.MustCompile("^[a-zA-Z.,'` ]*$")
+
+	if search != "" && regexpPpid.MatchString(search) {
+		//query prospect id only
+		qSearch = fmt.Sprintf("(tt.ProspectID = '%s')", search)
+	} else if search != "" && regexpIDNumber.MatchString(search) {
+		//query id number only
+		qSearch = fmt.Sprintf("(tt.IDNumber = '%s')", search)
+	} else if search != "" && regexpLegalName.MatchString(search) {
+		//query legal name only
+		qSearch = fmt.Sprintf("(tt.LegalName = '%s')", search)
+	} else {
+		//query default
+		qSearch = fmt.Sprintf("(tt.ProspectID = '%s' OR tt.IDNumber = '%s' OR tt.LegalName = '%s')", search, search, search)
+	}
+
 	if search != "" {
-		query = fmt.Sprintf("WHERE (tt.ProspectID = '%s' OR tt.IDNumber = '%s' OR tt.LegalName = '%s')", search, search, search)
+		query = fmt.Sprintf("WHERE %s", qSearch)
 	}
 
 	if filter == "" {
 		filter = query
 	} else {
-		filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID = '%s' OR tt.IDNumber = '%s' OR tt.LegalName = '%s')", search, search, search)
+		filter = filterBranch + fmt.Sprintf(" AND %s", qSearch)
 	}
 
 	if pagination != nil {

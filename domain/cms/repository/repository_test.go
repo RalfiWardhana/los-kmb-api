@@ -5972,7 +5972,7 @@ func TestGetInquirySearch(t *testing.T) {
 			BranchID:    "426",
 			MultiBranch: "1",
 			UserID:      "abc123",
-			Search:      "aprospectid",
+			Search:      "SAL-12345",
 		}
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
@@ -6015,7 +6015,7 @@ func TestGetInquirySearch(t *testing.T) {
 			LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 			LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 			LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-			) AS tt WHERE (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid')`)).
+			) AS tt WHERE (tt.ProspectID = 'SAL-12345')`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -6329,7 +6329,7 @@ func TestGetInquirySearch(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt WHERE (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	) AS tt WHERE (tt.ProspectID = 'SAL-12345') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
 				AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
@@ -6354,7 +6354,7 @@ func TestGetInquirySearch(t *testing.T) {
 			BranchID:    "426",
 			MultiBranch: "1",
 			UserID:      "abc123",
-			Search:      "aprospectid",
+			Search:      "ahmad name",
 		}
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
@@ -6397,7 +6397,7 @@ func TestGetInquirySearch(t *testing.T) {
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-		) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid')`)).
+		) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.LegalName = 'ahmad name')`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -6711,7 +6711,7 @@ func TestGetInquirySearch(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	) AS tt WHERE tt.BranchID IN ('426','436','429','431','442','428','430') AND (tt.LegalName = 'ahmad name') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
 				AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
@@ -6736,7 +6736,7 @@ func TestGetInquirySearch(t *testing.T) {
 			BranchID:    "426",
 			MultiBranch: "1",
 			UserID:      "abc123",
-			Search:      "aprospectid",
+			Search:      "7171072102760001",
 		}
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
@@ -6778,7 +6778,7 @@ func TestGetInquirySearch(t *testing.T) {
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-		) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid')`)).
+		) AS tt WHERE tt.BranchID = '426' AND (tt.IDNumber = '7171072102760001')`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -7092,7 +7092,7 @@ func TestGetInquirySearch(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt WHERE tt.BranchID = '426' AND (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	) AS tt WHERE tt.BranchID = '426' AND (tt.IDNumber = '7171072102760001') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
 				AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
@@ -7117,7 +7117,7 @@ func TestGetInquirySearch(t *testing.T) {
 			BranchID:    "426",
 			MultiBranch: "0",
 			UserID:      "abc123",
-			Search:      "aprospectid",
+			Search:      "random123",
 		}
 
 		// Mock SQL query and result
@@ -7149,7 +7149,7 @@ func TestGetInquirySearch(t *testing.T) {
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-		) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid') `)).
+		) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID = 'random123' OR tt.IDNumber = 'random123' OR tt.LegalName = 'random123') `)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -7463,7 +7463,7 @@ func TestGetInquirySearch(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID = 'aprospectid' OR tt.IDNumber = 'aprospectid' OR tt.LegalName = 'aprospectid') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	) AS tt WHERE tt.BranchID IN ('426') AND (tt.ProspectID = 'random123' OR tt.IDNumber = 'random123' OR tt.LegalName = 'random123') ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
 				AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
