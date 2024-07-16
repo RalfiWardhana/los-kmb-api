@@ -381,7 +381,7 @@ func GenerateBranchFilter(branchId string) string {
 	return fmt.Sprintf("WHERE tm.BranchID IN (%s)", branch)
 }
 
-func GenerateFilter(search, encryptedSearch, filterBranch, rangeDays string) string {
+func GenerateFilter(search, filterBranch, rangeDays string) string {
 	var filter string
 	var re = regexp.MustCompile(`SAL-|NE-`)
 
@@ -390,13 +390,13 @@ func GenerateFilter(search, encryptedSearch, filterBranch, rangeDays string) str
 			if re.MatchString(search) {
 				filter = filterBranch + fmt.Sprintf(" AND (tm.ProspectID = '%s')", search)
 			} else {
-				filter = filterBranch + fmt.Sprintf(" AND (tcp.IDNumber LIKE '%%%s%%' OR tcp.LegalName LIKE '%%%s%%')", encryptedSearch, encryptedSearch)
+				filter = filterBranch + fmt.Sprintf(" AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%%%s%%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%%%s%%')", search, search)
 			}
 		} else {
 			if re.MatchString(search) {
 				filter = fmt.Sprintf("WHERE (tm.ProspectID = '%s')", search)
 			} else {
-				filter = fmt.Sprintf("WHERE (tcp.IDNumber LIKE '%%%s%%' OR tcp.LegalName LIKE '%%%s%%')", encryptedSearch, encryptedSearch)
+				filter = fmt.Sprintf("WHERE (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%%%s%%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%%%s%%')", search, search)
 			}
 		}
 	} else {
