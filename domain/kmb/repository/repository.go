@@ -1070,12 +1070,12 @@ func (r repoHandler) SaveTrxJourney(prospectID string, request interface{}) (err
 
 func (r repoHandler) GetTrxJourney(prospectID string) (trxJourney entity.TrxJourney, err error) {
 
-	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT ProspectID, 
-		CASE WHEN
-			request2 IS NOT NULL THEN request+request2
-			ELSE request
-		END AS request from trx_journey with (nolock) where ProspectID = '%s'`, prospectID)).Scan(&trxJourney).Error; err != nil {
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT ProspectID, request, request2 from trx_journey with (nolock) where ProspectID = '%s'`, prospectID)).Scan(&trxJourney).Error; err != nil {
 		return
+	}
+
+	if trxJourney.Request2 != nil {
+		trxJourney.Request += trxJourney.Request2.(string)
 	}
 
 	return
