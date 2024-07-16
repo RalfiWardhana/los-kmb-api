@@ -3486,7 +3486,7 @@ func (r repoHandler) GetMappingClusterChangeLog(pagination interface{}) (data []
 
 func (r repoHandler) EncryptString(data string) (encrypted entity.EncryptString, err error) {
 
-	if err = r.losDB.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS encrypt`, data)).Scan(&encrypted).Error; err != nil {
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS encrypt`, data)).Scan(&encrypted).Error; err != nil {
 		return
 	}
 
