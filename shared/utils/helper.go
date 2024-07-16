@@ -378,32 +378,32 @@ func GenerateBranchFilter(branchId string) string {
 		}
 	}
 
-	return fmt.Sprintf("WHERE tt.BranchID IN (%s)", branch)
+	return fmt.Sprintf("WHERE tm.BranchID IN (%s)", branch)
 }
 
-func GenerateFilter(search, filterBranch, rangeDays string) string {
+func GenerateFilter(search, encryptedSearch, filterBranch, rangeDays string) string {
 	var filter string
 	var re = regexp.MustCompile(`SAL-|NE-`)
 
 	if search != "" {
 		if filterBranch != "" {
 			if re.MatchString(search) {
-				filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID = '%s')", search)
+				filter = filterBranch + fmt.Sprintf(" AND (tm.ProspectID = '%s')", search)
 			} else {
-				filter = filterBranch + fmt.Sprintf(" AND (tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search)
+				filter = filterBranch + fmt.Sprintf(" AND (tcp.IDNumber LIKE '%%%s%%' OR tcp.LegalName LIKE '%%%s%%')", encryptedSearch, encryptedSearch)
 			}
 		} else {
 			if re.MatchString(search) {
-				filter = fmt.Sprintf("WHERE (tt.ProspectID = '%s')", search)
+				filter = fmt.Sprintf("WHERE (tm.ProspectID = '%s')", search)
 			} else {
-				filter = fmt.Sprintf("WHERE (tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search)
+				filter = fmt.Sprintf("WHERE (tcp.IDNumber LIKE '%%%s%%' OR tcp.LegalName LIKE '%%%s%%')", encryptedSearch, encryptedSearch)
 			}
 		}
 	} else {
 		if filterBranch != "" {
-			filter = filterBranch + fmt.Sprintf(" AND CAST(tt.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
+			filter = filterBranch + fmt.Sprintf(" AND CAST(tm.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
 		} else {
-			filter = fmt.Sprintf("WHERE CAST(tt.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
+			filter = fmt.Sprintf("WHERE CAST(tm.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
 		}
 	}
 

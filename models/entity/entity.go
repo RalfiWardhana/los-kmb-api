@@ -2421,3 +2421,7 @@ type MappingVehicleAge struct {
 func (c *MappingVehicleAge) TableName() string {
 	return "m_mapping_vehicle_age"
 }
+
+type EncryptString struct {
+	Encrypt string `json:"encrypt"`
+}
