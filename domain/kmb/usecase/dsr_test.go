@@ -718,6 +718,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
 			},
+			filtering: entity.FilteringKMB{
+				RrdDate: sixMonthsAgo,
+			},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
 				Dsr:            30,
@@ -739,7 +742,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			codeLatestInstallment: 200,
 			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
 			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 10000, "contract_status": "", "outstanding_principal": 0, 
-			"rrd_date": "" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
+			"rrd_date": "` + sixMonthsAgo + `" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
 		},
 		{
 			name:                "TotalDsrFmfPbk ro priority",
@@ -752,6 +755,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			filtering: entity.FilteringKMB{
+				RrdDate: sixMonthsAgo,
 			},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
@@ -944,6 +950,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
 			},
+			filtering: entity.FilteringKMB{
+				RrdDate: sixMonthsAgo,
+			},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
 				Dsr:            30,
@@ -973,6 +982,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
 			},
+			filtering: entity.FilteringKMB{
+				RrdDate: sixMonthsAgo,
+			},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
 				Dsr:            30,
@@ -1000,6 +1012,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			filtering: entity.FilteringKMB{
+				RrdDate: sixMonthsAgo,
 			},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,

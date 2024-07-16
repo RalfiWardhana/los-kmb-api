@@ -24,6 +24,7 @@ func TestPefindo(t *testing.T) {
 
 	// Sample older date from the current time to test "RrdDate"
 	sevenMonthsAgo := currentTime.AddDate(0, -7, 0).Format("2006-01-02T15:04:05Z")
+	sixMonthsAgo := currentTime.AddDate(0, -6, 0).Format("2006-01-02T15:04:05Z")
 
 	testcases := []struct {
 		name         string
@@ -38,7 +39,7 @@ func TestPefindo(t *testing.T) {
 		errGetConfig error
 	}{
 		{
-			name: "Pefindo prime",
+			name: "Pefindo prime 1",
 			filtering: entity.FilteringKMB{
 				CustomerSegment: constant.RO_AO_PRIME,
 			},
@@ -55,9 +56,10 @@ func TestPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "Pefindo prime",
+			name: "Pefindo prime 2",
 			filtering: entity.FilteringKMB{
 				CustomerSegment: constant.RO_AO_PRIORITY,
+				RrdDate:         sixMonthsAgo,
 			},
 			spDupcheck: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
