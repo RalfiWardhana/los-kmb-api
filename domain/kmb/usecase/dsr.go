@@ -267,7 +267,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 	}
 
 	// INTERCEPT PERBAIKAN FLOW RO PRIME/PRIORITY (NON-TOPUP) | CHECK EXPIRED_CONTRACT
-	if (customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY) && SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO && (SpDupcheckMap.InstallmentTopup <= 0 && SpDupcheckMap.MaxOverdueDaysforActiveAgreement > 30) {
+	if (customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY) && (SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO && SpDupcheckMap.InstallmentTopup <= 0) {
 		if filtering.RrdDate == nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
 			return
@@ -296,7 +296,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 		}
 	}
 
-	if OverrideFlowLikeRegular && SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO && customerSegment == constant.RO_AO_PRIME {
+	if OverrideFlowLikeRegular {
 		reasonCustomerStatus = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + reasonCustomerStatus
 	}
 

@@ -42,7 +42,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 		}
 
 		// INTERCEPT PERBAIKAN FLOW RO PRIME/PRIORITY (NON-TOPUP) | CHECK EXPIRED_CONTRACT
-		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_RO && (spDupcheck.InstallmentTopup <= 0 && spDupcheck.MaxOverdueDaysforActiveAgreement > 30) {
+		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_RO && spDupcheck.InstallmentTopup <= 0 {
 			if filtering.RrdDate == nil {
 				err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
 				return
