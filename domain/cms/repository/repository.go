@@ -305,6 +305,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 		filterBranch   string
 		filterPaginate string
 		getRegion      []entity.RegionBranch
+		encrypted      entity.EncryptString
 	)
 
 	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
@@ -344,7 +345,11 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
 	}
 
-	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
+	if req.Search != "" {
+		encrypted, _ = r.EncryptString(req.Search)
+	}
+
+	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays)
 
 	if pagination != nil {
 		page, _ := json.Marshal(pagination)
@@ -1143,6 +1148,7 @@ func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface
 		filterBranch   string
 		filterPaginate string
 		getRegion      []entity.RegionBranch
+		encrypted      entity.EncryptString
 	)
 
 	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
@@ -1182,7 +1188,11 @@ func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
 	}
 
-	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
+	if req.Search != "" {
+		encrypted, _ = r.EncryptString(req.Search)
+	}
+
+	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays)
 
 	if pagination != nil {
 		page, _ := json.Marshal(pagination)
@@ -1295,6 +1305,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		filterPaginate string
 		query          string
 		getRegion      []entity.RegionBranch
+		encrypted      entity.EncryptString
 	)
 
 	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
@@ -1334,7 +1345,11 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
 	}
 
-	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
+	if req.Search != "" {
+		encrypted, _ = r.EncryptString(req.Search)
+	}
+
+	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays)
 
 	// Filter By
 	if req.Filter != "" {
@@ -2555,6 +2570,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		query          string
 		alias          string
 		getRegion      []entity.RegionBranch
+		encrypted      entity.EncryptString
 	)
 
 	alias = req.Alias
@@ -2596,7 +2612,11 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
 	}
 
-	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
+	if req.Search != "" {
+		encrypted, _ = r.EncryptString(req.Search)
+	}
+
+	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays)
 
 	// Filter By
 	if req.Filter != "" {

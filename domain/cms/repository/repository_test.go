@@ -468,7 +468,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 
 	// Expected input and output
 	req := request.ReqInquiryPrescreening{
-		Search:      "aprospectid",
+		Search:      "my name",
 		BranchID:    "426",
 		MultiBranch: "1",
 		UserID:      "abc123",
@@ -488,6 +488,10 @@ func TestGetInquiryPrescreening(t *testing.T) {
 		AND b.lob_id='125'`)).
 		WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 			AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','my name') AS encrypt`)).
+		WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).
+			AddRow("xxxxxx"))
 
 	mock.ExpectQuery(regexp.QuoteMeta(`WITH 
 		cte_app_config_mn AS (
@@ -638,7 +642,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 		) jb ON tce.JobPosition = jb.[key]
 		LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
 		LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
-		 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%')) AS tt`)).
+		WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.LegalName='xxxxxx')) AS tt`)).
 		WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 			AddRow("27"))
 
@@ -896,7 +900,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 		group_name = 'JobPosition'
 	) jb ON tce.JobPosition = jb.[key]
 	LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
-	LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key] WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key] WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.LegalName='xxxxxx')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 		WillReturnRows(sqlmock.NewRows([]string{"Code", "ReasonID", "ReasonMessage"}).
 			AddRow("12", "11", "Akte Jual Beli Tidak Sesuai"))
 
@@ -935,8 +939,12 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 	t.Run("without param branch", func(t *testing.T) {
 		// Expected input and output
 		req := request.ReqInquiryPrescreening{
-			Search: "aprospectid",
+			Search: "my name",
 		}
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','my name') AS encrypt`)).
+			WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).
+				AddRow("xxxxxx"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
 		cte_app_config_mn AS (
@@ -1087,7 +1095,7 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 		) jb ON tce.JobPosition = jb.[key]
 		LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
 		LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
-		 WHERE (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%')) AS tt`)).
+		 WHERE (tcp.LegalName = 'xxxxxx')) AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -1345,7 +1353,7 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 		group_name = 'JobPosition'
 	) jb ON tce.JobPosition = jb.[key]
 	LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
-	LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key] WHERE (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key] WHERE (tcp.LegalName = 'xxxxxx')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"Code", "ReasonID", "ReasonMessage"}).
 				AddRow("12", "11", "Akte Jual Beli Tidak Sesuai"))
 
@@ -1367,7 +1375,7 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 	t.Run("with region west java", func(t *testing.T) {
 		// Expected input and output
 		req := request.ReqInquiryPrescreening{
-			Search:      "aprospectid",
+			Search:      "my name",
 			BranchID:    "426",
 			MultiBranch: "1",
 			UserID:      "abc123",
@@ -1383,6 +1391,10 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 		AND b.lob_id='125'`)).
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','my name') AS encrypt`)).
+			WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).
+				AddRow("xxxxxx"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
 		cte_app_config_mn AS (
@@ -1533,7 +1545,7 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 		) jb ON tce.JobPosition = jb.[key]
 		LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
 		LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
-		 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%')) AS tt `)).
+		 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.LegalName='xxxxxx')) AS tt `)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -1791,7 +1803,7 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 		group_name = 'JobPosition'
 	) jb ON tce.JobPosition = jb.[key]
 	LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
-	LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key] WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key] WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.LegalName='xxxxxx')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"Code", "ReasonID", "ReasonMessage"}).
 				AddRow("12", "11", "Akte Jual Beli Tidak Sesuai"))
 
@@ -1813,7 +1825,7 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 	t.Run("with region ALL", func(t *testing.T) {
 		// Expected input and output
 		req := request.ReqInquiryPrescreening{
-			Search:      "aprospectid",
+			Search:      "my name",
 			BranchID:    "426",
 			MultiBranch: "1",
 			UserID:      "abc123",
@@ -1829,6 +1841,10 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 		AND b.lob_id='125'`)).
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("ALL", `["426","436","429","431","442","428","430"]`))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','my name') AS encrypt`)).
+			WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).
+				AddRow("xxxxxx"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
 		cte_app_config_mn AS (
@@ -1979,7 +1995,7 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 		) jb ON tce.JobPosition = jb.[key]
 		LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
 		LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
-		 WHERE (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%')) AS tt`)).
+		 WHERE (tcp.LegalName = 'xxxxxx')) AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -2237,7 +2253,7 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 		group_name = 'JobPosition'
 	) jb ON tce.JobPosition = jb.[key]
 	LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
-	LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key] WHERE (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key] WHERE (tcp.LegalName = 'xxxxxx')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"Code", "ReasonID", "ReasonMessage"}).
 				AddRow("12", "11", "Akte Jual Beli Tidak Sesuai"))
 
@@ -3185,6 +3201,8 @@ func TestGetInquiryCa(t *testing.T) {
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock) INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN ( SELECT value FROM region_user ru WITH (nolock) cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',') WHERE ru.user_id = 'abc123' ) AND b.lob_id='125'`)).WillReturnError(gorm.ErrRecordNotFound)
 
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','aprospectid') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("xxxxxx"))
+
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
 		cte_trx_ca_decision AS (
@@ -3258,7 +3276,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
 		LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
 		LEFT JOIN cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-		 WHERE tm.BranchID = '426' AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CRA' AND (tcd.decision IS NULL OR (rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN')) AND tst.source_decision<>'PSI') AS tt`)).
+		 WHERE tm.BranchID = '426' AND tcp.LegalName='xxxxxx') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CRA' AND (tcd.decision IS NULL OR (rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN')) AND tst.source_decision<>'PSI') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
@@ -3640,7 +3658,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
 		LEFT JOIN
 			cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-	 WHERE tm.BranchID = '426' AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CRA' AND (tcd.decision IS NULL OR (rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN')) AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	 WHERE tm.BranchID = '426' AND tcp.LegalName='xxxxxx') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CRA' AND (tcd.decision IS NULL OR (rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN')) AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function
@@ -3661,7 +3679,7 @@ func TestGetInquiryCa(t *testing.T) {
 	t.Run("success with multi branch and saved as draft", func(t *testing.T) {
 		// Expected input and output
 		req := request.ReqInquiryCa{
-			Search:      "aprospectid",
+			Search:      "SAL-XXX",
 			BranchID:    "426",
 			MultiBranch: "1",
 			Filter:      "SAVED_AS_DRAFT",
@@ -3669,6 +3687,8 @@ func TestGetInquiryCa(t *testing.T) {
 		}
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock) INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN ( SELECT value FROM region_user ru WITH (nolock) cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',') WHERE ru.user_id = 'abc123' ) AND b.lob_id='125'`)).WillReturnError(gorm.ErrRecordNotFound)
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','SAL-XXX') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("xxxxxx"))
 
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
@@ -3743,7 +3763,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
 		LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
 		LEFT JOIN cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-		 WHERE tm.BranchID = '426' AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tdd.draft_created_by= 'abc123'  AND tst.source_decision<>'PSI') AS tt`)).
+		 WHERE tm.BranchID = '426' AND (tm.ProspectID = 'SAL-XXX') AND tdd.draft_created_by= 'abc123'  AND tst.source_decision<>'PSI') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
@@ -4125,7 +4145,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
 		LEFT JOIN
 			cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-	 WHERE tm.BranchID = '426' AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tdd.draft_created_by= 'abc123'  AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	 WHERE tm.BranchID = '426' AND (tm.ProspectID = 'SAL-XXX') AND tdd.draft_created_by= 'abc123'  AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function
@@ -4146,12 +4166,14 @@ func TestGetInquiryCa(t *testing.T) {
 	t.Run("success without multi branch", func(t *testing.T) {
 		// Expected input and output
 		req := request.ReqInquiryCa{
-			Search:      "aprospectid",
+			Search:      "6104",
 			BranchID:    "426",
 			MultiBranch: "0",
 			Filter:      "REJECT",
 			UserID:      "db1f4044e1dc574",
 		}
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','6104') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("xxxxxx"))
 
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
@@ -4226,7 +4248,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
 		LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
 		LEFT JOIN cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-		 WHERE tm.BranchID IN ('426') AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.decision = 'REJ' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt`)).
+		 WHERE tm.BranchID IN ('426') AND tcp.IDNumber='xxxxxx') AND tst.decision = 'REJ' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
@@ -4608,7 +4630,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
 		LEFT JOIN
 			cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-	 WHERE tm.BranchID IN ('426') AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.decision = 'REJ' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	 WHERE tm.BranchID IN ('426') AND tcp.IDNumber='xxxxxx') AND tst.decision = 'REJ' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function
@@ -4647,6 +4669,8 @@ func TestGetInquiryCa(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','aprospectid') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("xxxxxx"))
+
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
 		cte_trx_ca_decision AS (
@@ -4720,7 +4744,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
 		LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
 		LEFT JOIN cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-		 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt`)).
+		 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.LegalName='xxxxxx') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
@@ -5102,7 +5126,7 @@ func TestGetInquiryCa(t *testing.T) {
 				LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
 				LEFT JOIN
 					cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-			 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.LegalName='xxxxxx') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function
@@ -5140,6 +5164,8 @@ func TestGetInquiryCa(t *testing.T) {
 		AND b.lob_id='125'`)).
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("ALL", `["426","436","429","431","442","428","430"]`))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','aprospectid') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("xxxxxx"))
 
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
@@ -5214,7 +5240,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
 		LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
 		LEFT JOIN cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-		 WHERE (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.decision = 'APR' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt`)).
+		 WHERE (tcp.LegalName = 'xxxxxx') AND tst.decision = 'APR' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
@@ -5596,7 +5622,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
 		LEFT JOIN
 			cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-	 WHERE (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.decision = 'APR' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	 WHERE (tcp.LegalName = 'xxxxxx') AND tst.decision = 'APR' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function
@@ -7956,6 +7982,8 @@ func TestGetInquiryApproval(t *testing.T) {
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock) INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN ( SELECT value FROM region_user ru WITH (nolock) cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',') WHERE ru.user_id = 'abc123' ) AND b.lob_id='125'`)).WillReturnError(gorm.ErrRecordNotFound)
 
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','aprospectid') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("xxxxxx"))
+
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
 		COUNT(tt.ProspectID) AS totalRow
@@ -8000,7 +8028,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
-		 WHERE tm.BranchID = '426' AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND (has.next_step = 'CBM' OR has.source_decision='CBM')) AS tt`)).
+		 WHERE tm.BranchID = '426' AND tcp.LegalName='xxxxxx') AND (has.next_step = 'CBM' OR has.source_decision='CBM')) AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
@@ -8349,7 +8377,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	 WHERE tm.BranchID = '426' AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND (has.next_step = 'CBM' OR has.source_decision='CBM')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	 WHERE tm.BranchID = '426' AND tcp.LegalName='xxxxxx') AND (has.next_step = 'CBM' OR has.source_decision='CBM')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function
@@ -8380,6 +8408,8 @@ func TestGetInquiryApproval(t *testing.T) {
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock) INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN ( SELECT value FROM region_user ru WITH (nolock) cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',') WHERE ru.user_id = 'abc123' ) AND b.lob_id='125'`)).WillReturnError(gorm.ErrRecordNotFound)
 
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','aprospectid') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("xxxxxx"))
+
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
 		COUNT(tt.ProspectID) AS totalRow
@@ -8424,7 +8454,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
-		 WHERE tm.BranchID = '426' AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CBM') AS tt`)).
+		 WHERE tm.BranchID = '426' AND tcp.LegalName='xxxxxx') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CBM') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
@@ -8773,7 +8803,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	 WHERE tm.BranchID = '426' AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CBM') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	 WHERE tm.BranchID = '426' AND tcp.LegalName='xxxxxx') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CBM') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function
@@ -8794,13 +8824,15 @@ func TestGetInquiryApproval(t *testing.T) {
 	t.Run("success without multi branch", func(t *testing.T) {
 		// Expected input and output
 		req := request.ReqInquiryApproval{
-			Search:      "aprospectid",
+			Search:      "NE-XXX",
 			BranchID:    "426",
 			MultiBranch: "0",
 			Filter:      "REJECT",
 			UserID:      "db1f4044e1dc574",
 			Alias:       "CBM",
 		}
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','NE-XXX') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("xxxxxx"))
 
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
@@ -8846,7 +8878,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
-		 WHERE tm.BranchID IN ('426') AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.decision = 'REJ' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt`)).
+		 WHERE tm.BranchID IN ('426') AND (tm.ProspectID = 'NE-XXX') AND tst.decision = 'REJ' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
@@ -9195,7 +9227,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-		  WHERE tm.BranchID IN ('426') AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.decision = 'REJ' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt`)).
+		  WHERE tm.BranchID IN ('426') AND (tm.ProspectID = 'NE-XXX') AND tst.decision = 'REJ' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function
@@ -9216,7 +9248,7 @@ func TestGetInquiryApproval(t *testing.T) {
 	t.Run("success with region west java", func(t *testing.T) {
 		// Expected input and output
 		req := request.ReqInquiryApproval{
-			Search:      "aprospectid",
+			Search:      "76457",
 			BranchID:    "426",
 			MultiBranch: "1",
 			Filter:      "CANCEL",
@@ -9234,6 +9266,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		AND b.lob_id='125'`)).
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','76457') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("xxxxxx"))
 
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
@@ -9279,7 +9313,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
-		 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt`)).
+		 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.IDNumber='xxxxxx') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
@@ -9628,7 +9662,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt  ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.IDNumber='xxxxxx') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt  ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function
@@ -9668,6 +9702,8 @@ func TestGetInquiryApproval(t *testing.T) {
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("ALL", `["426","436","429","431","442","428","430"]`))
 
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','aprospectid') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("xxxxxx"))
+
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
 		COUNT(tt.ProspectID) AS totalRow
@@ -9712,7 +9748,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
-		 WHERE (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.decision = 'APR' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt`)).
+		 WHERE (tcp.LegalName = 'xxxxxx') AND tst.decision = 'APR' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
@@ -10061,7 +10097,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	 WHERE (SCP.dbo.DEC_B64('SEC', tcp.IDNumber) LIKE '%aprospectid%' OR SCP.dbo.DEC_B64('SEC', tcp.LegalName) LIKE '%aprospectid%') AND tst.decision = 'APR' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	 WHERE (tcp.LegalName = 'xxxxxx') AND tst.decision = 'APR' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function
