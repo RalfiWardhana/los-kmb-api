@@ -37,7 +37,7 @@ func TestScorepro(t *testing.T) {
 	currentTime := time.Now().UTC()
 
 	// Sample older date from the current time to test "RrdDate"
-	sevenMonthsAgo := currentTime.AddDate(0, -7, 0).Format("2006-01-02T15:04:05Z")
+	sevenMonthsAgo := currentTime.AddDate(0, -7, 0)
 
 	testcases := []struct {
 		name               string

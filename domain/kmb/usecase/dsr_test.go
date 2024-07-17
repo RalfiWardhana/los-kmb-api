@@ -512,8 +512,8 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 	currentTime := time.Now().UTC()
 
 	// Sample older date from the current time to test "RrdDate"
-	sevenMonthsAgo := currentTime.AddDate(0, -7, 0).Format("2006-01-02T15:04:05Z")
-	sixMonthsAgo := currentTime.AddDate(0, -6, 0).Format("2006-01-02T15:04:05Z")
+	sevenMonthsAgo := currentTime.AddDate(0, -7, 0)
+	sixMonthsAgo := currentTime.AddDate(0, -6, 0)
 
 	testcases := []struct {
 		name                                             string
@@ -654,7 +654,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
-				Code:           constant.CODE_TOTAL_DSRLTE35,
+				Code:           constant.CODE_TOTAL_DSRLTE35_EXP_CONTRACT_6MONTHS,
 				Reason:         constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + "RO PRIME - DSR <= Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
 			},
@@ -742,7 +742,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			codeLatestInstallment: 200,
 			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
 			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 10000, "contract_status": "", "outstanding_principal": 0, 
-			"rrd_date": "` + sixMonthsAgo + `" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
+			"rrd_date": "` + sixMonthsAgo.Format(time.RFC3339) + `" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
 		},
 		{
 			name:                "TotalDsrFmfPbk ro priority",

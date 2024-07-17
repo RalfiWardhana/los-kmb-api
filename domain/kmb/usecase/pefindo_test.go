@@ -23,8 +23,8 @@ func TestPefindo(t *testing.T) {
 	currentTime := time.Now().UTC()
 
 	// Sample older date from the current time to test "RrdDate"
-	sevenMonthsAgo := currentTime.AddDate(0, -7, 0).Format("2006-01-02T15:04:05Z")
-	sixMonthsAgo := currentTime.AddDate(0, -6, 0).Format("2006-01-02T15:04:05Z")
+	sevenMonthsAgo := currentTime.AddDate(0, -7, 0)
+	sixMonthsAgo := currentTime.AddDate(0, -6, 0)
 
 	testcases := []struct {
 		name         string
@@ -88,7 +88,7 @@ func TestPefindo(t *testing.T) {
 				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
 			},
 			result: response.UsecaseApi{
-				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
+				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY_EXP_CONTRACT_6MONTHS,
 				Reason:         constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + fmt.Sprintf("%s %s - PBK Pass", constant.STATUS_KONSUMEN_RO, constant.RO_AO_PRIME),
 				Result:         constant.DECISION_PASS,
 				SourceDecision: constant.SOURCE_DECISION_BIRO,
