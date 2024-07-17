@@ -5,6 +5,15 @@ var TOPIC_SUBMISSION string
 var TOPIC_SUBMISSION_LOS string
 var TOPIC_INSERT_CUSTOMER string
 
+// Event Driven Key
+var KEY_PREFIX_FILTERING string
+var KEY_PREFIX_UPDATE_STATUS_FILTERING string
+var KEY_PREFIX_SUBMIT_TO_LOS string
+var KEY_PREFIX_AFTER_PRESCREENING string
+var KEY_PREFIX_CALLBACK string
+var KEY_PREFIX_CALLBACK_GOLIVE string
+var KEY_PREFIX_UPDATE_CUSTOMER string
+
 const (
 	FLAG_LOS                         = "LOS"
 	KMB_RESOURCE_ID                  = "los-kmb-api"
@@ -307,15 +316,6 @@ const (
 	DOC_FILTERING      = "nkmb_filtering_%s"
 	MSG_SET_DATA_CACHE = "SET_DATA_CACHE"
 	MSG_GET_DATA_CACHE = "GET_DATA_CACHE"
-
-	//Platform Event
-	KEY_PREFIX_FILTERING               = "filtering"
-	KEY_PREFIX_UPDATE_STATUS_FILTERING = "update_status_filtering"
-	KEY_PREFIX_SUBMIT_TO_LOS           = "submit_los_kmb"
-	KEY_PREFIX_AFTER_PRESCREENING      = "after_prescreening_los_kmb"
-	KEY_PREFIX_CALLBACK                = "callback_los_kmb"
-	KEY_PREFIX_CALLBACK_GOLIVE         = "callback_golive_kmb"
-	KEY_PREFIX_UPDATE_CUSTOMER         = "update_customer"
 
 	MAX_RETRY_PUBLISH = 3
 
