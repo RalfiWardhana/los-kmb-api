@@ -273,7 +273,13 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 			return
 		}
 
-		RrdDateString = filtering.RrdDate.(string)
+		RrdDateTime, ok := filtering.RrdDate.(time.Time)
+		if !ok {
+			err = errors.New(constant.ERROR_UPSTREAM + " - RrdDate is not of type time.Time")
+			return
+		}
+
+		RrdDateString = RrdDateTime.Format(time.RFC3339)
 		CreatedAtString = filtering.CreatedAt.Format(time.RFC3339)
 
 		RrdDate, _ = time.Parse(time.RFC3339, RrdDateString)
