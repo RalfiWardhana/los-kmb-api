@@ -30,66 +30,81 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 		customerSegment = filtering.CustomerSegment.(string)
 	}
 
-	if customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY {
-		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_AO && spDupcheck.InstallmentTopup == 0 && spDupcheck.NumberOfPaidInstallment >= 6 {
-			data = response.UsecaseApi{
-				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
-				Reason:         fmt.Sprintf("%s %s >= 6 bulan - PBK Pass", spDupcheck.StatusKonsumen, customerSegment),
-				Result:         constant.DECISION_PASS,
-				SourceDecision: constant.SOURCE_DECISION_BIRO,
-			}
+	// INTERCEPT PERBAIKAN FLOW RO PRIME/PRIORITY (NON-TOPUP) | CHECK EXPIRED_CONTRACT
+	if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_RO && spDupcheck.InstallmentTopup <= 0 && (customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY) {
+		if filtering.RrdDate == nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
 			return
 		}
 
-		// INTERCEPT PERBAIKAN FLOW RO PRIME/PRIORITY (NON-TOPUP) | CHECK EXPIRED_CONTRACT
-		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_RO && spDupcheck.InstallmentTopup <= 0 {
-			if filtering.RrdDate == nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
-				return
+		RrdDateTime, ok := filtering.RrdDate.(time.Time)
+		if !ok {
+			err = errors.New(constant.ERROR_UPSTREAM + " - RrdDate is not of type time.Time")
+			return
+		}
+
+		RrdDateString = RrdDateTime.Format(time.RFC3339)
+		CreatedAtString = filtering.CreatedAt.Format(time.RFC3339)
+
+		RrdDate, _ = time.Parse(time.RFC3339, RrdDateString)
+		CreatedAt, _ = time.Parse(time.RFC3339, CreatedAtString)
+		MonthsOfExpiredContract, _ = utils.PreciseMonthsDifference(RrdDate, CreatedAt)
+
+		// Get config expired_contract
+		expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
+			return
+		}
+
+		var configValueExpContract response.ExpiredContractConfig
+		json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+
+		if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
+			// Jalur mirip seperti customer segment "REGULAR"
+			OverrideFlowLikeRegular = true
+		}
+	}
+
+	if customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY {
+		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_AO && spDupcheck.InstallmentTopup == 0 && spDupcheck.NumberOfPaidInstallment >= 6 {
+			if OverrideFlowLikeRegular {
+				data = response.UsecaseApi{
+					Code:           constant.CODE_PEFINDO_PRIME_PRIORITY_EXP_CONTRACT_6MONTHS,
+					Reason:         constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + fmt.Sprintf("%s %s >= 6 bulan - PBK Pass", spDupcheck.StatusKonsumen, customerSegment),
+					Result:         constant.DECISION_PASS,
+					SourceDecision: constant.SOURCE_DECISION_BIRO,
+				}
+			} else {
+				data = response.UsecaseApi{
+					Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
+					Reason:         fmt.Sprintf("%s %s >= 6 bulan - PBK Pass", spDupcheck.StatusKonsumen, customerSegment),
+					Result:         constant.DECISION_PASS,
+					SourceDecision: constant.SOURCE_DECISION_BIRO,
+				}
 			}
 
-			RrdDateTime, ok := filtering.RrdDate.(time.Time)
-			if !ok {
-				err = errors.New(constant.ERROR_UPSTREAM + " - RrdDate is not of type time.Time")
-				return
-			}
-
-			RrdDateString = RrdDateTime.Format(time.RFC3339)
-			CreatedAtString = filtering.CreatedAt.Format(time.RFC3339)
-
-			RrdDate, _ = time.Parse(time.RFC3339, RrdDateString)
-			CreatedAt, _ = time.Parse(time.RFC3339, CreatedAtString)
-			MonthsOfExpiredContract, _ = utils.PreciseMonthsDifference(RrdDate, CreatedAt)
-
-			// Get config expired_contract
-			expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
-			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
-				return
-			}
-
-			var configValueExpContract response.ExpiredContractConfig
-			json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
-
-			if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
-				// Jalur mirip seperti customer segment "REGULAR"
-				OverrideFlowLikeRegular = true
-			}
+			return
 		}
 
 		// ADD INTERCEPT CONDITIONAL RELATED TO `PERBAIKAN RO PRIME/PRIORITY (NON-TOPUP)`
 		if ((spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_RO || (spDupcheck.InstallmentTopup > 0 && spDupcheck.MaxOverdueDaysforActiveAgreement <= 30)) && !OverrideFlowLikeRegular) || (OverrideFlowLikeRegular && !cbFound) {
-			pefindoReason := fmt.Sprintf("%s %s - PBK Pass", spDupcheck.StatusKonsumen, customerSegment)
 			if OverrideFlowLikeRegular {
-				pefindoReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + pefindoReason
+				data = response.UsecaseApi{
+					Code:           constant.CODE_PEFINDO_PRIME_PRIORITY_EXP_CONTRACT_6MONTHS,
+					Reason:         constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + fmt.Sprintf("%s %s - PBK Pass", spDupcheck.StatusKonsumen, customerSegment),
+					Result:         constant.DECISION_PASS,
+					SourceDecision: constant.SOURCE_DECISION_BIRO,
+				}
+			} else {
+				data = response.UsecaseApi{
+					Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
+					Reason:         fmt.Sprintf("%s %s - PBK Pass", spDupcheck.StatusKonsumen, customerSegment),
+					Result:         constant.DECISION_PASS,
+					SourceDecision: constant.SOURCE_DECISION_BIRO,
+				}
 			}
 
-			data = response.UsecaseApi{
-				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
-				Reason:         pefindoReason,
-				Result:         constant.DECISION_PASS,
-				SourceDecision: constant.SOURCE_DECISION_BIRO,
-			}
 			return
 		}
 	}

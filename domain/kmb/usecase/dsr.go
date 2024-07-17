@@ -302,8 +302,10 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 		}
 	}
 
+	RuleCodeForDSRLTE35 := constant.CODE_TOTAL_DSRLTE35
 	if OverrideFlowLikeRegular {
 		reasonCustomerStatus = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + reasonCustomerStatus
+		RuleCodeForDSRLTE35 = constant.CODE_TOTAL_DSRLTE35_EXP_CONTRACT_6MONTHS
 	}
 
 	if !OverrideFlowLikeRegular {
@@ -351,7 +353,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 					trxFMF.TotalDSR = SpDupcheckMap.Dsr
 					data = response.UsecaseApi{
 						Result:         constant.DECISION_PASS,
-						Code:           constant.CODE_TOTAL_DSRLTE35,
+						Code:           RuleCodeForDSRLTE35,
 						Reason:         fmt.Sprintf("%s", reasonCustomerStatus),
 						SourceDecision: constant.SOURCE_DECISION_DSR,
 					}
@@ -367,7 +369,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 							trxFMF.TotalDSR = SpDupcheckMap.Dsr
 							data = response.UsecaseApi{
 								Result:         constant.DECISION_PASS,
-								Code:           constant.CODE_TOTAL_DSRLTE35,
+								Code:           RuleCodeForDSRLTE35,
 								Reason:         fmt.Sprintf("%s", reasonCustomerStatus),
 								SourceDecision: constant.SOURCE_DECISION_DSR,
 							}
@@ -407,7 +409,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 	if totalDSR <= configValue.Data.MaxDsr {
 		data = response.UsecaseApi{
 			Result:         constant.DECISION_PASS,
-			Code:           constant.CODE_TOTAL_DSRLTE35,
+			Code:           RuleCodeForDSRLTE35,
 			Reason:         fmt.Sprintf("%s %s %s", reasonCustomerStatus, constant.REASON_TOTAL_DSRLTE, reasonMaxDsr),
 			SourceDecision: constant.SOURCE_DECISION_DSR,
 		}
