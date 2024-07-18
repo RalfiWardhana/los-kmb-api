@@ -3506,8 +3506,15 @@ func (r repoHandler) GetMappingClusterChangeLog(pagination interface{}) (data []
 
 func (r repoHandler) EncryptString(data string) (encrypted entity.EncryptString, err error) {
 
-	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS encrypt`, data)).Scan(&encrypted).Error; err != nil {
-		return
+	var regexpPpid = regexp.MustCompile(`SAL-|NE-`)
+
+	// check if data is not ProspectID
+	if data != "" && !regexpPpid.MatchString(data) {
+		if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS encrypt`, data)).Scan(&encrypted).Error; err != nil {
+			return
+		}
+	} else {
+		encrypted.Encrypt = data
 	}
 
 	return
