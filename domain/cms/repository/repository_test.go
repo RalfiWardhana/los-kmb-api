@@ -3688,8 +3688,6 @@ func TestGetInquiryCa(t *testing.T) {
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock) INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN ( SELECT value FROM region_user ru WITH (nolock) cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',') WHERE ru.user_id = 'abc123' ) AND b.lob_id='125'`)).WillReturnError(gorm.ErrRecordNotFound)
 
-		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','SAL-XXX') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("xxxxxx"))
-
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
 		cte_trx_ca_decision AS (
@@ -8831,8 +8829,6 @@ func TestGetInquiryApproval(t *testing.T) {
 			UserID:      "db1f4044e1dc574",
 			Alias:       "CBM",
 		}
-
-		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','NE-XXX') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("xxxxxx"))
 
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
