@@ -217,8 +217,10 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	/* Process Get Cluster based on CMO_ID ends here */
 
+	primePriority, _ := utils.ItemExists(mainCustomer.CustomerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
+
 	// hit ke pefindo
-	respFilteringPefindo, resPefindo, trxDetailBiro, err = u.usecase.FilteringPefindo(ctx, reqPefindo, mainCustomer.CustomerStatus, clusterCmo, accessToken)
+	respFilteringPefindo, resPefindo, trxDetailBiro, err = u.usecase.FilteringPefindo(ctx, reqPefindo, mainCustomer.CustomerStatus, clusterCmo, primePriority, accessToken)
 	if err != nil {
 		return
 	}
@@ -233,8 +235,6 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	entityFiltering.CustomerStatusKMB = mainCustomer.CustomerStatusKMB
 
 	entityFiltering.Cluster = respFiltering.Cluster
-
-	primePriority, _ := utils.ItemExists(mainCustomer.CustomerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
 
 	if primePriority && (mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_AO || mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO) {
 		respFiltering.Code = blackList.Code
@@ -326,7 +326,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	return
 }
 
-func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, customerStatus, clusterCMO string, accessToken string) (data response.Filtering, responsePefindo response.PefindoResult, trxDetailBiro []entity.TrxDetailBiro, err error) {
+func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, customerStatus, clusterCMO string, isPrimePriority bool, accessToken string) (data response.Filtering, responsePefindo response.PefindoResult, trxDetailBiro []entity.TrxDetailBiro, err error) {
 
 	timeOut, _ := strconv.Atoi(os.Getenv("DUPCHECK_API_TIMEOUT"))
 
@@ -695,7 +695,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 				if (pefindoResult.MaxOverdueLast12Months != nil && checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12Months) > constant.PBK_OVD_LAST_12) ||
 					(pefindoResult.MaxOverdue != nil && checkNullMaxOverdue(pefindoResult.MaxOverdue) > constant.PBK_OVD_CURRENT) {
 
-					if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET && strings.Contains("Cluster E Cluster F", clusterCMO) {
+					if !(customerStatus == constant.STATUS_KONSUMEN_RO && isPrimePriority) && pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET && strings.Contains("Cluster E Cluster F", clusterCMO) {
 						data.Reason = fmt.Sprintf("%s %s & Baki Debet > 3 - 20 Juta & Tidak dapat dibiayai", bpkbString, getReasonCategoryRoman(pefindoResult.Category))
 						data.NextProcess = false
 						data.Decision = constant.DECISION_REJECT

@@ -116,27 +116,27 @@ func (_m *Usecase) DupcheckIntegrator(ctx context.Context, prospectID string, id
 	return r0, r1
 }
 
-// FilteringPefindo provides a mock function with given fields: ctx, reqPefindo, customerStatus, clusterCMO, accessToken
-func (_m *Usecase) FilteringPefindo(ctx context.Context, reqPefindo request.Pefindo, customerStatus string, clusterCMO string, accessToken string) (response.Filtering, response.PefindoResult, []entity.TrxDetailBiro, error) {
-	ret := _m.Called(ctx, reqPefindo, customerStatus, clusterCMO, accessToken)
+// FilteringPefindo provides a mock function with given fields: ctx, reqPefindo, customerStatus, clusterCMO, isPrimePriority, accessToken
+func (_m *Usecase) FilteringPefindo(ctx context.Context, reqPefindo request.Pefindo, customerStatus string, clusterCMO string, isPrimePriority bool, accessToken string) (response.Filtering, response.PefindoResult, []entity.TrxDetailBiro, error) {
+	ret := _m.Called(ctx, reqPefindo, customerStatus, clusterCMO, isPrimePriority, accessToken)
 
 	var r0 response.Filtering
-	if rf, ok := ret.Get(0).(func(context.Context, request.Pefindo, string, string, string) response.Filtering); ok {
-		r0 = rf(ctx, reqPefindo, customerStatus, clusterCMO, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, request.Pefindo, string, string, bool, string) response.Filtering); ok {
+		r0 = rf(ctx, reqPefindo, customerStatus, clusterCMO, isPrimePriority, accessToken)
 	} else {
 		r0 = ret.Get(0).(response.Filtering)
 	}
 
 	var r1 response.PefindoResult
-	if rf, ok := ret.Get(1).(func(context.Context, request.Pefindo, string, string, string) response.PefindoResult); ok {
-		r1 = rf(ctx, reqPefindo, customerStatus, clusterCMO, accessToken)
+	if rf, ok := ret.Get(1).(func(context.Context, request.Pefindo, string, string, bool, string) response.PefindoResult); ok {
+		r1 = rf(ctx, reqPefindo, customerStatus, clusterCMO, isPrimePriority, accessToken)
 	} else {
 		r1 = ret.Get(1).(response.PefindoResult)
 	}
 
 	var r2 []entity.TrxDetailBiro
-	if rf, ok := ret.Get(2).(func(context.Context, request.Pefindo, string, string, string) []entity.TrxDetailBiro); ok {
-		r2 = rf(ctx, reqPefindo, customerStatus, clusterCMO, accessToken)
+	if rf, ok := ret.Get(2).(func(context.Context, request.Pefindo, string, string, bool, string) []entity.TrxDetailBiro); ok {
+		r2 = rf(ctx, reqPefindo, customerStatus, clusterCMO, isPrimePriority, accessToken)
 	} else {
 		if ret.Get(2) != nil {
 			r2 = ret.Get(2).([]entity.TrxDetailBiro)
@@ -144,8 +144,8 @@ func (_m *Usecase) FilteringPefindo(ctx context.Context, reqPefindo request.Pefi
 	}
 
 	var r3 error
-	if rf, ok := ret.Get(3).(func(context.Context, request.Pefindo, string, string, string) error); ok {
-		r3 = rf(ctx, reqPefindo, customerStatus, clusterCMO, accessToken)
+	if rf, ok := ret.Get(3).(func(context.Context, request.Pefindo, string, string, bool, string) error); ok {
+		r3 = rf(ctx, reqPefindo, customerStatus, clusterCMO, isPrimePriority, accessToken)
 	} else {
 		r3 = ret.Error(3)
 	}

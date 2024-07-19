@@ -754,7 +754,7 @@ func TestFiltering(t *testing.T) {
 				mockUsecase.On("BlacklistCheck", 1, tc.spSpouse).Return(tc.resBlackList, mock.Anything).Once()
 			}
 
-			mockUsecase.On("FilteringPefindo", ctx, tc.reqPefindo, mock.Anything, mock.Anything, accessToken).Return(tc.respFilteringPefindo, tc.resPefindo, tc.trxDetailBiro, tc.errpefindo).Once()
+			mockUsecase.On("FilteringPefindo", ctx, tc.reqPefindo, mock.Anything, mock.Anything, mock.Anything, accessToken).Return(tc.respFilteringPefindo, tc.resPefindo, tc.trxDetailBiro, tc.errpefindo).Once()
 
 			customerID, ok := tc.spCustomer.CustomerID.(string)
 			if !ok {
@@ -806,6 +806,7 @@ func TestFilteringPefindo(t *testing.T) {
 		pefindoResult        response.PefindoResult
 		customerStatus       string
 		clusterCMO           string
+		isPrimePriority      bool
 		reqPefindo           request.Pefindo
 		respFilteringPefindo response.Filtering
 		resPefindo           response.PefindoResult
@@ -4901,7 +4902,7 @@ func TestFilteringPefindo(t *testing.T) {
 			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("NEW_KMB_PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, tc.reqPefindo.ProspectID, accessToken).Return(resp, tc.errPefindo).Once()
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
-			rFilteringPefindo, rPefindo, _, err := usecase.FilteringPefindo(ctx, tc.reqPefindo, tc.customerStatus, tc.clusterCMO, accessToken)
+			rFilteringPefindo, rPefindo, _, err := usecase.FilteringPefindo(ctx, tc.reqPefindo, tc.customerStatus, tc.clusterCMO, tc.isPrimePriority, accessToken)
 			require.Equal(t, tc.respFilteringPefindo, rFilteringPefindo)
 			require.Equal(t, tc.resPefindo, rPefindo)
 			require.Equal(t, tc.errFinal, err)

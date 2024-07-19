@@ -307,3 +307,31 @@ func TestGetResultFiltering(t *testing.T) {
 		t.Errorf("error '%s' was not expected, but got: ", err)
 	}
 }
+
+func TestGetConfig(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	jsonValue := `{ "data": { "expired_contract_check_enabled": true, "expired_contract_max_months": 6 } }`
+
+	newDB := NewRepository(gormDB, gormDB, gormDB)
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT [value] FROM app_config WITH (nolock) WHERE group_name = 'expired_contract' AND lob = 'KMB-OFF' AND [key]= 'expired_contract_check' AND is_active = 1")).
+		WillReturnRows(sqlmock.NewRows([]string{"value"}).
+			AddRow(jsonValue))
+	result, err := newDB.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+	if err != nil {
+		t.Errorf("error '%s' was not expected, but got: ", err)
+	}
+
+	expected := entity.AppConfig{Value: jsonValue}
+	if result != expected {
+		t.Errorf("expected '%v', but got '%v'", expected, result)
+	}
+}
