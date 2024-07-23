@@ -642,7 +642,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 		) jb ON tce.JobPosition = jb.[key]
 		LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
 		LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
-		WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.LegalName='xxxxxx')) AS tt`)).
+		WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (tcp.LegalName = 'xxxxxx')) AS tt`)).
 		WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 			AddRow("27"))
 
@@ -900,7 +900,7 @@ func TestGetInquiryPrescreening(t *testing.T) {
 		group_name = 'JobPosition'
 	) jb ON tce.JobPosition = jb.[key]
 	LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
-	LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key] WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.LegalName='xxxxxx')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key] WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (tcp.LegalName = 'xxxxxx')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 		WillReturnRows(sqlmock.NewRows([]string{"Code", "ReasonID", "ReasonMessage"}).
 			AddRow("12", "11", "Akte Jual Beli Tidak Sesuai"))
 
@@ -1545,7 +1545,7 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 		) jb ON tce.JobPosition = jb.[key]
 		LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
 		LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
-		 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.LegalName='xxxxxx')) AS tt `)).
+		 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (tcp.LegalName = 'xxxxxx')) AS tt `)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -1803,7 +1803,7 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 		group_name = 'JobPosition'
 	) jb ON tce.JobPosition = jb.[key]
 	LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
-	LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key] WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.LegalName='xxxxxx')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key] WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (tcp.LegalName = 'xxxxxx')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"Code", "ReasonID", "ReasonMessage"}).
 				AddRow("12", "11", "Akte Jual Beli Tidak Sesuai"))
 
@@ -3276,7 +3276,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
 		LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
 		LEFT JOIN cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-		 WHERE tm.BranchID = '426' AND tcp.LegalName='xxxxxx') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CRA' AND (tcd.decision IS NULL OR (rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN')) AND tst.source_decision<>'PSI') AS tt`)).
+		 WHERE tm.BranchID = '426' AND (tcp.LegalName = 'xxxxxx') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CRA' AND (tcd.decision IS NULL OR (rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN')) AND tst.source_decision<>'PSI') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
@@ -3658,7 +3658,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
 		LEFT JOIN
 			cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-	 WHERE tm.BranchID = '426' AND tcp.LegalName='xxxxxx') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CRA' AND (tcd.decision IS NULL OR (rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN')) AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	 WHERE tm.BranchID = '426' AND (tcp.LegalName = 'xxxxxx') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CRA' AND (tcd.decision IS NULL OR (rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN')) AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function
@@ -4246,7 +4246,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
 		LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
 		LEFT JOIN cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-		 WHERE tm.BranchID IN ('426') AND tcp.IDNumber='xxxxxx') AND tst.decision = 'REJ' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt`)).
+		 WHERE tm.BranchID IN ('426') AND (tcp.IDNumber = 'xxxxxx') AND tst.decision = 'REJ' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
@@ -4628,7 +4628,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
 		LEFT JOIN
 			cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-	 WHERE tm.BranchID IN ('426') AND tcp.IDNumber='xxxxxx') AND tst.decision = 'REJ' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	 WHERE tm.BranchID IN ('426') AND (tcp.IDNumber = 'xxxxxx') AND tst.decision = 'REJ' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function
@@ -4742,7 +4742,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
 		LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
 		LEFT JOIN cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-		 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.LegalName='xxxxxx') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt`)).
+		 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (tcp.LegalName = 'xxxxxx') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`WITH 
@@ -5124,7 +5124,7 @@ func TestGetInquiryCa(t *testing.T) {
 				LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
 				LEFT JOIN
 					cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-			 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.LegalName='xxxxxx') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+			 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (tcp.LegalName = 'xxxxxx') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND tst.source_decision<>'PSI') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function
@@ -8026,7 +8026,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
-		 WHERE tm.BranchID = '426' AND tcp.LegalName='xxxxxx') AND (has.next_step = 'CBM' OR has.source_decision='CBM')) AS tt`)).
+		 WHERE tm.BranchID = '426' AND (tcp.LegalName = 'xxxxxx') AND (has.next_step = 'CBM' OR has.source_decision='CBM')) AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
@@ -8375,7 +8375,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	 WHERE tm.BranchID = '426' AND tcp.LegalName='xxxxxx') AND (has.next_step = 'CBM' OR has.source_decision='CBM')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	 WHERE tm.BranchID = '426' AND (tcp.LegalName = 'xxxxxx') AND (has.next_step = 'CBM' OR has.source_decision='CBM')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function
@@ -8452,7 +8452,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
-		 WHERE tm.BranchID = '426' AND tcp.LegalName='xxxxxx') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CBM') AS tt`)).
+		 WHERE tm.BranchID = '426' AND (tcp.LegalName = 'xxxxxx') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CBM') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
@@ -8801,7 +8801,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	 WHERE tm.BranchID = '426' AND tcp.LegalName='xxxxxx') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CBM') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	 WHERE tm.BranchID = '426' AND (tcp.LegalName = 'xxxxxx') AND tst.activity= 'UNPR' AND tst.decision= 'CPR' AND tst.source_decision = 'CBM') AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function
@@ -9309,7 +9309,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
-		 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.IDNumber='xxxxxx') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt`)).
+		 WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (tcp.IDNumber = 'xxxxxx') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
@@ -9658,7 +9658,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND tcp.IDNumber='xxxxxx') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt  ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (tcp.IDNumber = 'xxxxxx') AND tst.decision = 'CAN' AND tst.status_process='FIN' AND has.source_decision='CBM') AS tt  ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
 		// Call the function

@@ -381,32 +381,41 @@ func GenerateBranchFilter(branchId string) string {
 	return fmt.Sprintf("WHERE tm.BranchID IN (%s)", branch)
 }
 
-func GenerateFilter(search, encrypted, filterBranch, rangeDays string) string {
-	var filter string
+func GenerateFilter(search, encrypted, filterBranch, rangeDays, inquiryType string) string {
+	var filter, filterIdNumber, filterLegalName string
 	var regexpPpid = regexp.MustCompile(`SAL-|NE-`)
 	var regexpIDNumber = regexp.MustCompile(`^[0-9]*$`)
 	var regexpLegalName = regexp.MustCompile("^[a-zA-Z.,'` ]*$")
+
+	switch inquiryType {
+	case "NE":
+		filterIdNumber = fmt.Sprintf("(tm.IDNumber = '%s')", encrypted)
+		filterLegalName = fmt.Sprintf("(tm.LegalName = '%s')", encrypted)
+	default:
+		filterIdNumber = fmt.Sprintf("(tcp.IDNumber = '%s')", encrypted)
+		filterLegalName = fmt.Sprintf("(tcp.LegalName = '%s')", encrypted)
+	}
 
 	if search != "" {
 		if filterBranch != "" {
 			if regexpPpid.MatchString(search) {
 				filter = filterBranch + fmt.Sprintf(" AND (tm.ProspectID = '%s')", search)
 			} else if regexpIDNumber.MatchString(search) {
-				filter = filterBranch + fmt.Sprintf(" AND tcp.IDNumber='%s')", encrypted)
+				filter = filterBranch + fmt.Sprintf(" AND %s", filterIdNumber)
 			} else if regexpLegalName.MatchString(search) {
-				filter = filterBranch + fmt.Sprintf(" AND tcp.LegalName='%s')", encrypted)
+				filter = filterBranch + fmt.Sprintf(" AND %s", filterLegalName)
 			} else {
-				filter = filterBranch + fmt.Sprintf(" AND (tm.ProspectID = '%s') OR (tcp.IDNumber='%s') OR (tcp.LegalName='%s')", search, encrypted, encrypted)
+				filter = filterBranch + fmt.Sprintf(" AND (tm.ProspectID = '%s') OR %s OR %s", search, filterIdNumber, filterLegalName)
 			}
 		} else {
 			if regexpPpid.MatchString(search) {
 				filter = fmt.Sprintf("WHERE (tm.ProspectID = '%s')", search)
 			} else if regexpIDNumber.MatchString(search) {
-				filter = fmt.Sprintf("WHERE (tcp.IDNumber = '%s')", encrypted)
+				filter = fmt.Sprintf("WHERE %s", filterIdNumber)
 			} else if regexpLegalName.MatchString(search) {
-				filter = fmt.Sprintf("WHERE (tcp.LegalName = '%s')", encrypted)
+				filter = fmt.Sprintf("WHERE %s", filterLegalName)
 			} else {
-				filter = fmt.Sprintf("WHERE (tm.ProspectID = '%s') OR (tcp.IDNumber='%s') OR (tcp.LegalName='%s')", search, encrypted, encrypted)
+				filter = fmt.Sprintf("WHERE (tm.ProspectID = '%s') OR %s OR %s", search, filterIdNumber, filterLegalName)
 			}
 		}
 	} else {

@@ -349,7 +349,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 		encrypted, _ = r.EncryptString(req.Search)
 	}
 
-	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays)
+	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays, "")
 
 	if pagination != nil {
 		page, _ := json.Marshal(pagination)
@@ -1192,7 +1192,7 @@ func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface
 		encrypted, _ = r.EncryptString(req.Search)
 	}
 
-	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays)
+	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays, "NE")
 
 	if pagination != nil {
 		page, _ := json.Marshal(pagination)
@@ -1219,7 +1219,7 @@ func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface
 			scp.dbo.DEC_B64('SEC', tm.LegalName) AS LegalName
 		FROM
 		trx_new_entry tm WITH (nolock)
-		) AS tt %s`, filter)).Scan(&row).Error; err != nil {
+		 %s) AS tt`, filter)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -1349,7 +1349,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		encrypted, _ = r.EncryptString(req.Search)
 	}
 
-	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays)
+	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays, "")
 
 	// Filter By
 	if req.Filter != "" {
@@ -2616,7 +2616,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		encrypted, _ = r.EncryptString(req.Search)
 	}
 
-	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays)
+	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays, "")
 
 	// Filter By
 	if req.Filter != "" {
