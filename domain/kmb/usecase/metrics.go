@@ -514,7 +514,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		scoreBiro = filtering.ScoreBiro.(string)
 	}
 
-	responseScs, metricsScs, pefindoIDX, err := u.usecase.Scorepro(ctx, reqMetrics, scoreBiro, customerSegment, dupcheckData, accessToken)
+	responseScs, metricsScs, pefindoIDX, err := u.usecase.Scorepro(ctx, reqMetrics, scoreBiro, customerSegment, dupcheckData, accessToken, filtering)
 	if err != nil {
 		return
 	}
@@ -570,7 +570,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	}
 
 	income := reqDupcheck.MonthlyFixedIncome + reqDupcheck.MonthlyVariableIncome + reqDupcheck.SpouseIncome
-	metricsTotalDsrFmfPbk, trxFMFTotalDsrFmfPbk, err := u.usecase.TotalDsrFmfPbk(ctx, income, reqMetrics.Apk.InstallmentAmount, totalInstallmentPBK, reqMetrics.Transaction.ProspectID, customerSegment, accessToken, dupcheckData, configValue)
+	metricsTotalDsrFmfPbk, trxFMFTotalDsrFmfPbk, err := u.usecase.TotalDsrFmfPbk(ctx, income, reqMetrics.Apk.InstallmentAmount, totalInstallmentPBK, reqMetrics.Transaction.ProspectID, customerSegment, accessToken, dupcheckData, configValue, filtering)
 	if err != nil {
 		return
 	}
