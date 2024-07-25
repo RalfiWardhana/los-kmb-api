@@ -68,20 +68,11 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 
 	if customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY {
 		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_AO && spDupcheck.InstallmentTopup == 0 && spDupcheck.NumberOfPaidInstallment >= 6 {
-			if OverrideFlowLikeRegular {
-				data = response.UsecaseApi{
-					Code:           constant.CODE_PEFINDO_PRIME_PRIORITY_EXP_CONTRACT_6MONTHS,
-					Reason:         constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + fmt.Sprintf("%s %s >= 6 bulan - PBK Pass", spDupcheck.StatusKonsumen, customerSegment),
-					Result:         constant.DECISION_PASS,
-					SourceDecision: constant.SOURCE_DECISION_BIRO,
-				}
-			} else {
-				data = response.UsecaseApi{
-					Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
-					Reason:         fmt.Sprintf("%s %s >= 6 bulan - PBK Pass", spDupcheck.StatusKonsumen, customerSegment),
-					Result:         constant.DECISION_PASS,
-					SourceDecision: constant.SOURCE_DECISION_BIRO,
-				}
+			data = response.UsecaseApi{
+				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
+				Reason:         fmt.Sprintf("%s %s >= 6 bulan - PBK Pass", spDupcheck.StatusKonsumen, customerSegment),
+				Result:         constant.DECISION_PASS,
+				SourceDecision: constant.SOURCE_DECISION_BIRO,
 			}
 
 			return
