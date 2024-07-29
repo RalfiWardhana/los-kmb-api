@@ -2029,11 +2029,11 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 	return
 }
 
-func (r repoHandler) GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNameType, tenor int) (data entity.MappingVehicleAge, err error) {
+func (r repoHandler) GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNameType, tenor int, resultPefindo string, af float64) (data entity.MappingVehicleAge, err error) {
 
-	query := `SELECT TOP 1 * FROM m_mapping_vehicle_age WHERE vehicle_age_start <= ? AND vehicle_age_end >= ? AND cluster = ? AND bpkb_name_type = ? AND tenor_start <= ? AND tenor_end >= ?`
+	query := `SELECT TOP 1 * FROM m_mapping_vehicle_age WHERE vehicle_age_start <= ? AND vehicle_age_end >= ? AND cluster LIKE ? AND bpkb_name_type = ? AND tenor_start <= ? AND tenor_end >= ? AND result_pbk LIKE ? AND af_start < ? AND af_end >= ?`
 
-	if err = r.newKmbDB.Raw(query, vehicleAge, vehicleAge, cluster, bpkbNameType, tenor, tenor).Scan(&data).Error; err != nil {
+	if err = r.newKmbDB.Raw(query, vehicleAge, vehicleAge, fmt.Sprintf("%%%s%%", cluster), bpkbNameType, tenor, tenor, fmt.Sprintf("%%%s%%", resultPefindo), af, af).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
