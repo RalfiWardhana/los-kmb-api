@@ -128,7 +128,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	mapping.SpouseType = spMap.SpouseType
 
 	//Check vehicle age
-	ageVehicle, err := u.usecase.VehicleCheck(req.ManufactureYear, req.CMOCluster, req.BPKBName, req.Tenor, configValue)
+	ageVehicle, err := u.usecase.VehicleCheck(req.ManufactureYear, req.CMOCluster, req.BPKBName, req.Tenor, configValue, req.Filtering, req.AF)
 
 	if err != nil {
 		return
@@ -747,7 +747,7 @@ func (u usecase) CustomerKMB(spDupcheck response.SpDupCekCustomerByID) (statusKo
 
 }
 
-func (u usecase) VehicleCheck(manufactureYear, cmoCluster, bkpbName string, tenor int, configValue response.DupcheckConfig) (data response.UsecaseApi, err error) {
+func (u usecase) VehicleCheck(manufactureYear, cmoCluster, bkpbName string, tenor int, configValue response.DupcheckConfig, filtering entity.FilteringKMB, af float64) (data response.UsecaseApi, err error) {
 
 	data.SourceDecision = constant.SOURCE_DECISION_PMK
 
@@ -764,7 +764,9 @@ func (u usecase) VehicleCheck(manufactureYear, cmoCluster, bkpbName string, teno
 			bpkbNameType = 1
 		}
 
-		mapping, err := u.repository.GetMappingVehicleAge(ageVehicle, cmoCluster, bpkbNameType, tenor)
+		resultPefindo := checkResultPefindo(filtering)
+
+		mapping, err := u.repository.GetMappingVehicleAge(ageVehicle, cmoCluster, bpkbNameType, tenor, resultPefindo, af)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Vehicle Age Error")
 			return data, err
@@ -789,4 +791,28 @@ func (u usecase) VehicleCheck(manufactureYear, cmoCluster, bkpbName string, teno
 		return
 	}
 
+}
+
+func checkResultPefindo(filtering entity.FilteringKMB) (resultPefindo string) {
+	// check hit pefindo
+	if filtering.ScoreBiro != nil {
+		if filtering.ScoreBiro.(string) != "" && filtering.ScoreBiro.(string) != constant.DECISION_PBK_NO_HIT && filtering.ScoreBiro.(string) != constant.PEFINDO_UNSCORE {
+			// use ovd pefindo all
+			maxOverdueLast12Months, _ := utils.GetFloat(filtering.MaxOverdueLast12monthsBiro)
+			maxOverdueDays, _ := utils.GetFloat(filtering.MaxOverdueBiro)
+
+			// pass or reject
+			if maxOverdueLast12Months > constant.PBK_OVD_LAST_12 {
+				resultPefindo = constant.DECISION_REJECT
+			} else if maxOverdueDays > constant.PBK_OVD_CURRENT {
+				resultPefindo = constant.DECISION_REJECT
+			} else {
+				resultPefindo = constant.DECISION_PASS
+			}
+		}
+	} else {
+		resultPefindo = constant.DECISION_PBK_NO_HIT
+	}
+
+	return resultPefindo
 }
