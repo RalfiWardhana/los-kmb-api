@@ -261,6 +261,7 @@ const (
 	DECISION_PBK_NO_HIT                                          = "NO HIT"
 	UNSCORE_PBK                                                  = "UNSCORE"
 	NOT_MATCH_PBK                                                = "NOT_MATCH"
+	NO_HIT_PBK                                                   = "NO_HIT"
 	WO_AGUNAN_REJECT_CODE                                        = "9107"
 	WO_AGUNAN_PASS_CODE                                          = "9108"
 	NAMA_SAMA_BAKI_DEBET_SESUAI                                  = "Nama Sama & Baki Debet Sesuai Ketentuan"
@@ -474,6 +475,7 @@ const (
 	REASON_VEHICLE_SESUAI           = "Umur Kendaraan Sesuai Ketentuan"
 	REASON_VEHICLE_AGE_MAX          = "Usia Kendaraan >"
 	DEFAULT_BRANCH_ID               = "DEFAULT"
+	INFO_VEHICLE_AGE                = "Tidak diperkenankan deviasi usia kendaraan"
 
 	//NOKA NOSIN
 	ATTEMPT_REJECT                   = 2

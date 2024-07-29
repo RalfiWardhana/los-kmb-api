@@ -140,7 +140,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
-	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: ageVehicle.Code, SourceDecision: constant.SOURCE_DECISION_PMK, Reason: ageVehicle.Reason, NextStep: constant.SOURCE_DECISION_NOKANOSIN})
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: ageVehicle.Code, SourceDecision: constant.SOURCE_DECISION_PMK, Reason: ageVehicle.Reason, NextStep: constant.SOURCE_DECISION_NOKANOSIN, Info: ageVehicle.Info})
 
 	// Check Chassis Number with Active Aggrement
 	checkChassisNumber, err := u.usecase.CheckAgreementChassisNumber(ctx, req, accessToken)
@@ -758,13 +758,23 @@ func (u usecase) VehicleCheck(manufactureYear, cmoCluster, bkpbName string, teno
 
 	ageVehicle += int(tenor / 12)
 
-	if ageVehicle <= configValue.Data.VehicleAge {
-		bpkbNameType := 0
-		if strings.Contains(os.Getenv("NAMA_SAMA"), bkpbName) {
-			bpkbNameType = 1
-		}
+	bpkbNameType := 0
+	if strings.Contains(os.Getenv("NAMA_SAMA"), bkpbName) {
+		bpkbNameType = 1
+	}
 
-		resultPefindo := checkResultPefindo(filtering)
+	resultPefindo := checkResultPefindo(filtering)
+
+	detailInfo := map[string]interface{}{
+		"vehicle_age":    ageVehicle,
+		"cluster":        cmoCluster,
+		"bpkb_name_type": bpkbNameType,
+		"tenor":          tenor,
+		"af":             af,
+		"result_pbk":     resultPefindo,
+	}
+
+	if ageVehicle <= configValue.Data.VehicleAge {
 
 		mapping, err := u.repository.GetMappingVehicleAge(ageVehicle, cmoCluster, bpkbNameType, tenor, resultPefindo, af)
 		if err != nil {
@@ -772,22 +782,32 @@ func (u usecase) VehicleCheck(manufactureYear, cmoCluster, bkpbName string, teno
 			return data, err
 		}
 
+		detailInfo["info"] = mapping.Info
+		info, _ := json.Marshal(detailInfo)
+
 		if mapping.Decision == constant.DECISION_REJECT {
 			data.Result = constant.DECISION_REJECT
 			data.Code = constant.CODE_VEHICLE_AGE_MAX
 			data.Reason = fmt.Sprintf("%s Ketentuan", constant.REASON_VEHICLE_AGE_MAX)
+			data.Info = string(info)
 			return data, nil
 		}
 
 		data.Result = constant.DECISION_PASS
 		data.Code = constant.CODE_VEHICLE_SESUAI
 		data.Reason = constant.REASON_VEHICLE_SESUAI
+		data.Info = string(info)
 		return data, nil
 
 	} else {
+
+		detailInfo["info"] = constant.INFO_VEHICLE_AGE
+		info, _ := json.Marshal(detailInfo)
+
 		data.Result = constant.DECISION_REJECT
 		data.Code = constant.CODE_VEHICLE_AGE_MAX
 		data.Reason = fmt.Sprintf("%s %d Tahun", constant.REASON_VEHICLE_AGE_MAX, configValue.Data.VehicleAge)
+		data.Info = string(info)
 		return
 	}
 
@@ -811,7 +831,7 @@ func checkResultPefindo(filtering entity.FilteringKMB) (resultPefindo string) {
 			}
 		}
 	} else {
-		resultPefindo = constant.DECISION_PBK_NO_HIT
+		resultPefindo = constant.NO_HIT_PBK
 	}
 
 	return resultPefindo
