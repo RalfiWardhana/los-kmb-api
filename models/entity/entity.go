@@ -2421,3 +2421,13 @@ type MappingVehicleAge struct {
 func (c *MappingVehicleAge) TableName() string {
 	return "m_mapping_vehicle_age"
 }
+
+type MasterMappingIncomeMaxDSR struct {
+	TotalIncomeStart float64 `gorm:"column:total_income_start"`
+	TotalIncomeEnd   float64 `gorm:"column:total_income_end"`
+	DSRThreshold     float64 `gorm:"column:dsr_threshold"`
+}
+
+func (c *MasterMappingIncomeMaxDSR) TableName() string {
+	return "kmb_mapping_income_dsr"
+}

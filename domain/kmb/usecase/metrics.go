@@ -37,6 +37,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		trxDetailDupcheck []entity.TrxDetail
 		cbFound           bool
 		cmoCluster        string
+		mappingMaxDSR     entity.MasterMappingIncomeMaxDSR
 	)
 
 	// cek trx_master
@@ -352,10 +353,8 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 	reqDupcheck.Cluster = mappingCluster.Cluster
 
-	mappingMaxDSR := entity.MasterMappingMaxDSR{
-		Cluster: mappingCluster.Cluster,
-	}
-	mappingMaxDSR, err = u.repository.MasterMappingMaxDSR(mappingMaxDSR)
+	totalIncome := reqDupcheck.MonthlyFixedIncome + reqDupcheck.MonthlyVariableIncome + reqDupcheck.SpouseIncome
+	mappingMaxDSR, err = u.repository.MasterMappingIncomeMaxDSR(totalIncome)
 	if err != nil {
 		if err.Error() != constant.DATA_NOT_FOUND {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Max DSR error")
