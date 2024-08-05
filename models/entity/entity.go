@@ -2409,14 +2409,15 @@ func (c *TrxCmoNoFPD) TableName() string {
 }
 
 type MappingVehicleAge struct {
-	VehicleAgeStart int       `gorm:"column:vehicle_age_start"`
-	VehicleAgeEnd   int       `gorm:"column:vehicle_age_end"`
-	Cluster         string    `gorm:"type:varchar(50);column:cluster"`
-	BPKBNameType    int       `gorm:"column:bpkb_name_type"`
-	TenorStart      int       `gorm:"column:tenor_start"`
-	TenorEnd        int       `gorm:"column:tenor_end"`
-	Decision        string    `gorm:"type:varchar(20);column:decision"`
-	CreatedAt       time.Time `gorm:"type:datetime2(2);column:created_at"`
+	VehicleAgeStart int         `gorm:"column:vehicle_age_start"`
+	VehicleAgeEnd   int         `gorm:"column:vehicle_age_end"`
+	Cluster         string      `gorm:"type:varchar(50);column:cluster"`
+	BPKBNameType    int         `gorm:"column:bpkb_name_type"`
+	TenorStart      int         `gorm:"column:tenor_start"`
+	TenorEnd        int         `gorm:"column:tenor_end"`
+	Decision        string      `gorm:"type:varchar(20);column:decision"`
+	CreatedAt       time.Time   `gorm:"type:datetime2(2);column:created_at"`
+	Info            interface{} `gorm:"column:info"`
 }
 
 func (c *MappingVehicleAge) TableName() string {
