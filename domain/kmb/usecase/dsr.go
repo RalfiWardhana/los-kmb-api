@@ -304,6 +304,9 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 
 	RuleCodeForDSRLTE35 := constant.CODE_TOTAL_DSRLTE35
 	if OverrideFlowLikeRegular {
+		totalDSR = SpDupcheckMap.Dsr
+		trxFMF.TotalDSR = SpDupcheckMap.Dsr
+
 		reasonCustomerStatus = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + reasonCustomerStatus
 		RuleCodeForDSRLTE35 = constant.CODE_TOTAL_DSRLTE35_EXP_CONTRACT_6MONTHS
 	}

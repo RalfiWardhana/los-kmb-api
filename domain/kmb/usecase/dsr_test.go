@@ -660,7 +660,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			},
 			trxFMF: response.TrxFMF{
 				DSRPBK:   float64(0.5),
-				TotalDSR: float64(30.5),
+				TotalDSR: float64(30),
 			},
 			codeLatestInstallment: 200,
 			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
