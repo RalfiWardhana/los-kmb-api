@@ -628,6 +628,7 @@ func TestVehicleCheck(t *testing.T) {
 		resGetMappingVehicleAge entity.MappingVehicleAge
 		errGetMappingVehicleAge error
 		label                   string
+		filtering               entity.FilteringKMB
 	}{
 		{
 			dupcheckConfig: config,
@@ -859,10 +860,10 @@ func TestVehicleCheck(t *testing.T) {
 			var configValue response.DupcheckConfig
 			json.Unmarshal([]byte(test.dupcheckConfig.Value), &configValue)
 
-			mockRepository.On("GetMappingVehicleAge", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(test.resGetMappingVehicleAge, test.errGetMappingVehicleAge)
+			mockRepository.On("GetMappingVehicleAge", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(test.resGetMappingVehicleAge, test.errGetMappingVehicleAge)
 
 			service := NewUsecase(mockRepository, mockHttpClient)
-			result, err := service.VehicleCheck(test.year, test.cmoCluster, test.bpkbName, test.tenor, configValue)
+			result, err := service.VehicleCheck(test.year, test.cmoCluster, test.bpkbName, test.tenor, configValue, test.filtering, 100)
 
 			require.Equal(t, test.errExpected, err)
 			require.Equal(t, test.vehicle.Result, result.Result)

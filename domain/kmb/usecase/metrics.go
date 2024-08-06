@@ -319,6 +319,8 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		Dealer:                reqMetrics.Apk.Dealer,
 		AdminFee:              reqMetrics.Apk.AdminFee,
 		CMOCluster:            cmoCluster,
+		AF:                    reqMetrics.Apk.AF,
+		Filtering:             filtering,
 	}
 
 	if reqMetrics.CustomerSpouse != nil {
