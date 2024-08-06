@@ -2053,7 +2053,7 @@ func (r repoHandler) MasterMappingIncomeMaxDSR(totalIncome float64) (data entity
 	defer db.Commit()
 
 	query := `SELECT TOP 1 * FROM kmb_mapping_income_dsr WHERE total_income_start <= ? AND (total_income_end >= ? OR total_income_end IS NULL)`
-	if err = r.losDB.Raw(query, totalIncome).Scan(&data).Error; err != nil {
+	if err = r.losDB.Raw(query, totalIncome, totalIncome).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
