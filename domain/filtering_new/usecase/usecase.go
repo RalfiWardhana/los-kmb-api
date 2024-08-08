@@ -663,8 +663,8 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 					}
 
 					// Reason ovd include all
-					if !bpkbName && (pefindoResult.MaxOverdueLast12MonthsKORules != nil && checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12) &&
-						(pefindoResult.MaxOverdueKORules != nil && checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) <= constant.PBK_OVD_CURRENT) {
+					if !bpkbName && ((pefindoResult.MaxOverdueLast12MonthsKORules != nil && checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12) ||
+						(pefindoResult.MaxOverdueKORules != nil && checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) <= constant.PBK_OVD_CURRENT)) {
 						data.Reason = fmt.Sprintf("%s & Baki Debet > Threshold", bpkbString)
 						data.NextProcess = false
 						data.Decision = constant.DECISION_REJECT
