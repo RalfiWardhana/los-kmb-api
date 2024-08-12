@@ -606,6 +606,7 @@ const (
 	CODE_PEFINDO_OVD12GT60                  = "962"
 	REASON_PEFINDO_OVD12GT60                = "PBK - Last 12 Month OVD > %v"
 	CODE_PEFINDO_BPKB_BEDA                  = "9416"
+	REJECT_REASON_OVD_PEFINDO               = "OVD Tidak sesuai ketentuan"
 	REASON_BPKB_BEDA                        = "Nama Beda"
 	REASON_BPKB_SAMA                        = "Nama Sama"
 	CODE_BPKB_SAMA_BAKI_DEBET_GT20J         = "9410"

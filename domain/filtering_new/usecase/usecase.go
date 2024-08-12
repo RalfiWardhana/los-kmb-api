@@ -399,13 +399,13 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 								data.Code = constant.NAMA_BEDA_CURRENT_OVD_OVER_LIMIT_CODE
 								data.CustomerStatus = customerStatus
 								data.Decision = constant.DECISION_REJECT
-								data.Reason = fmt.Sprintf("NAMA BEDA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+								data.Reason = fmt.Sprintf("NAMA BEDA %s & %s", getReasonCategoryRoman(pefindoResult.Category), constant.REJECT_REASON_OVD_PEFINDO)
 							}
 						} else {
 							data.Code = constant.NAMA_BEDA_12_OVD_OVER_LIMIT_CODE
 							data.CustomerStatus = customerStatus
 							data.Decision = constant.DECISION_REJECT
-							data.Reason = fmt.Sprintf("NAMA BEDA %s & OVD 12 Bulan Terakhir > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
+							data.Reason = fmt.Sprintf("NAMA BEDA %s & %s", getReasonCategoryRoman(pefindoResult.Category), constant.REJECT_REASON_OVD_PEFINDO)
 						}
 					} else {
 						data.Code = constant.NAMA_BEDA_12_OVD_NULL_CODE
@@ -429,7 +429,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 							} else if checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) > constant.PBK_OVD_CURRENT {
 								data.Code = constant.NAMA_SAMA_CURRENT_OVD_OVER_LIMIT_CODE
 								data.CustomerStatus = customerStatus
-								data.Reason = fmt.Sprintf("NAMA SAMA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+								data.Reason = fmt.Sprintf("NAMA SAMA %s & %s", getReasonCategoryRoman(pefindoResult.Category), constant.REJECT_REASON_OVD_PEFINDO)
 
 								data.Decision = func() string {
 									if checkNullCategory(pefindoResult.Category) == 3 {
@@ -441,7 +441,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 						} else {
 							data.Code = constant.NAMA_SAMA_12_OVD_OVER_LIMIT_CODE
 							data.CustomerStatus = customerStatus
-							data.Reason = fmt.Sprintf("NAMA SAMA %s & OVD 12 Bulan Terakhir > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
+							data.Reason = fmt.Sprintf("NAMA SAMA %s & %s", getReasonCategoryRoman(pefindoResult.Category), constant.REJECT_REASON_OVD_PEFINDO)
 
 							data.Decision = func() string {
 								if checkNullCategory(pefindoResult.Category) == 3 {
@@ -663,9 +663,8 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 					}
 
 					// Reason ovd include all
-					if !bpkbName && (pefindoResult.MaxOverdueLast12MonthsKORules != nil && checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12) &&
-						(pefindoResult.MaxOverdueKORules != nil && checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) <= constant.PBK_OVD_CURRENT) {
-						data.Reason = fmt.Sprintf("%s & Baki Debet > Threshold", bpkbString)
+					if data.NextProcess && !bpkbName {
+						data.Reason = fmt.Sprintf("%s & %s", bpkbString, constant.REJECT_REASON_OVD_PEFINDO)
 						data.NextProcess = false
 						data.Decision = constant.DECISION_REJECT
 					}
