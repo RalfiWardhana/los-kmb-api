@@ -47,51 +47,24 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 			isWoContractBiro        float64
 			isWoWithCollateralBiro  float64
 			totalBakiDebetNonAgunan float64
+			category                string
 		)
 
-		if filtering.MaxOverdueKORules != nil {
-			maxOverdueDays, err = utils.GetFloat(filtering.MaxOverdueKORules)
-			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat MaxOverdueBiro Pefindo Error")
-				return
-			}
-		} else {
-			if filtering.MaxOverdueBiro != nil {
-				maxOverdueDays, err = utils.GetFloat(filtering.MaxOverdueBiro)
-				if err != nil {
-					err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat MaxOverdueBiro Pefindo Error")
-					return
-				}
-			}
-		}
-
-		if filtering.MaxOverdueLast12MonthsKORules != nil {
-			maxOverdueLast12Months, err = utils.GetFloat(filtering.MaxOverdueLast12MonthsKORules)
-			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat MaxOverdueLast12monthsBiro Pefindo Error")
-				return
-			}
-		} else {
-			if filtering.MaxOverdueLast12monthsBiro != nil {
-				maxOverdueLast12Months, err = utils.GetFloat(filtering.MaxOverdueLast12monthsBiro)
-				if err != nil {
-					err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat MaxOverdueLast12monthsBiro Pefindo Error")
-					return
-				}
-			}
-		}
+		maxOverdueDays, _ = utils.GetFloat(filtering.MaxOverdueKORules)
+		maxOverdueLast12Months, _ = utils.GetFloat(filtering.MaxOverdueLast12MonthsKORules)
+		category = getReasonCategoryRoman(filtering.Category)
 
 		if maxOverdueLast12Months > constant.PBK_OVD_LAST_12 {
 			data = response.UsecaseApi{
 				Code:           constant.CODE_PEFINDO_OVD12GT60,
-				Reason:         fmt.Sprintf(constant.REASON_PEFINDO_OVD12GT60, constant.PBK_OVD_LAST_12),
+				Reason:         constant.REJECT_REASON_OVD_PEFINDO,
 				Result:         constant.DECISION_REJECT,
 				SourceDecision: constant.SOURCE_DECISION_BIRO,
 			}
 		} else if maxOverdueDays > constant.PBK_OVD_CURRENT {
 			data = response.UsecaseApi{
 				Code:           constant.CODE_PEFINDO_CURRENT_GT30,
-				Reason:         fmt.Sprintf(constant.REASON_PEFINDO_CURRENT_GT30, constant.PBK_OVD_CURRENT),
+				Reason:         constant.REJECT_REASON_OVD_PEFINDO,
 				Result:         constant.DECISION_REJECT,
 				SourceDecision: constant.SOURCE_DECISION_BIRO,
 			}
@@ -134,7 +107,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 					if isWoWithCollateralBiro > 0 {
 						data = response.UsecaseApi{
 							Code:           constant.NAMA_SAMA_WO_AGUNAN_REJECT_CODE,
-							Reason:         fmt.Sprintf("%s & %s", constant.REASON_BPKB_SAMA, constant.ADA_FASILITAS_WO_AGUNAN),
+							Reason:         fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_SAMA, category, constant.ADA_FASILITAS_WO_AGUNAN),
 							Result:         constant.DECISION_REJECT,
 							SourceDecision: constant.SOURCE_DECISION_BIRO,
 						}
@@ -142,14 +115,14 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 						if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
 							data = response.UsecaseApi{
 								Code:           constant.CODE_BPKB_SAMA_BAKI_DEBET_GT20J,
-								Reason:         constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI,
+								Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, category),
 								Result:         constant.DECISION_REJECT,
 								SourceDecision: constant.SOURCE_DECISION_BIRO,
 							}
 						} else {
 							data = response.UsecaseApi{
 								Code:           constant.CODE_BPKB_SAMA_BAKI_DEBET_LTE20J,
-								Reason:         constant.NAMA_SAMA_BAKI_DEBET_SESUAI,
+								Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, category),
 								Result:         constant.DECISION_PASS,
 								SourceDecision: constant.SOURCE_DECISION_BIRO,
 							}
@@ -159,14 +132,14 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 					if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
 						data = response.UsecaseApi{
 							Code:           constant.CODE_BPKB_SAMA_BAKI_DEBET_GT20J,
-							Reason:         constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI,
+							Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, category),
 							Result:         constant.DECISION_REJECT,
 							SourceDecision: constant.SOURCE_DECISION_BIRO,
 						}
 					} else {
 						data = response.UsecaseApi{
 							Code:           constant.NAMA_SAMA_NO_FACILITY_WO_CODE,
-							Reason:         fmt.Sprintf("%s & %s", constant.REASON_BPKB_SAMA, constant.TIDAK_ADA_FASILITAS_WO_AGUNAN),
+							Reason:         fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_SAMA, category, constant.TIDAK_ADA_FASILITAS_WO_AGUNAN),
 							Result:         constant.DECISION_PASS,
 							SourceDecision: constant.SOURCE_DECISION_BIRO,
 						}
@@ -175,14 +148,12 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 			} else {
 				data = response.UsecaseApi{
 					Code:           constant.CODE_PEFINDO_BPKB_BEDA,
-					Reason:         fmt.Sprintf("%s & %s", constant.REASON_BPKB_BEDA, data.Reason),
+					Reason:         fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_BEDA, category, data.Reason),
 					Result:         constant.DECISION_REJECT,
 					SourceDecision: constant.SOURCE_DECISION_BIRO,
 				}
 			}
-		}
-
-		if data.Result == constant.DECISION_PASS {
+		} else if data.Result == constant.DECISION_PASS {
 			if strings.Contains(os.Getenv("NAMA_SAMA"), bpkbName) {
 				if filtering.IsWoContractBiro != nil {
 					isWoContractBiro, err = utils.GetFloat(filtering.IsWoContractBiro)
@@ -212,7 +183,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 					if isWoWithCollateralBiro > 0 {
 						data = response.UsecaseApi{
 							Code:           constant.NAMA_SAMA_WO_AGUNAN_REJECT_CODE,
-							Reason:         fmt.Sprintf("%s & %s", constant.REASON_BPKB_SAMA, constant.ADA_FASILITAS_WO_AGUNAN),
+							Reason:         fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_SAMA, category, constant.ADA_FASILITAS_WO_AGUNAN),
 							Result:         constant.DECISION_REJECT,
 							SourceDecision: constant.SOURCE_DECISION_BIRO,
 						}
@@ -220,14 +191,14 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 						if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
 							data = response.UsecaseApi{
 								Code:           constant.CODE_BPKB_SAMA_BAKI_DEBET_GT20J,
-								Reason:         constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI,
+								Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, category),
 								Result:         constant.DECISION_REJECT,
 								SourceDecision: constant.SOURCE_DECISION_BIRO,
 							}
 						} else {
 							data = response.UsecaseApi{
 								Code:           constant.CODE_BPKB_SAMA_BAKI_DEBET_LTE20J,
-								Reason:         constant.NAMA_SAMA_BAKI_DEBET_SESUAI,
+								Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, category),
 								Result:         constant.DECISION_PASS,
 								SourceDecision: constant.SOURCE_DECISION_BIRO,
 							}
@@ -237,14 +208,14 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 					if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
 						data = response.UsecaseApi{
 							Code:           constant.CODE_BPKB_SAMA_BAKI_DEBET_GT20J,
-							Reason:         constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI,
+							Reason:         fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, category),
 							Result:         constant.DECISION_REJECT,
 							SourceDecision: constant.SOURCE_DECISION_BIRO,
 						}
 					} else {
 						data = response.UsecaseApi{
 							Code:           constant.NAMA_SAMA_NO_FACILITY_WO_CODE,
-							Reason:         fmt.Sprintf("%s & %s", constant.REASON_BPKB_SAMA, constant.TIDAK_ADA_FASILITAS_WO_AGUNAN),
+							Reason:         fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_SAMA, category, constant.TIDAK_ADA_FASILITAS_WO_AGUNAN),
 							Result:         constant.DECISION_PASS,
 							SourceDecision: constant.SOURCE_DECISION_BIRO,
 						}
@@ -278,23 +249,23 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 				if isWoContractBiro > 0 {
 					if isWoWithCollateralBiro > 0 {
 						data = response.UsecaseApi{
-							Code:           constant.NAMA_SAMA_WO_AGUNAN_REJECT_CODE,
-							Reason:         fmt.Sprintf("%s & %s", constant.REASON_BPKB_BEDA, constant.ADA_FASILITAS_WO_AGUNAN),
+							Code:           constant.NAMA_BEDA_WO_AGUNAN_REJECT_CODE,
+							Reason:         fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_BEDA, category, constant.ADA_FASILITAS_WO_AGUNAN),
 							Result:         constant.DECISION_REJECT,
 							SourceDecision: constant.SOURCE_DECISION_BIRO,
 						}
 					} else {
 						if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
 							data = response.UsecaseApi{
-								Code:           constant.CODE_BPKB_SAMA_BAKI_DEBET_GT20J,
-								Reason:         constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI,
+								Code:           constant.CODE_BPKB_BEDA_BAKI_DEBET_GT20J,
+								Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, category),
 								Result:         constant.DECISION_REJECT,
 								SourceDecision: constant.SOURCE_DECISION_BIRO,
 							}
 						} else {
 							data = response.UsecaseApi{
-								Code:           constant.CODE_BPKB_SAMA_BAKI_DEBET_LTE20J,
-								Reason:         constant.NAMA_BEDA_BAKI_DEBET_SESUAI,
+								Code:           constant.CODE_BPKB_BEDA_BAKI_DEBET_LTE20J,
+								Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, category),
 								Result:         constant.DECISION_PASS,
 								SourceDecision: constant.SOURCE_DECISION_BIRO,
 							}
@@ -303,15 +274,15 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 				} else {
 					if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
 						data = response.UsecaseApi{
-							Code:           constant.CODE_BPKB_SAMA_BAKI_DEBET_GT20J,
-							Reason:         constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI,
+							Code:           constant.CODE_BPKB_BEDA_BAKI_DEBET_GT20J,
+							Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, category),
 							Result:         constant.DECISION_REJECT,
 							SourceDecision: constant.SOURCE_DECISION_BIRO,
 						}
 					} else {
 						data = response.UsecaseApi{
-							Code:           constant.NAMA_SAMA_NO_FACILITY_WO_CODE,
-							Reason:         fmt.Sprintf("%s & %s", constant.REASON_BPKB_BEDA, constant.TIDAK_ADA_FASILITAS_WO_AGUNAN),
+							Code:           constant.NAMA_BEDA_NO_FACILITY_WO_CODE,
+							Reason:         fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_BEDA, category, constant.TIDAK_ADA_FASILITAS_WO_AGUNAN),
 							Result:         constant.DECISION_PASS,
 							SourceDecision: constant.SOURCE_DECISION_BIRO,
 						}
@@ -329,9 +300,19 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 		}
 	}
 
-	if filtering.Reason != nil {
-		data.Reason = filtering.Reason.(string)
-	}
-
 	return
+}
+
+// function to map reason category values to Roman numerals
+func getReasonCategoryRoman(category interface{}) string {
+	switch category.(float64) {
+	case 1:
+		return "(I)"
+	case 2:
+		return "(II)"
+	case 3:
+		return "(III)"
+	default:
+		return ""
+	}
 }
