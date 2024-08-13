@@ -1,7 +1,6 @@
 package usecase
 
 import (
-	"errors"
 	"fmt"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/response"
@@ -61,12 +60,18 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 				Result:         constant.DECISION_REJECT,
 				SourceDecision: constant.SOURCE_DECISION_BIRO,
 			}
+			if strings.Contains(os.Getenv("NAMA_SAMA"), bpkbName) && category != "(III)" {
+				data.Result = constant.DECISION_PASS
+			}
 		} else if maxOverdueDays > constant.PBK_OVD_CURRENT {
 			data = response.UsecaseApi{
 				Code:           constant.CODE_PEFINDO_CURRENT_GT30,
 				Reason:         constant.REJECT_REASON_OVD_PEFINDO,
 				Result:         constant.DECISION_REJECT,
 				SourceDecision: constant.SOURCE_DECISION_BIRO,
+			}
+			if strings.Contains(os.Getenv("NAMA_SAMA"), bpkbName) && category != "(III)" {
+				data.Result = constant.DECISION_PASS
 			}
 		} else {
 			data = response.UsecaseApi{
@@ -79,29 +84,10 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 
 		if data.Result == constant.DECISION_REJECT {
 			if strings.Contains(os.Getenv("NAMA_SAMA"), bpkbName) {
-				if filtering.IsWoContractBiro != nil {
-					isWoContractBiro, err = utils.GetFloat(filtering.IsWoContractBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat IsWoContractBiro Pefindo Error")
-						return
-					}
-				}
 
-				if filtering.IsWoWithCollateralBiro != nil {
-					isWoWithCollateralBiro, err = utils.GetFloat(filtering.IsWoWithCollateralBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat IsWoWithCollateralBiro Pefindo Error")
-						return
-					}
-				}
-
-				if filtering.TotalBakiDebetNonCollateralBiro != nil {
-					totalBakiDebetNonAgunan, err = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat TotalBakiDebetNonCollateralBiro Pefindo Error")
-						return
-					}
-				}
+				isWoContractBiro, _ = utils.GetFloat(filtering.IsWoContractBiro)
+				isWoWithCollateralBiro, _ = utils.GetFloat(filtering.IsWoWithCollateralBiro)
+				totalBakiDebetNonAgunan, _ = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
 
 				if isWoContractBiro > 0 {
 					if isWoWithCollateralBiro > 0 {
@@ -155,29 +141,10 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 			}
 		} else if data.Result == constant.DECISION_PASS {
 			if strings.Contains(os.Getenv("NAMA_SAMA"), bpkbName) {
-				if filtering.IsWoContractBiro != nil {
-					isWoContractBiro, err = utils.GetFloat(filtering.IsWoContractBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat IsWoContractBiro Pefindo Error")
-						return
-					}
-				}
 
-				if filtering.IsWoWithCollateralBiro != nil {
-					isWoWithCollateralBiro, err = utils.GetFloat(filtering.IsWoWithCollateralBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat IsWoWithCollateralBiro Pefindo Error")
-						return
-					}
-				}
-
-				if filtering.TotalBakiDebetNonCollateralBiro != nil {
-					totalBakiDebetNonAgunan, err = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat TotalBakiDebetNonCollateralBiro Pefindo Error")
-						return
-					}
-				}
+				isWoContractBiro, _ = utils.GetFloat(filtering.IsWoContractBiro)
+				isWoWithCollateralBiro, _ = utils.GetFloat(filtering.IsWoWithCollateralBiro)
+				totalBakiDebetNonAgunan, _ = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
 
 				if isWoContractBiro > 0 {
 					if isWoWithCollateralBiro > 0 {
@@ -222,29 +189,10 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 					}
 				}
 			} else {
-				if filtering.IsWoContractBiro != nil {
-					isWoContractBiro, err = utils.GetFloat(filtering.IsWoContractBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat IsWoContractBiro Pefindo Error")
-						return
-					}
-				}
 
-				if filtering.IsWoWithCollateralBiro != nil {
-					isWoWithCollateralBiro, err = utils.GetFloat(filtering.IsWoWithCollateralBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat IsWoWithCollateralBiro Pefindo Error")
-						return
-					}
-				}
-
-				if filtering.TotalBakiDebetNonCollateralBiro != nil {
-					totalBakiDebetNonAgunan, err = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat TotalBakiDebetNonCollateralBiro Pefindo Error")
-						return
-					}
-				}
+				isWoContractBiro, _ = utils.GetFloat(filtering.IsWoContractBiro)
+				isWoWithCollateralBiro, _ = utils.GetFloat(filtering.IsWoWithCollateralBiro)
+				totalBakiDebetNonAgunan, _ = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
 
 				if isWoContractBiro > 0 {
 					if isWoWithCollateralBiro > 0 {
@@ -304,15 +252,15 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 }
 
 // function to map reason category values to Roman numerals
-func getReasonCategoryRoman(category interface{}) string {
-	switch category.(float64) {
+func getReasonCategoryRoman(category interface{}) (str string) {
+	num, _ := utils.GetFloat(category)
+	switch num {
 	case 1:
-		return "(I)"
+		str = "(I)"
 	case 2:
-		return "(II)"
+		str = "(II)"
 	case 3:
-		return "(III)"
-	default:
-		return ""
+		str = "(III)"
 	}
+	return str
 }

@@ -2341,7 +2341,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name:           "test pefindo reject bpkb beda",
+			name:           "test pefindo ovd last 12m all reject bpkb beda ",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
 			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
@@ -2393,7 +2393,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA BEDA & Baki Debet > Threshold",
+				Reason:            "NAMA BEDA & OVD Tidak sesuai ketentuan",
 				CustomerStatus:    "RO",
 				NextProcess:       false,
 				PbkReportCustomer: &pbkCustomer,
@@ -2415,7 +2415,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name:           "test pefindo reject current bpkb beda",
+			name:           "test pefindo ovd current all reject current bpkb beda",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
 			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
@@ -2467,7 +2467,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA BEDA & Baki Debet > Threshold",
+				Reason:            "NAMA BEDA & OVD Tidak sesuai ketentuan",
 				CustomerStatus:    "RO",
 				NextProcess:       false,
 				PbkReportCustomer: &pbkCustomer,
@@ -2785,7 +2785,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name:           "test pefindo reject current bpkb beda",
+			name:           "test pefindo pass ro bpkb beda ada wo agunan",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
 			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
@@ -2836,8 +2836,8 @@ func TestFilteringPefindo(t *testing.T) {
 			respFilteringPefindo: response.Filtering{
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
-				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA BEDA & Baki Debet > Threshold",
+				Decision:          constant.DECISION_PASS,
+				Reason:            "NAMA BEDA (I) & Ada Fasilitas WO Agunan",
 				CustomerStatus:    "RO",
 				NextProcess:       false,
 				PbkReportCustomer: &pbkCustomer,
@@ -3244,7 +3244,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name:           "test pefindo reject current bpkb beda",
+			name:           "test pefindo pass exlcude bnpl bpkb beda ada wo agunan",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
 			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
@@ -3295,8 +3295,8 @@ func TestFilteringPefindo(t *testing.T) {
 			respFilteringPefindo: response.Filtering{
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
-				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA BEDA & Baki Debet > Threshold",
+				Decision:          constant.DECISION_PASS,
+				Reason:            "NAMA BEDA (I) & Ada Fasilitas WO Agunan",
 				CustomerStatus:    "NEW",
 				NextProcess:       false,
 				PbkReportCustomer: &pbkCustomer,
@@ -3320,7 +3320,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name:           "test pefindo reject current bpkb beda",
+			name:           "test pefindo pass exclude bnpl bpkb beda baki debet > 20jt",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
 			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
@@ -3371,8 +3371,8 @@ func TestFilteringPefindo(t *testing.T) {
 			respFilteringPefindo: response.Filtering{
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
-				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA BEDA & Baki Debet > Threshold",
+				Decision:          constant.DECISION_PASS,
+				Reason:            "NAMA BEDA (I) & Baki Debet > 20 Juta",
 				CustomerStatus:    "NEW",
 				NextProcess:       false,
 				PbkReportCustomer: &pbkCustomer,
@@ -4381,7 +4381,7 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name:           "test pefindo reject current bpkb beda",
+			name:           "test pefindo ovd include all reject bpkb beda",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
 			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
@@ -4433,7 +4433,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA BEDA & Baki Debet > Threshold",
+				Reason:            "NAMA BEDA & OVD Tidak sesuai ketentuan",
 				CustomerStatus:    "NEW",
 				NextProcess:       false,
 				PbkReportCustomer: &pbkCustomer,
