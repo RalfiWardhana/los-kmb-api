@@ -324,6 +324,9 @@ var floatType = reflect.TypeOf(float64(0))
 var stringType = reflect.TypeOf("")
 
 func GetFloat(unk interface{}) (float64, error) {
+	if unk == nil {
+		unk = 0
+	}
 	switch i := unk.(type) {
 	case float64:
 		return i, nil
