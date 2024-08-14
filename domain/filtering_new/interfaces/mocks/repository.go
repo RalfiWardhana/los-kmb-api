@@ -55,6 +55,27 @@ func (_m *Repository) DummyDataPbk(query string) (entity.DummyPBK, error) {
 	return r0, r1
 }
 
+// GetConfig provides a mock function with given fields: groupName, lob, key
+func (_m *Repository) GetConfig(groupName string, lob string, key string) (entity.AppConfig, error) {
+	ret := _m.Called(groupName, lob, key)
+
+	var r0 entity.AppConfig
+	if rf, ok := ret.Get(0).(func(string, string, string) entity.AppConfig); ok {
+		r0 = rf(groupName, lob, key)
+	} else {
+		r0 = ret.Get(0).(entity.AppConfig)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string, string) error); ok {
+		r1 = rf(groupName, lob, key)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetFilteringByID provides a mock function with given fields: prospectID
 func (_m *Repository) GetFilteringByID(prospectID string) (int, error) {
 	ret := _m.Called(prospectID)

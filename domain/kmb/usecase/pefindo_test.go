@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"errors"
 	"fmt"
 	"los-kmb-api/domain/kmb/interfaces/mocks"
 	"los-kmb-api/models/entity"
@@ -10,24 +11,35 @@ import (
 	"los-kmb-api/shared/httpclient"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 )
 
 func TestPefindo(t *testing.T) {
 	os.Setenv("NAMA_SAMA", "K,P")
+
+	// Get the current time
+	currentTime := time.Now().UTC()
+
+	// Sample older date from the current time to test "RrdDate"
+	sevenMonthsAgo := currentTime.AddDate(0, -7, 0)
+	sixMonthsAgo := currentTime.AddDate(0, -6, 0)
+
 	testcases := []struct {
-		name       string
-		cbFound    bool
-		bpkbName   string
-		filtering  entity.FilteringKMB
-		spDupcheck response.SpDupcheckMap
-		req        request.Metrics
-		result     response.UsecaseApi
-		errResult  error
+		name         string
+		cbFound      bool
+		bpkbName     string
+		filtering    entity.FilteringKMB
+		spDupcheck   response.SpDupcheckMap
+		req          request.Metrics
+		result       response.UsecaseApi
+		errResult    error
+		config       entity.AppConfig
+		errGetConfig error
 	}{
 		{
-			name: "Pefindo prime",
+			name: "Pefindo prime 1",
 			filtering: entity.FilteringKMB{
 				CustomerSegment: constant.RO_AO_PRIME,
 			},
@@ -44,9 +56,10 @@ func TestPefindo(t *testing.T) {
 			},
 		},
 		{
-			name: "Pefindo prime",
+			name: "Pefindo prime 2",
 			filtering: entity.FilteringKMB{
 				CustomerSegment: constant.RO_AO_PRIORITY,
+				RrdDate:         sixMonthsAgo,
 			},
 			spDupcheck: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
@@ -57,6 +70,43 @@ func TestPefindo(t *testing.T) {
 				Result:         constant.DECISION_PASS,
 				SourceDecision: constant.SOURCE_DECISION_BIRO,
 			},
+		},
+		{
+			name: "Pefindo - CR Perbaikan Flow RO PrimePriority PASS",
+			filtering: entity.FilteringKMB{
+				CustomerSegment: constant.RO_AO_PRIME,
+				RrdDate:         sevenMonthsAgo,
+				CreatedAt:       currentTime,
+			},
+			spDupcheck: response.SpDupcheckMap{
+				StatusKonsumen:                   constant.STATUS_KONSUMEN_RO,
+				InstallmentTopup:                 0,
+				MaxOverdueDaysforActiveAgreement: 31,
+			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
+			result: response.UsecaseApi{
+				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY_EXP_CONTRACT_6MONTHS,
+				Reason:         constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + fmt.Sprintf("%s %s - PBK Pass", constant.STATUS_KONSUMEN_RO, constant.RO_AO_PRIME),
+				Result:         constant.DECISION_PASS,
+				SourceDecision: constant.SOURCE_DECISION_BIRO,
+			},
+		},
+		{
+			name: "Pefindo - CR Perbaikan Flow RO PrimePriority RrdDate NULL",
+			filtering: entity.FilteringKMB{
+				CustomerSegment: constant.RO_AO_PRIME,
+				RrdDate:         nil,
+				CreatedAt:       currentTime,
+			},
+			spDupcheck: response.SpDupcheckMap{
+				StatusKonsumen:                   constant.STATUS_KONSUMEN_RO,
+				InstallmentTopup:                 0,
+				MaxOverdueDaysforActiveAgreement: 31,
+			},
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty"),
 		},
 		{
 			name:     "Pefindo Reject BPKB nama sama pass",
@@ -498,6 +548,7 @@ func TestPefindo(t *testing.T) {
 			mockHttpClient := new(httpclient.MockHttpClient)
 
 			// mockRepository.On("GetElaborateLtv", tc.req.Transaction.ProspectID).Return(tc.trxElaborateLtv, tc.errTrxElaborateLtv)
+			mockRepository.On("GetConfig", "expired_contract", "KMB-OFF", "expired_contract_check").Return(tc.config, tc.errGetConfig)
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 

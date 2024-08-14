@@ -13,6 +13,7 @@ import (
 	"los-kmb-api/shared/httpclient"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
@@ -507,6 +508,13 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 	ctx := context.Background()
 	os.Setenv("LASTEST_PAID_INSTALLMENT_URL", "http://10.9.100.231/los-int-dupcheck-v2/api/v2/mdm/installment/")
 
+	// Get the current time
+	currentTime := time.Now().UTC()
+
+	// Sample older date from the current time to test "RrdDate"
+	sevenMonthsAgo := currentTime.AddDate(0, -7, 0)
+	sixMonthsAgo := currentTime.AddDate(0, -6, 0)
+
 	testcases := []struct {
 		name                                             string
 		totalIncome, newInstallment, totalInstallmentPBK float64
@@ -518,7 +526,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 		configValue                                      entity.AppConfig
 		result                                           response.UsecaseApi
 		trxFMF                                           response.TrxFMF
+		filtering                                        entity.FilteringKMB
 		errResult                                        error
+		config                                           entity.AppConfig
+		errGetConfig                                     error
 	}{
 		{
 			name:                "TotalDsrFmfPbk reject",
@@ -596,6 +607,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				CustomerID:     "123456",
 				ConfigMaxDSR:   35,
 			},
+			filtering: entity.FilteringKMB{
+				RrdDate:   sixMonthsAgo,
+				CreatedAt: currentTime,
+			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
 				Code:           constant.CODE_TOTAL_DSRLTE35,
@@ -614,6 +629,84 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			"rrd_date": "" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
 		},
 		{
+			name:                "TotalDsrFmfPbk CR perbaikan flow RO PrimePriority PASS",
+			totalIncome:         6000000,
+			newInstallment:      200000,
+			totalInstallmentPBK: 30000,
+			prospectID:          "TEST1",
+			customerSegment:     constant.RO_AO_PRIME,
+			accessToken:         "token",
+			configValue: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			SpDupcheckMap: response.SpDupcheckMap{
+				StatusKonsumen:                   constant.STATUS_KONSUMEN_RO,
+				Dsr:                              30,
+				InstallmentTopup:                 0,
+				MaxOverdueDaysforActiveAgreement: 31,
+				CustomerID:                       "123456",
+				ConfigMaxDSR:                     35,
+			},
+			filtering: entity.FilteringKMB{
+				RrdDate:   sevenMonthsAgo,
+				CreatedAt: currentTime,
+			},
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.CODE_TOTAL_DSRLTE35_EXP_CONTRACT_6MONTHS,
+				Reason:         constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + "RO PRIME - DSR <= Threshold",
+				SourceDecision: constant.SOURCE_DECISION_DSR,
+			},
+			trxFMF: response.TrxFMF{
+				DSRPBK:   float64(0.5),
+				TotalDSR: float64(30),
+			},
+			codeLatestInstallment: 200,
+			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
+			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 1000000, "contract_status": "", "outstanding_principal": 0, 
+			"rrd_date": "" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
+		},
+		{
+			name:                "TotalDsrFmfPbk CR perbaikan flow RO PrimePriority RrdDate NULL",
+			totalIncome:         6000000,
+			newInstallment:      200000,
+			totalInstallmentPBK: 30000,
+			prospectID:          "TEST1",
+			customerSegment:     constant.RO_AO_PRIME,
+			accessToken:         "token",
+			configValue: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			SpDupcheckMap: response.SpDupcheckMap{
+				StatusKonsumen:                   constant.STATUS_KONSUMEN_RO,
+				Dsr:                              30,
+				InstallmentTopup:                 0,
+				MaxOverdueDaysforActiveAgreement: 31,
+				CustomerID:                       "123456",
+				ConfigMaxDSR:                     35,
+			},
+			filtering: entity.FilteringKMB{
+				RrdDate:   nil,
+				CreatedAt: currentTime,
+			},
+			trxFMF: response.TrxFMF{
+				DSRPBK:   float64(0.5),
+				TotalDSR: float64(30.5),
+			},
+			codeLatestInstallment: 500,
+			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
+			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 1000000, "contract_status": "", "outstanding_principal": 0, 
+			"rrd_date": "" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
+			errLatestInstallment: errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty"),
+			errResult:            errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty"),
+		},
+		{
 			name:                "TotalDsrFmfPbk ro prime < installmentThreshold",
 			totalIncome:         6000000,
 			newInstallment:      200000,
@@ -624,6 +717,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			filtering: entity.FilteringKMB{
+				RrdDate: sixMonthsAgo,
 			},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
@@ -646,7 +742,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			codeLatestInstallment: 200,
 			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
 			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 10000, "contract_status": "", "outstanding_principal": 0, 
-			"rrd_date": "" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
+			"rrd_date": "` + sixMonthsAgo.Format(time.RFC3339) + `" }, "server_time": "2023-11-02T07:38:54+07:00", "request_id": "e187d3ce-5d4b-4b1a-b078-f0d1900df9dd" }`,
 		},
 		{
 			name:                "TotalDsrFmfPbk ro priority",
@@ -659,6 +755,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			filtering: entity.FilteringKMB{
+				RrdDate: sixMonthsAgo,
 			},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
@@ -851,6 +950,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
 			},
+			filtering: entity.FilteringKMB{
+				RrdDate: sixMonthsAgo,
+			},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
 				Dsr:            30,
@@ -880,6 +982,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
 			},
+			filtering: entity.FilteringKMB{
+				RrdDate: sixMonthsAgo,
+			},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
 				Dsr:            30,
@@ -907,6 +1012,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			filtering: entity.FilteringKMB{
+				RrdDate: sixMonthsAgo,
 			},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
@@ -946,11 +1054,13 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("LASTEST_PAID_INSTALLMENT_URL"), httpmock.NewStringResponder(tc.codeLatestInstallment, tc.bodyLatestInstallment))
 			resp, _ := rst.R().Get(os.Getenv("LASTEST_PAID_INSTALLMENT_URL"))
 
+			mockRepository.On("GetConfig", "expired_contract", "KMB-OFF", "expired_contract_check").Return(tc.config, tc.errGetConfig)
+
 			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.SpDupcheckMap.CustomerID.(string)+"/2", mock.Anything, mock.Anything, constant.METHOD_GET, false, 0, 30, tc.prospectID, tc.accessToken).Return(resp, tc.errLatestInstallment).Once()
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
-			data, trx, err := usecase.TotalDsrFmfPbk(ctx, tc.totalIncome, tc.newInstallment, tc.totalInstallmentPBK, tc.prospectID, tc.customerSegment, tc.accessToken, tc.SpDupcheckMap, configValue)
+			data, trx, err := usecase.TotalDsrFmfPbk(ctx, tc.totalIncome, tc.newInstallment, tc.totalInstallmentPBK, tc.prospectID, tc.customerSegment, tc.accessToken, tc.SpDupcheckMap, configValue, tc.filtering)
 
 			require.Equal(t, tc.result, data)
 			require.Equal(t, tc.trxFMF, trx)
