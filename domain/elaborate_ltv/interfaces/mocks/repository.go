@@ -13,6 +13,27 @@ type Repository struct {
 	mock.Mock
 }
 
+// GetConfig provides a mock function with given fields: groupName, lob, key
+func (_m *Repository) GetConfig(groupName string, lob string, key string) (entity.AppConfig, error) {
+	ret := _m.Called(groupName, lob, key)
+
+	var r0 entity.AppConfig
+	if rf, ok := ret.Get(0).(func(string, string, string) entity.AppConfig); ok {
+		r0 = rf(groupName, lob, key)
+	} else {
+		r0 = ret.Get(0).(entity.AppConfig)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string, string) error); ok {
+		r1 = rf(groupName, lob, key)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetFilteringResult provides a mock function with given fields: prospectID
 func (_m *Repository) GetFilteringResult(prospectID string) (entity.FilteringKMB, error) {
 	ret := _m.Called(prospectID)
@@ -34,8 +55,8 @@ func (_m *Repository) GetFilteringResult(prospectID string) (entity.FilteringKMB
 	return r0, r1
 }
 
-// GetMappingElaborateLTVOvd provides a mock function with given fields: resultPefindo, cluster
-func (_m *Repository) GetMappingElaborateLTVOvd(resultPefindo string, cluster string) ([]entity.MappingElaborateLTV, error) {
+// GetMappingElaborateLTV provides a mock function with given fields: resultPefindo, cluster
+func (_m *Repository) GetMappingElaborateLTV(resultPefindo string, cluster string) ([]entity.MappingElaborateLTV, error) {
 	ret := _m.Called(resultPefindo, cluster)
 
 	var r0 []entity.MappingElaborateLTV
@@ -57,8 +78,8 @@ func (_m *Repository) GetMappingElaborateLTVOvd(resultPefindo string, cluster st
 	return r0, r1
 }
 
-// GetMappingElaborateLTV provides a mock function with given fields: resultPefindo, cluster
-func (_m *Repository) GetMappingElaborateLTV(resultPefindo string, cluster string) ([]entity.MappingElaborateLTV, error) {
+// GetMappingElaborateLTVOvd provides a mock function with given fields: resultPefindo, cluster
+func (_m *Repository) GetMappingElaborateLTVOvd(resultPefindo string, cluster string) ([]entity.MappingElaborateLTV, error) {
 	ret := _m.Called(resultPefindo, cluster)
 
 	var r0 []entity.MappingElaborateLTV

@@ -63,4 +63,6 @@ type Repository interface {
 	SaveToStaging(prospectID string) (err error)
 
 	GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNameType, tenor int, resultPefindo string, af float64) (data entity.MappingVehicleAge, err error)
+
+	MasterMappingIncomeMaxDSR(totalIncome float64) (data entity.MasterMappingIncomeMaxDSR, err error)
 }
