@@ -2407,6 +2407,10 @@ func (c *TrxCmoNoFPD) TableName() string {
 	return "trx_cmo_no_fpd"
 }
 
+type EncryptString struct {
+	Encrypt string `json:"encrypt"`
+}
+
 type MappingVehicleAge struct {
 	VehicleAgeStart int         `gorm:"column:vehicle_age_start"`
 	VehicleAgeEnd   int         `gorm:"column:vehicle_age_end"`
@@ -2421,8 +2425,4 @@ type MappingVehicleAge struct {
 
 func (c *MappingVehicleAge) TableName() string {
 	return "m_mapping_vehicle_age"
-}
-
-type EncryptString struct {
-	Encrypt string `json:"encrypt"`
 }
