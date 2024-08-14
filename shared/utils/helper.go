@@ -494,3 +494,29 @@ func DiffInMonths(t1, t2 time.Time) int {
 	// t2 10-03-2024
 	// maka selisih dari 2 tanggal ini adalah 3 bulan
 }
+
+// Function to calculate the difference in months between two dates considering days as well
+func PreciseMonthsDifference(date1, date2 time.Time) (int, error) {
+	year1, month1, day1 := date1.Date()
+	year2, month2, day2 := date2.Date()
+
+	// Calculate the initial difference in months
+	months := (year2-year1)*12 + int(month2-month1)
+
+	// Adjust the difference if day2 is earlier in the month than day1
+	if day2 < day1 {
+		months--
+	}
+
+	// Check if there are additional days beyond the full months
+	if day2 > day1 {
+		months++
+	}
+
+	// Return an error if the difference is negative
+	if months < 0 {
+		return 0, errors.New("upstream_service_error - Difference of months rrd_date and current_date is negative (-)")
+	}
+
+	return months, nil
+}

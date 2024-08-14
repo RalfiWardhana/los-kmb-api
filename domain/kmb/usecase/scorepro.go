@@ -18,7 +18,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore, customerSegment string, spDupcheck response.SpDupcheckMap, accessToken string) (responseScs response.IntegratorScorePro, data response.ScorePro, respPefindoIDX response.PefindoIDX, err error) {
+func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore, customerSegment string, spDupcheck response.SpDupcheckMap, accessToken string, filtering entity.FilteringKMB) (responseScs response.IntegratorScorePro, data response.ScorePro, respPefindoIDX response.PefindoIDX, err error) {
 
 	var (
 		residenceZipCode              string
@@ -27,6 +27,13 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 		trxDetailBiro                 []entity.TrxDetailBiro
 		pefindoIDX                    request.PefindoIDX
 		reqScoreproIntegrator         request.ScoreProIntegrator
+		RrdDateString                 string
+		CreatedAtString               string
+		RrdDate                       time.Time
+		CreatedAt                     time.Time
+		MonthsOfExpiredContract       int
+		OverrideFlowLikeRegular       bool
+		expiredContractConfig         entity.AppConfig
 	)
 
 	// DEFAULT
@@ -288,7 +295,44 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 			return
 		}
 
-		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_RO || (spDupcheck.InstallmentTopup > 0 && spDupcheck.MaxOverdueDaysforActiveAgreement <= 30) {
+		// INTERCEPT PERBAIKAN FLOW RO PRIME/PRIORITY (NON-TOPUP) | CHECK EXPIRED_CONTRACT
+		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_RO && (spDupcheck.InstallmentTopup <= 0 && spDupcheck.MaxOverdueDaysforActiveAgreement > 30) {
+			if filtering.RrdDate == nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
+				return
+			}
+
+			RrdDateTime, ok := filtering.RrdDate.(time.Time)
+			if !ok {
+				err = errors.New(constant.ERROR_UPSTREAM + " - RrdDate is not of type time.Time")
+				return
+			}
+
+			RrdDateString = RrdDateTime.Format(time.RFC3339)
+			CreatedAtString = filtering.CreatedAt.Format(time.RFC3339)
+
+			RrdDate, _ = time.Parse(time.RFC3339, RrdDateString)
+			CreatedAt, _ = time.Parse(time.RFC3339, CreatedAtString)
+			MonthsOfExpiredContract, _ = utils.PreciseMonthsDifference(RrdDate, CreatedAt)
+
+			// Get config expired_contract
+			expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
+				return
+			}
+
+			var configValueExpContract response.ExpiredContractConfig
+			json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+
+			if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
+				// Jalur mirip seperti customer segment "REGULAR"
+				OverrideFlowLikeRegular = true
+			}
+		}
+
+		// ADD INTERCEPT CONDITIONAL RELATED TO `PERBAIKAN RO PRIME/PRIORITY (NON-TOPUP)`
+		if ((spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_RO || (spDupcheck.InstallmentTopup > 0 && spDupcheck.MaxOverdueDaysforActiveAgreement <= 30)) && !OverrideFlowLikeRegular) || (OverrideFlowLikeRegular && !cbFound) {
 			data.Result = constant.DECISION_PASS
 			data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 			data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
