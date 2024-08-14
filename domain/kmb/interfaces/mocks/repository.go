@@ -697,6 +697,27 @@ func (_m *Repository) MasterMappingCluster(req entity.MasterMappingCluster) (ent
 	return r0, r1
 }
 
+// MasterMappingIncomeMaxDSR provides a mock function with given fields: totalIncome
+func (_m *Repository) MasterMappingIncomeMaxDSR(totalIncome float64) (entity.MasterMappingIncomeMaxDSR, error) {
+	ret := _m.Called(totalIncome)
+
+	var r0 entity.MasterMappingIncomeMaxDSR
+	if rf, ok := ret.Get(0).(func(float64) entity.MasterMappingIncomeMaxDSR); ok {
+		r0 = rf(totalIncome)
+	} else {
+		r0 = ret.Get(0).(entity.MasterMappingIncomeMaxDSR)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(float64) error); ok {
+		r1 = rf(totalIncome)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // MasterMappingMaxDSR provides a mock function with given fields: req
 func (_m *Repository) MasterMappingMaxDSR(req entity.MasterMappingMaxDSR) (entity.MasterMappingMaxDSR, error) {
 	ret := _m.Called(req)
