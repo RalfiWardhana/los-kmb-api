@@ -277,6 +277,7 @@ const (
 	NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL                       = REASON_BPKB_SAMA + " %s & Baki Debet > 20 Juta"
 	NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL                       = REASON_BPKB_BEDA + " %s & Baki Debet > 20 Juta"
 	ADA_FASILITAS_WO_AGUNAN                                      = "Ada Fasilitas WO Agunan"
+	ADA_FASILITAS_WO_NON_AGUNAN                                  = "Ada Fasilitas WO Non Agunan"
 	TIDAK_ADA_FASILITAS_WO_AGUNAN                                = "Tidak Ada Fasilitas WO Agunan"
 	REASON_FILTERING_PBK_DOWN                                    = "No Hit PBK"
 	NAMA_BEDA_PBK_ALL_REJECT_REASON                              = "BPKB Nama Beda Baki Debet > Threshold"

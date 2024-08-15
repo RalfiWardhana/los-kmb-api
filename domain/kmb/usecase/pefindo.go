@@ -261,6 +261,18 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 						Result:         constant.DECISION_REJECT,
 						SourceDecision: constant.SOURCE_DECISION_BIRO,
 					}
+				} else if isWoContractBiro > 0 {
+					koRulesReason := fmt.Sprintf("%s %s & %s dan %s", constant.REASON_BPKB_BEDA, category, data.Reason, constant.ADA_FASILITAS_WO_NON_AGUNAN)
+					if OverrideFlowLikeRegular {
+						koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
+					}
+
+					data = response.UsecaseApi{
+						Code:           constant.CODE_PEFINDO_BPKB_BEDA,
+						Reason:         koRulesReason,
+						Result:         constant.DECISION_REJECT,
+						SourceDecision: constant.SOURCE_DECISION_BIRO,
+					}
 				} else {
 					koRulesReason := fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_BEDA, category, data.Reason)
 					if OverrideFlowLikeRegular {

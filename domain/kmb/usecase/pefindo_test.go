@@ -293,6 +293,28 @@ func TestPefindo(t *testing.T) {
 				Result:         constant.DECISION_REJECT,
 				SourceDecision: constant.SOURCE_DECISION_BIRO,
 			},
+		}, {
+			name:     "Pefindo_reject_nama_beda_ada_wo_non_agunan_reject",
+			cbFound:  true,
+			bpkbName: "KK",
+			filtering: entity.FilteringKMB{
+				CustomerSegment:               constant.RO_AO_REGULAR,
+				MaxOverdueBiro:                31,
+				MaxOverdueLast12monthsBiro:    9,
+				MaxOverdueKORules:             31,
+				MaxOverdueLast12MonthsKORules: 9,
+				Category:                      1,
+				IsWoContractBiro:              1,
+			},
+			spDupcheck: response.SpDupcheckMap{
+				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
+			},
+			result: response.UsecaseApi{
+				Code:           constant.CODE_PEFINDO_BPKB_BEDA,
+				Reason:         fmt.Sprintf("%s %s & %s dan %s", constant.REASON_BPKB_BEDA, "(I)", constant.REJECT_REASON_OVD_PEFINDO, constant.ADA_FASILITAS_WO_NON_AGUNAN),
+				Result:         constant.DECISION_REJECT,
+				SourceDecision: constant.SOURCE_DECISION_BIRO,
+			},
 		},
 		{
 			name:     "Pefindo Reject BPKB nama beda reject",
