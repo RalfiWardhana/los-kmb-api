@@ -233,16 +233,46 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 					}
 				}
 			} else {
-				koRulesReason := fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_BEDA, category, data.Reason)
-				if OverrideFlowLikeRegular {
-					koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
-				}
 
-				data = response.UsecaseApi{
-					Code:           constant.CODE_PEFINDO_BPKB_BEDA,
-					Reason:         koRulesReason,
-					Result:         constant.DECISION_REJECT,
-					SourceDecision: constant.SOURCE_DECISION_BIRO,
+				isWoWithCollateralBiro, _ = utils.GetFloat(filtering.IsWoWithCollateralBiro)
+				totalBakiDebetNonAgunan, _ = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
+
+				if isWoWithCollateralBiro > 0 {
+					koRulesReason := fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_BEDA, category, constant.ADA_FASILITAS_WO_AGUNAN)
+					if OverrideFlowLikeRegular {
+						koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
+					}
+
+					data = response.UsecaseApi{
+						Code:           constant.NAMA_BEDA_WO_AGUNAN_REJECT_CODE,
+						Reason:         koRulesReason,
+						Result:         constant.DECISION_REJECT,
+						SourceDecision: constant.SOURCE_DECISION_BIRO,
+					}
+				} else if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
+					koRulesReason := fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, category)
+					if OverrideFlowLikeRegular {
+						koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
+					}
+
+					data = response.UsecaseApi{
+						Code:           constant.CODE_BPKB_BEDA_BAKI_DEBET_GT20J,
+						Reason:         koRulesReason,
+						Result:         constant.DECISION_REJECT,
+						SourceDecision: constant.SOURCE_DECISION_BIRO,
+					}
+				} else {
+					koRulesReason := fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_BEDA, category, data.Reason)
+					if OverrideFlowLikeRegular {
+						koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
+					}
+
+					data = response.UsecaseApi{
+						Code:           constant.CODE_PEFINDO_BPKB_BEDA,
+						Reason:         koRulesReason,
+						Result:         constant.DECISION_REJECT,
+						SourceDecision: constant.SOURCE_DECISION_BIRO,
+					}
 				}
 			}
 		} else if data.Result == constant.DECISION_PASS {

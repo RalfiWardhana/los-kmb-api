@@ -248,6 +248,53 @@ func TestPefindo(t *testing.T) {
 			},
 		},
 		{
+			name:     "Pefindo_reject_nama_beda_ada_wo_agunan_reject",
+			cbFound:  true,
+			bpkbName: "KK",
+			filtering: entity.FilteringKMB{
+				CustomerSegment:               constant.RO_AO_REGULAR,
+				MaxOverdueBiro:                31,
+				MaxOverdueLast12monthsBiro:    9,
+				MaxOverdueKORules:             31,
+				MaxOverdueLast12MonthsKORules: 9,
+				Category:                      1,
+				IsWoContractBiro:              1,
+				IsWoWithCollateralBiro:        1,
+			},
+			spDupcheck: response.SpDupcheckMap{
+				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
+			},
+			result: response.UsecaseApi{
+				Code:           constant.NAMA_BEDA_WO_AGUNAN_REJECT_CODE,
+				Reason:         fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_BEDA, "(I)", constant.ADA_FASILITAS_WO_AGUNAN),
+				Result:         constant.DECISION_REJECT,
+				SourceDecision: constant.SOURCE_DECISION_BIRO,
+			},
+		},
+		{
+			name:     "Pefindo_reject_nama_beda_baki_debet_tidak_sesuai_reject",
+			cbFound:  true,
+			bpkbName: "KK",
+			filtering: entity.FilteringKMB{
+				CustomerSegment:                 constant.RO_AO_REGULAR,
+				MaxOverdueBiro:                  31,
+				MaxOverdueLast12monthsBiro:      9,
+				MaxOverdueKORules:               31,
+				MaxOverdueLast12MonthsKORules:   9,
+				Category:                        1,
+				TotalBakiDebetNonCollateralBiro: 90000000000000,
+			},
+			spDupcheck: response.SpDupcheckMap{
+				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
+			},
+			result: response.UsecaseApi{
+				Code:           constant.CODE_BPKB_BEDA_BAKI_DEBET_GT20J,
+				Reason:         fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, "(I)"),
+				Result:         constant.DECISION_REJECT,
+				SourceDecision: constant.SOURCE_DECISION_BIRO,
+			},
+		},
+		{
 			name:     "Pefindo Reject BPKB nama beda reject",
 			cbFound:  true,
 			bpkbName: "KK",
