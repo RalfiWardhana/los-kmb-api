@@ -234,6 +234,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 				}
 			} else {
 
+				isWoContractBiro, _ = utils.GetFloat(filtering.IsWoContractBiro)
 				isWoWithCollateralBiro, _ = utils.GetFloat(filtering.IsWoWithCollateralBiro)
 				totalBakiDebetNonAgunan, _ = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
 
