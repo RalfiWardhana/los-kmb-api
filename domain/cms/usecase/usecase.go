@@ -2054,7 +2054,7 @@ func (u usecase) GenerateExcelMappingCluster() (genName, fileName string, err er
 
 	sheetName := "Mapping Cluster Branch"
 
-	index := xlsx.NewSheet("Sheet1")
+	index, _ := xlsx.NewSheet("Sheet1")
 	xlsx.SetActiveSheet(index)
 	xlsx.SetSheetName("Sheet1", sheetName)
 

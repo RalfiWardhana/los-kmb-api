@@ -2422,3 +2422,92 @@ type MappingVehicleAge struct {
 func (c *MappingVehicleAge) TableName() string {
 	return "m_mapping_vehicle_age"
 }
+
+type DraftPrinciple struct {
+	ProspectID         string      `gorm:"column:type:varchar(20);ProspectID"`
+	IDNumber           string      `gorm:"column:type:varchar(16);IDNumber"`
+	SpouseIDNumber     interface{} `gorm:"column:type:varchar(16);SpouseIDNumber"`
+	ManufactureYear    string      `gorm:"column:type:varchar(4);ManufactureYear"`
+	NoChassis          string      `gorm:"column:type:varchar(30);ChassisNumber"`
+	NoEngine           string      `gorm:"column:type:varchar(30);EngineNumber"`
+	BranchID           string      `gorm:"column:type:varchar(10);BranchID"`
+	CMOID              string      `gorm:"column:type:varchar(20);CmoID"`
+	CMOName            string      `gorm:"column:type:varchar(50);CmoName"`
+	CC                 string      `gorm:"column:type:varchar(10);CC"`
+	TaxDate            time.Time   `gorm:"column:TaxDate"`
+	STNKExpiredDate    time.Time   `gorm:"column:STNKExpiredDate"`
+	OwnerAsset         string      `gorm:"column:type:varchar(50);OwnerAsset"`
+	LicensePlate       string      `gorm:"column:type:varchar(50);LicensePlate"`
+	Color              string      `gorm:"column:type:varchar(50);Color"`
+	Brand              string      `gorm:"column:type:varchar(255);Brand"`
+	ResidenceAddress   string      `gorm:"column:type:varchar(100);ResidenceAddress"`
+	ResidenceRT        string      `gorm:"column:type:varchar(3);ResidenceRT"`
+	ResidenceRW        string      `gorm:"column:type:varchar(3);ResidenceRW"`
+	ResidenceProvice   string      `gorm:"column:type:varchar(50);ResidenceProvice"`
+	ResidenceCity      string      `gorm:"column:type:varchar(30);ResidenceCity"`
+	ResidenceKecamatan string      `gorm:"column:type:varchar(30);ResidenceKecamatan"`
+	ResidenceKelurahan string      `gorm:"column:type:varchar(30);ResidenceKelurahan"`
+	ResidenceZipCode   string      `gorm:"column:type:varchar(5);ResidenceZipCode"`
+	ResidenceAreaPhone string      `gorm:"column:type:varchar(4);ResidenceAreaPhone"`
+	ResidencePhone     string      `gorm:"column:type:varchar(10);ResidencePhone"`
+	HomeStatus         string      `gorm:"column:type:varchar(2);HomeStatus"`
+	StaySinceYear      string      `gorm:"column:type:varchar(4);StaySinceYear"`
+	StaySinceMonth     string      `gorm:"column:type:varchar(2);StaySinceMonth"`
+	Decision           string      `gorm:"column:type:varchar(20);Decision"`
+	Reason             string      `gorm:"column:type:varchar(255);Reason"`
+	BPKBName           string      `gorm:"column:type:varchar(2);BPKBName"`
+	CreatedAt          time.Time   `gorm:"column:created_at"`
+}
+
+type TrxPrincipleStepOne struct {
+	ProspectID         string      `gorm:"column:ProspectID;type:varchar(20);"`
+	IDNumber           string      `gorm:"column:IDNumber;type:varchar(16)"`
+	SpouseIDNumber     interface{} `gorm:"column:SpouseIDNumber;type:varchar(16)"`
+	ManufactureYear    string      `gorm:"column:ManufactureYear;type:varchar(4)"`
+	NoChassis          string      `gorm:"column:ChassisNumber;type:varchar(30)"`
+	NoEngine           string      `gorm:"column:EngineNumber;type:varchar(30)"`
+	BranchID           string      `gorm:"column:BranchID;type:varchar(10)"`
+	CMOID              string      `gorm:"column:CmoID;type:varchar(20)"`
+	CMOName            string      `gorm:"column:CmoName;type:varchar(50)"`
+	CC                 string      `gorm:"column:CC;type:varchar(10)"`
+	TaxDate            time.Time   `gorm:"column:TaxDate"`
+	STNKExpiredDate    time.Time   `gorm:"column:STNKExpiredDate"`
+	OwnerAsset         string      `gorm:"column:OwnerAsset;type:varchar(50)"`
+	LicensePlate       string      `gorm:"column:LicensePlate;type:varchar(50)"`
+	Color              string      `gorm:"column:Color;type:varchar(50);"`
+	Brand              string      `gorm:"column:Brand;type:varchar(255)"`
+	ResidenceAddress   string      `gorm:"column:ResidenceAddress;type:varchar(100);"`
+	ResidenceRT        string      `gorm:"column:ResidenceRT;type:varchar(3)"`
+	ResidenceRW        string      `gorm:"column:ResidenceRW;type:varchar(3)"`
+	ResidenceProvice   string      `gorm:"column:ResidenceProvice;type:varchar(50)"`
+	ResidenceCity      string      `gorm:"column:ResidenceCity;type:varchar(30)"`
+	ResidenceKecamatan string      `gorm:"column:ResidenceKecamatan;type:varchar(30)"`
+	ResidenceKelurahan string      `gorm:"column:ResidenceKelurahan;type:varchar(30)"`
+	ResidenceZipCode   string      `gorm:"column:ResidenceZipCode;type:varchar(5)"`
+	ResidenceAreaPhone string      `gorm:"column:ResidenceAreaPhone;type:varchar(4)"`
+	ResidencePhone     string      `gorm:"column:ResidencePhone;type:varchar(10)"`
+	HomeStatus         string      `gorm:"column:HomeStatus;type:varchar(2)"`
+	StaySinceYear      string      `gorm:"column:StaySinceYear;type:varchar(4)"`
+	StaySinceMonth     string      `gorm:"column:StaySinceMonth;type:varchar(2)"`
+	Decision           string      `gorm:"column:Decision;type:varchar(20)"`
+	Reason             string      `gorm:"column:Reason;type:varchar(255)"`
+	BPKBName           string      `gorm:"column:BPKBName;type:varchar(2)"`
+	CreatedAt          time.Time   `gorm:"column:created_at"`
+}
+
+func (c *TrxPrincipleStepOne) TableName() string {
+	return "trx_principle_step_one"
+}
+
+type TrxPrincipleStatus struct {
+	ProspectID string    `gorm:"column:ProspectID;type:varchar(20)"`
+	IDNumber   string    `gorm:"column:IDNumber;type:varchar(16);"`
+	Step       int       `gorm:"column:Step"`
+	Decision   string    `gorm:"column:Decision;type:varchar(20);"`
+	CreatedAt  time.Time `gorm:"column:created_at"`
+	UpdatedAt  time.Time `gorm:"column:updated_at"`
+}
+
+func (c *TrxPrincipleStatus) TableName() string {
+	return "trx_principle_status"
+}

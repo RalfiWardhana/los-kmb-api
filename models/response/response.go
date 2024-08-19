@@ -926,3 +926,10 @@ type GetFPDCmoByID struct {
 	Errors   interface{} `json:"errors"`
 	Metadata interface{} `json:"metadata"`
 }
+
+type StepPrinciple struct {
+	ProspectID string `json:"prospect_id"`
+	ColorCode  string `json:"color_code"`
+	Status     string `json:"status"`
+	UpdatedAt  string `json:"updated_at"`
+}

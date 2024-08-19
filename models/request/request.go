@@ -963,3 +963,94 @@ type ReqHrisCareerHistory struct {
 	Ascending bool   `json:"ascending"`
 	Query     string `json:"query"`
 }
+
+type PrincipleAsset struct {
+	ProspectID         string `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
+	IDNumber           string `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
+	SpouseIDNumber     string `json:"spouse_id_number" example:"3506126712000002"`
+	ManufactureYear    string `json:"manufacture_year" validate:"len=4,number" example:"2020"`
+	NoChassis          string `json:"chassis_number" validate:"required,max=30" example:"MHKV1AA2JBK107322"`
+	NoEngine           string `json:"engine_number" validate:"required,max=30" example:"73218JAJK"`
+	BranchID           string `json:"branch_id" validate:"required,max=10" example:"426"`
+	CMOID              string `json:"cmo_id" validate:"required,max=20" example:"537281"`
+	CMOName            string `json:"cmo_name" validate:"required,max=50" example:"JONATHAN"`
+	CC                 string `json:"cc" validate:"required,max=10" example:"1500"`
+	TaxDate            string `json:"tax_date" validate:"required,dateformat" example:"2022-03-02"`
+	STNKExpiredDate    string `json:"stnk_expired_date" validate:"required,dateformat" example:"2025-03-20"`
+	OwnerAsset         string `json:"owner_asset" validate:"required,max=50" example:"JONATHAN"`
+	LicensePlate       string `json:"license_plate" validate:"required,max=50" example:"B3006TBJ"`
+	Color              string `json:"color" validate:"required,max=50" example:"HITAM"`
+	Brand              string `json:"brand" validate:"required,max=255" example:"HONDA"`
+	ResidenceAddress   string `json:"residence_address" validate:"required,max=100" example:"Dermaga Baru"`
+	ResidenceRT        string `json:"residence_rt" validate:"required,min=1,max=3" example:"001"`
+	ResidenceRW        string `json:"residence_rw" validate:"required,min=1,max=3" example:"002"`
+	ResidenceProvice   string `json:"residence_province" validate:"required,max=50" example:"Jakarta"`
+	ResidenceCity      string `json:"residence_city" validate:"required,max=30" example:"Jakarta Timur"`
+	ResidenceKecamatan string `json:"residence_kecamatan" validate:"required,max=30" example:"Duren Sawit"`
+	ResidenceKelurahan string `json:"residence_kelurahan" validate:"required,max=30" example:"Klender"`
+	ResidenceZipCode   string `json:"residence_zipcode" validate:"required,max=5" example:"13470"`
+	ResidenceAreaPhone string `json:"residence_area_phone" validate:"required,min=2,max=4" example:"021"`
+	ResidencePhone     string `json:"residence_phone" validate:"required,max=10" example:"86605224"`
+	HomeStatus         string `json:"home_status" validate:"required,max=2" example:"SD"`
+	StaySinceYear      string `json:"stay_since_year" validate:"required,max=4" example:"2024"`
+	StaySinceMonth     string `json:"stay_since_month" validate:"required,max=2" example:"04"`
+}
+
+type PrinciplePemohon struct {
+	ProspectID              string  `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
+	IDNumber                string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
+	SpouseIDNumber          string  `json:"spouse_id_number" example:"3506126712000002"`
+	MobilePhone             string  `json:"mobile_phone" validate:"min=9,max=14" example:"085880529100"`
+	LegalName               string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
+	FullName                string  `json:"full_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
+	BirthDate               string  `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
+	BirthPlace              string  `json:"birth_place" validate:"required,max=100" example:"Jakarta"`
+	SurgateMotherName       string  `json:"surgate_mother_name" validate:"required,max=50" example:"IBU"`
+	Gender                  string  `json:"gender" validate:"required,max=1" example:"M"`
+	LegalAddress            string  `json:"legal_address" validate:"required,max=100" example:"Dermaga Baru"`
+	LegalRT                 string  `json:"legal_rt" validate:"required,min=1,max=3" example:"001"`
+	LegalRW                 string  `json:"legal_rw" validate:"required,min=1,max=3" example:"003"`
+	LegalProvince           string  `json:"legal_province" validate:"required,max=50" example:"Jakarta"`
+	LegalCity               string  `json:"legal_city" validate:"required,max=30" example:"Jakarta Timur"`
+	LegalKecamatan          string  `json:"legal_kecamatan" validate:"required,max=30" example:"Duren Sawit"`
+	LegalKelurahan          string  `json:"legal_kelurahan" validate:"required,max=30" example:"Klender"`
+	LegalZipCode            string  `json:"legal_zipcode" validate:"required,max=5" example:"13470"`
+	LegalPhoneArea          string  `json:"legal_phone_area" validate:"required,min=2,max=4" example:"021"`
+	LegalPhone              string  `json:"legal_phone" validate:"required,max=10" example:"86605224"`
+	Education               string  `json:"education" validate:"required,max=10" example:"S1"`
+	ProfessionID            string  `json:"profession_id" validate:"required,max=10" example:"KRYSW"`
+	JobType                 string  `json:"job_type" validate:"required,max=10" example:"0012"`
+	JobPosition             string  `json:"job_position" validate:"required,max=10" example:"M"`
+	EmploymentSinceMonth    string  `json:"employement_since_month" validate:"required,max=2" example:"02"`
+	EmploymentSinceYear     string  `json:"employement_since_year" validate:"required,max=4" example:"2020"`
+	CompanyName             string  `json:"company_name" validate:"required,min=2,max=50" example:"PT KB Finansia"`
+	EconomySectorID         string  `json:"economy_sector" validate:"required,max=10" example:"06"`
+	IndustryTypeID          string  `json:"industry_type_id" validate:"required,max=10" example:"1000"`
+	CompanyAddress          string  `json:"company_address" validate:"required,max=100" example:"Dermaga Baru"`
+	CompanyRT               string  `json:"company_rt" validate:"required,min=1,max=3" example:"001"`
+	CompanyRW               string  `json:"company_rw" validate:"required,min=1,max=3" example:"003"`
+	CompanyProvince         string  `json:"company_province" validate:"required,max=50" example:"Jakarta"`
+	CompanyCity             string  `json:"company_city" validate:"required,max=30" example:"Jakarta Timur"`
+	CompanyKecamatan        string  `json:"company_kecamatan" validate:"required,max=30" example:"Duren Sawit"`
+	CompanyKelurahan        string  `json:"company_kelurahan" validate:"required,max=30" example:"Klender"`
+	CompanyZipCode          string  `json:"company_zipcode" validate:"required,max=5" example:"13470"`
+	CompanyPhoneArea        string  `json:"company_phone_area" validate:"required,min=2,max=4" example:"021"`
+	CompanyPhone            string  `json:"company_phone" validate:"required,max=10" example:"86605224"`
+	MonthlyFixedIncome      float64 `json:"monthly_fixed_income" validate:"required" example:"5000000"`
+	MaritalStatus           string  `json:"marital_status" validate:"required,max=10" example:"M"`
+	SpouseLegalName         string  `json:"spouse_legal_name" example:"YULINAR NIATI"`
+	SpouseFullName          string  `json:"spouse_full_name" example:"YULINAR NIATI"`
+	SpouseBirthDate         string  `json:"spouse_birth_date" example:"1992-09-11"`
+	SpouseBirthPlace        string  `json:"spouse_birth_place" example:"Jakarta"`
+	SpouseSurgateMotherName string  `json:"spouse_surgate_mother_name"  example:"MAMA"`
+	SpouseGender            string  `json:"spouse_gender" example:"F"`
+	SpouseMobilePhone       string  `json:"spouse_mobile_phone" example:"085880529111"`
+	SpouseIncome            float64 `json:"spouse_income" example:"5000000"`
+	SelfiePhoto             string  `json:"selfie_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/selfie_SAL-1140024081400003.jpg"`
+	KtpPhoto                string  `json:"ktp_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/ktp_SAL-1140024081400003.jpg"`
+	BpkbName                string  `json:"-"`
+}
+
+type ValidateNik struct {
+	IDNumber string `json:"id_number" validate:"required,number,len=16"`
+}
