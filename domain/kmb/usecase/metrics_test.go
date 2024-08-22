@@ -67,7 +67,7 @@ func TestMetrics(t *testing.T) {
 		bodyInternalRecord        string
 		errInternalRecord         error
 		mappingCluster            entity.MasterMappingCluster
-		mappingMaxDSR             entity.MasterMappingMaxDSR
+		mappingMaxDSR             entity.MasterMappingIncomeMaxDSR
 		errmappingCluster         error
 		errmappingMaxDSR          error
 	}{
@@ -835,7 +835,7 @@ func TestMetrics(t *testing.T) {
 			mappingCluster: entity.MasterMappingCluster{
 				Cluster: "Cluster A",
 			},
-			mappingMaxDSR: entity.MasterMappingMaxDSR{
+			mappingMaxDSR: entity.MasterMappingIncomeMaxDSR{
 				DSRThreshold: 35,
 			},
 			config: entity.AppConfig{
@@ -921,7 +921,7 @@ func TestMetrics(t *testing.T) {
 			mappingCluster: entity.MasterMappingCluster{
 				Cluster: "Cluster A",
 			},
-			mappingMaxDSR: entity.MasterMappingMaxDSR{
+			mappingMaxDSR: entity.MasterMappingIncomeMaxDSR{
 				DSRThreshold: 35,
 			},
 			config: entity.AppConfig{
@@ -1019,7 +1019,7 @@ func TestMetrics(t *testing.T) {
 				Reason: "PASS TENOR 36",
 			},
 			mappingCluster: entity.MasterMappingCluster{},
-			mappingMaxDSR: entity.MasterMappingMaxDSR{
+			mappingMaxDSR: entity.MasterMappingIncomeMaxDSR{
 				DSRThreshold: 35,
 			},
 			config: entity.AppConfig{
@@ -1428,7 +1428,7 @@ func TestMetrics(t *testing.T) {
 			mappingCluster: entity.MasterMappingCluster{
 				Cluster: "Cluster A",
 			},
-			mappingMaxDSR: entity.MasterMappingMaxDSR{
+			mappingMaxDSR: entity.MasterMappingIncomeMaxDSR{
 				DSRThreshold: 35,
 			},
 			dupcheckData: response.SpDupcheckMap{
@@ -1488,7 +1488,7 @@ func TestMetrics(t *testing.T) {
 			mockRepository.On("GetFilteringForJourney", tc.reqMetrics.Transaction.ProspectID).Return(tc.filtering, tc.errGetFilteringForJourney)
 			mockRepository.On("GetElaborateLtv", tc.reqMetrics.Transaction.ProspectID).Return(entity.MappingElaborateLTV{}, tc.errGetElaborateLtv)
 			mockRepository.On("MasterMappingCluster", mock.Anything).Return(tc.mappingCluster, tc.errmappingCluster)
-			mockRepository.On("MasterMappingMaxDSR", mock.Anything).Return(tc.mappingMaxDSR, tc.errmappingMaxDSR)
+			mockRepository.On("MasterMappingIncomeMaxDSR", mock.Anything).Return(tc.mappingMaxDSR, tc.errmappingMaxDSR)
 			mockUsecase.On("SaveTransaction", tc.countTrx, tc.reqMetrics, tc.trxPrescreening, tc.trxFMF, tc.details, mock.Anything).Return(tc.resultMetrics, tc.errSaveTransaction)
 			mockUsecase.On("Prescreening", ctx, tc.reqMetrics, tc.filtering, "token").Return(tc.trxPrescreening, tc.trxFMF, tc.trxPrescreeningDetail, tc.errPrescreening)
 			mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.trxTenor, tc.errRejectTenor36)
