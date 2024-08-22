@@ -378,32 +378,51 @@ func GenerateBranchFilter(branchId string) string {
 		}
 	}
 
-	return fmt.Sprintf("WHERE tt.BranchID IN (%s)", branch)
+	return fmt.Sprintf("WHERE tm.BranchID IN (%s)", branch)
 }
 
-func GenerateFilter(search, filterBranch, rangeDays string) string {
-	var filter string
-	var re = regexp.MustCompile(`SAL-|NE-`)
+func GenerateFilter(search, encrypted, filterBranch, rangeDays, inquiryType string) string {
+	var filter, filterIdNumber, filterLegalName string
+	var regexpPpid = regexp.MustCompile(`SAL-|NE-`)
+	var regexpIDNumber = regexp.MustCompile(`^[0-9]*$`)
+	var regexpLegalName = regexp.MustCompile("^[a-zA-Z.,'` ]*$")
+
+	switch inquiryType {
+	case "NE":
+		filterIdNumber = fmt.Sprintf("(tm.IDNumber = '%s')", encrypted)
+		filterLegalName = fmt.Sprintf("(tm.LegalName = '%s')", encrypted)
+	default:
+		filterIdNumber = fmt.Sprintf("(tcp.IDNumber = '%s')", encrypted)
+		filterLegalName = fmt.Sprintf("(tcp.LegalName = '%s')", encrypted)
+	}
 
 	if search != "" {
 		if filterBranch != "" {
-			if re.MatchString(search) {
-				filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID = '%s')", search)
+			if regexpPpid.MatchString(search) {
+				filter = filterBranch + fmt.Sprintf(" AND (tm.ProspectID = '%s')", search)
+			} else if regexpIDNumber.MatchString(search) {
+				filter = filterBranch + fmt.Sprintf(" AND %s", filterIdNumber)
+			} else if regexpLegalName.MatchString(search) {
+				filter = filterBranch + fmt.Sprintf(" AND %s", filterLegalName)
 			} else {
-				filter = filterBranch + fmt.Sprintf(" AND (tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search)
+				filter = filterBranch + fmt.Sprintf(" AND (tm.ProspectID = '%s') OR %s OR %s", search, filterIdNumber, filterLegalName)
 			}
 		} else {
-			if re.MatchString(search) {
-				filter = fmt.Sprintf("WHERE (tt.ProspectID = '%s')", search)
+			if regexpPpid.MatchString(search) {
+				filter = fmt.Sprintf("WHERE (tm.ProspectID = '%s')", search)
+			} else if regexpIDNumber.MatchString(search) {
+				filter = fmt.Sprintf("WHERE %s", filterIdNumber)
+			} else if regexpLegalName.MatchString(search) {
+				filter = fmt.Sprintf("WHERE %s", filterLegalName)
 			} else {
-				filter = fmt.Sprintf("WHERE (tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search)
+				filter = fmt.Sprintf("WHERE (tm.ProspectID = '%s') OR %s OR %s", search, filterIdNumber, filterLegalName)
 			}
 		}
 	} else {
 		if filterBranch != "" {
-			filter = filterBranch + fmt.Sprintf(" AND CAST(tt.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
+			filter = filterBranch + fmt.Sprintf(" AND CAST(tm.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
 		} else {
-			filter = fmt.Sprintf("WHERE CAST(tt.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
+			filter = fmt.Sprintf("WHERE CAST(tm.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
 		}
 	}
 
