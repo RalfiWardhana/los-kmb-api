@@ -107,42 +107,15 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 			isWoContractBiro        float64
 			isWoWithCollateralBiro  float64
 			totalBakiDebetNonAgunan float64
+			category                string
 		)
 
-		if filtering.MaxOverdueKORules != nil {
-			maxOverdueDays, err = utils.GetFloat(filtering.MaxOverdueKORules)
-			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat MaxOverdueBiro Pefindo Error")
-				return
-			}
-		} else {
-			if filtering.MaxOverdueBiro != nil {
-				maxOverdueDays, err = utils.GetFloat(filtering.MaxOverdueBiro)
-				if err != nil {
-					err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat MaxOverdueBiro Pefindo Error")
-					return
-				}
-			}
-		}
-
-		if filtering.MaxOverdueLast12MonthsKORules != nil {
-			maxOverdueLast12Months, err = utils.GetFloat(filtering.MaxOverdueLast12MonthsKORules)
-			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat MaxOverdueLast12monthsBiro Pefindo Error")
-				return
-			}
-		} else {
-			if filtering.MaxOverdueLast12monthsBiro != nil {
-				maxOverdueLast12Months, err = utils.GetFloat(filtering.MaxOverdueLast12monthsBiro)
-				if err != nil {
-					err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat MaxOverdueLast12monthsBiro Pefindo Error")
-					return
-				}
-			}
-		}
+		maxOverdueDays, _ = utils.GetFloat(filtering.MaxOverdueKORules)
+		maxOverdueLast12Months, _ = utils.GetFloat(filtering.MaxOverdueLast12MonthsKORules)
+		category = getReasonCategoryRoman(filtering.Category)
 
 		if maxOverdueLast12Months > constant.PBK_OVD_LAST_12 {
-			koRulesReason := fmt.Sprintf(constant.REASON_PEFINDO_OVD12GT60, constant.PBK_OVD_LAST_12)
+			koRulesReason := constant.REJECT_REASON_OVD_PEFINDO
 			if OverrideFlowLikeRegular {
 				koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 			}
@@ -153,8 +126,11 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 				Result:         constant.DECISION_REJECT,
 				SourceDecision: constant.SOURCE_DECISION_BIRO,
 			}
+			if strings.Contains(os.Getenv("NAMA_SAMA"), bpkbName) && category != "(III)" {
+				data.Result = constant.DECISION_PASS
+			}
 		} else if maxOverdueDays > constant.PBK_OVD_CURRENT {
-			koRulesReason := fmt.Sprintf(constant.REASON_PEFINDO_CURRENT_GT30, constant.PBK_OVD_CURRENT)
+			koRulesReason := constant.REJECT_REASON_OVD_PEFINDO
 			if OverrideFlowLikeRegular {
 				koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 			}
@@ -164,6 +140,9 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 				Reason:         koRulesReason,
 				Result:         constant.DECISION_REJECT,
 				SourceDecision: constant.SOURCE_DECISION_BIRO,
+			}
+			if strings.Contains(os.Getenv("NAMA_SAMA"), bpkbName) && category != "(III)" {
+				data.Result = constant.DECISION_PASS
 			}
 		} else {
 			koRulesReason := fmt.Sprintf(constant.REASON_PEFINDO_OVD12LTE60_CURRENT_LTE30, constant.PBK_OVD_CURRENT)
@@ -181,33 +160,14 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 
 		if data.Result == constant.DECISION_REJECT {
 			if strings.Contains(os.Getenv("NAMA_SAMA"), bpkbName) {
-				if filtering.IsWoContractBiro != nil {
-					isWoContractBiro, err = utils.GetFloat(filtering.IsWoContractBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat IsWoContractBiro Pefindo Error")
-						return
-					}
-				}
 
-				if filtering.IsWoWithCollateralBiro != nil {
-					isWoWithCollateralBiro, err = utils.GetFloat(filtering.IsWoWithCollateralBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat IsWoWithCollateralBiro Pefindo Error")
-						return
-					}
-				}
-
-				if filtering.TotalBakiDebetNonCollateralBiro != nil {
-					totalBakiDebetNonAgunan, err = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat TotalBakiDebetNonCollateralBiro Pefindo Error")
-						return
-					}
-				}
+				isWoContractBiro, _ = utils.GetFloat(filtering.IsWoContractBiro)
+				isWoWithCollateralBiro, _ = utils.GetFloat(filtering.IsWoWithCollateralBiro)
+				totalBakiDebetNonAgunan, _ = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
 
 				if isWoContractBiro > 0 {
 					if isWoWithCollateralBiro > 0 {
-						koRulesReason := fmt.Sprintf("%s & %s", constant.REASON_BPKB_SAMA, constant.ADA_FASILITAS_WO_AGUNAN)
+						koRulesReason := fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_SAMA, category, constant.ADA_FASILITAS_WO_AGUNAN)
 						if OverrideFlowLikeRegular {
 							koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 						}
@@ -220,7 +180,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 						}
 					} else {
 						if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
-							koRulesReason := constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+							koRulesReason := fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, category)
 							if OverrideFlowLikeRegular {
 								koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 							}
@@ -232,7 +192,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 								SourceDecision: constant.SOURCE_DECISION_BIRO,
 							}
 						} else {
-							koRulesReason := constant.NAMA_SAMA_BAKI_DEBET_SESUAI
+							koRulesReason := fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, category)
 							if OverrideFlowLikeRegular {
 								koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 							}
@@ -247,7 +207,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 					}
 				} else {
 					if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
-						koRulesReason := constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+						koRulesReason := fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, category)
 						if OverrideFlowLikeRegular {
 							koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 						}
@@ -259,7 +219,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 							SourceDecision: constant.SOURCE_DECISION_BIRO,
 						}
 					} else {
-						koRulesReason := fmt.Sprintf("%s & %s", constant.REASON_BPKB_SAMA, constant.TIDAK_ADA_FASILITAS_WO_AGUNAN)
+						koRulesReason := fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_SAMA, category, constant.TIDAK_ADA_FASILITAS_WO_AGUNAN)
 						if OverrideFlowLikeRegular {
 							koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 						}
@@ -273,49 +233,71 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 					}
 				}
 			} else {
-				koRulesReason := fmt.Sprintf("%s & %s", constant.REASON_BPKB_BEDA, data.Reason)
-				if OverrideFlowLikeRegular {
-					koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
-				}
 
-				data = response.UsecaseApi{
-					Code:           constant.CODE_PEFINDO_BPKB_BEDA,
-					Reason:         koRulesReason,
-					Result:         constant.DECISION_REJECT,
-					SourceDecision: constant.SOURCE_DECISION_BIRO,
+				isWoContractBiro, _ = utils.GetFloat(filtering.IsWoContractBiro)
+				isWoWithCollateralBiro, _ = utils.GetFloat(filtering.IsWoWithCollateralBiro)
+				totalBakiDebetNonAgunan, _ = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
+
+				if isWoWithCollateralBiro > 0 {
+					koRulesReason := fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_BEDA, category, constant.ADA_FASILITAS_WO_AGUNAN)
+					if OverrideFlowLikeRegular {
+						koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
+					}
+
+					data = response.UsecaseApi{
+						Code:           constant.NAMA_BEDA_WO_AGUNAN_REJECT_CODE,
+						Reason:         koRulesReason,
+						Result:         constant.DECISION_REJECT,
+						SourceDecision: constant.SOURCE_DECISION_BIRO,
+					}
+				} else if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
+					koRulesReason := fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, category)
+					if OverrideFlowLikeRegular {
+						koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
+					}
+
+					data = response.UsecaseApi{
+						Code:           constant.CODE_BPKB_BEDA_BAKI_DEBET_GT20J,
+						Reason:         koRulesReason,
+						Result:         constant.DECISION_REJECT,
+						SourceDecision: constant.SOURCE_DECISION_BIRO,
+					}
+				} else if isWoContractBiro > 0 {
+					koRulesReason := fmt.Sprintf("%s %s & %s dan %s", constant.REASON_BPKB_BEDA, category, data.Reason, constant.ADA_FASILITAS_WO_NON_AGUNAN)
+					if OverrideFlowLikeRegular {
+						koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
+					}
+
+					data = response.UsecaseApi{
+						Code:           constant.CODE_PEFINDO_BPKB_BEDA,
+						Reason:         koRulesReason,
+						Result:         constant.DECISION_REJECT,
+						SourceDecision: constant.SOURCE_DECISION_BIRO,
+					}
+				} else {
+					koRulesReason := fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_BEDA, category, data.Reason)
+					if OverrideFlowLikeRegular {
+						koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
+					}
+
+					data = response.UsecaseApi{
+						Code:           constant.CODE_PEFINDO_BPKB_BEDA,
+						Reason:         koRulesReason,
+						Result:         constant.DECISION_REJECT,
+						SourceDecision: constant.SOURCE_DECISION_BIRO,
+					}
 				}
 			}
-		}
-
-		if data.Result == constant.DECISION_PASS {
+		} else if data.Result == constant.DECISION_PASS {
 			if strings.Contains(os.Getenv("NAMA_SAMA"), bpkbName) {
-				if filtering.IsWoContractBiro != nil {
-					isWoContractBiro, err = utils.GetFloat(filtering.IsWoContractBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat IsWoContractBiro Pefindo Error")
-						return
-					}
-				}
 
-				if filtering.IsWoWithCollateralBiro != nil {
-					isWoWithCollateralBiro, err = utils.GetFloat(filtering.IsWoWithCollateralBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat IsWoWithCollateralBiro Pefindo Error")
-						return
-					}
-				}
-
-				if filtering.TotalBakiDebetNonCollateralBiro != nil {
-					totalBakiDebetNonAgunan, err = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat TotalBakiDebetNonCollateralBiro Pefindo Error")
-						return
-					}
-				}
+				isWoContractBiro, _ = utils.GetFloat(filtering.IsWoContractBiro)
+				isWoWithCollateralBiro, _ = utils.GetFloat(filtering.IsWoWithCollateralBiro)
+				totalBakiDebetNonAgunan, _ = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
 
 				if isWoContractBiro > 0 {
 					if isWoWithCollateralBiro > 0 {
-						koRulesReason := fmt.Sprintf("%s & %s", constant.REASON_BPKB_SAMA, constant.ADA_FASILITAS_WO_AGUNAN)
+						koRulesReason := fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_SAMA, category, constant.ADA_FASILITAS_WO_AGUNAN)
 						if OverrideFlowLikeRegular {
 							koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 						}
@@ -328,7 +310,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 						}
 					} else {
 						if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
-							koRulesReason := constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+							koRulesReason := fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, category)
 							if OverrideFlowLikeRegular {
 								koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 							}
@@ -340,7 +322,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 								SourceDecision: constant.SOURCE_DECISION_BIRO,
 							}
 						} else {
-							koRulesReason := constant.NAMA_SAMA_BAKI_DEBET_SESUAI
+							koRulesReason := fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL, category)
 							if OverrideFlowLikeRegular {
 								koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 							}
@@ -355,7 +337,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 					}
 				} else {
 					if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
-						koRulesReason := constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI
+						koRulesReason := fmt.Sprintf(constant.NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL, category)
 						if OverrideFlowLikeRegular {
 							koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 						}
@@ -367,7 +349,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 							SourceDecision: constant.SOURCE_DECISION_BIRO,
 						}
 					} else {
-						koRulesReason := fmt.Sprintf("%s & %s", constant.REASON_BPKB_SAMA, constant.TIDAK_ADA_FASILITAS_WO_AGUNAN)
+						koRulesReason := fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_SAMA, category, constant.TIDAK_ADA_FASILITAS_WO_AGUNAN)
 						if OverrideFlowLikeRegular {
 							koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 						}
@@ -381,64 +363,45 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 					}
 				}
 			} else {
-				if filtering.IsWoContractBiro != nil {
-					isWoContractBiro, err = utils.GetFloat(filtering.IsWoContractBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat IsWoContractBiro Pefindo Error")
-						return
-					}
-				}
 
-				if filtering.IsWoWithCollateralBiro != nil {
-					isWoWithCollateralBiro, err = utils.GetFloat(filtering.IsWoWithCollateralBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat IsWoWithCollateralBiro Pefindo Error")
-						return
-					}
-				}
-
-				if filtering.TotalBakiDebetNonCollateralBiro != nil {
-					totalBakiDebetNonAgunan, err = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
-					if err != nil {
-						err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat TotalBakiDebetNonCollateralBiro Pefindo Error")
-						return
-					}
-				}
+				isWoContractBiro, _ = utils.GetFloat(filtering.IsWoContractBiro)
+				isWoWithCollateralBiro, _ = utils.GetFloat(filtering.IsWoWithCollateralBiro)
+				totalBakiDebetNonAgunan, _ = utils.GetFloat(filtering.TotalBakiDebetNonCollateralBiro)
 
 				if isWoContractBiro > 0 {
 					if isWoWithCollateralBiro > 0 {
-						koRulesReason := fmt.Sprintf("%s & %s", constant.REASON_BPKB_BEDA, constant.ADA_FASILITAS_WO_AGUNAN)
+						koRulesReason := fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_BEDA, category, constant.ADA_FASILITAS_WO_AGUNAN)
 						if OverrideFlowLikeRegular {
 							koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 						}
 
 						data = response.UsecaseApi{
-							Code:           constant.NAMA_SAMA_WO_AGUNAN_REJECT_CODE,
+							Code:           constant.NAMA_BEDA_WO_AGUNAN_REJECT_CODE,
 							Reason:         koRulesReason,
 							Result:         constant.DECISION_REJECT,
 							SourceDecision: constant.SOURCE_DECISION_BIRO,
 						}
 					} else {
 						if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
-							koRulesReason := constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
+							koRulesReason := fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, category)
 							if OverrideFlowLikeRegular {
 								koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 							}
 
 							data = response.UsecaseApi{
-								Code:           constant.CODE_BPKB_SAMA_BAKI_DEBET_GT20J,
+								Code:           constant.CODE_BPKB_BEDA_BAKI_DEBET_GT20J,
 								Reason:         koRulesReason,
 								Result:         constant.DECISION_REJECT,
 								SourceDecision: constant.SOURCE_DECISION_BIRO,
 							}
 						} else {
-							koRulesReason := constant.NAMA_BEDA_BAKI_DEBET_SESUAI
+							koRulesReason := fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL, category)
 							if OverrideFlowLikeRegular {
 								koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 							}
 
 							data = response.UsecaseApi{
-								Code:           constant.CODE_BPKB_SAMA_BAKI_DEBET_LTE20J,
+								Code:           constant.CODE_BPKB_BEDA_BAKI_DEBET_LTE20J,
 								Reason:         koRulesReason,
 								Result:         constant.DECISION_PASS,
 								SourceDecision: constant.SOURCE_DECISION_BIRO,
@@ -447,25 +410,25 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 					}
 				} else {
 					if totalBakiDebetNonAgunan > constant.BAKI_DEBET {
-						koRulesReason := constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI
+						koRulesReason := fmt.Sprintf(constant.NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL, category)
 						if OverrideFlowLikeRegular {
 							koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 						}
 
 						data = response.UsecaseApi{
-							Code:           constant.CODE_BPKB_SAMA_BAKI_DEBET_GT20J,
+							Code:           constant.CODE_BPKB_BEDA_BAKI_DEBET_GT20J,
 							Reason:         koRulesReason,
 							Result:         constant.DECISION_REJECT,
 							SourceDecision: constant.SOURCE_DECISION_BIRO,
 						}
 					} else {
-						koRulesReason := fmt.Sprintf("%s & %s", constant.REASON_BPKB_BEDA, constant.TIDAK_ADA_FASILITAS_WO_AGUNAN)
+						koRulesReason := fmt.Sprintf("%s %s & %s", constant.REASON_BPKB_BEDA, category, constant.TIDAK_ADA_FASILITAS_WO_AGUNAN)
 						if OverrideFlowLikeRegular {
 							koRulesReason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + koRulesReason
 						}
 
 						data = response.UsecaseApi{
-							Code:           constant.NAMA_SAMA_NO_FACILITY_WO_CODE,
+							Code:           constant.NAMA_BEDA_NO_FACILITY_WO_CODE,
 							Reason:         koRulesReason,
 							Result:         constant.DECISION_PASS,
 							SourceDecision: constant.SOURCE_DECISION_BIRO,
@@ -489,9 +452,19 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 		}
 	}
 
-	if filtering.Reason != nil {
-		data.Reason = filtering.Reason.(string)
-	}
-
 	return
+}
+
+// function to map reason category values to Roman numerals
+func getReasonCategoryRoman(category interface{}) (str string) {
+	num, _ := utils.GetFloat(category)
+	switch num {
+	case 1:
+		str = "(I)"
+	case 2:
+		str = "(II)"
+	case 3:
+		str = "(III)"
+	}
+	return str
 }
