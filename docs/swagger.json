@@ -5,8 +5,7 @@
             "name": "Kredit Plus",
             "url": "https://kreditplus.com",
             "email": "support@kreditplus.com"
-        },
-        "license": {}
+        }
     },
     "host": "localhost:9710",
     "basePath": "/api/v2/pbk",
@@ -1826,6 +1825,72 @@
                 }
             }
         },
+        "/api/v3/kmb/elaborate-ltv": {
+            "post": {
+                "description": "KmbPrinciple",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KmbPrinciple"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.PrincipleElaborateLTV"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.UsecaseApi"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v3/kmb/employee/employee-data/{employee_id}": {
             "get": {
                 "description": "Api Get Employee Data",
@@ -2475,6 +2540,72 @@
                 }
             }
         },
+        "/api/v3/kmb/verify-pembiayaan": {
+            "post": {
+                "description": "KmbPrinciple",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KmbPrinciple"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.PrinciplePembiayaan"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.UsecaseApi"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v3/kmb/verify-pemohon": {
             "post": {
                 "description": "KmbPrinciple",
@@ -2583,6 +2714,8 @@
                 },
                 "area_phone": {
                     "type": "string",
+                    "maxLength": 4,
+                    "minLength": 2,
                     "example": "021"
                 },
                 "city": {
@@ -2599,14 +2732,19 @@
                 },
                 "phone": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "84522"
                 },
                 "rt": {
                     "type": "string",
+                    "maxLength": 3,
+                    "minLength": 1,
                     "example": "008"
                 },
                 "rw": {
                     "type": "string",
+                    "maxLength": 3,
+                    "minLength": 1,
                     "example": "017"
                 },
                 "type": {
@@ -2627,6 +2765,7 @@
             "properties": {
                 "prospect_id": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "SAL042600001"
                 }
             }
@@ -2715,44 +2854,55 @@
             "properties": {
                 "admin_fee": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 1500000
                 },
                 "af": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 84000000
                 },
                 "aoid": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "81088"
                 },
                 "commision_subsidi": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 0
                 },
                 "dealer": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 50
                 },
                 "down_payment_amount": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 22000000
                 },
                 "down_payment_rate": {
                     "type": "number",
+                    "maximum": 99,
                     "example": 20.95
                 },
                 "effective_rate": {
                     "type": "number",
+                    "maximum": 99,
                     "example": 26.4
                 },
                 "fidusia_fee": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 0
                 },
                 "finance_purpose": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "first_installment": {
                     "type": "string",
+                    "maxLength": 2,
                     "example": "AR"
                 },
                 "ins_asset_paid_by": {
@@ -2765,18 +2915,22 @@
                 },
                 "installment_amount": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 4181333
                 },
                 "insurance_amount": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 3150000
                 },
                 "interest_amount": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 66528000
                 },
                 "interest_rate": {
                     "type": "number",
+                    "maximum": 99,
                     "example": 2.2
                 },
                 "is_fidusia_covered": {
@@ -2785,49 +2939,62 @@
                 },
                 "life_insurance_amount_coverage": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 105000000
                 },
                 "life_insurance_coy_branch_id": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "426"
                 },
                 "loan_amount": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 105000000
                 },
                 "ntf": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 150528000
                 },
                 "other_fee": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 0
                 },
                 "otr": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 105000000
                 },
                 "payment_method": {
                     "type": "string",
+                    "maxLength": 2,
                     "example": "CR"
                 },
                 "premium_amount_to_customer": {
                     "type": "number",
+                    "maximum": 999999999999,
+                    "minimum": 0,
                     "example": 2184000
                 },
                 "product_id": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "1SNLMK"
                 },
                 "product_offering_desc": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 200
                 },
                 "product_offering_id": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "NLMKKAPSEP"
                 },
                 "provision_fee": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 2475000
                 },
                 "salesman_id": {
@@ -2840,14 +3007,17 @@
                 },
                 "survey_fee": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 0
                 },
                 "tenor": {
                     "type": "integer",
+                    "maximum": 60,
                     "example": 36
                 },
                 "way_of_payment": {
                     "type": "string",
+                    "maxLength": 2,
                     "example": "CA"
                 }
             }
@@ -2869,56 +3039,71 @@
             "properties": {
                 "admin_fee": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 1500000
                 },
                 "af": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 84000000
                 },
                 "dealer": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 50
                 },
                 "down_payment_amount": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 22000000
                 },
                 "down_payment_rate": {
                     "type": "number",
+                    "maximum": 99,
                     "example": 20.95
                 },
                 "finance_purpose": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "installment_amount": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 4181333
                 },
                 "insurance_amount": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 3150000
                 },
                 "loan_amount": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 105000000
                 },
                 "ntf": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 150528000
                 },
                 "otr": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 105000000
                 },
                 "premium_amount_to_customer": {
                     "type": "number",
+                    "maximum": 999999999999,
+                    "minimum": 0,
                     "example": 2184000
                 },
                 "provision_fee": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 2475000
                 },
                 "tenor": {
                     "type": "integer",
+                    "maximum": 60,
                     "example": 36
                 }
             }
@@ -2934,7 +3119,6 @@
                     "type": "string"
                 },
                 "data": {
-                    "type": "object",
                     "$ref": "#/definitions/request.DataElaborate"
                 }
             }
@@ -2967,30 +3151,39 @@
             "properties": {
                 "application_emcon_sesuai": {
                     "type": "string",
+                    "maxLength": 1,
                     "example": "1"
                 },
                 "emergency_area_phone_office": {
                     "type": "string",
+                    "maxLength": 4,
+                    "minLength": 2,
                     "example": "021"
                 },
                 "emergency_phone_office": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "567892"
                 },
                 "known_customer_address": {
                     "type": "string",
+                    "maxLength": 1,
                     "example": "1"
                 },
                 "known_customer_job": {
                     "type": "string",
+                    "maxLength": 1,
                     "example": "1"
                 },
                 "mobile_phone": {
                     "type": "string",
+                    "maxLength": 14,
+                    "minLength": 9,
                     "example": "0856789XXX1"
                 },
                 "name": {
                     "type": "string",
+                    "minLength": 2,
                     "example": "MULYADI"
                 },
                 "relationship": {
@@ -2999,10 +3192,12 @@
                 },
                 "verification_with": {
                     "type": "string",
+                    "maxLength": 100,
                     "example": "JONO"
                 },
                 "verify_by": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "PHONE"
                 }
             }
@@ -3012,10 +3207,13 @@
             "properties": {
                 "mobile_phone": {
                     "type": "string",
+                    "maxLength": 14,
+                    "minLength": 9,
                     "example": "0856789XXX1"
                 },
                 "name": {
                     "type": "string",
+                    "minLength": 2,
                     "example": "MULYADI"
                 },
                 "relationship": {
@@ -3037,10 +3235,12 @@
             "properties": {
                 "company_name": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "PT.KIMIA FARMA"
                 },
                 "company_phone_ext": {
                     "type": "string",
+                    "maxLength": 4,
                     "example": "442"
                 },
                 "employment_since_month": {
@@ -3053,22 +3253,27 @@
                 },
                 "industry_type_id": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "9990"
                 },
                 "job_position": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "S"
                 },
                 "job_type": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "008"
                 },
                 "monthly_fixed_income": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 5000000
                 },
                 "monthly_variable_income": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 3000000
                 },
                 "profession_id": {
@@ -3077,10 +3282,12 @@
                 },
                 "source_other_income": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "TOKO MAKMUR"
                 },
                 "spouse_income": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 6000000
                 }
             }
@@ -3090,6 +3297,7 @@
             "properties": {
                 "monthly_omset": {
                     "type": "number",
+                    "maximum": 999999999999999,
                     "example": 5000000
                 },
                 "monthly_omset_month": {
@@ -3107,6 +3315,7 @@
             "properties": {
                 "monthly_omset": {
                     "type": "number",
+                    "maximum": 999999999999999,
                     "example": 5000000
                 },
                 "monthly_omset_month": {
@@ -3145,18 +3354,22 @@
             "properties": {
                 "account_name": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "JONATHAN"
                 },
                 "account_no": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "567XX021"
                 },
                 "agree_to_accept_other_offering": {
                     "type": "integer",
+                    "maximum": 1,
                     "example": 1
                 },
                 "bank_id": {
                     "type": "string",
+                    "maxLength": 5,
                     "example": "BCA"
                 },
                 "birth_date": {
@@ -3165,26 +3378,33 @@
                 },
                 "birth_place": {
                     "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
                     "example": "JAKARTA"
                 },
                 "counterpart": {
                     "type": "integer",
+                    "maximum": 9999,
                     "example": 169
                 },
                 "customer_group": {
                     "type": "string",
+                    "maxLength": 1,
                     "example": "2"
                 },
                 "data_type": {
                     "type": "string",
+                    "maxLength": 1,
                     "example": "G"
                 },
                 "debt_business_scale": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "01"
                 },
                 "debt_group": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "303"
                 },
                 "education": {
@@ -3193,6 +3413,7 @@
                 },
                 "email": {
                     "type": "string",
+                    "maxLength": 100,
                     "example": "jonathaxx@gmail.com"
                 },
                 "expired_date": {
@@ -3209,6 +3430,7 @@
                 },
                 "home_location": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "N"
                 },
                 "home_status": {
@@ -3229,6 +3451,7 @@
                 },
                 "is_affiliate_with_pp": {
                     "type": "string",
+                    "maxLength": 1,
                     "example": "N"
                 },
                 "kk_no": {
@@ -3241,6 +3464,7 @@
                 },
                 "living_cost_amount": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 0
                 },
                 "marital_status": {
@@ -3249,10 +3473,13 @@
                 },
                 "mobile_phone": {
                     "type": "string",
+                    "maxLength": 14,
+                    "minLength": 9,
                     "example": "085689XXX01"
                 },
                 "nationality": {
                     "type": "string",
+                    "maxLength": 3,
                     "example": "WNI"
                 },
                 "npwp": {
@@ -3261,10 +3488,12 @@
                 },
                 "num_of_dependence": {
                     "type": "integer",
+                    "maximum": 50,
                     "example": 1
                 },
                 "personal_customer_type": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "M"
                 },
                 "religion": {
@@ -3277,6 +3506,7 @@
                 },
                 "status": {
                     "type": "string",
+                    "maxLength": 1,
                     "example": "F"
                 },
                 "stay_since_month": {
@@ -3293,6 +3523,7 @@
                 },
                 "wna_country": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "-"
                 }
             }
@@ -3313,6 +3544,8 @@
                 },
                 "birth_place": {
                     "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
                     "example": "JAKARTA"
                 },
                 "education": {
@@ -3321,10 +3554,12 @@
                 },
                 "email": {
                     "type": "string",
+                    "maxLength": 100,
                     "example": "jonathaxx@gmail.com"
                 },
                 "full_name": {
                     "type": "string",
+                    "minLength": 2,
                     "example": "ENCRYPTED"
                 },
                 "gender": {
@@ -3341,6 +3576,7 @@
                 },
                 "legal_name": {
                     "type": "string",
+                    "minLength": 2,
                     "example": "ENCRYPTED"
                 },
                 "marital_status": {
@@ -3349,6 +3585,8 @@
                 },
                 "mobile_phone": {
                     "type": "string",
+                    "maxLength": 14,
+                    "minLength": 9,
                     "example": "085689XXX01"
                 },
                 "npwp": {
@@ -3357,6 +3595,7 @@
                 },
                 "num_of_dependence": {
                     "type": "integer",
+                    "maximum": 50,
                     "example": 1
                 },
                 "stay_since_month": {
@@ -3369,6 +3608,7 @@
                 },
                 "surgate_mother_name": {
                     "type": "string",
+                    "minLength": 2,
                     "example": "ENCRYPTED"
                 }
             }
@@ -3382,6 +3622,7 @@
                 },
                 "url": {
                     "type": "string",
+                    "maxLength": 250,
                     "example": "https://dev-media.kreditplus.com/media/reference/20000/KPM-3677/ktp_EFM-3677.jpg"
                 }
             }
@@ -3402,14 +3643,18 @@
                 },
                 "birth_place": {
                     "type": "string",
+                    "maxLength": 100,
+                    "minLength": 3,
                     "example": "JAKARTA"
                 },
                 "company_name": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "PT.BUMI KARYA"
                 },
                 "company_phone": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "865542"
                 },
                 "full_name": {
@@ -3430,6 +3675,8 @@
                 },
                 "mobile_phone": {
                     "type": "string",
+                    "maxLength": 14,
+                    "minLength": 9,
                     "example": "08772012XXX0"
                 },
                 "profession_id": {
@@ -3457,6 +3704,7 @@
                 },
                 "full_name": {
                     "type": "string",
+                    "minLength": 2,
                     "example": "SUSI BUNGA"
                 },
                 "gender": {
@@ -3469,10 +3717,12 @@
                 },
                 "legal_name": {
                     "type": "string",
+                    "minLength": 2,
                     "example": "SUSI BUNGA"
                 },
                 "surgate_mother_name": {
                     "type": "string",
+                    "minLength": 2,
                     "example": "TUTI"
                 }
             }
@@ -3525,10 +3775,10 @@
                     "type": "string"
                 },
                 "ProspectID": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "Spouse": {
-                    "type": "object",
                     "$ref": "#/definitions/request.Spouse"
                 },
                 "SurgateMotherName": {
@@ -3572,7 +3822,8 @@
                     "type": "number"
                 },
                 "ProspectID": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "ResultPefindo": {
                     "type": "string"
@@ -3580,9 +3831,7 @@
                 "Tenor": {
                     "type": "integer"
                 },
-                "TotalBakiDebet": {
-                    "type": "object"
-                }
+                "TotalBakiDebet": {}
             }
         },
         "request.ElaborateLTV": {
@@ -3599,7 +3848,8 @@
                     "type": "string"
                 },
                 "tenor": {
-                    "type": "integer"
+                    "type": "integer",
+                    "maximum": 60
                 }
             }
         },
@@ -3630,6 +3880,7 @@
                 },
                 "cmo_id": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "123456"
                 },
                 "gender": {
@@ -3649,7 +3900,6 @@
                     "example": "SAL042600001"
                 },
                 "spouse": {
-                    "type": "object",
                     "$ref": "#/definitions/request.FilteringSpouse"
                 },
                 "surgate_mother_name": {
@@ -3669,7 +3919,6 @@
                     "type": "string"
                 },
                 "data": {
-                    "type": "object",
                     "$ref": "#/definitions/request.Data"
                 }
             }
@@ -3737,18 +3986,22 @@
             "properties": {
                 "asset_code": {
                     "type": "string",
+                    "maxLength": 200,
                     "example": "SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"
                 },
                 "asset_description": {
                     "type": "string",
+                    "maxLength": 200,
                     "example": "SUZUKI.KMOBIL.GRAND VITARA.JLX 2,0 AT"
                 },
                 "asset_insurance_amount_coverage": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 105000000
                 },
                 "asset_usage": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "N"
                 },
                 "bpkb_name": {
@@ -3757,46 +4010,57 @@
                 },
                 "brand": {
                     "type": "string",
+                    "maxLength": 255,
                     "example": "TOYOTA"
                 },
                 "category_id": {
                     "type": "string",
+                    "maxLength": 100,
                     "example": "SEDAN"
                 },
                 "cc": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "1500"
                 },
                 "chassis_number": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "MHKV1AA2JBK107322"
                 },
                 "color": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "HITAM"
                 },
                 "condition": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "U"
                 },
                 "coverage_type": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "TLO"
                 },
                 "engine_number": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "73218JAJK"
                 },
                 "ins_asset_insured_by": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "CO"
                 },
                 "insurance_coy_branch_id": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "426"
                 },
                 "license_plate": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "3006TBJ"
                 },
                 "manufacture_year": {
@@ -3805,6 +4069,7 @@
                 },
                 "owner_asset": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "JONATHAN"
                 },
                 "owner_ktp": {
@@ -3813,18 +4078,23 @@
                 },
                 "pos": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "426"
                 },
                 "premium_amount_to_customer": {
                     "type": "number",
+                    "maximum": 999999999999,
+                    "minimum": 0,
                     "example": 2184000
                 },
                 "qty": {
                     "type": "integer",
+                    "maximum": 1,
                     "example": 1
                 },
                 "region": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "0"
                 },
                 "stnk_expired_date": {
@@ -3833,6 +4103,7 @@
                 },
                 "supplier_id": {
                     "type": "string",
+                    "maxLength": 100,
                     "example": "42600342"
                 },
                 "tax_date": {
@@ -3858,10 +4129,12 @@
             "properties": {
                 "asset_code": {
                     "type": "string",
+                    "maxLength": 200,
                     "example": "SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"
                 },
                 "asset_description": {
                     "type": "string",
+                    "maxLength": 200,
                     "example": "SUZUKI.KMOBIL.GRAND VITARA.JLX 2,0 AT"
                 },
                 "bpkb_name": {
@@ -3870,26 +4143,32 @@
                 },
                 "brand": {
                     "type": "string",
+                    "maxLength": 255,
                     "example": "TOYOTA"
                 },
                 "category_id": {
                     "type": "string",
+                    "maxLength": 100,
                     "example": "SEDAN"
                 },
                 "chassis_number": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "MHKV1AA2JBK107322"
                 },
                 "color": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "HITAM"
                 },
                 "condition": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "U"
                 },
                 "engine_number": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "73218JAJK"
                 },
                 "manufacture_year": {
@@ -3898,10 +4177,13 @@
                 },
                 "owner_asset": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "JONATHAN"
                 },
                 "premium_amount_to_customer": {
                     "type": "number",
+                    "maximum": 999999999999,
+                    "minimum": 0,
                     "example": 2184000
                 }
             }
@@ -3926,19 +4208,15 @@
                     }
                 },
                 "agent": {
-                    "type": "object",
                     "$ref": "#/definitions/request.Agent"
                 },
                 "apk": {
-                    "type": "object",
                     "$ref": "#/definitions/request.Apk"
                 },
                 "customer_emcon": {
-                    "type": "object",
                     "$ref": "#/definitions/request.CustomerEmcon"
                 },
                 "customer_employment": {
-                    "type": "object",
                     "$ref": "#/definitions/request.CustomerEmployment"
                 },
                 "customer_omset": {
@@ -3948,7 +4226,6 @@
                     }
                 },
                 "customer_personal": {
-                    "type": "object",
                     "$ref": "#/definitions/request.CustomerPersonal"
                 },
                 "customer_photo": {
@@ -3958,11 +4235,9 @@
                     }
                 },
                 "customer_spouse": {
-                    "type": "object",
                     "$ref": "#/definitions/request.CustomerSpouse"
                 },
                 "item": {
-                    "type": "object",
                     "$ref": "#/definitions/request.Item"
                 },
                 "surveyor": {
@@ -3972,7 +4247,6 @@
                     }
                 },
                 "transaction": {
-                    "type": "object",
                     "$ref": "#/definitions/request.Transaction"
                 }
             }
@@ -3997,23 +4271,18 @@
                     }
                 },
                 "agent": {
-                    "type": "object",
                     "$ref": "#/definitions/request.AgentNE"
                 },
                 "apk": {
-                    "type": "object",
                     "$ref": "#/definitions/request.ApkNE"
                 },
                 "created_by": {
-                    "type": "object",
                     "$ref": "#/definitions/request.CreatedBy"
                 },
                 "customer_emcon": {
-                    "type": "object",
                     "$ref": "#/definitions/request.CustomerEmconNE"
                 },
                 "customer_employment": {
-                    "type": "object",
                     "$ref": "#/definitions/request.CustomerEmployment"
                 },
                 "customer_omset": {
@@ -4023,7 +4292,6 @@
                     }
                 },
                 "customer_personal": {
-                    "type": "object",
                     "$ref": "#/definitions/request.CustomerPersonalNE"
                 },
                 "customer_photo": {
@@ -4033,15 +4301,12 @@
                     }
                 },
                 "customer_spouse": {
-                    "type": "object",
                     "$ref": "#/definitions/request.CustomerSpouseNE"
                 },
                 "item": {
-                    "type": "object",
                     "$ref": "#/definitions/request.ItemNE"
                 },
                 "transaction": {
-                    "type": "object",
                     "$ref": "#/definitions/request.TransactionNE"
                 }
             }
@@ -4080,38 +4345,47 @@
             "properties": {
                 "branch_id": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "426"
                 },
                 "brand": {
                     "type": "string",
+                    "maxLength": 255,
                     "example": "HONDA"
                 },
                 "cc": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "1500"
                 },
                 "chassis_number": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "MHKV1AA2JBK107322"
                 },
                 "cmo_id": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "537281"
                 },
                 "cmo_name": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "JONATHAN"
                 },
                 "color": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "HITAM"
                 },
                 "engine_number": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "73218JAJK"
                 },
                 "home_status": {
                     "type": "string",
+                    "maxLength": 2,
                     "example": "SD"
                 },
                 "id_number": {
@@ -4120,6 +4394,7 @@
                 },
                 "license_plate": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "B3006TBJ"
                 },
                 "manufacture_year": {
@@ -4128,50 +4403,65 @@
                 },
                 "owner_asset": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "JONATHAN"
                 },
                 "prospect_id": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "SAL-1140024080800004"
                 },
                 "residence_address": {
                     "type": "string",
+                    "maxLength": 100,
                     "example": "Dermaga Baru"
                 },
                 "residence_area_phone": {
                     "type": "string",
+                    "maxLength": 4,
+                    "minLength": 2,
                     "example": "021"
                 },
                 "residence_city": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "Jakarta Timur"
                 },
                 "residence_kecamatan": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "Duren Sawit"
                 },
                 "residence_kelurahan": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "Klender"
                 },
                 "residence_phone": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "86605224"
                 },
                 "residence_province": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "Jakarta"
                 },
                 "residence_rt": {
                     "type": "string",
+                    "maxLength": 3,
+                    "minLength": 1,
                     "example": "001"
                 },
                 "residence_rw": {
                     "type": "string",
+                    "maxLength": 3,
+                    "minLength": 1,
                     "example": "002"
                 },
                 "residence_zipcode": {
                     "type": "string",
+                    "maxLength": 5,
                     "example": "13470"
                 },
                 "spouse_id_number": {
@@ -4180,10 +4470,12 @@
                 },
                 "stay_since_month": {
                     "type": "string",
+                    "maxLength": 2,
                     "example": "04"
                 },
                 "stay_since_year": {
                     "type": "string",
+                    "maxLength": 4,
                     "example": "2024"
                 },
                 "stnk_expired_date": {
@@ -4193,6 +4485,85 @@
                 "tax_date": {
                     "type": "string",
                     "example": "2022-03-02"
+                }
+            }
+        },
+        "request.PrincipleElaborateLTV": {
+            "type": "object",
+            "required": [
+                "tenor"
+            ],
+            "properties": {
+                "prospect_id": {
+                    "type": "string"
+                },
+                "tenor": {
+                    "type": "integer",
+                    "maximum": 60
+                }
+            }
+        },
+        "request.PrinciplePembiayaan": {
+            "type": "object",
+            "required": [
+                "admin_fee",
+                "af",
+                "down_payment_amount",
+                "installment_amount",
+                "ntf",
+                "otr",
+                "prospect_id",
+                "tenor"
+            ],
+            "properties": {
+                "admin_fee": {
+                    "type": "number",
+                    "maximum": 999999999999,
+                    "example": 1500000
+                },
+                "af": {
+                    "type": "number",
+                    "maximum": 999999999999,
+                    "example": 84000000
+                },
+                "dealer": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "down_payment_amount": {
+                    "type": "number",
+                    "maximum": 999999999999,
+                    "example": 22000000
+                },
+                "installment_amount": {
+                    "type": "number",
+                    "maximum": 999999999999,
+                    "example": 4181333
+                },
+                "monthly_variable_income": {
+                    "type": "number",
+                    "maximum": 999999999999,
+                    "example": 3000000
+                },
+                "ntf": {
+                    "type": "number",
+                    "maximum": 999999999999,
+                    "example": 150528000
+                },
+                "otr": {
+                    "type": "number",
+                    "maximum": 999999999999,
+                    "example": 105000000
+                },
+                "prospect_id": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "example": "SAL-1140024080800004"
+                },
+                "tenor": {
+                    "type": "integer",
+                    "maximum": 60,
+                    "example": 36
                 }
             }
         },
@@ -4234,6 +4605,7 @@
                 "legal_rw",
                 "legal_zipcode",
                 "marital_status",
+                "mobile_phone",
                 "monthly_fixed_income",
                 "profession_id",
                 "prospect_id",
@@ -4246,74 +4618,96 @@
                 },
                 "birth_place": {
                     "type": "string",
+                    "maxLength": 100,
                     "example": "Jakarta"
                 },
                 "company_address": {
                     "type": "string",
+                    "maxLength": 100,
                     "example": "Dermaga Baru"
                 },
                 "company_city": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "Jakarta Timur"
                 },
                 "company_kecamatan": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "Duren Sawit"
                 },
                 "company_kelurahan": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "Klender"
                 },
                 "company_name": {
                     "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2,
                     "example": "PT KB Finansia"
                 },
                 "company_phone": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "86605224"
                 },
                 "company_phone_area": {
                     "type": "string",
+                    "maxLength": 4,
+                    "minLength": 2,
                     "example": "021"
                 },
                 "company_province": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "Jakarta"
                 },
                 "company_rt": {
                     "type": "string",
+                    "maxLength": 3,
+                    "minLength": 1,
                     "example": "001"
                 },
                 "company_rw": {
                     "type": "string",
+                    "maxLength": 3,
+                    "minLength": 1,
                     "example": "003"
                 },
                 "company_zipcode": {
                     "type": "string",
+                    "maxLength": 5,
                     "example": "13470"
                 },
                 "economy_sector": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "06"
                 },
                 "education": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "S1"
                 },
                 "employement_since_month": {
                     "type": "string",
+                    "maxLength": 2,
                     "example": "02"
                 },
                 "employement_since_year": {
                     "type": "string",
+                    "maxLength": 4,
                     "example": "2020"
                 },
                 "full_name": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "Arya Danu"
                 },
                 "gender": {
                     "type": "string",
+                    "maxLength": 1,
                     "example": "M"
                 },
                 "id_number": {
@@ -4322,70 +4716,91 @@
                 },
                 "industry_type_id": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "1000"
                 },
                 "job_position": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "M"
                 },
                 "job_type": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "0012"
                 },
                 "ktp_photo": {
                     "type": "string",
+                    "maxLength": 250,
                     "example": "https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/ktp_SAL-1140024081400003.jpg"
                 },
                 "legal_address": {
                     "type": "string",
+                    "maxLength": 100,
                     "example": "Dermaga Baru"
                 },
                 "legal_city": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "Jakarta Timur"
                 },
                 "legal_kecamatan": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "Duren Sawit"
                 },
                 "legal_kelurahan": {
                     "type": "string",
+                    "maxLength": 30,
                     "example": "Klender"
                 },
                 "legal_name": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "Arya Danu"
                 },
                 "legal_phone": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "86605224"
                 },
                 "legal_phone_area": {
                     "type": "string",
+                    "maxLength": 4,
+                    "minLength": 2,
                     "example": "021"
                 },
                 "legal_province": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "Jakarta"
                 },
                 "legal_rt": {
                     "type": "string",
+                    "maxLength": 3,
+                    "minLength": 1,
                     "example": "001"
                 },
                 "legal_rw": {
                     "type": "string",
+                    "maxLength": 3,
+                    "minLength": 1,
                     "example": "003"
                 },
                 "legal_zipcode": {
                     "type": "string",
+                    "maxLength": 5,
                     "example": "13470"
                 },
                 "marital_status": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "M"
                 },
                 "mobile_phone": {
                     "type": "string",
+                    "maxLength": 14,
+                    "minLength": 9,
                     "example": "085880529100"
                 },
                 "monthly_fixed_income": {
@@ -4394,14 +4809,17 @@
                 },
                 "profession_id": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "KRYSW"
                 },
                 "prospect_id": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "SAL-1140024080800004"
                 },
                 "selfie_photo": {
                     "type": "string",
+                    "maxLength": 250,
                     "example": "https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/selfie_SAL-1140024081400003.jpg"
                 },
                 "spouse_birth_date": {
@@ -4442,6 +4860,7 @@
                 },
                 "surgate_mother_name": {
                     "type": "string",
+                    "maxLength": 50,
                     "example": "IBU"
                 }
             }
@@ -4460,57 +4879,73 @@
             "properties": {
                 "admin_fee": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 1500000
                 },
                 "af": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 84000000
                 },
                 "asset_premium_amount_to_customer": {
                     "type": "number",
+                    "maximum": 999999999999,
+                    "minimum": 0,
                     "example": 2184000
                 },
                 "down_payment_amount": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 22000000
                 },
                 "down_payment_rate": {
                     "type": "number",
+                    "maximum": 99,
                     "example": 20.95
                 },
                 "fidusia_fee": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 0
                 },
                 "installment_amount": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 4181333
                 },
                 "interest_amount": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 66528000
                 },
                 "interest_rate": {
                     "type": "number",
+                    "maximum": 99,
                     "example": 2.2
                 },
                 "life_premium_amount_to_customer": {
                     "type": "number",
+                    "maximum": 999999999999,
+                    "minimum": 0,
                     "example": 2184000
                 },
                 "loan_amount": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 105000000
                 },
                 "ntf": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 150528000
                 },
                 "product_offering_desc": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 200
                 },
                 "product_offering_id": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "NLMKKAPSEP"
                 },
                 "prospect_id": {
@@ -4519,10 +4954,12 @@
                 },
                 "provision_fee": {
                     "type": "number",
+                    "maximum": 999999999999,
                     "example": 2475000
                 },
                 "tenor": {
                     "type": "integer",
+                    "maximum": 60,
                     "example": 36
                 }
             }
@@ -4537,17 +4974,21 @@
             ],
             "properties": {
                 "decision_by": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "decision_by_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "prospect_id": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "TEST-DEV"
                 },
                 "reason": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 }
             }
         },
@@ -4560,19 +5001,23 @@
             ],
             "properties": {
                 "branch_id": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 3
                 },
                 "filter": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 15
                 },
                 "multi_branch": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 1
                 },
                 "search": {
                     "type": "string"
                 },
                 "user_id": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 }
             }
         },
@@ -4586,10 +5031,12 @@
             ],
             "properties": {
                 "decision_by": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "decision_by_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "dp_amount": {
                     "type": "number",
@@ -4597,6 +5044,7 @@
                 },
                 "prospect_id": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "TEST-DEV"
                 }
             }
@@ -4610,13 +5058,16 @@
             ],
             "properties": {
                 "decision_by": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "decision_by_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "prospect_id": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "TEST-DEV"
                 }
             }
@@ -4632,20 +5083,25 @@
             "properties": {
                 "decision": {
                     "type": "string",
+                    "maxLength": 7,
                     "example": "APPROVE,REJECT"
                 },
                 "decision_by": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "decision_by_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "prospect_id": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "TEST-DEV"
                 },
                 "reason": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 255
                 }
             }
         },
@@ -4661,23 +5117,29 @@
             "properties": {
                 "decision": {
                     "type": "string",
+                    "maxLength": 7,
                     "example": "APPROVE,REJECT"
                 },
                 "decision_by": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "decision_by_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "note": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 525
                 },
                 "prospect_id": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "TEST-DEV"
                 },
                 "slik_result": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 30
                 }
             }
         },
@@ -4691,16 +5153,19 @@
             ],
             "properties": {
                 "branch_id": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 3
                 },
                 "multi_branch": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 1
                 },
                 "search": {
                     "type": "string"
                 },
                 "user_id": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 20
                 }
             }
         },
@@ -4718,39 +5183,48 @@
             ],
             "properties": {
                 "alias": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 3
                 },
                 "code": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 4
                 },
                 "decision": {
                     "type": "string",
+                    "maxLength": 7,
                     "example": "APPROVE,REJECT,RETURN"
                 },
                 "decision_by": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "decision_by_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "dp_amount": {
                     "type": "number"
                 },
                 "final_approval": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 3
                 },
                 "need_escalation": {
                     "type": "boolean"
                 },
                 "note": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 525
                 },
                 "prospect_id": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "TEST-DEV"
                 },
                 "reason": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 }
             }
         },
@@ -4767,26 +5241,33 @@
             "properties": {
                 "decision": {
                     "type": "string",
+                    "maxLength": 7,
                     "example": "APPROVE,REJECT"
                 },
                 "decision_by": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 100
                 },
                 "decision_by_name": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 250
                 },
                 "note": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 525
                 },
                 "ntf_akumulasi": {
-                    "type": "number"
+                    "type": "number",
+                    "maximum": 9999999999999
                 },
                 "prospect_id": {
                     "type": "string",
+                    "maxLength": 20,
                     "example": "TEST-DEV"
                 },
                 "slik_result": {
-                    "type": "string"
+                    "type": "string",
+                    "maxLength": 30
                 }
             }
         },
@@ -4917,6 +5398,7 @@
             "properties": {
                 "application_source": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "H"
                 },
                 "branch_id": {
@@ -4955,6 +5437,7 @@
             "properties": {
                 "application_source": {
                     "type": "string",
+                    "maxLength": 10,
                     "example": "H"
                 },
                 "branch_id": {
@@ -4990,12 +5473,8 @@
         "response.ApiResponse": {
             "type": "object",
             "properties": {
-                "data": {
-                    "type": "object"
-                },
-                "errors": {
-                    "type": "object"
-                },
+                "data": {},
+                "errors": {},
                 "messages": {
                     "type": "string"
                 },
@@ -5050,9 +5529,7 @@
         "response.DupcheckResult": {
             "type": "object",
             "properties": {
-                "code": {
-                    "type": "object"
-                },
+                "code": {},
                 "decision": {
                     "type": "string"
                 },
@@ -5174,9 +5651,7 @@
         "response.InquiryRow": {
             "type": "object",
             "properties": {
-                "inquiry": {
-                    "type": "object"
-                },
+                "inquiry": {},
                 "recordsFiltered": {
                     "type": "integer"
                 },
@@ -5188,9 +5663,7 @@
         "response.ReasonMessageRow": {
             "type": "object",
             "properties": {
-                "reason": {
-                    "type": "object"
-                },
+                "reason": {},
                 "recordsFiltered": {
                     "type": "integer"
                 },
@@ -5213,9 +5686,7 @@
         "response.ReviewPrescreening": {
             "type": "object",
             "properties": {
-                "code": {
-                    "type": "object"
-                },
+                "code": {},
                 "decision": {
                     "type": "string"
                 },
@@ -5256,9 +5727,7 @@
                 "dsr": {
                     "type": "number"
                 },
-                "info": {
-                    "type": "object"
-                },
+                "info": {},
                 "reason": {
                     "type": "string"
                 },
