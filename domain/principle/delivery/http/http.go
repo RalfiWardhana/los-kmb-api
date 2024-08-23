@@ -30,6 +30,8 @@ func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, u
 	principleRoute.POST("/verify-asset", handler.VerifyAsset, middlewares.AccessMiddleware())
 	principleRoute.POST("/verify-pemohon", handler.VerifyPemohon, middlewares.AccessMiddleware())
 	principleRoute.GET("/step-principle/:id_number", handler.StepPrinciple, middlewares.AccessMiddleware())
+	principleRoute.POST("/elaborate-ltv", handler.ElaborateLTV, middlewares.AccessMiddleware())
+	principleRoute.POST("/verify-pembiayaan", handler.VerifyPembiayaan, middlewares.AccessMiddleware())
 }
 
 // KmbPrinciple Tools godoc
@@ -121,6 +123,72 @@ func (c *handler) StepPrinciple(ctx echo.Context) (err error) {
 	}
 
 	data, err := c.usecase.PrincipleStep(validate.IDNumber)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
+
+}
+
+// KmbPrinciple Tools godoc
+// @Description KmbPrinciple
+// @Tags KmbPrinciple
+// @Produce json
+// @Param body body request.PrincipleElaborateLTV true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.UsecaseApi}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/elaborate-ltv [post]
+func (c *handler) ElaborateLTV(ctx echo.Context) (err error) {
+
+	var r request.PrincipleElaborateLTV
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "800"), err)
+	}
+
+	data, err := c.usecase.PrincipleElaborateLTV(ctx.Request().Context(), r)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
+
+}
+
+// KmbPrinciple Tools godoc
+// @Description KmbPrinciple
+// @Tags KmbPrinciple
+// @Produce json
+// @Param body body request.PrinciplePembiayaan true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.UsecaseApi}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/verify-pembiayaan [post]
+func (c *handler) VerifyPembiayaan(ctx echo.Context) (err error) {
+
+	var r request.PrinciplePembiayaan
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "800"), err)
+	}
+
+	data, err := c.multiusecase.PrinciplePembiayaan(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
 

@@ -2499,6 +2499,117 @@ func (c *TrxPrincipleStepOne) TableName() string {
 	return "trx_principle_step_one"
 }
 
+type TrxPrincipleStepTwo struct {
+	ProspectID              string      `gorm:"column:ProspectID;type:varchar(20);"`
+	IDNumber                string      `gorm:"column:IDNumber;type:varchar(16)"`
+	LegalName               string      `gorm:"column:LegalName;type:varchar(100);"`
+	MobilePhone             string      `gorm:"column:MobilePhone;type:varchar(20);"`
+	FullName                string      `gorm:"column:FullName;type:varchar(100);"`
+	BirthDate               time.Time   `gorm:"column:BirthDate"`
+	BirthPlace              string      `gorm:"column:BirthPlace;type:varchar(100);"`
+	SurgateMotherName       string      `gorm:"column:SurgateMotherName;type:varchar(100);"`
+	Gender                  string      `gorm:"column:Gender;type:varchar(10);"`
+	SpouseIDNumber          interface{} `gorm:"column:SpouseIDNumber;type:varchar(16)"`
+	LegalAddress            string      `gorm:"column:LegalAddress;type:varchar(100);"`
+	LegalRT                 string      `gorm:"column:LegalRT;type:varchar(3);"`
+	LegalRW                 string      `gorm:"column:LegalRW;type:varchar(3);"`
+	LegalProvince           string      `gorm:"column:LegalProvince;type:varchar(50)"`
+	LegalCity               string      `gorm:"column:LegalCity;type:varchar(30);"`
+	LegalKecamatan          string      `gorm:"column:LegalKecamatan;type:varchar(30);"`
+	LegalKelurahan          string      `gorm:"column:LegalKelurahan;type:varchar(30);"`
+	LegalZipCode            string      `gorm:"column:LegalZipCode;type:varchar(5)"`
+	LegalAreaPhone          string      `gorm:"column:LegalAreaPhone;type:varchar(4)"`
+	LegalPhone              string      `gorm:"column:LegalPhone;type:varchar(10)"`
+	CompanyAddress          string      `gorm:"column:CompanyAddress;type:varchar(100);"`
+	CompanyRT               string      `gorm:"column:CompanyRT;type:varchar(3);"`
+	CompanyRW               string      `gorm:"column:CompanyRW;type:varchar(3);"`
+	CompanyProvince         string      `gorm:"column:CompanyProvince;type:varchar(50)"`
+	CompanyCity             string      `gorm:"column:CompanyCity;type:varchar(30);"`
+	CompanyKecamatan        string      `gorm:"column:CompanyKecamatan;type:varchar(30);"`
+	CompanyKelurahan        string      `gorm:"column:CompanyKelurahan;type:varchar(30);"`
+	CompanyZipCode          string      `gorm:"column:CompanyZipCode;type:varchar(5)"`
+	CompanyAreaPhone        string      `gorm:"column:CompanyAreaPhone;type:varchar(4)"`
+	CompanyPhone            string      `gorm:"column:CompanyPhone;type:varchar(10)"`
+	MonthlyFixedIncome      float64     `gorm:"column:MonthlyFixedIncome"`
+	MaritalStatus           string      `gorm:"column:MaritalStatus;type:varchar(10);"`
+	SpouseIncome            interface{} `gorm:"column:SpouseIncome"`
+	SelfiePhoto             interface{} `gorm:"column:SelfiePhoto;type:varchar(250);"`
+	KtpPhoto                interface{} `gorm:"column:KtpPhoto;type:varchar(250);"`
+	SpouseFullName          interface{} `gorm:"column:SpouseFullName;type:varchar(100);"`
+	SpouseBirthDate         interface{} `gorm:"column:SpouseBirthDate"`
+	SpouseBirthPlace        interface{} `gorm:"column:SpouseBirthPlace;type:varchar(100);"`
+	SpouseGender            interface{} `gorm:"column:SpouseGender;type:varchar(10);"`
+	SpouseLegalName         interface{} `gorm:"column:SpouseLegalName;type:varchar(100);"`
+	SpouseMobilePhone       interface{} `gorm:"column:SpouseMobilePhone;type:varchar(20);"`
+	SpouseSurgateMotherName interface{} `gorm:"column:SpouseSurgateMotherName;type:varchar(100);"`
+	EconomySectorID         string      `gorm:"column:EconomySectorID;type:varchar(10)"`
+	Education               string      `gorm:"column:Education;type:varchar(50);"`
+	EmploymentSinceMonth    string      `gorm:"column:EmploymentSinceMonth;type:varchar(2);"`
+	EmploymentSinceYear     string      `gorm:"column:EmploymentSinceYear;type:varchar(4);"`
+	IndustryTypeID          string      `gorm:"column:IndustryTypeID;type:varchar(10);"`
+	JobPosition             string      `gorm:"column:JobPosition;type:varchar(10);"`
+	JobType                 string      `gorm:"column:JobType;type:varchar(10);"`
+	ProfessionID            string      `gorm:"column:ProfessionID;type:varchar(10);"`
+	CheckBannedPMKDSRResult interface{} `gorm:"column:CheckBannedPMKDSRResult;type:varchar(50);"`
+	CheckBannedPMKDSRCode   interface{} `gorm:"column:CheckBannedPMKDSRCode;type:varchar(50);"`
+	CheckBannedPMKDSRReason interface{} `gorm:"column:CheckBannedPMKDSRReason;type:varchar(200);"`
+	CheckRejectionResult    interface{} `gorm:"column:CheckRejectionResult;type:varchar(50);"`
+	CheckRejectionCode      interface{} `gorm:"column:CheckRejectionCode;type:varchar(50);"`
+	CheckRejectionReason    interface{} `gorm:"column:CheckRejectionReason;type:varchar(200);"`
+	CheckBlacklistResult    interface{} `gorm:"column:CheckBlacklistResult;type:varchar(50);"`
+	CheckBlacklistCode      interface{} `gorm:"column:CheckBlacklistCode;type:varchar(50);"`
+	CheckBlacklistReason    interface{} `gorm:"column:CheckBlacklistReason;type:varchar(200);"`
+	CheckPMKResult          interface{} `gorm:"column:CheckPMKResult;type:varchar(50);"`
+	CheckPMKCode            interface{} `gorm:"column:CheckPMKCode;type:varchar(50);"`
+	CheckPMKReason          interface{} `gorm:"column:CheckPMKReason;type:varchar(200);"`
+	CheckEkycResult         interface{} `gorm:"column:CheckEkycResult;type:varchar(50);"`
+	CheckEkycCode           interface{} `gorm:"column:CheckEkycCode;type:varchar(50);"`
+	CheckEkycReason         interface{} `gorm:"column:CheckEkycReason;type:varchar(200);"`
+	FilteringResult         interface{} `gorm:"column:FilteringResult;type:varchar(50);"`
+	FilteringCode           interface{} `gorm:"column:FilteringCode;type:varchar(50);"`
+	FilteringReason         interface{} `gorm:"column:FilteringReason;type:varchar(200);"`
+	Decision                string      `gorm:"column:Decision;type:varchar(20)"`
+	Reason                  string      `gorm:"column:Reason;type:varchar(255)"`
+	CreatedAt               time.Time   `gorm:"column:created_at"`
+}
+
+func (c *TrxPrincipleStepTwo) TableName() string {
+	return "trx_principle_step_two"
+}
+
+type TrxPrincipleStepThree struct {
+	ProspectID               string      `gorm:"column:ProspectID;type:varchar(20);"`
+	IDNumber                 string      `gorm:"column:IDNumber;type:varchar(16)"`
+	Tenor                    int         `gorm:"column:Tenor"`
+	AF                       float64     `gorm:"column:AF"`
+	NTF                      float64     `gorm:"column:NTF"`
+	OTR                      float64     `gorm:"column:OTR"`
+	DPAmount                 float64     `gorm:"column:DPAmount"`
+	AdminFee                 float64     `gorm:"column:AdminFee"`
+	InstallmentAmount        float64     `gorm:"column:InstallmentAmount"`
+	Dealer                   string      `gorm:"column:Dealer;type:varchar(50);"`
+	MonthlyVariableIncome    float64     `gorm:"column:MonthlyVariableIncome"`
+	CheckVehicleResult       interface{} `gorm:"column:CheckVehicleResult;type:varchar(50);"`
+	CheckVehicleCode         interface{} `gorm:"column:CheckVehicleCode;type:varchar(50);"`
+	CheckVehicleReason       interface{} `gorm:"column:CheckVehicleReason;type:varchar(200);"`
+	CheckRejectTenor36Result interface{} `gorm:"column:CheckRejectTenor36Result;type:varchar(50);"`
+	CheckRejectTenor36Code   interface{} `gorm:"column:CheckRejectTenor36Code;type:varchar(50);"`
+	CheckRejectTenor36Reason interface{} `gorm:"column:CheckRejectTenor36Reason;type:varchar(200);"`
+	ScoreProResult           interface{} `gorm:"column:ScoreProResult;type:varchar(50);"`
+	ScoreProCode             interface{} `gorm:"column:ScoreProCode;type:varchar(50);"`
+	ScoreProReason           interface{} `gorm:"column:ScoreProReason;type:varchar(200);"`
+	CheckDSRResult           interface{} `gorm:"column:CheckDSRResult;type:varchar(50);"`
+	CheckDSRCode             interface{} `gorm:"column:CheckDSRCode;type:varchar(50);"`
+	CheckDSRReason           interface{} `gorm:"column:CheckDSRReason;type:varchar(200);"`
+	Decision                 string      `gorm:"column:Decision;type:varchar(20)"`
+	Reason                   string      `gorm:"column:Reason;type:varchar(255)"`
+	CreatedAt                time.Time   `gorm:"column:created_at"`
+}
+
+func (c *TrxPrincipleStepThree) TableName() string {
+	return "trx_principle_step_three"
+}
+
 type TrxPrincipleStatus struct {
 	ProspectID string    `gorm:"column:ProspectID;type:varchar(20)"`
 	IDNumber   string    `gorm:"column:IDNumber;type:varchar(16);"`

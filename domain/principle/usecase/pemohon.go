@@ -294,7 +294,10 @@ func (u usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory stri
 
 func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrinciplePemohon) (resp response.UsecaseApi, err error) {
 
-	var data response.Filtering
+	var (
+		data                response.Filtering
+		trxPrincipleStepTwo entity.TrxPrincipleStepTwo
+	)
 
 	defer func() {
 
@@ -308,6 +311,69 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			Result: data.Decision,
 			Code:   code,
 			Reason: data.Reason,
+		}
+
+		if err == nil {
+			birthDate, _ := time.Parse(constant.FORMAT_DATE, r.BirthDate)
+			var spouseBirthDate interface{}
+			if r.SpouseBirthDate != "" {
+				spouseBirthDate, _ = time.Parse(constant.FORMAT_DATE, r.SpouseBirthDate)
+			}
+
+			trxPrincipleStepTwo.ProspectID = r.ProspectID
+			trxPrincipleStepTwo.IDNumber = r.IDNumber
+			trxPrincipleStepTwo.LegalName = r.LegalName
+			trxPrincipleStepTwo.MobilePhone = r.MobilePhone
+			trxPrincipleStepTwo.FullName = r.FullName
+			trxPrincipleStepTwo.BirthDate = birthDate
+			trxPrincipleStepTwo.BirthPlace = r.BirthPlace
+			trxPrincipleStepTwo.SurgateMotherName = r.SurgateMotherName
+			trxPrincipleStepTwo.Gender = r.Gender
+			trxPrincipleStepTwo.SpouseIDNumber = utils.CheckEmptyString(r.SpouseIDNumber)
+			trxPrincipleStepTwo.LegalAddress = r.LegalAddress
+			trxPrincipleStepTwo.LegalRT = r.LegalRT
+			trxPrincipleStepTwo.LegalRW = r.LegalRW
+			trxPrincipleStepTwo.LegalProvince = r.LegalProvince
+			trxPrincipleStepTwo.LegalCity = r.LegalCity
+			trxPrincipleStepTwo.LegalKecamatan = r.LegalKecamatan
+			trxPrincipleStepTwo.LegalKelurahan = r.LegalKelurahan
+			trxPrincipleStepTwo.LegalZipCode = r.LegalZipCode
+			trxPrincipleStepTwo.LegalAreaPhone = r.LegalPhoneArea
+			trxPrincipleStepTwo.LegalPhone = r.LegalPhone
+			trxPrincipleStepTwo.CompanyAddress = r.CompanyAddress
+			trxPrincipleStepTwo.CompanyRT = r.CompanyRT
+			trxPrincipleStepTwo.CompanyRW = r.CompanyRW
+			trxPrincipleStepTwo.CompanyProvince = r.CompanyProvince
+			trxPrincipleStepTwo.CompanyCity = r.CompanyCity
+			trxPrincipleStepTwo.CompanyKecamatan = r.CompanyKecamatan
+			trxPrincipleStepTwo.CompanyKelurahan = r.CompanyKelurahan
+			trxPrincipleStepTwo.CompanyZipCode = r.CompanyZipCode
+			trxPrincipleStepTwo.CompanyAreaPhone = r.CompanyPhoneArea
+			trxPrincipleStepTwo.CompanyPhone = r.CompanyPhone
+			trxPrincipleStepTwo.MonthlyFixedIncome = r.MonthlyFixedIncome
+			trxPrincipleStepTwo.MaritalStatus = r.MaritalStatus
+			trxPrincipleStepTwo.SpouseIncome = r.SpouseIncome
+			trxPrincipleStepTwo.SelfiePhoto = utils.CheckEmptyString(r.SelfiePhoto)
+			trxPrincipleStepTwo.KtpPhoto = utils.CheckEmptyString(r.KtpPhoto)
+			trxPrincipleStepTwo.SpouseFullName = utils.CheckEmptyString(r.SpouseFullName)
+			trxPrincipleStepTwo.SpouseBirthDate = spouseBirthDate
+			trxPrincipleStepTwo.SpouseBirthPlace = utils.CheckEmptyString(r.SpouseBirthPlace)
+			trxPrincipleStepTwo.SpouseGender = utils.CheckEmptyString(r.SpouseGender)
+			trxPrincipleStepTwo.SpouseLegalName = utils.CheckEmptyString(r.SpouseLegalName)
+			trxPrincipleStepTwo.SpouseMobilePhone = utils.CheckEmptyString(r.SpouseMobilePhone)
+			trxPrincipleStepTwo.SpouseSurgateMotherName = utils.CheckEmptyString(r.SpouseSurgateMotherName)
+			trxPrincipleStepTwo.EconomySectorID = r.EconomySectorID
+			trxPrincipleStepTwo.Education = r.Education
+			trxPrincipleStepTwo.EmploymentSinceMonth = r.EmploymentSinceMonth
+			trxPrincipleStepTwo.EmploymentSinceYear = r.EmploymentSinceYear
+			trxPrincipleStepTwo.IndustryTypeID = r.IndustryTypeID
+			trxPrincipleStepTwo.JobPosition = r.JobPosition
+			trxPrincipleStepTwo.JobType = r.JobType
+			trxPrincipleStepTwo.ProfessionID = r.ProfessionID
+			trxPrincipleStepTwo.Decision = data.Decision
+			trxPrincipleStepTwo.Reason = data.Reason
+
+			_ = u.repository.SavePrincipleStepTwo(trxPrincipleStepTwo)
 		}
 	}()
 
@@ -331,6 +397,10 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		return
 	}
 
+	trxPrincipleStepTwo.CheckBannedPMKDSRResult = checkPmkOrDsr.Result
+	trxPrincipleStepTwo.CheckBannedPMKDSRCode = checkPmkOrDsr.Code
+	trxPrincipleStepTwo.CheckBannedPMKDSRReason = checkPmkOrDsr.Reason
+
 	if checkPmkOrDsr.Result == constant.DECISION_REJECT {
 		data.Decision = checkPmkOrDsr.Result
 		data.Code = checkPmkOrDsr.Code
@@ -345,6 +415,9 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	}
 
 	// save banned
+	trxPrincipleStepTwo.CheckRejectionResult = trxReject.Result
+	trxPrincipleStepTwo.CheckRejectionCode = trxReject.Code
+	trxPrincipleStepTwo.CheckRejectionReason = trxReject.Reason
 
 	if trxReject.Result == constant.DECISION_REJECT {
 
@@ -397,6 +470,10 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 
 		blackList, _ = u.usecase.BlacklistCheck(i, sp)
 
+		trxPrincipleStepTwo.CheckBlacklistResult = blackList.Result
+		trxPrincipleStepTwo.CheckBlacklistCode = blackList.Code
+		trxPrincipleStepTwo.CheckBlacklistReason = blackList.Reason
+
 		if blackList.Result == constant.DECISION_REJECT {
 
 			isBlacklist = true
@@ -435,6 +512,10 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	mainCustomer.CustomerStatus = mainCustomer.CustomerStatusKMB
 
 	pmk, _ := u.usecase.CheckPMK(draft.BranchID, mainCustomer.CustomerStatusKMB, income, draft.HomeStatus, r.ProfessionID, r.EmploymentSinceYear, r.EmploymentSinceMonth, draft.StaySinceYear, draft.StaySinceMonth, r.BirthDate, 12, r.MaritalStatus)
+
+	trxPrincipleStepTwo.CheckPMKResult = pmk.Result
+	trxPrincipleStepTwo.CheckPMKCode = pmk.Code
+	trxPrincipleStepTwo.CheckPMKReason = pmk.Reason
 
 	if pmk.Result == constant.DECISION_REJECT {
 		data.Decision = pmk.Result
@@ -552,6 +633,10 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	save.CustomerStatusKMB = mainCustomer.CustomerStatusKMB
 	save.Cluster = filtering.Cluster
 
+	trxPrincipleStepTwo.FilteringResult = filtering.Decision
+	trxPrincipleStepTwo.FilteringCode = filtering.Code
+	trxPrincipleStepTwo.FilteringReason = filtering.Reason
+
 	primePriority, _ := utils.ItemExists(mainCustomer.CustomerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
 
 	if primePriority && (mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_AO || mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO) {
@@ -617,7 +702,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 
 	r.BpkbName = draft.BPKBName
 
-	_, err = u.usecase.Dukcapil(ctx, r, reqMetricsEkyc, middlewares.UserInfoData.AccessToken)
+	dukcapil, err := u.usecase.Dukcapil(ctx, r, reqMetricsEkyc, middlewares.UserInfoData.AccessToken)
 
 	if err != nil && err.Error() != fmt.Sprintf("%s - Dukcapil", constant.TYPE_CONTINGENCY) {
 		return
@@ -625,27 +710,40 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 
 	if err != nil && err.Error() == fmt.Sprintf("%s - Dukcapil", constant.TYPE_CONTINGENCY) {
 
-		_, err = u.usecase.Asliri(ctx, r, middlewares.UserInfoData.AccessToken)
+		asliri, err := u.usecase.Asliri(ctx, r, middlewares.UserInfoData.AccessToken)
 
 		if err != nil {
 
-			_, err = u.usecase.Ktp(ctx, r, reqMetricsEkyc, middlewares.UserInfoData.AccessToken)
+			ktp, err := u.usecase.Ktp(ctx, r, reqMetricsEkyc, middlewares.UserInfoData.AccessToken)
+			if err != nil {
+				return response.UsecaseApi{}, err
+			}
 
 			// trxFMF.EkycSource = "KTP VALIDATOR"
 			// trxFMF.EkycSimiliarity = data.Similiarity
 			// trxFMF.EkycReason = data.Reason
-			return
+
+			trxPrincipleStepTwo.CheckEkycResult = ktp.Result
+			trxPrincipleStepTwo.CheckEkycCode = ktp.Code
+			trxPrincipleStepTwo.CheckEkycReason = ktp.Reason
 		}
 
 		// trxFMF.EkycSource = "ASLI RI"
 		// trxFMF.EkycSimiliarity = data.Similiarity
 		// trxFMF.EkycReason = data.Reason
-		return
+
+		trxPrincipleStepTwo.CheckEkycResult = asliri.Result
+		trxPrincipleStepTwo.CheckEkycCode = asliri.Code
+		trxPrincipleStepTwo.CheckEkycReason = asliri.Reason
 	}
 
 	// trxFMF.EkycSource = "DUKCAPIL"
 	// trxFMF.EkycSimiliarity = data.Similiarity
 	// trxFMF.EkycReason = data.Reason
+
+	trxPrincipleStepTwo.CheckEkycResult = dukcapil.Result
+	trxPrincipleStepTwo.CheckEkycCode = dukcapil.Code
+	trxPrincipleStepTwo.CheckEkycReason = dukcapil.Reason
 
 	err = u.usecase.Save(save, trxDetailBiro, entityTransactionCMOnoFPD)
 

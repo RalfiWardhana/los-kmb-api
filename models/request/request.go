@@ -1000,7 +1000,7 @@ type PrinciplePemohon struct {
 	ProspectID              string  `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
 	IDNumber                string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
 	SpouseIDNumber          string  `json:"spouse_id_number" example:"3506126712000002"`
-	MobilePhone             string  `json:"mobile_phone" validate:"min=9,max=14" example:"085880529100"`
+	MobilePhone             string  `json:"mobile_phone" validate:"required,min=9,max=14" example:"085880529100"`
 	LegalName               string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
 	FullName                string  `json:"full_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
 	BirthDate               string  `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
@@ -1049,6 +1049,24 @@ type PrinciplePemohon struct {
 	SelfiePhoto             string  `json:"selfie_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/selfie_SAL-1140024081400003.jpg"`
 	KtpPhoto                string  `json:"ktp_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/ktp_SAL-1140024081400003.jpg"`
 	BpkbName                string  `json:"-"`
+}
+
+type PrincipleElaborateLTV struct {
+	ProspectID string `json:"prospect_id" validate:"prospect_id"`
+	Tenor      int    `json:"tenor" validate:"required,max=60"`
+}
+
+type PrinciplePembiayaan struct {
+	ProspectID            string   `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
+	Tenor                 int      `json:"tenor" validate:"required,max=60" example:"36"`
+	AF                    float64  `json:"af" validate:"required,max=999999999999" example:"84000000"`
+	NTF                   float64  `json:"ntf" validate:"required,max=999999999999" example:"150528000"`
+	OTR                   float64  `json:"otr" validate:"required,max=999999999999" example:"105000000"`
+	DPAmount              float64  `json:"down_payment_amount" validate:"required,max=999999999999" example:"22000000"`
+	AdminFee              float64  `json:"admin_fee" validate:"required,max=999999999999" example:"1500000"`
+	InstallmentAmount     float64  `json:"installment_amount" validate:"required,max=999999999999" example:"4181333"`
+	Dealer                string   `json:"dealer" validate:"omitempty,max=50"`
+	MonthlyVariableIncome *float64 `json:"monthly_variable_income" validate:"omitempty,max=999999999999" example:"3000000"`
 }
 
 type ValidateNik struct {
