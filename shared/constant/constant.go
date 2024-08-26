@@ -1,5 +1,7 @@
 package constant
 
+import "github.com/labstack/echo/v4"
+
 var LOS_KMB_BASE_URL string
 var TOPIC_SUBMISSION string
 var TOPIC_SUBMISSION_LOS string
@@ -298,7 +300,7 @@ const (
 	HEADER_AUTHORIZATION = "Authorization"
 
 	// Key
-	HeaderXRequestID                = "X-Request-ID"
+	HeaderXRequestID                = echo.HeaderXRequestID
 	CTX_KEY_REQUEST_TIME            = "RequestTime"
 	CTX_KEY_TAG_VERSION             = "TagVersion"
 	CTX_KEY_LOS_VERSION             = "LOSVersion"
@@ -439,6 +441,13 @@ const (
 	REASON_KONSUMEN_BLACKLIST_RESTRUCTURE     = "Konsumen Blacklist - Konsumen Restructure"
 	REASON_PASANGAN_BLACKLIST_RESTRUCTURE     = "Pasangan Blacklist - Pasangan Restructure"
 	REASON_NON_BLACKLIST                      = "Non Blacklist"
+
+	//DEVIASI
+	SOURCE_DECISION_DEVIASI    = "DEV"
+	RULE_CODE_DEVIASI_DSR      = "1032"
+	CODE_DEVIASI_DSR           = "Dev 32"
+	RULE_CODE_DEVIASI_SCOREPRO = "1033"
+	CODE_DEVIASI_SCOREPRO      = "Dev 33"
 
 	//DSR
 	SOURCE_DECISION_DSR                      = "DSR"
