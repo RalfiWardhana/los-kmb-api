@@ -1628,6 +1628,10 @@ type InquiryCa struct {
 	EmergencyCity      string `gorm:"column:EmergencyCity"`
 	EmergencyAreaPhone string `gorm:"column:EmergencyAreaPhone"`
 	EmergencyPhone     string `gorm:"column:EmergencyPhone"`
+	DeviasiID          string `gorm:"column:deviasi_id"`
+	DeviasiDescription string `gorm:"column:deviasi_description"`
+	DeviasiDecision    string `gorm:"column:deviasi_decision"`
+	DeviasiReason      string `gorm:"column:deviasi_reason"`
 }
 
 type InquiryDataCa struct {
