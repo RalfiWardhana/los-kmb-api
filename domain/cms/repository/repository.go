@@ -2487,6 +2487,11 @@ func (r repoHandler) ProcessReturnOrder(prospectID string, trxStatus entity.TrxS
 			return err
 		}
 
+		// truncate the order from trx_deviasi
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&entity.TrxDeviasi{}).Error; err != nil {
+			return err
+		}
+
 		// insert trx_details
 		if err := tx.Create(&trxDetail).Error; err != nil {
 			return err
