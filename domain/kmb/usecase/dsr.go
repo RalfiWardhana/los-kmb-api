@@ -423,6 +423,20 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 			Reason:         fmt.Sprintf("%s %s %s", reasonCustomerStatus, constant.REASON_TOTAL_DSRGT, reasonMaxDsr),
 			SourceDecision: constant.SOURCE_DECISION_DSR,
 		}
+
+		var (
+			branchDeviasi     entity.MappingBranchDeviasi
+			mappingDeviasiDSR entity.MasterMappingDeviasiDSR
+			maxDsrDeviasi     float64
+		)
+		branchDeviasi, err = u.repository.GetBranchDeviasi(filtering.BranchID)
+		if branchDeviasi.BranchID != "" {
+			mappingDeviasiDSR, err = u.repository.MasterMappingDeviasiDSR(totalIncome)
+			maxDsrDeviasi = mappingDeviasiDSR.DSRThreshold
+			if mappingDeviasiDSR.DSRThreshold > 0 && totalDSR <= maxDsrDeviasi {
+				data.IsDeviasi = true
+			}
+		}
 	}
 
 	return

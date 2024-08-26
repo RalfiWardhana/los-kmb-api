@@ -258,7 +258,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	mapping.ConfigMaxDSR = configValue.Data.MaxDsr
 
 	if dsr.Result == constant.DECISION_REJECT {
-		return
+		// return // -- di ByPASS untuk kebutuhan deviasi
+		data.Result = constant.DECISION_PASS
 	}
 
 	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: dsr.Code, SourceDecision: dsr.SourceDecision, Reason: dsr.Reason, NextStep: constant.SOURCE_DECISION_DUPCHECK})
