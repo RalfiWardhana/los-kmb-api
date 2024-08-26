@@ -1933,6 +1933,7 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.Histo
 			 WHEN td.source_decision = 'SCP' THEN 'SCOREPRO'
 			 WHEN td.source_decision = 'DSR' THEN 'DSR'
 			 WHEN td.source_decision = 'LTV' THEN 'LTV'
+			 WHEN td.source_decision = 'DEV' THEN 'DEVIASI'
 			 WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
 			 WHEN td.source_decision = 'NRC' THEN 'RECALCULATE PROCESS'
 			 WHEN td.source_decision = 'CBM'
@@ -1954,6 +1955,7 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.Histo
 			 ELSE td.source_decision
 			END AS alias,
 			CASE
+			 WHEN td.source_decision = 'DEV' THEN '-'
 			 WHEN td.decision = 'PAS' THEN 'PASS'
 			 WHEN td.decision = 'REJ' THEN 'REJECT'
 			 WHEN td.decision = 'CAN' THEN 'CANCEL'
@@ -1970,7 +1972,7 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.Histo
 		FROM
 			trx_details td WITH (nolock)
 			LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
-		WHERE td.ProspectID = ? AND (td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC') OR 
+		WHERE td.ProspectID = ? AND (td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC','DEV') OR 
 		(td.source_decision IN('TNR','PRJ','NIK','NKA','BLK','PMK','LTV') AND td.decision = 'REJ'))
 		AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`, prospectID).Scan(&detail).Error; err != nil {
 
@@ -2243,7 +2245,11 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
 		tce.IndustryTypeID,
-		tak.UrlFormAkkk
+		tak.UrlFormAkkk,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -2256,6 +2262,8 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN (
 		  SELECT
 			ProspectID,

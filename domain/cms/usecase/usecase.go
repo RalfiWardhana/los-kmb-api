@@ -954,6 +954,12 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 				EmergencyPhone:     inq.EmergencyPhone,
 			},
 			Photo: photoData,
+			Deviasi: entity.Deviasi{
+				DeviasiID:          inq.DeviasiID,
+				DeviasiDescription: inq.DeviasiDescription,
+				DeviasiDecision:    inq.DeviasiDecision,
+				DeviasiReason:      inq.DeviasiReason,
+			},
 		}
 
 		data = append(data, row)
@@ -1354,6 +1360,12 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 				EmergencyPhone:     inq.EmergencyPhone,
 			},
 			Photo: photoData,
+			Deviasi: entity.Deviasi{
+				DeviasiID:          inq.DeviasiID,
+				DeviasiDescription: inq.DeviasiDescription,
+				DeviasiDecision:    inq.DeviasiDecision,
+				DeviasiReason:      inq.DeviasiReason,
+			},
 		}
 
 		data = append(data, row)
@@ -1880,6 +1892,12 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 				EmergencyPhone:     inq.EmergencyPhone,
 			},
 			Photo: photoData,
+			Deviasi: entity.Deviasi{
+				DeviasiID:          inq.DeviasiID,
+				DeviasiDescription: inq.DeviasiDescription,
+				DeviasiDecision:    inq.DeviasiDecision,
+				DeviasiReason:      inq.DeviasiReason,
+			},
 		}
 
 		data = append(data, row)

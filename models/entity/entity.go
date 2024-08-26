@@ -1648,6 +1648,7 @@ type InquiryDataCa struct {
 	Emcon          CustomerEmcon       `json:"emcon"`
 	Address        DataAddress         `json:"address"`
 	Photo          []DataPhoto         `json:"photo"`
+	Deviasi        Deviasi             `json:"deviasi"`
 }
 
 type DataCa struct {
@@ -1815,6 +1816,10 @@ type InquirySearch struct {
 	EmergencyCity      string `gorm:"column:EmergencyCity"`
 	EmergencyAreaPhone string `gorm:"column:EmergencyAreaPhone"`
 	EmergencyPhone     string `gorm:"column:EmergencyPhone"`
+	DeviasiID          string `gorm:"column:deviasi_id"`
+	DeviasiDescription string `gorm:"column:deviasi_description"`
+	DeviasiDecision    string `gorm:"column:deviasi_decision"`
+	DeviasiReason      string `gorm:"column:deviasi_reason"`
 }
 
 type InquiryDataSearch struct {
@@ -1829,6 +1834,7 @@ type InquiryDataSearch struct {
 	Emcon          CustomerEmcon      `json:"emcon"`
 	Address        DataAddress        `json:"address"`
 	Photo          []DataPhoto        `json:"photo"`
+	Deviasi        Deviasi            `json:"deviasi"`
 }
 
 type DataPersonal struct {
@@ -1892,6 +1898,7 @@ type InquiryDataApproval struct {
 	Emcon          CustomerEmcon       `json:"emcon"`
 	Address        DataAddress         `json:"address"`
 	Photo          []DataPhoto         `json:"photo"`
+	Deviasi        Deviasi             `json:"deviasi"`
 }
 
 type DataApproval struct {
@@ -2414,6 +2421,13 @@ func (c *TrxCmoNoFPD) TableName() string {
 
 type EncryptString struct {
 	Encrypt string `json:"encrypt"`
+}
+
+type Deviasi struct {
+	DeviasiID          string `json:"deviasi_id"`
+	DeviasiDescription string `json:"deviasi_description"`
+	DeviasiDecision    string `json:"deviasi_decision"`
+	DeviasiReason      string `json:"deviasi_reason"`
 }
 
 type TrxDeviasi struct {
