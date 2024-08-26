@@ -442,6 +442,11 @@ const (
 	REASON_PASANGAN_BLACKLIST_RESTRUCTURE     = "Pasangan Blacklist - Pasangan Restructure"
 	REASON_NON_BLACKLIST                      = "Non Blacklist"
 
+	//DEVIASI
+	SOURCE_DECISION_DEVIASI = "DEV"
+	CODE_DEVIASI_DSR        = "1032"
+	CODE_DEVIASI_SCOREPRO   = "1033"
+
 	//DSR
 	SOURCE_DECISION_DSR                      = "DSR"
 	CODE_DSRLTE35                            = "2701"
