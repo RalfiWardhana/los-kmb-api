@@ -1,5 +1,7 @@
 package constant
 
+import "github.com/labstack/echo/v4"
+
 var LOS_KMB_BASE_URL string
 var TOPIC_SUBMISSION string
 var TOPIC_SUBMISSION_LOS string
@@ -298,7 +300,7 @@ const (
 	HEADER_AUTHORIZATION = "Authorization"
 
 	// Key
-	HeaderXRequestID                = "X-Request-ID"
+	HeaderXRequestID                = echo.HeaderXRequestID
 	CTX_KEY_REQUEST_TIME            = "RequestTime"
 	CTX_KEY_TAG_VERSION             = "TagVersion"
 	CTX_KEY_LOS_VERSION             = "LOSVersion"
