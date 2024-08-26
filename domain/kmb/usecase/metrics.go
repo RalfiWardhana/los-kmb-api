@@ -529,12 +529,14 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	// handling flow deviasi scorepro
 	if metricsScs.IsDeviasi {
 
+		// insert deviasi
 		trxFMF.TrxDeviasi = entity.TrxDeviasi{
 			ProspectID: reqMetrics.Transaction.ProspectID,
 			DeviasiID:  constant.CODE_DEVIASI_SCOREPRO,
 			Reason:     responseScs.ScoreResult,
 		}
 
+		// detail scorepro
 		details = append(details, entity.TrxDetail{
 			ProspectID:     reqMetrics.Transaction.ProspectID,
 			StatusProcess:  constant.STATUS_ONPROCESS,
@@ -547,6 +549,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			NextStep:       constant.SOURCE_DECISION_DEVIASI,
 		})
 
+		// detail deviasi
 		details = append(details, entity.TrxDetail{
 			ProspectID:     reqMetrics.Transaction.ProspectID,
 			StatusProcess:  constant.STATUS_ONPROCESS,
@@ -558,6 +561,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			NextStep:       constant.SOURCE_DECISION_CA,
 		})
 
+		// detail ca
 		details = append(details, entity.TrxDetail{
 			ProspectID:     reqMetrics.Transaction.ProspectID,
 			StatusProcess:  constant.STATUS_ONPROCESS,
