@@ -2441,6 +2441,16 @@ func (c *MappingBranchDeviasi) TableName() string {
 	return "m_branch_deviasi"
 }
 
+type MasterMappingDeviasiDSR struct {
+	TotalIncomeStart float64 `gorm:"column:total_income_start"`
+	TotalIncomeEnd   float64 `gorm:"column:total_income_end"`
+	DSRThreshold     float64 `gorm:"column:dsr_threshold"`
+}
+
+func (c *MasterMappingDeviasiDSR) TableName() string {
+	return "m_mapping_deviasi_dsr"
+}
+
 type MappingVehicleAge struct {
 	VehicleAgeStart int         `gorm:"column:vehicle_age_start"`
 	VehicleAgeEnd   int         `gorm:"column:vehicle_age_end"`
@@ -2465,14 +2475,4 @@ type MasterMappingIncomeMaxDSR struct {
 
 func (c *MasterMappingIncomeMaxDSR) TableName() string {
 	return "kmb_mapping_income_dsr"
-}
-
-type MasterMappingDeviasiDSR struct {
-	TotalIncomeStart float64 `gorm:"column:total_income_start"`
-	TotalIncomeEnd   float64 `gorm:"column:total_income_end"`
-	DSRThreshold     float64 `gorm:"column:dsr_threshold"`
-}
-
-func (c *MasterMappingDeviasiDSR) TableName() string {
-	return "m_mapping_deviasi_dsr"
 }
