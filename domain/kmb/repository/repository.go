@@ -857,6 +857,16 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 		if countTrx > 0 || len(details) > 2 {
 
 			// save data metrics
+			// insert trx deviasi
+			if trxFMF.TrxDeviasi != (entity.TrxDeviasi{}) {
+
+				logInfo = trxFMF.TrxDeviasi
+
+				if err := tx.Create(&trxFMF.TrxDeviasi).Error; err != nil {
+					return err
+				}
+			}
+
 			// insert ban pmk dsr
 			if trxFMF.TrxBannedPMKDSR != (entity.TrxBannedPMKDSR{}) {
 
