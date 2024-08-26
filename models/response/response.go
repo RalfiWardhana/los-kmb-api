@@ -78,11 +78,12 @@ type IntegratorScorePro struct {
 }
 
 type ScorePro struct {
-	Result string `json:"result"`
-	Code   string `json:"code"`
-	Reason string `json:"reason"`
-	Source string `json:"source"`
-	Info   string `json:"info"`
+	Result    string `json:"result"`
+	Code      string `json:"code"`
+	Reason    string `json:"reason"`
+	Source    string `json:"source"`
+	Info      string `json:"info"`
+	IsDeviasi bool   `json:"-"`
 }
 
 type CustomerDomain struct {
@@ -434,6 +435,7 @@ type UsecaseApi struct {
 	Confidence     string      `json:"confidence,omitempty"`
 	SourceDecision string      `json:"source_decision,omitempty"`
 	Info           interface{} `json:"info,omitempty"`
+	IsDeviasi      bool        `json:"-"`
 }
 
 type LowIncome struct {
@@ -547,6 +549,7 @@ type TrxFMF struct {
 	EkycSource              interface{} `json:"ekyc_source"`
 	EkycSimiliarity         interface{} `json:"ekyc_similiarity"`
 	EkycReason              interface{} `json:"ekyc_reason"`
+	TrxDeviasi              entity.TrxDeviasi
 }
 
 type RoaoAkkk struct {

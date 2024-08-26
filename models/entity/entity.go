@@ -2412,6 +2412,45 @@ type EncryptString struct {
 	Encrypt string `json:"encrypt"`
 }
 
+type TrxDeviasi struct {
+	ProspectID string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	DeviasiID  string    `gorm:"type:varchar(20);column:deviasi_id"`
+	Reason     string    `gorm:"type:varchar(255);column:reason"`
+	CreatedAt  time.Time `gorm:"column:created_at" json:"-"`
+}
+
+func (c *TrxDeviasi) TableName() string {
+	return "trx_deviasi"
+}
+
+type MappingKodeDeviasi struct {
+	DeviasiID string `gorm:"type:varchar(20);column:deviasi_id"`
+	Deskripsi string `gorm:"type:varchar(255);column:deskripsi"`
+}
+
+func (c *MappingKodeDeviasi) TableName() string {
+	return "m_kode_deviasi"
+}
+
+type MappingBranchDeviasi struct {
+	BranchID      string `gorm:"type:varchar(10);column:BranchID" json:"branch_id"`
+	FinalApproval string `gorm:"type:varchar(3);column:final_approval"`
+}
+
+func (c *MappingBranchDeviasi) TableName() string {
+	return "m_branch_deviasi"
+}
+
+type MasterMappingDeviasiDSR struct {
+	TotalIncomeStart float64 `gorm:"column:total_income_start"`
+	TotalIncomeEnd   float64 `gorm:"column:total_income_end"`
+	DSRThreshold     float64 `gorm:"column:dsr_threshold"`
+}
+
+func (c *MasterMappingDeviasiDSR) TableName() string {
+	return "m_mapping_deviasi_dsr"
+}
+
 type MappingVehicleAge struct {
 	VehicleAgeStart int         `gorm:"column:vehicle_age_start"`
 	VehicleAgeEnd   int         `gorm:"column:vehicle_age_end"`
