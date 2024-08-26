@@ -533,7 +533,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		trxFMF.TrxDeviasi = entity.TrxDeviasi{
 			ProspectID: reqMetrics.Transaction.ProspectID,
 			DeviasiID:  constant.CODE_DEVIASI_SCOREPRO,
-			Reason:     responseScs.ScoreResult,
+			Reason:     metricsScs.Reason,
 		}
 
 		// detail scorepro
@@ -555,9 +555,9 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			StatusProcess:  constant.STATUS_ONPROCESS,
 			Activity:       constant.ACTIVITY_PROCESS,
 			Decision:       constant.DB_DECISION_PASS,
-			RuleCode:       constant.CODE_DEVIASI_SCOREPRO,
+			RuleCode:       constant.RULE_CODE_DEVIASI_SCOREPRO,
 			SourceDecision: constant.SOURCE_DECISION_DEVIASI,
-			Reason:         responseScs.ScoreResult,
+			Reason:         metricsScs.Reason,
 			NextStep:       constant.SOURCE_DECISION_CA,
 		})
 
@@ -571,7 +571,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			SourceDecision: constant.SOURCE_DECISION_CA,
 		})
 
-		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, responseScs.ScoreResult)
+		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, metricsScs.Reason)
 		if err != nil {
 			return
 		}
