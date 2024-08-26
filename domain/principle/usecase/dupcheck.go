@@ -110,7 +110,7 @@ func (u usecase) DupcheckIntegrator(ctx context.Context, prospectID, idNumber, l
 		"surgate_mother_name": surgateName,
 	})
 
-	custDupcheck, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("DUPCHECK_URL"), req, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, prospectID, accessToken)
+	custDupcheck, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("DUPCHECK_URL"), req, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, prospectID, accessToken)
 
 	if err != nil {
 		// err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Dupcheck Timeout")

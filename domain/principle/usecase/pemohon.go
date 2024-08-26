@@ -46,7 +46,7 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string) (data r
 	}
 
 	param, _ := json.Marshal(payload)
-	getDataEmployee, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), param, header, constant.METHOD_POST, false, 0, timeout, "", middlewares.UserInfoData.AccessToken)
+	getDataEmployee, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), param, header, constant.METHOD_POST, false, 0, timeout, "", middlewares.UserInfoData.AccessToken)
 
 	if getDataEmployee.StatusCode() == 504 || getDataEmployee.StatusCode() == 502 {
 		// err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get Employee Data Timeout")
@@ -159,7 +159,7 @@ func (u usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType strin
 	cmoID := CmoID
 	endpointURL := fmt.Sprintf(os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=%d&cmo_id=%s", lobID, cmoID)
 
-	getDataFpd, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointURL, nil, header, constant.METHOD_GET, false, 0, timeout, "", middlewares.UserInfoData.AccessToken)
+	getDataFpd, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, endpointURL, nil, header, constant.METHOD_GET, false, 0, timeout, "", middlewares.UserInfoData.AccessToken)
 
 	if getDataFpd.StatusCode() == 504 || getDataFpd.StatusCode() == 502 {
 		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get FPD Data Timeout")

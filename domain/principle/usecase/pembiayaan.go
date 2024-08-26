@@ -493,7 +493,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan, 
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 	paramPefindoIDX, _ := json.Marshal(pefindoIDX)
-	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("PEFINDO_IDX_URL"), paramPefindoIDX, map[string]string{}, constant.METHOD_POST, false, 0, timeout, req.ProspectID, accessToken)
+	resp, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("PEFINDO_IDX_URL"), paramPefindoIDX, map[string]string{}, constant.METHOD_POST, false, 0, timeout, req.ProspectID, accessToken)
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Pefindo IDX Error")
@@ -646,7 +646,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan, 
 
 	paramScorepro, _ := json.Marshal(reqScoreproIntegrator)
 
-	resp, _ = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("SCOREPRO_IDX_URL"), paramScorepro, map[string]string{}, constant.METHOD_POST, false, 0, timeout, req.ProspectID, accessToken)
+	resp, _ = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("SCOREPRO_IDX_URL"), paramScorepro, map[string]string{}, constant.METHOD_POST, false, 0, timeout, req.ProspectID, accessToken)
 
 	if resp.StatusCode() != 200 {
 
@@ -879,7 +879,7 @@ func (u usecase) DsrCheck(ctx context.Context, req request.PrinciplePembiayaan, 
 		jsonCustomer, _ := json.Marshal(customer)
 		var installmentLOS *resty.Response
 
-		installmentLOS, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("INSTALLMENT_PENDING_URL"), jsonCustomer, header, constant.METHOD_POST, true, 2, 60, req.ProspectID, accessToken)
+		installmentLOS, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("INSTALLMENT_PENDING_URL"), jsonCustomer, header, constant.METHOD_POST, true, 2, 60, req.ProspectID, accessToken)
 
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Call Installment Pending API Error")
@@ -1047,7 +1047,7 @@ func (u usecase) AgreementChassisNumberIntegrator(ctx context.Context, prospectI
 
 	var hitChassisNumber *resty.Response
 
-	hitChassisNumber, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+chassisNumber, nil, map[string]string{}, constant.METHOD_GET, true, 2, 60, prospectID, accessToken)
+	hitChassisNumber, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+chassisNumber, nil, map[string]string{}, constant.METHOD_GET, true, 2, 60, prospectID, accessToken)
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - DsrCheck Call Get Agreement of Chassis Number Timeout")

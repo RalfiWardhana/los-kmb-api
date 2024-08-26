@@ -78,7 +78,7 @@ func (u usecase) Dukcapil(ctx context.Context, r request.PrinciplePemohon, reqMe
 		endpointVd = os.Getenv("DUKCAPIL_VD_URL")
 	}
 
-	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointVd, paramVd, map[string]string{}, constant.METHOD_POST, true, 2, timeout, r.ProspectID, accessToken)
+	resp, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, endpointVd, paramVd, map[string]string{}, constant.METHOD_POST, true, 2, timeout, r.ProspectID, accessToken)
 
 	infoDukcapil.VdService = serviceVD
 
@@ -168,7 +168,7 @@ func (u usecase) Dukcapil(ctx context.Context, r request.PrinciplePemohon, reqMe
 		"transaction_id": r.ProspectID,
 	})
 
-	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointFr, paramFr, map[string]string{}, constant.METHOD_POST, true, 2, timeout, r.ProspectID, accessToken)
+	resp, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, endpointFr, paramFr, map[string]string{}, constant.METHOD_POST, true, 2, timeout, r.ProspectID, accessToken)
 
 	infoDukcapil.FrService = serviceFR
 
@@ -254,7 +254,7 @@ func (u usecase) Asliri(ctx context.Context, r request.PrinciplePemohon, accessT
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
-	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("ASLIRI_URL"), paramARI, map[string]string{}, constant.METHOD_POST, false, 0, timeout, r.ProspectID, accessToken)
+	resp, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("ASLIRI_URL"), paramARI, map[string]string{}, constant.METHOD_POST, false, 0, timeout, r.ProspectID, accessToken)
 
 	if err != nil {
 		// err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Asliri")
@@ -355,7 +355,7 @@ func (u usecase) Ktp(ctx context.Context, r request.PrinciplePemohon, reqMetrics
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
-	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("KTP_VALIDATOR_URL"), paramKtp, map[string]string{}, constant.METHOD_POST, false, 0, timeout, r.ProspectID, accessToken)
+	resp, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("KTP_VALIDATOR_URL"), paramKtp, map[string]string{}, constant.METHOD_POST, false, 0, timeout, r.ProspectID, accessToken)
 
 	if err != nil {
 		// err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call KTP Validator")

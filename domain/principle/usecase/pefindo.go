@@ -33,7 +33,7 @@ func (u usecase) Pefindo(ctx context.Context, r request.Pefindo, customerStatus,
 
 	param, _ := json.Marshal(r)
 
-	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("NEW_KMB_PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, r.ProspectID, middlewares.UserInfoData.AccessToken)
+	resp, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("NEW_KMB_PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, r.ProspectID, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
 		// err = errors.New(constant.ERROR_UPSTREAM + " - failed get data pefindo")
