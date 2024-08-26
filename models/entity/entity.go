@@ -2413,10 +2413,10 @@ type EncryptString struct {
 }
 
 type TrxDeviasi struct {
-	ProspectID    string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
-	KodeDeviasi   string    `gorm:"type:varchar(20);column:kode_deviasi"`
-	ReasonDeviasi string    `gorm:"type:varchar(255);column:reason_deviasi"`
-	CreatedAt     time.Time `gorm:"column:created_at" json:"-"`
+	ProspectID string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	DeviasiID  string    `gorm:"type:varchar(20);column:deviasi_id"`
+	Reason     string    `gorm:"type:varchar(255);column:reason"`
+	CreatedAt  time.Time `gorm:"column:created_at" json:"-"`
 }
 
 func (c *TrxDeviasi) TableName() string {
@@ -2424,8 +2424,8 @@ func (c *TrxDeviasi) TableName() string {
 }
 
 type MappingKodeDeviasi struct {
-	KodeDeviasi string `gorm:"type:varchar(20);column:kode_deviasi"`
-	Deskripsi   string `gorm:"type:varchar(255);column:deskripsi"`
+	DeviasiID string `gorm:"type:varchar(20);column:deviasi_id"`
+	Deskripsi string `gorm:"type:varchar(255);column:deskripsi"`
 }
 
 func (c *MappingKodeDeviasi) TableName() string {
