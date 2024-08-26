@@ -526,8 +526,14 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		ScsScore:  responseScs.ScoreResult,
 	}
 
-	// handling flow deviasi
+	// handling flow deviasi scorepro
 	if metricsScs.IsDeviasi {
+
+		trxFMF.TrxDeviasi = entity.TrxDeviasi{
+			ProspectID: reqMetrics.Transaction.ProspectID,
+			DeviasiID:  constant.CODE_DEVIASI_SCOREPRO,
+			Reason:     responseScs.ScoreResult,
+		}
 
 		details = append(details, entity.TrxDetail{
 			ProspectID:     reqMetrics.Transaction.ProspectID,
@@ -538,8 +544,35 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			SourceDecision: metricsScs.Source,
 			Info:           metricsScs.Info,
 			Reason:         responseScs.ScoreResult,
-			NextStep:       constant.SOURCE_DECISION_DSR,
+			NextStep:       constant.SOURCE_DECISION_DEVIASI,
 		})
+
+		details = append(details, entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
+			Decision:       constant.DB_DECISION_PASS,
+			RuleCode:       constant.CODE_DEVIASI_SCOREPRO,
+			SourceDecision: constant.SOURCE_DECISION_DEVIASI,
+			Reason:         responseScs.ScoreResult,
+			NextStep:       constant.SOURCE_DECISION_CA,
+		})
+
+		details = append(details, entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_UNPROCESS,
+			Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+			RuleCode:       constant.CODE_CREDIT_COMMITTEE,
+			SourceDecision: constant.SOURCE_DECISION_CA,
+		})
+
+		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, responseScs.ScoreResult)
+		if err != nil {
+			return
+		}
+
+		return
 
 	} else {
 		if metricsScs.Result == constant.DECISION_REJECT {
