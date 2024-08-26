@@ -479,5 +479,9 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 			}
 		}
 	}
+
+	if !strings.Contains(responseScs.Status, "ASS-") && data.Result == constant.DECISION_REJECT {
+		data.IsDeviasi = true
+	}
 	return
 }
