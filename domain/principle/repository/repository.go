@@ -286,7 +286,9 @@ func (r repoHandler) SavePrincipleStepOne(data entity.TrxPrincipleStepOne) (err 
 
 func (r repoHandler) GetPrincipleStepOne(prospectID string) (data entity.TrxPrincipleStepOne, err error) {
 
-	if err = r.newKmb.Raw(fmt.Sprintf(`SELECT * FROM trx_principle_step_one WITH (nolock) WHERE ProspectID = '%s'`, prospectID)).Scan(&data).Error; err != nil {
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_one WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmb.Raw(query).Scan(&data).Error; err != nil {
 		err = nil
 		return
 	}
@@ -319,7 +321,9 @@ func (r repoHandler) SavePrincipleStepTwo(data entity.TrxPrincipleStepTwo) (err 
 
 func (r repoHandler) GetPrincipleStepTwo(prospectID string) (data entity.TrxPrincipleStepTwo, err error) {
 
-	if err = r.newKmb.Raw(fmt.Sprintf(`SELECT * FROM trx_principle_step_two WITH (nolock) WHERE ProspectID = '%s'`, prospectID)).Scan(&data).Error; err != nil {
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_two WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmb.Raw(query).Scan(&data).Error; err != nil {
 		err = nil
 		return
 	}
