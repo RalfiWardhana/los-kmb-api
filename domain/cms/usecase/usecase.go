@@ -1030,11 +1030,20 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 	// Bisa melakukan submit jika status UNPR dan decision CPR
 	if status.Activity == constant.ACTIVITY_UNPROCESS && status.Decision == constant.DB_DECISION_CREDIT_PROCESS {
 
-		// get limit approval for final_approval
-		limit, err = u.repository.GetLimitApproval(req.NTFAkumulasi)
+		// handling final_approval deviasi
+		limit, err = u.repository.GetLimitApprovalDeviasi(req.ProspectID)
 		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Get limit approval error")
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get limit approval deviasi error")
 			return
+		}
+
+		if limit.Alias == "" {
+			// get limit approval for final_approval
+			limit, err = u.repository.GetLimitApproval(req.NTFAkumulasi)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get limit approval error")
+				return
+			}
 		}
 
 		switch req.Decision {
