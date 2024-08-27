@@ -527,25 +527,37 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 		result                                           response.UsecaseApi
 		trxFMF                                           response.TrxFMF
 		filtering                                        entity.FilteringKMB
+		mappingBranchDeviasi                             entity.MappingBranchDeviasi
+		mappingDeviasiDSR                                entity.MasterMappingDeviasiDSR
 		errResult                                        error
 		config                                           entity.AppConfig
 		errGetConfig                                     error
 	}{
 		{
 			name:                "TotalDsrFmfPbk reject",
-			totalIncome:         6000000,
-			newInstallment:      2000000,
-			totalInstallmentPBK: 3000000,
+			totalIncome:         100000000,
+			newInstallment:      60000000,
+			totalInstallmentPBK: 5000000,
 			prospectID:          "TEST1",
 			customerSegment:     "",
 			accessToken:         "token",
+			filtering: entity.FilteringKMB{
+				BranchID: "400",
+			},
+			mappingBranchDeviasi: entity.MappingBranchDeviasi{
+				BranchID:      "400",
+				FinalApproval: "CBM",
+			},
+			mappingDeviasiDSR: entity.MasterMappingDeviasiDSR{
+				DSRThreshold: 70,
+			},
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
 			},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_NEW,
-				Dsr:            30,
+				Dsr:            60,
 				CustomerID:     "",
 				ConfigMaxDSR:   35,
 			},
@@ -554,10 +566,11 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Code:           constant.CODE_TOTAL_DSRGT35,
 				Reason:         "NEW - DSR > Threshold",
 				SourceDecision: constant.SOURCE_DECISION_DSR,
+				IsDeviasi:      true,
 			},
 			trxFMF: response.TrxFMF{
-				DSRPBK:   float64(50),
-				TotalDSR: float64(80),
+				DSRPBK:   float64(5),
+				TotalDSR: float64(65),
 			},
 		},
 		{
@@ -1055,6 +1068,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			resp, _ := rst.R().Get(os.Getenv("LASTEST_PAID_INSTALLMENT_URL"))
 
 			mockRepository.On("GetConfig", "expired_contract", "KMB-OFF", "expired_contract_check").Return(tc.config, tc.errGetConfig)
+
+			mockRepository.On("GetBranchDeviasi", "400").Return(tc.mappingBranchDeviasi, tc.errGetConfig)
+
+			mockRepository.On("MasterMappingDeviasiDSR", tc.totalIncome).Return(tc.mappingDeviasiDSR, tc.errGetConfig)
 
 			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.SpDupcheckMap.CustomerID.(string)+"/2", mock.Anything, mock.Anything, constant.METHOD_GET, false, 0, 30, tc.prospectID, tc.accessToken).Return(resp, tc.errLatestInstallment).Once()
 
