@@ -1052,8 +1052,9 @@ type PrinciplePemohon struct {
 }
 
 type PrincipleElaborateLTV struct {
-	ProspectID string `json:"prospect_id" validate:"prospect_id"`
-	Tenor      int    `json:"tenor" validate:"required,max=60"`
+	ProspectID      string `json:"prospect_id" validate:"prospect_id"`
+	ManufactureYear string `json:"manufacture_year" validate:"required,len=4,number" example:"2020"`
+	Tenor           int    `json:"tenor" validate:"required,max=60"`
 }
 
 type PrinciplePembiayaan struct {

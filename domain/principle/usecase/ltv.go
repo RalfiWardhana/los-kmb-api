@@ -19,7 +19,6 @@ func (u usecase) PrincipleElaborateLTV(ctx context.Context, reqs request.Princip
 
 	var (
 		filteringKMB        entity.FilteringKMB
-		principleStepOne    entity.TrxPrincipleStepOne
 		ageS                string
 		bakiDebet           float64
 		bpkbNameType        int
@@ -40,11 +39,6 @@ func (u usecase) PrincipleElaborateLTV(ctx context.Context, reqs request.Princip
 
 	if filteringKMB.NextProcess != 1 {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Tidak bisa lanjut proses")
-		return
-	}
-
-	principleStepOne, err = u.repository.GetPrincipleStepOne(reqs.ProspectID)
-	if err != nil {
 		return
 	}
 
@@ -69,7 +63,7 @@ func (u usecase) PrincipleElaborateLTV(ctx context.Context, reqs request.Princip
 
 	now := time.Now()
 	// convert date to year for age_vehicle
-	manufacturingYear, err = time.Parse("2006", principleStepOne.ManufactureYear)
+	manufacturingYear, err = time.Parse("2006", reqs.ManufactureYear)
 	if err != nil {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Format tahun kendaraan tidak sesuai")
 		return
@@ -94,7 +88,7 @@ func (u usecase) PrincipleElaborateLTV(ctx context.Context, reqs request.Princip
 		ProspectID:        reqs.ProspectID,
 		RequestID:         ctx.Value(echo.HeaderXRequestID).(string),
 		Tenor:             reqs.Tenor,
-		ManufacturingYear: principleStepOne.ManufactureYear,
+		ManufacturingYear: reqs.ManufactureYear,
 	}
 
 	if strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string)) {
