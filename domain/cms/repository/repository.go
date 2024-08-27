@@ -1910,6 +1910,35 @@ func (r repoHandler) GetLimitApproval(ntf float64) (limit entity.MappingLimitApp
 	return
 }
 
+func (r repoHandler) GetLimitApprovalDeviasi(prospectID string) (limit entity.MappingLimitApprovalScheme, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.NewKmb.Raw(`SELECT
+		CASE 
+			WHEN final_approval IS NULL THEN 'CBM'
+			ELSE final_approval
+			END AS alias
+		FROM trx_deviasi td
+		LEFT JOIN trx_master tm ON td.ProspectID = tm.ProspectID 
+		LEFT JOIN m_branch_deviasi mbd ON tm.BranchID = mbd.BranchID 
+		WHERE td.ProspectID = ?`, prospectID).Scan(&limit).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.HistoryProcess, err error) {
 	var x sql.TxOptions
 
