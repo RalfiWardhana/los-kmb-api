@@ -1597,6 +1597,7 @@ func TestSubmitDecision(t *testing.T) {
 			Decision:   constant.DB_DECISION_CREDIT_PROCESS,
 		}
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(status, errSave).Once()
+		mockRepository.On("GetLimitApprovalDeviasi", req.ProspectID).Return(limit, errSave).Once()
 		mockRepository.On("GetLimitApproval", req.NTFAkumulasi).Return(limit, errSave).Once()
 		mockRepository.On("ProcessTransaction", trxCaDecision, trxHistoryApproval, trxStatus, trxDetail).Return(errSave).Once()
 
@@ -1678,6 +1679,7 @@ func TestSubmitDecision(t *testing.T) {
 			Decision:   constant.DB_DECISION_CREDIT_PROCESS,
 		}
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(status, errSave).Once()
+		mockRepository.On("GetLimitApprovalDeviasi", req.ProspectID).Return(limit, errSave).Once()
 		mockRepository.On("GetLimitApproval", req.NTFAkumulasi).Return(limit, errSave).Once()
 		mockRepository.On("ProcessTransaction", trxCaDecision, trxHistoryApproval, trxStatus, trxDetail).Return(errSave).Once()
 
@@ -1747,6 +1749,39 @@ func TestSubmitDecision(t *testing.T) {
 		require.Equal(t, errFinal, err)
 	})
 
+	t.Run("ErrorGetLimitApprovalDeviasiCase", func(t *testing.T) {
+		mockRepository := new(mocks.Repository)
+		mockHttpClient := new(httpclient.MockHttpClient)
+		var cache *bigcache.BigCache
+		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+
+		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Get limit approval deviasi error")
+
+		status := entity.TrxStatus{
+			ProspectID: "TST-DEV",
+			Activity:   constant.ACTIVITY_UNPROCESS,
+			Decision:   constant.DB_DECISION_CREDIT_PROCESS,
+		}
+		mockRepository.On("GetTrxStatus", mock.Anything).Return(status, nil).Once()
+		mockRepository.On("GetLimitApprovalDeviasi", mock.Anything).Return(entity.MappingLimitApprovalScheme{}, errors.New("error fetch db")).Once()
+
+		mockRepository.On("GetLimitApproval", mock.Anything).Return(entity.MappingLimitApprovalScheme{}, errors.New(constant.RECORD_NOT_FOUND)).Once()
+
+		req := request.ReqSubmitDecision{
+			ProspectID:   "TST-DEV",
+			NTFAkumulasi: 123456.55,
+			Decision:     constant.DECISION_APPROVE,
+			SlikResult:   "lancar",
+			Note:         "noted",
+			CreatedBy:    "agsa6srt",
+			DecisionBy:   "User123",
+		}
+		_, err := usecase.SubmitDecision(context.Background(), req)
+
+		// Verifikasi bahwa error yang diharapkan terjadi
+		require.Equal(t, errFinal, err)
+	})
+
 	t.Run("ErrorGetLimitApprovalCase", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
@@ -1761,6 +1796,7 @@ func TestSubmitDecision(t *testing.T) {
 			Decision:   constant.DB_DECISION_CREDIT_PROCESS,
 		}
 		mockRepository.On("GetTrxStatus", mock.Anything).Return(status, nil).Once()
+		mockRepository.On("GetLimitApprovalDeviasi", mock.Anything).Return(entity.MappingLimitApprovalScheme{}, errSave).Once()
 
 		mockRepository.On("GetLimitApproval", mock.Anything).Return(entity.MappingLimitApprovalScheme{}, errors.New(constant.RECORD_NOT_FOUND)).Once()
 
@@ -1799,6 +1835,8 @@ func TestSubmitDecision(t *testing.T) {
 			Activity: constant.ACTIVITY_UNPROCESS,
 			Decision: constant.DB_DECISION_CREDIT_PROCESS,
 		}, nil).Once()
+
+		mockRepository.On("GetLimitApprovalDeviasi", mock.Anything).Return(entity.MappingLimitApprovalScheme{}, nil).Once()
 
 		mockRepository.On("GetLimitApproval", mock.Anything).Return(entity.MappingLimitApprovalScheme{
 			Alias: "CBM",
