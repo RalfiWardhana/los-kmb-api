@@ -22,6 +22,7 @@ type Repository interface {
 	GetInternalRecord(prospectID string) (record []entity.TrxInternalRecord, err error)
 	SaveDraftData(draft entity.TrxDraftCaDecision) (err error)
 	GetLimitApproval(ntf float64) (limit entity.MappingLimitApprovalScheme, err error)
+	GetLimitApprovalDeviasi(prospectID string) (limit entity.MappingLimitApprovalScheme, err error)
 	GetInquirySearch(req request.ReqSearchInquiry, pagination interface{}) (data []entity.InquirySearch, rowTotal int, err error)
 	GetAkkk(prospectID string) (data entity.Akkk, err error)
 	SubmitNE(req request.MetricsNE, filtering request.Filtering, elaboreateLTV request.ElaborateLTV, journey request.Metrics) (err error)
