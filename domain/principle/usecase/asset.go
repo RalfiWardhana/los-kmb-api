@@ -133,7 +133,7 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		ResidenceKelurahan: r.ResidenceKelurahan,
 		ResidenceZipCode:   r.ResidenceZipCode,
 		ResidenceAreaPhone: r.ResidenceAreaPhone,
-		ResidencePhone:     r.ResidenceAreaPhone,
+		ResidencePhone:     r.ResidencePhone,
 		HomeStatus:         r.HomeStatus,
 		StaySinceYear:      r.StaySinceYear,
 		StaySinceMonth:     r.StaySinceMonth,
