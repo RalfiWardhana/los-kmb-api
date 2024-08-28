@@ -4501,9 +4501,14 @@ const docTemplate = `{
         "request.PrincipleElaborateLTV": {
             "type": "object",
             "required": [
+                "manufacture_year",
                 "tenor"
             ],
             "properties": {
+                "manufacture_year": {
+                    "type": "string",
+                    "example": "2020"
+                },
                 "prospect_id": {
                     "type": "string"
                 },

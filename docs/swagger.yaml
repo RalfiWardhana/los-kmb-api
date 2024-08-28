@@ -1408,12 +1408,16 @@ definitions:
     type: object
   request.PrincipleElaborateLTV:
     properties:
+      manufacture_year:
+        example: "2020"
+        type: string
       prospect_id:
         type: string
       tenor:
         maximum: 60
         type: integer
     required:
+    - manufacture_year
     - tenor
     type: object
   request.PrinciplePembiayaan:
