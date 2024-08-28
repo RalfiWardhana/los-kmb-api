@@ -933,3 +933,17 @@ type StepPrinciple struct {
 	Status     string `json:"status"`
 	UpdatedAt  string `json:"updated_at"`
 }
+
+type CustomerDomainValidate struct {
+	Code      string                     `json:"code"`
+	Message   string                     `json:"message"`
+	Data      CustomerDomainValidateData `json:"data"`
+	Errors    interface{}                `json:"errors"`
+	RequestID string                     `json:"request_id"`
+	Timestamp string                     `json:"timestamp"`
+}
+
+type CustomerDomainValidateData struct {
+	CustomerID int `json:"customer_id"`
+	KPMID      int `json:"kpm_id"`
+}

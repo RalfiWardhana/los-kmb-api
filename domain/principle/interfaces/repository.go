@@ -1,6 +1,8 @@
 package interfaces
 
-import "los-kmb-api/models/entity"
+import (
+	"los-kmb-api/models/entity"
+)
 
 type Repository interface {
 	GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig, err error)
@@ -31,4 +33,7 @@ type Repository interface {
 	GetActiveLoanTypeLast24M(customerID string) (score entity.GetActiveLoanTypeLast24M, err error)
 	GetMoblast(customerID string) (score entity.GetMoblast, err error)
 	SavePrincipleStepThree(data entity.TrxPrincipleStepThree) (err error)
+	GetPrincipleStepThree(prospectID string) (data entity.TrxPrincipleStepThree, err error)
+	SavePrincipleEmergencyContact(data entity.TrxPrincipleEmergencyContact) (err error)
+	SaveToWorker(data []entity.TrxWorker) (err error)
 }

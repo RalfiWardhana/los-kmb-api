@@ -1901,6 +1901,60 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v3/kmb/emergency-contact": {
+            "post": {
+                "description": "KmbPrinciple",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KmbPrinciple"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.PrincipleEmergencyContact"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v3/kmb/employee/employee-data/{employee_id}": {
             "get": {
                 "description": "Api Get Employee Data",
@@ -4501,15 +4555,129 @@ const docTemplate = `{
         "request.PrincipleElaborateLTV": {
             "type": "object",
             "required": [
+                "manufacture_year",
                 "tenor"
             ],
             "properties": {
+                "manufacture_year": {
+                    "type": "string",
+                    "example": "2020"
+                },
                 "prospect_id": {
                     "type": "string"
                 },
                 "tenor": {
                     "type": "integer",
                     "maximum": 60
+                }
+            }
+        },
+        "request.PrincipleEmergencyContact": {
+            "type": "object",
+            "required": [
+                "city",
+                "company_street_name",
+                "home_number",
+                "kecamatan",
+                "kelurahan",
+                "location_details",
+                "mobile_phone",
+                "name",
+                "prospect_id",
+                "province",
+                "relationship",
+                "rt",
+                "rw",
+                "user_information",
+                "zip_code"
+            ],
+            "properties": {
+                "area_phone": {
+                    "type": "string",
+                    "maxLength": 4,
+                    "minLength": 3,
+                    "example": "021"
+                },
+                "city": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "example": "JAKARTA SELATAN"
+                },
+                "company_street_name": {
+                    "type": "string",
+                    "maxLength": 90,
+                    "example": "JL.PEGANGSAAN 1"
+                },
+                "home_number": {
+                    "type": "string",
+                    "maxLength": 10,
+                    "example": "10A"
+                },
+                "kecamatan": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "example": "MAMPANG PRAPATAN"
+                },
+                "kelurahan": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "example": "TEGAL PARANG"
+                },
+                "location_details": {
+                    "type": "string",
+                    "example": "Near the big palm tree"
+                },
+                "mobile_phone": {
+                    "type": "string",
+                    "maxLength": 14,
+                    "minLength": 9,
+                    "example": "0856789XXX1"
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "minLength": 2,
+                    "example": "MULYADI"
+                },
+                "phone": {
+                    "type": "string",
+                    "maxLength": 10,
+                    "minLength": 5,
+                    "example": "567892"
+                },
+                "prospect_id": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "example": "SAL-1140024080800004"
+                },
+                "province": {
+                    "type": "string",
+                    "maxLength": 50,
+                    "example": "DKI JAKARTA"
+                },
+                "relationship": {
+                    "type": "string",
+                    "maxLength": 10,
+                    "example": "FM"
+                },
+                "rt": {
+                    "type": "string",
+                    "maxLength": 3,
+                    "minLength": 1,
+                    "example": "008"
+                },
+                "rw": {
+                    "type": "string",
+                    "maxLength": 3,
+                    "minLength": 1,
+                    "example": "017"
+                },
+                "user_information": {
+                    "$ref": "#/definitions/request.UserInformation"
+                },
+                "zip_code": {
+                    "type": "string",
+                    "example": "12790"
                 }
             }
         },
@@ -5477,6 +5645,23 @@ const docTemplate = `{
                 "prospect_id": {
                     "type": "string",
                     "example": "SAL042600001"
+                }
+            }
+        },
+        "request.UserInformation": {
+            "type": "object",
+            "required": [
+                "user_id",
+                "user_title"
+            ],
+            "properties": {
+                "user_id": {
+                    "type": "string",
+                    "maxLength": 50
+                },
+                "user_title": {
+                    "type": "string",
+                    "maxLength": 50
                 }
             }
         },

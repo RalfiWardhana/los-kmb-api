@@ -289,7 +289,6 @@ func (r repoHandler) GetPrincipleStepOne(prospectID string) (data entity.TrxPrin
 	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_one WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
 
 	if err = r.newKmb.Raw(query).Scan(&data).Error; err != nil {
-		err = nil
 		return
 	}
 
@@ -324,7 +323,6 @@ func (r repoHandler) GetPrincipleStepTwo(prospectID string) (data entity.TrxPrin
 	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_two WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
 
 	if err = r.newKmb.Raw(query).Scan(&data).Error; err != nil {
-		err = nil
 		return
 	}
 
@@ -554,6 +552,71 @@ func (r repoHandler) SavePrincipleStepThree(data entity.TrxPrincipleStepThree) (
 			tx.Rollback()
 			return err
 		}
+		return nil
+	})
+
+}
+
+func (r repoHandler) GetPrincipleStepThree(prospectID string) (data entity.TrxPrincipleStepThree, err error) {
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_three WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmb.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) SavePrincipleEmergencyContact(data entity.TrxPrincipleEmergencyContact) (err error) {
+
+	return r.newKmb.Transaction(func(tx *gorm.DB) error {
+		var existing entity.TrxPrincipleEmergencyContact
+		if err := tx.Raw("SELECT TOP 1 * FROM trx_principle_emergency_contact WHERE ProspectID = ?", data.ProspectID).Scan(&existing).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				if err := tx.Create(&data).Error; err != nil {
+					return err
+				}
+			} else {
+				return err
+			}
+		} else {
+			if err := tx.Model(&existing).Updates(map[string]interface{}{
+				"AreaPhone":         data.AreaPhone,
+				"Phone":             data.Phone,
+				"Name":              data.Name,
+				"Relationship":      data.Relationship,
+				"MobilePhone":       data.MobilePhone,
+				"CompanyStreetName": data.CompanyStreetName,
+				"HomeNumber":        data.HomeNumber,
+				"LocationDetails":   data.LocationDetails,
+				"RT":                data.Rt,
+				"RW":                data.Rw,
+				"Kelurahan":         data.Kelurahan,
+				"Kecamatan":         data.Kecamatan,
+				"City":              data.City,
+				"Province":          data.Province,
+				"ZipCode":           data.ZipCode,
+				"CustomerID":        data.CustomerID,
+				"KPMID":             data.KPMID,
+			}).Error; err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+}
+
+func (r repoHandler) SaveToWorker(data []entity.TrxWorker) (err error) {
+
+	return r.los.Transaction(func(tx *gorm.DB) error {
+		for _, worker := range data {
+			if err := r.los.Create(&worker).Error; err != nil {
+				return err
+			}
+		}
+
 		return nil
 	})
 

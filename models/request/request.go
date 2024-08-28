@@ -1070,6 +1070,31 @@ type PrinciplePembiayaan struct {
 	MonthlyVariableIncome *float64 `json:"monthly_variable_income" validate:"omitempty,max=999999999999" example:"3000000"`
 }
 
+type PrincipleEmergencyContact struct {
+	ProspectID        string          `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
+	Name              string          `json:"name" validate:"required,min=2,max=50,allowcharsname" example:"MULYADI"`
+	Relationship      string          `json:"relationship" validate:"required,relationship,max=10" example:"FM"`
+	MobilePhone       string          `json:"mobile_phone" validate:"required,min=9,max=14,number,mobile_phone" example:"0856789XXX1"`
+	CompanyStreetName string          `json:"company_street_name" validate:"required,max=90" example:"JL.PEGANGSAAN 1"`
+	HomeNumber        string          `json:"home_number" validate:"required,max=10" example:"10A"`
+	LocationDetails   string          `json:"location_details" validate:"required" example:"Near the big palm tree"`
+	Rt                string          `json:"rt" validate:"required,min=1,max=3,number" example:"008"`
+	Rw                string          `json:"rw" validate:"required,min=1,max=3,number" example:"017"`
+	Kelurahan         string          `json:"kelurahan" validate:"required,max=30" example:"TEGAL PARANG"`
+	Kecamatan         string          `json:"kecamatan" validate:"required,max=30" example:"MAMPANG PRAPATAN"`
+	City              string          `json:"city" validate:"required,max=50" example:"JAKARTA SELATAN"`
+	Province          string          `json:"province" validate:"required,max=50" example:"DKI JAKARTA"`
+	ZipCode           string          `json:"zip_code" validate:"required,len=5,number,ne=0" example:"12790"`
+	AreaPhone         string          `json:"area_phone" validate:"omitempty,min=3,max=4,number" example:"021"`
+	Phone             string          `json:"phone" validate:"omitempty,min=5,max=10,number" example:"567892"`
+	UserInformation   UserInformation `json:"user_information" validate:"required"`
+}
+
 type ValidateNik struct {
 	IDNumber string `json:"id_number" validate:"required,number,len=16"`
+}
+
+type UserInformation struct {
+	UserID    string `json:"user_id" validate:"required,max=50"`
+	UserTitle string `json:"user_title" validate:"required,max=50"`
 }

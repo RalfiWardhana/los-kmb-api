@@ -83,6 +83,7 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("notnull", notNullValidation)
 	v.validator.RegisterValidation("mustnull", mustNullValidation)
 	v.validator.RegisterValidation("decision", DecisionValidation)
+	v.validator.RegisterValidation("mobile_phone", MobilePhoneValidation)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
@@ -593,4 +594,12 @@ func DecisionValidation(fl validator.FieldLevel) (validator bool) {
 	Decision = decision
 
 	return
+}
+
+func MobilePhoneValidation(fl validator.FieldLevel) bool {
+	if fl.Field().String() != "" {
+		regex := regexp.MustCompile(`^08\d{7,12}$`)
+		return regex.MatchString(fl.Field().String())
+	}
+	return true
 }
