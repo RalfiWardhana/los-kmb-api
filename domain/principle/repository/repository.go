@@ -568,13 +568,23 @@ func (r repoHandler) GetPrincipleStepThree(prospectID string) (data entity.TrxPr
 	return
 }
 
-func (r repoHandler) SavePrincipleEmergencyContact(data entity.TrxPrincipleEmergencyContact) (err error) {
+func (r repoHandler) SavePrincipleEmergencyContact(data entity.TrxPrincipleEmergencyContact, idNumber string) (err error) {
 
 	return r.newKmb.Transaction(func(tx *gorm.DB) error {
 		var existing entity.TrxPrincipleEmergencyContact
 		if err := tx.Raw("SELECT TOP 1 * FROM trx_principle_emergency_contact WHERE ProspectID = ?", data.ProspectID).Scan(&existing).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				if err := tx.Create(&data).Error; err != nil {
+					return err
+				}
+				if err := tx.Create(&entity.TrxPrincipleStatus{
+					ProspectID: data.ProspectID,
+					IDNumber:   idNumber,
+					Step:       4,
+					Decision:   constant.DECISION_CREDIT_PROCESS,
+					UpdatedAt:  time.Now(),
+				}).Error; err != nil {
+					tx.Rollback()
 					return err
 				}
 			} else {
@@ -600,6 +610,17 @@ func (r repoHandler) SavePrincipleEmergencyContact(data entity.TrxPrincipleEmerg
 				"CustomerID":        data.CustomerID,
 				"KPMID":             data.KPMID,
 			}).Error; err != nil {
+				return err
+			}
+
+			if err := tx.Model(&entity.TrxPrincipleStatus{}).
+				Where("ProspectID = ? AND Step = ?", data.ProspectID, 4).
+				Updates(&entity.TrxPrincipleStatus{
+					IDNumber:  idNumber,
+					Decision:  constant.DECISION_CREDIT_PROCESS,
+					UpdatedAt: time.Now(),
+				}).Error; err != nil {
+				tx.Rollback()
 				return err
 			}
 		}

@@ -76,7 +76,7 @@ func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.Prin
 			Phone:             req.Phone,
 		}
 
-		err = u.repository.SavePrincipleEmergencyContact(trxPrincipleEmergencyContact)
+		err = u.repository.SavePrincipleEmergencyContact(trxPrincipleEmergencyContact, principleStepThree.IDNumber)
 
 		if err != nil {
 			errChan <- err
@@ -127,7 +127,7 @@ func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.Prin
 		trxPrincipleEmergencyContact.CustomerID = customerValidateData.Data.CustomerID
 		trxPrincipleEmergencyContact.KPMID = customerValidateData.Data.KPMID
 
-		err = u.repository.SavePrincipleEmergencyContact(trxPrincipleEmergencyContact)
+		err = u.repository.SavePrincipleEmergencyContact(trxPrincipleEmergencyContact, principleStepThree.IDNumber)
 		if err != nil {
 			return
 		}

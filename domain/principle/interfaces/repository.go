@@ -34,6 +34,6 @@ type Repository interface {
 	GetMoblast(customerID string) (score entity.GetMoblast, err error)
 	SavePrincipleStepThree(data entity.TrxPrincipleStepThree) (err error)
 	GetPrincipleStepThree(prospectID string) (data entity.TrxPrincipleStepThree, err error)
-	SavePrincipleEmergencyContact(data entity.TrxPrincipleEmergencyContact) (err error)
+	SavePrincipleEmergencyContact(data entity.TrxPrincipleEmergencyContact, idNumber string) (err error)
 	SaveToWorker(data []entity.TrxWorker) (err error)
 }

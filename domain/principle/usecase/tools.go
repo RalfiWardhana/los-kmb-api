@@ -54,6 +54,11 @@ func (u usecase) PrincipleStep(idNumber string) (step response.StepPrinciple, er
 
 		step.ColorCode = "#FFFF00"
 		step.Status = constant.REASON_CANCEL
+
+	case constant.DECISION_CREDIT_PROCESS:
+
+		step.ColorCode = "#00FF00"
+		step.Status = constant.REASON_CREDIT_PROCESS
 	}
 
 	return
