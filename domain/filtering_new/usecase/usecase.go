@@ -69,6 +69,9 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		savedCluster              string
 		useDefaultCluster         bool
 		entityTransactionCMOnoFPD entity.TrxCmoNoFPD
+		respRrdDate               string
+		monthsDiff                int
+		expiredContractConfig     entity.AppConfig
 	)
 
 	requestID := ctx.Value(echo.HeaderXRequestID).(string)
@@ -214,8 +217,10 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	/* Process Get Cluster based on CMO_ID ends here */
 
+	primePriority, _ := utils.ItemExists(mainCustomer.CustomerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
+
 	// hit ke pefindo
-	respFilteringPefindo, resPefindo, trxDetailBiro, err = u.usecase.FilteringPefindo(ctx, reqPefindo, mainCustomer.CustomerStatus, clusterCmo, accessToken)
+	respFilteringPefindo, resPefindo, trxDetailBiro, err = u.usecase.FilteringPefindo(ctx, reqPefindo, mainCustomer.CustomerStatus, clusterCmo, primePriority, accessToken)
 	if err != nil {
 		return
 	}
@@ -231,8 +236,6 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	entityFiltering.Cluster = respFiltering.Cluster
 
-	primePriority, _ := utils.ItemExists(mainCustomer.CustomerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
-
 	if primePriority && (mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_AO || mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO) {
 		respFiltering.Code = blackList.Code
 		respFiltering.Decision = blackList.Result
@@ -240,6 +243,36 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		respFiltering.NextProcess = true
 
 		entityFiltering.Cluster = constant.CLUSTER_PRIME_PRIORITY
+
+		if mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO {
+			if (mainCustomer.CustomerID != nil) && (mainCustomer.CustomerID.(string) != "") {
+				respRrdDate, monthsDiff, err = u.usecase.CheckLatestPaidInstallment(ctx, req.ProspectID, mainCustomer.CustomerID.(string), accessToken)
+				if err != nil {
+					return
+				}
+
+				// Get config expired_contract
+				expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+				if err != nil {
+					err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
+					return
+				}
+
+				var configValueExpContract response.ExpiredContractConfig
+				json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+
+				if configValueExpContract.Data.ExpiredContractCheckEnabled && !(monthsDiff <= configValueExpContract.Data.ExpiredContractMaxMonths) {
+					// Jalur mirip seperti customer segment "REGULAR"
+					respFiltering.Code = respFilteringPefindo.Code
+					respFiltering.Decision = respFilteringPefindo.Decision
+					respFiltering.Reason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + respFilteringPefindo.Reason
+					respFiltering.NextProcess = respFilteringPefindo.NextProcess
+				}
+			} else {
+				err = errors.New(constant.ERROR_BAD_REQUEST + " - Customer RO then CustomerID should not be empty")
+				return
+			}
+		}
 	}
 
 	// save transaction
@@ -247,6 +280,12 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	entityFiltering.CustomerStatus = mainCustomer.CustomerStatus
 	entityFiltering.CustomerSegment = mainCustomer.CustomerSegment
 	entityFiltering.CustomerID = mainCustomer.CustomerID
+
+	if respRrdDate == "" {
+		entityFiltering.RrdDate = nil
+	} else {
+		entityFiltering.RrdDate = respRrdDate
+	}
 
 	if respFiltering.NextProcess {
 		entityFiltering.NextProcess = 1
@@ -287,7 +326,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	return
 }
 
-func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, customerStatus, clusterCMO string, accessToken string) (data response.Filtering, responsePefindo response.PefindoResult, trxDetailBiro []entity.TrxDetailBiro, err error) {
+func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, customerStatus, clusterCMO string, isPrimePriority bool, accessToken string) (data response.Filtering, responsePefindo response.PefindoResult, trxDetailBiro []entity.TrxDetailBiro, err error) {
 
 	timeOut, _ := strconv.Atoi(os.Getenv("DUPCHECK_API_TIMEOUT"))
 
@@ -399,13 +438,13 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 								data.Code = constant.NAMA_BEDA_CURRENT_OVD_OVER_LIMIT_CODE
 								data.CustomerStatus = customerStatus
 								data.Decision = constant.DECISION_REJECT
-								data.Reason = fmt.Sprintf("NAMA BEDA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+								data.Reason = fmt.Sprintf("NAMA BEDA %s & %s", getReasonCategoryRoman(pefindoResult.Category), constant.REJECT_REASON_OVD_PEFINDO)
 							}
 						} else {
 							data.Code = constant.NAMA_BEDA_12_OVD_OVER_LIMIT_CODE
 							data.CustomerStatus = customerStatus
 							data.Decision = constant.DECISION_REJECT
-							data.Reason = fmt.Sprintf("NAMA BEDA %s & OVD 12 Bulan Terakhir > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
+							data.Reason = fmt.Sprintf("NAMA BEDA %s & %s", getReasonCategoryRoman(pefindoResult.Category), constant.REJECT_REASON_OVD_PEFINDO)
 						}
 					} else {
 						data.Code = constant.NAMA_BEDA_12_OVD_NULL_CODE
@@ -429,7 +468,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 							} else if checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) > constant.PBK_OVD_CURRENT {
 								data.Code = constant.NAMA_SAMA_CURRENT_OVD_OVER_LIMIT_CODE
 								data.CustomerStatus = customerStatus
-								data.Reason = fmt.Sprintf("NAMA SAMA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+								data.Reason = fmt.Sprintf("NAMA SAMA %s & %s", getReasonCategoryRoman(pefindoResult.Category), constant.REJECT_REASON_OVD_PEFINDO)
 
 								data.Decision = func() string {
 									if checkNullCategory(pefindoResult.Category) == 3 {
@@ -441,7 +480,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 						} else {
 							data.Code = constant.NAMA_SAMA_12_OVD_OVER_LIMIT_CODE
 							data.CustomerStatus = customerStatus
-							data.Reason = fmt.Sprintf("NAMA SAMA %s & OVD 12 Bulan Terakhir > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
+							data.Reason = fmt.Sprintf("NAMA SAMA %s & %s", getReasonCategoryRoman(pefindoResult.Category), constant.REJECT_REASON_OVD_PEFINDO)
 
 							data.Decision = func() string {
 								if checkNullCategory(pefindoResult.Category) == 3 {
@@ -656,16 +695,15 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 				if (pefindoResult.MaxOverdueLast12Months != nil && checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12Months) > constant.PBK_OVD_LAST_12) ||
 					(pefindoResult.MaxOverdue != nil && checkNullMaxOverdue(pefindoResult.MaxOverdue) > constant.PBK_OVD_CURRENT) {
 
-					if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET && strings.Contains("Cluster E Cluster F", clusterCMO) {
+					if !(customerStatus == constant.STATUS_KONSUMEN_RO && isPrimePriority) && pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET && strings.Contains("Cluster E Cluster F", clusterCMO) {
 						data.Reason = fmt.Sprintf("%s %s & Baki Debet > 3 - 20 Juta & Tidak dapat dibiayai", bpkbString, getReasonCategoryRoman(pefindoResult.Category))
 						data.NextProcess = false
 						data.Decision = constant.DECISION_REJECT
 					}
 
 					// Reason ovd include all
-					if !bpkbName && (pefindoResult.MaxOverdueLast12MonthsKORules != nil && checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12) &&
-						(pefindoResult.MaxOverdueKORules != nil && checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) <= constant.PBK_OVD_CURRENT) {
-						data.Reason = fmt.Sprintf("%s & Baki Debet > Threshold", bpkbString)
+					if data.NextProcess && !bpkbName {
+						data.Reason = fmt.Sprintf("%s & %s", bpkbString, constant.REJECT_REASON_OVD_PEFINDO)
 						data.NextProcess = false
 						data.Decision = constant.DECISION_REJECT
 					}
@@ -1283,6 +1321,56 @@ func (u usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory stri
 		}
 
 		entitySaveTrxNoFPd = SaveTrxNoFPd
+	}
+
+	return
+}
+
+func (u usecase) CheckLatestPaidInstallment(ctx context.Context, prospectID string, customerID string, accessToken string) (respRrdDate string, monthsDiff int, err error) {
+	var (
+		resp                      *resty.Response
+		respLatestPaidInstallment response.LatestPaidInstallmentData
+		parsedRrddate             time.Time
+	)
+
+	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+customerID+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout")
+		return
+	}
+
+	if resp.StatusCode() != 200 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call LatestPaidInstallmentData Error")
+		return
+	}
+
+	if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &respLatestPaidInstallment); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal LatestPaidInstallmentData Error")
+		return
+	}
+
+	rrdDate := respLatestPaidInstallment.RRDDate
+	if rrdDate == "" {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Result LatestPaidInstallmentData rrd_date Empty String")
+		return
+	}
+
+	parsedRrddate, err = time.Parse(time.RFC3339, rrdDate)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of response rrd_date (" + rrdDate + ")")
+		return
+	}
+
+	respRrdDate = parsedRrddate.Format("2006-01-02")
+
+	currentDate := time.Now()
+
+	// calculate months difference of expired contract
+	monthsDiff, err = utils.PreciseMonthsDifference(parsedRrddate, currentDate)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Difference of months rrd_date and current_date is negative (-)")
+		return
 	}
 
 	return

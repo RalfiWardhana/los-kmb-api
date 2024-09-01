@@ -2040,3 +2040,24 @@ func (r repoHandler) GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNa
 	}
 	return
 }
+
+func (r repoHandler) MasterMappingIncomeMaxDSR(totalIncome float64) (data entity.MasterMappingIncomeMaxDSR, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.losDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	query := `SELECT TOP 1 * FROM kmb_mapping_income_dsr WHERE total_income_start <= ? AND (total_income_end >= ? OR total_income_end IS NULL)`
+	if err = r.losDB.Raw(query, totalIncome, totalIncome).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+	}
+
+	return
+}

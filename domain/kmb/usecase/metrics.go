@@ -37,6 +37,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		trxDetailDupcheck []entity.TrxDetail
 		cbFound           bool
 		cmoCluster        string
+		mappingMaxDSR     entity.MasterMappingIncomeMaxDSR
 	)
 
 	// cek trx_master
@@ -354,10 +355,8 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 	reqDupcheck.Cluster = mappingCluster.Cluster
 
-	mappingMaxDSR := entity.MasterMappingMaxDSR{
-		Cluster: mappingCluster.Cluster,
-	}
-	mappingMaxDSR, err = u.repository.MasterMappingMaxDSR(mappingMaxDSR)
+	totalIncome := reqDupcheck.MonthlyFixedIncome + reqDupcheck.MonthlyVariableIncome + reqDupcheck.SpouseIncome
+	mappingMaxDSR, err = u.repository.MasterMappingIncomeMaxDSR(totalIncome)
 	if err != nil {
 		if err.Error() != constant.DATA_NOT_FOUND {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Max DSR error")
@@ -516,7 +515,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		scoreBiro = filtering.ScoreBiro.(string)
 	}
 
-	responseScs, metricsScs, pefindoIDX, err := u.usecase.Scorepro(ctx, reqMetrics, scoreBiro, customerSegment, dupcheckData, accessToken)
+	responseScs, metricsScs, pefindoIDX, err := u.usecase.Scorepro(ctx, reqMetrics, scoreBiro, customerSegment, dupcheckData, accessToken, filtering)
 	if err != nil {
 		return
 	}
@@ -572,7 +571,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	}
 
 	income := reqDupcheck.MonthlyFixedIncome + reqDupcheck.MonthlyVariableIncome + reqDupcheck.SpouseIncome
-	metricsTotalDsrFmfPbk, trxFMFTotalDsrFmfPbk, err := u.usecase.TotalDsrFmfPbk(ctx, income, reqMetrics.Apk.InstallmentAmount, totalInstallmentPBK, reqMetrics.Transaction.ProspectID, customerSegment, accessToken, dupcheckData, configValue)
+	metricsTotalDsrFmfPbk, trxFMFTotalDsrFmfPbk, err := u.usecase.TotalDsrFmfPbk(ctx, income, reqMetrics.Apk.InstallmentAmount, totalInstallmentPBK, reqMetrics.Transaction.ProspectID, customerSegment, accessToken, dupcheckData, configValue, filtering)
 	if err != nil {
 		return
 	}

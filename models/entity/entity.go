@@ -837,6 +837,7 @@ type FilteringKMB struct {
 	Category                        interface{} `gorm:"column:category" json:"category"`
 	MaxOverdueKORules               interface{} `gorm:"column:max_overdue_ko_rules" json:"max_overdue_ko_rules"`
 	MaxOverdueLast12MonthsKORules   interface{} `gorm:"column:max_overdue_last12months_ko_rules" json:"max_overdue_last12months_ko_rules"`
+	RrdDate                         interface{} `gorm:"column:rrd_date" json:"rrd_date"`
 	CreatedAt                       time.Time   `gorm:"column:created_at" json:"created_at"`
 }
 
@@ -2407,6 +2408,10 @@ func (c *TrxCmoNoFPD) TableName() string {
 	return "trx_cmo_no_fpd"
 }
 
+type EncryptString struct {
+	Encrypt string `json:"encrypt"`
+}
+
 type MappingVehicleAge struct {
 	VehicleAgeStart int         `gorm:"column:vehicle_age_start"`
 	VehicleAgeEnd   int         `gorm:"column:vehicle_age_end"`
@@ -2421,6 +2426,16 @@ type MappingVehicleAge struct {
 
 func (c *MappingVehicleAge) TableName() string {
 	return "m_mapping_vehicle_age"
+}
+
+type MasterMappingIncomeMaxDSR struct {
+	TotalIncomeStart float64 `gorm:"column:total_income_start"`
+	TotalIncomeEnd   float64 `gorm:"column:total_income_end"`
+	DSRThreshold     float64 `gorm:"column:dsr_threshold"`
+}
+
+func (c *MasterMappingIncomeMaxDSR) TableName() string {
+	return "kmb_mapping_income_dsr"
 }
 
 type DraftPrinciple struct {

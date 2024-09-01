@@ -10,4 +10,5 @@ type Repository interface {
 	GetMappingElaborateLTV(resultPefindo, cluster string) (data []entity.MappingElaborateLTV, err error)
 	GetMappingElaborateLTVOvd(resultPefindo, cluster string) (data []entity.MappingElaborateLTV, err error)
 	SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error)
+	GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig, err error)
 }

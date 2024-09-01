@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"errors"
 	"los-kmb-api/domain/kmb/interfaces/mocks"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
@@ -10,6 +11,7 @@ import (
 	"los-kmb-api/shared/httpclient"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
@@ -31,9 +33,16 @@ func TestScorepro(t *testing.T) {
 	os.Setenv("SCOREPRO_SEGMEN_ASS_SCORE", "2")
 	os.Setenv("NAMA_SAMA", "K,P")
 
+	// Get the current time
+	currentTime := time.Now().UTC()
+
+	// Sample older date from the current time to test "RrdDate"
+	sevenMonthsAgo := currentTime.AddDate(0, -7, 0)
+
 	testcases := []struct {
 		name               string
 		req                request.Metrics
+		filtering          entity.FilteringKMB
 		pefindoScore       string
 		customerSegment    string
 		spDupcheck         response.SpDupcheckMap
@@ -54,6 +63,8 @@ func TestScorepro(t *testing.T) {
 		err                error
 		result             response.ScorePro
 		errResult          error
+		config             entity.AppConfig
+		errGetConfig       error
 	}{
 		{
 			name: "scorepro jabo",
@@ -487,6 +498,106 @@ func TestScorepro(t *testing.T) {
 				Source: constant.SOURCE_DECISION_SCOREPRO,
 				Info:   `{"prospect_id":"EFMTESTAKKK0161109","score":800,"result":"PASS","score_band":"","score_result":"HIGH","status":"ASSCB-HIGH","segmen":"12","is_tsi":false,"score_bin":""}`,
 			},
+		},
+		{
+			name: "CR perbaikan flow RO PrimePriority PASS",
+			req: request.Metrics{
+				Address: []request.Address{
+					{
+						Type:    constant.ADDRESS_TYPE_RESIDENCE,
+						ZipCode: "12908",
+					},
+				},
+				Item: request.Item{BPKBName: "K"},
+			},
+			spDupcheck: response.SpDupcheckMap{
+				StatusKonsumen:                   constant.STATUS_KONSUMEN_RO,
+				CustomerID:                       "123456",
+				InstallmentTopup:                 0,
+				MaxOverdueDaysforActiveAgreement: 31,
+			},
+			filtering: entity.FilteringKMB{
+				RrdDate:   sevenMonthsAgo,
+				CreatedAt: currentTime,
+			},
+			customerSegment: constant.RO_AO_PRIME,
+			codePefindoIDX:  200,
+			bodyPefindoIDX: `{"message":"success","errors":null,"data":{"id":"pbk_idx6541eccbb2b8a","prospect_id":"EFM01454202307020007",
+			"created_at":"2023-11-01 13:14:35","nom03_12mth_all":0,"worst_24mth_auto":-999,"worst_24mth":0,"pefindo_add_info":null},
+			"server_time":"2023-11-01 13:14:35"}`,
+			scoreGenerator: entity.ScoreGenerator{
+				Key: "first_residence_zipcode_2w_aoro",
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score:   "LOW RISK",
+					Subject: constant.CUSTOMER,
+					BiroID:  "123456",
+				},
+				{
+					Score:   "LOW RISK",
+					Subject: constant.SPOUSE,
+					BiroID:  "234567",
+				},
+			},
+			codeScoreproIDX: 200,
+			bodyScoreproIDX: `{"messages":"OK","data":{"prospect_id":"EFMTESTAKKK0161109","score":800,"result":"PASS","score_result":"HIGH","status":"ASSCB-HIGH","phone_number":"085716728933","segmen":"12","is_tsi":false,"score_band":"","score_bin":""},"errors":null,"server_time":"2023-10-30T14:26:17+07:00"}`,
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
+			result: response.ScorePro{
+				Result: constant.DECISION_PASS,
+				Code:   constant.CODE_SCOREPRO_GTEMIN_THRESHOLD,
+				Reason: constant.REASON_SCOREPRO_GTEMIN_THRESHOLD,
+				Source: constant.SOURCE_DECISION_SCOREPRO,
+				Info:   `{"prospect_id":"EFMTESTAKKK0161109","score":800,"result":"PASS","score_band":"","score_result":"HIGH","status":"ASSCB-HIGH","segmen":"12","is_tsi":false,"score_bin":""}`,
+			},
+		},
+		{
+			name: "CR perbaikan flow RO PrimePriority RrdDate NULL",
+			req: request.Metrics{
+				Address: []request.Address{
+					{
+						Type:    constant.ADDRESS_TYPE_RESIDENCE,
+						ZipCode: "12908",
+					},
+				},
+				Item: request.Item{BPKBName: "K"},
+			},
+			spDupcheck: response.SpDupcheckMap{
+				StatusKonsumen:                   constant.STATUS_KONSUMEN_RO,
+				CustomerID:                       "123456",
+				InstallmentTopup:                 0,
+				MaxOverdueDaysforActiveAgreement: 31,
+			},
+			filtering: entity.FilteringKMB{
+				RrdDate:   nil,
+				CreatedAt: currentTime,
+			},
+			customerSegment: constant.RO_AO_PRIME,
+			codePefindoIDX:  200,
+			bodyPefindoIDX: `{"message":"success","errors":null,"data":{"id":"pbk_idx6541eccbb2b8a","prospect_id":"EFM01454202307020007",
+			"created_at":"2023-11-01 13:14:35","nom03_12mth_all":0,"worst_24mth_auto":-999,"worst_24mth":0,"pefindo_add_info":null},
+			"server_time":"2023-11-01 13:14:35"}`,
+			scoreGenerator: entity.ScoreGenerator{
+				Key: "first_residence_zipcode_2w_aoro",
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score:   "LOW RISK",
+					Subject: constant.CUSTOMER,
+					BiroID:  "123456",
+				},
+				{
+					Score:   "LOW RISK",
+					Subject: constant.SPOUSE,
+					BiroID:  "234567",
+				},
+			},
+			codeScoreproIDX: 500,
+			bodyScoreproIDX: `{"messages":"OK","data":{"prospect_id":"EFMTESTAKKK0161109","score":800,"result":"PASS","score_result":"HIGH","status":"ASSCB-HIGH","phone_number":"085716728933","segmen":"12","is_tsi":false,"score_band":"","score_bin":""},"errors":null,"server_time":"2023-10-30T14:26:17+07:00"}`,
+			errResult:       errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty"),
 		},
 		{
 			name: "scorepro ao prime",
@@ -938,6 +1049,7 @@ func TestScorepro(t *testing.T) {
 			mockRepository.On("GetActiveLoanTypeLast6M", tc.spDupcheck.CustomerID.(string)).Return(entity.GetActiveLoanTypeLast6M{}, nil)
 			mockRepository.On("GetActiveLoanTypeLast24M", tc.spDupcheck.CustomerID.(string)).Return(entity.GetActiveLoanTypeLast24M{}, nil)
 			mockRepository.On("GetMoblast", tc.spDupcheck.CustomerID.(string)).Return(entity.GetMoblast{}, nil)
+			mockRepository.On("GetConfig", "expired_contract", "KMB-OFF", "expired_contract_check").Return(tc.config, tc.errGetConfig)
 
 			rst := resty.New()
 			httpmock.ActivateNonDefault(rst.GetClient())
@@ -959,7 +1071,7 @@ func TestScorepro(t *testing.T) {
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
-			_, data, _, err := usecase.Scorepro(ctx, tc.req, tc.pefindoScore, tc.customerSegment, tc.spDupcheck, tc.accessToken)
+			_, data, _, err := usecase.Scorepro(ctx, tc.req, tc.pefindoScore, tc.customerSegment, tc.spDupcheck, tc.accessToken, tc.filtering)
 			require.Equal(t, tc.result, data)
 			require.Equal(t, tc.errResult, err)
 		})

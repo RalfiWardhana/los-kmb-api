@@ -927,6 +927,15 @@ type GetFPDCmoByID struct {
 	Metadata interface{} `json:"metadata"`
 }
 
+type ExpiredContractConfig struct {
+	Data ConfigExpiredContract `json:"data"`
+}
+
+type ConfigExpiredContract struct {
+	ExpiredContractCheckEnabled bool `json:"expired_contract_check_enabled"`
+	ExpiredContractMaxMonths    int  `json:"expired_contract_max_months"`
+}
+
 type StepPrinciple struct {
 	ProspectID string `json:"prospect_id"`
 	ColorCode  string `json:"color_code"`
