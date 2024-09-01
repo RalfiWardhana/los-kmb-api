@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func (u usecase) CheckPMK(branchID, customerKMB string, income float64, homeStatus, professionID, empYear, empMonth, stayYear, stayMonth, birthDate string, tenor int, maritalStatus string) (data response.UsecaseApi, err error) {
+func (u usecase) CheckPMK(branchID, customerKMB string, income float64, homeStatus, professionID, birthDate string, tenor int, maritalStatus string, empYear, empMonth, stayYear, stayMonth int) (data response.UsecaseApi, err error) {
 
 	location, _ := time.LoadLocation("Asia/Jakarta")
 
@@ -39,7 +39,7 @@ func (u usecase) CheckPMK(branchID, customerKMB string, income float64, homeStat
 		return
 	}
 
-	if empYear != "" && empMonth != "" {
+	if empYear != 0 && empMonth != 0 {
 		var timeNow int64
 		if professionID == constant.PROFESSION_ID_WRST || professionID == constant.PROFESSION_ID_PRO {
 			timeNow = time.Now().AddDate(-configData.Data.LengthOfBusiness, 0, 0).Unix()
@@ -47,7 +47,7 @@ func (u usecase) CheckPMK(branchID, customerKMB string, income float64, homeStat
 			timeNow = time.Now().AddDate(-configData.Data.LengthOfWork, 0, 0).Unix()
 		}
 
-		convTime, _ := time.ParseInLocation(layout, fmt.Sprintf("%s-%s-01", empYear, empMonth), location)
+		convTime, _ := time.ParseInLocation(layout, setTimetoParse(empYear, empMonth), location)
 
 		unixTime := convTime.Unix()
 
@@ -60,7 +60,7 @@ func (u usecase) CheckPMK(branchID, customerKMB string, income float64, homeStat
 
 	}
 
-	if stayYear != "" && stayMonth != "" {
+	if stayYear != 0 && stayMonth != 0 {
 
 		var lengthOfStay int
 
@@ -76,7 +76,8 @@ func (u usecase) CheckPMK(branchID, customerKMB string, income float64, homeStat
 		}
 
 		timeNow := time.Now().AddDate(-lengthOfStay, 0, 0).Unix()
-		convTime, _ := time.ParseInLocation(layout, fmt.Sprintf("%s-%s-01", stayYear, stayMonth), location)
+
+		convTime, _ := time.ParseInLocation(layout, setTimetoParse(stayYear, stayMonth), location)
 
 		unixTime := convTime.Unix()
 
@@ -127,4 +128,13 @@ func (u usecase) CheckPMK(branchID, customerKMB string, income float64, homeStat
 		}
 	}
 	return
+}
+
+func setTimetoParse(month int, year int) string {
+
+	if month >= 10 {
+		return fmt.Sprintf("%d-%d-01", year, month)
+	}
+
+	return fmt.Sprintf("%d-0%d-01", year, month)
 }

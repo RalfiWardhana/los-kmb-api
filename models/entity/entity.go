@@ -2451,8 +2451,8 @@ type DraftPrinciple struct {
 	ResidenceAreaPhone string      `gorm:"column:type:varchar(4);ResidenceAreaPhone"`
 	ResidencePhone     string      `gorm:"column:type:varchar(10);ResidencePhone"`
 	HomeStatus         string      `gorm:"column:type:varchar(2);HomeStatus"`
-	StaySinceYear      string      `gorm:"column:type:varchar(4);StaySinceYear"`
-	StaySinceMonth     string      `gorm:"column:type:varchar(2);StaySinceMonth"`
+	StaySinceYear      int         `gorm:"column:type:varchar(4);StaySinceYear"`
+	StaySinceMonth     int         `gorm:"column:type:varchar(2);StaySinceMonth"`
 	Decision           string      `gorm:"column:type:varchar(20);Decision"`
 	Reason             string      `gorm:"column:type:varchar(255);Reason"`
 	BPKBName           string      `gorm:"column:type:varchar(2);BPKBName"`
@@ -2487,8 +2487,8 @@ type TrxPrincipleStepOne struct {
 	ResidenceAreaPhone string      `gorm:"column:ResidenceAreaPhone;type:varchar(4)"`
 	ResidencePhone     string      `gorm:"column:ResidencePhone;type:varchar(10)"`
 	HomeStatus         string      `gorm:"column:HomeStatus;type:varchar(2)"`
-	StaySinceYear      string      `gorm:"column:StaySinceYear;type:varchar(4)"`
-	StaySinceMonth     string      `gorm:"column:StaySinceMonth;type:varchar(2)"`
+	StaySinceYear      int         `gorm:"column:StaySinceYear;type:varchar(4)"`
+	StaySinceMonth     int         `gorm:"column:StaySinceMonth;type:varchar(2)"`
 	Decision           string      `gorm:"column:Decision;type:varchar(20)"`
 	Reason             string      `gorm:"column:Reason;type:varchar(255)"`
 	BPKBName           string      `gorm:"column:BPKBName;type:varchar(2)"`
@@ -2544,8 +2544,8 @@ type TrxPrincipleStepTwo struct {
 	SpouseSurgateMotherName interface{} `gorm:"column:SpouseSurgateMotherName;type:varchar(100);"`
 	EconomySectorID         string      `gorm:"column:EconomySectorID;type:varchar(10)"`
 	Education               string      `gorm:"column:Education;type:varchar(50);"`
-	EmploymentSinceMonth    string      `gorm:"column:EmploymentSinceMonth;type:varchar(2);"`
-	EmploymentSinceYear     string      `gorm:"column:EmploymentSinceYear;type:varchar(4);"`
+	EmploymentSinceMonth    int         `gorm:"column:EmploymentSinceMonth;type:varchar(2);"`
+	EmploymentSinceYear     int         `gorm:"column:EmploymentSinceYear;type:varchar(4);"`
 	IndustryTypeID          string      `gorm:"column:IndustryTypeID;type:varchar(10);"`
 	JobPosition             string      `gorm:"column:JobPosition;type:varchar(10);"`
 	JobType                 string      `gorm:"column:JobType;type:varchar(10);"`

@@ -9,7 +9,7 @@ import (
 
 type Usecase interface {
 	CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (data response.UsecaseApi, err error)
-	CheckPMK(branchID, customerKMB string, income float64, homeStatus, professionID, empYear, empMonth, stayYear, stayMonth, birthDate string, tenor int, maritalStatus string) (data response.UsecaseApi, err error)
+	CheckPMK(branchID, customerKMB string, income float64, homeStatus, professionID, birthDate string, tenor int, maritalStatus string, empYear, empMonth, stayYear, stayMonth int) (data response.UsecaseApi, err error)
 	DupcheckIntegrator(ctx context.Context, prospectID, idNumber, legalName, birthDate, surgateName string, accessToken string) (spDupcheck response.SpDupCekCustomerByID, err error)
 	BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerByID) (data response.UsecaseApi, customerType string)
 	VehicleCheck(manufactureYear, cmoCluster, bkpbName string, tenor int, configValue response.DupcheckConfig, filtering entity.FilteringKMB, af float64) (data response.UsecaseApi, err error)

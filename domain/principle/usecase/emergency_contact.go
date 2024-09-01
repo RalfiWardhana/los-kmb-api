@@ -199,11 +199,6 @@ func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.Prin
 	// update customer transaction
 	sequence += 1
 
-	employmentSinceMonth, _ := strconv.Atoi(principleStepTwo.EmploymentSinceMonth)
-	employmentSinceYear, _ := strconv.Atoi(principleStepTwo.EmploymentSinceYear)
-	staySinceMonth, _ := strconv.Atoi(principleStepOne.StaySinceMonth)
-	staySinceYear, _ := strconv.Atoi(principleStepOne.StaySinceYear)
-
 	customerPersonal := map[string]interface{}{
 		"birth_place":             principleStepTwo.BirthPlace,
 		"full_name":               principleStepTwo.FullName,
@@ -212,14 +207,14 @@ func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.Prin
 		"education":               principleStepTwo.Education,
 		"marital_status":          principleStepTwo.MaritalStatus,
 		"home_status":             principleStepOne.HomeStatus,
-		"stay_since_month":        staySinceMonth,
-		"stay_since_year":         staySinceYear,
+		"stay_since_month":        principleStepOne.StaySinceMonth,
+		"stay_since_year":         principleStepOne.StaySinceYear,
 		"profession_id":           principleStepTwo.ProfessionID,
 		"job_type":                principleStepTwo.JobType,
 		"job_position":            principleStepTwo.JobPosition,
 		"industry_type_id":        principleStepTwo.IndustryTypeID,
-		"employment_since_month":  employmentSinceMonth,
-		"employment_since_year":   employmentSinceYear,
+		"employment_since_month":  principleStepTwo.EmploymentSinceMonth,
+		"employment_since_year":   principleStepTwo.EmploymentSinceYear,
 		"monthly_fixed_income":    principleStepTwo.MonthlyFixedIncome,
 		"spouse_income":           principleStepTwo.SpouseIncome,
 		"monthly_variable_income": principleStepThree.MonthlyVariableIncome,

@@ -555,8 +555,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan, 
 
 	} else if scoreGenerator.Key == os.Getenv("KEY_SCOREPRO_IDX_2W_OTHERS") {
 
-		employmentSinceYear, _ := strconv.Atoi(principleStepTwo.EmploymentSinceYear)
-		employmentSinceYear = currentYear - employmentSinceYear
+		employmentSinceYear := currentYear - principleStepTwo.EmploymentSinceYear
 
 		reqScoreproIntegrator.Data = map[string]interface{}{
 			"bpkb_name":        bpkbKey,

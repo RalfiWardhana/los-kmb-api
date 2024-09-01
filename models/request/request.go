@@ -972,8 +972,6 @@ type PrincipleAsset struct {
 	NoChassis          string `json:"chassis_number" validate:"required,max=30" example:"MHKV1AA2JBK107322"`
 	NoEngine           string `json:"engine_number" validate:"required,max=30" example:"73218JAJK"`
 	BranchID           string `json:"branch_id" validate:"required,max=10" example:"426"`
-	CMOID              string `json:"cmo_id" validate:"required,max=20" example:"537281"`
-	CMOName            string `json:"cmo_name" validate:"required,max=50" example:"JONATHAN"`
 	CC                 string `json:"cc" validate:"required,max=10" example:"1500"`
 	TaxDate            string `json:"tax_date" validate:"required,dateformat" example:"2022-03-02"`
 	STNKExpiredDate    string `json:"stnk_expired_date" validate:"required,dateformat" example:"2025-03-20"`
@@ -992,8 +990,8 @@ type PrincipleAsset struct {
 	ResidenceAreaPhone string `json:"residence_area_phone" validate:"required,min=2,max=4" example:"021"`
 	ResidencePhone     string `json:"residence_phone" validate:"required,max=10" example:"86605224"`
 	HomeStatus         string `json:"home_status" validate:"required,max=2" example:"SD"`
-	StaySinceYear      string `json:"stay_since_year" validate:"required,max=4" example:"2024"`
-	StaySinceMonth     string `json:"stay_since_month" validate:"required,max=2" example:"04"`
+	StaySinceYear      int    `json:"stay_since_year" validate:"required,len=4" example:"2024"`
+	StaySinceMonth     int    `json:"stay_since_month" validate:"required,min=1,max=12" example:"4"`
 }
 
 type PrinciplePemohon struct {
@@ -1021,8 +1019,8 @@ type PrinciplePemohon struct {
 	ProfessionID            string  `json:"profession_id" validate:"required,max=10" example:"KRYSW"`
 	JobType                 string  `json:"job_type" validate:"required,max=10" example:"0012"`
 	JobPosition             string  `json:"job_position" validate:"required,max=10" example:"M"`
-	EmploymentSinceMonth    string  `json:"employement_since_month" validate:"required,max=2" example:"02"`
-	EmploymentSinceYear     string  `json:"employement_since_year" validate:"required,max=4" example:"2020"`
+	EmploymentSinceMonth    int     `json:"employement_since_month" validate:"required,min=1,max=12" example:"12"`
+	EmploymentSinceYear     int     `json:"employement_since_year" validate:"required,len=4" example:"2020"`
 	CompanyName             string  `json:"company_name" validate:"required,min=2,max=50" example:"PT KB Finansia"`
 	EconomySectorID         string  `json:"economy_sector" validate:"required,max=10" example:"06"`
 	IndustryTypeID          string  `json:"industry_type_id" validate:"required,max=10" example:"1000"`

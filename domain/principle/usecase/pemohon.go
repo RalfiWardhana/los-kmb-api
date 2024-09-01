@@ -511,7 +511,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 
 	mainCustomer.CustomerStatus = mainCustomer.CustomerStatusKMB
 
-	pmk, _ := u.usecase.CheckPMK(draft.BranchID, mainCustomer.CustomerStatusKMB, income, draft.HomeStatus, r.ProfessionID, r.EmploymentSinceYear, r.EmploymentSinceMonth, draft.StaySinceYear, draft.StaySinceMonth, r.BirthDate, 12, r.MaritalStatus)
+	pmk, _ := u.usecase.CheckPMK(draft.BranchID, mainCustomer.CustomerStatusKMB, income, draft.HomeStatus, r.ProfessionID, r.BirthDate, 12, r.MaritalStatus, r.EmploymentSinceYear, r.EmploymentSinceMonth, draft.StaySinceYear, draft.StaySinceMonth)
 
 	trxPrincipleStepTwo.CheckPMKResult = pmk.Result
 	trxPrincipleStepTwo.CheckPMKCode = pmk.Code
