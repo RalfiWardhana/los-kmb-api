@@ -1066,6 +1066,8 @@ type PrinciplePembiayaan struct {
 	InstallmentAmount     float64  `json:"installment_amount" validate:"required,max=999999999999" example:"4181333"`
 	Dealer                string   `json:"dealer" validate:"omitempty,max=50"`
 	MonthlyVariableIncome *float64 `json:"monthly_variable_income" validate:"omitempty,max=999999999999" example:"3000000"`
+	AssetCategoryID       string   `json:"asset_category_id" validate:"required,max=100" example:"BEBEK"`
+	FinancePurpose        string   `json:"finance_purpose" validate:"required,max=100" example:"Multiguna Pembayaran dengan Angsuran"`
 }
 
 type PrincipleEmergencyContact struct {
