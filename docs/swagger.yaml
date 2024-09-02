@@ -1279,14 +1279,6 @@ definitions:
         example: MHKV1AA2JBK107322
         maxLength: 30
         type: string
-      cmo_id:
-        example: "537281"
-        maxLength: 20
-        type: string
-      cmo_name:
-        example: JONATHAN
-        maxLength: 50
-        type: string
       color:
         example: HITAM
         maxLength: 50
@@ -1364,13 +1356,13 @@ definitions:
         example: "3506126712000002"
         type: string
       stay_since_month:
-        example: "04"
-        maxLength: 2
-        type: string
+        example: 4
+        maximum: 12
+        minimum: 1
+        type: integer
       stay_since_year:
-        example: "2024"
-        maxLength: 4
-        type: string
+        example: 2024
+        type: integer
       stnk_expired_date:
         example: "2025-03-20"
         type: string
@@ -1382,8 +1374,6 @@ definitions:
     - brand
     - cc
     - chassis_number
-    - cmo_id
-    - cmo_name
     - color
     - engine_number
     - home_status
@@ -1519,6 +1509,10 @@ definitions:
         example: 84000000
         maximum: 999999999999
         type: number
+      asset_category_id:
+        example: BEBEK
+        maxLength: 100
+        type: string
       dealer:
         maxLength: 50
         type: string
@@ -1526,6 +1520,10 @@ definitions:
         example: 22000000
         maximum: 999999999999
         type: number
+      finance_purpose:
+        example: Multiguna Pembayaran dengan Angsuran
+        maxLength: 100
+        type: string
       installment_amount:
         example: 4181333
         maximum: 999999999999
@@ -1553,7 +1551,9 @@ definitions:
     required:
     - admin_fee
     - af
+    - asset_category_id
     - down_payment_amount
+    - finance_purpose
     - installment_amount
     - ntf
     - otr
@@ -1626,13 +1626,13 @@ definitions:
         maxLength: 10
         type: string
       employement_since_month:
-        example: "02"
-        maxLength: 2
-        type: string
+        example: 12
+        maximum: 12
+        minimum: 1
+        type: integer
       employement_since_year:
-        example: "2020"
-        maxLength: 4
-        type: string
+        example: 2020
+        type: integer
       full_name:
         example: Arya Danu
         maxLength: 50

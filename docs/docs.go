@@ -4382,8 +4382,6 @@ const docTemplate = `{
                 "brand",
                 "cc",
                 "chassis_number",
-                "cmo_id",
-                "cmo_name",
                 "color",
                 "engine_number",
                 "home_status",
@@ -4426,16 +4424,6 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 30,
                     "example": "MHKV1AA2JBK107322"
-                },
-                "cmo_id": {
-                    "type": "string",
-                    "maxLength": 20,
-                    "example": "537281"
-                },
-                "cmo_name": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "example": "JONATHAN"
                 },
                 "color": {
                     "type": "string",
@@ -4533,14 +4521,14 @@ const docTemplate = `{
                     "example": "3506126712000002"
                 },
                 "stay_since_month": {
-                    "type": "string",
-                    "maxLength": 2,
-                    "example": "04"
+                    "type": "integer",
+                    "maximum": 12,
+                    "minimum": 1,
+                    "example": 4
                 },
                 "stay_since_year": {
-                    "type": "string",
-                    "maxLength": 4,
-                    "example": "2024"
+                    "type": "integer",
+                    "example": 2024
                 },
                 "stnk_expired_date": {
                     "type": "string",
@@ -4686,7 +4674,9 @@ const docTemplate = `{
             "required": [
                 "admin_fee",
                 "af",
+                "asset_category_id",
                 "down_payment_amount",
+                "finance_purpose",
                 "installment_amount",
                 "ntf",
                 "otr",
@@ -4704,6 +4694,11 @@ const docTemplate = `{
                     "maximum": 999999999999,
                     "example": 84000000
                 },
+                "asset_category_id": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "BEBEK"
+                },
                 "dealer": {
                     "type": "string",
                     "maxLength": 50
@@ -4712,6 +4707,11 @@ const docTemplate = `{
                     "type": "number",
                     "maximum": 999999999999,
                     "example": 22000000
+                },
+                "finance_purpose": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "Multiguna Pembayaran dengan Angsuran"
                 },
                 "installment_amount": {
                     "type": "number",
@@ -4869,14 +4869,14 @@ const docTemplate = `{
                     "example": "S1"
                 },
                 "employement_since_month": {
-                    "type": "string",
-                    "maxLength": 2,
-                    "example": "02"
+                    "type": "integer",
+                    "maximum": 12,
+                    "minimum": 1,
+                    "example": 12
                 },
                 "employement_since_year": {
-                    "type": "string",
-                    "maxLength": 4,
-                    "example": "2020"
+                    "type": "integer",
+                    "example": 2020
                 },
                 "full_name": {
                     "type": "string",
