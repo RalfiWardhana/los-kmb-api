@@ -8,6 +8,7 @@ import (
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
+	"strconv"
 	"testing"
 	"time"
 
@@ -15,7 +16,7 @@ import (
 )
 
 func TestPmk(t *testing.T) {
-
+	today := time.Now()
 	responseAppConfig := entity.AppConfig{
 		Value: `{"data":{
 				"min_age_marital_status_m":19,
@@ -197,8 +198,8 @@ func TestPmk(t *testing.T) {
 			professionID:  "PRO",
 			empYear:       "2020",
 			empMonth:      "12",
-			stayYear:      "2023",
-			stayMonth:     "09",
+			stayYear:      strconv.Itoa(today.Year()),
+			stayMonth:     "01",
 			birthDate:     "1998-09-09",
 			tenor:         12,
 			maritalStatus: "S",
