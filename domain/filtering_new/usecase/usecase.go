@@ -420,7 +420,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 		}
 
 		if checkPefindo.Code == "200" && pefindoResult.Score != constant.PEFINDO_UNSCORE {
-			if pefindoResult.Category != nil {
+			if pefindoResult.Category != nil && getReasonCategoryRoman(pefindoResult.Category) != "" {
 				if !bpkbName {
 					if pefindoResult.MaxOverdueLast12MonthsKORules != nil {
 						if checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12 {
