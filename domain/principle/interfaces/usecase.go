@@ -31,6 +31,8 @@ type Usecase interface {
 	Scorepro(ctx context.Context, req request.PrinciplePembiayaan, principleStepOne entity.TrxPrincipleStepOne, principleStepTwo entity.TrxPrincipleStepTwo, pefindoScore, customerStatus, customerSegment string, installmentTopUp float64, spDupcheck response.SpDupCekCustomerByID, accessToken string) (data response.ScorePro, err error)
 	DsrCheck(ctx context.Context, req request.PrinciplePembiayaan, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, agreementChasisNumber response.AgreementChassisNumber, accessToken string, configValue response.DupcheckConfig) (data response.UsecaseApi, err error)
 	PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (err error)
+	PrincipleCoreCustomer(ctx context.Context, prospectID string, req request.PrincipleCoreCustomer, accessToken string) (err error)
+	PrincipleMarketingProgram(ctx context.Context, prospectID string, accessToken string) (err error)
 }
 
 type MultiUsecase interface {

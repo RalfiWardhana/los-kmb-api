@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/google/uuid"
 )
@@ -600,4 +601,24 @@ func CheckEmptyString(data string) interface{} {
 	}
 
 	return nil
+}
+
+func CapitalizeEachWord(s string) string {
+	words := strings.Fields(s)
+	for i, word := range words {
+		if len(word) > 0 {
+			runes := []rune(word)
+			runes[0] = unicode.ToUpper(runes[0])
+			words[i] = string(runes[0]) + strings.ToLower(string(runes[1:]))
+		}
+	}
+	return strings.Join(words, " ")
+}
+
+func GetLicensePlateCode(licensePlate string) string {
+	re := regexp.MustCompile(`^[A-Z]+`)
+
+	match := re.FindString(licensePlate)
+
+	return match
 }

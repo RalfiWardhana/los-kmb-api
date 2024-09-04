@@ -2666,3 +2666,22 @@ type TrxPrincipleEmergencyContact struct {
 func (c *TrxPrincipleEmergencyContact) TableName() string {
 	return "trx_principle_emergency_contact"
 }
+
+type TrxPrincipleMarketingProgram struct {
+	ProspectID                 string    `gorm:"column:ProspectID;type:varchar(20);"`
+	ProgramID                  string    `gorm:"column:ProgramID;type:varchar(50);"`
+	ProgramName                string    `gorm:"column:ProgramName;type:varchar(200);"`
+	ProductOfferingID          string    `gorm:"column:ProductOfferingID;type:varchar(50);"`
+	ProductOfferingDescription string    `gorm:"column:ProductOfferingDescription;type:varchar(50);"`
+	LoanAmount                 float64   `gorm:"column:LoanAmount"`
+	LoanAmountMaximum          float64   `gorm:"column:LoanAmountMaximum"`
+	AdminFee                   float64   `gorm:"column:AdminFee"`
+	ProvisionFee               float64   `gorm:"column:ProvisionFee"`
+	DPAmount                   float64   `gorm:"column:DPAmount"`
+	FinanceAmount              float64   `gorm:"column:FinanceAmount"`
+	CreatedAt                  time.Time `gorm:"column:created_at"`
+}
+
+func (c *TrxPrincipleMarketingProgram) TableName() string {
+	return "trx_principle_marketing_program"
+}

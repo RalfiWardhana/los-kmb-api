@@ -990,7 +990,7 @@ type PrincipleAsset struct {
 	ResidenceAreaPhone string `json:"residence_area_phone" validate:"required,min=2,max=4" example:"021"`
 	ResidencePhone     string `json:"residence_phone" validate:"required,max=10" example:"86605224"`
 	HomeStatus         string `json:"home_status" validate:"required,max=2" example:"SD"`
-	StaySinceYear      int    `json:"stay_since_year" validate:"required,len=4" example:"2024"`
+	StaySinceYear      int    `json:"stay_since_year" validate:"required" example:"2024"`
 	StaySinceMonth     int    `json:"stay_since_month" validate:"required,min=1,max=12" example:"4"`
 }
 
@@ -1020,7 +1020,7 @@ type PrinciplePemohon struct {
 	JobType                 string  `json:"job_type" validate:"required,max=10" example:"0012"`
 	JobPosition             string  `json:"job_position" validate:"required,max=10" example:"M"`
 	EmploymentSinceMonth    int     `json:"employement_since_month" validate:"required,min=1,max=12" example:"12"`
-	EmploymentSinceYear     int     `json:"employement_since_year" validate:"required,len=4" example:"2020"`
+	EmploymentSinceYear     int     `json:"employement_since_year" validate:"required" example:"2020"`
 	CompanyName             string  `json:"company_name" validate:"required,min=2,max=50" example:"PT KB Finansia"`
 	EconomySectorID         string  `json:"economy_sector" validate:"required,max=10" example:"06"`
 	IndustryTypeID          string  `json:"industry_type_id" validate:"required,max=10" example:"1000"`
@@ -1090,6 +1090,10 @@ type PrincipleEmergencyContact struct {
 	UserInformation   UserInformation `json:"user_information" validate:"required"`
 }
 
+type PrincipleCoreCustomer struct {
+	UserInformation UserInformation `json:"user_information" validate:"required"`
+}
+
 type ValidateNik struct {
 	IDNumber string `json:"id_number" validate:"required,number,len=16"`
 }
@@ -1097,4 +1101,47 @@ type ValidateNik struct {
 type UserInformation struct {
 	UserID    string `json:"user_id" validate:"required,max=50"`
 	UserTitle string `json:"user_title" validate:"required,max=50"`
+}
+
+type ReqMarsevLoanAmount struct {
+	BranchID      string  `json:"branch_id"`
+	OTR           float64 `json:"otr"`
+	MaxLTV        int     `json:"max_ltv_los"`
+	IsRecalculate bool    `json:"is_recalculate"`
+	LoanAmount    float64 `json:"loan_amount"`
+	DPAmount      float64 `json:"dp_amount_los"`
+}
+
+type ReqMarsevFilterProgram struct {
+	Page                   int     `json:"page"`
+	Limit                  int     `json:"limit"`
+	BranchID               string  `json:"branch_id"`
+	FinancingTypeCode      string  `json:"financing_type_code"`
+	CustomerOccupationCode string  `json:"customer_occupation_code"`
+	BpkbStatusCode         string  `json:"bpkb_status_code"`
+	SourceApplication      string  `json:"source_application"`
+	CustomerType           string  `json:"customer_type"`
+	AssetUsageTypeCode     string  `json:"asset_usage_type_code"`
+	AssetCategory          string  `json:"asset_category"`
+	AssetBrand             string  `json:"asset_brand"`
+	AssetYear              int     `json:"asset_year"`
+	LoanAmount             float64 `json:"loan_amount"`
+	Search                 string  `json:"search"`
+	Tenor                  int     `json:"tenor"`
+	SalesMethodID          int     `json:"sales_method_id"`
+}
+
+type ReqMarsevCalculateInstallment struct {
+	ProgramID              string  `json:"program_id"`
+	BranchID               string  `json:"branch_id"`
+	CustomerOccupationCode string  `json:"customer_occupation_code"`
+	AssetUsageTypeCode     string  `json:"asset_usage_type_code"`
+	AssetYear              int     `json:"asset_year"`
+	BpkbStatusCode         string  `json:"bpkb_status_code"`
+	LoanAmount             float64 `json:"loan_amount"`
+	Otr                    float64 `json:"otr"`
+	RegionCode             string  `json:"region_code"`
+	AssetCategory          string  `json:"asset_category"`
+	CustomerBirthDate      string  `json:"customer_birth_date"`
+	Tenor                  int     `json:"tenor"`
 }

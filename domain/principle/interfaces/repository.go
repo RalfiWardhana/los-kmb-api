@@ -35,5 +35,9 @@ type Repository interface {
 	SavePrincipleStepThree(data entity.TrxPrincipleStepThree) (err error)
 	GetPrincipleStepThree(prospectID string) (data entity.TrxPrincipleStepThree, err error)
 	SavePrincipleEmergencyContact(data entity.TrxPrincipleEmergencyContact, idNumber string) (err error)
+	GetPrincipleEmergencyContact(prospectID string) (data entity.TrxPrincipleEmergencyContact, err error)
 	SaveToWorker(data []entity.TrxWorker) (err error)
+	GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error)
+	SavePrincipleMarketingProgram(data entity.TrxPrincipleMarketingProgram) (err error)
+	GetPrincipleMarketingProgram(prospectID string) (data entity.TrxPrincipleMarketingProgram, err error)
 }

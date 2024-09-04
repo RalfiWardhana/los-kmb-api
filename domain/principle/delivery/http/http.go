@@ -1,10 +1,12 @@
 package http
 
 import (
+	"errors"
 	"fmt"
 	"los-kmb-api/domain/principle/interfaces"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
+	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 
 	_ "github.com/KB-FMF/los-common-library/errors"
@@ -33,6 +35,8 @@ func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, u
 	principleRoute.POST("/elaborate-ltv", handler.ElaborateLTV, middlewares.AccessMiddleware())
 	principleRoute.POST("/verify-pembiayaan", handler.VerifyPembiayaan, middlewares.AccessMiddleware())
 	principleRoute.POST("/emergency-contact", handler.EmergencyContact, middlewares.AccessMiddleware())
+	principleRoute.POST("/core-customer/:prospectID", handler.CoreCustomer, middlewares.AccessMiddleware())
+	principleRoute.POST("/marketing-program/:prospectID", handler.MarketingProgram, middlewares.AccessMiddleware())
 }
 
 // KmbPrinciple Tools godoc
@@ -223,6 +227,77 @@ func (c *handler) EmergencyContact(ctx echo.Context) (err error) {
 	}
 
 	err = c.usecase.PrincipleEmergencyContact(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), nil)
+
+}
+
+// KmbPrinciple Tools godoc
+// @Description KmbPrinciple
+// @Tags KmbPrinciple
+// @Produce json
+// @Param prospectID path string true "Prospect ID"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/core-customer/{prospectID} [post]
+func (c *handler) CoreCustomer(ctx echo.Context) (err error) {
+
+	var r request.PrincipleCoreCustomer
+
+	prospectID := ctx.Param("prospectID")
+
+	if prospectID == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID does not exist")
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
+	}
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "800"), err)
+	}
+
+	err = c.usecase.PrincipleCoreCustomer(ctx.Request().Context(), prospectID, r, middlewares.UserInfoData.AccessToken)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), nil)
+
+}
+
+// KmbPrinciple Tools godoc
+// @Description KmbPrinciple
+// @Tags KmbPrinciple
+// @Produce json
+// @Param prospectID path string true "Prospect ID"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/marketing-program/{prospectID} [post]
+func (c *handler) MarketingProgram(ctx echo.Context) (err error) {
+
+	prospectID := ctx.Param("prospectID")
+
+	if prospectID == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID does not exist")
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
+	}
+
+	err = c.usecase.PrincipleMarketingProgram(ctx.Request().Context(), prospectID, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
 
