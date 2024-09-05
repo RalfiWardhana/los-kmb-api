@@ -64,14 +64,6 @@ func (c *ConsumerRouter) StartConsume() error {
 				processorFunc := applyMiddlewares(val, c.middlewares...)
 				go processorFunc(ctx, event)
 			}
-
-			strSubmatch2 := re.FindStringSubmatch(strSubmatch[1])
-			if len(strSubmatch2) > 0 {
-				if val, ok := c.routes[strSubmatch2[1]]; ok {
-					processorFunc := applyMiddlewares(val, c.middlewares...)
-					go processorFunc(ctx, event)
-				}
-			}
 		}
 
 		return nil
