@@ -963,11 +963,12 @@ func TestScorepro(t *testing.T) {
 			codeScoreproIDX: 200,
 			bodyScoreproIDX: `{"messages":"OK","data":{"prospect_id":"EFMTESTAKKK0161109","score":"400-599","result":"REJECT","score_result":"MEDIUM","status":"ASSTSH-S04","phone_number":"085716728933","segmen":"4","is_tsi":true,"score_band":"","score_bin":""},"errors":null,"server_time":"2023-10-30T14:26:17+07:00"}`,
 			result: response.ScorePro{
-				Result: constant.DECISION_REJECT,
-				Code:   constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
-				Reason: constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
-				Source: constant.SOURCE_DECISION_SCOREPRO,
-				Info:   `{"prospect_id":"EFMTESTAKKK0161109","score":"400-599","result":"REJECT","score_band":"","score_result":"MEDIUM","status":"ASSTSH-S04","segmen":"4","is_tsi":true,"score_bin":""}`,
+				Result:    constant.DECISION_REJECT,
+				Code:      constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
+				Reason:    constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
+				Source:    constant.SOURCE_DECISION_SCOREPRO,
+				Info:      `{"prospect_id":"EFMTESTAKKK0161109","score":"400-599","result":"REJECT","score_band":"","score_result":"MEDIUM","status":"ASSTSH-S04","segmen":"4","is_tsi":true,"score_bin":""}`,
+				IsDeviasi: true,
 			},
 		},
 		{

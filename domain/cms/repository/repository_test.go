@@ -2923,6 +2923,61 @@ func TestGetLimitApproval(t *testing.T) {
 	})
 }
 
+func TestGetLimitApprovalDeviasi(t *testing.T) {
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	// Expected input and output
+	prospectID := "SAL-000001"
+	expectedData := entity.MappingLimitApprovalScheme{
+		Alias: "CBM",
+	}
+
+	t.Run("success", func(t *testing.T) {
+
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+		CASE 
+			WHEN final_approval IS NULL THEN 'CBM'
+			ELSE final_approval
+			END AS alias
+		FROM trx_deviasi td
+		LEFT JOIN trx_master tm ON td.ProspectID = tm.ProspectID 
+		LEFT JOIN m_branch_deviasi mbd ON tm.BranchID = mbd.BranchID 
+		WHERE td.ProspectID = ?`)).WithArgs(prospectID).
+			WillReturnRows(sqlmock.NewRows([]string{"alias"}).
+				AddRow("CBM"))
+		mock.ExpectCommit()
+
+		// Call the function
+		data, err := repo.GetLimitApprovalDeviasi(prospectID)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+}
+
 func TestGetHistoryProcess(t *testing.T) {
 	// Setup mock database connection
 	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
@@ -2965,6 +3020,7 @@ func TestGetHistoryProcess(t *testing.T) {
 			WHEN td.source_decision = 'SCP' THEN 'SCOREPRO'
 			WHEN td.source_decision = 'DSR' THEN 'DSR'
 			WHEN td.source_decision = 'LTV' THEN 'LTV'
+			WHEN td.source_decision = 'DEV' THEN 'DEVIASI'
 			WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
 			WHEN td.source_decision = 'NRC' THEN 'RECALCULATE PROCESS'
 			WHEN td.source_decision = 'CBM'
@@ -2986,6 +3042,7 @@ func TestGetHistoryProcess(t *testing.T) {
 			ELSE td.source_decision
 			END AS alias,
 			CASE
+			WHEN td.source_decision = 'DEV' THEN '-'
 			WHEN td.decision = 'PAS' THEN 'PASS'
 			WHEN td.decision = 'REJ' THEN 'REJECT'
 			WHEN td.decision = 'CAN' THEN 'CANCEL'
@@ -3002,7 +3059,7 @@ func TestGetHistoryProcess(t *testing.T) {
 		FROM
 			trx_details td WITH (nolock)
 			LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
-		WHERE td.ProspectID = ? AND (td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC') OR 
+		WHERE td.ProspectID = ? AND (td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC','DEV') OR 
 		(td.source_decision IN('TNR','PRJ','NIK','NKA','BLK','PMK','LTV') AND td.decision = 'REJ'))
 		AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
 			WillReturnRows(sqlmock.NewRows([]string{"source_decision", "decision", "reason", "created_at"}).
@@ -3041,6 +3098,7 @@ func TestGetHistoryProcess(t *testing.T) {
 			WHEN td.source_decision = 'SCP' THEN 'SCOREPRO'
 			WHEN td.source_decision = 'DSR' THEN 'DSR'
 			WHEN td.source_decision = 'LTV' THEN 'LTV'
+			WHEN td.source_decision = 'DEV' THEN 'DEVIASI'
 			WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
 			WHEN td.source_decision = 'NRC' THEN 'RECALCULATE PROCESS'
 			WHEN td.source_decision = 'CBM'
@@ -3062,6 +3120,7 @@ func TestGetHistoryProcess(t *testing.T) {
 			ELSE td.source_decision
 			END AS alias,
 			CASE
+			WHEN td.source_decision = 'DEV' THEN '-'
 			WHEN td.decision = 'PAS' THEN 'PASS'
 			WHEN td.decision = 'REJ' THEN 'REJECT'
 			WHEN td.decision = 'CAN' THEN 'CANCEL'
@@ -3078,7 +3137,7 @@ func TestGetHistoryProcess(t *testing.T) {
 		FROM
 			trx_details td WITH (nolock)
 			LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
-		WHERE td.ProspectID = ? AND (td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC') OR 
+		WHERE td.ProspectID = ? AND (td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC','DEV') OR 
 		(td.source_decision IN('TNR','PRJ','NIK','NKA','BLK','PMK','LTV') AND td.decision = 'REJ'))
 		AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
 			WillReturnError(gorm.ErrRecordNotFound)
@@ -3515,8 +3574,11 @@ func TestGetInquiryCa(t *testing.T) {
 		CASE
 		 WHEN rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN' THEN 1
 		 ELSE 0
-		END AS ActionEditData
-
+		END AS ActionEditData,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -3530,6 +3592,8 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN
 			cte_trx_history_approval_scheme rtn ON rtn.ProspectID = tm.ProspectID
 		LEFT JOIN
@@ -4000,8 +4064,11 @@ func TestGetInquiryCa(t *testing.T) {
 		CASE
 		 WHEN rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN' THEN 1
 		 ELSE 0
-		END AS ActionEditData
-
+		END AS ActionEditData,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -4015,6 +4082,8 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN
 			cte_trx_history_approval_scheme rtn ON rtn.ProspectID = tm.ProspectID
 		LEFT JOIN
@@ -4485,8 +4554,11 @@ func TestGetInquiryCa(t *testing.T) {
 		CASE
 		 WHEN rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN' THEN 1
 		 ELSE 0
-		END AS ActionEditData
-
+		END AS ActionEditData,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -4500,6 +4572,8 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN
 			cte_trx_history_approval_scheme rtn ON rtn.ProspectID = tm.ProspectID
 		LEFT JOIN
@@ -4981,8 +5055,11 @@ func TestGetInquiryCa(t *testing.T) {
 				CASE
 				 WHEN rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN' THEN 1
 				ELSE 0
-				END AS ActionEditData
-
+				END AS ActionEditData,
+				tde.deviasi_id,
+				mkd.deskripsi AS deviasi_description,
+				'REJECT' AS deviasi_decision,
+				tde.reason AS deviasi_reason
 			FROM
 				trx_master tm WITH (nolock)
 				INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -4996,6 +5073,8 @@ func TestGetInquiryCa(t *testing.T) {
 				LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 				LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 				LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+				LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+				LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 				LEFT JOIN
 					cte_trx_history_approval_scheme rtn ON rtn.ProspectID = tm.ProspectID
 				LEFT JOIN
@@ -5477,8 +5556,11 @@ func TestGetInquiryCa(t *testing.T) {
 		CASE
 		 WHEN rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN' THEN 1
 		 ELSE 0
-		END AS ActionEditData
-
+		END AS ActionEditData,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -5492,6 +5574,8 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN
 			cte_trx_history_approval_scheme rtn ON rtn.ProspectID = tm.ProspectID
 		LEFT JOIN
@@ -5828,6 +5912,10 @@ func TestProcessReturnOrder(t *testing.T) {
 			WithArgs(ppid, ppid).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
+		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "trx_deviasi" WHERE (ProspectID = ?)`)).
+			WithArgs(ppid).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","reason","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
 			WithArgs(trxDetail.ProspectID, trxDetail.StatusProcess, trxDetail.Activity, trxDetail.Decision, trxDetail.RuleCode, trxDetail.SourceDecision, trxDetail.NextStep, sqlmock.AnyArg(), trxDetail.Info, trxDetail.Reason, trxDetail.CreatedBy, sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -6058,7 +6146,11 @@ func TestGetInquirySearch(t *testing.T) {
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
 		tce.IndustryTypeID,
-		tak.UrlFormAkkk
+		tak.UrlFormAkkk,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -6071,6 +6163,8 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -6434,7 +6528,11 @@ func TestGetInquirySearch(t *testing.T) {
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
 		tce.IndustryTypeID,
-		tak.UrlFormAkkk
+		tak.UrlFormAkkk,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -6447,6 +6545,8 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -6809,7 +6909,11 @@ func TestGetInquirySearch(t *testing.T) {
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
 		tce.IndustryTypeID,
-		tak.UrlFormAkkk
+		tak.UrlFormAkkk,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -6822,6 +6926,8 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -7174,7 +7280,11 @@ func TestGetInquirySearch(t *testing.T) {
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
 		tce.IndustryTypeID,
-		tak.UrlFormAkkk
+		tak.UrlFormAkkk,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -7187,6 +7297,8 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -8178,7 +8290,11 @@ func TestGetInquiryApproval(t *testing.T) {
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
 		tdb.BiroSpouseResult,
-		tak.UrlFormAkkk
+		tak.UrlFormAkkk,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -8192,6 +8308,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		OUTER APPLY (
 			SELECT
 			  TOP 1 *
@@ -8604,7 +8722,11 @@ func TestGetInquiryApproval(t *testing.T) {
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
 		tdb.BiroSpouseResult,
-		tak.UrlFormAkkk
+		tak.UrlFormAkkk,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -8618,6 +8740,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		OUTER APPLY (
 			SELECT
 			  TOP 1 *
@@ -9026,7 +9150,11 @@ func TestGetInquiryApproval(t *testing.T) {
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
 		tdb.BiroSpouseResult,
-		tak.UrlFormAkkk
+		tak.UrlFormAkkk,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -9040,6 +9168,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		OUTER APPLY (
 			SELECT
 			  TOP 1 *
@@ -9461,7 +9591,11 @@ func TestGetInquiryApproval(t *testing.T) {
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
 		tdb.BiroSpouseResult,
-		tak.UrlFormAkkk
+		tak.UrlFormAkkk,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -9475,6 +9609,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		OUTER APPLY (
 			SELECT
 			  TOP 1 *
@@ -9896,7 +10032,11 @@ func TestGetInquiryApproval(t *testing.T) {
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
 		tdb.BiroSpouseResult,
-		tak.UrlFormAkkk
+		tak.UrlFormAkkk,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -9910,6 +10050,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		OUTER APPLY (
 			SELECT
 			  TOP 1 *

@@ -1628,6 +1628,10 @@ type InquiryCa struct {
 	EmergencyCity      string `gorm:"column:EmergencyCity"`
 	EmergencyAreaPhone string `gorm:"column:EmergencyAreaPhone"`
 	EmergencyPhone     string `gorm:"column:EmergencyPhone"`
+	DeviasiID          string `gorm:"column:deviasi_id"`
+	DeviasiDescription string `gorm:"column:deviasi_description"`
+	DeviasiDecision    string `gorm:"column:deviasi_decision"`
+	DeviasiReason      string `gorm:"column:deviasi_reason"`
 }
 
 type InquiryDataCa struct {
@@ -1644,6 +1648,7 @@ type InquiryDataCa struct {
 	Emcon          CustomerEmcon       `json:"emcon"`
 	Address        DataAddress         `json:"address"`
 	Photo          []DataPhoto         `json:"photo"`
+	Deviasi        Deviasi             `json:"deviasi"`
 }
 
 type DataCa struct {
@@ -1811,6 +1816,10 @@ type InquirySearch struct {
 	EmergencyCity      string `gorm:"column:EmergencyCity"`
 	EmergencyAreaPhone string `gorm:"column:EmergencyAreaPhone"`
 	EmergencyPhone     string `gorm:"column:EmergencyPhone"`
+	DeviasiID          string `gorm:"column:deviasi_id"`
+	DeviasiDescription string `gorm:"column:deviasi_description"`
+	DeviasiDecision    string `gorm:"column:deviasi_decision"`
+	DeviasiReason      string `gorm:"column:deviasi_reason"`
 }
 
 type InquiryDataSearch struct {
@@ -1825,6 +1834,7 @@ type InquiryDataSearch struct {
 	Emcon          CustomerEmcon      `json:"emcon"`
 	Address        DataAddress        `json:"address"`
 	Photo          []DataPhoto        `json:"photo"`
+	Deviasi        Deviasi            `json:"deviasi"`
 }
 
 type DataPersonal struct {
@@ -1888,6 +1898,7 @@ type InquiryDataApproval struct {
 	Emcon          CustomerEmcon       `json:"emcon"`
 	Address        DataAddress         `json:"address"`
 	Photo          []DataPhoto         `json:"photo"`
+	Deviasi        Deviasi             `json:"deviasi"`
 }
 
 type DataApproval struct {
@@ -2410,6 +2421,52 @@ func (c *TrxCmoNoFPD) TableName() string {
 
 type EncryptString struct {
 	Encrypt string `json:"encrypt"`
+}
+
+type Deviasi struct {
+	DeviasiID          string `json:"deviasi_id"`
+	DeviasiDescription string `json:"deviasi_description"`
+	DeviasiDecision    string `json:"deviasi_decision"`
+	DeviasiReason      string `json:"deviasi_reason"`
+}
+
+type TrxDeviasi struct {
+	ProspectID string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	DeviasiID  string    `gorm:"type:varchar(20);column:deviasi_id"`
+	Reason     string    `gorm:"type:varchar(255);column:reason"`
+	CreatedAt  time.Time `gorm:"column:created_at" json:"-"`
+}
+
+func (c *TrxDeviasi) TableName() string {
+	return "trx_deviasi"
+}
+
+type MappingKodeDeviasi struct {
+	DeviasiID string `gorm:"type:varchar(20);column:deviasi_id"`
+	Deskripsi string `gorm:"type:varchar(255);column:deskripsi"`
+}
+
+func (c *MappingKodeDeviasi) TableName() string {
+	return "m_kode_deviasi"
+}
+
+type MappingBranchDeviasi struct {
+	BranchID      string `gorm:"type:varchar(10);column:BranchID" json:"branch_id"`
+	FinalApproval string `gorm:"type:varchar(3);column:final_approval"`
+}
+
+func (c *MappingBranchDeviasi) TableName() string {
+	return "m_branch_deviasi"
+}
+
+type MasterMappingDeviasiDSR struct {
+	TotalIncomeStart float64 `gorm:"column:total_income_start"`
+	TotalIncomeEnd   float64 `gorm:"column:total_income_end"`
+	DSRThreshold     float64 `gorm:"column:dsr_threshold"`
+}
+
+func (c *MasterMappingDeviasiDSR) TableName() string {
+	return "m_mapping_deviasi_dsr"
 }
 
 type MappingVehicleAge struct {
