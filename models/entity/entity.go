@@ -2451,8 +2451,17 @@ func (c *MappingKodeDeviasi) TableName() string {
 }
 
 type MappingBranchDeviasi struct {
-	BranchID      string `gorm:"type:varchar(10);column:BranchID" json:"branch_id"`
-	FinalApproval string `gorm:"type:varchar(3);column:final_approval"`
+	BranchID       string    `gorm:"type:varchar(10);column:BranchID" json:"branch_id"`
+	FinalApproval  string    `gorm:"type:varchar(3);column:final_approval"`
+	QuotaAmount    float64   `gorm:"column:quota_amount" json:"quota_amount"`
+	QuotaAccount   int       `gorm:"column:quota_account" json:"quota_account"`
+	BookingAmount  float64   `gorm:"column:booking_amount" json:"booking_amount"`
+	BookingAccount int       `gorm:"column:booking_account" json:"booking_account"`
+	BalanceAmount  float64   `gorm:"column:balance_amount" json:"balance_amount"`
+	BalanceAccount int       `gorm:"column:balance_account" json:"balance_account"`
+	IsActive       bool      `gorm:"column:is_active" json:"is_active"`
+	UpdatedAt      time.Time `gorm:"column:updated_at" json:"updated_at"`
+	UpdatedBy      string    `gorm:"type:varchar(255);column:updated_by" json:"updated_by"`
 }
 
 func (c *MappingBranchDeviasi) TableName() string {
