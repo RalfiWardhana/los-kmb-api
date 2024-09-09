@@ -2093,7 +2093,7 @@ func (r repoHandler) MasterMappingDeviasiDSR(totalIncome float64) (data entity.M
 	return
 }
 
-func (r repoHandler) GetBranchDeviasi(BranchID string) (data entity.MappingBranchDeviasi, err error) {
+func (r repoHandler) GetBranchDeviasi(BranchID string, customerStatus string, NTF float64) (data entity.MappingBranchDeviasi, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
@@ -2102,9 +2102,26 @@ func (r repoHandler) GetBranchDeviasi(BranchID string) (data entity.MappingBranc
 	defer cancel()
 
 	db := r.newKmbDB.BeginTx(ctx, &x)
-	defer db.Commit()
+	defer func() {
+		if r := recover(); r != nil {
+			db.Rollback()
+			panic(r)
+		} else if err != nil {
+			db.Rollback()
+		} else {
+			db.Commit()
+		}
+	}()
 
-	if err = db.Raw("SELECT * FROM dbo.m_branch_deviasi WITH (nolock) WHERE BranchID = ?", BranchID).Scan(&data).Error; err != nil {
+	query := "SELECT * FROM dbo.m_branch_deviasi WITH (UPDLOCK) WHERE BranchID = ? AND is_active = 1"
+	args := []interface{}{BranchID}
+
+	if customerStatus != constant.STATUS_KONSUMEN_RO && customerStatus != constant.STATUS_KONSUMEN_AO {
+		query += " AND balance_amount >= ? AND balance_account >= 1"
+		args = append(args, NTF)
+	}
+
+	if err = db.Raw(query, args...).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
