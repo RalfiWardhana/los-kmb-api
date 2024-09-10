@@ -852,17 +852,27 @@ func (_m *Repository) SaveWorker(trxworker entity.TrxWorker) error {
 }
 
 // SubmitApproval provides a mock function with given fields: req, trxStatus, trxDetail, trxRecalculate, approval
-func (_m *Repository) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, trxRecalculate entity.TrxRecalculate, approval response.RespApprovalScheme) error {
+func (_m *Repository) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, trxRecalculate entity.TrxRecalculate, approval response.RespApprovalScheme) (entity.TrxStatus, error) {
 	ret := _m.Called(req, trxStatus, trxDetail, trxRecalculate, approval)
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(request.ReqSubmitApproval, entity.TrxStatus, entity.TrxDetail, entity.TrxRecalculate, response.RespApprovalScheme) error); ok {
+	var r0 entity.TrxStatus
+	var r1 error
+	if rf, ok := ret.Get(0).(func(request.ReqSubmitApproval, entity.TrxStatus, entity.TrxDetail, entity.TrxRecalculate, response.RespApprovalScheme) (entity.TrxStatus, error)); ok {
+		return rf(req, trxStatus, trxDetail, trxRecalculate, approval)
+	}
+	if rf, ok := ret.Get(0).(func(request.ReqSubmitApproval, entity.TrxStatus, entity.TrxDetail, entity.TrxRecalculate, response.RespApprovalScheme) entity.TrxStatus); ok {
 		r0 = rf(req, trxStatus, trxDetail, trxRecalculate, approval)
 	} else {
-		r0 = ret.Error(0)
+		r0 = ret.Get(0).(entity.TrxStatus)
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(request.ReqSubmitApproval, entity.TrxStatus, entity.TrxDetail, entity.TrxRecalculate, response.RespApprovalScheme) error); ok {
+		r1 = rf(req, trxStatus, trxDetail, trxRecalculate, approval)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // SubmitNE provides a mock function with given fields: req, filtering, elaboreateLTV, journey
