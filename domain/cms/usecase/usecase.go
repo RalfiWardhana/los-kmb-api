@@ -1106,7 +1106,7 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 			NextStep:              trxDetail.NextStep.(string),
 		}
 
-		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail)
+		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, false)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")
 			return
@@ -1447,7 +1447,7 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 			SourceDecision:        trxDetail.SourceDecision,
 		}
 
-		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail)
+		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, true)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Process Cancel Order error")
 			return

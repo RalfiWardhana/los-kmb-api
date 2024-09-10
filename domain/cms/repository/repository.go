@@ -2460,7 +2460,7 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 	return
 }
 
-func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxHistoryApproval entity.TrxHistoryApprovalScheme, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
+func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxHistoryApproval entity.TrxHistoryApprovalScheme, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, isCancel bool) (err error) {
 
 	trxCaDecision.CreatedAt = time.Now()
 	trxStatus.CreatedAt = time.Now()
@@ -2507,6 +2507,35 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 				ProspectID: trxStatus.ProspectID,
 			}
 			tx.Create(&trxAkkk)
+		}
+
+		if isCancel {
+			var ntf float64
+			var branchID string
+
+			selectQuery := `
+                SELECT mbd.BranchID, ta.NTF 
+                FROM trx_deviasi AS td WITH (UPDLOCK)
+                LEFT JOIN trx_apk AS ta ON (td.ProspectID = ta.ProspectID)
+                LEFT JOIN trx_master AS tm ON (td.ProspectID = tm.ProspectID)
+                LEFT JOIN m_branch_deviasi AS mbd ON (tm.BranchID = mbd.BranchID)
+                WHERE ta.ProspectID = ?
+            `
+			if err = tx.Raw(selectQuery, trxCaDecision.ProspectID).Row().Scan(&branchID, &ntf); err != nil {
+				return err
+			}
+
+			updateQuery := `
+                UPDATE m_branch_deviasi
+                SET booking_amount = booking_amount - ?,
+                    booking_account = booking_account - 1,
+                    balance_amount = (quota_amount - booking_amount) + ?,
+                    balance_account = (quota_account - booking_account) + 1
+                WHERE BranchID = ?
+            `
+			if err = tx.Exec(updateQuery, ntf, ntf, branchID).Error; err != nil {
+				return err
+			}
 		}
 
 		return nil
