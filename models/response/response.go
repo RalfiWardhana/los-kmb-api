@@ -75,6 +75,7 @@ type IntegratorScorePro struct {
 	Segmen      string      `json:"segmen"`
 	IsTsi       bool        `json:"is_tsi"`
 	ScoreBin    interface{} `json:"score_bin"`
+	Deviasi     interface{} `json:"deviasi"`
 }
 
 type ScorePro struct {
