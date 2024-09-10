@@ -1921,6 +1921,7 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 	var (
 		trxDetail                                     entity.TrxDetail
 		trxStatus                                     entity.TrxStatus
+		status                                        entity.TrxStatus
 		recentDP                                      entity.AFMobilePhone
 		trxRecalculate                                entity.TrxRecalculate
 		approvalScheme                                response.RespApprovalScheme
@@ -2031,19 +2032,32 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 		}
 	}
 
-	err = u.repository.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+	status, err = u.repository.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error")
 		return
 	}
 
-	data = response.ApprovalResponse{
-		ProspectID:     req.ProspectID,
-		Decision:       req.Decision,
-		Reason:         req.Reason,
-		Note:           req.Note,
-		IsFinal:        approvalScheme.IsFinal,
-		NeedEscalation: approvalScheme.IsEscalation,
+	if status.Reason == constant.REASON_REJECT_KUOTA_DEVIASI {
+		data = response.ApprovalResponse{
+			ProspectID:     req.ProspectID,
+			Decision:       constant.DECISION_REJECT,
+			Code:           constant.CODE_REJECT_KUOTA_DEVIASI,
+			Reason:         status.Reason,
+			Note:           status.Reason,
+			IsFinal:        approvalScheme.IsFinal,
+			NeedEscalation: approvalScheme.IsEscalation,
+		}
+	} else {
+		data = response.ApprovalResponse{
+			ProspectID:     req.ProspectID,
+			Decision:       req.Decision,
+			Code:           req.RuleCode,
+			Reason:         req.Reason,
+			Note:           req.Note,
+			IsFinal:        approvalScheme.IsFinal,
+			NeedEscalation: approvalScheme.IsEscalation,
+		}
 	}
 
 	return

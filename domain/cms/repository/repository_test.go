@@ -5916,6 +5916,14 @@ func TestProcessReturnOrder(t *testing.T) {
 			WithArgs(ppid).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
+		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "trx_final_approval" WHERE (ProspectID = ?)`)).
+			WithArgs(ppid).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "trx_agreements" WHERE (ProspectID = ?)`)).
+			WithArgs(ppid).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","reason","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
 			WithArgs(trxDetail.ProspectID, trxDetail.StatusProcess, trxDetail.Activity, trxDetail.Decision, trxDetail.RuleCode, trxDetail.SourceDecision, trxDetail.NextStep, sqlmock.AnyArg(), trxDetail.Info, trxDetail.Reason, trxDetail.CreatedBy, sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -10432,6 +10440,18 @@ func TestSubmitApproval(t *testing.T) {
 		}
 
 		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT ts.ProspectID, 
+			CASE 
+				WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
+				ELSE NULL
+			END AS activity 
+			FROM trx_status ts with (UPDLOCK)
+			LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+			LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
+			WHERE ts.ProspectID = 'ppid' AND ts.status_process = 'ONP'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "activity"}).
+				AddRow("ppid", ""))
+
 		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "source_decision" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
 			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -10446,9 +10466,9 @@ func TestSubmitApproval(t *testing.T) {
 
 		mock.ExpectCommit()
 
-		err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+		trxStatus, err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
 		if err != nil {
-			t.Errorf("error '%s' was not expected, but got: ", err)
+			t.Errorf("error '%s'", err.Error())
 		}
 	})
 
@@ -10520,6 +10540,18 @@ func TestSubmitApproval(t *testing.T) {
 		}
 
 		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT ts.ProspectID, 
+			CASE 
+				WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
+				ELSE NULL
+			END AS activity 
+			FROM trx_status ts with (UPDLOCK)
+			LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+			LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
+			WHERE ts.ProspectID = 'ppid' AND ts.status_process = 'ONP'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "activity"}).
+				AddRow("ppid", ""))
+
 		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "source_decision" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
 			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -10538,7 +10570,7 @@ func TestSubmitApproval(t *testing.T) {
 
 		mock.ExpectCommit()
 
-		err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+		trxStatus, err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
 		}
@@ -10613,6 +10645,18 @@ func TestSubmitApproval(t *testing.T) {
 		}
 
 		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT ts.ProspectID, 
+			CASE 
+				WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
+				ELSE NULL
+			END AS activity 
+			FROM trx_status ts with (UPDLOCK)
+			LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+			LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
+			WHERE ts.ProspectID = 'ppid' AND ts.status_process = 'ONP'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "activity"}).
+				AddRow("ppid", ""))
+
 		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
 			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -10631,13 +10675,13 @@ func TestSubmitApproval(t *testing.T) {
 
 		mock.ExpectCommit()
 
-		err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+		trxStatus, err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
 		}
 	})
 
-	t.Run("success submit rej final approval", func(t *testing.T) {
+	t.Run("success submit apr final approval", func(t *testing.T) {
 		os.Setenv("CLIENT_LOS", "2ck21b02")
 		os.Setenv("AUTH_LOS", "xYtKHAWHn2sZLm1IbXXu")
 		os.Setenv("INSERT_STAGING_URL", "http://10.9.100.131/los-kmb-api/api/v3/kmb/insert-staging")
@@ -10645,7 +10689,7 @@ func TestSubmitApproval(t *testing.T) {
 		req := request.ReqSubmitApproval{
 			ProspectID:     "ppid",
 			FinalApproval:  "GMO",
-			Decision:       "REJECT",
+			Decision:       "APPROVE",
 			NeedEscalation: false,
 			RuleCode:       "3750",
 			Alias:          "GMO",
@@ -10727,6 +10771,18 @@ func TestSubmitApproval(t *testing.T) {
 		}
 
 		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT ts.ProspectID, 
+			CASE 
+				WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
+				ELSE NULL
+			END AS activity 
+			FROM trx_status ts with (UPDLOCK)
+			LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+			LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
+			WHERE ts.ProspectID = 'ppid' AND ts.status_process = 'ONP'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "activity"}).
+				AddRow("ppid", ""))
+
 		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
 			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -10755,11 +10811,124 @@ func TestSubmitApproval(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_worker" ("ProspectID","activity","endpoint_target","endpoint_method","payload","header","response_timeout","api_type","max_retry","count_retry","created_at","category","action","status_code","sequence") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
 			WithArgs("ppid", "UNPR", "http://10.9.100.131/los-kmb-api/api/v3/kmb/insert-staging/ppid", "POST", sqlmock.AnyArg(), sqlmock.AnyArg(), 30, "RAW", 6, 0, sqlmock.AnyArg(), "CONFINS", "INSERT_STAGING_KMB", sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(1, 1))
-
-		mock.ExpectCommit()
 		mock.ExpectCommit()
 
-		err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+		mock.ExpectCommit()
+
+		trxStatus, err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
+	t.Run("success submit rej final approval", func(t *testing.T) {
+		os.Setenv("CLIENT_LOS", "2ck21b02")
+		os.Setenv("AUTH_LOS", "xYtKHAWHn2sZLm1IbXXu")
+		os.Setenv("INSERT_STAGING_URL", "http://10.9.100.131/los-kmb-api/api/v3/kmb/insert-staging")
+
+		req := request.ReqSubmitApproval{
+			ProspectID:     "ppid",
+			FinalApproval:  "GMO",
+			Decision:       "REJECT",
+			NeedEscalation: false,
+			RuleCode:       "3750",
+			Alias:          "GMO",
+			Reason:         "Oke",
+			Note:           "final di gmo",
+			CreatedBy:      "abc123",
+			DecisionBy:     "GMO KMB",
+		}
+
+		switch req.Decision {
+		case constant.DECISION_REJECT:
+			decision = rej
+			decision_detail = rej
+
+		case constant.DECISION_APPROVE:
+			decision = apr
+			decision_detail = pas
+
+		case constant.DECISION_RETURN:
+			decision = rtn
+			decision_detail = rtn
+		}
+
+		approvalScheme, _ = utils.ApprovalScheme(req)
+
+		trxStatus := entity.TrxStatus{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  onp,
+			Activity:       unpr,
+			Decision:       cpr,
+			RuleCode:       req.RuleCode,
+			SourceDecision: approvalScheme.NextStep,
+			Reason:         req.Reason,
+		}
+
+		trxDetail := entity.TrxDetail{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  onp,
+			Activity:       prcd,
+			Decision:       decision_detail,
+			RuleCode:       req.RuleCode,
+			SourceDecision: req.Alias,
+			Info:           req.Reason,
+			CreatedBy:      req.CreatedBy,
+			Reason:         req.Reason,
+		}
+
+		trxHistoryApproval := entity.TrxHistoryApprovalScheme{
+			ProspectID:     req.ProspectID,
+			Decision:       decision,
+			Reason:         req.Reason,
+			Note:           req.Note,
+			CreatedBy:      req.CreatedBy,
+			DecisionBy:     req.DecisionBy,
+			SourceDecision: trxDetail.SourceDecision,
+			NextStep:       approvalScheme.NextStep,
+		}
+
+		trxFinalApproval := entity.TrxFinalApproval{
+			ProspectID: req.ProspectID,
+			Decision:   decision,
+			Reason:     req.Reason,
+			Note:       req.Note,
+			CreatedBy:  req.CreatedBy,
+			DecisionBy: req.DecisionBy,
+		}
+
+		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT ts.ProspectID, 
+			CASE 
+				WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
+				ELSE NULL
+			END AS activity 
+			FROM trx_status ts with (UPDLOCK)
+			LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+			LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
+			WHERE ts.ProspectID = 'ppid' AND ts.status_process = 'ONP'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "activity"}).
+				AddRow("ppid", ""))
+
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
+			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","reason","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxDetail.ProspectID, trxDetail.StatusProcess, trxDetail.Activity, trxDetail.Decision, trxDetail.RuleCode, trxDetail.SourceDecision, trxDetail.NextStep, sqlmock.AnyArg(), trxDetail.Info, trxDetail.Reason, trxDetail.CreatedBy, sqlmock.AnyArg()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_history_approval_scheme" ("id","ProspectID","decision","reason","note","created_at","created_by","decision_by","need_escalation","next_final_approval_flag","source_decision","next_step") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(sqlmock.AnyArg(), trxHistoryApproval.ProspectID, trxHistoryApproval.Decision, trxHistoryApproval.Reason, trxHistoryApproval.Note, sqlmock.AnyArg(), trxHistoryApproval.CreatedBy, trxHistoryApproval.DecisionBy, sqlmock.AnyArg(), sqlmock.AnyArg(), trxHistoryApproval.SourceDecision, trxHistoryApproval.NextStep).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_final_approval" ("ProspectID","decision","reason","note","created_at","created_by","decision_by") VALUES (?,?,?,?,?,?,?)`)).
+			WithArgs(trxFinalApproval.ProspectID, trxFinalApproval.Decision, trxFinalApproval.Reason, trxFinalApproval.Note, sqlmock.AnyArg(), trxFinalApproval.CreatedBy, trxFinalApproval.DecisionBy).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectCommit()
+
+		trxStatus, err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
 		}
