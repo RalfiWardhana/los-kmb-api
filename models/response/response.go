@@ -865,6 +865,7 @@ type ApprovalResponse struct {
 	ProspectID     string `json:"prospect_id"`
 	Decision       string `json:"decision"`
 	Reason         string `json:"reason"`
+	Code           string `json:"code"`
 	Note           string `json:"note"`
 	IsFinal        bool   `json:"is_final"`
 	NeedEscalation bool   `json:"need_escalation"`

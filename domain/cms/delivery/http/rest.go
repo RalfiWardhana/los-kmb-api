@@ -903,9 +903,9 @@ func (c *handlerCMS) SubmitApproval(ctx echo.Context) (err error) {
 	if data.IsFinal && !data.NeedEscalation && data.Decision != constant.DECISION_RETURN {
 		response := response.Metrics{
 			ProspectID:     data.ProspectID,
-			Code:           req.RuleCode,
-			Decision:       req.Decision,
-			DecisionReason: string(data.Reason),
+			Code:           data.Code,
+			Decision:       data.Decision,
+			DecisionReason: data.Reason,
 		}
 
 		responseEvent := c.Json.EventSuccess(ctx.Request().Context(), accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", req, response)

@@ -3119,13 +3119,73 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 	return
 }
 
-func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, trxRecalculate entity.TrxRecalculate, approval response.RespApprovalScheme) (err error) {
+func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, trxRecalculate entity.TrxRecalculate, approval response.RespApprovalScheme) (status entity.TrxStatus, err error) {
 
 	trxStatus.CreatedAt = time.Now()
 	trxDetail.CreatedAt = time.Now()
 	trxRecalculate.CreatedAt = time.Now()
 
-	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
+	err = r.NewKmb.Transaction(func(tx *gorm.DB) error {
+
+		// cek trx status terbaru dan pengajuan deviasi atau bukan
+		var cekstatus entity.TrxStatus
+		if err := r.NewKmb.Raw(fmt.Sprintf(`SELECT ts.ProspectID, 
+				CASE 
+					WHEN td.ProspectID IS NOT NULL THEN 'DEV'
+					ELSE NULL
+				END AS activity 
+				FROM trx_status ts with (UPLOCK)
+				LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
+				WHERE ts.ProspectID = '%s' AND ts.status_process = '%s'`, trxStatus.ProspectID, constant.STATUS_ONPROCESS)).Scan(&cekstatus).Error; err != nil {
+			return err
+		}
+
+		// cek kuota deviasi
+		var confirmDeviasi entity.ConfirmDeviasi
+		if approval.IsFinal && !approval.IsEscalation && req.Decision == constant.DECISION_APPROVE && cekstatus.Activity == constant.SOURCE_DECISION_DEVIASI {
+			if err := r.NewKmb.Raw(fmt.Sprintf(`SELECT ta.NTF, mbd.*
+					CASE 
+						WHEN mbd.balance_amount >= ta.NTF AND mbd.balance_account > 0 THEN 1
+						ELSE 0
+					END AS deviasi
+					FROM trx_master tm 
+					LEFT JOIN trx_apk ta ON tm.ProspectID = ta.ProspectID 
+					LEFT JOIN m_branch_deviasi mbd ON tm.BranchID = mbd.BranchID 
+					WHERE tm.ProspectID = '%s'`, trxStatus.ProspectID)).Scan(&confirmDeviasi).Error; err != nil {
+				return err
+			}
+
+			info, _ := json.Marshal(confirmDeviasi)
+			trxDetail.Info = string(info)
+
+			// jika pengajuan deviasi approve maka cek kuota dan kurangi kuota deviasi
+			if confirmDeviasi.IsActive && confirmDeviasi.Deviasi {
+				// kuota tersedia, kurangi kuota deviasi
+				mappingBranchDeviasi := entity.MappingBranchDeviasi{
+					BookingAmount:  confirmDeviasi.BookingAmount + confirmDeviasi.NTF,
+					BookingAccount: confirmDeviasi.BookingAccount + 1,
+					BalanceAmount:  confirmDeviasi.BalanceAmount - confirmDeviasi.NTF,
+					BalanceAccount: confirmDeviasi.BalanceAccount - 1,
+				}
+
+				if err := tx.Model(&mappingBranchDeviasi).Select("booking_amount", "booking_account", "balance_amount", "balance_account").Where("BranchID = ? AND balance_amount = ? AND balance_account = ?", confirmDeviasi.BranchID, confirmDeviasi.BalanceAmount, confirmDeviasi.BalanceAccount).Updates(mappingBranchDeviasi).Error; err != nil {
+					return err
+				}
+
+			} else {
+				// kuota tidak tersedia, reject deviasi
+				// tidak mengubah rule_code karena rule_code digunakan didetail transaksi (rule_code credit committe)
+				trxStatus.Decision = constant.DB_DECISION_REJECT
+				trxStatus.Reason = constant.REASON_REJECT_KUOTA_DEVIASI
+
+				trxDetail.Decision = constant.DB_DECISION_REJECT
+				trxDetail.Reason = constant.REASON_REJECT_KUOTA_DEVIASI
+
+				req.Decision = constant.DECISION_REJECT
+				req.Reason = constant.REASON_REJECT_KUOTA_DEVIASI
+				req.Note = constant.REASON_REJECT_KUOTA_DEVIASI
+			}
+		}
 
 		// trx_status
 		if err := tx.Model(&trxStatus).Where("ProspectID = ?", trxStatus.ProspectID).Updates(trxStatus).Error; err != nil {
@@ -3222,53 +3282,59 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			}
 
 			// will insert trx_agreement
-			getAFPhone, _ := r.GetAFMobilePhone(req.ProspectID)
+			if decision == constant.DB_DECISION_APR {
 
-			trxAgreement := entity.TrxAgreement{
-				ProspectID:         req.ProspectID,
-				CheckingStatus:     constant.ACTIVITY_UNPROCESS,
-				ContractStatus:     "0",
-				AF:                 getAFPhone.AFValue,
-				MobilePhone:        getAFPhone.MobilePhone,
-				CustomerIDKreditmu: constant.LOB_NEW_KMB,
-			}
+				getAFPhone, _ := r.GetAFMobilePhone(req.ProspectID)
 
-			if err := tx.Create(&trxAgreement).Error; err != nil {
-				return err
-			}
+				trxAgreement := entity.TrxAgreement{
+					ProspectID:         req.ProspectID,
+					CheckingStatus:     constant.ACTIVITY_UNPROCESS,
+					ContractStatus:     "0",
+					AF:                 getAFPhone.AFValue,
+					MobilePhone:        getAFPhone.MobilePhone,
+					CustomerIDKreditmu: constant.LOB_NEW_KMB,
+				}
 
-			if err == nil && (len(req.ProspectID) > 2 && req.ProspectID[0:2] != "NE") {
-				return r.losDB.Transaction(func(tx2 *gorm.DB) error {
-					// worker insert staging
-					callbackHeaderLos, _ := json.Marshal(
-						map[string]string{
-							"X-Client-ID":   os.Getenv("CLIENT_LOS"),
-							"Authorization": os.Getenv("AUTH_LOS"),
-						})
+				if err := tx.Create(&trxAgreement).Error; err != nil {
+					return err
+				}
 
-					if err := tx2.Create(&entity.TrxWorker{
-						ProspectID:      req.ProspectID,
-						Category:        "CONFINS",
-						Action:          "INSERT_STAGING_KMB",
-						APIType:         "RAW",
-						EndPointTarget:  fmt.Sprintf("%s/%s", os.Getenv("INSERT_STAGING_URL"), req.ProspectID),
-						EndPointMethod:  constant.METHOD_POST,
-						Header:          string(callbackHeaderLos),
-						ResponseTimeout: 30,
-						MaxRetry:        6,
-						CountRetry:      0,
-						Activity:        constant.ACTIVITY_UNPROCESS,
-					}).Error; err != nil {
-						tx.Rollback()
-						return err
-					}
-					return nil
-				})
+				if err == nil && (len(req.ProspectID) > 2 && req.ProspectID[0:2] != "NE") {
+					return r.losDB.Transaction(func(tx2 *gorm.DB) error {
+						// worker insert staging
+						callbackHeaderLos, _ := json.Marshal(
+							map[string]string{
+								"X-Client-ID":   os.Getenv("CLIENT_LOS"),
+								"Authorization": os.Getenv("AUTH_LOS"),
+							})
+
+						if err := tx2.Create(&entity.TrxWorker{
+							ProspectID:      req.ProspectID,
+							Category:        "CONFINS",
+							Action:          "INSERT_STAGING_KMB",
+							APIType:         "RAW",
+							EndPointTarget:  fmt.Sprintf("%s/%s", os.Getenv("INSERT_STAGING_URL"), req.ProspectID),
+							EndPointMethod:  constant.METHOD_POST,
+							Header:          string(callbackHeaderLos),
+							ResponseTimeout: 30,
+							MaxRetry:        6,
+							CountRetry:      0,
+							Activity:        constant.ACTIVITY_UNPROCESS,
+						}).Error; err != nil {
+							tx.Rollback()
+							return err
+						}
+						return nil
+					})
+				}
+
 			}
 		}
 
 		return nil
 	})
+
+	return trxStatus, err
 }
 
 func (r repoHandler) GetMappingCluster() (data []entity.MasterMappingCluster, err error) {
