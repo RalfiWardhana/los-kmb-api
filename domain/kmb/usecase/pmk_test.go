@@ -224,7 +224,7 @@ func TestPmk(t *testing.T) {
 			empMonth:      "12",
 			stayYear:      "2020",
 			stayMonth:     "09",
-			birthDate:     "2005-09-09",
+			birthDate:     today.AddDate(-17, 0, 0).Format("2006-01-02"),
 			tenor:         12,
 			maritalStatus: "M",
 			minimalIncome: entity.MappingIncomePMK{
