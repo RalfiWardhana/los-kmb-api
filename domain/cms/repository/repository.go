@@ -2535,6 +2535,16 @@ func (r repoHandler) ProcessReturnOrder(prospectID string, trxStatus entity.TrxS
 			return err
 		}
 
+		// truncate the trx_final_approval
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&entity.TrxFinalApproval{}).Error; err != nil {
+			return err
+		}
+
+		// truncate the dbo.trx_agreements
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&entity.TrxAgreement{}).Error; err != nil {
+			return err
+		}
+
 		// insert trx_details
 		if err := tx.Create(&trxDetail).Error; err != nil {
 			return err
@@ -3144,7 +3154,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 		// cek kuota deviasi
 		var confirmDeviasi entity.ConfirmDeviasi
 		if approval.IsFinal && !approval.IsEscalation && req.Decision == constant.DECISION_APPROVE && cekstatus.Activity == constant.SOURCE_DECISION_DEVIASI {
-			if err := r.NewKmb.Raw(fmt.Sprintf(`SELECT ta.NTF, mbd.*
+			if err := r.NewKmb.Raw(fmt.Sprintf(`SELECT ta.NTF, mbd.*,
 					CASE 
 						WHEN mbd.balance_amount >= ta.NTF AND mbd.balance_account > 0 THEN 1
 						ELSE 0
