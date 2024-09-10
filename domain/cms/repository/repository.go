@@ -3134,7 +3134,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
  					WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
 					ELSE NULL
 				END AS activity 
-				FROM trx_status ts with (UPLOCK)
+				FROM trx_status ts with (UPDLOCK)
 				LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID 
 				LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
 				WHERE ts.ProspectID = '%s' AND ts.status_process = '%s'`, trxStatus.ProspectID, constant.STATUS_ONPROCESS)).Scan(&cekstatus).Error; err != nil {
