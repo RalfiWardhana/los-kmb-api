@@ -503,8 +503,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 			err = json.Unmarshal(info, &infoRespScp)
 
 			// add info deviasi
-			infoDeviasi, _ := json.Marshal(confirmDeviasi)
-			infoRespScp.Deviasi = string(utils.SafeEncoding(infoDeviasi))
+			infoRespScp.Deviasi = confirmDeviasi
 
 			// return info
 			info, _ := json.Marshal(infoRespScp)
