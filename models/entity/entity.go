@@ -2507,6 +2507,7 @@ type TrxPrincipleStepOne struct {
 	Decision           string      `gorm:"column:Decision;type:varchar(20)"`
 	Reason             string      `gorm:"column:Reason;type:varchar(255)"`
 	BPKBName           string      `gorm:"column:BPKBName;type:varchar(2)"`
+	AssetCode          string      `gorm:"column:AssetCode;type:varchar(200)"`
 	CreatedAt          time.Time   `gorm:"column:created_at"`
 }
 

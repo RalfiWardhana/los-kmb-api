@@ -47,7 +47,7 @@ func (u usecase) CheckPMK(branchID, customerKMB string, income float64, homeStat
 			timeNow = time.Now().AddDate(-configData.Data.LengthOfWork, 0, 0).Unix()
 		}
 
-		convTime, _ := time.ParseInLocation(layout, setTimetoParse(empYear, empMonth), location)
+		convTime, _ := time.ParseInLocation(layout, setTimetoParse(empMonth, empYear), location)
 
 		unixTime := convTime.Unix()
 
@@ -77,7 +77,7 @@ func (u usecase) CheckPMK(branchID, customerKMB string, income float64, homeStat
 
 		timeNow := time.Now().AddDate(-lengthOfStay, 0, 0).Unix()
 
-		convTime, _ := time.ParseInLocation(layout, setTimetoParse(stayYear, stayMonth), location)
+		convTime, _ := time.ParseInLocation(layout, setTimetoParse(stayMonth, stayYear), location)
 
 		unixTime := convTime.Unix()
 

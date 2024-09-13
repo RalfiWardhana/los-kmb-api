@@ -97,8 +97,17 @@ func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.Prin
 	// get marketing program
 	sequence += 1
 
+	paramMarketingProgram := request.PrincipleMarketingProgram{
+		UserInformation: request.UserInformation{
+			UserID:    req.UserInformation.UserID,
+			UserTitle: req.UserInformation.UserTitle,
+		},
+	}
+
+	param, _ = json.Marshal(paramMarketingProgram)
+
 	worker = append(worker, entity.TrxWorker{ProspectID: req.ProspectID, Activity: constant.WORKER_IDLE, EndPointTarget: os.Getenv("PRINCIPLE_MARKETING_PROGRAM_URL") + req.ProspectID,
-		EndPointMethod: constant.METHOD_POST, Header: string(headerParamLos),
+		EndPointMethod: constant.METHOD_POST, Header: string(headerParamLos), Payload: string(param),
 		ResponseTimeout: timeOut, APIType: constant.WORKER_TYPE_RAW, MaxRetry: 6, CountRetry: 0,
 		Category: constant.WORKER_CATEGORY_PRINCIPLE_KMB, Action: constant.WORKER_ACTION_GET_MARKETING_PROGRAM, Sequence: sequence,
 	})

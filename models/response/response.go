@@ -1103,3 +1103,32 @@ type MDMMasterMappingLicensePlateRecord struct {
 	DeletedAt       *string `json:"deleted_at,omitempty"`
 	DeletedBy       *string `json:"deleted_by,omitempty"`
 }
+
+type MDMMasterDetailBranchResponse struct {
+	Code      string                    `json:"code"`
+	Message   string                    `json:"message"`
+	Data      MDMMasterDetailBranchData `json:"data"`
+	Errors    interface{}               `json:"errors"`
+	RequestID string                    `json:"request_id"`
+	Timestamp string                    `json:"timestamp"`
+}
+
+type MDMMasterDetailBranchData struct {
+	BranchID      string  `json:"branch_id"`
+	BranchName    string  `json:"branch_name"`
+	CreatedAt     string  `json:"created_at"`
+	CreatedBy     string  `json:"created_by"`
+	UpdatedAt     *string `json:"updated_at,omitempty"`
+	UpdatedBy     *string `json:"updated_by,omitempty"`
+	IsActive      bool    `json:"is_active"`
+	BranchAddress string  `json:"branch_address"`
+}
+
+type SallySubmit2wPrincipleResponse struct {
+	Code      int         `json:"code"`
+	Message   string      `json:"message"`
+	Data      interface{} `json:"data"`
+	Errors    interface{} `json:"errors"`
+	RequestID string      `json:"request_id"`
+	Timestamp string      `json:"timestamp"`
+}

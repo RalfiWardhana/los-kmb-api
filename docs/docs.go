@@ -1769,6 +1769,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v3/kmb/core-customer/{prospectID}": {
+            "post": {
+                "description": "KmbPrinciple",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KmbPrinciple"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Prospect ID",
+                        "name": "prospectID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.PrincipleCoreCustomer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v3/kmb/elaborate": {
             "post": {
                 "description": "ElaborateLTV",
@@ -2158,6 +2219,67 @@ const docTemplate = `{
                         "name": "prospectID",
                         "in": "path",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/marketing-program/{prospectID}": {
+            "post": {
+                "description": "KmbPrinciple",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KmbPrinciple"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Prospect ID",
+                        "name": "prospectID",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.PrincipleMarketingProgram"
+                        }
                     }
                 ],
                 "responses": {
@@ -4378,6 +4500,7 @@ const docTemplate = `{
         "request.PrincipleAsset": {
             "type": "object",
             "required": [
+                "asset_code",
                 "branch_id",
                 "brand",
                 "cc",
@@ -4405,6 +4528,11 @@ const docTemplate = `{
                 "tax_date"
             ],
             "properties": {
+                "asset_code": {
+                    "type": "string",
+                    "maxLength": 200,
+                    "example": "SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"
+                },
                 "branch_id": {
                     "type": "string",
                     "maxLength": 10,
@@ -4540,6 +4668,17 @@ const docTemplate = `{
                 }
             }
         },
+        "request.PrincipleCoreCustomer": {
+            "type": "object",
+            "required": [
+                "user_information"
+            ],
+            "properties": {
+                "user_information": {
+                    "$ref": "#/definitions/request.UserInformation"
+                }
+            }
+        },
         "request.PrincipleElaborateLTV": {
             "type": "object",
             "required": [
@@ -4666,6 +4805,17 @@ const docTemplate = `{
                 "zip_code": {
                     "type": "string",
                     "example": "12790"
+                }
+            }
+        },
+        "request.PrincipleMarketingProgram": {
+            "type": "object",
+            "required": [
+                "user_information"
+            ],
+            "properties": {
+                "user_information": {
+                    "$ref": "#/definitions/request.UserInformation"
                 }
             }
         },

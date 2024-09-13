@@ -296,6 +296,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 
 	var (
 		data                response.Filtering
+		principleStepOne    entity.TrxPrincipleStepOne
 		trxPrincipleStepTwo entity.TrxPrincipleStepTwo
 	)
 
@@ -373,11 +374,31 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			trxPrincipleStepTwo.Decision = data.Decision
 			trxPrincipleStepTwo.Reason = data.Reason
 
-			_ = u.repository.SavePrincipleStepTwo(trxPrincipleStepTwo)
+			err = u.repository.SavePrincipleStepTwo(trxPrincipleStepTwo)
+			if err != nil {
+				return
+			}
+
+			err = u.repository.UpdatePrincipleStepOne(r.ProspectID, principleStepOne)
+			if err != nil {
+				return
+			}
 		}
 	}()
 
-	draft, _ := u.repository.GetDraftPrinciple(r.ProspectID)
+	principleStepOne, err = u.repository.GetPrincipleStepOne(r.ProspectID)
+	if err != nil {
+		return
+	}
+
+	bpkbNameType := "O"
+	if principleStepOne.OwnerAsset == r.LegalName {
+		bpkbNameType = "K"
+	} else if principleStepOne.OwnerAsset == r.SpouseLegalName {
+		bpkbNameType = "P"
+	}
+
+	principleStepOne.BPKBName = bpkbNameType
 
 	dupcheckConfig, err := u.repository.GetConfig("dupcheck", constant.LOB_KMB_OFF, "dupcheck_kmb_config")
 
@@ -451,7 +472,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	)
 
 	income := r.MonthlyFixedIncome + r.SpouseIncome
-	save := entity.FilteringKMB{ProspectID: r.ProspectID, RequestID: ctx.Value(echo.HeaderXRequestID).(string), BranchID: draft.BranchID, BpkbName: draft.BPKBName}
+	save := entity.FilteringKMB{ProspectID: r.ProspectID, RequestID: ctx.Value(echo.HeaderXRequestID).(string), BranchID: principleStepOne.BranchID, BpkbName: principleStepOne.BPKBName}
 	customer = append(customer, request.SpouseDupcheck{IDNumber: r.IDNumber, LegalName: r.LegalName, BirthDate: r.BirthDate, MotherName: r.SurgateMotherName})
 
 	if r.MaritalStatus == constant.MARRIED {
@@ -511,7 +532,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 
 	mainCustomer.CustomerStatus = mainCustomer.CustomerStatusKMB
 
-	pmk, _ := u.usecase.CheckPMK(draft.BranchID, mainCustomer.CustomerStatusKMB, income, draft.HomeStatus, r.ProfessionID, r.BirthDate, 12, r.MaritalStatus, r.EmploymentSinceYear, r.EmploymentSinceMonth, draft.StaySinceYear, draft.StaySinceMonth)
+	pmk, _ := u.usecase.CheckPMK(principleStepOne.BranchID, mainCustomer.CustomerStatusKMB, income, principleStepOne.HomeStatus, r.ProfessionID, r.BirthDate, 12, r.MaritalStatus, r.EmploymentSinceYear, r.EmploymentSinceMonth, principleStepOne.StaySinceYear, principleStepOne.StaySinceMonth)
 
 	trxPrincipleStepTwo.CheckPMKResult = pmk.Result
 	trxPrincipleStepTwo.CheckPMKCode = pmk.Code
@@ -529,13 +550,13 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		IDMember:          constant.USER_PBK_KMB_FILTEERING,
 		User:              constant.USER_PBK_KMB_FILTEERING,
 		ProspectID:        r.ProspectID,
-		BranchID:          draft.BranchID,
+		BranchID:          principleStepOne.BranchID,
 		IDNumber:          r.IDNumber,
 		LegalName:         r.LegalName,
 		BirthDate:         r.BirthDate,
 		SurgateMotherName: r.SurgateMotherName,
 		Gender:            r.Gender,
-		BPKBName:          draft.BPKBName,
+		BPKBName:          principleStepOne.BPKBName,
 	}
 
 	if r.MaritalStatus == constant.MARRIED && r.SpouseIDNumber != "" && r.SpouseLegalName != "" && r.SpouseBirthDate != "" && r.SpouseSurgateMotherName != "" {
@@ -549,7 +570,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 
 	/* Process Get Cluster based on CMO_ID starts here */
 
-	hrisCMO, err = u.usecase.GetEmployeeData(ctx, draft.CMOID)
+	hrisCMO, err = u.usecase.GetEmployeeData(ctx, principleStepOne.CMOID)
 	if err != nil {
 		return
 	}
@@ -559,7 +580,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		return
 	}
 
-	bpkbName := strings.Contains(os.Getenv("NAMA_SAMA"), draft.BPKBName)
+	bpkbName := strings.Contains(os.Getenv("NAMA_SAMA"), principleStepOne.BPKBName)
 
 	if bpkbName {
 		bpkb = constant.BPKB_NAMA_SAMA
@@ -572,7 +593,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		useDefaultCluster = true
 	} else {
 		// Mendapatkan value FPD dari masing-masing jenis BPKB
-		mdmFPD, err = u.usecase.GetFpdCMO(ctx, draft.CMOID, bpkb)
+		mdmFPD, err = u.usecase.GetFpdCMO(ctx, principleStepOne.CMOID, bpkb)
 		if err != nil {
 			return
 		}
@@ -600,7 +621,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	}
 
 	if useDefaultCluster {
-		savedCluster, entityTransactionCMOnoFPD, err = u.usecase.CheckCmoNoFPD(r.ProspectID, draft.CMOID, hrisCMO.CMOCategory, hrisCMO.JoinDate, clusterCMO, bpkb)
+		savedCluster, entityTransactionCMOnoFPD, err = u.usecase.CheckCmoNoFPD(r.ProspectID, principleStepOne.CMOID, hrisCMO.CMOCategory, hrisCMO.JoinDate, clusterCMO, bpkb)
 		if err != nil {
 			return
 		}
@@ -609,7 +630,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		}
 	}
 
-	save.CMOID = draft.CMOID
+	save.CMOID = principleStepOne.CMOID
 	save.CMOJoinDate = hrisCMO.JoinDate
 	save.CMOCategory = hrisCMO.CMOCategory
 	save.CMOFPD = mdmFPD.CmoFpd
@@ -700,7 +721,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		CustomerSegment: mainCustomer.CustomerSegment,
 	}
 
-	r.BpkbName = draft.BPKBName
+	r.BpkbName = principleStepOne.BPKBName
 
 	dukcapil, err := u.usecase.Dukcapil(ctx, r, reqMetricsEkyc, middlewares.UserInfoData.AccessToken)
 

@@ -992,6 +992,7 @@ type PrincipleAsset struct {
 	HomeStatus         string `json:"home_status" validate:"required,max=2" example:"SD"`
 	StaySinceYear      int    `json:"stay_since_year" validate:"required" example:"2024"`
 	StaySinceMonth     int    `json:"stay_since_month" validate:"required,min=1,max=12" example:"4"`
+	AssetCode          string `json:"asset_code" validate:"required,max=200" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
 }
 
 type PrinciplePemohon struct {
@@ -1094,6 +1095,10 @@ type PrincipleCoreCustomer struct {
 	UserInformation UserInformation `json:"user_information" validate:"required"`
 }
 
+type PrincipleMarketingProgram struct {
+	UserInformation UserInformation `json:"user_information" validate:"required"`
+}
+
 type ValidateNik struct {
 	IDNumber string `json:"id_number" validate:"required,number,len=16"`
 }
@@ -1144,4 +1149,106 @@ type ReqMarsevCalculateInstallment struct {
 	AssetCategory          string  `json:"asset_category"`
 	CustomerBirthDate      string  `json:"customer_birth_date"`
 	Tenor                  int     `json:"tenor"`
+}
+
+type ReqSallySubmit2wPrinciple struct {
+	Order            SallySubmit2wPrincipleOrder            `json:"order"`
+	Kop              SallySubmit2wPrincipleKop              `json:"kop"`
+	ObjekSewa        SallySubmit2wPrincipleObjekSewa        `json:"objeksewa"`
+	Biaya            SallySubmit2wPrincipleBiaya            `json:"biaya"`
+	ProgramMarketing SallySubmit2wPrincipleProgramMarketing `json:"program_marketing"`
+	Filtering        SallySubmit2wPrincipleFiltering        `json:"filtering"`
+}
+
+type SallySubmit2wPrincipleOrder struct {
+	Application SallySubmit2wPrincipleApplication `json:"application"`
+	Asset       SallySubmit2wPrincipleAsset       `json:"asset"`
+	Customer    SallySubmit2wPrincipleCustomer    `json:"customer"`
+	Document    []SallySubmit2wPrincipleDocument  `json:"document"`
+}
+
+type SallySubmit2wPrincipleApplication struct {
+	BranchID          string  `json:"branch_id"`
+	BranchName        string  `json:"branch_name"`
+	InstallmentAmount float64 `json:"installment_amount"`
+	ApplicationFormID int     `json:"application_form_id"`
+	OrderTypeID       int     `json:"order_type_id"`
+	ProspectID        string  `json:"prospect_id"`
+}
+
+type SallySubmit2wPrincipleAsset struct {
+	BPKBName              string `json:"bpkb_name"`
+	BPKBOwnershipStatusID int    `json:"bpkb_ownership_status_id"`
+	PoliceNo              string `json:"police_no"`
+}
+
+type SallySubmit2wPrincipleCustomer struct {
+	CustomerID string `json:"customer_id"`
+}
+
+type SallySubmit2wPrincipleDocument struct {
+	URL  string `json:"url"`
+	Type string `json:"type"`
+}
+
+type SallySubmit2wPrincipleKop struct {
+	IsPSA              bool   `json:"is_psa"`
+	PurposeOfFinancing string `json:"purpose_of_financing"`
+	FinancingObject    string `json:"financing_object"`
+}
+
+type SallySubmit2wPrincipleObjekSewa struct {
+	Documents          []SallySubmit2wPrincipleDocument `json:"documents"`
+	AssetUsageID       string                           `json:"asset_usage_id"`
+	CategoryID         string                           `json:"category_id"`
+	AssetCode          string                           `json:"asset_code"`
+	ManufacturingYear  int                              `json:"manufacturing_year"`
+	Color              string                           `json:"color"`
+	CylinderVolume     int                              `json:"cylinder_volume"`
+	IsBBN              bool                             `json:"is_bbn"`
+	PlateAreaCode      string                           `json:"plate_area_code"`
+	ChassisNumber      string                           `json:"chassis_number"`
+	MachineNumber      string                           `json:"machine_number"`
+	OTRAmount          float64                          `json:"otr_amount"`
+	ExpiredSTNKDate    string                           `json:"expired_stnk_date"`
+	ExpiredSTNKTaxDate string                           `json:"expired_stnk_tax_date"`
+	UpdatedBy          string                           `json:"updated_by"`
+}
+
+type SallySubmit2wPrincipleBiaya struct {
+	TotalOTRAmount        float64 `json:"total_otr_amount"`
+	Tenor                 int     `json:"tenor"`
+	LoanAmount            float64 `json:"loan_amount"`
+	AdminFee              float64 `json:"admin_fee"`
+	ProvisionFee          float64 `json:"provision_fee"`
+	TotalDPAmount         float64 `json:"total_dp_amount"`
+	AmountFinance         float64 `json:"amount_finance"`
+	CorrespondenceAddress string  `json:"correspondence_address"`
+	PaymentDay            int     `json:"payment_day"`
+	RentPaymentMethod     string  `json:"rent_payment_method"`
+	PersonalNPWPNumber    string  `json:"personal_npwp_number"`
+	MaxLTVLOS             int     `json:"max_ltv_los"`
+	UpdatedBy             string  `json:"updated_by"`
+	LoanAmountMaximum     float64 `json:"loan_amount_maximum"`
+}
+
+type SallySubmit2wPrincipleProgramMarketing struct {
+	ProgramMarketingID   string `json:"program_marketing_id"`
+	ProgramMarketingName string `json:"program_marketing_name"`
+	ProductOfferingID    string `json:"product_offering_id"`
+	ProductOfferingName  string `json:"product_offering_name"`
+	UpdatedBy            string `json:"updated_by"`
+}
+
+type SallySubmit2wPrincipleFiltering struct {
+	Decision          string  `json:"decision"`
+	Reason            string  `json:"reason"`
+	CustomerStatus    string  `json:"customer_status"`
+	CustomerStatusKMB string  `json:"customer_status_kmb"`
+	CustomerSegment   string  `json:"customer_segment"`
+	IsBlacklist       bool    `json:"is_blacklist"`
+	NextProcess       bool    `json:"next_process"`
+	PBKReportCustomer string  `json:"pbk_report_customer"`
+	PBKReportSpouse   string  `json:"pbk_report_spouse"`
+	BakiDebet         float64 `json:"baki_debet"`
 }

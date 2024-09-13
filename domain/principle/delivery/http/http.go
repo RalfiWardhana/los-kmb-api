@@ -244,6 +244,7 @@ func (c *handler) EmergencyContact(ctx echo.Context) (err error) {
 // @Tags KmbPrinciple
 // @Produce json
 // @Param prospectID path string true "Prospect ID"
+// @Param body body request.PrincipleCoreCustomer true "Body payload"
 // @Success 200 {object} response.ApiResponse{}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
@@ -284,11 +285,14 @@ func (c *handler) CoreCustomer(ctx echo.Context) (err error) {
 // @Tags KmbPrinciple
 // @Produce json
 // @Param prospectID path string true "Prospect ID"
+// @Param body body request.PrincipleMarketingProgram true "Body payload"
 // @Success 200 {object} response.ApiResponse{}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
 // @Router /api/v3/kmb/marketing-program/{prospectID} [post]
 func (c *handler) MarketingProgram(ctx echo.Context) (err error) {
+
+	var r request.PrincipleMarketingProgram
 
 	prospectID := ctx.Param("prospectID")
 
@@ -297,7 +301,14 @@ func (c *handler) MarketingProgram(ctx echo.Context) (err error) {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
 	}
 
-	err = c.usecase.PrincipleMarketingProgram(ctx.Request().Context(), prospectID, middlewares.UserInfoData.AccessToken)
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "800"), err)
+	}
+
+	err = c.usecase.PrincipleMarketingProgram(ctx.Request().Context(), prospectID, r, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
 

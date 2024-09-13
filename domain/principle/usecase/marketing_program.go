@@ -17,24 +17,28 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID string, accessToken string) (err error) {
+func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID string, req request.PrincipleMarketingProgram, accessToken string) (err error) {
 
 	var (
 		principleStepOne                entity.TrxPrincipleStepOne
 		principleStepTwo                entity.TrxPrincipleStepTwo
 		principleStepThree              entity.TrxPrincipleStepThree
+		principleEmergencyContact       entity.TrxPrincipleEmergencyContact
 		filteringKMB                    entity.FilteringKMB
+		trxDetailBiro                   []entity.TrxDetailBiro
 		mappingElaborateLTV             entity.MappingElaborateLTV
 		marsevLoanAmountRes             response.MarsevLoanAmountResponse
 		marsevFilterProgramRes          response.MarsevFilterProgramResponse
 		marsevCalculateInstallmentRes   response.MarsevCalculateInstallmentResponse
 		mdmMasterMappingLicensePlateRes response.MDMMasterMappingLicensePlateResponse
+		mdmMasterDetailBranchRes        response.MDMMasterDetailBranchResponse
+		sallySubmit2wPrincipleRes       response.SallySubmit2wPrincipleResponse
 		trxPrincipleMarketingProgram    entity.TrxPrincipleMarketingProgram
 		wg                              sync.WaitGroup
-		errChan                         = make(chan error, 5)
+		errChan                         = make(chan error, 7)
 	)
 
-	wg.Add(5)
+	wg.Add(7)
 	go func() {
 		defer wg.Done()
 		principleStepOne, err = u.repository.GetPrincipleStepOne(prospectID)
@@ -64,6 +68,15 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 
 	go func() {
 		defer wg.Done()
+		principleEmergencyContact, err = u.repository.GetPrincipleEmergencyContact(prospectID)
+
+		if err != nil {
+			errChan <- err
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
 		filteringKMB, err = u.repository.GetFilteringResult(prospectID)
 
 		if err != nil {
@@ -74,6 +87,15 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 	go func() {
 		defer wg.Done()
 		mappingElaborateLTV, err = u.repository.GetElaborateLtv(prospectID)
+
+		if err != nil {
+			errChan <- err
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+		trxDetailBiro, err = u.repository.GetTrxDetailBIro(prospectID)
 
 		if err != nil {
 			errChan <- err
@@ -95,6 +117,7 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 		"Authorization": os.Getenv("MARSEV_AUTHORIZATION_KEY"),
 	}
 
+	// get loan amount
 	payload := request.ReqMarsevLoanAmount{
 		BranchID:      principleStepOne.BranchID,
 		OTR:           principleStepThree.OTR,
@@ -122,6 +145,7 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 		}
 	}
 
+	// get marketing program
 	bpkbStatusCode := "DN"
 	if strings.Contains(os.Getenv("NAMA_SAMA"), principleStepOne.BPKBName) {
 		bpkbStatusCode = "SN"
@@ -199,6 +223,7 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 
 	filterProgramData := marsevFilterProgramRes.Data[0]
 
+	// calculate installment
 	headerMDM := map[string]string{
 		"Content-Type":  "application/json",
 		"Authorization": accessToken,
@@ -284,5 +309,185 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 		return
 	}
 
+	// submit to sally
+	resp, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("MDM_MASTER_BRANCH_URL")+principleStepOne.BranchID, param, headerMDM, constant.METHOD_GET, false, 0, timeOut, prospectID, accessToken)
+	if err != nil {
+		return
+	}
+
+	if resp.StatusCode() != 200 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - MDM Get Master Branch Error")
+		return
+	}
+
+	if resp.StatusCode() == 200 {
+		if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &mdmMasterDetailBranchRes); err != nil {
+			return
+		}
+	}
+
+	headerSally := map[string]string{
+		"Content-Type":  "application/json",
+		"Authorization": accessToken,
+	}
+
+	var payloadSubmitSally request.ReqSallySubmit2wPrinciple
+
+	customerID := strconv.Itoa(principleEmergencyContact.CustomerID)
+
+	payloadSubmitSally.Order.Application = request.SallySubmit2wPrincipleApplication{
+		BranchID:          principleStepOne.BranchID,
+		BranchName:        mdmMasterDetailBranchRes.Data.BranchName,
+		InstallmentAmount: principleStepThree.InstallmentAmount,
+		ApplicationFormID: 1,
+		OrderTypeID:       6,
+		ProspectID:        prospectID,
+	}
+
+	payloadSubmitSally.Order.Asset = request.SallySubmit2wPrincipleAsset{
+		PoliceNo:              principleStepOne.LicensePlate,
+		BPKBOwnershipStatusID: MapperBPKBOwnershipStatusID(principleStepOne.BPKBName),
+		BPKBName:              principleStepOne.OwnerAsset,
+	}
+
+	payloadSubmitSally.Order.Customer = request.SallySubmit2wPrincipleCustomer{
+		CustomerID: customerID,
+	}
+
+	var documents []request.SallySubmit2wPrincipleDocument
+
+	if ktpPhoto, ok := principleStepTwo.KtpPhoto.(string); ok {
+		documents = append(documents, request.SallySubmit2wPrincipleDocument{
+			URL:  ktpPhoto,
+			Type: "KTP",
+		})
+	}
+
+	payloadSubmitSally.Order.Document = documents
+
+	isPsa := false
+	if principleStepThree.Dealer == constant.DEALER_PSA {
+		isPsa = true
+	}
+
+	payloadSubmitSally.Kop = request.SallySubmit2wPrincipleKop{
+		IsPSA:              isPsa,
+		FinancingObject:    "Vehicle",
+		PurposeOfFinancing: principleStepThree.FinancePurpose,
+	}
+
+	expiredSTNKDate := principleStepOne.STNKExpiredDate.Format(constant.FORMAT_DATE)
+	expiredSTNKTaxDate := principleStepOne.TaxDate.Format(constant.FORMAT_DATE)
+	cylinderVolume, _ := strconv.Atoi(principleStepOne.CC)
+
+	payloadSubmitSally.ObjekSewa = request.SallySubmit2wPrincipleObjekSewa{
+		AssetUsageID:       "C",
+		CategoryID:         principleStepThree.AssetCategoryID,
+		AssetCode:          principleStepOne.AssetCode,
+		ManufacturingYear:  manufactureYear,
+		Color:              principleStepOne.Color,
+		CylinderVolume:     cylinderVolume,
+		PlateAreaCode:      licensePlateCode,
+		IsBBN:              false,
+		ChassisNumber:      principleStepOne.NoChassis,
+		MachineNumber:      principleStepOne.NoEngine,
+		OTRAmount:          principleStepThree.OTR,
+		ExpiredSTNKDate:    expiredSTNKDate,
+		ExpiredSTNKTaxDate: expiredSTNKTaxDate,
+		UpdatedBy:          customerID,
+	}
+
+	payloadSubmitSally.Biaya = request.SallySubmit2wPrincipleBiaya{
+		TotalOTRAmount:        principleStepThree.OTR,
+		Tenor:                 principleStepThree.Tenor,
+		LoanAmount:            trxPrincipleMarketingProgram.LoanAmount,
+		LoanAmountMaximum:     trxPrincipleMarketingProgram.LoanAmountMaximum,
+		AdminFee:              trxPrincipleMarketingProgram.AdminFee,
+		ProvisionFee:          trxPrincipleMarketingProgram.ProvisionFee,
+		TotalDPAmount:         trxPrincipleMarketingProgram.DPAmount,
+		AmountFinance:         trxPrincipleMarketingProgram.FinanceAmount,
+		PaymentDay:            1,
+		RentPaymentMethod:     "Payment Point",
+		PersonalNPWPNumber:    "",
+		CorrespondenceAddress: "Rumah",
+		MaxLTVLOS:             mappingElaborateLTV.LTV,
+		UpdatedBy:             customerID,
+	}
+
+	payloadSubmitSally.ProgramMarketing = request.SallySubmit2wPrincipleProgramMarketing{
+		ProgramMarketingID:   trxPrincipleMarketingProgram.ProgramID,
+		ProgramMarketingName: trxPrincipleMarketingProgram.ProgramName,
+		ProductOfferingID:    trxPrincipleMarketingProgram.ProductOfferingID,
+		ProductOfferingName:  trxPrincipleMarketingProgram.ProductOfferingDescription,
+		UpdatedBy:            customerID,
+	}
+
+	isBlacklist := filteringKMB.IsBlacklist == 1
+	nextProcess := filteringKMB.NextProcess == 1
+
+	var PBKReportCustomer string
+	var PBKReportSpouse string
+	for _, v := range trxDetailBiro {
+		if v.Score != "" && v.Score != constant.DECISION_PBK_NO_HIT && v.Score != constant.PEFINDO_UNSCORE {
+			if v.Subject == constant.CUSTOMER {
+				PBKReportCustomer = v.UrlPdfReport
+			}
+			if v.Subject == constant.SPOUSE {
+				PBKReportSpouse = v.UrlPdfReport
+			}
+		}
+	}
+
+	var bakiDebet float64
+	if filteringKMB.TotalBakiDebetNonCollateralBiro != nil {
+		bakiDebet = filteringKMB.TotalBakiDebetNonCollateralBiro.(float64)
+	}
+
+	payloadSubmitSally.Filtering = request.SallySubmit2wPrincipleFiltering{
+		Decision:          filteringKMB.Decision,
+		Reason:            filteringKMB.Reason.(string),
+		CustomerStatus:    customerStatus,
+		CustomerStatusKMB: "",
+		CustomerSegment:   customerSegment,
+		IsBlacklist:       isBlacklist,
+		NextProcess:       nextProcess,
+		PBKReportCustomer: PBKReportCustomer,
+		PBKReportSpouse:   PBKReportSpouse,
+		BakiDebet:         bakiDebet,
+	}
+
+	param, _ = json.Marshal(payloadSubmitSally)
+
+	resp, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("SALLY_SUBMISSION_2W_PRINCIPLE_URL"), param, headerSally, constant.METHOD_POST, false, 0, timeOut, prospectID, accessToken)
+	if err != nil {
+		return
+	}
+
+	if resp.StatusCode() != 200 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Sally Submit 2W Principle Error")
+		return
+	}
+
+	if resp.StatusCode() == 200 {
+		if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &sallySubmit2wPrincipleRes); err != nil {
+			return
+		}
+	}
+
 	return
+}
+
+func MapperBPKBOwnershipStatusID(bpkbName string) int {
+	switch bpkbName {
+	case "K":
+		return 1
+	case "P":
+		return 2
+	case "KK":
+		return 3
+	case "O":
+		return 4
+	default:
+		return 4
+	}
 }

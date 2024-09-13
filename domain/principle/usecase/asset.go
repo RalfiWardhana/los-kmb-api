@@ -100,12 +100,6 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 
 	taxDate, _ := time.Parse(constant.FORMAT_DATE, r.TaxDate)
 	stnkExpired, _ := time.Parse(constant.FORMAT_DATE, r.STNKExpiredDate)
-	bpkbName := "O"
-	if r.OwnerAsset == r.IDNumber {
-		bpkbName = "K"
-	} else if r.OwnerAsset == r.SpouseIDNumber {
-		bpkbName = "P"
-	}
 
 	_ = u.repository.SavePrincipleStepOne(entity.TrxPrincipleStepOne{
 		ProspectID:         r.ProspectID,
@@ -139,7 +133,7 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		StaySinceMonth:     r.StaySinceMonth,
 		Decision:           data.Result,
 		Reason:             data.Reason,
-		BPKBName:           bpkbName,
+		AssetCode:          r.AssetCode,
 	})
 
 	return

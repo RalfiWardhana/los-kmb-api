@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"los-kmb-api/domain/principle/interfaces"
 	"los-kmb-api/models/entity"
-	"los-kmb-api/shared/config"
 	"los-kmb-api/shared/constant"
 	"os"
 	"strconv"
@@ -295,6 +294,25 @@ func (r repoHandler) GetPrincipleStepOne(prospectID string) (data entity.TrxPrin
 	return
 }
 
+func (r repoHandler) UpdatePrincipleStepOne(prospectID string, data entity.TrxPrincipleStepOne) (err error) {
+
+	return r.newKmb.Transaction(func(tx *gorm.DB) error {
+		var existing entity.TrxPrincipleStepOne
+		if err := tx.Where("ProspectID = ?", prospectID).Order("created_at DESC").First(&existing).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Model(&entity.TrxPrincipleStepOne{}).
+			Where("ProspectID = ?", data.ProspectID).
+			Updates(&data).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		return nil
+	})
+}
+
 func (r repoHandler) SavePrincipleStepTwo(data entity.TrxPrincipleStepTwo) (err error) {
 
 	return r.newKmb.Transaction(func(tx *gorm.DB) error {
@@ -332,7 +350,7 @@ func (r repoHandler) GetPrincipleStepTwo(prospectID string) (data entity.TrxPrin
 func (r repoHandler) GetFilteringResult(prospectID string) (filtering entity.FilteringKMB, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -340,7 +358,7 @@ func (r repoHandler) GetFilteringResult(prospectID string) (filtering entity.Fil
 	db := r.newKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.newKmb.Raw("SELECT bpkb_name, customer_status, decision, next_process, max_overdue_biro, max_overdue_last12months_biro, customer_segment, total_baki_debet_non_collateral_biro, score_biro, cluster, cmo_cluster FROM trx_filtering WITH (nolock) WHERE prospect_id = ?", prospectID).Scan(&filtering).Error; err != nil {
+	if err = r.newKmb.Raw("SELECT bpkb_name, customer_status, decision, reason, is_blacklist, next_process, max_overdue_biro, max_overdue_last12months_biro, customer_segment, total_baki_debet_non_collateral_biro, score_biro, cluster, cmo_cluster FROM trx_filtering WITH (nolock) WHERE prospect_id = ?", prospectID).Scan(&filtering).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
 		}
@@ -353,7 +371,7 @@ func (r repoHandler) GetFilteringResult(prospectID string) (filtering entity.Fil
 func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster string) (data []entity.MappingElaborateLTV, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -371,7 +389,7 @@ func (r repoHandler) SaveTrxElaborateLTV(data entity.TrxElaborateLTV) (err error
 	data.CreatedAt = time.Now()
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -455,7 +473,7 @@ func (r repoHandler) GetScoreGeneratorROAO() (score entity.ScoreGenerator, err e
 func (r repoHandler) GetTrxDetailBIro(prospectID string) (trxDetailBiro []entity.TrxDetailBiro, err error) {
 	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
@@ -591,25 +609,9 @@ func (r repoHandler) SavePrincipleEmergencyContact(data entity.TrxPrincipleEmerg
 				return err
 			}
 		} else {
-			if err := tx.Model(&existing).Updates(map[string]interface{}{
-				"AreaPhone":         data.AreaPhone,
-				"Phone":             data.Phone,
-				"Name":              data.Name,
-				"Relationship":      data.Relationship,
-				"MobilePhone":       data.MobilePhone,
-				"CompanyStreetName": data.CompanyStreetName,
-				"HomeNumber":        data.HomeNumber,
-				"LocationDetails":   data.LocationDetails,
-				"RT":                data.Rt,
-				"RW":                data.Rw,
-				"Kelurahan":         data.Kelurahan,
-				"Kecamatan":         data.Kecamatan,
-				"City":              data.City,
-				"Province":          data.Province,
-				"ZipCode":           data.ZipCode,
-				"CustomerID":        data.CustomerID,
-				"KPMID":             data.KPMID,
-			}).Error; err != nil {
+			if err := tx.Model(&existing).
+				Where("ProspectID = ?", data.ProspectID).
+				Updates(data).Error; err != nil {
 				return err
 			}
 
@@ -644,7 +646,7 @@ func (r repoHandler) SaveToWorker(data []entity.TrxWorker) (err error) {
 
 	return r.los.Transaction(func(tx *gorm.DB) error {
 		for _, worker := range data {
-			if err := r.los.Create(&worker).Error; err != nil {
+			if err := tx.Create(&worker).Error; err != nil {
 				return err
 			}
 		}

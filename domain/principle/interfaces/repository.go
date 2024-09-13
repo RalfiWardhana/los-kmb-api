@@ -1,8 +1,6 @@
 package interfaces
 
-import (
-	"los-kmb-api/models/entity"
-)
+import "los-kmb-api/models/entity"
 
 type Repository interface {
 	GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig, err error)
@@ -19,6 +17,7 @@ type Repository interface {
 	CheckCMONoFPD(cmoID string, bpkbName string) (data entity.TrxCmoNoFPD, err error)
 	SavePrincipleStepOne(data entity.TrxPrincipleStepOne) (err error)
 	GetPrincipleStepOne(prospectID string) (data entity.TrxPrincipleStepOne, err error)
+	UpdatePrincipleStepOne(prospectID string, data entity.TrxPrincipleStepOne) (err error)
 	GetTrxPrincipleStatus(nik string) (data entity.TrxPrincipleStatus, err error)
 	SavePrincipleStepTwo(data entity.TrxPrincipleStepTwo) (err error)
 	GetPrincipleStepTwo(prospectID string) (data entity.TrxPrincipleStepTwo, err error)
