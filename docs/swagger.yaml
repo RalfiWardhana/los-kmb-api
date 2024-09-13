@@ -1370,6 +1370,10 @@ definitions:
       stnk_expired_date:
         example: "2025-03-20"
         type: string
+      stnk_photo:
+        example: https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/stnk_SAL-1140024081400003.jpg
+        maxLength: 250
+        type: string
       tax_date:
         example: "2022-03-02"
         type: string

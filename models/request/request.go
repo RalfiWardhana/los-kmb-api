@@ -993,6 +993,7 @@ type PrincipleAsset struct {
 	StaySinceYear      int    `json:"stay_since_year" validate:"required" example:"2024"`
 	StaySinceMonth     int    `json:"stay_since_month" validate:"required,min=1,max=12" example:"4"`
 	AssetCode          string `json:"asset_code" validate:"required,max=200" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
+	STNKPhoto          string `json:"stnk_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/stnk_SAL-1140024081400003.jpg"`
 }
 
 type PrinciplePemohon struct {

@@ -4662,6 +4662,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "2025-03-20"
                 },
+                "stnk_photo": {
+                    "type": "string",
+                    "maxLength": 250,
+                    "example": "https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/stnk_SAL-1140024081400003.jpg"
+                },
                 "tax_date": {
                     "type": "string",
                     "example": "2022-03-02"

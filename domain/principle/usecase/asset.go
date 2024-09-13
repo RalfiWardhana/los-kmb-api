@@ -134,6 +134,7 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		Decision:           data.Result,
 		Reason:             data.Reason,
 		AssetCode:          r.AssetCode,
+		STNKPhoto:          r.STNKPhoto,
 	})
 
 	return

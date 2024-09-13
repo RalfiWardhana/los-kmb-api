@@ -363,6 +363,13 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 		})
 	}
 
+	if stnkPhoto, ok := principleStepOne.STNKPhoto.(string); ok {
+		documents = append(documents, request.SallySubmit2wPrincipleDocument{
+			URL:  stnkPhoto,
+			Type: "STNK",
+		})
+	}
+
 	payloadSubmitSally.Order.Document = documents
 
 	isPsa := false
