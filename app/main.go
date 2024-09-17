@@ -26,6 +26,9 @@ import (
 	kmbDelivery "los-kmb-api/domain/kmb/delivery/http"
 	kmbRepository "los-kmb-api/domain/kmb/repository"
 	kmbUsecase "los-kmb-api/domain/kmb/usecase"
+	principleDelivery "los-kmb-api/domain/principle/delivery/http"
+	principleRepository "los-kmb-api/domain/principle/repository"
+	principleUsecase "los-kmb-api/domain/principle/usecase"
 	toolsDelivery "los-kmb-api/domain/tools/delivery/http"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/shared/authorization"
@@ -49,6 +52,7 @@ import (
 
 	"los-kmb-api/shared/common/platformevent"
 
+	"github.com/KB-FMF/los-common-library/response"
 	"github.com/KB-FMF/platform-library/event"
 	"github.com/allegro/bigcache/v3"
 	"github.com/jinzhu/gorm"
@@ -244,6 +248,13 @@ func main() {
 	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
 	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, authorization, jsonResponse, accessToken, producer)
+
+	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+	// libTrace := tracer.Initialize(os.Getenv("APP_NAME"), tracer.IsEnable(config.IsDebug), tracer.LicenseKey(os.Getenv("NEWRELIC_CONFIG_LICENSE")))
+
+	principleRepo := principleRepository.NewRepository(newKMB, kpLos, scorePro, confins)
+	principleMultiCase, principleCase := principleUsecase.NewMultiUsecase(principleRepo, httpClient)
+	principleDelivery.Handler(apiGroupv3, principleMultiCase, principleCase, principleRepo, libResponse, accessToken)
 
 	toolsDelivery.ToolsHandler(apiGroupv3, jsonResponse, accessToken, producer)
 

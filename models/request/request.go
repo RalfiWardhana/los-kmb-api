@@ -963,3 +963,293 @@ type ReqHrisCareerHistory struct {
 	Ascending bool   `json:"ascending"`
 	Query     string `json:"query"`
 }
+
+type PrincipleAsset struct {
+	ProspectID         string `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
+	IDNumber           string `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
+	SpouseIDNumber     string `json:"spouse_id_number" example:"3506126712000002"`
+	ManufactureYear    string `json:"manufacture_year" validate:"len=4,number" example:"2020"`
+	NoChassis          string `json:"chassis_number" validate:"required,max=30" example:"MHKV1AA2JBK107322"`
+	NoEngine           string `json:"engine_number" validate:"required,max=30" example:"73218JAJK"`
+	BranchID           string `json:"branch_id" validate:"required,max=10" example:"426"`
+	CC                 string `json:"cc" validate:"required,max=10" example:"1500"`
+	TaxDate            string `json:"tax_date" validate:"required,dateformat" example:"2022-03-02"`
+	STNKExpiredDate    string `json:"stnk_expired_date" validate:"required,dateformat" example:"2025-03-20"`
+	OwnerAsset         string `json:"owner_asset" validate:"required,max=50" example:"JONATHAN"`
+	LicensePlate       string `json:"license_plate" validate:"required,max=50" example:"B3006TBJ"`
+	Color              string `json:"color" validate:"required,max=50" example:"HITAM"`
+	Brand              string `json:"brand" validate:"required,max=255" example:"HONDA"`
+	ResidenceAddress   string `json:"residence_address" validate:"required,max=100" example:"Dermaga Baru"`
+	ResidenceRT        string `json:"residence_rt" validate:"required,min=1,max=3" example:"001"`
+	ResidenceRW        string `json:"residence_rw" validate:"required,min=1,max=3" example:"002"`
+	ResidenceProvice   string `json:"residence_province" validate:"required,max=50" example:"Jakarta"`
+	ResidenceCity      string `json:"residence_city" validate:"required,max=30" example:"Jakarta Timur"`
+	ResidenceKecamatan string `json:"residence_kecamatan" validate:"required,max=30" example:"Duren Sawit"`
+	ResidenceKelurahan string `json:"residence_kelurahan" validate:"required,max=30" example:"Klender"`
+	ResidenceZipCode   string `json:"residence_zipcode" validate:"required,max=5" example:"13470"`
+	ResidenceAreaPhone string `json:"residence_area_phone" validate:"required,min=2,max=4" example:"021"`
+	ResidencePhone     string `json:"residence_phone" validate:"required,max=10" example:"86605224"`
+	HomeStatus         string `json:"home_status" validate:"required,max=2" example:"SD"`
+	StaySinceYear      int    `json:"stay_since_year" validate:"required" example:"2024"`
+	StaySinceMonth     int    `json:"stay_since_month" validate:"required,min=1,max=12" example:"4"`
+	AssetCode          string `json:"asset_code" validate:"required,max=200" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
+	STNKPhoto          string `json:"stnk_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/stnk_SAL-1140024081400003.jpg"`
+}
+
+type PrinciplePemohon struct {
+	ProspectID              string  `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
+	IDNumber                string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
+	SpouseIDNumber          string  `json:"spouse_id_number" example:"3506126712000002"`
+	MobilePhone             string  `json:"mobile_phone" validate:"required,min=9,max=14" example:"085880529100"`
+	LegalName               string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
+	FullName                string  `json:"full_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
+	BirthDate               string  `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
+	BirthPlace              string  `json:"birth_place" validate:"required,max=100" example:"Jakarta"`
+	SurgateMotherName       string  `json:"surgate_mother_name" validate:"required,max=50" example:"IBU"`
+	Gender                  string  `json:"gender" validate:"required,max=1" example:"M"`
+	LegalAddress            string  `json:"legal_address" validate:"required,max=100" example:"Dermaga Baru"`
+	LegalRT                 string  `json:"legal_rt" validate:"required,min=1,max=3" example:"001"`
+	LegalRW                 string  `json:"legal_rw" validate:"required,min=1,max=3" example:"003"`
+	LegalProvince           string  `json:"legal_province" validate:"required,max=50" example:"Jakarta"`
+	LegalCity               string  `json:"legal_city" validate:"required,max=30" example:"Jakarta Timur"`
+	LegalKecamatan          string  `json:"legal_kecamatan" validate:"required,max=30" example:"Duren Sawit"`
+	LegalKelurahan          string  `json:"legal_kelurahan" validate:"required,max=30" example:"Klender"`
+	LegalZipCode            string  `json:"legal_zipcode" validate:"required,max=5" example:"13470"`
+	LegalPhoneArea          string  `json:"legal_phone_area" validate:"required,min=2,max=4" example:"021"`
+	LegalPhone              string  `json:"legal_phone" validate:"required,max=10" example:"86605224"`
+	Education               string  `json:"education" validate:"required,max=10" example:"S1"`
+	ProfessionID            string  `json:"profession_id" validate:"required,max=10" example:"KRYSW"`
+	JobType                 string  `json:"job_type" validate:"required,max=10" example:"0012"`
+	JobPosition             string  `json:"job_position" validate:"required,max=10" example:"M"`
+	EmploymentSinceMonth    int     `json:"employement_since_month" validate:"required,min=1,max=12" example:"12"`
+	EmploymentSinceYear     int     `json:"employement_since_year" validate:"required" example:"2020"`
+	CompanyName             string  `json:"company_name" validate:"required,min=2,max=50" example:"PT KB Finansia"`
+	EconomySectorID         string  `json:"economy_sector" validate:"required,max=10" example:"06"`
+	IndustryTypeID          string  `json:"industry_type_id" validate:"required,max=10" example:"1000"`
+	CompanyAddress          string  `json:"company_address" validate:"required,max=100" example:"Dermaga Baru"`
+	CompanyRT               string  `json:"company_rt" validate:"required,min=1,max=3" example:"001"`
+	CompanyRW               string  `json:"company_rw" validate:"required,min=1,max=3" example:"003"`
+	CompanyProvince         string  `json:"company_province" validate:"required,max=50" example:"Jakarta"`
+	CompanyCity             string  `json:"company_city" validate:"required,max=30" example:"Jakarta Timur"`
+	CompanyKecamatan        string  `json:"company_kecamatan" validate:"required,max=30" example:"Duren Sawit"`
+	CompanyKelurahan        string  `json:"company_kelurahan" validate:"required,max=30" example:"Klender"`
+	CompanyZipCode          string  `json:"company_zipcode" validate:"required,max=5" example:"13470"`
+	CompanyPhoneArea        string  `json:"company_phone_area" validate:"required,min=2,max=4" example:"021"`
+	CompanyPhone            string  `json:"company_phone" validate:"required,max=10" example:"86605224"`
+	MonthlyFixedIncome      float64 `json:"monthly_fixed_income" validate:"required" example:"5000000"`
+	MaritalStatus           string  `json:"marital_status" validate:"required,max=10" example:"M"`
+	SpouseLegalName         string  `json:"spouse_legal_name" example:"YULINAR NIATI"`
+	SpouseFullName          string  `json:"spouse_full_name" example:"YULINAR NIATI"`
+	SpouseBirthDate         string  `json:"spouse_birth_date" example:"1992-09-11"`
+	SpouseBirthPlace        string  `json:"spouse_birth_place" example:"Jakarta"`
+	SpouseSurgateMotherName string  `json:"spouse_surgate_mother_name"  example:"MAMA"`
+	SpouseGender            string  `json:"spouse_gender" example:"F"`
+	SpouseMobilePhone       string  `json:"spouse_mobile_phone" example:"085880529111"`
+	SpouseIncome            float64 `json:"spouse_income" example:"5000000"`
+	SelfiePhoto             string  `json:"selfie_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/selfie_SAL-1140024081400003.jpg"`
+	KtpPhoto                string  `json:"ktp_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/ktp_SAL-1140024081400003.jpg"`
+	BpkbName                string  `json:"-"`
+}
+
+type PrincipleElaborateLTV struct {
+	ProspectID      string `json:"prospect_id" validate:"prospect_id"`
+	ManufactureYear string `json:"manufacture_year" validate:"required,len=4,number" example:"2020"`
+	Tenor           int    `json:"tenor" validate:"required,max=60"`
+}
+
+type PrinciplePembiayaan struct {
+	ProspectID            string   `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
+	Tenor                 int      `json:"tenor" validate:"required,max=60" example:"36"`
+	AF                    float64  `json:"af" validate:"required,max=999999999999" example:"84000000"`
+	NTF                   float64  `json:"ntf" validate:"required,max=999999999999" example:"150528000"`
+	OTR                   float64  `json:"otr" validate:"required,max=999999999999" example:"105000000"`
+	DPAmount              float64  `json:"down_payment_amount" validate:"required,max=999999999999" example:"22000000"`
+	AdminFee              float64  `json:"admin_fee" validate:"required,max=999999999999" example:"1500000"`
+	InstallmentAmount     float64  `json:"installment_amount" validate:"required,max=999999999999" example:"4181333"`
+	Dealer                string   `json:"dealer" validate:"omitempty,max=50"`
+	MonthlyVariableIncome *float64 `json:"monthly_variable_income" validate:"omitempty,max=999999999999" example:"3000000"`
+	AssetCategoryID       string   `json:"asset_category_id" validate:"required,max=100" example:"BEBEK"`
+	FinancePurpose        string   `json:"finance_purpose" validate:"required,max=100" example:"Multiguna Pembayaran dengan Angsuran"`
+}
+
+type PrincipleEmergencyContact struct {
+	ProspectID        string          `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
+	Name              string          `json:"name" validate:"required,min=2,max=50,allowcharsname" example:"MULYADI"`
+	Relationship      string          `json:"relationship" validate:"required,relationship,max=10" example:"FM"`
+	MobilePhone       string          `json:"mobile_phone" validate:"required,min=9,max=14,number,mobile_phone" example:"0856789XXX1"`
+	CompanyStreetName string          `json:"company_street_name" validate:"required,max=90" example:"JL.PEGANGSAAN 1"`
+	HomeNumber        string          `json:"home_number" validate:"required,max=10" example:"10A"`
+	LocationDetails   string          `json:"location_details" validate:"required" example:"Near the big palm tree"`
+	Rt                string          `json:"rt" validate:"required,min=1,max=3,number" example:"008"`
+	Rw                string          `json:"rw" validate:"required,min=1,max=3,number" example:"017"`
+	Kelurahan         string          `json:"kelurahan" validate:"required,max=30" example:"TEGAL PARANG"`
+	Kecamatan         string          `json:"kecamatan" validate:"required,max=30" example:"MAMPANG PRAPATAN"`
+	City              string          `json:"city" validate:"required,max=50" example:"JAKARTA SELATAN"`
+	Province          string          `json:"province" validate:"required,max=50" example:"DKI JAKARTA"`
+	ZipCode           string          `json:"zip_code" validate:"required,len=5,number,ne=0" example:"12790"`
+	AreaPhone         string          `json:"area_phone" validate:"omitempty,min=3,max=4,number" example:"021"`
+	Phone             string          `json:"phone" validate:"omitempty,min=5,max=10,number" example:"567892"`
+	UserInformation   UserInformation `json:"user_information" validate:"required"`
+}
+
+type PrincipleCoreCustomer struct {
+	UserInformation UserInformation `json:"user_information" validate:"required"`
+}
+
+type PrincipleMarketingProgram struct {
+	UserInformation UserInformation `json:"user_information" validate:"required"`
+}
+
+type ValidateNik struct {
+	IDNumber string `json:"id_number" validate:"required,number,len=16"`
+}
+
+type UserInformation struct {
+	UserID    string `json:"user_id" validate:"required,max=50"`
+	UserTitle string `json:"user_title" validate:"required,max=50"`
+}
+
+type ReqMarsevLoanAmount struct {
+	BranchID      string  `json:"branch_id"`
+	OTR           float64 `json:"otr"`
+	MaxLTV        int     `json:"max_ltv_los"`
+	IsRecalculate bool    `json:"is_recalculate"`
+	LoanAmount    float64 `json:"loan_amount"`
+	DPAmount      float64 `json:"dp_amount_los"`
+}
+
+type ReqMarsevFilterProgram struct {
+	Page                   int     `json:"page"`
+	Limit                  int     `json:"limit"`
+	BranchID               string  `json:"branch_id"`
+	FinancingTypeCode      string  `json:"financing_type_code"`
+	CustomerOccupationCode string  `json:"customer_occupation_code"`
+	BpkbStatusCode         string  `json:"bpkb_status_code"`
+	SourceApplication      string  `json:"source_application"`
+	CustomerType           string  `json:"customer_type"`
+	AssetUsageTypeCode     string  `json:"asset_usage_type_code"`
+	AssetCategory          string  `json:"asset_category"`
+	AssetBrand             string  `json:"asset_brand"`
+	AssetYear              int     `json:"asset_year"`
+	LoanAmount             float64 `json:"loan_amount"`
+	Search                 string  `json:"search"`
+	Tenor                  int     `json:"tenor"`
+	SalesMethodID          int     `json:"sales_method_id"`
+}
+
+type ReqMarsevCalculateInstallment struct {
+	ProgramID              string  `json:"program_id"`
+	BranchID               string  `json:"branch_id"`
+	CustomerOccupationCode string  `json:"customer_occupation_code"`
+	AssetUsageTypeCode     string  `json:"asset_usage_type_code"`
+	AssetYear              int     `json:"asset_year"`
+	BpkbStatusCode         string  `json:"bpkb_status_code"`
+	LoanAmount             float64 `json:"loan_amount"`
+	Otr                    float64 `json:"otr"`
+	RegionCode             string  `json:"region_code"`
+	AssetCategory          string  `json:"asset_category"`
+	CustomerBirthDate      string  `json:"customer_birth_date"`
+	Tenor                  int     `json:"tenor"`
+}
+
+type ReqSallySubmit2wPrinciple struct {
+	Order            SallySubmit2wPrincipleOrder            `json:"order"`
+	Kop              SallySubmit2wPrincipleKop              `json:"kop"`
+	ObjekSewa        SallySubmit2wPrincipleObjekSewa        `json:"objeksewa"`
+	Biaya            SallySubmit2wPrincipleBiaya            `json:"biaya"`
+	ProgramMarketing SallySubmit2wPrincipleProgramMarketing `json:"program_marketing"`
+	Filtering        SallySubmit2wPrincipleFiltering        `json:"filtering"`
+}
+
+type SallySubmit2wPrincipleOrder struct {
+	Application SallySubmit2wPrincipleApplication `json:"application"`
+	Asset       SallySubmit2wPrincipleAsset       `json:"asset"`
+	Customer    SallySubmit2wPrincipleCustomer    `json:"customer"`
+	Document    []SallySubmit2wPrincipleDocument  `json:"document"`
+}
+
+type SallySubmit2wPrincipleApplication struct {
+	BranchID          string  `json:"branch_id"`
+	BranchName        string  `json:"branch_name"`
+	InstallmentAmount float64 `json:"installment_amount"`
+	ApplicationFormID int     `json:"application_form_id"`
+	OrderTypeID       int     `json:"order_type_id"`
+	ProspectID        string  `json:"prospect_id"`
+}
+
+type SallySubmit2wPrincipleAsset struct {
+	BPKBName              string `json:"bpkb_name"`
+	BPKBOwnershipStatusID int    `json:"bpkb_ownership_status_id"`
+	PoliceNo              string `json:"police_no"`
+}
+
+type SallySubmit2wPrincipleCustomer struct {
+	CustomerID string `json:"customer_id"`
+}
+
+type SallySubmit2wPrincipleDocument struct {
+	URL  string `json:"url"`
+	Type string `json:"type"`
+}
+
+type SallySubmit2wPrincipleKop struct {
+	IsPSA              bool   `json:"is_psa"`
+	PurposeOfFinancing string `json:"purpose_of_financing"`
+	FinancingObject    string `json:"financing_object"`
+}
+
+type SallySubmit2wPrincipleObjekSewa struct {
+	Documents          []SallySubmit2wPrincipleDocument `json:"documents"`
+	AssetUsageID       string                           `json:"asset_usage_id"`
+	CategoryID         string                           `json:"category_id"`
+	AssetCode          string                           `json:"asset_code"`
+	ManufacturingYear  int                              `json:"manufacturing_year"`
+	Color              string                           `json:"color"`
+	CylinderVolume     int                              `json:"cylinder_volume"`
+	IsBBN              bool                             `json:"is_bbn"`
+	PlateAreaCode      string                           `json:"plate_area_code"`
+	ChassisNumber      string                           `json:"chassis_number"`
+	MachineNumber      string                           `json:"machine_number"`
+	OTRAmount          float64                          `json:"otr_amount"`
+	ExpiredSTNKDate    string                           `json:"expired_stnk_date"`
+	ExpiredSTNKTaxDate string                           `json:"expired_stnk_tax_date"`
+	UpdatedBy          string                           `json:"updated_by"`
+}
+
+type SallySubmit2wPrincipleBiaya struct {
+	TotalOTRAmount        float64 `json:"total_otr_amount"`
+	Tenor                 int     `json:"tenor"`
+	LoanAmount            float64 `json:"loan_amount"`
+	AdminFee              float64 `json:"admin_fee"`
+	ProvisionFee          float64 `json:"provision_fee"`
+	TotalDPAmount         float64 `json:"total_dp_amount"`
+	AmountFinance         float64 `json:"amount_finance"`
+	CorrespondenceAddress string  `json:"correspondence_address"`
+	PaymentDay            int     `json:"payment_day"`
+	RentPaymentMethod     string  `json:"rent_payment_method"`
+	PersonalNPWPNumber    string  `json:"personal_npwp_number"`
+	MaxLTVLOS             int     `json:"max_ltv_los"`
+	UpdatedBy             string  `json:"updated_by"`
+	LoanAmountMaximum     float64 `json:"loan_amount_maximum"`
+}
+
+type SallySubmit2wPrincipleProgramMarketing struct {
+	ProgramMarketingID   string `json:"program_marketing_id"`
+	ProgramMarketingName string `json:"program_marketing_name"`
+	ProductOfferingID    string `json:"product_offering_id"`
+	ProductOfferingName  string `json:"product_offering_name"`
+	UpdatedBy            string `json:"updated_by"`
+}
+
+type SallySubmit2wPrincipleFiltering struct {
+	Decision          string  `json:"decision"`
+	Reason            string  `json:"reason"`
+	CustomerStatus    string  `json:"customer_status"`
+	CustomerStatusKMB string  `json:"customer_status_kmb"`
+	CustomerSegment   string  `json:"customer_segment"`
+	IsBlacklist       bool    `json:"is_blacklist"`
+	NextProcess       bool    `json:"next_process"`
+	PBKReportCustomer string  `json:"pbk_report_customer"`
+	PBKReportSpouse   string  `json:"pbk_report_spouse"`
+	BakiDebet         float64 `json:"baki_debet"`
+}

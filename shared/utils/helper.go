@@ -21,6 +21,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/google/uuid"
 )
@@ -541,4 +542,83 @@ func PreciseMonthsDifference(date1, date2 time.Time) (int, error) {
 	}
 
 	return months, nil
+}
+
+func CheckNullCategory(Category interface{}) float64 {
+	var category float64
+
+	if CheckVriable(Category) == reflect.String.String() {
+		category = StrConvFloat64(Category.(string))
+	} else {
+		category = Category.(float64)
+	}
+
+	return category
+}
+
+// function to map reason category values to Roman numerals
+func GetReasonCategoryRoman(category interface{}) string {
+	switch category.(float64) {
+	case 1:
+		return "(I)"
+	case 2:
+		return "(II)"
+	case 3:
+		return "(III)"
+	default:
+		return ""
+	}
+}
+
+func CheckNullMaxOverdueLast12Months(MaxOverdueLast12Months interface{}) float64 {
+	var max_overdue_last12_months float64
+
+	if CheckVriable(MaxOverdueLast12Months) == reflect.String.String() {
+		max_overdue_last12_months = StrConvFloat64(MaxOverdueLast12Months.(string))
+	} else {
+		max_overdue_last12_months = MaxOverdueLast12Months.(float64)
+	}
+
+	return max_overdue_last12_months
+}
+
+func CheckNullMaxOverdue(MaxOverdueLast interface{}) float64 {
+	var max_overdue_months float64
+
+	if CheckVriable(MaxOverdueLast) == reflect.String.String() {
+		max_overdue_months = StrConvFloat64(MaxOverdueLast.(string))
+	} else {
+		max_overdue_months = MaxOverdueLast.(float64)
+	}
+
+	return max_overdue_months
+}
+
+func CheckEmptyString(data string) interface{} {
+
+	if data != "" {
+		return data
+	}
+
+	return nil
+}
+
+func CapitalizeEachWord(s string) string {
+	words := strings.Fields(s)
+	for i, word := range words {
+		if len(word) > 0 {
+			runes := []rune(word)
+			runes[0] = unicode.ToUpper(runes[0])
+			words[i] = string(runes[0]) + strings.ToLower(string(runes[1:]))
+		}
+	}
+	return strings.Join(words, " ")
+}
+
+func GetLicensePlateCode(licensePlate string) string {
+	re := regexp.MustCompile(`^[A-Z]+`)
+
+	match := re.FindString(licensePlate)
+
+	return match
 }

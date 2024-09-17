@@ -19,6 +19,7 @@ var (
 	DateLogFile   map[string]string
 	GetLogFile    map[string]*os.File
 	IsDevelopment bool
+	IsDebug       bool
 )
 
 func LoadEnv() {
@@ -40,6 +41,8 @@ func NewConfiguration(appEnv string) {
 	} else {
 		IsDevelopment = false
 	}
+
+	IsDebug, _ = strconv.ParseBool(os.Getenv("APP_DEBUG"))
 
 	GetLogFile = make(map[string]*os.File)
 	DateLogFile = make(map[string]string)
