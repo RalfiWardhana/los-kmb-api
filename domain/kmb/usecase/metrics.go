@@ -281,6 +281,11 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		customerSegment = filtering.CustomerSegment.(string)
 	}
 
+	var numOfDependence int
+	if reqMetrics.CustomerPersonal.NumOfDependence != nil {
+		numOfDependence = *reqMetrics.CustomerPersonal.NumOfDependence
+	}
+
 	reqDupcheck = request.DupcheckApi{
 		ProspectID:            reqMetrics.Transaction.ProspectID,
 		BranchID:              reqMetrics.Transaction.BranchID,
@@ -297,7 +302,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		StaySinceYear:         reqMetrics.CustomerPersonal.StaySinceYear,
 		StaySinceMonth:        reqMetrics.CustomerPersonal.StaySinceMonth,
 		BirthDate:             reqMetrics.CustomerPersonal.BirthDate,
-		BirthPlace:            reqDupcheck.BirthPlace,
+		BirthPlace:            reqMetrics.CustomerPersonal.BirthPlace,
 		Tenor:                 reqMetrics.Apk.Tenor,
 		IDNumber:              reqMetrics.CustomerPersonal.IDNumber,
 		LegalName:             reqMetrics.CustomerPersonal.LegalName,
@@ -306,7 +311,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		RangkaNo:              reqMetrics.Item.NoChassis,
 		ManufactureYear:       reqMetrics.Item.ManufactureYear,
 		BPKBName:              reqMetrics.Item.BPKBName,
-		NumOfDependence:       reqDupcheck.NumOfDependence,
+		NumOfDependence:       numOfDependence,
 		DPAmount:              reqMetrics.Apk.DPAmount,
 		OTRPrice:              reqMetrics.Apk.OTR,
 		NTF:                   reqMetrics.Apk.NTF,
