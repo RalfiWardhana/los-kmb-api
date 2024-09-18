@@ -345,12 +345,12 @@ const (
 	CODE_REJECT_NTF_ELABORATE              = 9603
 	CODE_REJECT_CLUSTER_E_F                = "9604"
 	RANGE_CLUSTER_BAKI_DEBET_REJECT        = 10000000
-	WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD  = "& Baki Debet <= 10 Juta"
-	WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD = "& Baki Debet > 10 - 20 Juta"
+	WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD  = "& Baki Debet < 10 Juta"
+	WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD = "& Baki Debet 10 - 20 Juta"
 	REASON_PASS_ELABORATE                  = "PASS - Elaborated Scheme"
 	REASON_REJECT_ELABORATE                = "REJECT - Elaborated Scheme"
 	REASON_REJECT_NTF_ELABORATE            = "REJECT - NTF Tidak Sesuai Threshold"
-	REASON_REJECT_CLUSTER_E_F              = "%s, Baki Debet > 10 Juta - 20 Juta & Tidak dapat dibiayai"
+	REASON_REJECT_CLUSTER_E_F              = "%s, Baki Debet 10 Juta - 20 Juta & Tidak dapat dibiayai"
 	CLUSTER_B                              = "Cluster B"
 	CLUSTER_C                              = "Cluster C"
 	CLUSTER_E                              = "Cluster E"
