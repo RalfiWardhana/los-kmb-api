@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
@@ -18,13 +19,20 @@ import (
 func (u usecase) PrincipleElaborateLTV(ctx context.Context, reqs request.PrincipleElaborateLTV) (data response.ElaborateLTV, err error) {
 
 	var (
-		filteringKMB        entity.FilteringKMB
-		ageS                string
-		bakiDebet           float64
-		bpkbNameType        int
-		manufacturingYear   time.Time
-		mappingElaborateLTV []entity.MappingElaborateLTV
-		cluster             string
+		filteringKMB            entity.FilteringKMB
+		ageS                    string
+		bakiDebet               float64
+		bpkbNameType            int
+		manufacturingYear       time.Time
+		mappingElaborateLTV     []entity.MappingElaborateLTV
+		cluster                 string
+		RrdDateString           string
+		CreatedAtString         string
+		RrdDate                 time.Time
+		CreatedAt               time.Time
+		MonthsOfExpiredContract int
+		OverrideFlowLikeRegular bool
+		expiredContractConfig   entity.AppConfig
 	)
 
 	filteringKMB, err = u.repository.GetFilteringResult(reqs.ProspectID)
@@ -43,7 +51,58 @@ func (u usecase) PrincipleElaborateLTV(ctx context.Context, reqs request.Princip
 	}
 
 	resultPefindo := filteringKMB.Decision
-	if filteringKMB.CustomerSegment != nil && !strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string)) {
+
+	if filteringKMB.CustomerSegment != nil && strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string)) {
+		cluster = constant.CLUSTER_PRIME_PRIORITY
+
+		// Cek apakah customer RO PRIME/PRIORITY ini termasuk jalur `expired_contract tidak <= 6 bulan`
+		if filteringKMB.CustomerStatus == constant.STATUS_KONSUMEN_RO {
+			if filteringKMB.RrdDate == nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
+				return
+			}
+
+			RrdDateString = filteringKMB.RrdDate.(string)
+			CreatedAtString = filteringKMB.CreatedAt.Format(time.RFC3339)
+
+			RrdDate, err = time.Parse(time.RFC3339, RrdDateString)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of RrdDate (" + RrdDateString + ")")
+				return
+			}
+
+			CreatedAt, err = time.Parse(time.RFC3339, CreatedAtString)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of CreatedAt (" + CreatedAtString + ")")
+				return
+			}
+
+			MonthsOfExpiredContract, err = utils.PreciseMonthsDifference(RrdDate, CreatedAt)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Difference of months RrdDate and CreatedAt is negative (-)")
+				return
+			}
+
+			// Get config expired_contract
+			expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
+				return
+			}
+
+			var configValueExpContract response.ExpiredContractConfig
+			json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+
+			if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
+				// Jalur mirip seperti customer segment "REGULAR"
+				OverrideFlowLikeRegular = true
+			}
+		}
+	} else {
+		cluster = filteringKMB.CMOCluster.(string)
+	}
+
+	if (filteringKMB.CustomerSegment != nil && !strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string))) || (OverrideFlowLikeRegular && resultPefindo == constant.DECISION_REJECT) {
 		if filteringKMB.ScoreBiro == nil || filteringKMB.ScoreBiro == "" || filteringKMB.ScoreBiro == constant.UNSCORE_PBK {
 			resultPefindo = constant.DECISION_PBK_NO_HIT
 		} else if filteringKMB.MaxOverdueBiro != nil || filteringKMB.MaxOverdueLast12monthsBiro != nil {
@@ -91,13 +150,10 @@ func (u usecase) PrincipleElaborateLTV(ctx context.Context, reqs request.Princip
 		ManufacturingYear: reqs.ManufactureYear,
 	}
 
-	if strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string)) {
-		cluster = constant.CLUSTER_PRIME_PRIORITY
-	} else {
-		if filteringKMB.CMOCluster == nil {
-			cluster = filteringKMB.Cluster.(string)
-		} else {
-			cluster = filteringKMB.CMOCluster.(string)
+	if OverrideFlowLikeRegular && resultPefindo == constant.DECISION_REJECT {
+		cluster = filteringKMB.CustomerStatus.(string) + " " + constant.CLUSTER_PRIME_PRIORITY
+		if int(bakiDebet) > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT {
+			cluster = filteringKMB.CustomerStatus.(string) + " " + filteringKMB.CustomerSegment.(string)
 		}
 	}
 
@@ -135,8 +191,15 @@ func (u usecase) PrincipleElaborateLTV(ctx context.Context, reqs request.Princip
 
 			//pass
 			if resultPefindo == constant.DECISION_PASS && m.TenorStart <= reqs.Tenor && reqs.Tenor <= m.TenorEnd {
-				data.LTV = m.LTV
-				trxElaborateLTV.MappingElaborateLTVID = m.ID
+				if m.BPKBNameType == 1 {
+					if bpkbNameType == m.BPKBNameType {
+						data.LTV = m.LTV
+						trxElaborateLTV.MappingElaborateLTVID = m.ID
+					}
+				} else {
+					data.LTV = m.LTV
+					trxElaborateLTV.MappingElaborateLTVID = m.ID
+				}
 			}
 
 			//reject
@@ -147,22 +210,20 @@ func (u usecase) PrincipleElaborateLTV(ctx context.Context, reqs request.Princip
 		}
 
 		// max tenor
-		if resultPefindo == constant.DECISION_REJECT && int(bakiDebet) > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && strings.Contains("Cluster E Cluster F", cluster) {
-			data.LTV = 0
-			data.MaxTenor = 0
-			data.AdjustTenor = false
-			data.Reason = constant.REASON_REJECT_ELABORATE
-		} else {
-			if m.TenorEnd >= data.MaxTenor && m.LTV > 0 {
-				if m.BPKBNameType == 1 && m.AgeVehicle != "" {
-					if bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
-						data.MaxTenor = m.TenorEnd
-						data.AdjustTenor = true
-					}
-				} else {
+		if m.TenorEnd >= data.MaxTenor && m.LTV > 0 {
+			if m.AgeVehicle != "" {
+				if bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
 					data.MaxTenor = m.TenorEnd
 					data.AdjustTenor = true
 				}
+			} else if m.BPKBNameType == 1 {
+				if bpkbNameType == m.BPKBNameType {
+					data.MaxTenor = m.TenorEnd
+					data.AdjustTenor = true
+				}
+			} else {
+				data.MaxTenor = m.TenorEnd
+				data.AdjustTenor = true
 			}
 		}
 	}

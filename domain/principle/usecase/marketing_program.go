@@ -338,6 +338,7 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 	payloadSubmitSally.Order.Application = request.SallySubmit2wPrincipleApplication{
 		BranchID:          principleStepOne.BranchID,
 		BranchName:        mdmMasterDetailBranchRes.Data.BranchName,
+		CmoID:             principleStepOne.CMOID,
 		InstallmentAmount: principleStepThree.InstallmentAmount,
 		ApplicationFormID: 1,
 		OrderTypeID:       6,

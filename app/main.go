@@ -253,7 +253,8 @@ func main() {
 	// libTrace := tracer.Initialize(os.Getenv("APP_NAME"), tracer.IsEnable(config.IsDebug), tracer.LicenseKey(os.Getenv("NEWRELIC_CONFIG_LICENSE")))
 
 	principleRepo := principleRepository.NewRepository(newKMB, kpLos, scorePro, confins)
-	principleMultiCase, principleCase := principleUsecase.NewMultiUsecase(principleRepo, httpClient)
+	principleCase := principleUsecase.NewUsecase(principleRepo, httpClient)
+	principleMultiCase := principleUsecase.NewMultiUsecase(principleRepo, httpClient, principleCase)
 	principleDelivery.Handler(apiGroupv3, principleMultiCase, principleCase, principleRepo, libResponse, accessToken)
 
 	toolsDelivery.ToolsHandler(apiGroupv3, jsonResponse, accessToken, producer)

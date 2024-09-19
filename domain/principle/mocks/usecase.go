@@ -165,6 +165,41 @@ func (_m *Usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory st
 	return r0, r1, r2
 }
 
+// CheckLatestPaidInstallment provides a mock function with given fields: ctx, prospectID, customerID, accessToken
+func (_m *Usecase) CheckLatestPaidInstallment(ctx context.Context, prospectID string, customerID string, accessToken string) (string, int, error) {
+	ret := _m.Called(ctx, prospectID, customerID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CheckLatestPaidInstallment")
+	}
+
+	var r0 string
+	var r1 int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (string, int, error)); ok {
+		return rf(ctx, prospectID, customerID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) string); ok {
+		r0 = rf(ctx, prospectID, customerID, accessToken)
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) int); ok {
+		r1 = rf(ctx, prospectID, customerID, accessToken)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, string, string, string) error); ok {
+		r2 = rf(ctx, prospectID, customerID, accessToken)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // CheckNokaNosin provides a mock function with given fields: ctx, r
 func (_m *Usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (response.UsecaseApi, error) {
 	ret := _m.Called(ctx, r)

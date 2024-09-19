@@ -29,15 +29,13 @@ type (
 	}
 )
 
-func NewMultiUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient) (interfaces.MultiUsecase, interfaces.Usecase) {
-
-	usecase := NewUsecase(repository, httpclient)
+func NewMultiUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient, usecase interfaces.Usecase) interfaces.MultiUsecase {
 
 	return &multiUsecase{
 		usecase:    usecase,
 		repository: repository,
 		httpclient: httpclient,
-	}, usecase
+	}
 }
 
 func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient) interfaces.Usecase {
