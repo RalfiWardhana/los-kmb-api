@@ -1135,3 +1135,38 @@ type SallySubmit2wPrincipleResponse struct {
 	RequestID string      `json:"request_id"`
 	Timestamp string      `json:"timestamp"`
 }
+
+type MDMMasterMappingBranchEmployeeResponse struct {
+	Code     string                                 `json:"code"`
+	Message  string                                 `json:"message"`
+	Data     []MDMMasterMappingBranchEmployeeRecord `json:"data"`
+	Errors   interface{}                            `json:"errors"`
+	Metadata MDMMasterMappingBranchEmployeeMetadata `json:"metadata"`
+}
+
+type MDMMasterMappingBranchEmployeeRecord struct {
+	ID         int     `json:"id"`
+	BranchID   string  `json:"branch_id"`
+	BranchName string  `json:"branch_name"`
+	CMOID      string  `json:"cmo_id"`
+	CMOName    string  `json:"cmo_name"`
+	LobID      int     `json:"lob_id"`
+	CreatedAt  string  `json:"created_at"`
+	CreatedBy  string  `json:"created_by"`
+	UpdatedAt  *string `json:"updated_at,omitempty"`
+	UpdatedBy  *string `json:"updated_by,omitempty"`
+	DeletedAt  *string `json:"deleted_at,omitempty"`
+	DeletedBy  *string `json:"deleted_by,omitempty"`
+}
+
+type MDMMasterMappingBranchEmployeeMetadata struct {
+	Pagination MDMMasterMappingBranchEmployeePagination `json:"pagination"`
+}
+
+type MDMMasterMappingBranchEmployeePagination struct {
+	Limit    int  `json:"limit"`
+	NextPage bool `json:"next_page"`
+	Page     int  `json:"page"`
+	PrevPage bool `json:"prev_page"`
+	Total    int  `json:"total"`
+}

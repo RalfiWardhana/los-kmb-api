@@ -34,6 +34,7 @@ type Usecase interface {
 	PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (err error)
 	PrincipleCoreCustomer(ctx context.Context, prospectID string, req request.PrincipleCoreCustomer, accessToken string) (err error)
 	PrincipleMarketingProgram(ctx context.Context, prospectID string, req request.PrincipleMarketingProgram, accessToken string) (err error)
+	MDMGetMasterMappingBranchEmployee(ctx context.Context, prospectID, branchID, accessToken string) (data response.MDMMasterMappingBranchEmployeeResponse, err error)
 }
 
 type MultiUsecase interface {

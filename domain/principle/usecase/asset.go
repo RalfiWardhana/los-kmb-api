@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"los-kmb-api/domain/principle/interfaces"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/entity"
@@ -12,6 +13,7 @@ import (
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
 	"os"
+	"strconv"
 	"time"
 
 	jsoniter "github.com/json-iterator/go"
@@ -48,7 +50,8 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (data response.UsecaseApi, err error) {
 
 	var (
-		mdmChassis response.AgreementChassisNumber
+		mdmChassis     response.AgreementChassisNumber
+		cmoID, cmoName string
 	)
 
 	hitChassisNumber, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+r.NoChassis, nil, map[string]string{}, constant.METHOD_GET, true, 6, 60, r.ProspectID, middlewares.UserInfoData.AccessToken)
@@ -99,6 +102,17 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 	taxDate, _ := time.Parse(constant.FORMAT_DATE, r.TaxDate)
 	stnkExpired, _ := time.Parse(constant.FORMAT_DATE, r.STNKExpiredDate)
 
+	respCmoBranch, err := u.MDMGetMasterMappingBranchEmployee(ctx, r.ProspectID, r.BranchID, middlewares.UserInfoData.AccessToken)
+	if err != nil {
+		return
+	}
+
+	if len(respCmoBranch.Data) > 0 {
+		cmoData := respCmoBranch.Data[0]
+		cmoID = cmoData.CMOID
+		cmoName = cmoData.CMOName
+	}
+
 	_ = u.repository.SavePrincipleStepOne(entity.TrxPrincipleStepOne{
 		ProspectID:         r.ProspectID,
 		IDNumber:           r.IDNumber,
@@ -107,8 +121,8 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		NoChassis:          r.NoChassis,
 		NoEngine:           r.NoEngine,
 		BranchID:           r.BranchID,
-		CMOID:              "",
-		CMOName:            "",
+		CMOID:              cmoID,
+		CMOName:            cmoName,
 		CC:                 r.CC,
 		TaxDate:            taxDate,
 		STNKExpiredDate:    stnkExpired,
@@ -134,6 +148,33 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		AssetCode:          r.AssetCode,
 		STNKPhoto:          r.STNKPhoto,
 	})
+
+	return
+}
+
+func (u usecase) MDMGetMasterMappingBranchEmployee(ctx context.Context, prospectID, branchID, accessToken string) (data response.MDMMasterMappingBranchEmployeeResponse, err error) {
+
+	timeOut, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	headerMDM := map[string]string{
+		"Content-Type":  "application/json",
+		"Authorization": accessToken,
+	}
+
+	resp, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("MDM_MASTER_MAPPING_BRANCH_EMPLOYEE_URL")+"?lob_id="+strconv.Itoa(constant.LOBID_KMB)+"&branch_id="+branchID, nil, headerMDM, constant.METHOD_GET, false, 0, timeOut, prospectID, accessToken)
+	if err != nil {
+		return
+	}
+
+	if resp.StatusCode() != 200 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - MDM Get Master Mapping Branch Employee Error")
+		return
+	}
+
+	if resp.StatusCode() == 200 {
+		if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &data); err != nil {
+			return
+		}
+	}
 
 	return
 }

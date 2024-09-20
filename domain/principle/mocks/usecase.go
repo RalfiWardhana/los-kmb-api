@@ -452,6 +452,34 @@ func (_m *Usecase) Ktp(ctx context.Context, r request.PrinciplePemohon, reqMetri
 	return r0, r1
 }
 
+// MDMGetMasterMappingBranchEmployee provides a mock function with given fields: ctx, prospectID, branchID, accessToken
+func (_m *Usecase) MDMGetMasterMappingBranchEmployee(ctx context.Context, prospectID string, branchID string, accessToken string) (response.MDMMasterMappingBranchEmployeeResponse, error) {
+	ret := _m.Called(ctx, prospectID, branchID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MDMGetMasterMappingBranchEmployee")
+	}
+
+	var r0 response.MDMMasterMappingBranchEmployeeResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (response.MDMMasterMappingBranchEmployeeResponse, error)); ok {
+		return rf(ctx, prospectID, branchID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) response.MDMMasterMappingBranchEmployeeResponse); ok {
+		r0 = rf(ctx, prospectID, branchID, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.MDMMasterMappingBranchEmployeeResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, prospectID, branchID, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Pefindo provides a mock function with given fields: ctx, r, customerStatus, clusterCMO, bpkbName
 func (_m *Usecase) Pefindo(ctx context.Context, r request.Pefindo, customerStatus string, clusterCMO string, bpkbName string) (response.Filtering, response.PefindoResult, []entity.TrxDetailBiro, error) {
 	ret := _m.Called(ctx, r, customerStatus, clusterCMO, bpkbName)

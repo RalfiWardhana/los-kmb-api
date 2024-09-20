@@ -230,7 +230,7 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 	}
 
 	licensePlateCode := utils.GetLicensePlateCode(principleStepOne.LicensePlate)
-	resp, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("MDM_MASTER_MAPPING_LICENSE_PLATE_URL")+"?lob_id="+strconv.Itoa(constant.LOBID_KMB)+"&plate_code="+licensePlateCode, param, headerMDM, constant.METHOD_GET, false, 0, timeOut, prospectID, accessToken)
+	resp, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("MDM_MASTER_MAPPING_LICENSE_PLATE_URL")+"?lob_id="+strconv.Itoa(constant.LOBID_KMB)+"&plate_code="+licensePlateCode, nil, headerMDM, constant.METHOD_GET, false, 0, timeOut, prospectID, accessToken)
 	if err != nil {
 		return
 	}
@@ -338,11 +338,15 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 	payloadSubmitSally.Order.Application = request.SallySubmit2wPrincipleApplication{
 		BranchID:          principleStepOne.BranchID,
 		BranchName:        mdmMasterDetailBranchRes.Data.BranchName,
-		CmoID:             principleStepOne.CMOID,
 		InstallmentAmount: principleStepThree.InstallmentAmount,
 		ApplicationFormID: 1,
 		OrderTypeID:       6,
 		ProspectID:        prospectID,
+	}
+
+	if principleStepOne.CMOID != "" {
+		payloadSubmitSally.Order.Application.CmoID = principleStepOne.CMOID
+		payloadSubmitSally.Order.Application.CmoName = principleStepOne.CMOName
 	}
 
 	payloadSubmitSally.Order.Asset = request.SallySubmit2wPrincipleAsset{

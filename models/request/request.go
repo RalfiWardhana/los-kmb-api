@@ -1172,6 +1172,7 @@ type SallySubmit2wPrincipleApplication struct {
 	BranchID          string  `json:"branch_id"`
 	BranchName        string  `json:"branch_name"`
 	CmoID             string  `json:"cmo_id"`
+	CmoName           string  `json:"cmo_name"`
 	InstallmentAmount float64 `json:"installment_amount"`
 	ApplicationFormID int     `json:"application_form_id"`
 	OrderTypeID       int     `json:"order_type_id"`
