@@ -2113,7 +2113,7 @@ func (r repoHandler) GetBranchDeviasi(BranchID string, customerStatus string, NT
 		}
 	}()
 
-	query := "SELECT * FROM dbo.m_branch_deviasi WITH (UPDLOCK) WHERE BranchID = ? AND is_active = 1"
+	query := "SELECT * FROM dbo.m_branch_deviasi WITH (nolock) WHERE BranchID = ? AND is_active = 1"
 	args := []interface{}{BranchID}
 
 	if customerStatus != constant.STATUS_KONSUMEN_RO && customerStatus != constant.STATUS_KONSUMEN_AO {
