@@ -292,7 +292,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	}
 
 	// ada data pefindo
-	if resPefindo.Score != "" && resPefindo.Category != nil {
+	if resPefindo.Score != "" && resPefindo.Category != nil && getReasonCategoryRoman(resPefindo.Category) != "" {
 		entityFiltering.MaxOverdueBiro = resPefindo.MaxOverdue
 		entityFiltering.MaxOverdueLast12monthsBiro = resPefindo.MaxOverdueLast12Months
 		entityFiltering.ScoreBiro = resPefindo.Score
