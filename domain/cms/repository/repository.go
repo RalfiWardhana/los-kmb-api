@@ -2510,31 +2510,41 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 		}
 
 		if isCancel {
-			var ntf float64
-			var branchID string
+			var (
+				ntf            float64
+				branchID       string
+				customerStatus string
+				decisionFinal  interface{}
+			)
 
 			selectQuery := `
-                SELECT mbd.BranchID, ta.NTF 
-                FROM trx_deviasi AS td WITH (UPDLOCK)
-                LEFT JOIN trx_apk AS ta ON (td.ProspectID = ta.ProspectID)
-                LEFT JOIN trx_master AS tm ON (td.ProspectID = tm.ProspectID)
-                LEFT JOIN m_branch_deviasi AS mbd ON (tm.BranchID = mbd.BranchID)
+                SELECT mbd.BranchID, ta.NTF, tf.customer_status, tfa.decision
+				FROM trx_deviasi AS td WITH (nolock)
+				LEFT JOIN trx_apk AS ta ON (td.ProspectID = ta.ProspectID)
+				LEFT JOIN trx_master AS tm ON (td.ProspectID = tm.ProspectID)
+				LEFT JOIN m_branch_deviasi AS mbd ON (tm.BranchID = mbd.BranchID)
+				LEFT JOIN trx_filtering AS tf ON (td.ProspectID = tf.prospect_id)
+				LEFT JOIN trx_final_approval AS tfa ON (td.ProspectID = tfa.ProspectID)
                 WHERE ta.ProspectID = ?
             `
-			if err = tx.Raw(selectQuery, trxCaDecision.ProspectID).Row().Scan(&branchID, &ntf); err != nil {
+			if err = tx.Raw(selectQuery, trxCaDecision.ProspectID).Row().Scan(&branchID, &ntf, &customerStatus, &decisionFinal); err != nil {
 				return err
 			}
 
-			updateQuery := `
-                UPDATE m_branch_deviasi
-                SET booking_amount = booking_amount - ?,
-                    booking_account = booking_account - 1,
-                    balance_amount = (quota_amount - booking_amount) + ?,
-                    balance_account = (quota_account - booking_account) + 1
-                WHERE BranchID = ?
-            `
-			if err = tx.Exec(updateQuery, ntf, ntf, branchID).Error; err != nil {
-				return err
+			if branchID != "" && customerStatus != "" && customerStatus == constant.STATUS_KONSUMEN_NEW && decisionFinal != nil {
+				if decisionStr, ok := decisionFinal.(string); ok && decisionStr == constant.DB_DECISION_APR {
+					updateQuery := `
+						UPDATE m_branch_deviasi
+						SET booking_amount = booking_amount - ?,
+							booking_account = booking_account - 1,
+							balance_amount = (quota_amount - booking_amount) + ?,
+							balance_account = (quota_account - booking_account) + 1
+						WHERE BranchID = ?
+					`
+					if err = tx.Exec(updateQuery, ntf, ntf, branchID).Error; err != nil {
+						return err
+					}
+				}
 			}
 		}
 
