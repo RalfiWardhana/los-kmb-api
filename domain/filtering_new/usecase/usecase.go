@@ -292,7 +292,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	}
 
 	// ada data pefindo
-	if resPefindo.Score != "" && resPefindo.Category != nil {
+	if resPefindo.Score != "" && resPefindo.Category != nil && getReasonCategoryRoman(resPefindo.Category) != "" {
 		entityFiltering.MaxOverdueBiro = resPefindo.MaxOverdue
 		entityFiltering.MaxOverdueLast12monthsBiro = resPefindo.MaxOverdueLast12Months
 		entityFiltering.ScoreBiro = resPefindo.Score
@@ -683,11 +683,11 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 
 				// Reason Baki Debet
 				if (data.Decision == constant.DECISION_REJECT && data.NextProcess) || isReasonBakiDebet {
-					if pefindoResult.TotalBakiDebetNonAgunan <= 3000000 {
-						data.Reason = fmt.Sprintf("%s %s & Baki Debet <= 3 Juta", bpkbString, getReasonCategoryRoman(pefindoResult.Category))
+					if pefindoResult.TotalBakiDebetNonAgunan <= constant.RANGE_CLUSTER_BAKI_DEBET_REJECT {
+						data.Reason = fmt.Sprintf("%s %s %s", bpkbString, getReasonCategoryRoman(pefindoResult.Category), constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD)
 					}
-					if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-						data.Reason = fmt.Sprintf("%s %s & Baki Debet > 3 - 20 Juta", bpkbString, getReasonCategoryRoman(pefindoResult.Category))
+					if pefindoResult.TotalBakiDebetNonAgunan > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+						data.Reason = fmt.Sprintf("%s %s %s", bpkbString, getReasonCategoryRoman(pefindoResult.Category), constant.WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD)
 					}
 				}
 
@@ -695,11 +695,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 				if (pefindoResult.MaxOverdueLast12Months != nil && checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12Months) > constant.PBK_OVD_LAST_12) ||
 					(pefindoResult.MaxOverdue != nil && checkNullMaxOverdue(pefindoResult.MaxOverdue) > constant.PBK_OVD_CURRENT) {
 
-					if !(customerStatus == constant.STATUS_KONSUMEN_RO && isPrimePriority) && pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET && strings.Contains("Cluster E Cluster F", clusterCMO) {
-						data.Reason = fmt.Sprintf("%s %s & Baki Debet > 3 - 20 Juta & Tidak dapat dibiayai", bpkbString, getReasonCategoryRoman(pefindoResult.Category))
-						data.NextProcess = false
-						data.Decision = constant.DECISION_REJECT
-					}
+					// -- Update CR 2024-09-12: change `Cluster E Cluster F`` from REJECT to PASS -- //
 
 					// Reason ovd include all
 					if data.NextProcess && !bpkbName {
