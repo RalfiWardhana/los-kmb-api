@@ -968,8 +968,11 @@ func TestScorepro(t *testing.T) {
 				Code:      constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
 				Reason:    constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
 				Source:    constant.SOURCE_DECISION_SCOREPRO,
-				Info:      `{"prospect_id":"EFMTESTAKKK0161109","score":"400-599","result":"REJECT","score_band":"","score_result":"MEDIUM","status":"ASSTSH-S04","segmen":"4","is_tsi":true,"score_bin":"","deviasi":null}`,
+				Info:      `{"prospect_id":"EFMTESTAKKK0161109","score":"400-599","result":"REJECT","score_band":"","score_result":"MEDIUM","status":"ASSTSH-S04","segmen":"4","is_tsi":true,"score_bin":"","deviasi":{"NTF":0,"branch_id":"","FinalApproval":"","quota_amount":0,"quota_account":0,"booking_amount":0,"booking_account":0,"balance_amount":0,"balance_account":0,"is_active":true,"deviasi":false}}`,
 				IsDeviasi: true,
+			},
+			confimDeviasi: entity.ConfirmDeviasi{
+				IsActive: true,
 			},
 		},
 		{
