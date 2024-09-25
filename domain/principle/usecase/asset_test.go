@@ -7,6 +7,8 @@ import (
 	"los-kmb-api/domain/principle/mocks"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
+	"los-kmb-api/shared/common/platformevent"
+	mockplatformevent "los-kmb-api/shared/common/platformevent/mocks"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
@@ -186,6 +188,8 @@ func TestCheckNokaNosin(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
+			mockPlatformEvent := mockplatformevent.NewPlatformEventInterface(t)
+			var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
 
 			rst := resty.New()
 			httpmock.ActivateNonDefault(rst.GetClient())
@@ -209,9 +213,10 @@ func TestCheckNokaNosin(t *testing.T) {
 
 			if tc.expectSavePrincipleStepOne {
 				mockRepository.On("SavePrincipleStepOne", mock.AnythingOfType("entity.TrxPrincipleStepOne")).Return(nil).Once()
+				mockPlatformEvent.On("PublishEvent", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, 0).Return(nil).Once()
 			}
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockHttpClient, platformEvent)
 
 			result, err := usecase.CheckNokaNosin(ctx, tc.request)
 			require.Equal(t, tc.result, result)
@@ -309,7 +314,7 @@ func TestMDMGetMasterMappingBranchEmployee(t *testing.T) {
 				"Authorization": accessToken,
 			}, constant.METHOD_GET, false, 0, mock.AnythingOfType("int"), tc.prospectID, accessToken).Return(resp, tc.errEngineAPI)
 
-			usecase := NewUsecase(nil, mockHttpClient)
+			usecase := NewUsecase(nil, mockHttpClient, nil)
 
 			result, err := usecase.MDMGetMasterMappingBranchEmployee(ctx, tc.prospectID, tc.branchID, accessToken)
 

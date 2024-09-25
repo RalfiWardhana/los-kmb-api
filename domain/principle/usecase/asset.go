@@ -9,6 +9,7 @@ import (
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
+	"los-kmb-api/shared/common/platformevent"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
@@ -24,26 +25,30 @@ type (
 		repository interfaces.Repository
 		httpclient httpclient.HttpClient
 		usecase    interfaces.Usecase
+		producer   platformevent.PlatformEventInterface
 	}
 	usecase struct {
 		repository interfaces.Repository
 		httpclient httpclient.HttpClient
+		producer   platformevent.PlatformEventInterface
 	}
 )
 
-func NewMultiUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient, usecase interfaces.Usecase) interfaces.MultiUsecase {
+func NewMultiUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient, producer platformevent.PlatformEventInterface, usecase interfaces.Usecase) interfaces.MultiUsecase {
 
 	return &multiUsecase{
 		usecase:    usecase,
 		repository: repository,
 		httpclient: httpclient,
+		producer:   producer,
 	}
 }
 
-func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient) interfaces.Usecase {
+func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient, producer platformevent.PlatformEventInterface) interfaces.Usecase {
 	return &usecase{
 		repository: repository,
 		httpclient: httpclient,
+		producer:   producer,
 	}
 }
 
@@ -148,6 +153,19 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		AssetCode:          r.AssetCode,
 		STNKPhoto:          r.STNKPhoto,
 	})
+
+	statusCode := constant.PRINCIPLE_STATUS_ASSET_APPROVE
+	if data.Result == constant.DECISION_REJECT {
+		statusCode = constant.PRINCIPLE_STATUS_ASSET_REJECT
+	}
+
+	u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+		OrderID:     r.ProspectID,
+		Source:      3,
+		StatusCode:  statusCode,
+		ProductName: r.AssetCode,
+		BranchCode:  r.BranchID,
+	}), 0)
 
 	return
 }

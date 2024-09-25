@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"los-kmb-api/middlewares"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
@@ -71,6 +72,19 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 			trxPrincipleStepThree.Reason = resp.Reason
 
 			_ = u.repository.SavePrincipleStepThree(trxPrincipleStepThree)
+
+			statusCode := constant.PRINCIPLE_STATUS_BIAYA_APPROVE
+			if resp.Result == constant.DECISION_REJECT {
+				statusCode = constant.PRINCIPLE_STATUS_BIAYA_REJECT
+			}
+
+			u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+				OrderID:     r.ProspectID,
+				Source:      3,
+				StatusCode:  statusCode,
+				ProductName: principleStepOne.AssetCode,
+				BranchCode:  principleStepOne.BranchID,
+			}), 0)
 		}
 	}()
 

@@ -242,7 +242,7 @@ func TestBlacklistCheck(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
 			result, ct := usecase.BlacklistCheck(tc.index, tc.spCustomer)
 			require.Equal(t, tc.res, result)
@@ -333,7 +333,7 @@ func TestDupcheckIntegrator(t *testing.T) {
 				mock.Anything, map[string]string{}, constant.METHOD_POST, false, 0, timeout,
 				ProspectID, accessToken).Return(resp, tc.errHttp).Once()
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
 			result, err := usecase.DupcheckIntegrator(ctx, ProspectID, IDNumber, LegalName, BirthDate, MotherName, accessToken)
 			require.Equal(t, tc.resDupcheck, result)
@@ -384,7 +384,7 @@ func TestBannedPMKOrDSR(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockRepository.On("GetBannedPMKDSR", tc.encrypted).Return(tc.mockTrxBanned, tc.mockError)
 
-			usecase := NewUsecase(mockRepository, nil)
+			usecase := NewUsecase(mockRepository, nil, nil)
 
 			result, err := usecase.BannedPMKOrDSR(tc.encrypted)
 
@@ -441,7 +441,7 @@ func TestCustomerKMB(t *testing.T) {
 
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
-			usecase := NewUsecase(nil, nil)
+			usecase := NewUsecase(nil, nil, nil)
 
 			status, err := usecase.CustomerKMB(tc.spDupcheck)
 
@@ -531,7 +531,7 @@ func TestRejection(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockRepository.On("GetRejection", tc.encrypted).Return(tc.mockTrxReject, tc.mockError)
 
-			usecase := NewUsecase(mockRepository, nil)
+			usecase := NewUsecase(mockRepository, nil, nil)
 
 			result, banned, err := usecase.Rejection(tc.prospectID, tc.encrypted, tc.configValue)
 

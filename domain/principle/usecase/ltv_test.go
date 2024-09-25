@@ -850,7 +850,7 @@ func TestPrincipleElaborateLTV(t *testing.T) {
 			mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything).Return(tc.mappingElaborateLTV, tc.errMapping)
 			mockRepository.On("SaveTrxElaborateLTV", mock.Anything).Return(tc.errSaveTrxElaborateLTV)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
 			result, err := usecase.PrincipleElaborateLTV(ctx, tc.reqs)
 			require.Equal(t, tc.result, result)

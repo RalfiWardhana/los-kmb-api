@@ -384,6 +384,19 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			if err != nil {
 				return
 			}
+
+			statusCode := constant.PRINCIPLE_STATUS_PEMOHON_APPROVE
+			if data.Decision == constant.DECISION_REJECT {
+				statusCode = constant.PRINCIPLE_STATUS_PEMOHON_REJECT
+			}
+
+			u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+				OrderID:     r.ProspectID,
+				Source:      3,
+				StatusCode:  statusCode,
+				ProductName: principleStepOne.AssetCode,
+				BranchCode:  principleStepOne.BranchID,
+			}), 0)
 		}
 	}()
 

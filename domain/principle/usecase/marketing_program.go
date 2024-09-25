@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"los-kmb-api/middlewares"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
@@ -455,11 +456,16 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 		bakiDebet = filteringKMB.TotalBakiDebetNonCollateralBiro.(float64)
 	}
 
+	var customerStatusKMB string
+	if filteringKMB.CustomerStatusKMB != nil {
+		customerStatusKMB = filteringKMB.CustomerStatusKMB.(string)
+	}
+
 	payloadSubmitSally.Filtering = request.SallySubmit2wPrincipleFiltering{
 		Decision:          filteringKMB.Decision,
 		Reason:            filteringKMB.Reason.(string),
 		CustomerStatus:    customerStatus,
-		CustomerStatusKMB: "",
+		CustomerStatusKMB: customerStatusKMB,
 		CustomerSegment:   customerSegment,
 		IsBlacklist:       isBlacklist,
 		NextProcess:       nextProcess,
@@ -484,6 +490,16 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 		if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &sallySubmit2wPrincipleRes); err != nil {
 			return
 		}
+
+		statusCode := constant.PRINCIPLE_STATUS_SUBMIT_SALLY
+		u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, prospectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+			OrderID:     prospectID,
+			KpmID:       principleEmergencyContact.KPMID,
+			Source:      3,
+			StatusCode:  statusCode,
+			ProductName: principleStepOne.AssetCode,
+			BranchCode:  principleStepOne.BranchID,
+		}), 0)
 	}
 
 	return

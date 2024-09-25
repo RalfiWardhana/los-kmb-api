@@ -1255,3 +1255,14 @@ type SallySubmit2wPrincipleFiltering struct {
 	PBKReportSpouse   string  `json:"pbk_report_spouse"`
 	BakiDebet         float64 `json:"baki_debet"`
 }
+
+type Update2wPrincipleTransaction struct {
+	OrderID       string `json:"order_id"`
+	KpmID         int    `json:"kpm_id"`
+	Source        int    `json:"source"`
+	StatusCode    string `json:"status_code"`
+	ProductName   string `json:"product_name"`
+	Amount        int    `json:"amount"`
+	AssetTypeCode string `json:"asset_type_code"`
+	BranchCode    string `json:"branch_code"`
+}

@@ -2007,7 +2007,7 @@ func TestDukcapil(t *testing.T) {
 		resp, _ = rst.R().Post(os.Getenv("DUKCAPIL_FR_URL"))
 		mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("DUKCAPIL_FR_URL"), mock.Anything, map[string]string{}, constant.METHOD_POST, true, 2, mock.Anything, test.request.ProspectID, mock.Anything).Return(resp, nil).Once()
 
-		usecase := NewUsecase(mockRepository, mockHttpClient)
+		usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
 		data, err := usecase.Dukcapil(ctx, test.request, test.reqMetricsEkyc, "token")
 
@@ -2411,7 +2411,7 @@ func TestAsliri(t *testing.T) {
 		mockHttpClient := new(httpclient.MockHttpClient)
 		mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("ASLIRI_URL"), mock.Anything, map[string]string{}, constant.METHOD_POST, false, 0, timeout, prospectID, "token").Return(resp, test.err).Once()
 
-		service := NewUsecase(mockRepository, mockHttpClient)
+		service := NewUsecase(mockRepository, mockHttpClient, nil)
 
 		result, err := service.Asliri(ctx, test.payload, "token")
 
@@ -2540,7 +2540,7 @@ func TestKtp(t *testing.T) {
 
 			mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("KTP_VALIDATOR_URL"), mock.Anything, map[string]string{}, constant.METHOD_POST, false, 0, 30, tc.req.ProspectID, "token").Return(resp, tc.errKtpValidator).Once()
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
 			result, err := usecase.Ktp(ctx, tc.req, tc.reqMetricsEkyc, "token")
 

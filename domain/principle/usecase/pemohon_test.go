@@ -8,6 +8,8 @@ import (
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
+	"los-kmb-api/shared/common/platformevent"
+	mockplatformevent "los-kmb-api/shared/common/platformevent/mocks"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
@@ -118,7 +120,7 @@ func TestGetEmployeeData(t *testing.T) {
 
 			mockHttpClient.On("EngineAPI", mock.Anything, constant.DILEN_KMB_LOG, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), mock.Anything, map[string]string{"Authorization": "Bearer "}, constant.METHOD_POST, false, 0, timeout, "", "").Return(resp, tc.mockError).Once()
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
 			data, err := usecase.GetEmployeeData(context.Background(), tc.employeeID)
 
@@ -269,7 +271,7 @@ func TestGetFpdCMO(t *testing.T) {
 			resp, _ := rst.R().SetHeaders(map[string]string{"Content-Type": "application/json", "Authorization": ""}).Get(os.Getenv("AGREEMENT_LTV_FPD") + "?lob_id=2&cmo_id=" + tc.cmoID)
 
 			mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=2&cmo_id="+tc.cmoID, []byte(nil), map[string]string{"Authorization": ""}, constant.METHOD_GET, false, 0, timeout, "", "").Return(resp, tc.mockError).Once()
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
 			data, err := usecase.GetFpdCMO(ctx, tc.cmoID, tc.bpkbNameType)
 
@@ -339,7 +341,7 @@ func TestCheckCmoNoFPD(t *testing.T) {
 
 			mockRepository.On("CheckCMONoFPD", tc.cmoID, tc.bpkbName).Return(tc.mockReturnData, tc.mockReturnError)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
 			clusterCMOSaved, entitySaveTrxNoFPd, err := usecase.CheckCmoNoFPD(tc.prospectID, tc.cmoID, tc.cmoCategory, tc.cmoJoinDate, tc.defaultCluster, tc.bpkbName)
 			require.Equal(t, tc.expectedCluster, clusterCMOSaved)
@@ -414,6 +416,7 @@ func TestPrinciplePemohon(t *testing.T) {
 		expectSave                    bool
 		expectSavePrincipleStepTwo    bool
 		expectUpdatePrincipleStepOne  bool
+		expectPublishEvent            bool
 	}{
 		{
 			name: "error get principle step one",
@@ -465,6 +468,7 @@ func TestPrinciplePemohon(t *testing.T) {
 			expectBannedPMKOrDSR:         true,
 			expectSavePrincipleStepTwo:   true,
 			expectUpdatePrincipleStepOne: true,
+			expectPublishEvent:           true,
 		},
 		{
 			name: "error rejection",
@@ -513,6 +517,7 @@ func TestPrinciplePemohon(t *testing.T) {
 			expectRejection:              true,
 			expectSavePrincipleStepTwo:   true,
 			expectUpdatePrincipleStepOne: true,
+			expectPublishEvent:           true,
 		},
 		{
 			name: "error dupcheck integrator",
@@ -577,6 +582,7 @@ func TestPrinciplePemohon(t *testing.T) {
 			expectBlacklistCheck:         true,
 			expectSavePrincipleStepTwo:   true,
 			expectUpdatePrincipleStepOne: true,
+			expectPublishEvent:           true,
 		},
 		{
 			name: "error customer kmb",
@@ -699,6 +705,7 @@ func TestPrinciplePemohon(t *testing.T) {
 			expectGetEmployeeData:        true,
 			expectSavePrincipleStepTwo:   true,
 			expectUpdatePrincipleStepOne: true,
+			expectPublishEvent:           true,
 		},
 		{
 			name: "error get fpd cmo",
@@ -1235,6 +1242,8 @@ func TestPrinciplePemohon(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
+			mockPlatformEvent := mockplatformevent.NewPlatformEventInterface(t)
+			var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
 
 			mockRepository.On("GetPrincipleStepOne", tc.request.ProspectID).Return(tc.resGetPrincipleStepOne, tc.errGetPrincipleStepOne)
 			if tc.expectGetConfig {
@@ -1298,7 +1307,11 @@ func TestPrinciplePemohon(t *testing.T) {
 				mockUsecase.On("Save", mock.Anything, mock.Anything, mock.Anything).Return(tc.errSave)
 			}
 
-			multiUsecase := NewMultiUsecase(mockRepository, mockHttpClient, mockUsecase)
+			if tc.expectPublishEvent {
+				mockPlatformEvent.On("PublishEvent", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, 0).Return(nil).Once()
+			}
+
+			multiUsecase := NewMultiUsecase(mockRepository, mockHttpClient, platformEvent, mockUsecase)
 
 			result, err := multiUsecase.PrinciplePemohon(ctx, tc.request)
 
@@ -1377,7 +1390,7 @@ func TestSave(t *testing.T) {
 
 			mockRepository.On("SaveFiltering", tc.transaction, tc.trxDetailBiro, tc.transactionCMOnoFPD).Return(tc.errSaveFiltering).Once()
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
 			err := usecase.Save(tc.transaction, tc.trxDetailBiro, tc.transactionCMOnoFPD)
 
@@ -1500,7 +1513,7 @@ func TestCheckLatestPaidInstallment(t *testing.T) {
 			resp, _ := rst.R().SetHeaders(map[string]string{"Content-Type": "application/json", "Authorization": accessToken}).Get(os.Getenv("LASTEST_PAID_INSTALLMENT_URL") + tc.customerID + "/2")
 
 			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.customerID+"/2", []byte(nil), map[string]string{}, constant.METHOD_GET, false, 0, timeout, tc.prospectID, accessToken).Return(resp, tc.mockError).Once()
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
 			rrdDate, monthsDiff, err := usecase.CheckLatestPaidInstallment(ctx, tc.prospectID, tc.customerID, accessToken)
 

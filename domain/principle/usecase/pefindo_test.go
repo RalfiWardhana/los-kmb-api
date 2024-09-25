@@ -3574,7 +3574,7 @@ func TestPefindo(t *testing.T) {
 
 			param, _ := json.Marshal(tc.reqPefindo)
 			mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("NEW_KMB_PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, tc.reqPefindo.ProspectID, accessToken).Return(resp, tc.errPefindo).Once()
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
 			rFilteringPefindo, rPefindo, _, err := usecase.Pefindo(ctx, tc.reqPefindo, tc.customerStatus, tc.clusterCMO, tc.bpkbName)
 			require.Equal(t, tc.respFilteringPefindo, rFilteringPefindo)

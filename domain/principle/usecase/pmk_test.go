@@ -421,7 +421,7 @@ func TestCheckPMK(t *testing.T) {
 				mockRepository.On("GetMinimalIncomePMK", tc.branchID, tc.customerKMB).Return(tc.resGetMinimalIncomePMK, tc.errGetMinimalIncomePMK).Once()
 			}
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
 			result, err := usecase.CheckPMK(tc.branchID, tc.customerKMB, tc.income, tc.homeStatus, tc.professionID, tc.birthDate, tc.tenor, tc.maritalStatus, tc.empYear, tc.empMonth, tc.stayYear, tc.stayMonth)
 
