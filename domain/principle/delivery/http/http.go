@@ -8,6 +8,7 @@ import (
 	"los-kmb-api/models/request"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
+	"net/http"
 
 	_ "github.com/KB-FMF/los-common-library/errors"
 	"github.com/KB-FMF/los-common-library/response"
@@ -65,7 +66,7 @@ func (c *handler) VerifyAsset(ctx echo.Context) (err error) {
 
 		code, err := utils.WrapError(err)
 
-		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err)
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
@@ -98,7 +99,7 @@ func (c *handler) VerifyPemohon(ctx echo.Context) (err error) {
 
 		code, err := utils.WrapError(err)
 
-		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err)
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
@@ -133,7 +134,7 @@ func (c *handler) StepPrinciple(ctx echo.Context) (err error) {
 
 		code, err := utils.WrapError(err)
 
-		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err)
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
@@ -166,7 +167,7 @@ func (c *handler) ElaborateLTV(ctx echo.Context) (err error) {
 
 		code, err := utils.WrapError(err)
 
-		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err)
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
@@ -199,7 +200,7 @@ func (c *handler) VerifyPembiayaan(ctx echo.Context) (err error) {
 
 		code, err := utils.WrapError(err)
 
-		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err)
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
@@ -232,7 +233,7 @@ func (c *handler) EmergencyContact(ctx echo.Context) (err error) {
 
 		code, err := utils.WrapError(err)
 
-		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err)
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), nil)

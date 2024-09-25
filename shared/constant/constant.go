@@ -695,6 +695,8 @@ const (
 
 	FINANCE_PURPOSE_MODAL_KERJA = "Modal Kerja Fasilitas Modal Usaha"
 
+	PRINCIPLE_ERROR_RESPONSE_MESSAGE = "komunikasi antar layanan terjadi kesalahan, silakan coba lagi"
+
 	WORKER_UNPROCESS                    = "UNPR"
 	WORKER_IDLE                         = "IDLE"
 	WORKER_TYPE_RAW                     = "RAW"
