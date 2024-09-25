@@ -2034,7 +2034,7 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 
 	status, err = u.repository.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error " + err.Error())
 		return
 	}
 

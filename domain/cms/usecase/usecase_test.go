@@ -2806,9 +2806,9 @@ func TestSubmitApproval(t *testing.T) {
 			DecisionBy:    "User123",
 		}
 
-		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error")
+		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error query Submit Approval failed")
 
-		mockRepository.On("SubmitApproval", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(entity.TrxStatus{}, errors.New(constant.ERROR_UPSTREAM+" - Submit Approval error")).Once()
+		mockRepository.On("SubmitApproval", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(entity.TrxStatus{}, errors.New("query Submit Approval failed")).Once()
 
 		_, err := usecase.SubmitApproval(context.Background(), req)
 
