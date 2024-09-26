@@ -707,6 +707,8 @@ const (
 	PRINCIPLE_STATUS_BIAYA_REJECT    = "BIAYA-R"
 	PRINCIPLE_STATUS_SUBMIT_SALLY    = "SAL-A"
 
+	PRINCIPLE_ERROR_RESPONSE_MESSAGE = "komunikasi antar layanan terjadi kesalahan, silakan coba lagi"
+
 	WORKER_UNPROCESS                    = "UNPR"
 	WORKER_IDLE                         = "IDLE"
 	WORKER_TYPE_RAW                     = "RAW"
