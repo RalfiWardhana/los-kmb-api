@@ -10445,7 +10445,7 @@ func TestSubmitApproval(t *testing.T) {
 				WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
 				ELSE NULL
 			END AS activity 
-			FROM trx_status ts with (UPDLOCK)
+			FROM trx_status ts
 			LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
 			LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
 			WHERE ts.ProspectID = 'ppid' AND ts.status_process = 'ONP'`)).
@@ -10545,7 +10545,7 @@ func TestSubmitApproval(t *testing.T) {
 				WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
 				ELSE NULL
 			END AS activity 
-			FROM trx_status ts with (UPDLOCK)
+			FROM trx_status ts
 			LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
 			LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
 			WHERE ts.ProspectID = 'ppid' AND ts.status_process = 'ONP'`)).
@@ -10650,7 +10650,7 @@ func TestSubmitApproval(t *testing.T) {
 				WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
 				ELSE NULL
 			END AS activity 
-			FROM trx_status ts with (UPDLOCK)
+			FROM trx_status ts
 			LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
 			LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
 			WHERE ts.ProspectID = 'ppid' AND ts.status_process = 'ONP'`)).
@@ -10776,7 +10776,7 @@ func TestSubmitApproval(t *testing.T) {
 				WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
 				ELSE NULL
 			END AS activity 
-			FROM trx_status ts with (UPDLOCK)
+			FROM trx_status ts
 			LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
 			LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
 			WHERE ts.ProspectID = 'ppid' AND ts.status_process = 'ONP'`)).
@@ -10903,7 +10903,7 @@ func TestSubmitApproval(t *testing.T) {
 				WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
 				ELSE NULL
 			END AS activity 
-			FROM trx_status ts with (UPDLOCK)
+			FROM trx_status ts
 			LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
 			LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
 			WHERE ts.ProspectID = 'ppid' AND ts.status_process = 'ONP'`)).
