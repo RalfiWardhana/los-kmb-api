@@ -3159,7 +3159,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 						WHEN mbd.balance_amount >= ta.NTF AND mbd.balance_account > 0 THEN 1
 						ELSE 0
 					END AS deviasi
-					FROM trx_master tm 
+					FROM trx_master tm WITH (UPDLOCK)
 					LEFT JOIN trx_apk ta ON tm.ProspectID = ta.ProspectID 
 					LEFT JOIN m_branch_deviasi mbd ON tm.BranchID = mbd.BranchID 
 					WHERE tm.ProspectID = '%s'`, trxStatus.ProspectID)).Scan(&confirmDeviasi).Error; err != nil {
