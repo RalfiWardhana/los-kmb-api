@@ -3139,7 +3139,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 
 		// cek trx status terbaru dan pengajuan deviasi atau bukan
 		var cekstatus entity.TrxStatus
-		if err := r.NewKmb.Raw(fmt.Sprintf(`SELECT ts.ProspectID, 
+		if err := tx.Raw(fmt.Sprintf(`SELECT ts.ProspectID, 
 				CASE 
  					WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
 					ELSE NULL
@@ -3151,39 +3151,40 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 			return err
 		}
 
-		// cek kuota deviasi
-		var confirmDeviasi entity.ConfirmDeviasi
+		// jika pengajuan deviasi approve maka cek kuota dan kurangi kuota deviasi
 		if approval.IsFinal && !approval.IsEscalation && req.Decision == constant.DECISION_APPROVE && cekstatus.Activity == constant.SOURCE_DECISION_DEVIASI {
-			if err := r.NewKmb.Raw(fmt.Sprintf(`SELECT ta.NTF, mbd.*,
-					CASE 
-						WHEN mbd.balance_amount >= ta.NTF AND mbd.balance_account > 0 THEN 1
-						ELSE 0
-					END AS deviasi
-					FROM trx_master tm WITH (UPDLOCK)
+
+			// cek kuota deviasi
+			// kuota tersedia, kurangi kuota deviasi
+			var confirmDeviasi entity.ConfirmDeviasi
+			if err = tx.Raw(fmt.Sprintf(`UPDATE m_branch_deviasi 
+				SET booking_amount = q.booking_amount+q.NTF, booking_account = q.booking_account+1, balance_amount = q.balance_amount-q.NTF, balance_account = q.balance_account-1
+				OUTPUT q.NTF, inserted.*,
+				CASE 
+					WHEN inserted.booking_account = deleted.booking_account+1 THEN 1
+					ELSE 0
+				END as deviasi
+				FROM (
+					SELECT ta.NTF, mbd.*
+					FROM m_branch_deviasi mbd
+					LEFT JOIN trx_master tm ON mbd.BranchID = tm.BranchID 
 					LEFT JOIN trx_apk ta ON tm.ProspectID = ta.ProspectID 
-					LEFT JOIN m_branch_deviasi mbd ON tm.BranchID = mbd.BranchID 
-					WHERE tm.ProspectID = '%s'`, trxStatus.ProspectID)).Scan(&confirmDeviasi).Error; err != nil {
-				return err
-			}
-
-			info, _ := json.Marshal(confirmDeviasi)
-			trxDetail.Info = string(info)
-
-			// jika pengajuan deviasi approve maka cek kuota dan kurangi kuota deviasi
-			if confirmDeviasi.IsActive && confirmDeviasi.Deviasi {
-				// kuota tersedia, kurangi kuota deviasi
-				mappingBranchDeviasi := entity.MappingBranchDeviasi{
-					BookingAmount:  confirmDeviasi.BookingAmount + confirmDeviasi.NTF,
-					BookingAccount: confirmDeviasi.BookingAccount + 1,
-					BalanceAmount:  confirmDeviasi.BalanceAmount - confirmDeviasi.NTF,
-					BalanceAccount: confirmDeviasi.BalanceAccount - 1,
-				}
-
-				if err := tx.Model(&mappingBranchDeviasi).Select("booking_amount", "booking_account", "balance_amount", "balance_account").Where("BranchID = ? AND balance_amount = ? AND balance_account = ?", confirmDeviasi.BranchID, confirmDeviasi.BalanceAmount, confirmDeviasi.BalanceAccount).Updates(mappingBranchDeviasi).Error; err != nil {
+					WHERE tm.ProspectID = '%s'
+				) as q
+				WHERE m_branch_deviasi.BranchID = q.BranchID AND m_branch_deviasi.is_active = 1 AND q.balance_amount >= q.NTF AND q.balance_account > 0
+				`, trxStatus.ProspectID)).Scan(&confirmDeviasi).Error; err != nil {
+				if err != gorm.ErrRecordNotFound {
 					return err
 				}
+			}
+
+			if confirmDeviasi.Deviasi {
+
+				info, _ := json.Marshal(confirmDeviasi)
+				trxDetail.Info = string(info)
 
 			} else {
+
 				// kuota tidak tersedia, reject deviasi
 				// tidak mengubah rule_code karena rule_code digunakan didetail transaksi (rule_code credit committe)
 				trxStatus.Decision = constant.DB_DECISION_REJECT
@@ -3196,6 +3197,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 				req.Reason = constant.REASON_REJECT_KUOTA_DEVIASI
 				req.Note = constant.REASON_REJECT_KUOTA_DEVIASI
 			}
+
 		}
 
 		// trx_status
