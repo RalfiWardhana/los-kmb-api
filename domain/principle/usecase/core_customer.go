@@ -251,6 +251,7 @@ func (u usecase) PrincipleCoreCustomer(ctx context.Context, prospectID string, r
 			"residence_city":                    principleStepOne.ResidenceCity,
 			"residence_kecamatan":               principleStepOne.ResidenceKecamatan,
 			"residence_kelurahan":               principleStepOne.ResidenceKelurahan,
+			"residence_province":                principleStepOne.ResidenceProvice,
 			"residence_phone":                   principleStepOne.ResidencePhone,
 			"residence_rt":                      principleStepOne.ResidenceRT,
 			"residence_rw":                      principleStepOne.ResidenceRW,
