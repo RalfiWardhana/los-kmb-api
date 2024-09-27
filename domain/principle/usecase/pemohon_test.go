@@ -1323,6 +1323,8 @@ func TestPrinciplePemohon(t *testing.T) {
 				require.Equal(t, tc.result, result)
 			}
 
+			time.Sleep(100 * time.Millisecond)
+
 			mockRepository.AssertExpectations(t)
 			mockHttpClient.AssertExpectations(t)
 			mockUsecase.AssertExpectations(t)
