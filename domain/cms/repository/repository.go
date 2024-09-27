@@ -3148,6 +3148,9 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 				LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID 
 				LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
 				WHERE ts.ProspectID = '%s' AND ts.status_process = '%s'`, trxStatus.ProspectID, constant.STATUS_ONPROCESS)).Scan(&cekstatus).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				err = errors.New(constant.RECORD_NOT_FOUND)
+			}
 			return err
 		}
 
@@ -3173,6 +3176,7 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 				) as q
 				WHERE m_branch_deviasi.BranchID = q.BranchID AND m_branch_deviasi.is_active = 1 AND q.balance_amount >= q.NTF AND q.balance_account > 0
 				`, trxStatus.ProspectID)).Scan(&confirmDeviasi).Error; err != nil {
+				// record not found artinya kuota deviasi tidak tersedia
 				if err != gorm.ErrRecordNotFound {
 					return err
 				}

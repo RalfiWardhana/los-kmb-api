@@ -446,7 +446,7 @@ func TestReviewPrescreening(t *testing.T) {
 			DecisionBy: "User123",
 		}
 
-		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dalam prescreening")
+		errFinal := errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dalam prescreening")
 
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(entity.TrxStatus{
 			Activity:       constant.ACTIVITY_PROCESS,
@@ -529,7 +529,7 @@ func TestReviewPrescreeningInvalidStatus(t *testing.T) {
 			Reason:     "Valid reason",
 			DecisionBy: "User123",
 		}
-		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dalam prescreening")
+		errFinal := errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dalam prescreening")
 
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(entity.TrxStatus{
 			Activity:       constant.ACTIVITY_PROCESS,
@@ -1502,7 +1502,7 @@ func TestCancelOrder(t *testing.T) {
 		var cache *bigcache.BigCache
 		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
 
-		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dapat dicancel")
+		errFinal := errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dapat dicancel")
 
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(entity.TrxStatus{
 			Activity:       constant.ACTIVITY_STOP,
@@ -1510,7 +1510,7 @@ func TestCancelOrder(t *testing.T) {
 			Decision:       constant.DB_DECISION_REJECT,
 		}, errSave).Once()
 
-		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dapat dicancel")).Once()
+		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dapat dicancel")).Once()
 
 		_, err := usecase.CancelOrder(context.Background(), req)
 
@@ -1701,7 +1701,7 @@ func TestSubmitDecision(t *testing.T) {
 		var cache *bigcache.BigCache
 		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
 
-		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Status order tidak sedang dalam credit process")
+		errFinal := errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak sedang dalam credit process")
 
 		mockRepository.On("GetTrxStatus", mock.Anything).Return(entity.TrxStatus{
 			Activity: constant.ACTIVITY_PROCESS,

@@ -591,7 +591,7 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 
 		decisionInfo, ok := decisionMapping[req.Decision]
 		if !ok {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Decision tidak valid")
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decision tidak valid")
 			return
 		}
 
@@ -638,7 +638,7 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 		data.Reason = reason
 
 	} else {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dalam prescreening")
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dalam prescreening")
 		return
 	}
 
@@ -1119,7 +1119,7 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 			Note:       req.Note,
 		}
 	} else {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Status order tidak sedang dalam credit process")
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak sedang dalam credit process")
 		return
 	}
 
@@ -1460,7 +1460,7 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 		}
 
 	} else {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dapat dicancel")
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dapat dicancel")
 		return
 	}
 
@@ -2034,7 +2034,13 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 
 	status, err = u.repository.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error " + err.Error())
+		if err.Error() == constant.RECORD_NOT_FOUND {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Submit Approval error status order tidak dapat diproses")
+		} else if strings.Contains(err.Error(), "duplicate") {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Submit Approval error " + err.Error())
+		} else {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error " + err.Error())
+		}
 		return
 	}
 
