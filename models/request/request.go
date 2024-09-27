@@ -1001,12 +1001,14 @@ type PrinciplePemohon struct {
 	IDNumber                string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
 	SpouseIDNumber          string  `json:"spouse_id_number" example:"3506126712000002"`
 	MobilePhone             string  `json:"mobile_phone" validate:"required,min=9,max=14" example:"085880529100"`
+	Email                   string  `json:"email" validate:"required,email,max=100" example:"jonathaxx@gmail.com"`
 	LegalName               string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
 	FullName                string  `json:"full_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
 	BirthDate               string  `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
 	BirthPlace              string  `json:"birth_place" validate:"required,max=100" example:"Jakarta"`
 	SurgateMotherName       string  `json:"surgate_mother_name" validate:"required,max=50" example:"IBU"`
 	Gender                  string  `json:"gender" validate:"required,max=1" example:"M"`
+	Religion                string  `json:"religion" validate:"required,len=1"  example:"1"`
 	LegalAddress            string  `json:"legal_address" validate:"required,max=100" example:"Dermaga Baru"`
 	LegalRT                 string  `json:"legal_rt" validate:"required,min=1,max=3" example:"001"`
 	LegalRW                 string  `json:"legal_rw" validate:"required,min=1,max=3" example:"003"`

@@ -2578,11 +2578,13 @@ type TrxPrincipleStepTwo struct {
 	IDNumber                string      `gorm:"column:IDNumber;type:varchar(16)"`
 	LegalName               string      `gorm:"column:LegalName;type:varchar(100);"`
 	MobilePhone             string      `gorm:"column:MobilePhone;type:varchar(20);"`
+	Email                   string      `gorm:"column:Email;type:varchar(100);"`
 	FullName                string      `gorm:"column:FullName;type:varchar(100);"`
 	BirthDate               time.Time   `gorm:"column:BirthDate"`
 	BirthPlace              string      `gorm:"column:BirthPlace;type:varchar(100);"`
 	SurgateMotherName       string      `gorm:"column:SurgateMotherName;type:varchar(100);"`
 	Gender                  string      `gorm:"column:Gender;type:varchar(10);"`
+	Religion                string      `gorm:"column:Religion;type:varchar(10);"`
 	SpouseIDNumber          interface{} `gorm:"column:SpouseIDNumber;type:varchar(16)"`
 	LegalAddress            string      `gorm:"column:LegalAddress;type:varchar(100);"`
 	LegalRT                 string      `gorm:"column:LegalRT;type:varchar(3);"`
@@ -2594,6 +2596,7 @@ type TrxPrincipleStepTwo struct {
 	LegalZipCode            string      `gorm:"column:LegalZipCode;type:varchar(5)"`
 	LegalAreaPhone          string      `gorm:"column:LegalAreaPhone;type:varchar(4)"`
 	LegalPhone              string      `gorm:"column:LegalPhone;type:varchar(10)"`
+	CompanyName             string      `gorm:"column:CompanyName;type:varchar(50);"`
 	CompanyAddress          string      `gorm:"column:CompanyAddress;type:varchar(100);"`
 	CompanyRT               string      `gorm:"column:CompanyRT;type:varchar(3);"`
 	CompanyRW               string      `gorm:"column:CompanyRW;type:varchar(3);"`

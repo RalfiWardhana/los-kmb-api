@@ -342,6 +342,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			trxPrincipleStepTwo.LegalZipCode = r.LegalZipCode
 			trxPrincipleStepTwo.LegalAreaPhone = r.LegalPhoneArea
 			trxPrincipleStepTwo.LegalPhone = r.LegalPhone
+			trxPrincipleStepTwo.CompanyName = r.CompanyName
 			trxPrincipleStepTwo.CompanyAddress = r.CompanyAddress
 			trxPrincipleStepTwo.CompanyRT = r.CompanyRT
 			trxPrincipleStepTwo.CompanyRW = r.CompanyRW
