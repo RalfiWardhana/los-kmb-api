@@ -331,6 +331,8 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			trxPrincipleStepTwo.BirthPlace = r.BirthPlace
 			trxPrincipleStepTwo.SurgateMotherName = r.SurgateMotherName
 			trxPrincipleStepTwo.Gender = r.Gender
+			trxPrincipleStepTwo.Email = r.Email
+			trxPrincipleStepTwo.Religion = r.Religion
 			trxPrincipleStepTwo.SpouseIDNumber = utils.CheckEmptyString(r.SpouseIDNumber)
 			trxPrincipleStepTwo.LegalAddress = r.LegalAddress
 			trxPrincipleStepTwo.LegalRT = r.LegalRT

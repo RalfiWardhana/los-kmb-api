@@ -1155,6 +1155,7 @@ type ReqMarsevCalculateInstallment struct {
 }
 
 type ReqSallySubmit2wPrinciple struct {
+	Document         []SallySubmit2wPrincipleDocument       `json:"documents"`
 	Order            SallySubmit2wPrincipleOrder            `json:"order"`
 	Kop              SallySubmit2wPrincipleKop              `json:"kop"`
 	ObjekSewa        SallySubmit2wPrincipleObjekSewa        `json:"objeksewa"`
@@ -1167,7 +1168,6 @@ type SallySubmit2wPrincipleOrder struct {
 	Application SallySubmit2wPrincipleApplication `json:"application"`
 	Asset       SallySubmit2wPrincipleAsset       `json:"asset"`
 	Customer    SallySubmit2wPrincipleCustomer    `json:"customer"`
-	Document    []SallySubmit2wPrincipleDocument  `json:"document"`
 }
 
 type SallySubmit2wPrincipleApplication struct {
@@ -1203,21 +1203,20 @@ type SallySubmit2wPrincipleKop struct {
 }
 
 type SallySubmit2wPrincipleObjekSewa struct {
-	Documents          []SallySubmit2wPrincipleDocument `json:"documents"`
-	AssetUsageID       string                           `json:"asset_usage_id"`
-	CategoryID         string                           `json:"category_id"`
-	AssetCode          string                           `json:"asset_code"`
-	ManufacturingYear  int                              `json:"manufacturing_year"`
-	Color              string                           `json:"color"`
-	CylinderVolume     int                              `json:"cylinder_volume"`
-	IsBBN              bool                             `json:"is_bbn"`
-	PlateAreaCode      string                           `json:"plate_area_code"`
-	ChassisNumber      string                           `json:"chassis_number"`
-	MachineNumber      string                           `json:"machine_number"`
-	OTRAmount          float64                          `json:"otr_amount"`
-	ExpiredSTNKDate    string                           `json:"expired_stnk_date"`
-	ExpiredSTNKTaxDate string                           `json:"expired_stnk_tax_date"`
-	UpdatedBy          string                           `json:"updated_by"`
+	AssetUsageID       string  `json:"asset_usage_id"`
+	CategoryID         string  `json:"category_id"`
+	AssetCode          string  `json:"asset_code"`
+	ManufacturingYear  int     `json:"manufacturing_year"`
+	Color              string  `json:"color"`
+	CylinderVolume     int     `json:"cylinder_volume"`
+	IsBBN              bool    `json:"is_bbn"`
+	PlateAreaCode      string  `json:"plate_area_code"`
+	ChassisNumber      string  `json:"chassis_number"`
+	MachineNumber      string  `json:"machine_number"`
+	OTRAmount          float64 `json:"otr_amount"`
+	ExpiredSTNKDate    string  `json:"expired_stnk_date"`
+	ExpiredSTNKTaxDate string  `json:"expired_stnk_tax_date"`
+	UpdatedBy          string  `json:"updated_by"`
 }
 
 type SallySubmit2wPrincipleBiaya struct {

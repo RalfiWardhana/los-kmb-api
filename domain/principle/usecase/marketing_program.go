@@ -369,6 +369,13 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 		})
 	}
 
+	if selfiePhoto, ok := principleStepTwo.SelfiePhoto.(string); ok {
+		documents = append(documents, request.SallySubmit2wPrincipleDocument{
+			URL:  selfiePhoto,
+			Type: "SELFIE",
+		})
+	}
+
 	if stnkPhoto, ok := principleStepOne.STNKPhoto.(string); ok {
 		documents = append(documents, request.SallySubmit2wPrincipleDocument{
 			URL:  stnkPhoto,
@@ -376,7 +383,7 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 		})
 	}
 
-	payloadSubmitSally.Order.Document = documents
+	payloadSubmitSally.Document = documents
 
 	isPsa := false
 	if principleStepThree.Dealer == constant.DEALER_PSA {
