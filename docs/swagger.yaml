@@ -1648,6 +1648,10 @@ definitions:
         example: S1
         maxLength: 10
         type: string
+      email:
+        example: jonathaxx@gmail.com
+        maxLength: 100
+        type: string
       employement_since_month:
         example: 12
         maximum: 12
@@ -1750,6 +1754,9 @@ definitions:
         example: SAL-1140024080800004
         maxLength: 20
         type: string
+      religion:
+        example: "1"
+        type: string
       selfie_photo:
         example: https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/selfie_SAL-1140024081400003.jpg
         maxLength: 250
@@ -1801,6 +1808,7 @@ definitions:
     - company_zipcode
     - economy_sector
     - education
+    - email
     - employement_since_month
     - employement_since_year
     - full_name
@@ -1825,6 +1833,7 @@ definitions:
     - monthly_fixed_income
     - profession_id
     - prospect_id
+    - religion
     - surgate_mother_name
     type: object
   request.Recalculate:

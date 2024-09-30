@@ -982,7 +982,7 @@ type PrincipleAsset struct {
 	ResidenceAddress   string `json:"residence_address" validate:"required,max=100" example:"Dermaga Baru"`
 	ResidenceRT        string `json:"residence_rt" validate:"required,min=1,max=3" example:"001"`
 	ResidenceRW        string `json:"residence_rw" validate:"required,min=1,max=3" example:"002"`
-	ResidenceProvice   string `json:"residence_province" validate:"required,max=50" example:"Jakarta"`
+	ResidenceProvince  string `json:"residence_province" validate:"required,max=50" example:"Jakarta"`
 	ResidenceCity      string `json:"residence_city" validate:"required,max=30" example:"Jakarta Timur"`
 	ResidenceKecamatan string `json:"residence_kecamatan" validate:"required,max=30" example:"Duren Sawit"`
 	ResidenceKelurahan string `json:"residence_kelurahan" validate:"required,max=30" example:"Klender"`

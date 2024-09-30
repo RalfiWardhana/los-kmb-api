@@ -55,7 +55,7 @@ func TestVerifyAsset(t *testing.T) {
 		ResidenceAddress:   "Jl. PATIMURA",
 		ResidenceRT:        "001",
 		ResidenceRW:        "002",
-		ResidenceProvice:   "JAWA TIMUR",
+		ResidenceProvince:  "JAWA TIMUR",
 		ResidenceCity:      "KOTA MALANG",
 		ResidenceKecamatan: "LOWOKWARU",
 		ResidenceKelurahan: "LOWOKWARU",

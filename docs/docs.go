@@ -4918,6 +4918,7 @@ const docTemplate = `{
                 "company_zipcode",
                 "economy_sector",
                 "education",
+                "email",
                 "employement_since_month",
                 "employement_since_year",
                 "full_name",
@@ -4942,6 +4943,7 @@ const docTemplate = `{
                 "monthly_fixed_income",
                 "profession_id",
                 "prospect_id",
+                "religion",
                 "surgate_mother_name"
             ],
             "properties": {
@@ -5022,6 +5024,11 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 10,
                     "example": "S1"
+                },
+                "email": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "jonathaxx@gmail.com"
                 },
                 "employement_since_month": {
                     "type": "integer",
@@ -5149,6 +5156,10 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 20,
                     "example": "SAL-1140024080800004"
+                },
+                "religion": {
+                    "type": "string",
+                    "example": "1"
                 },
                 "selfie_photo": {
                     "type": "string",

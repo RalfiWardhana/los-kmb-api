@@ -2551,7 +2551,7 @@ type TrxPrincipleStepOne struct {
 	ResidenceAddress   string      `gorm:"column:ResidenceAddress;type:varchar(100);"`
 	ResidenceRT        string      `gorm:"column:ResidenceRT;type:varchar(3)"`
 	ResidenceRW        string      `gorm:"column:ResidenceRW;type:varchar(3)"`
-	ResidenceProvice   string      `gorm:"column:ResidenceProvice;type:varchar(50)"`
+	ResidenceProvince  string      `gorm:"column:ResidenceProvince;type:varchar(50)"`
 	ResidenceCity      string      `gorm:"column:ResidenceCity;type:varchar(30)"`
 	ResidenceKecamatan string      `gorm:"column:ResidenceKecamatan;type:varchar(30)"`
 	ResidenceKelurahan string      `gorm:"column:ResidenceKelurahan;type:varchar(30)"`
