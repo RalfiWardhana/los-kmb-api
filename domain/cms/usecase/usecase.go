@@ -1108,8 +1108,12 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 
 		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail)
 		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")
-			return
+			if err.Error() == constant.ERROR_ROWS_AFFECTED {
+				err = nil
+			} else {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error " + err.Error())
+				return
+			}
 		}
 
 		data = response.CAResponse{

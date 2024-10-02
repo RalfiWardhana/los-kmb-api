@@ -1842,9 +1842,9 @@ func TestSubmitDecision(t *testing.T) {
 			Alias: "CBM",
 		}, nil).Once()
 
-		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")
+		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error update failed")
 
-		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")).Once()
+		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New("update failed")).Once()
 
 		_, err := usecase.SubmitDecision(context.Background(), req)
 

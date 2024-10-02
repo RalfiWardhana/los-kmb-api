@@ -373,6 +373,7 @@ const (
 	TOKEN_INVALID         = "token tidak valid."
 	RESTY_MAX_RETRY_ERROR = "Max retry attempt exceeded"
 	ERROR_NOT_FOUND       = "data_not_found"
+	ERROR_ROWS_AFFECTED   = "RowsAffected 0"
 
 	//PRE SCREENING
 	QUICK_APPROVE      = false

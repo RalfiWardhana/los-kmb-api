@@ -5838,12 +5838,12 @@ func TestProcessTransaction(t *testing.T) {
 	t.Run("success update", func(t *testing.T) {
 
 		mock.ExpectBegin()
-		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_ca_decision" ("ProspectID","decision","slik_result","note","created_at","created_by","decision_by","final_approval") VALUES (?,?,?,?,?,?,?,?)`)).
-			WithArgs(trxCaDecision.ProspectID, trxCaDecision.Decision, trxCaDecision.SlikResult, trxCaDecision.Note, sqlmock.AnyArg(), trxCaDecision.CreatedBy, trxCaDecision.DecisionBy, trxCaDecision.FinalApproval).
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "source_decision" = ?, "status_process" = ?  WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ? AND source_decision = 'CRA'))`)).
+			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "source_decision" = ?, "status_process" = ?  WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
-			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_ca_decision" ("ProspectID","decision","slik_result","note","created_at","created_by","decision_by","final_approval") VALUES (?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxCaDecision.ProspectID, trxCaDecision.Decision, trxCaDecision.SlikResult, trxCaDecision.Note, sqlmock.AnyArg(), trxCaDecision.CreatedBy, trxCaDecision.DecisionBy, trxCaDecision.FinalApproval).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","reason","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).

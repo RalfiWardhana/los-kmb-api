@@ -2470,6 +2470,25 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 
 	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
+		// if trx not cancel/stop then check source_decision CRA
+		if trxStatus.Activity != constant.ACTIVITY_STOP {
+			// trx_status
+			result := tx.Model(&trxStatus).Where("ProspectID = ? AND source_decision = 'CRA'", trxStatus.ProspectID).Updates(trxStatus)
+			if result.Error != nil {
+				err = result.Error
+				return err
+			}
+			if result.RowsAffected == 0 {
+				err = errors.New(constant.ERROR_ROWS_AFFECTED)
+				return err
+			}
+		} else {
+			// trx_status
+			if err := tx.Model(&trxStatus).Where("ProspectID = ?", trxStatus.ProspectID).Updates(trxStatus).Error; err != nil {
+				return err
+			}
+		}
+
 		// trx_ca_decision
 		result := tx.Model(&trxCaDecision).Where("ProspectID = ?", trxCaDecision.ProspectID).Updates(trxCaDecision)
 
@@ -2478,11 +2497,6 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 			if err = tx.Create(&trxCaDecision).Error; err != nil {
 				return err
 			}
-		}
-
-		// trx_status
-		if err := tx.Model(&trxStatus).Where("ProspectID = ?", trxStatus.ProspectID).Updates(trxStatus).Error; err != nil {
-			return err
 		}
 
 		// trx_details
