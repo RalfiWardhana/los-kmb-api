@@ -221,7 +221,7 @@ func (c *handler) VerifyPembiayaan(ctx echo.Context) (err error) {
 // @Tags KmbPrinciple
 // @Produce json
 // @Param body body request.PrincipleEmergencyContact true "Body payload"
-// @Success 200 {object} response.ApiResponse{}
+// @Success 200 {object} response.ApiResponse{data=response.UsecaseApi}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
 // @Router /api/v3/kmb/emergency-contact [post]
@@ -236,7 +236,7 @@ func (c *handler) EmergencyContact(ctx echo.Context) (err error) {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "800"), err)
 	}
 
-	err = c.usecase.PrincipleEmergencyContact(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
+	data, err := c.usecase.PrincipleEmergencyContact(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
 
@@ -245,7 +245,7 @@ func (c *handler) EmergencyContact(ctx echo.Context) (err error) {
 		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
 	}
 
-	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), nil)
+	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
 
 }
 
@@ -254,7 +254,6 @@ func (c *handler) EmergencyContact(ctx echo.Context) (err error) {
 // @Tags KmbPrinciple
 // @Produce json
 // @Param prospectID path string true "Prospect ID"
-// @Param body body request.PrincipleCoreCustomer true "Body payload"
 // @Success 200 {object} response.ApiResponse{}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
@@ -286,7 +285,6 @@ func (c *handler) CoreCustomer(ctx echo.Context) (err error) {
 // @Tags KmbPrinciple
 // @Produce json
 // @Param prospectID path string true "Prospect ID"
-// @Param body body request.PrincipleMarketingProgram true "Body payload"
 // @Success 200 {object} response.ApiResponse{}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
@@ -318,7 +316,7 @@ func (c *handler) MarketingProgram(ctx echo.Context) (err error) {
 // @Tags KmbPrinciple
 // @Produce json
 // @Param prospectID path string true "Prospect ID"
-// @Param body body request.PrincipleMarketingProgram true "Body payload"
+// @Param body body request.PrincipleGetData true "Body payload"
 // @Success 200 {object} response.ApiResponse{}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}

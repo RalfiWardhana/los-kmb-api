@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"os"
 	"strconv"
 	"sync"
 )
 
-func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (err error) {
+func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (data response.UsecaseApi, err error) {
 	var (
 		principleStepThree           entity.TrxPrincipleStepThree
 		trxPrincipleEmergencyContact entity.TrxPrincipleEmergencyContact
@@ -61,7 +62,7 @@ func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.Prin
 	}()
 
 	if err := <-errChan; err != nil {
-		return err
+		return data, err
 	}
 
 	timeOut, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
@@ -93,6 +94,10 @@ func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.Prin
 	})
 
 	go u.repository.SaveToWorker(worker)
+
+	data.Code = constant.EMERGENCY_PASS_CODE
+	data.Result = constant.DECISION_PASS
+	data.Reason = constant.EMERGENCY_PASS_REASON
 
 	return
 }

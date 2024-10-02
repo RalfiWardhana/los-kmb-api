@@ -707,6 +707,9 @@ const (
 	PRINCIPLE_STATUS_BIAYA_REJECT    = "BIAYA-R"
 	PRINCIPLE_STATUS_SUBMIT_SALLY    = "SAL-A"
 
+	EMERGENCY_PASS_CODE   = "4701"
+	EMERGENCY_PASS_REASON = "Sukses Submit To Sally"
+
 	PRINCIPLE_ERROR_RESPONSE_MESSAGE = "komunikasi antar layanan terjadi kesalahan, silakan coba lagi"
 
 	WORKER_UNPROCESS                    = "UNPR"

@@ -1785,15 +1785,6 @@ const docTemplate = `{
                         "name": "prospectID",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "Body payload",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.PrincipleCoreCustomer"
-                        }
                     }
                 ],
                 "responses": {
@@ -1986,7 +1977,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.ApiResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.UsecaseApi"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -2271,6 +2274,58 @@ const docTemplate = `{
                         "name": "prospectID",
                         "in": "path",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/principle-data": {
+            "post": {
+                "description": "KmbPrinciple",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KmbPrinciple"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Prospect ID",
+                        "name": "prospectID",
+                        "in": "path",
+                        "required": true
                     },
                     {
                         "description": "Body payload",
@@ -2278,7 +2333,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.PrincipleMarketingProgram"
+                            "$ref": "#/definitions/request.PrincipleGetData"
                         }
                     }
                 ],
@@ -4673,27 +4728,18 @@ const docTemplate = `{
                 }
             }
         },
-        "request.PrincipleCoreCustomer": {
-            "type": "object",
-            "required": [
-                "user_information"
-            ],
-            "properties": {
-                "user_information": {
-                    "$ref": "#/definitions/request.UserInformation"
-                }
-            }
-        },
         "request.PrincipleElaborateLTV": {
             "type": "object",
             "required": [
-                "manufacture_year",
+                "finance_purpose",
                 "tenor"
             ],
             "properties": {
-                "manufacture_year": {
-                    "type": "string",
-                    "example": "2020"
+                "finance_purpose": {
+                    "type": "string"
+                },
+                "loan_amount": {
+                    "type": "number"
                 },
                 "prospect_id": {
                     "type": "string"
@@ -4707,12 +4753,10 @@ const docTemplate = `{
         "request.PrincipleEmergencyContact": {
             "type": "object",
             "required": [
+                "address",
                 "city",
-                "company_street_name",
-                "home_number",
                 "kecamatan",
                 "kelurahan",
-                "location_details",
                 "mobile_phone",
                 "name",
                 "prospect_id",
@@ -4720,10 +4764,14 @@ const docTemplate = `{
                 "relationship",
                 "rt",
                 "rw",
-                "user_information",
                 "zip_code"
             ],
             "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 90,
+                    "example": "JL.PEGANGSAAN 1"
+                },
                 "area_phone": {
                     "type": "string",
                     "maxLength": 4,
@@ -4735,16 +4783,6 @@ const docTemplate = `{
                     "maxLength": 50,
                     "example": "JAKARTA SELATAN"
                 },
-                "company_street_name": {
-                    "type": "string",
-                    "maxLength": 90,
-                    "example": "JL.PEGANGSAAN 1"
-                },
-                "home_number": {
-                    "type": "string",
-                    "maxLength": 10,
-                    "example": "10A"
-                },
                 "kecamatan": {
                     "type": "string",
                     "maxLength": 30,
@@ -4754,10 +4792,6 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 30,
                     "example": "TEGAL PARANG"
-                },
-                "location_details": {
-                    "type": "string",
-                    "example": "Near the big palm tree"
                 },
                 "mobile_phone": {
                     "type": "string",
@@ -4804,23 +4838,20 @@ const docTemplate = `{
                     "minLength": 1,
                     "example": "017"
                 },
-                "user_information": {
-                    "$ref": "#/definitions/request.UserInformation"
-                },
                 "zip_code": {
                     "type": "string",
                     "example": "12790"
                 }
             }
         },
-        "request.PrincipleMarketingProgram": {
+        "request.PrincipleGetData": {
             "type": "object",
-            "required": [
-                "user_information"
-            ],
             "properties": {
-                "user_information": {
-                    "$ref": "#/definitions/request.UserInformation"
+                "context": {
+                    "type": "string"
+                },
+                "prospect_id": {
+                    "type": "string"
                 }
             }
         },
@@ -5811,23 +5842,6 @@ const docTemplate = `{
                 "prospect_id": {
                     "type": "string",
                     "example": "SAL042600001"
-                }
-            }
-        },
-        "request.UserInformation": {
-            "type": "object",
-            "required": [
-                "user_id",
-                "user_title"
-            ],
-            "properties": {
-                "user_id": {
-                    "type": "string",
-                    "maxLength": 50
-                },
-                "user_title": {
-                    "type": "string",
-                    "maxLength": 50
                 }
             }
         },

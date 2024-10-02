@@ -79,7 +79,7 @@ func TestPrincipleEmergencyContact(t *testing.T) {
 
 			usecase := NewUsecase(mockRepository, mockHttpClient, platformEvent)
 
-			err := usecase.PrincipleEmergencyContact(ctx, tc.request, accessToken)
+			_, err := usecase.PrincipleEmergencyContact(ctx, tc.request, accessToken)
 
 			if tc.err != nil {
 				require.Error(t, err)

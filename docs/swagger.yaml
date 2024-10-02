@@ -1405,29 +1405,27 @@ definitions:
     - stnk_expired_date
     - tax_date
     type: object
-  request.PrincipleCoreCustomer:
-    properties:
-      user_information:
-        $ref: '#/definitions/request.UserInformation'
-    required:
-    - user_information
-    type: object
   request.PrincipleElaborateLTV:
     properties:
-      manufacture_year:
-        example: "2020"
+      finance_purpose:
         type: string
+      loan_amount:
+        type: number
       prospect_id:
         type: string
       tenor:
         maximum: 60
         type: integer
     required:
-    - manufacture_year
+    - finance_purpose
     - tenor
     type: object
   request.PrincipleEmergencyContact:
     properties:
+      address:
+        example: JL.PEGANGSAAN 1
+        maxLength: 90
+        type: string
       area_phone:
         example: "021"
         maxLength: 4
@@ -1437,14 +1435,6 @@ definitions:
         example: JAKARTA SELATAN
         maxLength: 50
         type: string
-      company_street_name:
-        example: JL.PEGANGSAAN 1
-        maxLength: 90
-        type: string
-      home_number:
-        example: 10A
-        maxLength: 10
-        type: string
       kecamatan:
         example: MAMPANG PRAPATAN
         maxLength: 30
@@ -1452,9 +1442,6 @@ definitions:
       kelurahan:
         example: TEGAL PARANG
         maxLength: 30
-        type: string
-      location_details:
-        example: Near the big palm tree
         type: string
       mobile_phone:
         example: 0856789XXX1
@@ -1493,18 +1480,14 @@ definitions:
         maxLength: 3
         minLength: 1
         type: string
-      user_information:
-        $ref: '#/definitions/request.UserInformation'
       zip_code:
         example: "12790"
         type: string
     required:
+    - address
     - city
-    - company_street_name
-    - home_number
     - kecamatan
     - kelurahan
-    - location_details
     - mobile_phone
     - name
     - prospect_id
@@ -1512,15 +1495,14 @@ definitions:
     - relationship
     - rt
     - rw
-    - user_information
     - zip_code
     type: object
-  request.PrincipleMarketingProgram:
+  request.PrincipleGetData:
     properties:
-      user_information:
-        $ref: '#/definitions/request.UserInformation'
-    required:
-    - user_information
+      context:
+        type: string
+      prospect_id:
+        type: string
     type: object
   request.PrinciplePembiayaan:
     properties:
@@ -2289,18 +2271,6 @@ definitions:
     - application_source
     - branch_name
     - order_at
-    type: object
-  request.UserInformation:
-    properties:
-      user_id:
-        maxLength: 50
-        type: string
-      user_title:
-        maxLength: 50
-        type: string
-    required:
-    - user_id
-    - user_title
     type: object
   response.ApiResponse:
     properties:
@@ -3488,12 +3458,6 @@ paths:
         name: prospectID
         required: true
         type: string
-      - description: Body payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/request.PrincipleCoreCustomer'
       produces:
       - application/json
       responses:
@@ -3606,7 +3570,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.ApiResponse'
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.UsecaseApi'
+              type: object
         "400":
           description: Bad Request
           schema:
@@ -3769,12 +3738,43 @@ paths:
         name: prospectID
         required: true
         type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - KmbPrinciple
+  /api/v3/kmb/principle-data:
+    post:
+      description: KmbPrinciple
+      parameters:
+      - description: Prospect ID
+        in: path
+        name: prospectID
+        required: true
+        type: string
       - description: Body payload
         in: body
         name: body
         required: true
         schema:
-          $ref: '#/definitions/request.PrincipleMarketingProgram'
+          $ref: '#/definitions/request.PrincipleGetData'
       produces:
       - application/json
       responses:
