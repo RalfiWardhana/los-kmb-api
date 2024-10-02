@@ -412,8 +412,10 @@ func TestElaborateLTV(t *testing.T) {
 	}
 
 	body := request.PrincipleElaborateLTV{
-		ProspectID: "SAL-1140024080800017",
-		Tenor:      12,
+		ProspectID:     "SAL-1140024080800017",
+		Tenor:          12,
+		FinancePurpose: constant.FINANCE_PURPOSE_MODAL_KERJA,
+		LoanAmount:     1000000,
 	}
 
 	t.Run("success", func(t *testing.T) {
@@ -432,10 +434,10 @@ func TestElaborateLTV(t *testing.T) {
 
 		c.Set(constant.HeaderXRequestID, reqID)
 
-		mockResponse := responses.ElaborateLTV{
+		mockResponse := responses.PrincipleElaborateLTV{
 			LTV: 80,
 		}
-		mockUsecase.On("PrincipleElaborateLTV", mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
+		mockUsecase.On("PrincipleElaborateLTV", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
 
 		_ = handler.ElaborateLTV(c)
 
@@ -490,7 +492,7 @@ func TestElaborateLTV(t *testing.T) {
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
-		mockUsecase.On("PrincipleElaborateLTV", mock.Anything, mock.Anything).Return(responses.ElaborateLTV{}, errors.New("some error")).Once()
+		mockUsecase.On("PrincipleElaborateLTV", mock.Anything, mock.Anything, mock.Anything).Return(responses.PrincipleElaborateLTV{}, errors.New("some error")).Once()
 
 		_ = handler.ElaborateLTV(c)
 
