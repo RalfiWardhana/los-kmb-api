@@ -41,10 +41,6 @@ func TestPrincipleEmergencyContact(t *testing.T) {
 				Name:         "John Doe",
 				Relationship: "Friend",
 				MobilePhone:  "1234567890",
-				UserInformation: request.UserInformation{
-					UserID:    "USER001",
-					UserTitle: "Mr",
-				},
 			},
 			principleStepThree: entity.TrxPrincipleStepThree{IDNumber: "123456"},
 			expectSaveToWorker: true,

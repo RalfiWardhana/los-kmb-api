@@ -1054,9 +1054,10 @@ type PrinciplePemohon struct {
 }
 
 type PrincipleElaborateLTV struct {
-	ProspectID      string `json:"prospect_id" validate:"prospect_id"`
-	ManufactureYear string `json:"manufacture_year" validate:"required,len=4,number" example:"2020"`
-	Tenor           int    `json:"tenor" validate:"required,max=60"`
+	ProspectID     string  `json:"prospect_id" validate:"prospect_id"`
+	Tenor          int     `json:"tenor" validate:"required,max=60"`
+	FinancePurpose string  `json:"finance_purpose" validate:"required"`
+	LoanAmount     float64 `json:"loan_amount"`
 }
 
 type PrinciplePembiayaan struct {
@@ -1075,31 +1076,20 @@ type PrinciplePembiayaan struct {
 }
 
 type PrincipleEmergencyContact struct {
-	ProspectID        string          `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
-	Name              string          `json:"name" validate:"required,min=2,max=50,allowcharsname" example:"MULYADI"`
-	Relationship      string          `json:"relationship" validate:"required,relationship,max=10" example:"FM"`
-	MobilePhone       string          `json:"mobile_phone" validate:"required,min=9,max=14,number,mobile_phone" example:"0856789XXX1"`
-	CompanyStreetName string          `json:"company_street_name" validate:"required,max=90" example:"JL.PEGANGSAAN 1"`
-	HomeNumber        string          `json:"home_number" validate:"required,max=10" example:"10A"`
-	LocationDetails   string          `json:"location_details" validate:"required" example:"Near the big palm tree"`
-	Rt                string          `json:"rt" validate:"required,min=1,max=3,number" example:"008"`
-	Rw                string          `json:"rw" validate:"required,min=1,max=3,number" example:"017"`
-	Kelurahan         string          `json:"kelurahan" validate:"required,max=30" example:"TEGAL PARANG"`
-	Kecamatan         string          `json:"kecamatan" validate:"required,max=30" example:"MAMPANG PRAPATAN"`
-	City              string          `json:"city" validate:"required,max=50" example:"JAKARTA SELATAN"`
-	Province          string          `json:"province" validate:"required,max=50" example:"DKI JAKARTA"`
-	ZipCode           string          `json:"zip_code" validate:"required,len=5,number,ne=0" example:"12790"`
-	AreaPhone         string          `json:"area_phone" validate:"omitempty,min=3,max=4,number" example:"021"`
-	Phone             string          `json:"phone" validate:"omitempty,min=5,max=10,number" example:"567892"`
-	UserInformation   UserInformation `json:"user_information" validate:"required"`
-}
-
-type PrincipleCoreCustomer struct {
-	UserInformation UserInformation `json:"user_information" validate:"required"`
-}
-
-type PrincipleMarketingProgram struct {
-	UserInformation UserInformation `json:"user_information" validate:"required"`
+	ProspectID   string `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
+	Name         string `json:"name" validate:"required,min=2,max=50,allowcharsname" example:"MULYADI"`
+	Relationship string `json:"relationship" validate:"required,relationship,max=10" example:"FM"`
+	MobilePhone  string `json:"mobile_phone" validate:"required,min=9,max=14,number,mobile_phone" example:"0856789XXX1"`
+	Address      string `json:"address" validate:"required,max=90" example:"JL.PEGANGSAAN 1"`
+	Rt           string `json:"rt" validate:"required,min=1,max=3,number" example:"008"`
+	Rw           string `json:"rw" validate:"required,min=1,max=3,number" example:"017"`
+	Kelurahan    string `json:"kelurahan" validate:"required,max=30" example:"TEGAL PARANG"`
+	Kecamatan    string `json:"kecamatan" validate:"required,max=30" example:"MAMPANG PRAPATAN"`
+	City         string `json:"city" validate:"required,max=50" example:"JAKARTA SELATAN"`
+	Province     string `json:"province" validate:"required,max=50" example:"DKI JAKARTA"`
+	ZipCode      string `json:"zip_code" validate:"required,len=5,number,ne=0" example:"12790"`
+	AreaPhone    string `json:"area_phone" validate:"omitempty,min=3,max=4,number" example:"021"`
+	Phone        string `json:"phone" validate:"omitempty,min=5,max=10,number" example:"567892"`
 }
 
 type ValidateNik struct {
@@ -1266,4 +1256,9 @@ type Update2wPrincipleTransaction struct {
 	Amount        int    `json:"amount"`
 	AssetTypeCode string `json:"asset_type_code"`
 	BranchCode    string `json:"branch_code"`
+}
+
+type PrincipleGetData struct {
+	Context    string `json:"context"`
+	ProspectID string `json:"prospect_id"`
 }

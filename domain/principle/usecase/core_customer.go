@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"los-kmb-api/models/entity"
-	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"os"
@@ -16,7 +15,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u usecase) PrincipleCoreCustomer(ctx context.Context, prospectID string, req request.PrincipleCoreCustomer, accessToken string) (err error) {
+func (u usecase) PrincipleCoreCustomer(ctx context.Context, prospectID string, accessToken string) (err error) {
 
 	var (
 		principleStepOne             entity.TrxPrincipleStepOne
@@ -259,7 +258,7 @@ func (u usecase) PrincipleCoreCustomer(ctx context.Context, prospectID string, r
 			"residence_rt":                      principleStepOne.ResidenceRT,
 			"residence_rw":                      principleStepOne.ResidenceRW,
 			"residence_zip_code":                principleStepOne.ResidenceZipCode,
-			"emergency_contact_address":         trxPrincipleEmergencyContact.CompanyStreetName + " " + trxPrincipleEmergencyContact.HomeNumber,
+			"emergency_contact_address":         trxPrincipleEmergencyContact.Address,
 			"emergency_contact_city":            trxPrincipleEmergencyContact.City,
 			"emergency_contact_home_phone":      trxPrincipleEmergencyContact.Phone,
 			"emergency_contact_home_phone_area": trxPrincipleEmergencyContact.AreaPhone,
@@ -275,8 +274,8 @@ func (u usecase) PrincipleCoreCustomer(ctx context.Context, prospectID string, r
 			"selfie_media_url": principleStepTwo.SelfiePhoto,
 		},
 		"user_information": map[string]interface{}{
-			"user_id":    req.UserInformation.UserID,
-			"user_title": req.UserInformation.UserTitle,
+			"user_id":    principleStepOne.CMOID,
+			"user_title": "CMO",
 		},
 	}
 

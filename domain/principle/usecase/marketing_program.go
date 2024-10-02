@@ -18,7 +18,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID string, req request.PrincipleMarketingProgram, accessToken string) (err error) {
+func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID string, accessToken string) (err error) {
 
 	var (
 		principleStepOne                entity.TrxPrincipleStepOne
