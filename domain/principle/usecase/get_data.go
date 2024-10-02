@@ -4,11 +4,15 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 	"os"
 	"strconv"
+	"strings"
+	"sync"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -19,11 +23,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 	case "Domisili":
 
-		principleStepOne, err := u.repository.GetPrincipleStepOne(req.ProspectID)
-
-		if err != nil {
-			return data, err
-		}
+		principleStepOne, _ := u.repository.GetPrincipleStepOne(req.ProspectID)
 
 		data = map[string]interface{}{
 			"id_number":            principleStepOne.IDNumber,
@@ -47,11 +47,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 	case "Pemohon":
 
-		principleStepTwo, err := u.repository.GetPrincipleStepTwo(req.ProspectID)
-
-		if err != nil {
-			return data, err
-		}
+		principleStepTwo, _ := u.repository.GetPrincipleStepTwo(req.ProspectID)
 
 		data = map[string]interface{}{
 			"id_number":                  principleStepTwo.IDNumber,
@@ -105,20 +101,65 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 	case "Biaya":
 
-		principleStepThree, err := u.repository.GetPrincipleStepThree(req.ProspectID)
+		var (
+			wg                 sync.WaitGroup
+			errChan            = make(chan error, 4)
+			principleStepOne   entity.TrxPrincipleStepOne
+			principleStepTwo   entity.TrxPrincipleStepTwo
+			principleStepThree entity.TrxPrincipleStepThree
+			filteringKMB       entity.FilteringKMB
+		)
 
-		if err != nil {
-			return data, err
-		}
+		wg.Add(4)
 
-		principleStepOne, err := u.repository.GetPrincipleStepOne(req.ProspectID)
-		if err != nil {
+		go func() {
+			defer wg.Done()
+			principleStepOne, _ = u.repository.GetPrincipleStepOne(req.ProspectID)
+
+			if err != nil {
+				errChan <- err
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+			principleStepTwo, _ = u.repository.GetPrincipleStepTwo(req.ProspectID)
+			if err != nil {
+				errChan <- err
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+			principleStepThree, _ = u.repository.GetPrincipleStepThree(req.ProspectID)
+
+			if err != nil {
+				errChan <- err
+			}
+		}()
+
+		go func() {
+			defer wg.Done()
+			filteringKMB, err = u.repository.GetFilteringResult(req.ProspectID)
+
+			if err != nil {
+				errChan <- err
+			}
+		}()
+
+		go func() {
+			wg.Wait()
+			close(errChan)
+		}()
+
+		if err := <-errChan; err != nil {
 			return data, err
 		}
 
 		var (
-			marsevLoanAmountRes response.MarsevLoanAmountResponse
-			assetList           response.AssetList
+			marsevLoanAmountRes    response.MarsevLoanAmountResponse
+			assetList              response.AssetList
+			marsevFilterProgramRes response.MarsevFilterProgramResponse
 		)
 
 		timeOut, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
@@ -128,7 +169,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 		}
 
 		// get loan amount
-		payload := request.ReqMarsevLoanAmount{
+		payloadMaxLoan := request.ReqMarsevLoanAmount{
 			BranchID:      principleStepOne.BranchID,
 			OTR:           5000000,
 			MaxLTV:        50,
@@ -137,7 +178,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			DPAmount:      0,
 		}
 
-		param, _ := json.Marshal(payload)
+		param, _ := json.Marshal(payloadMaxLoan)
 
 		resp, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("MARSEV_LOAN_AMOUNT_URL"), param, header, constant.METHOD_POST, false, 0, timeOut, req.ProspectID, accessToken)
 		if err != nil {
@@ -158,14 +199,14 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 		timeOut, _ = strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
 
-		request, _ := json.Marshal(map[string]interface{}{
+		payloadAsset, _ := json.Marshal(map[string]interface{}{
 			"branch_id": principleStepOne.BranchID,
 			"lob_id":    11,
 			"page_size": 10,
 			"search":    principleStepOne.AssetCode,
 		})
 
-		resp, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("MDM_ASSET_URL"), request, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, req.ProspectID, accessToken)
+		resp, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("MDM_ASSET_URL"), payloadAsset, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, req.ProspectID, accessToken)
 
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Call Asset MDM Timeout")
@@ -184,6 +225,89 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			return data, err
 		}
 
+		var categoryId string
+
+		if len(assetList.Records) > 0 {
+			categoryId = assetList.Records[0].CategoryID
+		}
+
+		if req.FinancePurpose != "" {
+			// get marketing program
+			bpkbStatusCode := "DN"
+			if strings.Contains(os.Getenv("NAMA_SAMA"), principleStepOne.BPKBName) {
+				bpkbStatusCode = "SN"
+			}
+
+			var customerStatus string
+			if filteringKMB.CustomerStatus == nil {
+				customerStatus = constant.STATUS_KONSUMEN_NEW
+			} else {
+				customerStatus = filteringKMB.CustomerStatus.(string)
+			}
+
+			var customerSegment string
+			if filteringKMB.CustomerSegment == nil {
+				customerSegment = constant.RO_AO_REGULAR
+			} else {
+				customerSegment = filteringKMB.CustomerSegment.(string)
+			}
+
+			customerType := utils.CapitalizeEachWord(customerStatus)
+			if customerStatus != constant.STATUS_KONSUMEN_NEW {
+				customerType = constant.STATUS_KONSUMEN_RO_AO + " " + utils.CapitalizeEachWord(customerSegment)
+				if customerSegment == constant.RO_AO_REGULAR {
+					customerType = constant.STATUS_KONSUMEN_RO_AO + " Standard"
+				}
+			}
+
+			manufactureYear, _ := strconv.Atoi(principleStepOne.ManufactureYear)
+
+			financeType := "PM"
+			if req.FinancePurpose == constant.FINANCE_PURPOSE_MODAL_KERJA {
+				financeType = "PMK"
+			}
+
+			payloadFilterProgram := request.ReqMarsevFilterProgram{
+				Page:                   1,
+				Limit:                  10,
+				BranchID:               principleStepOne.BranchID,
+				FinancingTypeCode:      financeType,
+				CustomerOccupationCode: principleStepTwo.ProfessionID,
+				BpkbStatusCode:         bpkbStatusCode,
+				SourceApplication:      constant.MARSEV_SOURCE_APPLICATION_KPM,
+				CustomerType:           customerType,
+				AssetUsageTypeCode:     "C",
+				AssetCategory:          categoryId,
+				AssetBrand:             principleStepOne.Brand,
+				AssetYear:              manufactureYear,
+				LoanAmount:             2000000,
+				SalesMethodID:          5,
+			}
+
+			param, _ = json.Marshal(payloadFilterProgram)
+
+			resp, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("MARSEV_FILTER_PROGRAM_URL"), param, header, constant.METHOD_POST, false, 0, timeOut, req.ProspectID, accessToken)
+			if err != nil {
+				return data, err
+			}
+
+			if resp.StatusCode() != 200 {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Marsev Get Filter Program Error")
+				return data, err
+			}
+
+			if resp.StatusCode() == 200 {
+				if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &marsevFilterProgramRes); err != nil {
+					return data, err
+				}
+
+				if len(marsevFilterProgramRes.Data) == 0 {
+					err = errors.New(constant.ERROR_UPSTREAM + " - Marsev Get Filter Program Error Not Found Data")
+					return data, err
+				}
+			}
+		}
+
 		data = map[string]interface{}{
 			"is_psa":           marsevLoanAmountRes.Data.IsPsa,
 			"manufacture_year": principleStepOne.ManufactureYear,
@@ -193,15 +317,15 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			"type":             assetList.Records[0].Model,
 		}
 
+		if len(marsevFilterProgramRes.Data) > 0 {
+			data["tenors"] = marsevFilterProgramRes.Data[0].Tenors
+		}
+
 		return data, err
 
 	case "Emergency":
 
-		principleStepFour, err := u.repository.GetPrincipleEmergencyContact(req.ProspectID)
-
-		if err != nil {
-			return data, err
-		}
+		principleStepFour, _ := u.repository.GetPrincipleEmergencyContact(req.ProspectID)
 
 		data = map[string]interface{}{
 			"name":         principleStepFour.Name,

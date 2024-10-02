@@ -1259,6 +1259,7 @@ type Update2wPrincipleTransaction struct {
 }
 
 type PrincipleGetData struct {
-	Context    string `json:"context"`
-	ProspectID string `json:"prospect_id"`
+	Context        string `json:"context"  validate:"required"`
+	ProspectID     string `json:"prospect_id" validate:"required"`
+	FinancePurpose string `json:"finance_purpose"`
 }
