@@ -38,6 +38,7 @@ func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, u
 	principleRoute.POST("/emergency-contact", handler.EmergencyContact, middlewares.AccessMiddleware())
 	principleRoute.POST("/core-customer/:prospectID", handler.CoreCustomer, middlewares.AccessMiddleware())
 	principleRoute.POST("/marketing-program/:prospectID", handler.MarketingProgram, middlewares.AccessMiddleware())
+	principleRoute.POST("/principle-data", handler.GetPrincipleData, middlewares.AccessMiddleware())
 }
 
 // KmbPrinciple Tools godoc
@@ -161,13 +162,21 @@ func (c *handler) ElaborateLTV(ctx echo.Context) (err error) {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "800"), err)
 	}
 
-	data, err := c.usecase.PrincipleElaborateLTV(ctx.Request().Context(), r)
+	data, err := c.usecase.PrincipleElaborateLTV(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
 
 		code, err := utils.WrapError(err)
 
 		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
+	}
+
+	if data.AdjustTenor && data.LTV == 0 {
+		return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "002"), data)
+	}
+
+	if !data.AdjustTenor && data.LTV == 0 {
+		return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "003"), data)
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
@@ -212,7 +221,7 @@ func (c *handler) VerifyPembiayaan(ctx echo.Context) (err error) {
 // @Tags KmbPrinciple
 // @Produce json
 // @Param body body request.PrincipleEmergencyContact true "Body payload"
-// @Success 200 {object} response.ApiResponse{}
+// @Success 200 {object} response.ApiResponse{data=response.UsecaseApi}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
 // @Router /api/v3/kmb/emergency-contact [post]
@@ -227,7 +236,7 @@ func (c *handler) EmergencyContact(ctx echo.Context) (err error) {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "800"), err)
 	}
 
-	err = c.usecase.PrincipleEmergencyContact(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
+	data, err := c.usecase.PrincipleEmergencyContact(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
 
@@ -236,7 +245,7 @@ func (c *handler) EmergencyContact(ctx echo.Context) (err error) {
 		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
 	}
 
-	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), nil)
+	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
 
 }
 
@@ -245,15 +254,12 @@ func (c *handler) EmergencyContact(ctx echo.Context) (err error) {
 // @Tags KmbPrinciple
 // @Produce json
 // @Param prospectID path string true "Prospect ID"
-// @Param body body request.PrincipleCoreCustomer true "Body payload"
 // @Success 200 {object} response.ApiResponse{}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
 // @Router /api/v3/kmb/core-customer/{prospectID} [post]
 func (c *handler) CoreCustomer(ctx echo.Context) (err error) {
 
-	var r request.PrincipleCoreCustomer
-
 	prospectID := ctx.Param("prospectID")
 
 	if prospectID == "" {
@@ -261,14 +267,7 @@ func (c *handler) CoreCustomer(ctx echo.Context) (err error) {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
 	}
 
-	if err = ctx.Bind(&r); err != nil {
-		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
-	}
-	if err = ctx.Validate(&r); err != nil {
-		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "800"), err)
-	}
-
-	err = c.usecase.PrincipleCoreCustomer(ctx.Request().Context(), prospectID, r, middlewares.UserInfoData.AccessToken)
+	err = c.usecase.PrincipleCoreCustomer(ctx.Request().Context(), prospectID, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
 
@@ -286,14 +285,11 @@ func (c *handler) CoreCustomer(ctx echo.Context) (err error) {
 // @Tags KmbPrinciple
 // @Produce json
 // @Param prospectID path string true "Prospect ID"
-// @Param body body request.PrincipleMarketingProgram true "Body payload"
 // @Success 200 {object} response.ApiResponse{}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
 // @Router /api/v3/kmb/marketing-program/{prospectID} [post]
 func (c *handler) MarketingProgram(ctx echo.Context) (err error) {
-
-	var r request.PrincipleMarketingProgram
 
 	prospectID := ctx.Param("prospectID")
 
@@ -302,14 +298,7 @@ func (c *handler) MarketingProgram(ctx echo.Context) (err error) {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
 	}
 
-	if err = ctx.Bind(&r); err != nil {
-		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
-	}
-	if err = ctx.Validate(&r); err != nil {
-		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "800"), err)
-	}
-
-	err = c.usecase.PrincipleMarketingProgram(ctx.Request().Context(), prospectID, r, middlewares.UserInfoData.AccessToken)
+	err = c.usecase.PrincipleMarketingProgram(ctx.Request().Context(), prospectID, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
 
@@ -319,5 +308,39 @@ func (c *handler) MarketingProgram(ctx echo.Context) (err error) {
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), nil)
+
+}
+
+// KmbPrinciple Tools godoc
+// @Description KmbPrinciple
+// @Tags KmbPrinciple
+// @Produce json
+// @Param prospectID path string true "Prospect ID"
+// @Param body body request.PrincipleGetData true "Body payload"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/principle-data [post]
+func (c *handler) GetPrincipleData(ctx echo.Context) (err error) {
+
+	var r request.PrincipleGetData
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "800"), err)
+	}
+
+	data, err := c.usecase.GetDataPrinciple(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
 
 }

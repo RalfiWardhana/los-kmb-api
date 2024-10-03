@@ -55,7 +55,7 @@ func TestVerifyAsset(t *testing.T) {
 		ResidenceAddress:   "Jl. PATIMURA",
 		ResidenceRT:        "001",
 		ResidenceRW:        "002",
-		ResidenceProvice:   "JAWA TIMUR",
+		ResidenceProvince:  "JAWA TIMUR",
 		ResidenceCity:      "KOTA MALANG",
 		ResidenceKecamatan: "LOWOKWARU",
 		ResidenceKelurahan: "LOWOKWARU",
@@ -174,12 +174,14 @@ func TestVerifyPemohon(t *testing.T) {
 		IDNumber:                "3505151204000001",
 		SpouseIDNumber:          "3506126712000001",
 		MobilePhone:             "085880529100",
+		Email:                   "test@test.com",
 		LegalName:               "Test",
 		FullName:                "Test",
 		BirthDate:               "1993-11-12",
 		BirthPlace:              "JEMBER",
 		SurgateMotherName:       "IBU",
 		Gender:                  "M",
+		Religion:                "1",
 		LegalAddress:            "Jl. PATIMURA",
 		LegalRT:                 "001",
 		LegalRW:                 "003",
@@ -410,9 +412,10 @@ func TestElaborateLTV(t *testing.T) {
 	}
 
 	body := request.PrincipleElaborateLTV{
-		ProspectID:      "SAL-1140024080800017",
-		ManufactureYear: "2020",
-		Tenor:           12,
+		ProspectID:     "SAL-1140024080800017",
+		Tenor:          12,
+		FinancePurpose: constant.FINANCE_PURPOSE_MODAL_KERJA,
+		LoanAmount:     1000000,
 	}
 
 	t.Run("success", func(t *testing.T) {
@@ -431,10 +434,10 @@ func TestElaborateLTV(t *testing.T) {
 
 		c.Set(constant.HeaderXRequestID, reqID)
 
-		mockResponse := responses.ElaborateLTV{
+		mockResponse := responses.PrincipleElaborateLTV{
 			LTV: 80,
 		}
-		mockUsecase.On("PrincipleElaborateLTV", mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
+		mockUsecase.On("PrincipleElaborateLTV", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
 
 		_ = handler.ElaborateLTV(c)
 
@@ -489,7 +492,7 @@ func TestElaborateLTV(t *testing.T) {
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
-		mockUsecase.On("PrincipleElaborateLTV", mock.Anything, mock.Anything).Return(responses.ElaborateLTV{}, errors.New("some error")).Once()
+		mockUsecase.On("PrincipleElaborateLTV", mock.Anything, mock.Anything, mock.Anything).Return(responses.PrincipleElaborateLTV{}, errors.New("some error")).Once()
 
 		_ = handler.ElaborateLTV(c)
 
@@ -637,26 +640,20 @@ func TestEmergencyContact(t *testing.T) {
 	}
 
 	body := request.PrincipleEmergencyContact{
-		ProspectID:        "SAL-1140024080800016",
-		Name:              "MULYADI",
-		Relationship:      "FM",
-		MobilePhone:       "08567891231",
-		CompanyStreetName: "JL.PEGANGSAAN 1",
-		HomeNumber:        "10A",
-		LocationDetails:   "Near the big palm tree",
-		Rt:                "008",
-		Rw:                "017",
-		Kelurahan:         "TEGAL PARANG",
-		Kecamatan:         "MAMPANG PRAPATAN",
-		City:              "JAKARTA SELATAN",
-		Province:          "DKI JAKARTA",
-		ZipCode:           "12790",
-		AreaPhone:         "021",
-		Phone:             "567892",
-		UserInformation: request.UserInformation{
-			UserID:    "132212",
-			UserTitle: "SPV",
-		},
+		ProspectID:   "SAL-1140024080800016",
+		Name:         "MULYADI",
+		Relationship: "FM",
+		MobilePhone:  "08567891231",
+		Address:      "JL.PEGANGSAAN 1",
+		Rt:           "008",
+		Rw:           "017",
+		Kelurahan:    "TEGAL PARANG",
+		Kecamatan:    "MAMPANG PRAPATAN",
+		City:         "JAKARTA SELATAN",
+		Province:     "DKI JAKARTA",
+		ZipCode:      "12790",
+		AreaPhone:    "021",
+		Phone:        "567892",
 	}
 
 	t.Run("success", func(t *testing.T) {
@@ -678,7 +675,12 @@ func TestEmergencyContact(t *testing.T) {
 
 		c.Set(constant.HeaderXRequestID, reqID)
 
-		mockUsecase.On("PrincipleEmergencyContact", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+		mockResponse := responses.UsecaseApi{
+			Code:   constant.EMERGENCY_PASS_CODE,
+			Result: constant.DECISION_PASS,
+			Reason: constant.EMERGENCY_PASS_REASON,
+		}
+		mockUsecase.On("PrincipleEmergencyContact", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
 
 		_ = handler.EmergencyContact(c)
 
@@ -740,7 +742,7 @@ func TestEmergencyContact(t *testing.T) {
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
-		mockUsecase.On("PrincipleEmergencyContact", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("some error")).Once()
+		mockUsecase.On("PrincipleEmergencyContact", mock.Anything, mock.Anything, mock.Anything).Return(responses.UsecaseApi{}, errors.New("some error")).Once()
 
 		_ = handler.EmergencyContact(c)
 
@@ -764,22 +766,13 @@ func TestCoreCustomer(t *testing.T) {
 		responses:    libResponse,
 	}
 
-	body := request.PrincipleCoreCustomer{
-		UserInformation: request.UserInformation{
-			UserID:    "123",
-			UserTitle: "TEST",
-		},
-	}
-
 	t.Run("success", func(t *testing.T) {
 		e := echo.New()
 		e.Validator = common.NewValidator()
 
-		data, _ := json.Marshal(body)
-
 		reqID := utils.GenerateUUID()
 
-		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(string(data)))
+		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(""))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		req.Header.Set(echo.HeaderXRequestID, reqID)
 		rec := httptest.NewRecorder()
@@ -804,9 +797,7 @@ func TestCoreCustomer(t *testing.T) {
 		e := echo.New()
 		e.Validator = common.NewValidator()
 
-		data, _ := json.Marshal(body)
-
-		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(string(data)))
+		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(""))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
@@ -820,58 +811,13 @@ func TestCoreCustomer(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), "PRINCIPLE-799")
 	})
 
-	t.Run("error bind", func(t *testing.T) {
-		e := echo.New()
-
-		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("invalid json"))
-		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
-		c.SetPath("/api/v3/kmb/core-customer/:prospectID")
-		c.SetParamNames("prospectID")
-		c.SetParamValues("SAL-1140024080800017")
-
-		_ = handler.CoreCustomer(c)
-
-		assert.Equal(t, http.StatusBadRequest, rec.Code)
-		assert.Contains(t, rec.Body.String(), "PRINCIPLE-799")
-	})
-
-	t.Run("error validate", func(t *testing.T) {
-		e := echo.New()
-		e.Validator = common.NewValidator()
-
-		invalidBody := body
-		invalidBody.UserInformation.UserID = ""
-
-		data, _ := json.Marshal(invalidBody)
-
-		reqID := utils.GenerateUUID()
-
-		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(string(data)))
-		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		req.Header.Set(echo.HeaderXRequestID, reqID)
-		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
-		c.SetPath("/api/v3/kmb/core-customer/:prospectID")
-		c.SetParamNames("prospectID")
-		c.SetParamValues("SAL-1140024080800017")
-
-		_ = handler.CoreCustomer(c)
-
-		assert.Equal(t, http.StatusBadRequest, rec.Code)
-		assert.Contains(t, rec.Body.String(), "PRINCIPLE-800")
-	})
-
 	t.Run("error usecase", func(t *testing.T) {
 		e := echo.New()
 		e.Validator = common.NewValidator()
 
-		data, _ := json.Marshal(body)
-
 		reqID := utils.GenerateUUID()
 
-		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(string(data)))
+		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(""))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		req.Header.Set(echo.HeaderXRequestID, reqID)
 		rec := httptest.NewRecorder()
@@ -904,22 +850,13 @@ func TestMarketingProgram(t *testing.T) {
 		responses:    libResponse,
 	}
 
-	body := request.PrincipleMarketingProgram{
-		UserInformation: request.UserInformation{
-			UserID:    "123",
-			UserTitle: "TEST",
-		},
-	}
-
 	t.Run("success", func(t *testing.T) {
 		e := echo.New()
 		e.Validator = common.NewValidator()
 
-		data, _ := json.Marshal(body)
-
 		reqID := utils.GenerateUUID()
 
-		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(string(data)))
+		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(""))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		req.Header.Set(echo.HeaderXRequestID, reqID)
 		rec := httptest.NewRecorder()
@@ -944,9 +881,7 @@ func TestMarketingProgram(t *testing.T) {
 		e := echo.New()
 		e.Validator = common.NewValidator()
 
-		data, _ := json.Marshal(body)
-
-		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(string(data)))
+		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(""))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
@@ -960,58 +895,13 @@ func TestMarketingProgram(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), "PRINCIPLE-799")
 	})
 
-	t.Run("error bind", func(t *testing.T) {
-		e := echo.New()
-
-		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader("invalid json"))
-		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
-		c.SetPath("/api/v3/kmb/marketing-program/:prospectID")
-		c.SetParamNames("prospectID")
-		c.SetParamValues("SAL-1140024080800017")
-
-		_ = handler.MarketingProgram(c)
-
-		assert.Equal(t, http.StatusBadRequest, rec.Code)
-		assert.Contains(t, rec.Body.String(), "PRINCIPLE-799")
-	})
-
-	t.Run("error validate", func(t *testing.T) {
-		e := echo.New()
-		e.Validator = common.NewValidator()
-
-		invalidBody := body
-		invalidBody.UserInformation.UserID = ""
-
-		data, _ := json.Marshal(invalidBody)
-
-		reqID := utils.GenerateUUID()
-
-		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(string(data)))
-		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		req.Header.Set(echo.HeaderXRequestID, reqID)
-		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
-		c.SetPath("/api/v3/kmb/marketing-program/:prospectID")
-		c.SetParamNames("prospectID")
-		c.SetParamValues("SAL-1140024080800017")
-
-		_ = handler.MarketingProgram(c)
-
-		assert.Equal(t, http.StatusBadRequest, rec.Code)
-		assert.Contains(t, rec.Body.String(), "PRINCIPLE-800")
-	})
-
 	t.Run("error usecase", func(t *testing.T) {
 		e := echo.New()
 		e.Validator = common.NewValidator()
 
-		data, _ := json.Marshal(body)
-
 		reqID := utils.GenerateUUID()
 
-		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(string(data)))
+		req := httptest.NewRequest(http.MethodPost, "/", strings.NewReader(""))
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
 		req.Header.Set(echo.HeaderXRequestID, reqID)
 		rec := httptest.NewRecorder()

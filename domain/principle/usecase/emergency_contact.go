@@ -5,13 +5,14 @@ import (
 	"encoding/json"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"os"
 	"strconv"
 	"sync"
 )
 
-func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (err error) {
+func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (data response.UsecaseApi, err error) {
 	var (
 		principleStepThree           entity.TrxPrincipleStepThree
 		trxPrincipleEmergencyContact entity.TrxPrincipleEmergencyContact
@@ -32,22 +33,20 @@ func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.Prin
 	go func() {
 		defer wg.Done()
 		trxPrincipleEmergencyContact = entity.TrxPrincipleEmergencyContact{
-			ProspectID:        req.ProspectID,
-			Name:              req.Name,
-			Relationship:      req.Relationship,
-			MobilePhone:       req.MobilePhone,
-			CompanyStreetName: req.CompanyStreetName,
-			HomeNumber:        req.HomeNumber,
-			LocationDetails:   req.LocationDetails,
-			Rt:                req.Rt,
-			Rw:                req.Rw,
-			Kelurahan:         req.Kelurahan,
-			Kecamatan:         req.Kecamatan,
-			City:              req.City,
-			Province:          req.Province,
-			ZipCode:           req.ZipCode,
-			AreaPhone:         req.AreaPhone,
-			Phone:             req.Phone,
+			ProspectID:   req.ProspectID,
+			Name:         req.Name,
+			Relationship: req.Relationship,
+			MobilePhone:  req.MobilePhone,
+			Address:      req.Address,
+			Rt:           req.Rt,
+			Rw:           req.Rw,
+			Kelurahan:    req.Kelurahan,
+			Kecamatan:    req.Kecamatan,
+			City:         req.City,
+			Province:     req.Province,
+			ZipCode:      req.ZipCode,
+			AreaPhone:    req.AreaPhone,
+			Phone:        req.Phone,
 		}
 
 		err = u.repository.SavePrincipleEmergencyContact(trxPrincipleEmergencyContact, principleStepThree.IDNumber)
@@ -63,7 +62,7 @@ func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.Prin
 	}()
 
 	if err := <-errChan; err != nil {
-		return err
+		return data, err
 	}
 
 	timeOut, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
@@ -79,17 +78,8 @@ func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.Prin
 	// insert customer
 	sequence := 1
 
-	paramCoreCustomer := request.PrincipleCoreCustomer{
-		UserInformation: request.UserInformation{
-			UserID:    req.UserInformation.UserID,
-			UserTitle: req.UserInformation.UserTitle,
-		},
-	}
-
-	param, _ := json.Marshal(paramCoreCustomer)
-
 	worker = append(worker, entity.TrxWorker{ProspectID: req.ProspectID, Activity: constant.WORKER_UNPROCESS, EndPointTarget: os.Getenv("PRINCIPLE_CORE_CUSTOMER_URL") + req.ProspectID,
-		EndPointMethod: constant.METHOD_POST, Header: string(headerParamLos), Payload: string(param),
+		EndPointMethod: constant.METHOD_POST, Header: string(headerParamLos), Payload: "",
 		ResponseTimeout: timeOut, APIType: constant.WORKER_TYPE_RAW, MaxRetry: 6, CountRetry: 0,
 		Category: constant.WORKER_CATEGORY_PRINCIPLE_KMB, Action: constant.WORKER_ACTION_UPDATE_CORE_CUSTOMER, Sequence: sequence,
 	})
@@ -97,22 +87,17 @@ func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.Prin
 	// get marketing program
 	sequence += 1
 
-	paramMarketingProgram := request.PrincipleMarketingProgram{
-		UserInformation: request.UserInformation{
-			UserID:    req.UserInformation.UserID,
-			UserTitle: req.UserInformation.UserTitle,
-		},
-	}
-
-	param, _ = json.Marshal(paramMarketingProgram)
-
 	worker = append(worker, entity.TrxWorker{ProspectID: req.ProspectID, Activity: constant.WORKER_IDLE, EndPointTarget: os.Getenv("PRINCIPLE_MARKETING_PROGRAM_URL") + req.ProspectID,
-		EndPointMethod: constant.METHOD_POST, Header: string(headerParamLos), Payload: string(param),
+		EndPointMethod: constant.METHOD_POST, Header: string(headerParamLos), Payload: "",
 		ResponseTimeout: timeOut, APIType: constant.WORKER_TYPE_RAW, MaxRetry: 6, CountRetry: 0,
 		Category: constant.WORKER_CATEGORY_PRINCIPLE_KMB, Action: constant.WORKER_ACTION_GET_MARKETING_PROGRAM, Sequence: sequence,
 	})
 
 	go u.repository.SaveToWorker(worker)
+
+	data.Code = constant.EMERGENCY_PASS_CODE
+	data.Result = constant.DECISION_PASS
+	data.Reason = constant.EMERGENCY_PASS_REASON
 
 	return
 }

@@ -1775,15 +1775,6 @@
                         "name": "prospectID",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "description": "Body payload",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/request.PrincipleCoreCustomer"
-                        }
                     }
                 ],
                 "responses": {
@@ -1976,7 +1967,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.ApiResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.UsecaseApi"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -2261,6 +2264,58 @@
                         "name": "prospectID",
                         "in": "path",
                         "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v3/kmb/principle-data": {
+            "post": {
+                "description": "KmbPrinciple",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KmbPrinciple"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Prospect ID",
+                        "name": "prospectID",
+                        "in": "path",
+                        "required": true
                     },
                     {
                         "description": "Body payload",
@@ -2268,7 +2323,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.PrincipleMarketingProgram"
+                            "$ref": "#/definitions/request.PrincipleGetData"
                         }
                     }
                 ],
@@ -4663,27 +4718,18 @@
                 }
             }
         },
-        "request.PrincipleCoreCustomer": {
-            "type": "object",
-            "required": [
-                "user_information"
-            ],
-            "properties": {
-                "user_information": {
-                    "$ref": "#/definitions/request.UserInformation"
-                }
-            }
-        },
         "request.PrincipleElaborateLTV": {
             "type": "object",
             "required": [
-                "manufacture_year",
+                "finance_purpose",
                 "tenor"
             ],
             "properties": {
-                "manufacture_year": {
-                    "type": "string",
-                    "example": "2020"
+                "finance_purpose": {
+                    "type": "string"
+                },
+                "loan_amount": {
+                    "type": "number"
                 },
                 "prospect_id": {
                     "type": "string"
@@ -4697,12 +4743,10 @@
         "request.PrincipleEmergencyContact": {
             "type": "object",
             "required": [
+                "address",
                 "city",
-                "company_street_name",
-                "home_number",
                 "kecamatan",
                 "kelurahan",
-                "location_details",
                 "mobile_phone",
                 "name",
                 "prospect_id",
@@ -4710,10 +4754,14 @@
                 "relationship",
                 "rt",
                 "rw",
-                "user_information",
                 "zip_code"
             ],
             "properties": {
+                "address": {
+                    "type": "string",
+                    "maxLength": 90,
+                    "example": "JL.PEGANGSAAN 1"
+                },
                 "area_phone": {
                     "type": "string",
                     "maxLength": 4,
@@ -4725,16 +4773,6 @@
                     "maxLength": 50,
                     "example": "JAKARTA SELATAN"
                 },
-                "company_street_name": {
-                    "type": "string",
-                    "maxLength": 90,
-                    "example": "JL.PEGANGSAAN 1"
-                },
-                "home_number": {
-                    "type": "string",
-                    "maxLength": 10,
-                    "example": "10A"
-                },
                 "kecamatan": {
                     "type": "string",
                     "maxLength": 30,
@@ -4744,10 +4782,6 @@
                     "type": "string",
                     "maxLength": 30,
                     "example": "TEGAL PARANG"
-                },
-                "location_details": {
-                    "type": "string",
-                    "example": "Near the big palm tree"
                 },
                 "mobile_phone": {
                     "type": "string",
@@ -4794,23 +4828,20 @@
                     "minLength": 1,
                     "example": "017"
                 },
-                "user_information": {
-                    "$ref": "#/definitions/request.UserInformation"
-                },
                 "zip_code": {
                     "type": "string",
                     "example": "12790"
                 }
             }
         },
-        "request.PrincipleMarketingProgram": {
+        "request.PrincipleGetData": {
             "type": "object",
-            "required": [
-                "user_information"
-            ],
             "properties": {
-                "user_information": {
-                    "$ref": "#/definitions/request.UserInformation"
+                "context": {
+                    "type": "string"
+                },
+                "prospect_id": {
+                    "type": "string"
                 }
             }
         },
@@ -4908,6 +4939,7 @@
                 "company_zipcode",
                 "economy_sector",
                 "education",
+                "email",
                 "employement_since_month",
                 "employement_since_year",
                 "full_name",
@@ -4932,6 +4964,7 @@
                 "monthly_fixed_income",
                 "profession_id",
                 "prospect_id",
+                "religion",
                 "surgate_mother_name"
             ],
             "properties": {
@@ -5012,6 +5045,11 @@
                     "type": "string",
                     "maxLength": 10,
                     "example": "S1"
+                },
+                "email": {
+                    "type": "string",
+                    "maxLength": 100,
+                    "example": "jonathaxx@gmail.com"
                 },
                 "employement_since_month": {
                     "type": "integer",
@@ -5139,6 +5177,10 @@
                     "type": "string",
                     "maxLength": 20,
                     "example": "SAL-1140024080800004"
+                },
+                "religion": {
+                    "type": "string",
+                    "example": "1"
                 },
                 "selfie_photo": {
                     "type": "string",
@@ -5790,23 +5832,6 @@
                 "prospect_id": {
                     "type": "string",
                     "example": "SAL042600001"
-                }
-            }
-        },
-        "request.UserInformation": {
-            "type": "object",
-            "required": [
-                "user_id",
-                "user_title"
-            ],
-            "properties": {
-                "user_id": {
-                    "type": "string",
-                    "maxLength": 50
-                },
-                "user_title": {
-                    "type": "string",
-                    "maxLength": 50
                 }
             }
         },

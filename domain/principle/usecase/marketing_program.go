@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"los-kmb-api/middlewares"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
@@ -17,7 +18,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID string, req request.PrincipleMarketingProgram, accessToken string) (err error) {
+func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID string, accessToken string) (err error) {
 
 	var (
 		principleStepOne                entity.TrxPrincipleStepOne
@@ -230,7 +231,7 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 	}
 
 	licensePlateCode := utils.GetLicensePlateCode(principleStepOne.LicensePlate)
-	resp, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("MDM_MASTER_MAPPING_LICENSE_PLATE_URL")+"?lob_id="+strconv.Itoa(constant.LOBID_KMB)+"&plate_code="+licensePlateCode, param, headerMDM, constant.METHOD_GET, false, 0, timeOut, prospectID, accessToken)
+	resp, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("MDM_MASTER_MAPPING_LICENSE_PLATE_URL")+"?lob_id="+strconv.Itoa(constant.LOBID_KMB)+"&plate_code="+licensePlateCode, nil, headerMDM, constant.METHOD_GET, false, 0, timeOut, prospectID, accessToken)
 	if err != nil {
 		return
 	}
@@ -344,6 +345,11 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 		ProspectID:        prospectID,
 	}
 
+	if principleStepOne.CMOID != "" {
+		payloadSubmitSally.Order.Application.CmoID = principleStepOne.CMOID
+		payloadSubmitSally.Order.Application.CmoName = principleStepOne.CMOName
+	}
+
 	payloadSubmitSally.Order.Asset = request.SallySubmit2wPrincipleAsset{
 		PoliceNo:              principleStepOne.LicensePlate,
 		BPKBOwnershipStatusID: MapperBPKBOwnershipStatusID(principleStepOne.BPKBName),
@@ -363,6 +369,13 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 		})
 	}
 
+	if selfiePhoto, ok := principleStepTwo.SelfiePhoto.(string); ok {
+		documents = append(documents, request.SallySubmit2wPrincipleDocument{
+			URL:  selfiePhoto,
+			Type: "SELFIE",
+		})
+	}
+
 	if stnkPhoto, ok := principleStepOne.STNKPhoto.(string); ok {
 		documents = append(documents, request.SallySubmit2wPrincipleDocument{
 			URL:  stnkPhoto,
@@ -370,7 +383,7 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 		})
 	}
 
-	payloadSubmitSally.Order.Document = documents
+	payloadSubmitSally.Document = documents
 
 	isPsa := false
 	if principleStepThree.Dealer == constant.DEALER_PSA {
@@ -447,14 +460,23 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 
 	var bakiDebet float64
 	if filteringKMB.TotalBakiDebetNonCollateralBiro != nil {
-		bakiDebet = filteringKMB.TotalBakiDebetNonCollateralBiro.(float64)
+		bakiDebet, err = utils.GetFloat(filteringKMB.TotalBakiDebetNonCollateralBiro)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " baki debet " + err.Error())
+			return
+		}
+	}
+
+	var customerStatusKMB string
+	if filteringKMB.CustomerStatusKMB != nil {
+		customerStatusKMB = filteringKMB.CustomerStatusKMB.(string)
 	}
 
 	payloadSubmitSally.Filtering = request.SallySubmit2wPrincipleFiltering{
 		Decision:          filteringKMB.Decision,
 		Reason:            filteringKMB.Reason.(string),
 		CustomerStatus:    customerStatus,
-		CustomerStatusKMB: "",
+		CustomerStatusKMB: customerStatusKMB,
 		CustomerSegment:   customerSegment,
 		IsBlacklist:       isBlacklist,
 		NextProcess:       nextProcess,
@@ -479,6 +501,16 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 		if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &sallySubmit2wPrincipleRes); err != nil {
 			return
 		}
+
+		statusCode := constant.PRINCIPLE_STATUS_SUBMIT_SALLY
+		go u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, prospectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+			OrderID:     prospectID,
+			KpmID:       principleEmergencyContact.KPMID,
+			Source:      3,
+			StatusCode:  statusCode,
+			ProductName: principleStepOne.AssetCode,
+			BranchCode:  principleStepOne.BranchID,
+		}), 0)
 	}
 
 	return

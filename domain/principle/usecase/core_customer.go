@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"los-kmb-api/models/entity"
-	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"os"
@@ -16,7 +15,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u usecase) PrincipleCoreCustomer(ctx context.Context, prospectID string, req request.PrincipleCoreCustomer, accessToken string) (err error) {
+func (u usecase) PrincipleCoreCustomer(ctx context.Context, prospectID string, accessToken string) (err error) {
 
 	var (
 		principleStepOne             entity.TrxPrincipleStepOne
@@ -200,6 +199,8 @@ func (u usecase) PrincipleCoreCustomer(ctx context.Context, prospectID string, r
 		"full_name":               principleStepTwo.FullName,
 		"gender":                  principleStepTwo.Gender,
 		"mobile_phone":            principleStepTwo.MobilePhone,
+		"email":                   principleStepTwo.Email,
+		"religion":                principleStepTwo.Religion,
 		"education":               principleStepTwo.Education,
 		"marital_status":          principleStepTwo.MaritalStatus,
 		"home_status":             principleStepOne.HomeStatus,
@@ -211,6 +212,7 @@ func (u usecase) PrincipleCoreCustomer(ctx context.Context, prospectID string, r
 		"industry_type_id":        principleStepTwo.IndustryTypeID,
 		"employment_since_month":  principleStepTwo.EmploymentSinceMonth,
 		"employment_since_year":   principleStepTwo.EmploymentSinceYear,
+		"company_name":            principleStepTwo.CompanyName,
 		"monthly_fixed_income":    principleStepTwo.MonthlyFixedIncome,
 		"spouse_income":           principleStepTwo.SpouseIncome,
 		"monthly_variable_income": principleStepThree.MonthlyVariableIncome,
@@ -251,11 +253,12 @@ func (u usecase) PrincipleCoreCustomer(ctx context.Context, prospectID string, r
 			"residence_city":                    principleStepOne.ResidenceCity,
 			"residence_kecamatan":               principleStepOne.ResidenceKecamatan,
 			"residence_kelurahan":               principleStepOne.ResidenceKelurahan,
+			"residence_province":                principleStepOne.ResidenceProvince,
 			"residence_phone":                   principleStepOne.ResidencePhone,
 			"residence_rt":                      principleStepOne.ResidenceRT,
 			"residence_rw":                      principleStepOne.ResidenceRW,
 			"residence_zip_code":                principleStepOne.ResidenceZipCode,
-			"emergency_contact_address":         trxPrincipleEmergencyContact.CompanyStreetName + " " + trxPrincipleEmergencyContact.HomeNumber,
+			"emergency_contact_address":         trxPrincipleEmergencyContact.Address,
 			"emergency_contact_city":            trxPrincipleEmergencyContact.City,
 			"emergency_contact_home_phone":      trxPrincipleEmergencyContact.Phone,
 			"emergency_contact_home_phone_area": trxPrincipleEmergencyContact.AreaPhone,
@@ -271,8 +274,8 @@ func (u usecase) PrincipleCoreCustomer(ctx context.Context, prospectID string, r
 			"selfie_media_url": principleStepTwo.SelfiePhoto,
 		},
 		"user_information": map[string]interface{}{
-			"user_id":    req.UserInformation.UserID,
-			"user_title": req.UserInformation.UserTitle,
+			"user_id":    principleStepOne.CMOID,
+			"user_title": "CMO",
 		},
 	}
 

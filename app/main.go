@@ -118,6 +118,7 @@ func main() {
 	constant.TOPIC_SUBMISSION = os.Getenv("TOPIC_SUBMISSION")
 	constant.TOPIC_SUBMISSION_LOS = os.Getenv("TOPIC_SUBMISSION_LOS")
 	constant.TOPIC_INSERT_CUSTOMER = os.Getenv("TOPIC_INSERT_CUSTOMER")
+	constant.TOPIC_SUBMISSION_PRINCIPLE = os.Getenv("TOPIC_SUBMISSION_PRINCIPLE")
 
 	//Platform Event key
 	constant.KEY_PREFIX_FILTERING = os.Getenv("KEY_PREFIX_FILTERING")
@@ -127,6 +128,7 @@ func main() {
 	constant.KEY_PREFIX_CALLBACK = os.Getenv("KEY_PREFIX_CALLBACK")
 	constant.KEY_PREFIX_CALLBACK_GOLIVE = os.Getenv("KEY_PREFIX_CALLBACK_GOLIVE")
 	constant.KEY_PREFIX_UPDATE_CUSTOMER = os.Getenv("KEY_PREFIX_UPDATE_CUSTOMER")
+	constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE = os.Getenv("KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE")
 
 	var minilosWG *gorm.DB
 
@@ -253,7 +255,8 @@ func main() {
 	// libTrace := tracer.Initialize(os.Getenv("APP_NAME"), tracer.IsEnable(config.IsDebug), tracer.LicenseKey(os.Getenv("NEWRELIC_CONFIG_LICENSE")))
 
 	principleRepo := principleRepository.NewRepository(newKMB, kpLos, scorePro, confins)
-	principleMultiCase, principleCase := principleUsecase.NewMultiUsecase(principleRepo, httpClient)
+	principleCase := principleUsecase.NewUsecase(principleRepo, httpClient, producer)
+	principleMultiCase := principleUsecase.NewMultiUsecase(principleRepo, httpClient, producer, principleCase)
 	principleDelivery.Handler(apiGroupv3, principleMultiCase, principleCase, principleRepo, libResponse, accessToken)
 
 	toolsDelivery.ToolsHandler(apiGroupv3, jsonResponse, accessToken, producer)

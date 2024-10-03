@@ -6,6 +6,7 @@ var LOS_KMB_BASE_URL string
 var TOPIC_SUBMISSION string
 var TOPIC_SUBMISSION_LOS string
 var TOPIC_INSERT_CUSTOMER string
+var TOPIC_SUBMISSION_PRINCIPLE string
 
 // Event Driven Key
 var KEY_PREFIX_FILTERING string
@@ -15,6 +16,7 @@ var KEY_PREFIX_AFTER_PRESCREENING string
 var KEY_PREFIX_CALLBACK string
 var KEY_PREFIX_CALLBACK_GOLIVE string
 var KEY_PREFIX_UPDATE_CUSTOMER string
+var KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE string
 
 const (
 	FLAG_LOS                         = "LOS"
@@ -341,31 +343,33 @@ const (
 	DILEN_KMB_LOG        = "DILEN_KMB_LOG"
 
 	// ELABORATE SCHEME
-	MESSAGE_KMB_ELABORATE            = "KMB-ELABORATE"
-	CODE_PASS_ELABORATE              = 9601
-	CODE_REJECT_ELABORATE            = 9602
-	CODE_REJECT_NTF_ELABORATE        = 9603
-	CODE_REJECT_CLUSTER_E_F          = "9604"
-	RANGE_CLUSTER_BAKI_DEBET_REJECT  = 3000000
-	REASON_PASS_ELABORATE            = "PASS - Elaborated Scheme"
-	REASON_REJECT_ELABORATE          = "REJECT - Elaborated Scheme"
-	REASON_REJECT_NTF_ELABORATE      = "REJECT - NTF Tidak Sesuai Threshold"
-	REASON_REJECT_CLUSTER_E_F        = "%s, Baki Debet > 3 Juta - 20 Juta & Tidak dapat dibiayai"
-	CLUSTER_B                        = "Cluster B"
-	CLUSTER_C                        = "Cluster C"
-	CLUSTER_E                        = "Cluster E"
-	CLUSTER_F                        = "Cluster F"
-	BRANCH_ID_PRIME_PRIORITY         = "000"
-	CLUSTER_PRIME_PRIORITY           = "PRIME PRIORITY"
-	SOURCE_DECISION_ELABORATE_LTV    = "LTV"
-	STRING_CODE_PASS_ELABORATE       = "9601"
-	STRING_CODE_REJECT_ELABORATE     = "9602"
-	STRING_CODE_REJECT_NTF_ELABORATE = "9603"
-	SOURCE_DECISION_ELABORATE_INCOME = "INC"
-	CODE_PASS_ELABORATE_INCOME       = "302"
-	REASON_PASS_ELABORATE_INCOME     = "PASS - Elaborated Income"
-	CODE_REJECT_ELABORATE_INCOME     = "303"
-	REASON_REJECT_ELABORATE_INCOME   = "REJECT - Elaborated Income"
+	MESSAGE_KMB_ELABORATE                  = "KMB-ELABORATE"
+	CODE_PASS_ELABORATE                    = 9601
+	CODE_REJECT_ELABORATE                  = 9602
+	CODE_REJECT_NTF_ELABORATE              = 9603
+	CODE_REJECT_CLUSTER_E_F                = "9604"
+	RANGE_CLUSTER_BAKI_DEBET_REJECT        = 9999999
+	WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD  = "& Baki Debet < 10 Juta"
+	WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD = "& Baki Debet 10 - 20 Juta"
+	REASON_PASS_ELABORATE                  = "PASS - Elaborated Scheme"
+	REASON_REJECT_ELABORATE                = "REJECT - Elaborated Scheme"
+	REASON_REJECT_NTF_ELABORATE            = "REJECT - NTF Tidak Sesuai Threshold"
+	REASON_REJECT_CLUSTER_E_F              = "%s, Baki Debet 10 Juta - 20 Juta & Tidak dapat dibiayai"
+	CLUSTER_B                              = "Cluster B"
+	CLUSTER_C                              = "Cluster C"
+	CLUSTER_E                              = "Cluster E"
+	CLUSTER_F                              = "Cluster F"
+	BRANCH_ID_PRIME_PRIORITY               = "000"
+	CLUSTER_PRIME_PRIORITY                 = "PRIME PRIORITY"
+	SOURCE_DECISION_ELABORATE_LTV          = "LTV"
+	STRING_CODE_PASS_ELABORATE             = "9601"
+	STRING_CODE_REJECT_ELABORATE           = "9602"
+	STRING_CODE_REJECT_NTF_ELABORATE       = "9603"
+	SOURCE_DECISION_ELABORATE_INCOME       = "INC"
+	CODE_PASS_ELABORATE_INCOME             = "302"
+	REASON_PASS_ELABORATE_INCOME           = "PASS - Elaborated Income"
+	CODE_REJECT_ELABORATE_INCOME           = "303"
+	REASON_REJECT_ELABORATE_INCOME         = "REJECT - Elaborated Income"
 
 	//HTTP MSG
 	MSG_CORE_API          = "CORE_API"
@@ -694,6 +698,17 @@ const (
 	REASON_CREDIT_PROCESS = "PENGAJUAN DALAM CREDIT PROSES"
 
 	FINANCE_PURPOSE_MODAL_KERJA = "Modal Kerja Fasilitas Modal Usaha"
+
+	PRINCIPLE_STATUS_ASSET_APPROVE   = "ASSET-A"
+	PRINCIPLE_STATUS_ASSET_REJECT    = "ASSET-R"
+	PRINCIPLE_STATUS_PEMOHON_APPROVE = "PROFILE-A"
+	PRINCIPLE_STATUS_PEMOHON_REJECT  = "PROFILE-R"
+	PRINCIPLE_STATUS_BIAYA_APPROVE   = "BIAYA-A"
+	PRINCIPLE_STATUS_BIAYA_REJECT    = "BIAYA-R"
+	PRINCIPLE_STATUS_SUBMIT_SALLY    = "SAL-A"
+
+	EMERGENCY_PASS_CODE   = "4701"
+	EMERGENCY_PASS_REASON = "Sukses Submit To Sally"
 
 	PRINCIPLE_ERROR_RESPONSE_MESSAGE = "komunikasi antar layanan terjadi kesalahan, silakan coba lagi"
 

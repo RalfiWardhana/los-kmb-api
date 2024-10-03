@@ -961,7 +961,7 @@ func TestGetFilteringResult(t *testing.T) {
 
 	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
-	query := `SELECT bpkb_name, customer_status, decision, reason, is_blacklist, next_process, max_overdue_biro, max_overdue_last12months_biro, customer_segment, total_baki_debet_non_collateral_biro, score_biro, cluster, cmo_cluster FROM trx_filtering WITH (nolock) WHERE prospect_id = ?`
+	query := `SELECT bpkb_name, customer_status, customer_status_kmb, decision, reason, is_blacklist, next_process, max_overdue_biro, max_overdue_last12months_biro, customer_segment, total_baki_debet_non_collateral_biro, score_biro, cluster, cmo_cluster, FORMAT(rrd_date, 'yyyy-MM-ddTHH:mm:ss') + 'Z' AS rrd_date, created_at FROM trx_filtering WITH (nolock) WHERE prospect_id = ?`
 
 	prospectID := "TEST0001"
 
@@ -1470,24 +1470,22 @@ func TestSavePrincipleEmergencyContact(t *testing.T) {
 	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
 	data := entity.TrxPrincipleEmergencyContact{
-		ProspectID:        "SAL-1140024080800016",
-		Name:              "Test",
-		Relationship:      "",
-		MobilePhone:       "",
-		CompanyStreetName: "",
-		HomeNumber:        "",
-		LocationDetails:   "",
-		Rt:                "",
-		Rw:                "",
-		Kelurahan:         "",
-		Kecamatan:         "",
-		City:              "",
-		Province:          "",
-		ZipCode:           "",
-		AreaPhone:         "",
-		Phone:             "",
-		CustomerID:        0,
-		KPMID:             0,
+		ProspectID:   "SAL-1140024080800016",
+		Name:         "Test",
+		Address:      "",
+		Relationship: "",
+		MobilePhone:  "",
+		Rt:           "",
+		Rw:           "",
+		Kelurahan:    "",
+		Kecamatan:    "",
+		City:         "",
+		Province:     "",
+		ZipCode:      "",
+		AreaPhone:    "",
+		Phone:        "",
+		CustomerID:   0,
+		KPMID:        0,
 	}
 
 	idNumber := "123456"
@@ -1501,7 +1499,7 @@ func TestSavePrincipleEmergencyContact(t *testing.T) {
 		mock.ExpectExec(`INSERT INTO "trx_principle_emergency_contact" (.*)`).
 			WithArgs(
 				data.ProspectID, data.Name, data.Relationship, data.MobilePhone,
-				data.CompanyStreetName, data.HomeNumber, data.LocationDetails,
+				data.Address,
 				data.Rt, data.Rw, data.Kelurahan, data.Kecamatan, data.City,
 				data.Province, data.ZipCode, data.AreaPhone, data.Phone,
 				data.CustomerID, data.KPMID, sqlmock.AnyArg(), sqlmock.AnyArg(),

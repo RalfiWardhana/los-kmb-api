@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"los-kmb-api/middlewares"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
@@ -71,6 +72,19 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 			trxPrincipleStepThree.Reason = resp.Reason
 
 			_ = u.repository.SavePrincipleStepThree(trxPrincipleStepThree)
+
+			statusCode := constant.PRINCIPLE_STATUS_BIAYA_APPROVE
+			if resp.Result == constant.DECISION_REJECT {
+				statusCode = constant.PRINCIPLE_STATUS_BIAYA_REJECT
+			}
+
+			go u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+				OrderID:     r.ProspectID,
+				Source:      3,
+				StatusCode:  statusCode,
+				ProductName: principleStepOne.AssetCode,
+				BranchCode:  principleStepOne.BranchID,
+			}), 0)
 		}
 	}()
 
@@ -376,20 +390,18 @@ func (u usecase) VehicleCheck(manufactureYear, cmoCluster, bkpbName string, teno
 
 func checkResultPefindo(filtering entity.FilteringKMB) (resultPefindo string) {
 	// check hit pefindo
-	if filtering.ScoreBiro != nil {
-		if filtering.ScoreBiro.(string) != "" && filtering.ScoreBiro.(string) != constant.DECISION_PBK_NO_HIT && filtering.ScoreBiro.(string) != constant.PEFINDO_UNSCORE {
-			// use ovd pefindo all
-			maxOverdueLast12Months, _ := utils.GetFloat(filtering.MaxOverdueLast12monthsBiro)
-			maxOverdueDays, _ := utils.GetFloat(filtering.MaxOverdueBiro)
+	if filtering.ScoreBiro != nil && filtering.ScoreBiro.(string) != "" && filtering.ScoreBiro.(string) != constant.DECISION_PBK_NO_HIT && filtering.ScoreBiro.(string) != constant.PEFINDO_UNSCORE {
+		// use ovd pefindo all
+		maxOverdueLast12Months, _ := utils.GetFloat(filtering.MaxOverdueLast12monthsBiro)
+		maxOverdueDays, _ := utils.GetFloat(filtering.MaxOverdueBiro)
 
-			// pass or reject
-			if maxOverdueLast12Months > constant.PBK_OVD_LAST_12 {
-				resultPefindo = constant.DECISION_REJECT
-			} else if maxOverdueDays > constant.PBK_OVD_CURRENT {
-				resultPefindo = constant.DECISION_REJECT
-			} else {
-				resultPefindo = constant.DECISION_PASS
-			}
+		// pass or reject
+		if maxOverdueLast12Months > constant.PBK_OVD_LAST_12 {
+			resultPefindo = constant.DECISION_REJECT
+		} else if maxOverdueDays > constant.PBK_OVD_CURRENT {
+			resultPefindo = constant.DECISION_REJECT
+		} else {
+			resultPefindo = constant.DECISION_PASS
 		}
 	} else {
 		resultPefindo = constant.NO_HIT_PBK

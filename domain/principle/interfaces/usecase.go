@@ -17,6 +17,7 @@ type Usecase interface {
 	GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType string) (data response.FpdCMOResponse, err error)
 	CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory string, cmoJoinDate string, defaultCluster string, bpkbName string) (clusterCMOSaved string, entitySaveTrxNoFPd entity.TrxCmoNoFPD, err error)
 	Pefindo(ctx context.Context, r request.Pefindo, customerStatus, clusterCMO string, bpkbName string) (data response.Filtering, responsePefindo response.PefindoResult, trxDetailBiro []entity.TrxDetailBiro, err error)
+	CheckLatestPaidInstallment(ctx context.Context, prospectID string, customerID string, accessToken string) (respRrdDate string, monthsDiff int, err error)
 	Save(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, transactionCMOnoFPD entity.TrxCmoNoFPD) (err error)
 	BannedPMKOrDSR(idNumber string) (data response.UsecaseApi, err error)
 	Rejection(prospectID string, encrypted string, configValue response.DupcheckConfig) (data response.UsecaseApi, trxBannedPMKDSR entity.TrxBannedPMKDSR, err error)
@@ -25,14 +26,16 @@ type Usecase interface {
 	Asliri(ctx context.Context, r request.PrinciplePemohon, accessToken string) (data response.Ekyc, err error)
 	Ktp(ctx context.Context, r request.PrinciplePemohon, reqMetricsEkyc request.MetricsEkyc, accessToken string) (data response.Ekyc, err error)
 	PrincipleStep(idNumber string) (step response.StepPrinciple, err error)
-	PrincipleElaborateLTV(ctx context.Context, r request.PrincipleElaborateLTV) (data response.ElaborateLTV, err error)
+	PrincipleElaborateLTV(ctx context.Context, r request.PrincipleElaborateLTV, accessToken string) (data response.PrincipleElaborateLTV, err error)
 	AgreementChassisNumberIntegrator(ctx context.Context, prospectID, chassisNumber string, accessToken string) (data response.AgreementChassisNumber, err error)
 	RejectTenor36(cluster string) (data response.UsecaseApi, err error)
 	Scorepro(ctx context.Context, req request.PrinciplePembiayaan, principleStepOne entity.TrxPrincipleStepOne, principleStepTwo entity.TrxPrincipleStepTwo, pefindoScore, customerStatus, customerSegment string, installmentTopUp float64, spDupcheck response.SpDupCekCustomerByID, accessToken string) (data response.ScorePro, err error)
 	DsrCheck(ctx context.Context, req request.PrinciplePembiayaan, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, agreementChasisNumber response.AgreementChassisNumber, accessToken string, configValue response.DupcheckConfig) (data response.UsecaseApi, err error)
-	PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (err error)
-	PrincipleCoreCustomer(ctx context.Context, prospectID string, req request.PrincipleCoreCustomer, accessToken string) (err error)
-	PrincipleMarketingProgram(ctx context.Context, prospectID string, req request.PrincipleMarketingProgram, accessToken string) (err error)
+	PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (data response.UsecaseApi, err error)
+	PrincipleCoreCustomer(ctx context.Context, prospectID string, accessToken string) (err error)
+	PrincipleMarketingProgram(ctx context.Context, prospectID string, accessToken string) (err error)
+	MDMGetMasterMappingBranchEmployee(ctx context.Context, prospectID, branchID, accessToken string) (data response.MDMMasterMappingBranchEmployeeResponse, err error)
+	GetDataPrinciple(ctx context.Context, req request.PrincipleGetData, accessToken string) (data map[string]interface{}, err error)
 }
 
 type MultiUsecase interface {

@@ -2551,7 +2551,7 @@ type TrxPrincipleStepOne struct {
 	ResidenceAddress   string      `gorm:"column:ResidenceAddress;type:varchar(100);"`
 	ResidenceRT        string      `gorm:"column:ResidenceRT;type:varchar(3)"`
 	ResidenceRW        string      `gorm:"column:ResidenceRW;type:varchar(3)"`
-	ResidenceProvice   string      `gorm:"column:ResidenceProvice;type:varchar(50)"`
+	ResidenceProvince  string      `gorm:"column:ResidenceProvince;type:varchar(50)"`
 	ResidenceCity      string      `gorm:"column:ResidenceCity;type:varchar(30)"`
 	ResidenceKecamatan string      `gorm:"column:ResidenceKecamatan;type:varchar(30)"`
 	ResidenceKelurahan string      `gorm:"column:ResidenceKelurahan;type:varchar(30)"`
@@ -2578,11 +2578,13 @@ type TrxPrincipleStepTwo struct {
 	IDNumber                string      `gorm:"column:IDNumber;type:varchar(16)"`
 	LegalName               string      `gorm:"column:LegalName;type:varchar(100);"`
 	MobilePhone             string      `gorm:"column:MobilePhone;type:varchar(20);"`
+	Email                   string      `gorm:"column:Email;type:varchar(100);"`
 	FullName                string      `gorm:"column:FullName;type:varchar(100);"`
 	BirthDate               time.Time   `gorm:"column:BirthDate"`
 	BirthPlace              string      `gorm:"column:BirthPlace;type:varchar(100);"`
 	SurgateMotherName       string      `gorm:"column:SurgateMotherName;type:varchar(100);"`
 	Gender                  string      `gorm:"column:Gender;type:varchar(10);"`
+	Religion                string      `gorm:"column:Religion;type:varchar(10);"`
 	SpouseIDNumber          interface{} `gorm:"column:SpouseIDNumber;type:varchar(16)"`
 	LegalAddress            string      `gorm:"column:LegalAddress;type:varchar(100);"`
 	LegalRT                 string      `gorm:"column:LegalRT;type:varchar(3);"`
@@ -2594,6 +2596,7 @@ type TrxPrincipleStepTwo struct {
 	LegalZipCode            string      `gorm:"column:LegalZipCode;type:varchar(5)"`
 	LegalAreaPhone          string      `gorm:"column:LegalAreaPhone;type:varchar(4)"`
 	LegalPhone              string      `gorm:"column:LegalPhone;type:varchar(10)"`
+	CompanyName             string      `gorm:"column:CompanyName;type:varchar(50);"`
 	CompanyAddress          string      `gorm:"column:CompanyAddress;type:varchar(100);"`
 	CompanyRT               string      `gorm:"column:CompanyRT;type:varchar(3);"`
 	CompanyRW               string      `gorm:"column:CompanyRW;type:varchar(3);"`
@@ -2700,26 +2703,24 @@ func (c *TrxPrincipleStatus) TableName() string {
 }
 
 type TrxPrincipleEmergencyContact struct {
-	ProspectID        string    `gorm:"column:ProspectID;type:varchar(20);"`
-	Name              string    `gorm:"column:Name;type:varchar(200);"`
-	Relationship      string    `gorm:"column:Relationship;type:varchar(10);"`
-	MobilePhone       string    `gorm:"column:MobilePhone;type:varchar(20);"`
-	CompanyStreetName string    `gorm:"column:CompanyStreetName;type:varchar(255);"`
-	HomeNumber        string    `gorm:"column:HomeNumber;type:varchar(20);"`
-	LocationDetails   string    `gorm:"column:LocationDetails;type:varchar(255);"`
-	Rt                string    `gorm:"column:RT;type:varchar(3);"`
-	Rw                string    `gorm:"column:RW;type:varchar(3);"`
-	Kelurahan         string    `gorm:"column:Kelurahan;type:varchar(30);"`
-	Kecamatan         string    `gorm:"column:Kecamatan;type:varchar(30);"`
-	City              string    `gorm:"column:City;type:varchar(30);"`
-	Province          string    `gorm:"column:Province;type:varchar(30);"`
-	ZipCode           string    `gorm:"column:ZipCode;type:varchar(5);"`
-	AreaPhone         string    `gorm:"column:AreaPhone;type:varchar(5);"`
-	Phone             string    `gorm:"column:Phone;type:varchar(20);"`
-	CustomerID        int       `gorm:"column:CustomerID;"`
-	KPMID             int       `gorm:"column:KPMID;"`
-	CreatedAt         time.Time `gorm:"column:created_at"`
-	UpdatedAt         time.Time `gorm:"column:updated_at;autoUpdateTime"`
+	ProspectID   string    `gorm:"column:ProspectID;type:varchar(20);"`
+	Name         string    `gorm:"column:Name;type:varchar(200);"`
+	Relationship string    `gorm:"column:Relationship;type:varchar(10);"`
+	MobilePhone  string    `gorm:"column:MobilePhone;type:varchar(20);"`
+	Address      string    `gorm:"column:Address;type:varchar(255);"`
+	Rt           string    `gorm:"column:RT;type:varchar(3);"`
+	Rw           string    `gorm:"column:RW;type:varchar(3);"`
+	Kelurahan    string    `gorm:"column:Kelurahan;type:varchar(30);"`
+	Kecamatan    string    `gorm:"column:Kecamatan;type:varchar(30);"`
+	City         string    `gorm:"column:City;type:varchar(30);"`
+	Province     string    `gorm:"column:Province;type:varchar(30);"`
+	ZipCode      string    `gorm:"column:ZipCode;type:varchar(5);"`
+	AreaPhone    string    `gorm:"column:AreaPhone;type:varchar(5);"`
+	Phone        string    `gorm:"column:Phone;type:varchar(20);"`
+	CustomerID   int       `gorm:"column:CustomerID;"`
+	KPMID        int       `gorm:"column:KPMID;"`
+	CreatedAt    time.Time `gorm:"column:created_at"`
+	UpdatedAt    time.Time `gorm:"column:updated_at;autoUpdateTime"`
 }
 
 func (c *TrxPrincipleEmergencyContact) TableName() string {

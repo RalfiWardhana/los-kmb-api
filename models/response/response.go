@@ -999,6 +999,7 @@ type MarsevLoanAmountData struct {
 	AdminFeeAmount     float64 `json:"admin_fee_amount"`
 	ProvisionFeeAmount float64 `json:"provision_fee_amount"`
 	LoanAmountFinal    float64 `json:"loan_amount_final"`
+	IsPsa              bool    `json:"is_psa"`
 }
 
 type MarsevFilterProgramResponse struct {
@@ -1134,4 +1135,79 @@ type SallySubmit2wPrincipleResponse struct {
 	Errors    interface{} `json:"errors"`
 	RequestID string      `json:"request_id"`
 	Timestamp string      `json:"timestamp"`
+}
+
+type MDMMasterMappingBranchEmployeeResponse struct {
+	Code     string                                 `json:"code"`
+	Message  string                                 `json:"message"`
+	Data     []MDMMasterMappingBranchEmployeeRecord `json:"data"`
+	Errors   interface{}                            `json:"errors"`
+	Metadata MDMMasterMappingBranchEmployeeMetadata `json:"metadata"`
+}
+
+type MDMMasterMappingBranchEmployeeRecord struct {
+	ID         int     `json:"id"`
+	BranchID   string  `json:"branch_id"`
+	BranchName string  `json:"branch_name"`
+	CMOID      string  `json:"cmo_id"`
+	CMOName    string  `json:"cmo_name"`
+	LobID      int     `json:"lob_id"`
+	CreatedAt  string  `json:"created_at"`
+	CreatedBy  string  `json:"created_by"`
+	UpdatedAt  *string `json:"updated_at,omitempty"`
+	UpdatedBy  *string `json:"updated_by,omitempty"`
+	DeletedAt  *string `json:"deleted_at,omitempty"`
+	DeletedBy  *string `json:"deleted_by,omitempty"`
+}
+
+type MDMMasterMappingBranchEmployeeMetadata struct {
+	Pagination MDMMasterMappingBranchEmployeePagination `json:"pagination"`
+}
+
+type MDMMasterMappingBranchEmployeePagination struct {
+	Limit    int  `json:"limit"`
+	NextPage bool `json:"next_page"`
+	Page     int  `json:"page"`
+	PrevPage bool `json:"prev_page"`
+	Total    int  `json:"total"`
+}
+
+type AssetYearList struct {
+	Records []struct {
+		AssetCode        string `json:"asset_code"`
+		BranchID         string `json:"branch_id"`
+		Brand            string `json:"brand"`
+		ManufactureYear  int    `json:"manufacturing_year"`
+		MarketPriceValue int    `json:"market_price_value"`
+	} `json:"records"`
+}
+
+type PrincipleElaborateLTV struct {
+	LTV               int         `json:"ltv"`
+	AdjustTenor       bool        `json:"adjust_tenor"`
+	MaxTenor          int         `json:"max_tenor"`
+	Reason            string      `json:"reason"`
+	LoanAmountMaximum float64     `json:"loan_amount_maximum"`
+	IsPsa             interface{} `json:"is_psa,omitempty"`
+	InstallmentAmount interface{} `json:"installment_amount,omitempty"`
+	AF                interface{} `json:"af,omitempty"`
+	AdminFee          interface{} `json:"admin_fee,omitempty"`
+	NTF               interface{} `json:"ntf,omitempty"`
+	AssetCategoryID   interface{} `json:"asset_category_id,omitempty"`
+	Otr               interface{} `json:"otr,omitempty"`
+}
+
+type AssetList struct {
+	Records []struct {
+		AssetCode           string `json:"asset_code"`
+		AssetDescription    string `json:"asset_description"`
+		AssetDisplay        string `json:"asset_display"`
+		AssetTypeID         string `json:"asset_type_id"`
+		BranchID            string `json:"branch_id"`
+		Brand               string `json:"brand"`
+		CategoryID          string `json:"category_id"`
+		CategoryDescription string `json:"category_description"`
+		IsElectric          bool   `json:"is_electric"`
+		Model               string `json:"model"`
+	} `json:"records"`
 }
