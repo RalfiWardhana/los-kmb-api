@@ -460,7 +460,11 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 
 	var bakiDebet float64
 	if filteringKMB.TotalBakiDebetNonCollateralBiro != nil {
-		bakiDebet = filteringKMB.TotalBakiDebetNonCollateralBiro.(float64)
+		bakiDebet, err = utils.GetFloat(filteringKMB.TotalBakiDebetNonCollateralBiro)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " baki debet " + err.Error())
+			return
+		}
 	}
 
 	var customerStatusKMB string
