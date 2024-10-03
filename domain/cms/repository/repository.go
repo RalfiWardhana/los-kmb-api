@@ -2528,8 +2528,15 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
                 WHERE ta.ProspectID = ?
             `
 			if err = tx.Raw(selectQuery, trxCaDecision.ProspectID).Row().Scan(&branchID, &ntf, &customerStatus, &decisionFinal); err != nil {
-				return err
-			}
+                if err == gorm.ErrRecordNotFound {
+                    branchID = ""
+                    ntf = 0
+                    customerStatus = ""
+                    decisionFinal = nil
+                } else {
+                    return err
+                }
+            }
 
 			if branchID != "" && customerStatus != "" && customerStatus == constant.STATUS_KONSUMEN_NEW && decisionFinal != nil {
 				if decisionStr, ok := decisionFinal.(string); ok && decisionStr == constant.DB_DECISION_APR {
