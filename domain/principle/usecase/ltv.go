@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
@@ -258,7 +257,12 @@ func (u usecase) PrincipleElaborateLTV(ctx context.Context, reqs request.Princip
 	}
 
 	if data.LTV == 0 && data.AdjustTenor {
-		data.Reason = fmt.Sprintf("Tenor yang dapat digunakan maksimal %d kali angsuran", data.MaxTenor)
+		data.Reason = "Lama Angsuran Tidak Tersedia, Silahkan coba lama angsuran yang lain"
+		return
+	}
+
+	if data.LTV == 0 && !data.AdjustTenor {
+		data.Reason = "Mohon maaf, Lama Angsuran Tidak Tersedia"
 		return
 	}
 

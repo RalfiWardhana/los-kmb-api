@@ -70,7 +70,7 @@ func (c *handler) VerifyAsset(ctx echo.Context) (err error) {
 		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
 	}
 
-	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
+	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data, response.WithMessage(data.Reason))
 
 }
 
@@ -103,7 +103,7 @@ func (c *handler) VerifyPemohon(ctx echo.Context) (err error) {
 		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
 	}
 
-	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
+	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data, response.WithMessage(data.Reason))
 
 }
 
@@ -172,11 +172,11 @@ func (c *handler) ElaborateLTV(ctx echo.Context) (err error) {
 	}
 
 	if data.AdjustTenor && data.LTV == 0 {
-		return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "002"), data)
+		return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "002"), data, response.WithMessage(data.Reason))
 	}
 
 	if !data.AdjustTenor && data.LTV == 0 {
-		return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "003"), data)
+		return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "003"), data, response.WithMessage(data.Reason))
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
@@ -212,7 +212,7 @@ func (c *handler) VerifyPembiayaan(ctx echo.Context) (err error) {
 		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
 	}
 
-	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
+	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data, response.WithMessage(data.Reason))
 
 }
 

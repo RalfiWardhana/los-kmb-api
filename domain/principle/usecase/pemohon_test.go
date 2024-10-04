@@ -18,6 +18,7 @@ import (
 	"testing"
 	"time"
 
+	errorLib "github.com/KB-FMF/los-common-library/errors"
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
 	jsoniter "github.com/json-iterator/go"
@@ -68,18 +69,18 @@ func TestGetEmployeeData(t *testing.T) {
 			employeeID:     "123",
 			mockResponse:   response.GetEmployeeByID{},
 			mockStatusCode: 504,
-			expectedError:  errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get Employee Data Timeout"),
+			expectedError:  fmt.Errorf(errorLib.ErrGatewayTimeout + " - Get employee data"),
 			expectedData:   response.EmployeeCMOResponse{},
-			mockError:      errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get Employee Data Timeout"),
+			mockError:      fmt.Errorf(errorLib.ErrGatewayTimeout + " - Get employee data"),
 		},
 		{
 			name:           "error employee data not found",
 			employeeID:     "123",
 			mockResponse:   response.GetEmployeeByID{},
 			mockStatusCode: 404,
-			expectedError:  errors.New(constant.ERROR_UPSTREAM + " - Get Employee Data Error"),
+			expectedError:  fmt.Errorf(errorLib.ErrBadRequest + " - Get employee data"),
 			expectedData:   response.EmployeeCMOResponse{},
-			mockError:      errors.New(constant.ERROR_UPSTREAM + " - Get Employee Data Error"),
+			mockError:      fmt.Errorf(errorLib.ErrBadRequest + " - Get employee data"),
 		},
 		{
 			name:       "error real career date empty",
@@ -95,9 +96,9 @@ func TestGetEmployeeData(t *testing.T) {
 				},
 			},
 			mockStatusCode: 200,
-			expectedError:  errors.New(constant.ERROR_BAD_REQUEST + " - Get Employee Data Error"),
+			expectedError:  fmt.Errorf(errorLib.ErrServiceUnavailable + " - Get employee data"),
 			expectedData:   response.EmployeeCMOResponse{},
-			mockError:      errors.New(constant.ERROR_BAD_REQUEST + " - Get Employee Data Error"),
+			mockError:      fmt.Errorf(errorLib.ErrServiceUnavailable + " - Get employee data"),
 		},
 	}
 
@@ -237,9 +238,9 @@ func TestGetFpdCMO(t *testing.T) {
 			bpkbNameType:   "NAMA BEDA",
 			mockResponse:   response.GetFPDCmoByID{},
 			mockStatusCode: 504,
-			expectedError:  errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get FPD Data Timeout"),
+			expectedError:  fmt.Errorf(errorLib.ErrGatewayTimeout + " - Get fpd data"),
 			expectedData:   response.FpdCMOResponse{},
-			mockError:      errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get FPD Data Timeout"),
+			mockError:      fmt.Errorf(errorLib.ErrGatewayTimeout + " - Get fpd data"),
 		},
 		{
 			name:           "error fpd data not found",
@@ -247,9 +248,9 @@ func TestGetFpdCMO(t *testing.T) {
 			bpkbNameType:   "NAMA SAMA",
 			mockResponse:   response.GetFPDCmoByID{},
 			mockStatusCode: 404,
-			expectedError:  errors.New(constant.ERROR_UPSTREAM + " - Get FPD Data Error"),
+			expectedError:  fmt.Errorf(errorLib.ErrBadRequest + " - Get fpd data"),
 			expectedData:   response.FpdCMOResponse{},
-			mockError:      errors.New(constant.ERROR_UPSTREAM + " - Get FPD Data Error"),
+			mockError:      fmt.Errorf(errorLib.ErrBadRequest + " - Get fpd data"),
 		},
 	}
 
@@ -457,12 +458,12 @@ func TestPrinciplePemohon(t *testing.T) {
 			resBannedPMKOrDSR: response.UsecaseApi{
 				Result: constant.DECISION_REJECT,
 				Code:   constant.CODE_PERNAH_REJECT_PMK_DSR,
-				Reason: constant.REASON_PERNAH_REJECT_PMK_DSR,
+				Reason: "Data diri tidak lolos verifikasi",
 			},
 			result: response.UsecaseApi{
 				Result: constant.DECISION_REJECT,
 				Code:   constant.CODE_PERNAH_REJECT_PMK_DSR,
-				Reason: constant.REASON_PERNAH_REJECT_PMK_DSR,
+				Reason: "Data diri tidak lolos verifikasi",
 			},
 			expectGetConfig:              true,
 			expectBannedPMKOrDSR:         true,
@@ -505,12 +506,12 @@ func TestPrinciplePemohon(t *testing.T) {
 			resRejection: response.UsecaseApi{
 				Result: constant.DECISION_REJECT,
 				Code:   constant.CODE_PERNAH_REJECT_PMK_DSR,
-				Reason: constant.REASON_PERNAH_REJECT_PMK_DSR,
+				Reason: "Data diri tidak lolos verifikasi",
 			},
 			result: response.UsecaseApi{
 				Result: constant.DECISION_REJECT,
 				Code:   constant.CODE_PERNAH_REJECT_PMK_DSR,
-				Reason: constant.REASON_PERNAH_REJECT_PMK_DSR,
+				Reason: "Data diri tidak lolos verifikasi",
 			},
 			expectGetConfig:              true,
 			expectBannedPMKOrDSR:         true,
@@ -568,12 +569,12 @@ func TestPrinciplePemohon(t *testing.T) {
 			resBlacklistCheck: response.UsecaseApi{
 				Result: constant.DECISION_REJECT,
 				Code:   constant.CODE_KONSUMEN_SIMILIAR,
-				Reason: constant.REASON_KONSUMEN_SIMILIAR,
+				Reason: "Data diri tidak lolos verifikasi",
 			},
 			result: response.UsecaseApi{
 				Result: constant.DECISION_REJECT,
 				Code:   constant.CODE_KONSUMEN_SIMILIAR,
-				Reason: constant.REASON_KONSUMEN_SIMILIAR,
+				Reason: "Data diri tidak lolos verifikasi",
 			},
 			expectGetConfig:              true,
 			expectBannedPMKOrDSR:         true,

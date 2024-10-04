@@ -74,8 +74,10 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 			_ = u.repository.SavePrincipleStepThree(trxPrincipleStepThree)
 
 			statusCode := constant.PRINCIPLE_STATUS_BIAYA_APPROVE
+			resp.Reason = "Verifikasi data pembiayaan berhasil"
 			if resp.Result == constant.DECISION_REJECT {
 				statusCode = constant.PRINCIPLE_STATUS_BIAYA_REJECT
+				resp.Reason = "Data pembiayaan tidak lolos verifikasi"
 			}
 
 			go u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{

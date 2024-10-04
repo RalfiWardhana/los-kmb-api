@@ -16,6 +16,8 @@ import (
 	"strings"
 	"time"
 
+	errorLib "github.com/KB-FMF/los-common-library/errors"
+
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/labstack/echo/v4"
@@ -50,12 +52,12 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string) (data r
 	getDataEmployee, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), param, header, constant.METHOD_POST, false, 0, timeout, "", middlewares.UserInfoData.AccessToken)
 
 	if getDataEmployee.StatusCode() == 504 || getDataEmployee.StatusCode() == 502 {
-		// err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get Employee Data Timeout")
+		err = fmt.Errorf(errorLib.ErrGatewayTimeout + " - Get employee data")
 		return
 	}
 
 	if getDataEmployee.StatusCode() != 200 && getDataEmployee.StatusCode() != 504 && getDataEmployee.StatusCode() != 502 {
-		// err = errors.New(constant.ERROR_UPSTREAM + " - Get Employee Data Error")
+		err = fmt.Errorf(errorLib.ErrBadRequest + " - Get employee data")
 		return
 	}
 
@@ -84,37 +86,35 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string) (data r
 		} else {
 			dataEmployee = respGetEmployeeData.Data[lastIndex]
 			if dataEmployee.RealCareerDate == "" {
-				// err = errors.New(constant.ERROR_UPSTREAM + " - RealCareerDate Empty")
+				err = fmt.Errorf(errorLib.ErrServiceUnavailable + " - RealCareerDate empty")
 				return
 			}
 
 			parsedTime, err = time.Parse("2006-01-02T15:04:05", dataEmployee.RealCareerDate)
 			if err != nil {
-				// err = errors.New(constant.ERROR_UPSTREAM + " - Error Parse RealCareerDate")
+				err = fmt.Errorf(errorLib.ErrServiceUnavailable + " - Error parse realCareerDate")
 				return
 			}
 
-			layout := constant.FORMAT_DATE
+			dataEmployee.RealCareerDate = parsedTime.Format(time.DateOnly)
 
-			dataEmployee.RealCareerDate = parsedTime.Format(layout)
-
-			today = time.Now().Format(layout)
+			today = time.Now().Format(time.DateOnly)
 			// memvalidasi bulan+tahun yang diberikan tidak lebih besar dari bulan+tahun hari ini
 			err = utils.ValidateDiffMonthYear(dataEmployee.RealCareerDate, today)
 			if err != nil {
-				// err = errors.New(constant.ERROR_UPSTREAM + " - Error Validate MonthYear of RealCareerDate")
+				err = fmt.Errorf(errorLib.ErrServiceUnavailable + " - Error validate monthYear of realCareerDate")
 				return
 			}
 
-			todayDate, err = time.Parse(layout, today)
+			todayDate, err = time.Parse(time.DateOnly, today)
 			if err != nil {
-				// err = errors.New(constant.ERROR_UPSTREAM + " - Error Parse todayDate")
+				err = fmt.Errorf(errorLib.ErrServiceUnavailable + " - Error parse todayDate")
 				return
 			}
 
-			givenDate, err = time.Parse(layout, dataEmployee.RealCareerDate)
+			givenDate, err = time.Parse(time.DateOnly, dataEmployee.RealCareerDate)
 			if err != nil {
-				// err = errors.New(constant.ERROR_UPSTREAM + " - Error Parse givenDate")
+				err = fmt.Errorf(errorLib.ErrServiceUnavailable + " - Error parse givenDate")
 				return
 			}
 
@@ -138,7 +138,7 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string) (data r
 		}
 
 	} else {
-		// err = errors.New(constant.ERROR_BAD_REQUEST + " - Get Employee Data Error")
+		err = fmt.Errorf(errorLib.ErrServiceUnavailable + " - Get employee data")
 		return
 	}
 
@@ -163,12 +163,12 @@ func (u usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType strin
 	getDataFpd, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, endpointURL, nil, header, constant.METHOD_GET, false, 0, timeout, "", middlewares.UserInfoData.AccessToken)
 
 	if getDataFpd.StatusCode() == 504 || getDataFpd.StatusCode() == 502 {
-		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get FPD Data Timeout")
+		err = fmt.Errorf(errorLib.ErrGatewayTimeout + " - Get fpd data")
 		return
 	}
 
 	if getDataFpd.StatusCode() != 200 && getDataFpd.StatusCode() != 504 && getDataFpd.StatusCode() != 502 {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Get FPD Data Error")
+		err = fmt.Errorf(errorLib.ErrBadRequest + " - Get fpd data")
 		return
 	}
 
@@ -221,7 +221,6 @@ func (u usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType strin
 
 		}
 	} else {
-		// err = errors.New(constant.ERROR_BAD_REQUEST + " - Get FPD Data Error")
 		return
 	}
 
@@ -249,7 +248,6 @@ func (u usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory stri
 
 	TrxCmoNoFpd, err = u.repository.CheckCMONoFPD(cmoID, bpkbName)
 	if err != nil {
-		// err = errors.New(constant.ERROR_UPSTREAM + " - Check CMO No FPD error")
 		return
 	}
 
@@ -389,8 +387,10 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			}
 
 			statusCode := constant.PRINCIPLE_STATUS_PEMOHON_APPROVE
+			data.Reason = "Verifikasi data diri berhasil"
 			if data.Decision == constant.DECISION_REJECT {
 				statusCode = constant.PRINCIPLE_STATUS_PEMOHON_REJECT
+				data.Reason = "Data diri tidak lolos verifikasi"
 			}
 
 			go u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{

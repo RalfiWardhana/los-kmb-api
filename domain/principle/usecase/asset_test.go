@@ -87,7 +87,7 @@ func TestCheckNokaNosin(t *testing.T) {
 			result: response.UsecaseApi{
 				Code:   constant.CODE_REJECT_CHASSIS_NUMBER,
 				Result: constant.DECISION_REJECT,
-				Reason: constant.REASON_REJECT_CHASSIS_NUMBER,
+				Reason: "Data STNK tidak lolos verifikasi",
 			},
 			expectGetMasterBranchCMO:   true,
 			expectSavePrincipleStepOne: true,
@@ -109,7 +109,7 @@ func TestCheckNokaNosin(t *testing.T) {
 			result: response.UsecaseApi{
 				Code:   constant.CODE_OK_CONSUMEN_MATCH,
 				Result: constant.DECISION_PASS,
-				Reason: constant.REASON_OK_CONSUMEN_MATCH,
+				Reason: "Verifikasi data aset berhasil",
 			},
 			expectGetMasterBranchCMO:   true,
 			expectSavePrincipleStepOne: true,
@@ -132,7 +132,7 @@ func TestCheckNokaNosin(t *testing.T) {
 			result: response.UsecaseApi{
 				Code:   constant.CODE_REJECTION_FRAUD_POTENTIAL,
 				Result: constant.DECISION_REJECT,
-				Reason: constant.REASON_REJECTION_FRAUD_POTENTIAL,
+				Reason: "Data STNK tidak lolos verifikasi",
 			},
 			expectGetMasterBranchCMO:   true,
 			expectSavePrincipleStepOne: true,
@@ -178,7 +178,7 @@ func TestCheckNokaNosin(t *testing.T) {
 			result: response.UsecaseApi{
 				Code:   constant.CODE_AGREEMENT_NOT_FOUND,
 				Result: constant.DECISION_PASS,
-				Reason: constant.REASON_AGREEMENT_NOT_FOUND,
+				Reason: "Verifikasi data aset berhasil",
 			},
 			expectGetMasterBranchCMO:   true,
 			expectSavePrincipleStepOne: true,

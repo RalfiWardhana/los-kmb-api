@@ -154,9 +154,12 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		STNKPhoto:          r.STNKPhoto,
 	})
 
+	//masking reason
 	statusCode := constant.PRINCIPLE_STATUS_ASSET_APPROVE
+	data.Reason = "Verifikasi data aset berhasil"
 	if data.Result == constant.DECISION_REJECT {
 		statusCode = constant.PRINCIPLE_STATUS_ASSET_REJECT
+		data.Reason = "Data STNK tidak lolos verifikasi"
 	}
 
 	go u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
