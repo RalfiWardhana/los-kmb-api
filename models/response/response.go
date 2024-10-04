@@ -1189,6 +1189,7 @@ type PrincipleElaborateLTV struct {
 	Reason            string      `json:"reason"`
 	LoanAmountMaximum float64     `json:"loan_amount_maximum"`
 	IsPsa             interface{} `json:"is_psa,omitempty"`
+	Dealer            interface{} `json:"dealer,omitempty"`
 	InstallmentAmount interface{} `json:"installment_amount,omitempty"`
 	AF                interface{} `json:"af,omitempty"`
 	AdminFee          interface{} `json:"admin_fee,omitempty"`
