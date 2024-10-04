@@ -520,6 +520,10 @@ func (u usecase) PrincipleElaborateLTV(ctx context.Context, reqs request.Princip
 			data.AF = marsevCalculateInstallmentRes.Data[0].AmountOfFinance
 			data.NTF = marsevCalculateInstallmentRes.Data[0].NTF
 			data.IsPsa = marsevLoanAmountRes.Data.IsPsa
+			data.Dealer = "NON PSA"
+			if marsevLoanAmountRes.Data.IsPsa {
+				data.Dealer = "PSA"
+			}
 			data.AdminFee = marsevCalculateInstallmentRes.Data[0].AdminFee
 			data.AssetCategoryID = categoryId
 			data.Otr = otr

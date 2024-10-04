@@ -108,6 +108,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			principleStepTwo   entity.TrxPrincipleStepTwo
 			principleStepThree entity.TrxPrincipleStepThree
 			filteringKMB       entity.FilteringKMB
+			dealer             string
 		)
 
 		wg.Add(4)
@@ -193,6 +194,11 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 		if resp.StatusCode() == 200 {
 			if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &marsevLoanAmountRes); err != nil {
 				return data, err
+			}
+
+			dealer = "NON PSA"
+			if marsevLoanAmountRes.Data.IsPsa {
+				dealer = "PSA"
 			}
 
 		}
@@ -309,6 +315,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 		}
 
 		data = map[string]interface{}{
+			"dealer":           dealer,
 			"is_psa":           marsevLoanAmountRes.Data.IsPsa,
 			"manufacture_year": principleStepOne.ManufactureYear,
 			"finance_purpose":  principleStepThree.FinancePurpose,
