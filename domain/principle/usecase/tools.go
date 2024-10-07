@@ -3,6 +3,8 @@ package usecase
 import (
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
+
+	"github.com/jinzhu/gorm"
 )
 
 func (u usecase) PrincipleStep(idNumber string) (step response.StepPrinciple, err error) {
@@ -10,29 +12,17 @@ func (u usecase) PrincipleStep(idNumber string) (step response.StepPrinciple, er
 	data, err := u.repository.GetTrxPrincipleStatus(idNumber)
 
 	if err != nil {
-		return
+		if err != gorm.ErrRecordNotFound {
+			return
+		}
+
+		return response.StepPrinciple{}, nil
 	}
 
 	step.ProspectID = data.ProspectID
 	step.UpdatedAt = data.UpdatedAt.Format(constant.FORMAT_DATE_TIME)
 
 	switch data.Decision {
-
-	case constant.DECISION_REJECT:
-
-		step.ColorCode = "#FF0000"
-
-		switch data.Step {
-
-		case 1:
-			step.Status = constant.REASON_ASSET_REJECT
-
-		case 2:
-			step.Status = constant.REASON_PROFIL_REJECT
-
-		case 3:
-			step.Status = constant.REASON_PEMBIAYAAN_REJECT
-		}
 
 	case constant.DECISION_PASS:
 
@@ -50,15 +40,10 @@ func (u usecase) PrincipleStep(idNumber string) (step response.StepPrinciple, er
 			step.Status = constant.REASON_PEMBIAYAAN_APPROVE
 		}
 
-	case constant.DECISION_CANCEL:
-
-		step.ColorCode = "#FFFF00"
-		step.Status = constant.REASON_CANCEL
-
 	case constant.DECISION_CREDIT_PROCESS:
 
-		step.ColorCode = "#00FF00"
-		step.Status = constant.REASON_CREDIT_PROCESS
+		step.ColorCode = "#FFCC00"
+		step.Status = constant.REASON_PROSES_SURVEY
 	}
 
 	return

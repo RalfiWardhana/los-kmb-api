@@ -172,11 +172,11 @@ func (m *AccessMiddleware) AccessMiddleware() echo.MiddlewareFunc {
 				return m.BadGateway(context, err.Error())
 			}
 
-			// hris token
-			_, err = GetTokenHris()
-			if err != nil {
-				return m.BadGateway(context, err.Error())
-			}
+			// // hris token
+			// _, err = GetTokenHris()
+			// if err != nil {
+			// 	return m.BadGateway(context, err.Error())
+			// }
 			return handlerFunc(context)
 
 		}

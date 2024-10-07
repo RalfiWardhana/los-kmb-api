@@ -138,6 +138,15 @@ func (c *handler) StepPrinciple(ctx echo.Context) (err error) {
 		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
 	}
 
+	if data.Status == "" {
+		return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "003"), nil)
+	}
+
+	if data.Status == constant.REASON_PROSES_SURVEY {
+		return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "002"), data, response.WithMessage("Kamu masih memiliki pengajuan lain yang sedang diproses"))
+
+	}
+
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
 
 }
