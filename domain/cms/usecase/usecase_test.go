@@ -1510,7 +1510,7 @@ func TestCancelOrder(t *testing.T) {
 			Decision:       constant.DB_DECISION_REJECT,
 		}, errSave).Once()
 
-		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dapat dicancel")).Once()
+		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dapat dicancel")).Once()
 
 		_, err := usecase.CancelOrder(context.Background(), req)
 
