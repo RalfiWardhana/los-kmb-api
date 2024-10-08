@@ -81,6 +81,34 @@ func (_m *Usecase) CheckAgreementChassisNumber(ctx context.Context, reqs request
 	return r0, r1
 }
 
+// CheckAgreementLunas provides a mock function with given fields: ctx, prospectID, customerId, filterKMBOnly, accessToken
+func (_m *Usecase) CheckAgreementLunas(ctx context.Context, prospectID string, customerId string, filterKMBOnly bool, accessToken string) (response.ConfinsAgreementCustomer, bool, error) {
+	ret := _m.Called(ctx, prospectID, customerId, filterKMBOnly, accessToken)
+
+	var r0 response.ConfinsAgreementCustomer
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, bool, string) response.ConfinsAgreementCustomer); ok {
+		r0 = rf(ctx, prospectID, customerId, filterKMBOnly, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.ConfinsAgreementCustomer)
+	}
+
+	var r1 bool
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, bool, string) bool); ok {
+		r1 = rf(ctx, prospectID, customerId, filterKMBOnly, accessToken)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(context.Context, string, string, bool, string) error); ok {
+		r2 = rf(ctx, prospectID, customerId, filterKMBOnly, accessToken)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // CheckBannedChassisNumber provides a mock function with given fields: chassisNumber
 func (_m *Usecase) CheckBannedChassisNumber(chassisNumber string) (response.UsecaseApi, error) {
 	ret := _m.Called(chassisNumber)
