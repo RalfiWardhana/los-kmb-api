@@ -115,6 +115,15 @@ func main() {
 	constant.TOPIC_SUBMISSION_LOS = os.Getenv("TOPIC_SUBMISSION_LOS")
 	constant.TOPIC_INSERT_CUSTOMER = os.Getenv("TOPIC_INSERT_CUSTOMER")
 
+	//Platform Event key
+	constant.KEY_PREFIX_FILTERING = os.Getenv("KEY_PREFIX_FILTERING")
+	constant.KEY_PREFIX_UPDATE_STATUS_FILTERING = os.Getenv("KEY_PREFIX_UPDATE_STATUS_FILTERING")
+	constant.KEY_PREFIX_SUBMIT_TO_LOS = os.Getenv("KEY_PREFIX_SUBMIT_TO_LOS")
+	constant.KEY_PREFIX_AFTER_PRESCREENING = os.Getenv("KEY_PREFIX_AFTER_PRESCREENING")
+	constant.KEY_PREFIX_CALLBACK = os.Getenv("KEY_PREFIX_CALLBACK")
+	constant.KEY_PREFIX_CALLBACK_GOLIVE = os.Getenv("KEY_PREFIX_CALLBACK_GOLIVE")
+	constant.KEY_PREFIX_UPDATE_CUSTOMER = os.Getenv("KEY_PREFIX_UPDATE_CUSTOMER")
+
 	var minilosWG *gorm.DB
 
 	minilosKMB, err := database.OpenMinilosKMB()
@@ -219,7 +228,7 @@ func main() {
 	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken, producer, platformCache)
 
 	// define new kmb elaborate domain
-	newElaborateLTVRepo := elaborateLTVRepository.NewRepository(kpLosLogs, newKMB)
+	newElaborateLTVRepo := elaborateLTVRepository.NewRepository(kpLos, kpLosLogs, newKMB)
 	newElaborateLTVUsecase := elaborateLTVUsecase.NewUsecase(newElaborateLTVRepo, httpClient)
 	elaborateLTVDelivery.ElaborateHandler(apiGroupv3, newElaborateLTVUsecase, newElaborateLTVRepo, authorization, jsonResponse, accessToken)
 
@@ -278,7 +287,7 @@ func main() {
 		}
 	})
 
-	eventHandler.NewServiceKMB(consumerJourneyRouter, kmbRepositories, kmbUsecases, kmbMetrics, validator, producer, jsonResponse)
+	eventHandler.NewServiceKMB(consumerJourneyRouter, kmbRepositories, kmbUsecases, kmbMetrics, validator, producer, jsonResponse, cmsUsecases)
 
 	if err := consumerJourneyRouter.StartConsume(); err != nil {
 		panic(err)

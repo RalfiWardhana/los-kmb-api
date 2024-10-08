@@ -18,15 +18,14 @@ import (
 
 type handlerKMB struct {
 	metrics       interfaces.Metrics
-	multiUsecase  interfaces.MultiUsecase
 	usecase       interfaces.Usecase
 	repository    interfaces.Repository
 	authorization authorization.Authorization
 	Json          common.JSON
-	producer      platformevent.PlatformEvent
+	producer      platformevent.PlatformEventInterface
 }
 
-func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, authorization authorization.Authorization, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEvent) {
+func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, authorization authorization.Authorization, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEventInterface) {
 	handler := handlerKMB{
 		metrics:       metrics,
 		usecase:       usecase,

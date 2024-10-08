@@ -61,4 +61,11 @@ type Repository interface {
 	GetRecalculate(prospectID string) (getRecalculate entity.GetRecalculate, err error)
 	SaveRecalculate(beforeRecalculate entity.TrxRecalculate, afterRecalculate entity.TrxRecalculate) (err error)
 	SaveToStaging(prospectID string) (err error)
+
+	GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNameType, tenor int, resultPefindo string, af float64) (data entity.MappingVehicleAge, err error)
+
+	MasterMappingIncomeMaxDSR(totalIncome float64) (data entity.MasterMappingIncomeMaxDSR, err error)
+
+	MasterMappingDeviasiDSR(totalIncome float64) (data entity.MasterMappingDeviasiDSR, err error)
+	GetBranchDeviasi(BranchID string) (data entity.MappingBranchDeviasi, err error)
 }

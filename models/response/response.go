@@ -44,6 +44,7 @@ type Filtering struct {
 	PbkReportSpouse   interface{} `json:"pbk_report_spouse"`
 	TotalBakiDebet    interface{} `json:"total_baki_debet"`
 	Cluster           interface{} `json:"-"`
+	ClusterCMO        interface{} `json:"-"`
 }
 
 type PefindoIDX struct {
@@ -77,11 +78,12 @@ type IntegratorScorePro struct {
 }
 
 type ScorePro struct {
-	Result string `json:"result"`
-	Code   string `json:"code"`
-	Reason string `json:"reason"`
-	Source string `json:"source"`
-	Info   string `json:"info"`
+	Result    string `json:"result"`
+	Code      string `json:"code"`
+	Reason    string `json:"reason"`
+	Source    string `json:"source"`
+	Info      string `json:"info"`
+	IsDeviasi bool   `json:"-"`
 }
 
 type CustomerDomain struct {
@@ -433,6 +435,7 @@ type UsecaseApi struct {
 	Confidence     string      `json:"confidence,omitempty"`
 	SourceDecision string      `json:"source_decision,omitempty"`
 	Info           interface{} `json:"info,omitempty"`
+	IsDeviasi      bool        `json:"-"`
 }
 
 type LowIncome struct {
@@ -546,6 +549,7 @@ type TrxFMF struct {
 	EkycSource              interface{} `json:"ekyc_source"`
 	EkycSimiliarity         interface{} `json:"ekyc_similiarity"`
 	EkycReason              interface{} `json:"ekyc_reason"`
+	TrxDeviasi              entity.TrxDeviasi
 }
 
 type RoaoAkkk struct {
@@ -809,6 +813,11 @@ type BiroAkkk struct {
 	PefindoSpouseAgunan              interface{} `json:"pefindo_spouse_agunan"`
 }
 
+type ResponseGenerateFormAKKK struct {
+	MediaUrl string `json:"media_url"`
+	Path     string `json:"path"`
+}
+
 type InquiryRow struct {
 	Inquiry        interface{} `json:"inquiry"`
 	RecordFiltered int         `json:"recordsFiltered"`
@@ -868,4 +877,64 @@ type SubmitRecalculateResponse struct {
 	Errors     interface{} `json:"errors"`
 	RequestID  string      `json:"request_id"`
 	ServerTime string      `json:"timestamp"`
+}
+
+type EmployeeCMOResponse struct {
+	EmployeeID         string `json:"employee_id"`
+	EmployeeName       string `json:"employee_name"`
+	EmployeeIDWithName string `json:"employee_id_with_name"`
+	JoinDate           string `json:"join_date"`
+	PositionGroupCode  string `json:"position_group_code"`
+	PositionGroupName  string `json:"position_group_name"`
+	CMOCategory        string `json:"cmo_category"`
+}
+
+type EmployeeCareerHistory struct {
+	EmployeeID        string `json:"employee_id"`
+	EmployeeName      string `json:"name"`
+	RealCareerDate    string `json:"real_career_date"`
+	RegistrationDate  string `json:"registration_date"`
+	RegistrationNo    string `json:"registration_no"`
+	PositionGroupCode string `json:"position_group_code"`
+	PositionGroupName string `json:"position_group_name"`
+	PositionCodeOld   string `json:"position_code_old"`
+	PositionNameOld   string `json:"position_name_old"`
+	PositionCodeNew   string `json:"position_code_new"`
+	PositionNameNew   string `json:"position_name_new"`
+}
+
+type GetEmployeeByID struct {
+	Error   interface{}             `json:"error"`
+	Message string                  `json:"message"`
+	Data    []EmployeeCareerHistory `json:"data"`
+}
+
+type FpdCMOResponse struct {
+	FpdExist    bool    `json:"fpd_exist"`
+	CmoFpd      float64 `json:"cmo_fpd"`
+	CmoAccSales int     `json:"cmo_acc_sales"`
+}
+
+type FpdData struct {
+	CmoID        string  `json:"cmo_id"`
+	BpkbNameType string  `json:"bpkb_name_type"`
+	Fpd          float64 `json:"fpd"`
+	AccSales     int     `json:"acc_sales"`
+}
+
+type GetFPDCmoByID struct {
+	Code     string      `json:"code"`
+	Message  string      `json:"message"`
+	Data     []FpdData   `json:"data"`
+	Errors   interface{} `json:"errors"`
+	Metadata interface{} `json:"metadata"`
+}
+
+type ExpiredContractConfig struct {
+	Data ConfigExpiredContract `json:"data"`
+}
+
+type ConfigExpiredContract struct {
+	ExpiredContractCheckEnabled bool `json:"expired_contract_check_enabled"`
+	ExpiredContractMaxMonths    int  `json:"expired_contract_max_months"`
 }

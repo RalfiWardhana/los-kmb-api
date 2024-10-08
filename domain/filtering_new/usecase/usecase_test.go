@@ -13,10 +13,13 @@ import (
 	"los-kmb-api/shared/utils"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
@@ -67,11 +70,12 @@ func TestFilteringProspectID(t *testing.T) {
 
 func TestSaveFiltering(t *testing.T) {
 	testcases := []struct {
-		name          string
-		transaction   entity.FilteringKMB
-		trxDetailBiro []entity.TrxDetailBiro
-		errSave       error
-		errFinal      error
+		name                string
+		transaction         entity.FilteringKMB
+		trxDetailBiro       []entity.TrxDetailBiro
+		transactionCMOnoFPD entity.TrxCmoNoFPD
+		errSave             error
+		errFinal            error
 	}{
 		{
 			name:     "test error timeout",
@@ -89,11 +93,11 @@ func TestSaveFiltering(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
-			mockRepository.On("SaveFiltering", mock.Anything, mock.Anything).Return(tc.errSave)
+			mockRepository.On("SaveFiltering", mock.Anything, mock.Anything, mock.Anything).Return(tc.errSave)
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
-			err := usecase.SaveFiltering(tc.transaction, tc.trxDetailBiro)
+			err := usecase.SaveFiltering(tc.transaction, tc.trxDetailBiro, tc.transactionCMOnoFPD)
 			require.Equal(t, tc.errFinal, err)
 		})
 	}
@@ -275,27 +279,41 @@ func TestBlacklistCheck(t *testing.T) {
 }
 
 func TestFiltering(t *testing.T) {
+	os.Setenv("NAMA_SAMA", "K,P")
+
 	accessToken := "token"
+	hrisAccessToken := "hristoken"
 	ctx := context.Background()
 	reqID := utils.GenerateUUID()
 	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
 
 	testcases := []struct {
-		name                 string
-		req                  request.Filtering
-		married              bool
-		spCustomer           response.SpDupCekCustomerByID
-		errspCustomer        error
-		spSpouse             response.SpDupCekCustomerByID
-		errspSpouse          error
-		resBlackList         response.UsecaseApi
-		respFilteringPefindo response.Filtering
-		reqPefindo           request.Pefindo
-		resPefindo           response.PefindoResult
-		errpefindo           error
-		trxDetailBiro        []entity.TrxDetailBiro
-		resFinal             response.Filtering
-		errFinal             error
+		name                             string
+		req                              request.Filtering
+		married                          bool
+		spCustomer                       response.SpDupCekCustomerByID
+		errspCustomer                    error
+		spSpouse                         response.SpDupCekCustomerByID
+		errspSpouse                      error
+		resBlackList                     response.UsecaseApi
+		respFilteringPefindo             response.Filtering
+		reqPefindo                       request.Pefindo
+		resPefindo                       response.PefindoResult
+		errpefindo                       error
+		trxDetailBiro                    []entity.TrxDetailBiro
+		resEmployee                      response.EmployeeCMOResponse
+		errEmployee                      error
+		resFPD                           response.FpdCMOResponse
+		errFPD                           error
+		entityFPDCluster                 entity.MasterMappingFpdCluster
+		errMapFpdCluster                 error
+		resFinal                         response.Filtering
+		errFinal                         error
+		rrdDate_LatestPaidInstallment    string
+		monthsDiff_LatestPaidInstallment int
+		err_LatestPaidInstallment        error
+		config                           entity.AppConfig
+		errGetConfig                     error
 	}{
 		{
 			name: "TEST_ERROR_DupcheckIntegrator",
@@ -315,6 +333,7 @@ func TestFiltering(t *testing.T) {
 					Gender:     "F",
 					MotherName: "ELSA",
 				},
+				CMOID: "105394",
 			},
 			married:       true,
 			errspCustomer: errors.New("error sp"),
@@ -338,6 +357,7 @@ func TestFiltering(t *testing.T) {
 					Gender:     "F",
 					MotherName: "ELSA",
 				},
+				CMOID: "105394",
 			},
 			married: true,
 			resBlackList: response.UsecaseApi{
@@ -352,7 +372,7 @@ func TestFiltering(t *testing.T) {
 			},
 		},
 		{
-			name: "TEST_err_FilteringPefindo",
+			name: "TEST_err_FilteringPefindo_01",
 			req: request.Filtering{
 				ProspectID: "SAL02400020230727001",
 				BPKBName:   "K",
@@ -369,6 +389,27 @@ func TestFiltering(t *testing.T) {
 					Gender:     "F",
 					MotherName: "ELSA",
 				},
+				CMOID: "105394",
+			},
+			resEmployee: response.EmployeeCMOResponse{
+				EmployeeID:         "105394",
+				EmployeeName:       "SUSANAH",
+				EmployeeIDWithName: "105394 - SUSANAH",
+				JoinDate:           "2023-07-24",
+				PositionGroupCode:  "AO",
+				PositionGroupName:  "Marketing",
+				CMOCategory:        "OLD",
+			},
+			resFPD: response.FpdCMOResponse{
+				FpdExist:    true,
+				CmoFpd:      22,
+				CmoAccSales: 47,
+			},
+			entityFPDCluster: entity.MasterMappingFpdCluster{
+				Cluster:     "Cluster E",
+				FpdStartHte: 20,
+				FpdEndLt:    25,
+				CreatedAt:   time.Time{},
 			},
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
@@ -394,7 +435,7 @@ func TestFiltering(t *testing.T) {
 			errFinal:   errors.New("error pefindo"),
 		},
 		{
-			name: "TEST_err_FilteringPefindo",
+			name: "TEST_err_FilteringPefindo_02",
 			req: request.Filtering{
 				ProspectID: "SAL02400020230727001",
 				BPKBName:   "K",
@@ -411,6 +452,27 @@ func TestFiltering(t *testing.T) {
 					Gender:     "F",
 					MotherName: "ELSA",
 				},
+				CMOID: "105394",
+			},
+			resEmployee: response.EmployeeCMOResponse{
+				EmployeeID:         "105394",
+				EmployeeName:       "SUSANAH",
+				EmployeeIDWithName: "105394 - SUSANAH",
+				JoinDate:           "2023-07-24",
+				PositionGroupCode:  "AO",
+				PositionGroupName:  "Marketing",
+				CMOCategory:        "OLD",
+			},
+			resFPD: response.FpdCMOResponse{
+				FpdExist:    true,
+				CmoFpd:      22,
+				CmoAccSales: 47,
+			},
+			entityFPDCluster: entity.MasterMappingFpdCluster{
+				Cluster:     "Cluster E",
+				FpdStartHte: 20,
+				FpdEndLt:    25,
+				CreatedAt:   time.Time{},
 			},
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
@@ -434,6 +496,7 @@ func TestFiltering(t *testing.T) {
 			spCustomer: response.SpDupCekCustomerByID{
 				CustomerStatus:  constant.STATUS_KONSUMEN_RO,
 				CustomerSegment: constant.RO_AO_PRIME,
+				CustomerID:      "14045",
 			},
 			resBlackList: response.UsecaseApi{
 				Result: constant.DECISION_PASS,
@@ -462,7 +525,215 @@ func TestFiltering(t *testing.T) {
 				NextProcess:       true,
 				Code:              "123",
 				Reason:            "RO PRIME",
+				ClusterCMO:        "Cluster E",
 			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
+			rrdDate_LatestPaidInstallment:    time.Now().AddDate(0, -3, 0).Format("2006-01-02"),
+			monthsDiff_LatestPaidInstallment: 3,
+			err_LatestPaidInstallment:        nil,
+		},
+		{
+			name: "TEST_err_FilteringPefindo_02_RO_PRIME_Expired_7_months",
+			req: request.Filtering{
+				ProspectID: "SAL02400020230727001",
+				BPKBName:   "K",
+				BranchID:   "426",
+				IDNumber:   "3275066006789999",
+				LegalName:  "EMI LegalName",
+				BirthDate:  "1971-04-15",
+				Gender:     "M",
+				MotherName: "HAROEMI MotherName",
+				Spouse: &request.FilteringSpouse{
+					IDNumber:   "3345270510910123",
+					LegalName:  "DIANA LegalName",
+					BirthDate:  "1995-08-28",
+					Gender:     "F",
+					MotherName: "ELSA",
+				},
+				CMOID: "105394",
+			},
+			resEmployee: response.EmployeeCMOResponse{
+				EmployeeID:         "105394",
+				EmployeeName:       "SUSANAH",
+				EmployeeIDWithName: "105394 - SUSANAH",
+				JoinDate:           "2023-07-24",
+				PositionGroupCode:  "AO",
+				PositionGroupName:  "Marketing",
+				CMOCategory:        "OLD",
+			},
+			resFPD: response.FpdCMOResponse{
+				FpdExist:    true,
+				CmoFpd:      22,
+				CmoAccSales: 47,
+			},
+			entityFPDCluster: entity.MasterMappingFpdCluster{
+				Cluster:     "Cluster E",
+				FpdStartHte: 20,
+				FpdEndLt:    25,
+				CreatedAt:   time.Time{},
+			},
+			reqPefindo: request.Pefindo{
+				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
+				IDMember:                constant.USER_PBK_KMB_FILTEERING,
+				User:                    constant.USER_PBK_KMB_FILTEERING,
+				ProspectID:              "SAL02400020230727001",
+				BPKBName:                "K",
+				BranchID:                "426",
+				IDNumber:                "3275066006789999",
+				LegalName:               "EMI LegalName",
+				BirthDate:               "1971-04-15",
+				Gender:                  "M",
+				SurgateMotherName:       "HAROEMI MotherName",
+				SpouseIDNumber:          "3345270510910123",
+				SpouseLegalName:         "DIANA LegalName",
+				SpouseBirthDate:         "1995-08-28",
+				SpouseGender:            "F",
+				SpouseSurgateMotherName: "ELSA",
+				MaritalStatus:           "M",
+			},
+			spCustomer: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO,
+				CustomerSegment: constant.RO_AO_PRIME,
+				CustomerID:      "14045",
+			},
+			resBlackList: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+				Code:   "123",
+			},
+			married: true,
+			respFilteringPefindo: response.Filtering{
+				ProspectID:      "SAL02400020230727001",
+				Decision:        constant.DECISION_PASS,
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO,
+				CustomerSegment: constant.RO_AO_PRIME,
+				Reason:          constant.STATUS_KONSUMEN_RO + constant.RO_AO_PRIME,
+				NextProcess:     true,
+				Code:            "123",
+			},
+			resPefindo: response.PefindoResult{
+				Score:       "Average Risk",
+				WoContract:  true,
+				WoAdaAgunan: true,
+			},
+			resFinal: response.Filtering{
+				ProspectID:        "SAL02400020230727001",
+				Decision:          constant.DECISION_PASS,
+				CustomerStatus:    constant.STATUS_KONSUMEN_RO,
+				CustomerStatusKMB: constant.STATUS_KONSUMEN_NEW,
+				CustomerSegment:   constant.RO_AO_PRIME,
+				NextProcess:       true,
+				Code:              "123",
+				Reason:            constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + constant.STATUS_KONSUMEN_RO + constant.RO_AO_PRIME,
+				ClusterCMO:        "Cluster E",
+			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
+			rrdDate_LatestPaidInstallment:    time.Now().AddDate(0, -7, 0).Format("2006-01-02"),
+			monthsDiff_LatestPaidInstallment: 7,
+			err_LatestPaidInstallment:        nil,
+		},
+		{
+			name: "TEST_err_Filtering_RO_PRIME",
+			req: request.Filtering{
+				ProspectID: "SAL02400020230727001",
+				BPKBName:   "K",
+				BranchID:   "426",
+				IDNumber:   "3275066006789999",
+				LegalName:  "EMI LegalName",
+				BirthDate:  "1971-04-15",
+				Gender:     "M",
+				MotherName: "HAROEMI MotherName",
+				Spouse: &request.FilteringSpouse{
+					IDNumber:   "3345270510910123",
+					LegalName:  "DIANA LegalName",
+					BirthDate:  "1995-08-28",
+					Gender:     "F",
+					MotherName: "ELSA",
+				},
+				CMOID: "105394",
+			},
+			resEmployee: response.EmployeeCMOResponse{
+				EmployeeID:         "105394",
+				EmployeeName:       "SUSANAH",
+				EmployeeIDWithName: "105394 - SUSANAH",
+				JoinDate:           "2023-07-24",
+				PositionGroupCode:  "AO",
+				PositionGroupName:  "Marketing",
+				CMOCategory:        "OLD",
+			},
+			resFPD: response.FpdCMOResponse{
+				FpdExist:    true,
+				CmoFpd:      22,
+				CmoAccSales: 47,
+			},
+			entityFPDCluster: entity.MasterMappingFpdCluster{
+				Cluster:     "Cluster E",
+				FpdStartHte: 20,
+				FpdEndLt:    25,
+				CreatedAt:   time.Time{},
+			},
+			reqPefindo: request.Pefindo{
+				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
+				IDMember:                constant.USER_PBK_KMB_FILTEERING,
+				User:                    constant.USER_PBK_KMB_FILTEERING,
+				ProspectID:              "SAL02400020230727001",
+				BPKBName:                "K",
+				BranchID:                "426",
+				IDNumber:                "3275066006789999",
+				LegalName:               "EMI LegalName",
+				BirthDate:               "1971-04-15",
+				Gender:                  "M",
+				SurgateMotherName:       "HAROEMI MotherName",
+				SpouseIDNumber:          "3345270510910123",
+				SpouseLegalName:         "DIANA LegalName",
+				SpouseBirthDate:         "1995-08-28",
+				SpouseGender:            "F",
+				SpouseSurgateMotherName: "ELSA",
+				MaritalStatus:           "M",
+			},
+			spCustomer: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO,
+				CustomerSegment: constant.RO_AO_PRIME,
+				CustomerID:      nil,
+			},
+			resBlackList: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+				Code:   "123",
+			},
+			married: true,
+			respFilteringPefindo: response.Filtering{
+				ProspectID:      "SAL02400020230727001",
+				Decision:        constant.DECISION_PASS,
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+				NextProcess:     true,
+				Code:            "123",
+			},
+			resPefindo: response.PefindoResult{
+				Score:       "Average Risk",
+				WoContract:  true,
+				WoAdaAgunan: true,
+			},
+			resFinal: response.Filtering{
+				ProspectID:        "SAL02400020230727001",
+				Decision:          constant.DECISION_PASS,
+				CustomerStatus:    constant.STATUS_KONSUMEN_RO,
+				CustomerStatusKMB: constant.STATUS_KONSUMEN_NEW,
+				CustomerSegment:   constant.RO_AO_PRIME,
+				NextProcess:       true,
+				Code:              "123",
+				Reason:            "RO PRIME",
+				ClusterCMO:        "Cluster E",
+			},
+			rrdDate_LatestPaidInstallment:    "",
+			monthsDiff_LatestPaidInstallment: 0,
+			err_LatestPaidInstallment:        errors.New(constant.ERROR_BAD_REQUEST + " - Customer RO then CustomerID should not be empty"),
+			errFinal:                         errors.New(constant.ERROR_BAD_REQUEST + " - Customer RO then CustomerID should not be empty"),
 		},
 	}
 	for _, tc := range testcases {
@@ -471,7 +742,7 @@ func TestFiltering(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
-			mockUsecase.On("SaveFiltering", mock.Anything, mock.Anything).Return(nil)
+			mockUsecase.On("SaveFiltering", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			mockUsecase.On("DupcheckIntegrator", ctx, tc.req.ProspectID, tc.req.IDNumber, tc.req.LegalName, tc.req.BirthDate, tc.req.MotherName, accessToken).Return(tc.spCustomer, tc.errspCustomer).Once()
 			if tc.married {
@@ -483,11 +754,31 @@ func TestFiltering(t *testing.T) {
 				mockUsecase.On("BlacklistCheck", 1, tc.spSpouse).Return(tc.resBlackList, mock.Anything).Once()
 			}
 
-			mockUsecase.On("FilteringPefindo", ctx, tc.reqPefindo, mock.Anything, accessToken).Return(tc.respFilteringPefindo, tc.resPefindo, tc.trxDetailBiro, tc.errpefindo).Once()
+			mockUsecase.On("FilteringPefindo", ctx, tc.reqPefindo, mock.Anything, mock.Anything, mock.Anything, accessToken).Return(tc.respFilteringPefindo, tc.resPefindo, tc.trxDetailBiro, tc.errpefindo).Once()
+
+			customerID, ok := tc.spCustomer.CustomerID.(string)
+			if !ok {
+				customerID = ""
+			}
+
+			mockRepository.On("GetConfig", "expired_contract", "KMB-OFF", "expired_contract_check").Return(tc.config, tc.errGetConfig)
+
+			mockUsecase.On("CheckLatestPaidInstallment", ctx, tc.req.ProspectID, customerID, accessToken).Return(tc.rrdDate_LatestPaidInstallment, tc.monthsDiff_LatestPaidInstallment, tc.err_LatestPaidInstallment).Once()
+
+			mockUsecase.On("GetEmployeeData", ctx, tc.req.CMOID, accessToken, hrisAccessToken).Return(tc.resEmployee, tc.errEmployee).Once()
+
+			bpkbName := strings.Contains(os.Getenv("NAMA_SAMA"), tc.req.BPKBName)
+			bpkbString := "NAMA BEDA"
+			if bpkbName {
+				bpkbString = "NAMA SAMA"
+			}
+			mockUsecase.On("GetFpdCMO", ctx, tc.req.CMOID, bpkbString, accessToken).Return(tc.resFPD, tc.errFPD).Once()
+
+			mockRepository.On("MasterMappingFpdCluster", tc.resFPD.CmoFpd).Return(tc.entityFPDCluster, tc.errMapFpdCluster)
 
 			multiUsecase := NewMultiUsecase(mockRepository, mockHttpClient, mockUsecase)
 
-			result, err := multiUsecase.Filtering(ctx, tc.req, tc.married, accessToken)
+			result, err := multiUsecase.Filtering(ctx, tc.req, tc.married, accessToken, hrisAccessToken)
 
 			require.Equal(t, tc.resFinal, result)
 			require.Equal(t, tc.errFinal, err)
@@ -514,6 +805,8 @@ func TestFilteringPefindo(t *testing.T) {
 		checkPefindo         response.ResponsePefindo
 		pefindoResult        response.PefindoResult
 		customerStatus       string
+		clusterCMO           string
+		isPrimePriority      bool
 		reqPefindo           request.Pefindo
 		respFilteringPefindo response.Filtering
 		resPefindo           response.PefindoResult
@@ -529,6 +822,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo bpkb sama",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -581,7 +875,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9103",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA SAMA (I) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA SAMA (I) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -605,6 +899,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo bpkb sama baki debet 3-20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -657,7 +952,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9103",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA SAMA (I) & Baki Debet > 3 - 20 Juta",
+				Reason:            "NAMA SAMA (I) " + constant.WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -682,6 +977,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo bpkb sama baki debet >20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -759,6 +1055,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo bpkb sama new",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -811,7 +1108,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9103",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA SAMA (I) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA SAMA (I) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "NEW",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -835,6 +1132,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo bpkb sama new baki debet 3-20jt",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -887,7 +1185,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9103",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA SAMA (I) & Baki Debet > 3 - 20 Juta",
+				Reason:            "NAMA SAMA (I) " + constant.WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD,
 				CustomerStatus:    "NEW",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -912,6 +1210,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo bpkb sama new baki debet >20jt",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -989,6 +1288,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject 12 bpkb sama",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -1038,7 +1338,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9107",
 				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA SAMA (III) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA SAMA (III) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -1062,6 +1362,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject 12 bpkb sama baki debet 3-20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -1111,7 +1412,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9107",
 				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA SAMA (III) & Baki Debet > 3 - 20 Juta",
+				Reason:            "NAMA SAMA (III) " + constant.WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -1136,6 +1437,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject 12 bpkb sama baki debet >20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -1210,6 +1512,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb sama",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -1259,7 +1562,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9107",
 				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA SAMA (III) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA SAMA (III) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -1283,6 +1586,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb sama baki debet 3-20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -1332,7 +1636,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9107",
 				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA SAMA (III) & Baki Debet > 3 - 20 Juta",
+				Reason:            "NAMA SAMA (III) " + constant.WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -1357,6 +1661,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb sama baki debet >20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -1431,6 +1736,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb sama baki debet <=3jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -1480,7 +1786,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9107",
 				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA SAMA (III) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA SAMA (III) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -1506,6 +1812,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb sama baki debet 3-20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -1555,7 +1862,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9107",
 				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA SAMA (III) & Baki Debet > 3 - 20 Juta",
+				Reason:            "NAMA SAMA (III) " + constant.WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -1582,6 +1889,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb sama baki debet >20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -1658,6 +1966,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo pass current bpkb sama ao/ro",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -1734,6 +2043,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo pass bpkb beda baki debet <3jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -1783,7 +2093,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA BEDA (I) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA BEDA (I) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -1807,6 +2117,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo pass bpkb beda baki debet 3-20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -1856,7 +2167,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA BEDA (I) & Baki Debet > 3 - 20 Juta",
+				Reason:            "NAMA BEDA (I) " + constant.WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -1881,6 +2192,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo pass bpkb beda baki debet >20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -1955,6 +2267,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo pass bpkb beda new baki debet <3jt",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -2004,7 +2317,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA BEDA (I) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA BEDA (I) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "NEW",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -2028,6 +2341,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo pass bpkb beda new baki debet 3-20jt",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -2077,7 +2391,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA BEDA (I) & Baki Debet > 3 - 20 Juta",
+				Reason:            "NAMA BEDA (I) " + constant.WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD,
 				CustomerStatus:    "NEW",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -2102,6 +2416,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo pass bpkb beda new baki debet >20jt",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -2176,6 +2491,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject bpkb beda new",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -2248,8 +2564,9 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name:           "test pefindo reject bpkb beda",
+			name:           "test pefindo ovd last 12m all reject bpkb beda ",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -2299,7 +2616,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA BEDA & Baki Debet > Threshold",
+				Reason:            "NAMA BEDA & OVD Tidak sesuai ketentuan",
 				CustomerStatus:    "RO",
 				NextProcess:       false,
 				PbkReportCustomer: &pbkCustomer,
@@ -2321,8 +2638,9 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name:           "test pefindo reject current bpkb beda",
+			name:           "test pefindo ovd current all reject current bpkb beda",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -2372,7 +2690,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA BEDA & Baki Debet > Threshold",
+				Reason:            "NAMA BEDA & OVD Tidak sesuai ketentuan",
 				CustomerStatus:    "RO",
 				NextProcess:       false,
 				PbkReportCustomer: &pbkCustomer,
@@ -2396,6 +2714,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb beda",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -2445,7 +2764,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA BEDA (I) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA BEDA (I) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -2469,6 +2788,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb beda",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -2518,7 +2838,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA BEDA (I) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA BEDA (I) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -2542,6 +2862,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb beda",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -2591,7 +2912,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9103",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA SAMA (I) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA SAMA (I) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -2615,6 +2936,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb beda",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -2664,7 +2986,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9103",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA SAMA (I) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA SAMA (I) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -2686,8 +3008,9 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name:           "test pefindo reject current bpkb beda",
+			name:           "test pefindo pass ro bpkb beda ada wo agunan",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -2736,8 +3059,8 @@ func TestFilteringPefindo(t *testing.T) {
 			respFilteringPefindo: response.Filtering{
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
-				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA BEDA & Baki Debet > Threshold",
+				Decision:          constant.DECISION_PASS,
+				Reason:            "NAMA BEDA (I) & Ada Fasilitas WO Agunan",
 				CustomerStatus:    "RO",
 				NextProcess:       false,
 				PbkReportCustomer: &pbkCustomer,
@@ -2763,6 +3086,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb beda baki debet <=3jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -2812,7 +3136,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9107",
 				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA BEDA (III) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA BEDA (III) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -2838,6 +3162,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb beda baki debet 3-20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -2887,7 +3212,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9107",
 				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA BEDA (III) & Baki Debet > 3 - 20 Juta",
+				Reason:            "NAMA BEDA (III) " + constant.WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -2914,6 +3239,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb beda baki debet >20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -2990,6 +3316,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb beda",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -3065,6 +3392,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb beda",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -3139,8 +3467,9 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name:           "test pefindo reject current bpkb beda",
+			name:           "test pefindo pass exlcude bnpl bpkb beda ada wo agunan",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -3189,8 +3518,8 @@ func TestFilteringPefindo(t *testing.T) {
 			respFilteringPefindo: response.Filtering{
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
-				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA BEDA & Baki Debet > Threshold",
+				Decision:          constant.DECISION_PASS,
+				Reason:            "NAMA BEDA (I) & Ada Fasilitas WO Agunan",
 				CustomerStatus:    "NEW",
 				NextProcess:       false,
 				PbkReportCustomer: &pbkCustomer,
@@ -3214,8 +3543,9 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name:           "test pefindo reject current bpkb beda",
+			name:           "test pefindo pass exclude bnpl bpkb beda baki debet > 20jt",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -3264,8 +3594,8 @@ func TestFilteringPefindo(t *testing.T) {
 			respFilteringPefindo: response.Filtering{
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
-				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA BEDA & Baki Debet > Threshold",
+				Decision:          constant.DECISION_PASS,
+				Reason:            "NAMA BEDA (I) & Baki Debet > 20 Juta",
 				CustomerStatus:    "NEW",
 				NextProcess:       false,
 				PbkReportCustomer: &pbkCustomer,
@@ -3292,6 +3622,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb sama baki debet <=3jt",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -3341,7 +3672,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9103",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA SAMA (I) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA SAMA (I) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "NEW",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -3366,6 +3697,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb sama baki debet 3-20jt",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -3415,7 +3747,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9103",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA SAMA (I) & Baki Debet > 3 - 20 Juta",
+				Reason:            "NAMA SAMA (I) " + constant.WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD,
 				CustomerStatus:    "NEW",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -3441,6 +3773,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb sama baki debet >20jt",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -3516,6 +3849,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb sama ao/ro baki debet <=3jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -3565,7 +3899,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9103",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA SAMA (I) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA SAMA (I) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -3590,6 +3924,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb sama ao/ro baki debet 3-20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -3639,7 +3974,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9103",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA SAMA (I) & Baki Debet > 3 - 20 Juta",
+				Reason:            "NAMA SAMA (I) " + constant.WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -3665,6 +4000,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb sama ao/ro baki debet >20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -3740,6 +4076,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo pass bpkb beda new baki debet <3jt",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -3789,7 +4126,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA BEDA (I) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA BEDA (I) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "NEW",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -3814,6 +4151,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo pass bpkb beda new baki debet 3-20jt",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -3863,7 +4201,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA BEDA (I) & Baki Debet > 3 - 20 Juta",
+				Reason:            "NAMA BEDA (I) " + constant.WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD,
 				CustomerStatus:    "NEW",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -3889,6 +4227,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo pass bpkb beda new baki debet >20jt",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -3964,6 +4303,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject bpkb beda new",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -4039,6 +4379,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo pass bpkb beda ao/ro baki debet <3jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -4088,7 +4429,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA BEDA (I) & Baki Debet <= 3 Juta",
+				Reason:            "NAMA BEDA (I) " + constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -4113,6 +4454,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo pass bpkb beda ao/ro baki debet 3-20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -4162,7 +4504,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_PASS,
-				Reason:            "NAMA BEDA (I) & Baki Debet > 3 - 20 Juta",
+				Reason:            "NAMA BEDA (I) " + constant.WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD,
 				CustomerStatus:    "RO",
 				NextProcess:       true,
 				PbkReportCustomer: &pbkCustomer,
@@ -4188,6 +4530,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo pass bpkb beda ao/ro baki debet >20jt",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -4261,8 +4604,9 @@ func TestFilteringPefindo(t *testing.T) {
 			},
 		},
 		{
-			name:           "test pefindo reject current bpkb beda",
+			name:           "test pefindo ovd include all reject bpkb beda",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -4312,7 +4656,7 @@ func TestFilteringPefindo(t *testing.T) {
 				ProspectID:        "SAL02400020230727001",
 				Code:              "9096",
 				Decision:          constant.DECISION_REJECT,
-				Reason:            "NAMA BEDA & Baki Debet > Threshold",
+				Reason:            "NAMA BEDA & OVD Tidak sesuai ketentuan",
 				CustomerStatus:    "NEW",
 				NextProcess:       false,
 				PbkReportCustomer: &pbkCustomer,
@@ -4337,6 +4681,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb beda",
 			customerStatus: constant.STATUS_KONSUMEN_RO,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -4409,6 +4754,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb beda",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -4481,6 +4827,7 @@ func TestFilteringPefindo(t *testing.T) {
 		{
 			name:           "test pefindo reject current bpkb beda",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
 			reqPefindo: request.Pefindo{
 				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
 				IDMember:                constant.USER_PBK_KMB_FILTEERING,
@@ -4555,7 +4902,7 @@ func TestFilteringPefindo(t *testing.T) {
 			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("NEW_KMB_PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, tc.reqPefindo.ProspectID, accessToken).Return(resp, tc.errPefindo).Once()
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
-			rFilteringPefindo, rPefindo, _, err := usecase.FilteringPefindo(ctx, tc.reqPefindo, tc.customerStatus, accessToken)
+			rFilteringPefindo, rPefindo, _, err := usecase.FilteringPefindo(ctx, tc.reqPefindo, tc.customerStatus, tc.clusterCMO, tc.isPrimePriority, accessToken)
 			require.Equal(t, tc.respFilteringPefindo, rFilteringPefindo)
 			require.Equal(t, tc.resPefindo, rPefindo)
 			require.Equal(t, tc.errFinal, err)
@@ -4699,6 +5046,463 @@ func TestGetResultFiltering(t *testing.T) {
 			result, err := usecase.GetResultFiltering(tc.prospectID)
 			require.Equal(t, tc.respFiltering, result)
 			require.Equal(t, tc.errFinal, err)
+		})
+	}
+}
+
+func TestGetEmployeeData(t *testing.T) {
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	accessToken := "token"
+	hrisAccessToken := "hris-access-token"
+
+	testCases := []struct {
+		name            string
+		employeeID      string
+		accessToken     string
+		hrisAccessToken string
+		mockResponse    response.GetEmployeeByID
+		mockStatusCode  int
+		mockError       error
+		expectedError   error
+		expectedData    response.EmployeeCMOResponse
+	}{
+		{
+			name:            "Success - Active CMO",
+			employeeID:      "123",
+			accessToken:     "access-token",
+			hrisAccessToken: "hris-access-token",
+			mockResponse: response.GetEmployeeByID{
+				Data: []response.EmployeeCareerHistory{
+					{
+						EmployeeID:        "123",
+						EmployeeName:      "John Doe",
+						PositionGroupCode: "AO",
+						PositionGroupName: "Credit Marketing Officer",
+						RealCareerDate:    "2022-01-01T00:00:00",
+					},
+				},
+			},
+			mockStatusCode: 200,
+			expectedError:  nil,
+			expectedData: response.EmployeeCMOResponse{
+				EmployeeID:         "123",
+				EmployeeName:       "John Doe",
+				EmployeeIDWithName: "123 - John Doe",
+				JoinDate:           "2022-01-01",
+				PositionGroupCode:  "AO",
+				PositionGroupName:  "Credit Marketing Officer",
+				CMOCategory:        constant.CMO_LAMA,
+			},
+		},
+		{
+			name:            "Error - Employee Data Timeout",
+			employeeID:      "123",
+			accessToken:     "access-token",
+			hrisAccessToken: "hris-access-token",
+			mockResponse:    response.GetEmployeeByID{},
+			mockStatusCode:  504,
+			expectedError:   errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get Employee Data Timeout"),
+			expectedData:    response.EmployeeCMOResponse{},
+			mockError:       errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get Employee Data Timeout"),
+		},
+		{
+			name:            "Error - Employee Data Not Found",
+			employeeID:      "123",
+			accessToken:     "access-token",
+			hrisAccessToken: "hris-access-token",
+			mockResponse:    response.GetEmployeeByID{},
+			mockStatusCode:  404,
+			expectedError:   errors.New(constant.ERROR_UPSTREAM + " - Get Employee Data Error"),
+			expectedData:    response.EmployeeCMOResponse{},
+			mockError:       errors.New(constant.ERROR_UPSTREAM + " - Get Employee Data Error"),
+		},
+		{
+			name:            "Error - RealCareerDate Empty",
+			employeeID:      "123",
+			accessToken:     "access-token",
+			hrisAccessToken: "hris-access-token",
+			mockResponse: response.GetEmployeeByID{
+				Data: []response.EmployeeCareerHistory{
+					{
+						EmployeeID:        "123",
+						EmployeeName:      "John Doe",
+						PositionGroupCode: "AO",
+						RealCareerDate:    "",
+					},
+				},
+			},
+			mockStatusCode: 200,
+			expectedError:  errors.New(constant.ERROR_BAD_REQUEST + " - Get Employee Data Error"),
+			expectedData:   response.EmployeeCMOResponse{},
+			mockError:      errors.New(constant.ERROR_BAD_REQUEST + " - Get Employee Data Error"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			mockResponseBody, err := jsoniter.MarshalToString(tc.mockResponse)
+			if err != nil {
+				t.Fatalf("failed to marshal mock response: %v", err)
+			}
+
+			rst := resty.New()
+			httpmock.ActivateNonDefault(rst.GetClient())
+			defer httpmock.DeactivateAndReset()
+
+			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), httpmock.NewStringResponder(tc.mockStatusCode, mockResponseBody))
+			resp, _ := rst.R().Post(os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"))
+
+			mockHttpClient.On("EngineAPI", mock.Anything, constant.NEW_KMB_LOG, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), mock.Anything, map[string]string{"Authorization": "Bearer hris-access-token"}, constant.METHOD_POST, false, 0, timeout, "", accessToken).Return(resp, tc.mockError).Once()
+
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			data, err := usecase.GetEmployeeData(context.Background(), tc.employeeID, accessToken, hrisAccessToken)
+
+			require.Equal(t, tc.expectedError, err)
+			require.Equal(t, tc.expectedData, data)
+		})
+	}
+}
+
+func TestGetFpdCMO(t *testing.T) {
+	os.Setenv("AGREEMENT_LTV_FPD", "http://10.9.100.122:8181/api/v1/agreement/ltv-fpd")
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	ctx := context.Background()
+	reqID := utils.GenerateUUID()
+	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
+	accessToken := "token"
+
+	testCases := []struct {
+		name           string
+		cmoID          string
+		bpkbNameType   string
+		accessToken    string
+		mockResponse   response.GetFPDCmoByID
+		mockStatusCode int
+		mockError      error
+		expectedError  error
+		expectedData   response.FpdCMOResponse
+	}{
+		{
+			name:         "Success - FPD Data for NAMA BEDA",
+			cmoID:        "CMO01",
+			bpkbNameType: "NAMA BEDA",
+			accessToken:  "access-token",
+			mockResponse: response.GetFPDCmoByID{
+				Data: []response.FpdData{
+					{
+						BpkbNameType: "NAMA BEDA",
+						Fpd:          1.5,
+						AccSales:     10,
+					},
+				},
+			},
+			mockStatusCode: 200,
+			expectedError:  nil,
+			expectedData: response.FpdCMOResponse{
+				FpdExist:    true,
+				CmoFpd:      1.5,
+				CmoAccSales: 10,
+			},
+		},
+		{
+			name:         "Success - FPD Data for NAMA SAMA",
+			cmoID:        "CMO02",
+			bpkbNameType: "NAMA SAMA",
+			accessToken:  "access-token",
+			mockResponse: response.GetFPDCmoByID{
+				Data: []response.FpdData{
+					{
+						BpkbNameType: "NAMA SAMA",
+						Fpd:          2.0,
+						AccSales:     15,
+					},
+				},
+			},
+			mockStatusCode: 200,
+			expectedError:  nil,
+			expectedData: response.FpdCMOResponse{
+				FpdExist:    true,
+				CmoFpd:      2.0,
+				CmoAccSales: 15,
+			},
+		},
+		{
+			name:         "Success - FPD Data for NAMA BEDA and NAMA SAMA kosong",
+			cmoID:        "CMO11",
+			bpkbNameType: "NAMA BEDA",
+			accessToken:  "access-token",
+			mockResponse: response.GetFPDCmoByID{
+				Data: []response.FpdData{},
+			},
+			mockStatusCode: 200,
+			expectedError:  nil,
+			expectedData: response.FpdCMOResponse{
+				FpdExist:    false,
+				CmoFpd:      0,
+				CmoAccSales: 0,
+			},
+		},
+		{
+			name:         "Success - FPD Data for BPKB NAMA AGAK LAEN",
+			cmoID:        "CMO12",
+			bpkbNameType: "NAMA AGAK LAEN",
+			accessToken:  "access-token",
+			mockResponse: response.GetFPDCmoByID{
+				Data: []response.FpdData{
+					{
+						BpkbNameType: "NAMA BEDA",
+						Fpd:          1.5,
+						AccSales:     10,
+					},
+					{
+						BpkbNameType: "NAMA SAMA",
+						Fpd:          2.0,
+						AccSales:     15,
+					},
+				},
+			},
+			mockStatusCode: 200,
+			expectedError:  nil,
+			expectedData: response.FpdCMOResponse{
+				FpdExist:    false,
+				CmoFpd:      0,
+				CmoAccSales: 0,
+			},
+		},
+		{
+			name:           "Error - FPD Data Timeout",
+			cmoID:          "CMO03",
+			bpkbNameType:   "NAMA BEDA",
+			accessToken:    "access-token",
+			mockResponse:   response.GetFPDCmoByID{},
+			mockStatusCode: 504,
+			expectedError:  errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get FPD Data Timeout"),
+			expectedData:   response.FpdCMOResponse{},
+			mockError:      errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get FPD Data Timeout"),
+		},
+		{
+			name:           "Error - FPD Data Not Found",
+			cmoID:          "CMO04",
+			bpkbNameType:   "NAMA SAMA",
+			accessToken:    "access-token",
+			mockResponse:   response.GetFPDCmoByID{},
+			mockStatusCode: 404,
+			expectedError:  errors.New(constant.ERROR_UPSTREAM + " - Get FPD Data Error"),
+			expectedData:   response.FpdCMOResponse{},
+			mockError:      errors.New(constant.ERROR_UPSTREAM + " - Get FPD Data Error"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			mockResponseBody, err := jsoniter.MarshalToString(tc.mockResponse)
+			if err != nil {
+				t.Fatalf("failed to marshal mock response: %v", err)
+			}
+
+			rst := resty.New()
+			httpmock.ActivateNonDefault(rst.GetClient())
+			defer httpmock.DeactivateAndReset()
+
+			httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=2&cmo_id="+tc.cmoID, httpmock.NewStringResponder(tc.mockStatusCode, mockResponseBody))
+			resp, _ := rst.R().SetHeaders(map[string]string{"Content-Type": "application/json", "Authorization": accessToken}).Get(os.Getenv("AGREEMENT_LTV_FPD") + "?lob_id=2&cmo_id=" + tc.cmoID)
+
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=2&cmo_id="+tc.cmoID, []byte(nil), map[string]string{"Authorization": accessToken}, constant.METHOD_GET, false, 0, timeout, "", accessToken).Return(resp, tc.mockError).Once()
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			data, err := usecase.GetFpdCMO(ctx, tc.cmoID, tc.bpkbNameType, accessToken)
+
+			require.Equal(t, tc.expectedError, err)
+			require.Equal(t, tc.expectedData, data)
+		})
+	}
+}
+
+func TestCheckCmoNoFPD(t *testing.T) {
+	testcases := []struct {
+		name               string
+		prospectID         string
+		cmoID              string
+		cmoCategory        string
+		cmoJoinDate        string
+		defaultCluster     string
+		bpkbName           string
+		mockReturnData     entity.TrxCmoNoFPD
+		mockReturnError    error
+		expectedCluster    string
+		expectedEntitySave entity.TrxCmoNoFPD
+		expectedError      error
+	}{
+		{
+			name:            "test new CMO",
+			prospectID:      "SAL0002",
+			cmoID:           "CMO02",
+			cmoCategory:     constant.CMO_BARU,
+			cmoJoinDate:     "2024-05-28",
+			defaultCluster:  "Cluster C",
+			bpkbName:        "NAMA BEDA",
+			mockReturnData:  entity.TrxCmoNoFPD{},
+			expectedCluster: "",
+			expectedEntitySave: entity.TrxCmoNoFPD{
+				ProspectID:              "SAL0002",
+				BPKBName:                "NAMA BEDA",
+				CMOID:                   "CMO02",
+				CmoCategory:             constant.CMO_BARU,
+				CmoJoinDate:             "2024-05-28",
+				DefaultCluster:          "Cluster C",
+				DefaultClusterStartDate: "2024-05-28",
+				DefaultClusterEndDate:   "2024-04-30",
+			},
+			expectedError: nil,
+		},
+		{
+			name:               "test error in repository",
+			prospectID:         "SAL0003",
+			cmoID:              "CMO03",
+			cmoCategory:        constant.CMO_LAMA,
+			cmoJoinDate:        "2023-01-01",
+			defaultCluster:     "Cluster B",
+			bpkbName:           "NAMA SAMA",
+			mockReturnData:     entity.TrxCmoNoFPD{},
+			mockReturnError:    errors.New("repository error"),
+			expectedCluster:    "",
+			expectedEntitySave: entity.TrxCmoNoFPD{},
+			expectedError:      errors.New(constant.ERROR_UPSTREAM + " - Check CMO No FPD error"),
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			mockRepository.On("CheckCMONoFPD", tc.cmoID, tc.bpkbName).Return(tc.mockReturnData, tc.mockReturnError)
+
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			clusterCMOSaved, entitySaveTrxNoFPd, err := usecase.CheckCmoNoFPD(tc.prospectID, tc.cmoID, tc.cmoCategory, tc.cmoJoinDate, tc.defaultCluster, tc.bpkbName)
+			require.Equal(t, tc.expectedCluster, clusterCMOSaved)
+			require.Equal(t, tc.expectedEntitySave, entitySaveTrxNoFPd)
+			require.Equal(t, tc.expectedError, err)
+		})
+	}
+}
+
+func TestCheckLatestPaidInstallment(t *testing.T) {
+	os.Setenv("LASTEST_PAID_INSTALLMENT_URL", "http://10.9.100.231/los-int-dupcheck-v2/api/v2/mdm/installment/")
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	ctx := context.Background()
+	reqID := utils.GenerateUUID()
+	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
+	accessToken := "token"
+
+	testCases := []struct {
+		name                string
+		prospectID          string
+		customerID          string
+		accessToken         string
+		mockResponse        string
+		mockStatusCode      int
+		expectedRespRrdDate string
+		expectedMonthsDiff  int
+		expectedError       error
+	}{
+		{
+			name:                "Success case",
+			prospectID:          "prospect1",
+			customerID:          "customer1",
+			mockResponse:        `{ "data": { "rrd_date": "` + time.Now().AddDate(0, -7, 0).Format("2006-01-02") + `T00:00:00Z" } }`,
+			mockStatusCode:      200,
+			expectedRespRrdDate: time.Now().AddDate(0, -7, 0).Format("2006-01-02"),
+			expectedMonthsDiff:  7,
+			expectedError:       nil,
+		},
+		{
+			name:                "Unmarshal error case",
+			prospectID:          "prospect1",
+			customerID:          "customer1",
+			mockResponse:        `{ "datas": { "rrd_date": "` + time.Now().AddDate(0, -7, 0).Format("2006-01-02") + `T00:00:00Z" } }`,
+			mockStatusCode:      200,
+			expectedRespRrdDate: "",
+			expectedMonthsDiff:  0,
+			expectedError:       errors.New(constant.ERROR_UPSTREAM + " - Unmarshal LatestPaidInstallmentData Error"),
+		},
+		{
+			name:                "RRD Date higher than current date case",
+			prospectID:          "prospect1",
+			customerID:          "customer1",
+			mockResponse:        `{ "data": { "rrd_date": "` + time.Now().AddDate(0, +1, 0).Format("2006-01-02") + `T00:00:00Z" } }`,
+			mockStatusCode:      200,
+			expectedRespRrdDate: time.Now().AddDate(0, +1, 0).Format("2006-01-02"),
+			expectedMonthsDiff:  0,
+			expectedError:       errors.New(constant.ERROR_UPSTREAM + " - Difference of months rrd_date and current_date is negative (-)"),
+		},
+		{
+			name:                "Error case - empty RRDDate",
+			prospectID:          "prospect2",
+			customerID:          "customer2",
+			mockResponse:        `{ "data": { "rrd_date": "" } }`,
+			mockStatusCode:      200,
+			expectedRespRrdDate: "",
+			expectedMonthsDiff:  0,
+			expectedError:       errors.New(constant.ERROR_UPSTREAM + " - Result LatestPaidInstallmentData rrd_date Empty String"),
+		},
+		{
+			name:                "Error case - invalid date format",
+			prospectID:          "prospect3",
+			customerID:          "customer3",
+			mockResponse:        `{ "data": { "rrd_date": "01-01-2020" } }`,
+			mockStatusCode:      200,
+			expectedRespRrdDate: "",
+			expectedMonthsDiff:  0,
+			expectedError:       errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of response rrd_date (01-01-2020)"),
+		},
+		{
+			name:                "Error case - upstream error",
+			prospectID:          "prospect4",
+			customerID:          "customer4",
+			mockResponse:        `{}`,
+			mockStatusCode:      500,
+			expectedRespRrdDate: "",
+			expectedMonthsDiff:  0,
+			expectedError:       errors.New(constant.ERROR_UPSTREAM + " - Call LatestPaidInstallmentData Error"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			rst := resty.New()
+			httpmock.ActivateNonDefault(rst.GetClient())
+			defer httpmock.DeactivateAndReset()
+
+			httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.customerID+"/2", httpmock.NewStringResponder(tc.mockStatusCode, tc.mockResponse))
+			resp, _ := rst.R().Get(os.Getenv("LASTEST_PAID_INSTALLMENT_URL") + tc.customerID + "/2")
+
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.customerID+"/2", []byte(nil), map[string]string{}, constant.METHOD_GET, false, 0, timeout, tc.prospectID, accessToken).Return(resp, nil).Once()
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			respRrdDate, monthsDiff, err := usecase.CheckLatestPaidInstallment(ctx, tc.prospectID, tc.customerID, accessToken)
+
+			require.Equal(t, tc.expectedRespRrdDate, respRrdDate)
+			require.Equal(t, tc.expectedMonthsDiff, monthsDiff)
+			if tc.expectedError != nil {
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
 		})
 	}
 }

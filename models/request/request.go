@@ -1,5 +1,7 @@
 package request
 
+import "los-kmb-api/models/entity"
+
 type FilteringRequest struct {
 	ClientKey string `json:"client_key" validate:"required,key"`
 	Data      Data   `json:"data" validate:"required"`
@@ -92,44 +94,47 @@ type DataElaborate struct {
 }
 
 type DupcheckApi struct {
-	ProspectID            string             `json:"prospect_id" validate:"required"`
-	BranchID              string             `json:"branch_id" validate:"required"`
-	ImageSelfie           string             `json:"image_selfie" validate:"required"`
-	ImageKtp              string             `json:"ktp_url" validate:"required"`
-	MonthlyFixedIncome    float64            `json:"monthly_fixed_income" validate:"required"`
-	HomeStatus            string             `json:"home_status" validate:"required,max=2"`
-	MonthlyVariableIncome float64            `json:"monthly_variable_income"`
-	SpouseIncome          float64            `json:"spouse_income"`
-	JobPosition           string             `json:"job_position" validate:"required"`
-	ProfessionID          string             `json:"profession_id" validate:"required"`
-	EmploymentSinceYear   string             `json:"employment_since_year" validate:"required,len=4"`
-	EmploymentSinceMonth  string             `json:"employment_since_month" validate:"required,len=2"`
-	StaySinceYear         string             `json:"stay_since_year" validate:"required,len=4"`
-	StaySinceMonth        string             `json:"stay_since_month" validate:"required,len=2"`
-	BirthDate             string             `json:"birth_date" validate:"required,dateformat"`
-	BirthPlace            string             `json:"birth_place" validate:"required,allowcharsname"`
-	Tenor                 int                `json:"tenor" validate:"required"`
-	IDNumber              string             `json:"id_number" validate:"required,len=16,number"`
-	LegalName             string             `json:"legal_name" validate:"required,allowcharsname"`
-	MotherName            string             `json:"surgate_mother_name" validate:"required,allowcharsname"`
-	Spouse                *DupcheckApiSpouse `json:"spouse" validate:"omitempty"`
-	EngineNo              string             `json:"no_engine" validate:"required"`
-	RangkaNo              string             `json:"no_rangka" validate:"required"`
-	ManufactureYear       string             `json:"manufacture_year" validate:"required,len=4,number"`
-	BPKBName              string             `json:"bpkb_name" validate:"required,bpkbname"`
-	NumOfDependence       int                `json:"num_of_dependence" validate:"required"`
-	DPAmount              float64            `json:"down_payment_amount" validate:"required,max=999999999999" example:"22000000"`
-	OTRPrice              float64            `json:"otr" validate:"required"`
-	NTF                   float64            `json:"ntf" validate:"required"`
-	LegalZipCode          string             `json:"legal_zip_code" validate:"required"`
-	CompanyZipCode        string             `json:"company_zip_code" validate:"required"`
-	Gender                string             `json:"gender" validate:"required"`
-	InstallmentAmount     float64            `json:"installment_amount" validate:"required"`
-	MaritalStatus         string             `json:"marital_status"`
-	CustomerSegment       string             `json:"customer_segment"`
-	Dealer                string             `json:"dealer"`
-	AdminFee              *float64           `json:"admin_fee" validate:"required,max=999999999999" example:"1500000"`
-	Cluster               string             `json:"-"`
+	ProspectID            string              `json:"prospect_id" validate:"required"`
+	BranchID              string              `json:"branch_id" validate:"required"`
+	ImageSelfie           string              `json:"image_selfie" validate:"required"`
+	ImageKtp              string              `json:"ktp_url" validate:"required"`
+	MonthlyFixedIncome    float64             `json:"monthly_fixed_income" validate:"required"`
+	HomeStatus            string              `json:"home_status" validate:"required,max=2"`
+	MonthlyVariableIncome float64             `json:"monthly_variable_income"`
+	SpouseIncome          float64             `json:"spouse_income"`
+	JobPosition           string              `json:"job_position" validate:"required"`
+	ProfessionID          string              `json:"profession_id" validate:"required"`
+	EmploymentSinceYear   string              `json:"employment_since_year" validate:"required,len=4"`
+	EmploymentSinceMonth  string              `json:"employment_since_month" validate:"required,len=2"`
+	StaySinceYear         string              `json:"stay_since_year" validate:"required,len=4"`
+	StaySinceMonth        string              `json:"stay_since_month" validate:"required,len=2"`
+	BirthDate             string              `json:"birth_date" validate:"required,dateformat"`
+	BirthPlace            string              `json:"birth_place" validate:"required,allowcharsname"`
+	Tenor                 int                 `json:"tenor" validate:"required"`
+	IDNumber              string              `json:"id_number" validate:"required,len=16,number"`
+	LegalName             string              `json:"legal_name" validate:"required,allowcharsname"`
+	MotherName            string              `json:"surgate_mother_name" validate:"required,allowcharsname"`
+	Spouse                *DupcheckApiSpouse  `json:"spouse" validate:"omitempty"`
+	EngineNo              string              `json:"no_engine" validate:"required"`
+	RangkaNo              string              `json:"no_rangka" validate:"required"`
+	ManufactureYear       string              `json:"manufacture_year" validate:"required,len=4,number"`
+	BPKBName              string              `json:"bpkb_name" validate:"required,bpkbname"`
+	NumOfDependence       int                 `json:"num_of_dependence" validate:"required"`
+	DPAmount              float64             `json:"down_payment_amount" validate:"required,max=999999999999" example:"22000000"`
+	OTRPrice              float64             `json:"otr" validate:"required"`
+	NTF                   float64             `json:"ntf" validate:"required"`
+	LegalZipCode          string              `json:"legal_zip_code" validate:"required"`
+	CompanyZipCode        string              `json:"company_zip_code" validate:"required"`
+	Gender                string              `json:"gender" validate:"required"`
+	InstallmentAmount     float64             `json:"installment_amount" validate:"required"`
+	MaritalStatus         string              `json:"marital_status"`
+	CustomerSegment       string              `json:"customer_segment"`
+	Dealer                string              `json:"dealer"`
+	AdminFee              *float64            `json:"admin_fee" validate:"required,max=999999999999" example:"1500000"`
+	Cluster               string              `json:"-"`
+	CMOCluster            string              `json:"-"`
+	AF                    float64             `json:"-"`
+	Filtering             entity.FilteringKMB `json:"-"`
 }
 
 type SpouseDupcheck struct {
@@ -664,6 +669,7 @@ type Agent struct {
 type AgentNE struct {
 	CmoRecom  string `json:"cmo_recom" validate:"recom" example:"1"`
 	CmoName   string `json:"cmo_name" validate:"required" example:"SETO MULYA"`
+	CmoNik    string `json:"cmo_nik" validate:"required" example:"93510"`
 	RecomDate string `json:"recom_date" validate:"required" example:"2021-07-15"`
 }
 
@@ -687,6 +693,12 @@ type Recalculate struct {
 	LoanAmount                   float64 `json:"loan_amount" validate:"max=999999999999" example:"105000000"`
 }
 
+type RequestGenerateFormAKKK struct {
+	ProspectID string `json:"prospect_id" validate:"required" example:"TEST-DEV"`
+	LOB        string `json:"lob" validate:"required" example:"new-kmb"`
+	Source     string `json:"source" example:"SYSTEM"`
+}
+
 type Filtering struct {
 	ProspectID string           `json:"prospect_id" validate:"prospect_id" example:"SAL042600001"`
 	BranchID   string           `json:"branch_id" validate:"required,branch_id" example:"426"`
@@ -696,6 +708,7 @@ type Filtering struct {
 	Gender     string           `json:"gender" validate:"required,gender" example:"M"`
 	MotherName string           `json:"surgate_mother_name" validate:"required,allow_name" example:"ENCRYPTED SURGATE MOTHER NAME"`
 	BPKBName   string           `json:"bpkb_name" validate:"required,bpkbname" example:"K"`
+	CMOID      string           `json:"cmo_id" validate:"required,max=20" example:"123456"`
 	Spouse     *FilteringSpouse `json:"spouse" validate:"omitempty"`
 }
 
@@ -941,4 +954,12 @@ type ReqUploadMappingCluster struct {
 type ReqListMappingClusterBranch struct {
 	BranchID   string `json:"branch_id" example:"400"`
 	BranchName string `json:"customer_status" example:"BEKASI"`
+}
+
+type ReqHrisCareerHistory struct {
+	Limit     string `json:"limit"`
+	Page      int    `json:"page"`
+	Column    string `json:"column"`
+	Ascending bool   `json:"ascending"`
+	Query     string `json:"query"`
 }

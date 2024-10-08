@@ -6,6 +6,7 @@ import (
 	"crypto/md5"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"los-kmb-api/models/entity"
@@ -323,6 +324,9 @@ var floatType = reflect.TypeOf(float64(0))
 var stringType = reflect.TypeOf("")
 
 func GetFloat(unk interface{}) (float64, error) {
+	if unk == nil {
+		unk = 0
+	}
 	switch i := unk.(type) {
 	case float64:
 		return i, nil
@@ -377,32 +381,51 @@ func GenerateBranchFilter(branchId string) string {
 		}
 	}
 
-	return fmt.Sprintf("WHERE tt.BranchID IN (%s)", branch)
+	return fmt.Sprintf("WHERE tm.BranchID IN (%s)", branch)
 }
 
-func GenerateFilter(search, filterBranch, rangeDays string) string {
-	var filter string
-	var re = regexp.MustCompile(`SAL-|NE-`)
+func GenerateFilter(search, encrypted, filterBranch, rangeDays, inquiryType string) string {
+	var filter, filterIdNumber, filterLegalName string
+	var regexpPpid = regexp.MustCompile(`SAL-|NE-`)
+	var regexpIDNumber = regexp.MustCompile(`^[0-9]*$`)
+	var regexpLegalName = regexp.MustCompile("^[a-zA-Z.,'` ]*$")
+
+	switch inquiryType {
+	case "NE":
+		filterIdNumber = fmt.Sprintf("(tm.IDNumber = '%s')", encrypted)
+		filterLegalName = fmt.Sprintf("(tm.LegalName = '%s')", encrypted)
+	default:
+		filterIdNumber = fmt.Sprintf("(tcp.IDNumber = '%s')", encrypted)
+		filterLegalName = fmt.Sprintf("(tcp.LegalName = '%s')", encrypted)
+	}
 
 	if search != "" {
 		if filterBranch != "" {
-			if re.MatchString(search) {
-				filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID = '%s')", search)
+			if regexpPpid.MatchString(search) {
+				filter = filterBranch + fmt.Sprintf(" AND (tm.ProspectID = '%s')", search)
+			} else if regexpIDNumber.MatchString(search) {
+				filter = filterBranch + fmt.Sprintf(" AND %s", filterIdNumber)
+			} else if regexpLegalName.MatchString(search) {
+				filter = filterBranch + fmt.Sprintf(" AND %s", filterLegalName)
 			} else {
-				filter = filterBranch + fmt.Sprintf(" AND (tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search)
+				filter = filterBranch + fmt.Sprintf(" AND (tm.ProspectID = '%s') OR %s OR %s", search, filterIdNumber, filterLegalName)
 			}
 		} else {
-			if re.MatchString(search) {
-				filter = fmt.Sprintf("WHERE (tt.ProspectID = '%s')", search)
+			if regexpPpid.MatchString(search) {
+				filter = fmt.Sprintf("WHERE (tm.ProspectID = '%s')", search)
+			} else if regexpIDNumber.MatchString(search) {
+				filter = fmt.Sprintf("WHERE %s", filterIdNumber)
+			} else if regexpLegalName.MatchString(search) {
+				filter = fmt.Sprintf("WHERE %s", filterLegalName)
 			} else {
-				filter = fmt.Sprintf("WHERE (tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search)
+				filter = fmt.Sprintf("WHERE (tm.ProspectID = '%s') OR %s OR %s", search, filterIdNumber, filterLegalName)
 			}
 		}
 	} else {
 		if filterBranch != "" {
-			filter = filterBranch + fmt.Sprintf(" AND CAST(tt.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
+			filter = filterBranch + fmt.Sprintf(" AND CAST(tm.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
 		} else {
-			filter = fmt.Sprintf("WHERE CAST(tt.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
+			filter = fmt.Sprintf("WHERE CAST(tm.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays)
 		}
 	}
 
@@ -457,4 +480,65 @@ func ApprovalScheme(req request.ReqSubmitApproval) (result response.RespApproval
 		}
 	}
 	return
+}
+
+func ValidateDiffMonthYear(given, today string) error {
+	// Fungsi untuk memvalidasi bulan+tahun yang diberikan tidak lebih besar dari bulan+tahun hari ini
+
+	givenDate, err := time.Parse("2006-01-02", given)
+	if err != nil {
+		return err
+	}
+	todayDate, err := time.Parse("2006-01-02", today)
+	if err != nil {
+		return err
+	}
+
+	if givenDate.Year() > todayDate.Year() || (givenDate.Year() == todayDate.Year() && givenDate.Month() > todayDate.Month()) {
+		return errors.New("given monthYear greater than today monthYear")
+	}
+
+	return nil
+}
+
+func DiffInMonths(t1, t2 time.Time) int {
+	// Fungsi untuk menghitung selisih bulan antara dua tanggal
+
+	y1, m1, _ := t1.Date()
+	y2, m2, _ := t2.Date()
+
+	// Konversi tanggal ke bulan
+	months := (y1-y2)*12 + int(m1-m2)
+
+	return months + 1 // Tambahkan 1 karena perhitungan dimulai dari bulan berikutnya setelah t1
+	// Contoh :
+	// t1 08-05-2024
+	// t2 10-03-2024
+	// maka selisih dari 2 tanggal ini adalah 3 bulan
+}
+
+// Function to calculate the difference in months between two dates considering days as well
+func PreciseMonthsDifference(date1, date2 time.Time) (int, error) {
+	year1, month1, day1 := date1.Date()
+	year2, month2, day2 := date2.Date()
+
+	// Calculate the initial difference in months
+	months := (year2-year1)*12 + int(month2-month1)
+
+	// Adjust the difference if day2 is earlier in the month than day1
+	if day2 < day1 {
+		months--
+	}
+
+	// Check if there are additional days beyond the full months
+	if day2 > day1 {
+		months++
+	}
+
+	// Return an error if the difference is negative
+	if months < 0 {
+		return 0, errors.New("upstream_service_error - Difference of months rrd_date and current_date is negative (-)")
+	}
+
+	return months, nil
 }

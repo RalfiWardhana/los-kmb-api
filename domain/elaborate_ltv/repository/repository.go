@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"los-kmb-api/domain/elaborate_ltv/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/shared/config"
@@ -21,12 +22,14 @@ var (
 )
 
 type repoHandler struct {
+	KpLos     *gorm.DB
 	KpLosLogs *gorm.DB
 	NewKmb    *gorm.DB
 }
 
-func NewRepository(KpLosLogs, NewKmb *gorm.DB) interfaces.Repository {
+func NewRepository(kpLos, KpLosLogs, NewKmb *gorm.DB) interfaces.Repository {
 	return &repoHandler{
+		KpLos:     kpLos,
 		KpLosLogs: KpLosLogs,
 		NewKmb:    NewKmb,
 	}
@@ -77,7 +80,7 @@ func (r repoHandler) GetFilteringResult(prospectID string) (filtering entity.Fil
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.NewKmb.Raw("SELECT bpkb_name, customer_status, decision, next_process, max_overdue_biro, max_overdue_last12months_biro, customer_segment, total_baki_debet_non_collateral_biro, score_biro, cluster FROM trx_filtering WITH (nolock) WHERE prospect_id = ?", prospectID).Scan(&filtering).Error; err != nil {
+	if err = r.NewKmb.Raw("SELECT bpkb_name, customer_status, decision, next_process, max_overdue_biro, max_overdue_last12months_biro, customer_segment, total_baki_debet_non_collateral_biro, score_biro, cluster, cmo_cluster, FORMAT(rrd_date, 'yyyy-MM-ddTHH:mm:ss') + 'Z' AS rrd_date, created_at FROM trx_filtering WITH (nolock) WHERE prospect_id = ?", prospectID).Scan(&filtering).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
 		}
@@ -140,4 +143,12 @@ func (r repoHandler) SaveLogOrchestrator(header, request, response interface{}, 
 		return
 	}
 	return
+}
+
+func (r *repoHandler) GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig, err error) {
+	if err := r.KpLos.Raw(fmt.Sprintf("SELECT [value] FROM app_config WITH (nolock) WHERE group_name = '%s' AND lob = '%s' AND [key]= '%s' AND is_active = 1", groupName, lob, key)).Scan(&appConfig).Error; err != nil {
+		return appConfig, err
+	}
+
+	return appConfig, err
 }

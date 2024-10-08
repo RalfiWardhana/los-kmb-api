@@ -571,6 +571,10 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				personal.CustomerStatus = trxFMF.DupcheckData.StatusKonsumen
 			}
 
+			if data.CustomerPersonal.NumOfDependence != nil {
+				personal.NumOfDependence = *data.CustomerPersonal.NumOfDependence
+			}
+
 			logInfo = personal
 
 			if err := tx.Create(&personal).Error; err != nil {
@@ -853,6 +857,16 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 		if countTrx > 0 || len(details) > 2 {
 
 			// save data metrics
+			// insert trx deviasi
+			if trxFMF.TrxDeviasi != (entity.TrxDeviasi{}) {
+
+				logInfo = trxFMF.TrxDeviasi
+
+				if err := tx.Create(&trxFMF.TrxDeviasi).Error; err != nil {
+					return err
+				}
+			}
+
 			// insert ban pmk dsr
 			if trxFMF.TrxBannedPMKDSR != (entity.TrxBannedPMKDSR{}) {
 
@@ -916,16 +930,14 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 			roaoAkkk.InstallmentAmountSpouseFMF = trxFMF.DupcheckData.InstallmentAmountSpouseFMF
 
 			if trxFMF.DupcheckData.StatusKonsumen != constant.STATUS_KONSUMEN_NEW {
-				roaoAkkk = response.RoaoAkkk{
-					MaxOverdueDaysROAO:               trxFMF.DupcheckData.MaxOverdueDaysROAO,
-					MaxOverdueDaysforActiveAgreement: trxFMF.DupcheckData.MaxOverdueDaysforActiveAgreement,
-					NumberofAgreement:                trxFMF.DupcheckData.NumberofAgreement,
-					AgreementStatus:                  trxFMF.DupcheckData.AgreementStatus,
-					NumberOfPaidInstallment:          trxFMF.DupcheckData.NumberOfPaidInstallment,
-					OSInstallmentDue:                 trxFMF.DupcheckData.OSInstallmentDue,
-					InstallmentAmountFMF:             trxFMF.DupcheckData.InstallmentAmountFMF,
-					InstallmentTopup:                 trxFMF.DupcheckData.InstallmentTopup,
-				}
+				roaoAkkk.MaxOverdueDaysROAO = trxFMF.DupcheckData.MaxOverdueDaysROAO
+				roaoAkkk.MaxOverdueDaysforActiveAgreement = trxFMF.DupcheckData.MaxOverdueDaysforActiveAgreement
+				roaoAkkk.NumberofAgreement = trxFMF.DupcheckData.NumberofAgreement
+				roaoAkkk.AgreementStatus = trxFMF.DupcheckData.AgreementStatus
+				roaoAkkk.NumberOfPaidInstallment = trxFMF.DupcheckData.NumberOfPaidInstallment
+				roaoAkkk.OSInstallmentDue = trxFMF.DupcheckData.OSInstallmentDue
+				roaoAkkk.InstallmentAmountFMF = trxFMF.DupcheckData.InstallmentAmountFMF
+				roaoAkkk.InstallmentTopup = trxFMF.DupcheckData.InstallmentTopup
 			}
 
 			akkk := entity.TrxAkkk{
@@ -1046,11 +1058,21 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 func (r repoHandler) SaveTrxJourney(prospectID string, request interface{}) (err error) {
 
 	requestByte, _ := json.Marshal(request)
+	payload := string(utils.SafeEncoding(requestByte))
 
-	if err = r.newKmbDB.Model(&entity.TrxJourney{}).Create(&entity.TrxJourney{
+	trxJourney := entity.TrxJourney{
 		ProspectID: prospectID,
-		Request:    string(utils.SafeEncoding(requestByte)),
-	}).Error; err != nil {
+	}
+
+	asRunes := []rune(payload)
+	if len(asRunes) > 7900 {
+		trxJourney.Request = string(asRunes[:7900])
+		trxJourney.Request2 = string(asRunes[7900:])
+	} else {
+		trxJourney.Request = payload
+	}
+
+	if err = r.newKmbDB.Model(&entity.TrxJourney{}).Create(&trxJourney).Error; err != nil {
 		return
 	}
 	return
@@ -1058,8 +1080,12 @@ func (r repoHandler) SaveTrxJourney(prospectID string, request interface{}) (err
 
 func (r repoHandler) GetTrxJourney(prospectID string) (trxJourney entity.TrxJourney, err error) {
 
-	if err = r.newKmbDB.Raw(fmt.Sprintf("SELECT ProspectID, request from trx_journey with (nolock) where ProspectID = '%s'", prospectID)).Scan(&trxJourney).Error; err != nil {
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT ProspectID, request, request2 from trx_journey with (nolock) where ProspectID = '%s'`, prospectID)).Scan(&trxJourney).Error; err != nil {
 		return
+	}
+
+	if trxJourney.Request2 != nil {
+		trxJourney.Request += trxJourney.Request2.(string)
 	}
 
 	return
@@ -2009,6 +2035,81 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 
 		return nil
 	})
+
+	return
+}
+
+func (r repoHandler) GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNameType, tenor int, resultPefindo string, af float64) (data entity.MappingVehicleAge, err error) {
+
+	query := `SELECT TOP 1 * FROM m_mapping_vehicle_age WHERE vehicle_age_start <= ? AND vehicle_age_end >= ? AND cluster LIKE ? AND bpkb_name_type = ? AND tenor_start <= ? AND tenor_end >= ? AND result_pbk LIKE ? AND af_start < ? AND af_end >= ?`
+
+	if err = r.newKmbDB.Raw(query, vehicleAge, vehicleAge, fmt.Sprintf("%%%s%%", cluster), bpkbNameType, tenor, tenor, fmt.Sprintf("%%%s%%", resultPefindo), af, af).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+	}
+	return
+}
+
+func (r repoHandler) MasterMappingIncomeMaxDSR(totalIncome float64) (data entity.MasterMappingIncomeMaxDSR, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.losDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	query := `SELECT TOP 1 * FROM kmb_mapping_income_dsr WHERE total_income_start <= ? AND (total_income_end >= ? OR total_income_end IS NULL)`
+	if err = r.losDB.Raw(query, totalIncome, totalIncome).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+	}
+
+	return
+}
+
+func (r repoHandler) MasterMappingDeviasiDSR(totalIncome float64) (data entity.MasterMappingDeviasiDSR, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.newKmbDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	query := `SELECT TOP 1 * FROM m_mapping_deviasi_dsr WHERE total_income_start <= ? AND (total_income_end >= ? OR total_income_end IS NULL)`
+	if err = r.newKmbDB.Raw(query, totalIncome, totalIncome).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+	}
+
+	return
+}
+
+func (r repoHandler) GetBranchDeviasi(BranchID string) (data entity.MappingBranchDeviasi, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.newKmbDB.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = db.Raw("SELECT * FROM dbo.m_branch_deviasi WITH (nolock) WHERE BranchID = ?", BranchID).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
 
 	return
 }

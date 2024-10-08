@@ -13,6 +13,7 @@ import (
 	"los-kmb-api/shared/utils"
 	"os"
 	"strconv"
+	"strings"
 
 	"github.com/labstack/echo/v4"
 )
@@ -47,6 +48,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.GET("/cms/approval/inquiry", handler.ApprovalInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/approval/reason", handler.ApprovalReason, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/approval/submit-approval", handler.SubmitApproval, middlewares.AccessMiddleware())
+	cmsroute.POST("/cms/form-akkk", handler.GenerateFormAKKK, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ne/submit", handler.SubmitNE, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/ne/inquiry", handler.NEInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/ne/inquiry/:prospect_id", handler.NEInquiryDetail, middlewares.AccessMiddleware())
@@ -154,6 +156,14 @@ func (c *handlerCMS) ReviewPrescreening(ctx echo.Context) (err error) {
 	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Review", req, data)
 
 	if data.Decision == constant.DB_DECISION_REJECT {
+		// generate form akkk
+		reqGenAkkk := request.RequestGenerateFormAKKK{
+			ProspectID: data.ProspectID,
+			LOB:        strings.ToLower(constant.LOB_NEW_KMB),
+			Source:     constant.SYSTEM,
+		}
+		c.usecase.GenerateFormAKKK(ctx.Request().Context(), reqGenAkkk, accessToken)
+
 		response := response.Metrics{
 			ProspectID:     data.ProspectID,
 			Decision:       req.Decision,
@@ -653,6 +663,14 @@ func (c *handlerCMS) CancelOrder(ctx echo.Context) (err error) {
 		}
 		responseEvent := c.Json.EventSuccess(ctx.Request().Context(), accessToken, constant.NEW_KMB_LOG, "LOS - CA Cancel Order", req, response)
 
+		// generate form akkk
+		reqGenAkkk := request.RequestGenerateFormAKKK{
+			ProspectID: data.ProspectID,
+			LOB:        strings.ToLower(constant.LOB_NEW_KMB),
+			Source:     constant.SYSTEM,
+		}
+		c.usecase.GenerateFormAKKK(ctx.Request().Context(), reqGenAkkk, accessToken)
+
 		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(responseEvent), 0)
 	}
 
@@ -860,7 +878,7 @@ func (c *handlerCMS) SubmitApproval(ctx echo.Context) (err error) {
 	// Save Log Orchestrator
 	defer func() {
 		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
-		go c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/approval/submit-approval", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
+		c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/approval/submit-approval", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
 	}()
 
 	if err := ctx.Bind(&req); err != nil {
@@ -892,9 +910,62 @@ func (c *handlerCMS) SubmitApproval(ctx echo.Context) (err error) {
 
 		responseEvent := c.Json.EventSuccess(ctx.Request().Context(), accessToken, constant.NEW_KMB_LOG, "LOS - Approval Submit Decision", req, response)
 
+		// generate form akkk
+		reqGenAkkk := request.RequestGenerateFormAKKK{
+			ProspectID: data.ProspectID,
+			LOB:        strings.ToLower(constant.LOB_NEW_KMB),
+			Source:     constant.SYSTEM,
+		}
+		c.usecase.GenerateFormAKKK(ctx.Request().Context(), reqGenAkkk, accessToken)
+
 		c.producer.PublishEvent(ctx.Request().Context(), accessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_CALLBACK, req.ProspectID, utils.StructToMap(responseEvent), 0)
 	}
 
+	return ctxJson
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Generate Form AKKK
+// @Tags Generate Form AKKK
+// @Produce json
+// @Param body body request.RequestGenerateFormAKKK true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.ResponseGenerateFormAKKK}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/form-akkk [post]
+func (c *handlerCMS) GenerateFormAKKK(ctx echo.Context) (err error) {
+
+	var (
+		resp        interface{}
+		accessToken = middlewares.UserInfoData.AccessToken
+		req         request.RequestGenerateFormAKKK
+		ctxJson     error
+	)
+
+	// Save Log Orchestrator
+	defer func() {
+		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
+		c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/form-akkk", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
+	}()
+
+	if err := ctx.Bind(&req); err != nil {
+		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Generate Form AKKK", err)
+		return ctxJson
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Generate Form AKKK", req, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.GenerateFormAKKK(ctx.Request().Context(), req, accessToken)
+
+	if err != nil {
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Generate Form AKKK", req, err)
+		return ctxJson
+	}
+
+	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Generate Form AKKK", req, data)
 	return ctxJson
 }
 

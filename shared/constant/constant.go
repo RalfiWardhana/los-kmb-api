@@ -1,9 +1,20 @@
 package constant
 
+import "github.com/labstack/echo/v4"
+
 var LOS_KMB_BASE_URL string
 var TOPIC_SUBMISSION string
 var TOPIC_SUBMISSION_LOS string
 var TOPIC_INSERT_CUSTOMER string
+
+// Event Driven Key
+var KEY_PREFIX_FILTERING string
+var KEY_PREFIX_UPDATE_STATUS_FILTERING string
+var KEY_PREFIX_SUBMIT_TO_LOS string
+var KEY_PREFIX_AFTER_PRESCREENING string
+var KEY_PREFIX_CALLBACK string
+var KEY_PREFIX_CALLBACK_GOLIVE string
+var KEY_PREFIX_UPDATE_CUSTOMER string
 
 const (
 	FLAG_LOS                         = "LOS"
@@ -97,6 +108,7 @@ const (
 	NG_APPLICATION_TYPE              = "NG"
 	CODE_SPOUSE                      = "SP"
 	CU                               = "CU"
+	SYSTEM                           = "SYSTEM"
 
 	CMO_AGENT                  = "CMO"
 	CODE_CMO_RECOMMENDED       = "1410"
@@ -236,6 +248,7 @@ const (
 	NAMA_BEDA_12_OVD_OVER_LIMIT_CODE                             = "9099"
 	NAMA_BEDA_12_OVD_NULL_CODE                                   = "9095"
 	NAMA_BEDA_PBK_ALL_REJECT_CODE                                = "9094"
+	NAMA_BEDA_WO_AGUNAN_REJECT_CODE                              = "9093"
 	NAMA_SAMA_CURRENT_OVD_NULL_CODE                              = "9102"
 	NAMA_SAMA_CURRENT_OVD_UNDER_LIMIT_CODE                       = "9103"
 	NAMA_SAMA_CURRENT_OVD_OVER_LIMIT_CODE                        = "9105"
@@ -244,6 +257,7 @@ const (
 	NAMA_SAMA_WO_AGUNAN_PASS_CODE                                = "9101"
 	NAMA_SAMA_WO_AGUNAN_REJECT_CODE                              = "9016"
 	NAMA_SAMA_NO_FACILITY_WO_CODE                                = "9016"
+	NAMA_BEDA_NO_FACILITY_WO_CODE                                = "9017"
 	NAMA_SAMA_UNSCORE_RO_AO_CODE                                 = "9190"
 	NAMA_SAMA_UNSCORE_NEW_CODE                                   = "9192"
 	SERVICE_PBK_UNAVAILABLE_CODE                                 = "9194"
@@ -251,17 +265,21 @@ const (
 	DECISION_PBK_NO_HIT                                          = "NO HIT"
 	UNSCORE_PBK                                                  = "UNSCORE"
 	NOT_MATCH_PBK                                                = "NOT_MATCH"
+	NO_HIT_PBK                                                   = "NO_HIT"
 	WO_AGUNAN_REJECT_CODE                                        = "9107"
 	WO_AGUNAN_PASS_CODE                                          = "9108"
-	NAMA_SAMA_BAKI_DEBET_SESUAI                                  = "Nama Sama & Baki Debet Sesuai Ketentuan"
-	NAMA_BEDA_BAKI_DEBET_SESUAI                                  = "Nama Beda & Baki Debet Sesuai Ketentuan"
-	NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI                            = "Nama Sama & Baki Debet > 20 Juta"
-	NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI                            = "Nama Beda & Baki Debet > 20 Juta"
-	NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL                             = "NAMA SAMA %s & Baki Debet Sesuai Ketentuan"
-	NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL                             = "NAMA BEDA %s & Baki Debet Sesuai Ketentuan"
-	NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL                       = "NAMA SAMA %s & Baki Debet > 20 Juta"
-	NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL                       = "NAMA BEDA %s & Baki Debet > 20 Juta"
+	REASON_BPKB_BEDA                                             = "NAMA BEDA"
+	REASON_BPKB_SAMA                                             = "NAMA SAMA"
+	NAMA_SAMA_BAKI_DEBET_SESUAI                                  = REASON_BPKB_SAMA + " & Baki Debet Sesuai Ketentuan"
+	NAMA_BEDA_BAKI_DEBET_SESUAI                                  = REASON_BPKB_BEDA + " & Baki Debet Sesuai Ketentuan"
+	NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI                            = REASON_BPKB_SAMA + " & Baki Debet > 20 Juta"
+	NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI                            = REASON_BPKB_BEDA + " & Baki Debet > 20 Juta"
+	NAMA_SAMA_BAKI_DEBET_SESUAI_BNPL                             = REASON_BPKB_SAMA + " %s & Baki Debet Sesuai Ketentuan"
+	NAMA_BEDA_BAKI_DEBET_SESUAI_BNPL                             = REASON_BPKB_BEDA + " %s & Baki Debet Sesuai Ketentuan"
+	NAMA_SAMA_BAKI_DEBET_TIDAK_SESUAI_BNPL                       = REASON_BPKB_SAMA + " %s & Baki Debet > 20 Juta"
+	NAMA_BEDA_BAKI_DEBET_TIDAK_SESUAI_BNPL                       = REASON_BPKB_BEDA + " %s & Baki Debet > 20 Juta"
 	ADA_FASILITAS_WO_AGUNAN                                      = "Ada Fasilitas WO Agunan"
+	ADA_FASILITAS_WO_NON_AGUNAN                                  = "Ada Fasilitas WO Non Agunan"
 	TIDAK_ADA_FASILITAS_WO_AGUNAN                                = "Tidak Ada Fasilitas WO Agunan"
 	REASON_FILTERING_PBK_DOWN                                    = "No Hit PBK"
 	NAMA_BEDA_PBK_ALL_REJECT_REASON                              = "BPKB Nama Beda Baki Debet > Threshold"
@@ -282,7 +300,7 @@ const (
 	HEADER_AUTHORIZATION = "Authorization"
 
 	// Key
-	HeaderXRequestID                = "X-Request-ID"
+	HeaderXRequestID                = echo.HeaderXRequestID
 	CTX_KEY_REQUEST_TIME            = "RequestTime"
 	CTX_KEY_TAG_VERSION             = "TagVersion"
 	CTX_KEY_LOS_VERSION             = "LOSVersion"
@@ -307,15 +325,6 @@ const (
 	MSG_SET_DATA_CACHE = "SET_DATA_CACHE"
 	MSG_GET_DATA_CACHE = "GET_DATA_CACHE"
 
-	//Platform Event
-	KEY_PREFIX_FILTERING               = "filtering"
-	KEY_PREFIX_UPDATE_STATUS_FILTERING = "update_status_filtering"
-	KEY_PREFIX_SUBMIT_TO_LOS           = "submit_los_kmb"
-	KEY_PREFIX_AFTER_PRESCREENING      = "after_prescreening_los_kmb"
-	KEY_PREFIX_CALLBACK                = "callback_los_kmb"
-	KEY_PREFIX_CALLBACK_GOLIVE         = "callback_golive_kmb"
-	KEY_PREFIX_UPDATE_CUSTOMER         = "update_customer"
-
 	MAX_RETRY_PUBLISH = 3
 
 	// Format
@@ -330,30 +339,33 @@ const (
 	NEW_KMB_LOG          = "NEW_KMB_LOG"
 
 	// ELABORATE SCHEME
-	MESSAGE_KMB_ELABORATE            = "KMB-ELABORATE"
-	CODE_PASS_ELABORATE              = 9601
-	CODE_REJECT_ELABORATE            = 9602
-	CODE_REJECT_NTF_ELABORATE        = 9603
-	CODE_REJECT_CLUSTER_E_F          = "9604"
-	RANGE_CLUSTER_BAKI_DEBET_REJECT  = 3000000
-	REASON_PASS_ELABORATE            = "PASS - Elaborated Scheme"
-	REASON_REJECT_ELABORATE          = "REJECT - Elaborated Scheme"
-	REASON_REJECT_NTF_ELABORATE      = "REJECT - NTF Tidak Sesuai Threshold"
-	REASON_REJECT_CLUSTER_E_F        = "%s, Baki Debet > 3 Juta - 20 Juta & Tidak dapat dibiayai"
-	CLUSTER_C                        = "Cluster C"
-	CLUSTER_E                        = "Cluster E"
-	CLUSTER_F                        = "Cluster F"
-	BRANCH_ID_PRIME_PRIORITY         = "000"
-	CLUSTER_PRIME_PRIORITY           = "PRIME PRIORITY"
-	SOURCE_DECISION_ELABORATE_LTV    = "LTV"
-	STRING_CODE_PASS_ELABORATE       = "9601"
-	STRING_CODE_REJECT_ELABORATE     = "9602"
-	STRING_CODE_REJECT_NTF_ELABORATE = "9603"
-	SOURCE_DECISION_ELABORATE_INCOME = "INC"
-	CODE_PASS_ELABORATE_INCOME       = "302"
-	REASON_PASS_ELABORATE_INCOME     = "PASS - Elaborated Income"
-	CODE_REJECT_ELABORATE_INCOME     = "303"
-	REASON_REJECT_ELABORATE_INCOME   = "REJECT - Elaborated Income"
+	MESSAGE_KMB_ELABORATE                  = "KMB-ELABORATE"
+	CODE_PASS_ELABORATE                    = 9601
+	CODE_REJECT_ELABORATE                  = 9602
+	CODE_REJECT_NTF_ELABORATE              = 9603
+	CODE_REJECT_CLUSTER_E_F                = "9604"
+	RANGE_CLUSTER_BAKI_DEBET_REJECT        = 9999999
+	WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD  = "& Baki Debet < 10 Juta"
+	WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD = "& Baki Debet 10 - 20 Juta"
+	REASON_PASS_ELABORATE                  = "PASS - Elaborated Scheme"
+	REASON_REJECT_ELABORATE                = "REJECT - Elaborated Scheme"
+	REASON_REJECT_NTF_ELABORATE            = "REJECT - NTF Tidak Sesuai Threshold"
+	REASON_REJECT_CLUSTER_E_F              = "%s, Baki Debet 10 Juta - 20 Juta & Tidak dapat dibiayai"
+	CLUSTER_B                              = "Cluster B"
+	CLUSTER_C                              = "Cluster C"
+	CLUSTER_E                              = "Cluster E"
+	CLUSTER_F                              = "Cluster F"
+	BRANCH_ID_PRIME_PRIORITY               = "000"
+	CLUSTER_PRIME_PRIORITY                 = "PRIME PRIORITY"
+	SOURCE_DECISION_ELABORATE_LTV          = "LTV"
+	STRING_CODE_PASS_ELABORATE             = "9601"
+	STRING_CODE_REJECT_ELABORATE           = "9602"
+	STRING_CODE_REJECT_NTF_ELABORATE       = "9603"
+	SOURCE_DECISION_ELABORATE_INCOME       = "INC"
+	CODE_PASS_ELABORATE_INCOME             = "302"
+	REASON_PASS_ELABORATE_INCOME           = "PASS - Elaborated Income"
+	CODE_REJECT_ELABORATE_INCOME           = "303"
+	REASON_REJECT_ELABORATE_INCOME         = "REJECT - Elaborated Income"
 
 	//HTTP MSG
 	MSG_CORE_API          = "CORE_API"
@@ -432,23 +444,32 @@ const (
 	REASON_PASANGAN_BLACKLIST_RESTRUCTURE     = "Pasangan Blacklist - Pasangan Restructure"
 	REASON_NON_BLACKLIST                      = "Non Blacklist"
 
+	//DEVIASI
+	SOURCE_DECISION_DEVIASI    = "DEV"
+	RULE_CODE_DEVIASI_DSR      = "1032"
+	CODE_DEVIASI_DSR           = "Dev 32"
+	RULE_CODE_DEVIASI_SCOREPRO = "1033"
+	CODE_DEVIASI_SCOREPRO      = "Dev 33"
+
 	//DSR
-	SOURCE_DECISION_DSR    = "DSR"
-	CODE_DSRLTE35          = "2701"
-	CODE_DSRGT35           = "2702"
-	REASON_DSRLTE35        = "- Confins DSR <="
-	REASON_DSRGT35         = "- Confins DSR >"
-	CODE_TOPUP_MENUNGGAK   = "2703"
-	REASON_TOPUP_MENUNGGAK = "Menunggak"
-	CODE_PENCAIRAN_TOPUP   = "2704"
-	REASON_PENCAIRAN_TOPUP = "Persentase Minimum Pencairan yang diterima kurang dari Threshold"
-	TOP_UP                 = "Top Up"
-	CODE_MENUNGGAK         = "645"
-	CODE_TOTAL_DSRLTE35    = "2701"
-	CODE_TOTAL_DSRGT35     = "2702"
-	REASON_MENUNGGAK       = "- Menunggak"
-	REASON_TOTAL_DSRLTE    = "- DSR <="
-	REASON_TOTAL_DSRGT     = "- DSR >"
+	SOURCE_DECISION_DSR                      = "DSR"
+	CODE_DSRLTE35                            = "2701"
+	CODE_DSRLTE35_EXP_CONTRACT_6MONTHS       = "2705"
+	CODE_DSRGT35                             = "2702"
+	REASON_DSRLTE35                          = "- Confins DSR <="
+	REASON_DSRGT35                           = "- Confins DSR >"
+	CODE_TOPUP_MENUNGGAK                     = "2703"
+	REASON_TOPUP_MENUNGGAK                   = "Menunggak"
+	CODE_PENCAIRAN_TOPUP                     = "2704"
+	REASON_PENCAIRAN_TOPUP                   = "Persentase Minimum Pencairan yang diterima kurang dari Threshold"
+	TOP_UP                                   = "Top Up"
+	CODE_MENUNGGAK                           = "645"
+	CODE_TOTAL_DSRLTE35                      = "2701"
+	CODE_TOTAL_DSRLTE35_EXP_CONTRACT_6MONTHS = "2705"
+	CODE_TOTAL_DSRGT35                       = "2702"
+	REASON_MENUNGGAK                         = "- Menunggak"
+	REASON_TOTAL_DSRLTE                      = "- DSR <="
+	REASON_TOTAL_DSRGT                       = "- DSR >"
 
 	DEALER_PSA     = "PSA"
 	DEALER_NON_PSA = "NON PSA"
@@ -472,6 +493,7 @@ const (
 	REASON_VEHICLE_SESUAI           = "Umur Kendaraan Sesuai Ketentuan"
 	REASON_VEHICLE_AGE_MAX          = "Usia Kendaraan >"
 	DEFAULT_BRANCH_ID               = "DEFAULT"
+	INFO_VEHICLE_AGE                = "Tidak diperkenankan deviasi usia kendaraan"
 
 	//NOKA NOSIN
 	ATTEMPT_REJECT                   = 2
@@ -591,24 +613,26 @@ const (
 	ADDRESS_TYPE_MAILING   = "MAILING"
 
 	// BIRO
-	SOURCE_DECISION_BIRO                    = "PBK"
-	CODE_PEFINDO_NOTFOUND                   = "897"
-	CODE_PEFINDO_NO                         = "8977"
-	REASON_PEFINDO_NOTFOUND                 = "PBK Tidak Ditemukan"
-	CODE_PEFINDO_OVD12LTE60_CURRENT_LTE30   = "938"
-	REASON_PEFINDO_OVD12LTE60_CURRENT_LTE30 = "PBK - Current OVD <= %v"
-	CODE_PEFINDO_CURRENT_GT30               = "941"
-	REASON_PEFINDO_CURRENT_GT30             = "PBK - Current OVD > %v"
-	CODE_PEFINDO_OVD12GT60                  = "962"
-	REASON_PEFINDO_OVD12GT60                = "PBK - Last 12 Month OVD > %v"
-	CODE_PEFINDO_BPKB_BEDA                  = "9416"
-	REASON_BPKB_BEDA                        = "Nama Beda"
-	REASON_BPKB_SAMA                        = "Nama Sama"
-	CODE_BPKB_SAMA_BAKI_DEBET_GT20J         = "9410"
-	CODE_BPKB_SAMA_BAKI_DEBET_LTE20J        = "9408"
-	CODE_PEFINDO_PRIME_PRIORITY             = "9422"
-	CUSTOMER                                = "CUSTOMER"
-	SPOUSE                                  = "SPOUSE"
+	SOURCE_DECISION_BIRO                             = "PBK"
+	CODE_PEFINDO_NOTFOUND                            = "897"
+	CODE_PEFINDO_NO                                  = "8977"
+	REASON_PEFINDO_NOTFOUND                          = "PBK Tidak Ditemukan"
+	CODE_PEFINDO_OVD12LTE60_CURRENT_LTE30            = "938"
+	REASON_PEFINDO_OVD12LTE60_CURRENT_LTE30          = "PBK - Current OVD <= %v"
+	CODE_PEFINDO_CURRENT_GT30                        = "941"
+	REASON_PEFINDO_CURRENT_GT30                      = "PBK - Current OVD > %v"
+	CODE_PEFINDO_OVD12GT60                           = "962"
+	REASON_PEFINDO_OVD12GT60                         = "PBK - Last 12 Month OVD > %v"
+	CODE_PEFINDO_BPKB_BEDA                           = "9416"
+	REJECT_REASON_OVD_PEFINDO                        = "OVD Tidak sesuai ketentuan"
+	CODE_BPKB_SAMA_BAKI_DEBET_GT20J                  = "9410"
+	CODE_BPKB_BEDA_BAKI_DEBET_GT20J                  = "9411"
+	CODE_BPKB_SAMA_BAKI_DEBET_LTE20J                 = "9408"
+	CODE_BPKB_BEDA_BAKI_DEBET_LTE20J                 = "9409"
+	CODE_PEFINDO_PRIME_PRIORITY                      = "9422"
+	CODE_PEFINDO_PRIME_PRIORITY_EXP_CONTRACT_6MONTHS = "9423"
+	CUSTOMER                                         = "CUSTOMER"
+	SPOUSE                                           = "SPOUSE"
 
 	// SCOREPRO
 	SOURCE_DECISION_SCOREPRO         = "SCP"
@@ -640,4 +664,12 @@ const (
 
 	// CREDIT APPROVAL
 	CODE_CBM = 3741
+
+	// CMO CLUSTER
+	CMO_LAMA = "OLD"
+	CMO_BARU = "NEW"
+
+	// Max Months Difference for Expired Contract
+	EXPIRED_CONTRACT_LIMIT              = 6
+	EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS = "Expired Contract > 6 bln | "
 )

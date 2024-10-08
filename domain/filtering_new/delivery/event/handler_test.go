@@ -9,6 +9,7 @@ import (
 	"los-kmb-api/shared/common"
 	mocksJson "los-kmb-api/shared/common/json/mocks"
 	mockplatformcache "los-kmb-api/shared/common/platformcache/mocks"
+	mockplatformevent "los-kmb-api/shared/common/platformevent/mocks"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
@@ -350,14 +351,6 @@ func TestFiltering(t *testing.T) {
 			mockEvent := new(MockEvent)
 			mockPlatformCache := new(mockplatformcache.PlatformCacheInterface)
 
-			handler := &handlers{
-				multiusecase:  mockMultiUsecase,
-				usecase:       mockUsecase,
-				repository:    mockRepository,
-				validator:     validator,
-				Json:          mockJson,
-				platformCache: mockPlatformCache,
-			}
 			ctx := context.Background()
 			startTime := utils.GenerateTimeInMilisecond()
 			reqID := utils.GenerateUUID()
@@ -366,6 +359,7 @@ func TestFiltering(t *testing.T) {
 			ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
 			ctx = context.WithValue(ctx, constant.CTX_KEY_IS_CONSUMER, true)
 
+			mockPlatformEvent := mockplatformevent.NewPlatformEventInterface(t)
 			mockEvent.On("GetBody").Return([]byte(tc.reqbody))
 			mockEvent.On("GetKey").Return([]byte("filtering_12131421414_EFM0TST0020230809013"))
 			mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
@@ -377,6 +371,17 @@ func TestFiltering(t *testing.T) {
 			mockPlatformCache.On("SetCache", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, nil)
 			mockPlatformCache.On("GetCache", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, tc.errCheckCache).Once()
 			mockUsecase.On("GetResultFiltering", "EFM0TST0020230809013").Return(tc.resultFiltering, tc.errGetResultFiltering).Once()
+			mockPlatformEvent.On("PublishEvent", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, 0).Return(nil).Once()
+
+			handler := &handlers{
+				multiusecase:  mockMultiUsecase,
+				usecase:       mockUsecase,
+				repository:    mockRepository,
+				validator:     validator,
+				Json:          mockJson,
+				platformCache: mockPlatformCache,
+				producer:      mockPlatformEvent,
+			}
 
 			err := handler.Filtering(ctx, mockEvent)
 			if err != nil {

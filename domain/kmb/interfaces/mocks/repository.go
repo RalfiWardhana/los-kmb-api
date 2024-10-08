@@ -124,6 +124,27 @@ func (_m *Repository) GetBannedPMKDSR(idNumber string) (entity.TrxBannedPMKDSR, 
 	return r0, r1
 }
 
+// GetBranchDeviasi provides a mock function with given fields: BranchID
+func (_m *Repository) GetBranchDeviasi(BranchID string) (entity.MappingBranchDeviasi, error) {
+	ret := _m.Called(BranchID)
+
+	var r0 entity.MappingBranchDeviasi
+	if rf, ok := ret.Get(0).(func(string) entity.MappingBranchDeviasi); ok {
+		r0 = rf(BranchID)
+	} else {
+		r0 = ret.Get(0).(entity.MappingBranchDeviasi)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(BranchID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetCheckingRejectAttempt provides a mock function with given fields: idNumber, blackListDate
 func (_m *Repository) GetCheckingRejectAttempt(idNumber string, blackListDate string) (entity.DupcheckRejectionPMK, error) {
 	ret := _m.Called(idNumber, blackListDate)
@@ -485,6 +506,27 @@ func (_m *Repository) GetMappingElaborateIncome(mappingElaborateIncome entity.Ma
 	return r0, r1
 }
 
+// GetMappingVehicleAge provides a mock function with given fields: vehicleAge, cluster, bpkbNameType, tenor, resultPefindo, af
+func (_m *Repository) GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNameType int, tenor int, resultPefindo string, af float64) (entity.MappingVehicleAge, error) {
+	ret := _m.Called(vehicleAge, cluster, bpkbNameType, tenor, resultPefindo, af)
+
+	var r0 entity.MappingVehicleAge
+	if rf, ok := ret.Get(0).(func(int, string, int, int, string, float64) entity.MappingVehicleAge); ok {
+		r0 = rf(vehicleAge, cluster, bpkbNameType, tenor, resultPefindo, af)
+	} else {
+		r0 = ret.Get(0).(entity.MappingVehicleAge)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(int, string, int, int, string, float64) error); ok {
+		r1 = rf(vehicleAge, cluster, bpkbNameType, tenor, resultPefindo, af)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetMasterBranch provides a mock function with given fields: branchID
 func (_m *Repository) GetMasterBranch(branchID string) (entity.MasterBranch, error) {
 	ret := _m.Called(branchID)
@@ -669,6 +711,48 @@ func (_m *Repository) MasterMappingCluster(req entity.MasterMappingCluster) (ent
 	var r1 error
 	if rf, ok := ret.Get(1).(func(entity.MasterMappingCluster) error); ok {
 		r1 = rf(req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MasterMappingDeviasiDSR provides a mock function with given fields: totalIncome
+func (_m *Repository) MasterMappingDeviasiDSR(totalIncome float64) (entity.MasterMappingDeviasiDSR, error) {
+	ret := _m.Called(totalIncome)
+
+	var r0 entity.MasterMappingDeviasiDSR
+	if rf, ok := ret.Get(0).(func(float64) entity.MasterMappingDeviasiDSR); ok {
+		r0 = rf(totalIncome)
+	} else {
+		r0 = ret.Get(0).(entity.MasterMappingDeviasiDSR)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(float64) error); ok {
+		r1 = rf(totalIncome)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MasterMappingIncomeMaxDSR provides a mock function with given fields: totalIncome
+func (_m *Repository) MasterMappingIncomeMaxDSR(totalIncome float64) (entity.MasterMappingIncomeMaxDSR, error) {
+	ret := _m.Called(totalIncome)
+
+	var r0 entity.MasterMappingIncomeMaxDSR
+	if rf, ok := ret.Get(0).(func(float64) entity.MasterMappingIncomeMaxDSR); ok {
+		r0 = rf(totalIncome)
+	} else {
+		r0 = ret.Get(0).(entity.MasterMappingIncomeMaxDSR)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(float64) error); ok {
+		r1 = rf(totalIncome)
 	} else {
 		r1 = ret.Error(1)
 	}

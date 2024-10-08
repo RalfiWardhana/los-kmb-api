@@ -12663,7 +12663,7 @@ func TestFilteringPefindo(t *testing.T) {
 			errFinal: errors.New("failed get cluster branch"),
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_ClusterEF_BakiDebet3-20jt_ResultPefindoReject",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaSama_ClusterEF_BakiDebet10-20jt_ResultPefindoReject",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "K",
@@ -12693,7 +12693,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"angsuran_aktif_pbk": 4407662,
 					"wo_contract": false,
 					"wo_ada_agunan": false,
-					"total_baki_debet_non_agunan": 3100000,
+					"total_baki_debet_non_agunan": 10100000,
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"category": 3,
 					"max_overdue_ko_rules": 31,
@@ -12733,12 +12733,12 @@ func TestFilteringPefindo(t *testing.T) {
 				Decision:       constant.DECISION_REJECT,
 				Reason:         fmt.Sprintf("%s "+constant.REASON_REJECT_CLUSTER_E_F, "NAMA SAMA", "(III)"),
 				NextProcess:    0,
-				TotalBakiDebet: 3100000,
+				TotalBakiDebet: 10100000,
 				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 			},
 		},
 		{
-			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_ClusterEF_BakiDebet3-20jt",
+			name: "TEST_REJECT_FilteringPefindo_BPKBNamaBeda_ClusterEF_BakiDebet10-20jt",
 			req: request.FilteringRequest{
 				Data: request.Data{
 					BPKBName:          "KK",
@@ -12768,7 +12768,7 @@ func TestFilteringPefindo(t *testing.T) {
 					"angsuran_aktif_pbk": 4407662,
 					"wo_contract": false,
 					"wo_ada_agunan": true,
-					"total_baki_debet_non_agunan": 3100000,
+					"total_baki_debet_non_agunan": 10100000,
 					"detail_report": "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 					"category": 1,
 					"max_overdue_ko_rules": 31,
@@ -12808,7 +12808,7 @@ func TestFilteringPefindo(t *testing.T) {
 				Decision:       constant.DECISION_REJECT,
 				Reason:         fmt.Sprintf("%s "+constant.REASON_REJECT_CLUSTER_E_F, "NAMA BEDA", "(I)"),
 				NextProcess:    0,
-				TotalBakiDebet: 3100000,
+				TotalBakiDebet: 10100000,
 				PbkReport:      "http://10.9.100.121/minilos_static_files/data/pefindo/pdf/pdf_kp_656d6e44a6bf8_1676593952.pdf",
 			},
 		},

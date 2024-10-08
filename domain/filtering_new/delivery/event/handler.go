@@ -27,12 +27,12 @@ type handlers struct {
 	usecase       interfaces.Usecase
 	repository    interfaces.Repository
 	validator     *common.Validator
-	producer      platformevent.PlatformEvent
+	producer      platformevent.PlatformEventInterface
 	Json          common.JSON
 	platformCache platformcache.PlatformCacheInterface
 }
 
-func NewServiceFiltering(app *platformevent.ConsumerRouter, repository interfaces.Repository, usecase interfaces.Usecase, multiUsecase interfaces.MultiUsecase, validator *common.Validator, producer platformevent.PlatformEvent, json common.JSON,
+func NewServiceFiltering(app *platformevent.ConsumerRouter, repository interfaces.Repository, usecase interfaces.Usecase, multiUsecase interfaces.MultiUsecase, validator *common.Validator, producer platformevent.PlatformEventInterface, json common.JSON,
 	platformCache platformcache.PlatformCacheInterface) {
 	handler := handlers{
 		multiusecase:  multiUsecase,
@@ -166,7 +166,7 @@ func (h handlers) Filtering(ctx context.Context, event event.Event) (err error) 
 		return nil
 	}
 
-	resultFiltering, err = h.multiusecase.Filtering(ctx, req, married, middlewares.UserInfoData.AccessToken)
+	resultFiltering, err = h.multiusecase.Filtering(ctx, req, married, middlewares.UserInfoData.AccessToken, middlewares.HrisApiData.Token)
 	if err != nil {
 		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 	} else {

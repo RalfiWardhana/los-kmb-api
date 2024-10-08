@@ -67,8 +67,11 @@ func (u usecase) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 
 		for _, description := range industry {
 			u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
+
+			if strings.ToUpper(data.IndustryTypeID.(string)) == strings.ToUpper(strings.ReplaceAll(description.IndustryTypeID, " ", "")) {
+				industryType = []byte(description.Description)
+			}
 		}
-		industryType, _ = u.cache.Get(data.IndustryTypeID.(string))
 	}
 
 	if industryType != nil {
@@ -158,6 +161,7 @@ func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data inte
 		BirthDate:  req.CustomerPersonal.BirthDate,
 		Gender:     req.CustomerPersonal.Gender,
 		BPKBName:   req.Item.BPKBName,
+		CMOID:      req.Agent.CmoNik,
 	}
 
 	filtering.IDNumber, _ = utils.PlatformEncryptText(req.CustomerPersonal.IDNumber)
@@ -324,10 +328,13 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 
 			for _, description := range industry {
 				u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
-			}
-		}
 
-		industryType, _ = u.cache.Get(inq.IndustryTypeID)
+				if strings.ToUpper(inq.IndustryTypeID) == strings.ToUpper(strings.ReplaceAll(description.IndustryTypeID, " ", "")) {
+					industryType = []byte(description.Description)
+				}
+			}
+
+		}
 
 		// get trx_customer_photo
 		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
@@ -669,10 +676,12 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 
 			for _, description := range industry {
 				u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
+
+				if strings.ToUpper(inq.IndustryTypeID) == strings.ToUpper(strings.ReplaceAll(description.IndustryTypeID, " ", "")) {
+					industryType = []byte(description.Description)
+				}
 			}
 		}
-
-		industryType, _ = u.cache.Get(inq.IndustryTypeID)
 
 		// get trx_customer_photo
 		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
@@ -945,6 +954,12 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 				EmergencyPhone:     inq.EmergencyPhone,
 			},
 			Photo: photoData,
+			Deviasi: entity.Deviasi{
+				DeviasiID:          inq.DeviasiID,
+				DeviasiDescription: inq.DeviasiDescription,
+				DeviasiDecision:    inq.DeviasiDecision,
+				DeviasiReason:      inq.DeviasiReason,
+			},
 		}
 
 		data = append(data, row)
@@ -1015,11 +1030,20 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 	// Bisa melakukan submit jika status UNPR dan decision CPR
 	if status.Activity == constant.ACTIVITY_UNPROCESS && status.Decision == constant.DB_DECISION_CREDIT_PROCESS {
 
-		// get limit approval for final_approval
-		limit, err = u.repository.GetLimitApproval(req.NTFAkumulasi)
+		// handling final_approval deviasi
+		limit, err = u.repository.GetLimitApprovalDeviasi(req.ProspectID)
 		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Get limit approval error")
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get limit approval deviasi error")
 			return
+		}
+
+		if limit.Alias == "" {
+			// get limit approval for final_approval
+			limit, err = u.repository.GetLimitApproval(req.NTFAkumulasi)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get limit approval error")
+				return
+			}
 		}
 
 		switch req.Decision {
@@ -1131,10 +1155,12 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 
 			for _, description := range industry {
 				u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
+
+				if strings.ToUpper(inq.IndustryTypeID) == strings.ToUpper(strings.ReplaceAll(description.IndustryTypeID, " ", "")) {
+					industryType = []byte(description.Description)
+				}
 			}
 		}
-
-		industryType, _ = u.cache.Get(inq.IndustryTypeID)
 
 		// get trx_customer_photo
 		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
@@ -1230,6 +1256,7 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 				ActionReturn:  inq.ActionReturn,
 				ActionCancel:  inq.ActionCancel,
 				ActionFormAkk: inq.ActionFormAkk,
+				UrlFormAkkk:   inq.UrlFormAkkk,
 			},
 			HistoryProcess: historyData,
 			General: entity.DataGeneral{
@@ -1342,6 +1369,12 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 				EmergencyPhone:     inq.EmergencyPhone,
 			},
 			Photo: photoData,
+			Deviasi: entity.Deviasi{
+				DeviasiID:          inq.DeviasiID,
+				DeviasiDescription: inq.DeviasiDescription,
+				DeviasiDecision:    inq.DeviasiDecision,
+				DeviasiReason:      inq.DeviasiReason,
+			},
 		}
 
 		data = append(data, row)
@@ -1602,10 +1635,12 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 
 			for _, description := range industry {
 				u.cache.Set(strings.ReplaceAll(description.IndustryTypeID, " ", ""), []byte(description.Description))
+
+				if strings.ToUpper(inq.IndustryTypeID) == strings.ToUpper(strings.ReplaceAll(description.IndustryTypeID, " ", "")) {
+					industryType = []byte(description.Description)
+				}
 			}
 		}
-
-		industryType, _ = u.cache.Get(inq.IndustryTypeID)
 
 		// get trx_customer_photo
 		photos, err = u.repository.GetCustomerPhoto(inq.ProspectID)
@@ -1738,6 +1773,7 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 			CA: entity.DataApproval{
 				ShowAction:         inq.ShowAction,
 				ActionFormAkk:      inq.ActionFormAkk,
+				UrlFormAkkk:        inq.UrlFormAkkk,
 				IsLastApproval:     inq.IsLastApproval,
 				HasReturn:          inq.HasReturn,
 				StatusDecision:     statusDecision,
@@ -1865,6 +1901,12 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 				EmergencyPhone:     inq.EmergencyPhone,
 			},
 			Photo: photoData,
+			Deviasi: entity.Deviasi{
+				DeviasiID:          inq.DeviasiID,
+				DeviasiDescription: inq.DeviasiDescription,
+				DeviasiDecision:    inq.DeviasiDecision,
+				DeviasiReason:      inq.DeviasiReason,
+			},
 		}
 
 		data = append(data, row)

@@ -607,6 +607,8 @@ func TestBlacklistCheck(t *testing.T) {
 
 func TestVehicleCheck(t *testing.T) {
 
+	os.Setenv("NAMA_SAMA", "K,P")
+
 	config := entity.AppConfig{
 		Key:   "parameterize",
 		Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35}}`,
@@ -616,12 +618,17 @@ func TestVehicleCheck(t *testing.T) {
 	yearReject := time.Now().AddDate(-18, 0, 0).Format("2006")
 
 	testcase := []struct {
-		vehicle          response.UsecaseApi
-		err, errExpected error
-		dupcheckConfig   entity.AppConfig
-		year             string
-		label            string
-		tenor            int
+		vehicle                 response.UsecaseApi
+		err, errExpected        error
+		dupcheckConfig          entity.AppConfig
+		year                    string
+		cmoCluster              string
+		bpkbName                string
+		tenor                   int
+		resGetMappingVehicleAge entity.MappingVehicleAge
+		errGetMappingVehicleAge error
+		label                   string
+		filtering               entity.FilteringKMB
 	}{
 		{
 			dupcheckConfig: config,
@@ -642,6 +649,209 @@ func TestVehicleCheck(t *testing.T) {
 			},
 			year:  yearReject,
 			label: "TEST_VEHICLE_REJECT",
+			filtering: entity.FilteringKMB{
+				ScoreBiro: "LOW RISK",
+			},
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+				Code:   constant.CODE_VEHICLE_SESUAI,
+				Reason: constant.REASON_VEHICLE_SESUAI,
+			},
+			year:       time.Now().AddDate(-10, 0, 0).Format("2006"),
+			cmoCluster: "Cluster C",
+			bpkbName:   "KK",
+			tenor:      12,
+			resGetMappingVehicleAge: entity.MappingVehicleAge{
+				VehicleAgeStart: 11,
+				VehicleAgeEnd:   12,
+				Cluster:         "Cluster C",
+				BPKBNameType:    0,
+				TenorStart:      1,
+				TenorEnd:        23,
+				Decision:        constant.DECISION_PASS,
+			},
+			label: "test pass vehicle age 11-12 cluster A-C tenor <24",
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+				Code:   constant.CODE_VEHICLE_SESUAI,
+				Reason: constant.REASON_VEHICLE_SESUAI,
+			},
+			year:       time.Now().AddDate(-9, 0, 0).Format("2006"),
+			cmoCluster: "Cluster A",
+			bpkbName:   "K",
+			tenor:      24,
+			resGetMappingVehicleAge: entity.MappingVehicleAge{
+				VehicleAgeStart: 11,
+				VehicleAgeEnd:   12,
+				Cluster:         "Cluster A",
+				BPKBNameType:    1,
+				TenorStart:      24,
+				TenorEnd:        36,
+				Decision:        constant.DECISION_PASS,
+			},
+			label: "test pass vehicle age 11-12 cluster A-C tenor >=24",
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_REJECT,
+				Code:   constant.CODE_VEHICLE_AGE_MAX,
+				Reason: fmt.Sprintf("%s Ketentuan", constant.REASON_VEHICLE_AGE_MAX),
+			},
+			year:       time.Now().AddDate(-8, 0, 0).Format("2006"),
+			cmoCluster: "Cluster B",
+			bpkbName:   "KK",
+			tenor:      36,
+			resGetMappingVehicleAge: entity.MappingVehicleAge{
+				VehicleAgeStart: 11,
+				VehicleAgeEnd:   12,
+				Cluster:         "Cluster B",
+				BPKBNameType:    0,
+				TenorStart:      24,
+				TenorEnd:        36,
+				Decision:        constant.DECISION_REJECT,
+			},
+			label: "test reject vehicle age 11-12 cluster A-C tenor >=24",
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_REJECT,
+				Code:   constant.CODE_VEHICLE_AGE_MAX,
+				Reason: fmt.Sprintf("%s Ketentuan", constant.REASON_VEHICLE_AGE_MAX),
+			},
+			year:       time.Now().AddDate(-11, 0, 0).Format("2006"),
+			cmoCluster: "Cluster D",
+			bpkbName:   "K",
+			tenor:      1,
+			resGetMappingVehicleAge: entity.MappingVehicleAge{
+				VehicleAgeStart: 11,
+				VehicleAgeEnd:   12,
+				Cluster:         "Cluster D",
+				BPKBNameType:    1,
+				TenorStart:      1,
+				TenorEnd:        23,
+				Decision:        constant.DECISION_REJECT,
+			},
+			label: "test reject vehicle age 11-12 cluster D-F all tenor",
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+				Code:   constant.CODE_VEHICLE_SESUAI,
+				Reason: constant.REASON_VEHICLE_SESUAI,
+			},
+			year:       time.Now().AddDate(-12, 0, 0).Format("2006"),
+			cmoCluster: "Cluster B",
+			bpkbName:   "KK",
+			tenor:      12,
+			resGetMappingVehicleAge: entity.MappingVehicleAge{
+				VehicleAgeStart: 13,
+				VehicleAgeEnd:   13,
+				Cluster:         "Cluster B",
+				BPKBNameType:    0,
+				TenorStart:      1,
+				TenorEnd:        23,
+				Decision:        constant.DECISION_PASS,
+			},
+			label: "test pass vehicle age 13 cluster A-C tenor <24",
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+				Code:   constant.CODE_VEHICLE_SESUAI,
+				Reason: constant.REASON_VEHICLE_SESUAI,
+			},
+			year:       time.Now().AddDate(-11, 0, 0).Format("2006"),
+			cmoCluster: "Cluster A",
+			bpkbName:   "K",
+			tenor:      24,
+			resGetMappingVehicleAge: entity.MappingVehicleAge{
+				VehicleAgeStart: 13,
+				VehicleAgeEnd:   13,
+				Cluster:         "Cluster A",
+				BPKBNameType:    1,
+				TenorStart:      24,
+				TenorEnd:        36,
+				Decision:        constant.DECISION_PASS,
+			},
+			label: "test pass vehicle age 13 cluster A-C tenor >=24",
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_REJECT,
+				Code:   constant.CODE_VEHICLE_AGE_MAX,
+				Reason: fmt.Sprintf("%s Ketentuan", constant.REASON_VEHICLE_AGE_MAX),
+			},
+			year:       time.Now().AddDate(-11, 0, 0).Format("2006"),
+			cmoCluster: "Cluster C",
+			bpkbName:   "KK",
+			tenor:      24,
+			resGetMappingVehicleAge: entity.MappingVehicleAge{
+				VehicleAgeStart: 13,
+				VehicleAgeEnd:   13,
+				Cluster:         "Cluster C",
+				BPKBNameType:    0,
+				TenorStart:      24,
+				TenorEnd:        36,
+				Decision:        constant.DECISION_REJECT,
+			},
+			label: "test reject vehicle age 13 cluster A-C tenor >=24",
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_REJECT,
+				Code:   constant.CODE_VEHICLE_AGE_MAX,
+				Reason: fmt.Sprintf("%s Ketentuan", constant.REASON_VEHICLE_AGE_MAX),
+			},
+			year:       time.Now().AddDate(-13, 0, 0).Format("2006"),
+			cmoCluster: "Cluster F",
+			bpkbName:   "K",
+			tenor:      1,
+			resGetMappingVehicleAge: entity.MappingVehicleAge{
+				VehicleAgeStart: 13,
+				VehicleAgeEnd:   13,
+				Cluster:         "Cluster F",
+				BPKBNameType:    1,
+				TenorStart:      1,
+				TenorEnd:        23,
+				Decision:        constant.DECISION_REJECT,
+			},
+			label: "test reject vehicle age 13 cluster D-F all tenor",
+		},
+		{
+			dupcheckConfig:          config,
+			year:                    time.Now().AddDate(-13, 0, 0).Format("2006"),
+			cmoCluster:              "Cluster F",
+			bpkbName:                "K",
+			tenor:                   1,
+			errGetMappingVehicleAge: errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Vehicle Age Error"),
+			errExpected:             errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Vehicle Age Error"),
+			label:                   "test error get mapping vehicle age",
+		},
+		{
+			dupcheckConfig: config,
+			vehicle: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+				Code:   constant.CODE_VEHICLE_SESUAI,
+				Reason: constant.REASON_VEHICLE_SESUAI,
+			},
+			year:                    time.Now().AddDate(-12, 0, 0).Format("2006"),
+			cmoCluster:              "Cluster B",
+			bpkbName:                "KK",
+			tenor:                   12,
+			resGetMappingVehicleAge: entity.MappingVehicleAge{},
+			label:                   "test pass mapping empty",
 		},
 	}
 
@@ -653,8 +863,10 @@ func TestVehicleCheck(t *testing.T) {
 			var configValue response.DupcheckConfig
 			json.Unmarshal([]byte(test.dupcheckConfig.Value), &configValue)
 
+			mockRepository.On("GetMappingVehicleAge", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(test.resGetMappingVehicleAge, test.errGetMappingVehicleAge)
+
 			service := NewUsecase(mockRepository, mockHttpClient)
-			result, err := service.VehicleCheck(test.year, test.tenor, configValue)
+			result, err := service.VehicleCheck(test.year, test.cmoCluster, test.bpkbName, test.tenor, configValue, test.filtering, 100)
 
 			require.Equal(t, test.errExpected, err)
 			require.Equal(t, test.vehicle.Result, result.Result)

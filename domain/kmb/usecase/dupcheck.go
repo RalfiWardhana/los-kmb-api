@@ -128,7 +128,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	mapping.SpouseType = spMap.SpouseType
 
 	//Check vehicle age
-	ageVehicle, err := u.usecase.VehicleCheck(req.ManufactureYear, req.Tenor, configValue)
+	ageVehicle, err := u.usecase.VehicleCheck(req.ManufactureYear, req.CMOCluster, req.BPKBName, req.Tenor, configValue, req.Filtering, req.AF)
 
 	if err != nil {
 		return
@@ -140,7 +140,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
-	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: ageVehicle.Code, SourceDecision: constant.SOURCE_DECISION_PMK, Reason: ageVehicle.Reason, NextStep: constant.SOURCE_DECISION_NOKANOSIN})
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: ageVehicle.Code, SourceDecision: constant.SOURCE_DECISION_PMK, Reason: ageVehicle.Reason, NextStep: constant.SOURCE_DECISION_NOKANOSIN, Info: ageVehicle.Info})
 
 	// Check Chassis Number with Active Aggrement
 	checkChassisNumber, err := u.usecase.CheckAgreementChassisNumber(ctx, req, accessToken)
@@ -258,7 +258,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	mapping.ConfigMaxDSR = configValue.Data.MaxDsr
 
 	if dsr.Result == constant.DECISION_REJECT {
-		return
+		// return // -- di ByPASS untuk kebutuhan deviasi
+		data.Result = constant.DECISION_PASS
 	}
 
 	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: dsr.Code, SourceDecision: dsr.SourceDecision, Reason: dsr.Reason, NextStep: constant.SOURCE_DECISION_DUPCHECK})
@@ -747,7 +748,7 @@ func (u usecase) CustomerKMB(spDupcheck response.SpDupCekCustomerByID) (statusKo
 
 }
 
-func (u usecase) VehicleCheck(manufactureYear string, tenor int, configValue response.DupcheckConfig) (data response.UsecaseApi, err error) {
+func (u usecase) VehicleCheck(manufactureYear, cmoCluster, bkpbName string, tenor int, configValue response.DupcheckConfig, filtering entity.FilteringKMB, af float64) (data response.UsecaseApi, err error) {
 
 	data.SourceDecision = constant.SOURCE_DECISION_PMK
 
@@ -758,17 +759,79 @@ func (u usecase) VehicleCheck(manufactureYear string, tenor int, configValue res
 
 	ageVehicle += int(tenor / 12)
 
+	bpkbNameType := 0
+	if strings.Contains(os.Getenv("NAMA_SAMA"), bkpbName) {
+		bpkbNameType = 1
+	}
+
+	resultPefindo := checkResultPefindo(filtering)
+
+	detailInfo := map[string]interface{}{
+		"vehicle_age":    ageVehicle,
+		"cluster":        cmoCluster,
+		"bpkb_name_type": bpkbNameType,
+		"tenor":          tenor,
+		"af":             af,
+		"result_pbk":     resultPefindo,
+	}
+
 	if ageVehicle <= configValue.Data.VehicleAge {
+
+		mapping, err := u.repository.GetMappingVehicleAge(ageVehicle, cmoCluster, bpkbNameType, tenor, resultPefindo, af)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Vehicle Age Error")
+			return data, err
+		}
+
+		detailInfo["info"] = mapping.Info
+		info, _ := json.Marshal(detailInfo)
+
+		if mapping.Decision == constant.DECISION_REJECT {
+			data.Result = constant.DECISION_REJECT
+			data.Code = constant.CODE_VEHICLE_AGE_MAX
+			data.Reason = fmt.Sprintf("%s Ketentuan", constant.REASON_VEHICLE_AGE_MAX)
+			data.Info = string(info)
+			return data, nil
+		}
+
 		data.Result = constant.DECISION_PASS
 		data.Code = constant.CODE_VEHICLE_SESUAI
 		data.Reason = constant.REASON_VEHICLE_SESUAI
-		return
+		data.Info = string(info)
+		return data, nil
 
 	} else {
+
+		detailInfo["info"] = constant.INFO_VEHICLE_AGE
+		info, _ := json.Marshal(detailInfo)
+
 		data.Result = constant.DECISION_REJECT
 		data.Code = constant.CODE_VEHICLE_AGE_MAX
 		data.Reason = fmt.Sprintf("%s %d Tahun", constant.REASON_VEHICLE_AGE_MAX, configValue.Data.VehicleAge)
+		data.Info = string(info)
 		return
 	}
 
+}
+
+func checkResultPefindo(filtering entity.FilteringKMB) (resultPefindo string) {
+	// check hit pefindo
+	if filtering.ScoreBiro != nil && filtering.ScoreBiro.(string) != "" && filtering.ScoreBiro.(string) != constant.DECISION_PBK_NO_HIT && filtering.ScoreBiro.(string) != constant.PEFINDO_UNSCORE {
+		// use ovd pefindo all
+		maxOverdueLast12Months, _ := utils.GetFloat(filtering.MaxOverdueLast12monthsBiro)
+		maxOverdueDays, _ := utils.GetFloat(filtering.MaxOverdueBiro)
+
+		// pass or reject
+		if maxOverdueLast12Months > constant.PBK_OVD_LAST_12 {
+			resultPefindo = constant.DECISION_REJECT
+		} else if maxOverdueDays > constant.PBK_OVD_CURRENT {
+			resultPefindo = constant.DECISION_REJECT
+		} else {
+			resultPefindo = constant.DECISION_PASS
+		}
+	} else {
+		resultPefindo = constant.NO_HIT_PBK
+	}
+
+	return resultPefindo
 }

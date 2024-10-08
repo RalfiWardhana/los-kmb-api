@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"los-kmb-api/domain/elaborate_ltv/interfaces"
 	"los-kmb-api/models/entity"
@@ -34,13 +35,20 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, accessToken string) (data response.ElaborateLTV, err error) {
 
 	var (
-		filteringKMB        entity.FilteringKMB
-		ageS                string
-		bakiDebet           float64
-		bpkbNameType        int
-		manufacturingYear   time.Time
-		getMappingLtvOvd    []entity.MappingElaborateLTV
-		mappingElaborateLTV []entity.MappingElaborateLTV
+		filteringKMB            entity.FilteringKMB
+		ageS                    string
+		bakiDebet               float64
+		bpkbNameType            int
+		manufacturingYear       time.Time
+		mappingElaborateLTV     []entity.MappingElaborateLTV
+		cluster                 string
+		RrdDateString           string
+		CreatedAtString         string
+		RrdDate                 time.Time
+		CreatedAt               time.Time
+		MonthsOfExpiredContract int
+		OverrideFlowLikeRegular bool
+		expiredContractConfig   entity.AppConfig
 	)
 
 	filteringKMB, err = u.repository.GetFilteringResult(reqs.ProspectID)
@@ -59,7 +67,58 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 	}
 
 	resultPefindo := filteringKMB.Decision
-	if filteringKMB.CustomerSegment != nil && !strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string)) {
+
+	if filteringKMB.CustomerSegment != nil && strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string)) {
+		cluster = constant.CLUSTER_PRIME_PRIORITY
+
+		// Cek apakah customer RO PRIME/PRIORITY ini termasuk jalur `expired_contract tidak <= 6 bulan`
+		if filteringKMB.CustomerStatus == constant.STATUS_KONSUMEN_RO {
+			if filteringKMB.RrdDate == nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
+				return
+			}
+
+			RrdDateString = filteringKMB.RrdDate.(string)
+			CreatedAtString = filteringKMB.CreatedAt.Format(time.RFC3339)
+
+			RrdDate, err = time.Parse(time.RFC3339, RrdDateString)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of RrdDate (" + RrdDateString + ")")
+				return
+			}
+
+			CreatedAt, err = time.Parse(time.RFC3339, CreatedAtString)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of CreatedAt (" + CreatedAtString + ")")
+				return
+			}
+
+			MonthsOfExpiredContract, err = utils.PreciseMonthsDifference(RrdDate, CreatedAt)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Difference of months RrdDate and CreatedAt is negative (-)")
+				return
+			}
+
+			// Get config expired_contract
+			expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
+				return
+			}
+
+			var configValueExpContract response.ExpiredContractConfig
+			json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+
+			if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
+				// Jalur mirip seperti customer segment "REGULAR"
+				OverrideFlowLikeRegular = true
+			}
+		}
+	} else {
+		cluster = filteringKMB.CMOCluster.(string)
+	}
+
+	if (filteringKMB.CustomerSegment != nil && !strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string))) || (OverrideFlowLikeRegular) {
 		if filteringKMB.ScoreBiro == nil || filteringKMB.ScoreBiro == "" || filteringKMB.ScoreBiro == constant.UNSCORE_PBK {
 			resultPefindo = constant.DECISION_PBK_NO_HIT
 		} else if filteringKMB.MaxOverdueBiro != nil || filteringKMB.MaxOverdueLast12monthsBiro != nil {
@@ -107,26 +166,17 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		ManufacturingYear: reqs.ManufacturingYear,
 	}
 
-	maxOvd := filteringKMB.MaxOverdueBiro
-	maxOvd12 := filteringKMB.MaxOverdueLast12monthsBiro
-
-	maxOverdueBiro, _ := maxOvd.(int64)
-	maxOverdueLast12, _ := maxOvd12.(int64)
-
-	// Check max OVD 12 & max OVD current
-	if (maxOvd != nil && maxOvd12 != nil) && (maxOverdueLast12 <= 10 && maxOverdueBiro == 0) {
-		// Get Mapping LTV OVD
-		getMappingLtvOvd, _ = u.repository.GetMappingElaborateLTVOvd(resultPefindo, filteringKMB.Cluster.(string))
+	if OverrideFlowLikeRegular && resultPefindo == constant.DECISION_REJECT {
+		cluster = filteringKMB.CustomerStatus.(string) + " " + constant.CLUSTER_PRIME_PRIORITY
+		if int(bakiDebet) > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT {
+			cluster = filteringKMB.CustomerStatus.(string) + " " + filteringKMB.CustomerSegment.(string)
+		}
 	}
 
-	if len(getMappingLtvOvd) > 0 && (maxOvd != nil && maxOvd12 != nil) && (maxOverdueLast12 <= 10 && maxOverdueBiro == 0) {
-		mappingElaborateLTV = getMappingLtvOvd
-	} else {
-		mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, filteringKMB.Cluster.(string))
-		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
-			return
-		}
+	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, cluster)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
+		return
 	}
 
 	for _, m := range mappingElaborateLTV {
@@ -157,8 +207,15 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 
 			//pass
 			if resultPefindo == constant.DECISION_PASS && m.TenorStart <= reqs.Tenor && reqs.Tenor <= m.TenorEnd {
-				data.LTV = m.LTV
-				trxElaborateLTV.MappingElaborateLTVID = m.ID
+				if m.BPKBNameType == 1 {
+					if bpkbNameType == m.BPKBNameType {
+						data.LTV = m.LTV
+						trxElaborateLTV.MappingElaborateLTVID = m.ID
+					}
+				} else {
+					data.LTV = m.LTV
+					trxElaborateLTV.MappingElaborateLTVID = m.ID
+				}
 			}
 
 			//reject
@@ -169,22 +226,20 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		}
 
 		// max tenor
-		if resultPefindo == constant.DECISION_REJECT && int(bakiDebet) > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && strings.Contains("Cluster E Cluster F", filteringKMB.Cluster.(string)) {
-			data.LTV = 0
-			data.MaxTenor = 0
-			data.AdjustTenor = false
-			data.Reason = constant.REASON_REJECT_ELABORATE
-		} else {
-			if m.TenorEnd >= data.MaxTenor && m.LTV > 0 {
-				if m.BPKBNameType == 1 && m.AgeVehicle != "" {
-					if bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
-						data.MaxTenor = m.TenorEnd
-						data.AdjustTenor = true
-					}
-				} else {
+		if m.TenorEnd >= data.MaxTenor && m.LTV > 0 {
+			if m.AgeVehicle != "" {
+				if bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
 					data.MaxTenor = m.TenorEnd
 					data.AdjustTenor = true
 				}
+			} else if m.BPKBNameType == 1 {
+				if bpkbNameType == m.BPKBNameType {
+					data.MaxTenor = m.TenorEnd
+					data.AdjustTenor = true
+				}
+			} else {
+				data.MaxTenor = m.TenorEnd
+				data.AdjustTenor = true
 			}
 		}
 	}

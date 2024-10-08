@@ -10,9 +10,11 @@ import (
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
+	"los-kmb-api/shared/config"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -303,6 +305,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 		filterBranch   string
 		filterPaginate string
 		getRegion      []entity.RegionBranch
+		encrypted      entity.EncryptString
 	)
 
 	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
@@ -330,19 +333,23 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 			if userAllRegion {
 				filterBranch += ""
 			} else {
-				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
+				filterBranch += "WHERE tm.BranchID IN (" + extractBranchIDUser + ")"
 			}
 		} else {
 			filterBranch += ""
 			if req.BranchID != "999" {
-				filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+				filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
 			}
 		}
 	} else {
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
 	}
 
-	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
+	if req.Search != "" {
+		encrypted, _ = r.EncryptString(req.Search)
+	}
+
+	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays, "")
 
 	if pagination != nil {
 		page, _ := json.Marshal(pagination)
@@ -378,13 +385,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 		SELECT
 		COUNT(tt.ProspectID) AS totalRow
 		FROM
-		(
-			SELECT
-			cb.BranchID,
-			tm.ProspectID,
-			tm.created_at,
-			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+		(SELECT tm.ProspectID
 		FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -511,7 +512,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 		) jb ON tce.JobPosition = jb.[key]
 		LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
 		LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
-		) AS tt %s`, filter)).Scan(&row).Error; err != nil {
+		 %s) AS tt`, filter)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -774,7 +775,7 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 		group_name = 'JobPosition'
 	) jb ON tce.JobPosition = jb.[key]
 	LEFT JOIN cte_app_config_mn mn2 ON tce.EmploymentSinceMonth = mn2.[key]
-	LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key] ) AS tt %s ORDER BY tt.created_at DESC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
+	LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key] %s) AS tt ORDER BY tt.created_at DESC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
 		return
 	}
 
@@ -831,6 +832,16 @@ func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detai
 		// insert trx_details
 		if err = tx.Create(&detail).Error; err != nil {
 			return err
+		}
+
+		// if stop insert trx_akkk
+		if status.Activity == constant.ACTIVITY_STOP {
+			trxAkkk := entity.TrxAkkk{
+				ProspectID: status.ProspectID,
+			}
+			if err = tx.Create(&trxAkkk).Error; err != nil {
+				return err
+			}
 		}
 
 		// insert trx_prescreening
@@ -1005,6 +1016,7 @@ func (r repoHandler) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 		(CAST(ISNULL(ta2.InstallmentAmount, 0) AS NUMERIC(17,2)) +
 		CASE 
 			WHEN ta.TotalDSR = ta.DSRFMF THEN 0
+			WHEN ta.TotalDSR IS NULL THEN 0
 			ELSE CAST(ISNULL(tf.total_installment_amount_biro, 0) AS NUMERIC(17,2))
 		END +
 		CAST(ISNULL(ta.InstallmentAmountFMF, 0) AS NUMERIC(17,2)) +
@@ -1136,6 +1148,7 @@ func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface
 		filterBranch   string
 		filterPaginate string
 		getRegion      []entity.RegionBranch
+		encrypted      entity.EncryptString
 	)
 
 	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
@@ -1163,19 +1176,23 @@ func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface
 			if userAllRegion {
 				filterBranch += ""
 			} else {
-				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
+				filterBranch += "WHERE tm.BranchID IN (" + extractBranchIDUser + ")"
 			}
 		} else {
 			filterBranch += ""
 			if req.BranchID != "999" {
-				filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+				filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
 			}
 		}
 	} else {
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
 	}
 
-	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
+	if req.Search != "" {
+		encrypted, _ = r.EncryptString(req.Search)
+	}
+
+	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays, "NE")
 
 	if pagination != nil {
 		page, _ := json.Marshal(pagination)
@@ -1202,7 +1219,7 @@ func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface
 			scp.dbo.DEC_B64('SEC', tm.LegalName) AS LegalName
 		FROM
 		trx_new_entry tm WITH (nolock)
-		) AS tt %s`, filter)).Scan(&row).Error; err != nil {
+		 %s) AS tt`, filter)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -1227,7 +1244,7 @@ func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface
   	FROM
 	trx_new_entry tm WITH (nolock)
 	LEFT JOIN trx_filtering tf WITH (nolock) ON tm.ProspectID = tf.prospect_id
-	) AS tt %s ORDER BY tt.created_at DESC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
+	 %s) AS tt ORDER BY tt.created_at DESC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
 		return
 	}
 
@@ -1288,6 +1305,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		filterPaginate string
 		query          string
 		getRegion      []entity.RegionBranch
+		encrypted      entity.EncryptString
 	)
 
 	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
@@ -1315,19 +1333,23 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 			if userAllRegion {
 				filterBranch += ""
 			} else {
-				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
+				filterBranch += "WHERE tm.BranchID IN (" + extractBranchIDUser + ")"
 			}
 		} else {
 			filterBranch += ""
 			if req.BranchID != "999" {
-				filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+				filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
 			}
 		}
 	} else {
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
 	}
 
-	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
+	if req.Search != "" {
+		encrypted, _ = r.EncryptString(req.Search)
+	}
+
+	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays, "")
 
 	// Filter By
 	if req.Filter != "" {
@@ -1336,22 +1358,22 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		)
 		switch req.Filter {
 		case constant.DECISION_APPROVE:
-			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s'", constant.DB_DECISION_APR, constant.STATUS_FINAL)
+			query = fmt.Sprintf(" AND tst.decision = '%s' AND tst.status_process='%s'", constant.DB_DECISION_APR, constant.STATUS_FINAL)
 
 		case constant.DECISION_REJECT:
-			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s'", constant.DB_DECISION_REJECT, constant.STATUS_FINAL)
+			query = fmt.Sprintf(" AND tst.decision = '%s' AND tst.status_process='%s'", constant.DB_DECISION_REJECT, constant.STATUS_FINAL)
 
 		case constant.DECISION_CANCEL:
-			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s'", constant.DB_DECISION_CANCEL, constant.STATUS_FINAL)
+			query = fmt.Sprintf(" AND tst.decision = '%s' AND tst.status_process='%s'", constant.DB_DECISION_CANCEL, constant.STATUS_FINAL)
 
 		case constant.NEED_DECISION:
 			activity = constant.ACTIVITY_UNPROCESS
 			source := constant.DB_DECISION_CREDIT_ANALYST
-			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s' AND (tt.decision_ca IS NULL OR tt.ActionEditData=1)", activity, constant.DB_DECISION_CREDIT_PROCESS, source)
+			query = fmt.Sprintf(" AND tst.activity= '%s' AND tst.decision= '%s' AND tst.source_decision = '%s' AND (tcd.decision IS NULL OR (rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'%s'))", activity, constant.DB_DECISION_CREDIT_PROCESS, source, constant.STATUS_FINAL)
 
 		case constant.SAVED_AS_DRAFT:
 			if req.UserID != "" {
-				query = fmt.Sprintf(" AND tt.draft_created_by= '%s' ", req.UserID)
+				query = fmt.Sprintf(" AND tdd.draft_created_by= '%s' ", req.UserID)
 			}
 		}
 	}
@@ -1423,25 +1445,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		SELECT
 		COUNT(tt.ProspectID) AS totalRow
 		FROM
-		(
-			SELECT
-			cb.BranchID,
-			tm.ProspectID,
-			tm.lob,
-			tm.created_at,
-			tst.activity,
-			tst.source_decision,
-			tst.status_process,
-			tst.decision,
-			tcd.decision as decision_ca,
-			tcd.created_by as decision_by_ca,
-			tdd.created_by AS draft_created_by,
-			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
-			CASE
-			 WHEN rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN' THEN 1
-			 ELSE 0
-			END AS ActionEditData
+		(SELECT tm.ProspectID
 		FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -1460,7 +1464,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
 		LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
 		LEFT JOIN cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-		) AS tt %s AND tt.source_decision<>'%s'`, filter, constant.PRESCREENING)).Scan(&row).Error; err != nil {
+		 %s AND tst.source_decision<>'%s') AS tt`, filter, constant.PRESCREENING)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -1703,7 +1707,11 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		CASE
 		 WHEN rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN' THEN 1
 		 ELSE 0
-		END AS ActionEditData
+		END AS ActionEditData,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 	  	FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -1717,6 +1725,8 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN
 			cte_trx_history_approval_scheme rtn ON rtn.ProspectID = tm.ProspectID
 		LEFT JOIN
@@ -1844,7 +1854,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		LEFT JOIN cte_app_config_pr pr2 ON tcs.ProfessionID = pr2.[key]
 		LEFT JOIN
 			cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID
-		) AS tt %s AND tt.source_decision<>'%s' ORDER BY tt.created_at DESC %s`, filter, constant.PRESCREENING, filterPaginate)).Scan(&data).Error; err != nil {
+		 %s AND tst.source_decision<>'%s') AS tt ORDER BY tt.created_at DESC %s`, filter, constant.PRESCREENING, filterPaginate)).Scan(&data).Error; err != nil {
 		return
 	}
 
@@ -1900,6 +1910,35 @@ func (r repoHandler) GetLimitApproval(ntf float64) (limit entity.MappingLimitApp
 	return
 }
 
+func (r repoHandler) GetLimitApprovalDeviasi(prospectID string) (limit entity.MappingLimitApprovalScheme, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.NewKmb.Raw(`SELECT
+		CASE 
+			WHEN final_approval IS NULL THEN 'CBM'
+			ELSE final_approval
+			END AS alias
+		FROM trx_deviasi td
+		LEFT JOIN trx_master tm ON td.ProspectID = tm.ProspectID 
+		LEFT JOIN m_branch_deviasi mbd ON tm.BranchID = mbd.BranchID 
+		WHERE td.ProspectID = ?`, prospectID).Scan(&limit).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.HistoryProcess, err error) {
 	var x sql.TxOptions
 
@@ -1923,6 +1962,7 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.Histo
 			 WHEN td.source_decision = 'SCP' THEN 'SCOREPRO'
 			 WHEN td.source_decision = 'DSR' THEN 'DSR'
 			 WHEN td.source_decision = 'LTV' THEN 'LTV'
+			 WHEN td.source_decision = 'DEV' THEN 'DEVIASI'
 			 WHEN td.source_decision = 'CRA' THEN 'CREDIT ANALYSIS'
 			 WHEN td.source_decision = 'NRC' THEN 'RECALCULATE PROCESS'
 			 WHEN td.source_decision = 'CBM'
@@ -1944,6 +1984,7 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.Histo
 			 ELSE td.source_decision
 			END AS alias,
 			CASE
+			 WHEN td.source_decision = 'DEV' THEN '-'
 			 WHEN td.decision = 'PAS' THEN 'PASS'
 			 WHEN td.decision = 'REJ' THEN 'REJECT'
 			 WHEN td.decision = 'CAN' THEN 'CANCEL'
@@ -1960,7 +2001,7 @@ func (r repoHandler) GetHistoryProcess(prospectID string) (detail []entity.Histo
 		FROM
 			trx_details td WITH (nolock)
 			LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
-		WHERE td.ProspectID = ? AND (td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC') OR 
+		WHERE td.ProspectID = ? AND (td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC','DEV') OR 
 		(td.source_decision IN('TNR','PRJ','NIK','NKA','BLK','PMK','LTV') AND td.decision = 'REJ'))
 		AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`, prospectID).Scan(&detail).Error; err != nil {
 
@@ -2005,12 +2046,12 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 			if userAllRegion {
 				filterBranch += ""
 			} else {
-				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
+				filterBranch += "WHERE tm.BranchID IN (" + extractBranchIDUser + ")"
 			}
 		} else {
 			filterBranch += ""
 			if req.BranchID != "999" {
-				filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+				filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
 			}
 		}
 	} else {
@@ -2021,14 +2062,36 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 
 	search := req.Search
 
+	var qSearch string
+	var regexpPpid = regexp.MustCompile(`SAL-|NE-`)
+	var regexpIDNumber = regexp.MustCompile(`^[0-9]*$`)
+	var regexpLegalName = regexp.MustCompile("^[a-zA-Z.,'` ]*$")
+
+	if search != "" && regexpPpid.MatchString(search) {
+		//query prospect id only
+		qSearch = fmt.Sprintf("(tm.ProspectID = '%s')", search)
+	} else if search != "" && regexpIDNumber.MatchString(search) {
+		//query id number only
+		encrypted, _ := r.EncryptString(search)
+		qSearch = fmt.Sprintf("(tcp.IDNumber = '%s')", encrypted.Encrypt)
+	} else if search != "" && regexpLegalName.MatchString(search) {
+		//query legal name only
+		encrypted, _ := r.EncryptString(search)
+		qSearch = fmt.Sprintf("(tcp.LegalName = '%s')", encrypted.Encrypt)
+	} else {
+		//query default
+		encrypted, _ := r.EncryptString(search)
+		qSearch = fmt.Sprintf("(tm.ProspectID = '%s' OR tcp.IDNumber = '%s' OR tcp.LegalName = '%s')", search, encrypted.Encrypt, encrypted.Encrypt)
+	}
+
 	if search != "" {
-		query = fmt.Sprintf("WHERE (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+		query = fmt.Sprintf("WHERE %s", qSearch)
 	}
 
 	if filter == "" {
 		filter = query
 	} else {
-		filter = filterBranch + fmt.Sprintf(" AND (tt.ProspectID LIKE '%%%s%%' OR tt.IDNumber LIKE '%%%s%%' OR tt.LegalName LIKE '%%%s%%')", search, search, search)
+		filter = filterBranch + fmt.Sprintf(" AND %s", qSearch)
 	}
 
 	if pagination != nil {
@@ -2047,17 +2110,7 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		SELECT
 		COUNT(tt.ProspectID) AS totalRow
 		FROM
-		(
-			SELECT
-			cb.BranchID,
-			tm.ProspectID,
-			tm.lob,
-			tm.created_at,
-			tst.activity,
-			tst.source_decision,
-			tst.decision,
-			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+		(SELECT tm.ProspectID
 		FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -2072,7 +2125,7 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-		) AS tt %s`, filter)).Scan(&row).Error; err != nil {
+		%s) AS tt`, filter)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -2220,7 +2273,12 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		cae.City AS EmergencyCity,
 		cae.AreaPhone AS EmergencyAreaPhone,
 		cae.Phone AS EmergencyPhone,
-		tce.IndustryTypeID
+		tce.IndustryTypeID,
+		tak.UrlFormAkkk,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -2232,6 +2290,9 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN (
 		  SELECT
 			ProspectID,
@@ -2389,7 +2450,7 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt %s ORDER BY tt.created_at DESC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
+		 %s) AS tt ORDER BY tt.created_at DESC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
 		return
 	}
 
@@ -2440,6 +2501,14 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 			return err
 		}
 
+		// if stop insert trx_akkk
+		if trxStatus.Activity == constant.ACTIVITY_STOP {
+			trxAkkk := entity.TrxAkkk{
+				ProspectID: trxStatus.ProspectID,
+			}
+			tx.Create(&trxAkkk)
+		}
+
 		return nil
 	})
 }
@@ -2458,6 +2527,11 @@ func (r repoHandler) ProcessReturnOrder(prospectID string, trxStatus entity.TrxS
 
 		// truncate the order from trx_details
 		if err := tx.Where("ProspectID = ?", prospectID).Delete(&trxDetail).Error; err != nil {
+			return err
+		}
+
+		// truncate the order from trx_deviasi
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&entity.TrxDeviasi{}).Error; err != nil {
 			return err
 		}
 
@@ -2544,6 +2618,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		query          string
 		alias          string
 		getRegion      []entity.RegionBranch
+		encrypted      entity.EncryptString
 	)
 
 	alias = req.Alias
@@ -2573,19 +2648,23 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 			if userAllRegion {
 				filterBranch += ""
 			} else {
-				filterBranch += "WHERE tt.BranchID IN (" + extractBranchIDUser + ")"
+				filterBranch += "WHERE tm.BranchID IN (" + extractBranchIDUser + ")"
 			}
 		} else {
 			filterBranch += ""
 			if req.BranchID != "999" {
-				filterBranch += "WHERE tt.BranchID = '" + req.BranchID + "'"
+				filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
 			}
 		}
 	} else {
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
 	}
 
-	filter = utils.GenerateFilter(req.Search, filterBranch, rangeDays)
+	if req.Search != "" {
+		encrypted, _ = r.EncryptString(req.Search)
+	}
+
+	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays, "")
 
 	// Filter By
 	if req.Filter != "" {
@@ -2594,21 +2673,21 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		)
 		switch req.Filter {
 		case constant.DECISION_APPROVE:
-			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s' AND tt.approval_source_decision='%s'", constant.DB_DECISION_APR, constant.STATUS_FINAL, alias)
+			query = fmt.Sprintf(" AND tst.decision = '%s' AND tst.status_process='%s' AND has.source_decision='%s'", constant.DB_DECISION_APR, constant.STATUS_FINAL, alias)
 
 		case constant.DECISION_REJECT:
 
-			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s' AND tt.approval_source_decision='%s'", constant.DB_DECISION_REJECT, constant.STATUS_FINAL, alias)
+			query = fmt.Sprintf(" AND tst.decision = '%s' AND tst.status_process='%s' AND has.source_decision='%s'", constant.DB_DECISION_REJECT, constant.STATUS_FINAL, alias)
 
 		case constant.DECISION_CANCEL:
-			query = fmt.Sprintf(" AND tt.decision = '%s' AND tt.status_process='%s' AND tt.approval_source_decision='%s'", constant.DB_DECISION_CANCEL, constant.STATUS_FINAL, alias)
+			query = fmt.Sprintf(" AND tst.decision = '%s' AND tst.status_process='%s' AND has.source_decision='%s'", constant.DB_DECISION_CANCEL, constant.STATUS_FINAL, alias)
 
 		case constant.NEED_DECISION:
 			activity = constant.ACTIVITY_UNPROCESS
-			query = fmt.Sprintf(" AND tt.activity= '%s' AND tt.decision= '%s' AND tt.source_decision = '%s'", activity, constant.DB_DECISION_CREDIT_PROCESS, alias)
+			query = fmt.Sprintf(" AND tst.activity= '%s' AND tst.decision= '%s' AND tst.source_decision = '%s'", activity, constant.DB_DECISION_CREDIT_PROCESS, alias)
 		}
 	} else {
-		query = fmt.Sprintf(" AND (tt.next_step = '%s' OR tt.approval_source_decision='%s')", alias, alias)
+		query = fmt.Sprintf(" AND (has.next_step = '%s' OR has.source_decision='%s')", alias, alias)
 	}
 
 	filter = filter + query
@@ -2629,24 +2708,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		SELECT
 		COUNT(tt.ProspectID) AS totalRow
 		FROM
-		(
-			SELECT
-			cb.BranchID,
-			tm.ProspectID,
-			tm.lob,
-			tm.created_at,
-			tst.activity,
-			tst.source_decision,
-			tst.status_process,
-			tst.decision,
-			tcd.final_approval,
-			tcd.decision_by,
-			has.next_step,
-			has.decision AS approval_decision,
-			has.source_decision AS approval_source_decision,
-			tcd.decision as ca_decision,
-			scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-			scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName
+		(SELECT tm.ProspectID
 		FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -2686,7 +2748,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		  FROM
 			trx_ca_decision WITH (nolock)
 		) tcd ON tm.ProspectID = tcd.ProspectID
-		) AS tt %s`, alias, alias, filter)).Scan(&row).Error; err != nil {
+		 %s) AS tt`, alias, alias, filter)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -2843,7 +2905,12 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		tak.ScsScore,
 		tak.ScsStatus,
 		tdb.BiroCustomerResult,
-		tdb.BiroSpouseResult
+		tdb.BiroSpouseResult,
+		tak.UrlFormAkkk,
+		tde.deviasi_id,
+		mkd.deskripsi AS deviasi_description,
+		'REJECT' AS deviasi_decision,
+		tde.reason AS deviasi_reason
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -2857,6 +2924,8 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		OUTER APPLY (
 			SELECT
 			  TOP 1 *
@@ -3040,7 +3109,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	) AS tt %s ORDER BY tt.created_at DESC %s`, alias, alias, alias, alias, filter, filterPaginate)).Scan(&data).Error; err != nil {
+	 %s) AS tt ORDER BY tt.created_at DESC %s`, alias, alias, alias, alias, filter, filterPaginate)).Scan(&data).Error; err != nil {
 		return
 	}
 
@@ -3400,6 +3469,40 @@ func (r repoHandler) GetMappingClusterBranch(req request.ReqListMappingClusterBr
 	return
 }
 
+func (r repoHandler) SaveWorker(trxworker entity.TrxWorker) (err error) {
+	err = r.losDB.Create(&trxworker).Error
+	return
+}
+
+func (r repoHandler) SaveUrlFormAKKK(prospectID, urlFormAKKK string) (err error) {
+
+	var (
+		data entity.TrxAkkk
+		x    sql.TxOptions
+	)
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	result := db.Model(&data).Where("ProspectID = ?", prospectID).Updates(entity.TrxAkkk{
+		UrlFormAkkk: urlFormAKKK,
+	})
+
+	if err = result.Error; err != nil {
+		return
+	}
+
+	if result.RowsAffected == 0 {
+		err = errors.New("RowsAffected 0")
+	}
+	return
+}
+
 func (r repoHandler) GetMappingClusterChangeLog(pagination interface{}) (data []entity.MappingClusterChangeLog, rowTotal int, err error) {
 	var (
 		filterPaginate string
@@ -3452,5 +3555,21 @@ func (r repoHandler) GetMappingClusterChangeLog(pagination interface{}) (data []
 	if len(data) == 0 {
 		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
 	}
+	return
+}
+
+func (r repoHandler) EncryptString(data string) (encrypted entity.EncryptString, err error) {
+
+	var regexpPpid = regexp.MustCompile(`SAL-|NE-`)
+
+	// check if data is not ProspectID
+	if data != "" && !regexpPpid.MatchString(data) {
+		if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS encrypt`, data)).Scan(&encrypted).Error; err != nil {
+			return
+		}
+	} else {
+		encrypted.Encrypt = data
+	}
+
 	return
 }

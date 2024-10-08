@@ -16,6 +16,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
@@ -49,18 +50,28 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 	}
 }
 
-func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, married bool, accessToken string) (respFiltering response.Filtering, err error) {
+func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, married bool, accessToken string, hrisAccessToken string) (respFiltering response.Filtering, err error) {
 
 	var (
-		customer             []request.SpouseDupcheck
-		dataCustomer         []response.SpDupCekCustomerByID
-		blackList            response.UsecaseApi
-		sp                   response.SpDupCekCustomerByID
-		isBlacklist          bool
-		resPefindo           response.PefindoResult
-		reqPefindo           request.Pefindo
-		trxDetailBiro        []entity.TrxDetailBiro
-		respFilteringPefindo response.Filtering
+		customer                  []request.SpouseDupcheck
+		dataCustomer              []response.SpDupCekCustomerByID
+		blackList                 response.UsecaseApi
+		sp                        response.SpDupCekCustomerByID
+		isBlacklist               bool
+		resPefindo                response.PefindoResult
+		reqPefindo                request.Pefindo
+		trxDetailBiro             []entity.TrxDetailBiro
+		respFilteringPefindo      response.Filtering
+		resCMO                    response.EmployeeCMOResponse
+		resFPD                    response.FpdCMOResponse
+		bpkbName                  bool
+		clusterCmo                string
+		savedCluster              string
+		useDefaultCluster         bool
+		entityTransactionCMOnoFPD entity.TrxCmoNoFPD
+		respRrdDate               string
+		monthsDiff                int
+		expiredContractConfig     entity.AppConfig
 	)
 
 	requestID := ctx.Value(echo.HeaderXRequestID).(string)
@@ -95,7 +106,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 			entityFiltering.Reason = blackList.Reason
 			entityFiltering.IsBlacklist = 1
 
-			err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro)
+			err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD)
 
 			return
 		}
@@ -134,22 +145,96 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		mainCustomer.CustomerStatusKMB = constant.STATUS_KONSUMEN_NEW
 	}
 
+	/* Process Get Cluster based on CMO_ID starts here */
+
+	resCMO, err = u.usecase.GetEmployeeData(ctx, req.CMOID, accessToken, hrisAccessToken)
+	if err != nil {
+		return
+	}
+
+	if resCMO.CMOCategory == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - CMO_ID " + req.CMOID + " not found on HRIS API")
+		return
+	}
+
+	bpkbName = strings.Contains(os.Getenv("NAMA_SAMA"), req.BPKBName)
+	bpkbString := "NAMA BEDA"
+	defaultCluster := constant.CLUSTER_C
+	if bpkbName {
+		bpkbString = "NAMA SAMA"
+		defaultCluster = constant.CLUSTER_B
+	}
+
+	if resCMO.CMOCategory == constant.CMO_BARU {
+		clusterCmo = defaultCluster
+		// set cluster menggunakan Default Cluster selama 3 bulan, terhitung sejak bulan join_date nya
+		useDefaultCluster = true
+	} else {
+		// Mendapatkan value FPD dari masing-masing jenis BPKB
+		resFPD, err = u.usecase.GetFpdCMO(ctx, req.CMOID, bpkbString, accessToken)
+		if err != nil {
+			return
+		}
+
+		if !resFPD.FpdExist {
+			clusterCmo = defaultCluster
+			// set cluster menggunakan Default Cluster selama 3 bulan, terhitung sejak tanggal hit filtering nya (assume: today)
+			useDefaultCluster = true
+		} else {
+			// Check Cluster
+			var mappingFpdCluster entity.MasterMappingFpdCluster
+			mappingFpdCluster, err = u.repository.MasterMappingFpdCluster(resFPD.CmoFpd)
+			if err != nil {
+				return
+			}
+
+			if mappingFpdCluster.Cluster == "" {
+				clusterCmo = defaultCluster
+				// set cluster menggunakan Default Cluster selama 3 bulan, terhitung sejak tanggal hit filtering nya (assume: today)
+				useDefaultCluster = true
+			} else {
+				clusterCmo = mappingFpdCluster.Cluster
+			}
+		}
+	}
+
+	if useDefaultCluster == true {
+		savedCluster, entityTransactionCMOnoFPD, err = u.usecase.CheckCmoNoFPD(req.ProspectID, req.CMOID, resCMO.CMOCategory, resCMO.JoinDate, clusterCmo, bpkbString)
+		if err != nil {
+			return
+		}
+		if savedCluster != "" {
+			clusterCmo = savedCluster
+		}
+	}
+
+	entityFiltering.CMOID = req.CMOID
+	entityFiltering.CMOJoinDate = resCMO.JoinDate
+	entityFiltering.CMOCategory = resCMO.CMOCategory
+	entityFiltering.CMOFPD = resFPD.CmoFpd
+	entityFiltering.CMOAccSales = resFPD.CmoAccSales
+	entityFiltering.CMOCluster = clusterCmo
+
+	/* Process Get Cluster based on CMO_ID ends here */
+
+	primePriority, _ := utils.ItemExists(mainCustomer.CustomerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
+
 	// hit ke pefindo
-	respFilteringPefindo, resPefindo, trxDetailBiro, err = u.usecase.FilteringPefindo(ctx, reqPefindo, mainCustomer.CustomerStatus, accessToken)
+	respFilteringPefindo, resPefindo, trxDetailBiro, err = u.usecase.FilteringPefindo(ctx, reqPefindo, mainCustomer.CustomerStatus, clusterCmo, primePriority, accessToken)
 	if err != nil {
 		return
 	}
 
 	respFiltering = respFilteringPefindo
+	respFiltering.ClusterCMO = clusterCmo
 
 	respFiltering.ProspectID = req.ProspectID
 	respFiltering.CustomerSegment = mainCustomer.CustomerSegment
 	respFiltering.CustomerStatusKMB = mainCustomer.CustomerStatusKMB
 
 	entityFiltering.CustomerStatusKMB = mainCustomer.CustomerStatusKMB
-	entityFiltering.Cluster = respFiltering.Cluster
 
-	primePriority, _ := utils.ItemExists(mainCustomer.CustomerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
+	entityFiltering.Cluster = respFiltering.Cluster
 
 	if primePriority && (mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_AO || mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO) {
 		respFiltering.Code = blackList.Code
@@ -158,6 +243,36 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		respFiltering.NextProcess = true
 
 		entityFiltering.Cluster = constant.CLUSTER_PRIME_PRIORITY
+
+		if mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO {
+			if (mainCustomer.CustomerID != nil) && (mainCustomer.CustomerID.(string) != "") {
+				respRrdDate, monthsDiff, err = u.usecase.CheckLatestPaidInstallment(ctx, req.ProspectID, mainCustomer.CustomerID.(string), accessToken)
+				if err != nil {
+					return
+				}
+
+				// Get config expired_contract
+				expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+				if err != nil {
+					err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
+					return
+				}
+
+				var configValueExpContract response.ExpiredContractConfig
+				json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+
+				if configValueExpContract.Data.ExpiredContractCheckEnabled && !(monthsDiff <= configValueExpContract.Data.ExpiredContractMaxMonths) {
+					// Jalur mirip seperti customer segment "REGULAR"
+					respFiltering.Code = respFilteringPefindo.Code
+					respFiltering.Decision = respFilteringPefindo.Decision
+					respFiltering.Reason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + respFilteringPefindo.Reason
+					respFiltering.NextProcess = respFilteringPefindo.NextProcess
+				}
+			} else {
+				err = errors.New(constant.ERROR_BAD_REQUEST + " - Customer RO then CustomerID should not be empty")
+				return
+			}
+		}
 	}
 
 	// save transaction
@@ -166,12 +281,18 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	entityFiltering.CustomerSegment = mainCustomer.CustomerSegment
 	entityFiltering.CustomerID = mainCustomer.CustomerID
 
+	if respRrdDate == "" {
+		entityFiltering.RrdDate = nil
+	} else {
+		entityFiltering.RrdDate = respRrdDate
+	}
+
 	if respFiltering.NextProcess {
 		entityFiltering.NextProcess = 1
 	}
 
 	// ada data pefindo
-	if resPefindo.Score != "" && resPefindo.Category != nil {
+	if resPefindo.Score != "" && resPefindo.Category != nil && getReasonCategoryRoman(resPefindo.Category) != "" {
 		entityFiltering.MaxOverdueBiro = resPefindo.MaxOverdue
 		entityFiltering.MaxOverdueLast12monthsBiro = resPefindo.MaxOverdueLast12Months
 		entityFiltering.ScoreBiro = resPefindo.Score
@@ -200,12 +321,12 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	entityFiltering.Reason = respFiltering.Reason
 
-	err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro)
+	err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD)
 
 	return
 }
 
-func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, customerStatus, accessToken string) (data response.Filtering, responsePefindo response.PefindoResult, trxDetailBiro []entity.TrxDetailBiro, err error) {
+func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, customerStatus, clusterCMO string, isPrimePriority bool, accessToken string) (data response.Filtering, responsePefindo response.PefindoResult, trxDetailBiro []entity.TrxDetailBiro, err error) {
 
 	timeOut, _ := strconv.Atoi(os.Getenv("DUPCHECK_API_TIMEOUT"))
 
@@ -299,7 +420,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 		}
 
 		if checkPefindo.Code == "200" && pefindoResult.Score != constant.PEFINDO_UNSCORE {
-			if pefindoResult.Category != nil {
+			if pefindoResult.Category != nil && getReasonCategoryRoman(pefindoResult.Category) != "" {
 				if !bpkbName {
 					if pefindoResult.MaxOverdueLast12MonthsKORules != nil {
 						if checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12 {
@@ -317,13 +438,13 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 								data.Code = constant.NAMA_BEDA_CURRENT_OVD_OVER_LIMIT_CODE
 								data.CustomerStatus = customerStatus
 								data.Decision = constant.DECISION_REJECT
-								data.Reason = fmt.Sprintf("NAMA BEDA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+								data.Reason = fmt.Sprintf("NAMA BEDA %s & %s", getReasonCategoryRoman(pefindoResult.Category), constant.REJECT_REASON_OVD_PEFINDO)
 							}
 						} else {
 							data.Code = constant.NAMA_BEDA_12_OVD_OVER_LIMIT_CODE
 							data.CustomerStatus = customerStatus
 							data.Decision = constant.DECISION_REJECT
-							data.Reason = fmt.Sprintf("NAMA BEDA %s & OVD 12 Bulan Terakhir > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
+							data.Reason = fmt.Sprintf("NAMA BEDA %s & %s", getReasonCategoryRoman(pefindoResult.Category), constant.REJECT_REASON_OVD_PEFINDO)
 						}
 					} else {
 						data.Code = constant.NAMA_BEDA_12_OVD_NULL_CODE
@@ -331,7 +452,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 						data.Decision = constant.DECISION_PASS
 						data.Reason = fmt.Sprintf("NAMA BEDA %s & OVD 12 Bulan Terakhir Null", getReasonCategoryRoman(pefindoResult.Category))
 					}
-				} else if bpkbName {
+				} else {
 					if pefindoResult.MaxOverdueLast12MonthsKORules != nil {
 						if checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12 {
 							if pefindoResult.MaxOverdueKORules == nil {
@@ -347,7 +468,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 							} else if checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) > constant.PBK_OVD_CURRENT {
 								data.Code = constant.NAMA_SAMA_CURRENT_OVD_OVER_LIMIT_CODE
 								data.CustomerStatus = customerStatus
-								data.Reason = fmt.Sprintf("NAMA SAMA %s & PBK OVD 12 Bulan Terakhir <= %d & OVD Current > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12, constant.PBK_OVD_CURRENT)
+								data.Reason = fmt.Sprintf("NAMA SAMA %s & %s", getReasonCategoryRoman(pefindoResult.Category), constant.REJECT_REASON_OVD_PEFINDO)
 
 								data.Decision = func() string {
 									if checkNullCategory(pefindoResult.Category) == 3 {
@@ -359,7 +480,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 						} else {
 							data.Code = constant.NAMA_SAMA_12_OVD_OVER_LIMIT_CODE
 							data.CustomerStatus = customerStatus
-							data.Reason = fmt.Sprintf("NAMA SAMA %s & OVD 12 Bulan Terakhir > %d", getReasonCategoryRoman(pefindoResult.Category), constant.PBK_OVD_LAST_12)
+							data.Reason = fmt.Sprintf("NAMA SAMA %s & %s", getReasonCategoryRoman(pefindoResult.Category), constant.REJECT_REASON_OVD_PEFINDO)
 
 							data.Decision = func() string {
 								if checkNullCategory(pefindoResult.Category) == 3 {
@@ -562,11 +683,11 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 
 				// Reason Baki Debet
 				if (data.Decision == constant.DECISION_REJECT && data.NextProcess) || isReasonBakiDebet {
-					if pefindoResult.TotalBakiDebetNonAgunan <= 3000000 {
-						data.Reason = fmt.Sprintf("%s %s & Baki Debet <= 3 Juta", bpkbString, getReasonCategoryRoman(pefindoResult.Category))
+					if pefindoResult.TotalBakiDebetNonAgunan <= constant.RANGE_CLUSTER_BAKI_DEBET_REJECT {
+						data.Reason = fmt.Sprintf("%s %s %s", bpkbString, getReasonCategoryRoman(pefindoResult.Category), constant.WORDING_BAKIDEBET_LOWERTHAN_THRESHOLD)
 					}
-					if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
-						data.Reason = fmt.Sprintf("%s %s & Baki Debet > 3 - 20 Juta", bpkbString, getReasonCategoryRoman(pefindoResult.Category))
+					if pefindoResult.TotalBakiDebetNonAgunan > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET {
+						data.Reason = fmt.Sprintf("%s %s %s", bpkbString, getReasonCategoryRoman(pefindoResult.Category), constant.WORDING_BAKIDEBET_HIGHERTHAN_THRESHOLD)
 					}
 				}
 
@@ -574,16 +695,11 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 				if (pefindoResult.MaxOverdueLast12Months != nil && checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12Months) > constant.PBK_OVD_LAST_12) ||
 					(pefindoResult.MaxOverdue != nil && checkNullMaxOverdue(pefindoResult.MaxOverdue) > constant.PBK_OVD_CURRENT) {
 
-					if pefindoResult.TotalBakiDebetNonAgunan > 3000000 && pefindoResult.TotalBakiDebetNonAgunan <= constant.BAKI_DEBET && strings.Contains("Cluster E Cluster F", mappingCluster.Cluster) {
-						data.Reason = fmt.Sprintf("%s %s & Baki Debet > 3 - 20 Juta & Tidak dapat dibiayai", bpkbString, getReasonCategoryRoman(pefindoResult.Category))
-						data.NextProcess = false
-						data.Decision = constant.DECISION_REJECT
-					}
+					// -- Update CR 2024-09-12: change `Cluster E Cluster F`` from REJECT to PASS -- //
 
 					// Reason ovd include all
-					if !bpkbName && (pefindoResult.MaxOverdueLast12MonthsKORules != nil && checkNullMaxOverdueLast12Months(pefindoResult.MaxOverdueLast12MonthsKORules) <= constant.PBK_OVD_LAST_12) &&
-						(pefindoResult.MaxOverdueKORules != nil && checkNullMaxOverdue(pefindoResult.MaxOverdueKORules) <= constant.PBK_OVD_CURRENT) {
-						data.Reason = fmt.Sprintf("%s & Baki Debet > Threshold", bpkbString)
+					if data.NextProcess && !bpkbName {
+						data.Reason = fmt.Sprintf("%s & %s", bpkbString, constant.REJECT_REASON_OVD_PEFINDO)
 						data.NextProcess = false
 						data.Decision = constant.DECISION_REJECT
 					}
@@ -830,9 +946,9 @@ func (u usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerB
 	return
 }
 
-func (u usecase) SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro) (err error) {
+func (u usecase) SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, transactionCMOnoFPD entity.TrxCmoNoFPD) (err error) {
 
-	err = u.repository.SaveFiltering(transaction, trxDetailBiro)
+	err = u.repository.SaveFiltering(transaction, trxDetailBiro, transactionCMOnoFPD)
 
 	if err != nil {
 
@@ -929,4 +1045,329 @@ func getReasonCategoryRoman(category interface{}) string {
 	default:
 		return ""
 	}
+}
+
+func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessToken string, hrisAccessToken string) (data response.EmployeeCMOResponse, err error) {
+
+	var (
+		dataEmployee        response.EmployeeCareerHistory
+		respGetEmployeeData response.GetEmployeeByID
+		today               string
+		parsedTime          time.Time
+		todayDate           time.Time
+		givenDate           time.Time
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	header := map[string]string{
+		"Authorization": "Bearer " + hrisAccessToken,
+	}
+
+	payload := request.ReqHrisCareerHistory{
+		Limit:     "100",
+		Page:      1,
+		Column:    "real_career_date",
+		Ascending: false,
+		Query:     "employee_id==" + employeeID,
+	}
+
+	param, _ := json.Marshal(payload)
+	getDataEmployee, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), param, header, constant.METHOD_POST, false, 0, timeout, "", accessToken)
+
+	if getDataEmployee.StatusCode() == 504 || getDataEmployee.StatusCode() == 502 {
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get Employee Data Timeout")
+		return
+	}
+
+	if getDataEmployee.StatusCode() != 200 && getDataEmployee.StatusCode() != 504 && getDataEmployee.StatusCode() != 502 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Employee Data Error")
+		return
+	}
+
+	if err == nil && getDataEmployee.StatusCode() == 200 {
+		json.Unmarshal([]byte(jsoniter.Get(getDataEmployee.Body()).ToString()), &respGetEmployeeData)
+
+		isCmoActive := false
+		if len(respGetEmployeeData.Data) > 0 && respGetEmployeeData.Data[0].PositionGroupCode == "AO" {
+			isCmoActive = true
+		}
+
+		var lastIndex int = -1
+		// Cek dulu apakah saat ini employee tersebut adalah berposisi sebagai "CMO"
+		if isCmoActive {
+			// Mencari index terakhir yang mengandung position_group_code "AO"
+			for i, emp := range respGetEmployeeData.Data {
+				if emp.PositionGroupCode == "AO" {
+					lastIndex = i
+				}
+			}
+		}
+
+		if lastIndex == -1 {
+			// Jika tidak ada data dengan position_group_code "AO"
+			data = response.EmployeeCMOResponse{}
+		} else {
+			dataEmployee = respGetEmployeeData.Data[lastIndex]
+			if dataEmployee.RealCareerDate == "" {
+				err = errors.New(constant.ERROR_UPSTREAM + " - RealCareerDate Empty")
+				return
+			}
+
+			parsedTime, err = time.Parse("2006-01-02T15:04:05", dataEmployee.RealCareerDate)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error Parse RealCareerDate")
+				return
+			}
+
+			dataEmployee.RealCareerDate = parsedTime.Format("2006-01-02")
+
+			today = time.Now().Format("2006-01-02")
+			// memvalidasi bulan+tahun yang diberikan tidak lebih besar dari bulan+tahun hari ini
+			err = utils.ValidateDiffMonthYear(dataEmployee.RealCareerDate, today)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error Validate MonthYear of RealCareerDate")
+				return
+			}
+
+			todayDate, err = time.Parse("2006-01-02", today)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error Parse todayDate")
+				return
+			}
+
+			givenDate, err = time.Parse("2006-01-02", dataEmployee.RealCareerDate)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error Parse givenDate")
+				return
+			}
+
+			diffOfMonths := utils.DiffInMonths(todayDate, givenDate)
+
+			cmoJoinedAge, _ := strconv.Atoi(os.Getenv("CMO_JOINED_AGE"))
+			var cmoCategory string = constant.CMO_BARU
+			if diffOfMonths > cmoJoinedAge {
+				cmoCategory = constant.CMO_LAMA
+			}
+
+			data = response.EmployeeCMOResponse{
+				EmployeeID:         dataEmployee.EmployeeID,
+				EmployeeName:       dataEmployee.EmployeeName,
+				EmployeeIDWithName: dataEmployee.EmployeeID + " - " + dataEmployee.EmployeeName,
+				JoinDate:           dataEmployee.RealCareerDate,
+				PositionGroupCode:  dataEmployee.PositionGroupCode,
+				PositionGroupName:  dataEmployee.PositionGroupName,
+				CMOCategory:        cmoCategory,
+			}
+		}
+	} else {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Get Employee Data Error")
+		return
+	}
+
+	return
+}
+
+func (u usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType string, accessToken string) (data response.FpdCMOResponse, err error) {
+	var (
+		respGetFPD response.GetFPDCmoByID
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	header := map[string]string{
+		"Authorization": accessToken,
+	}
+
+	lobID := constant.LOBID_KMB
+	cmoID := CmoID
+	endpointURL := fmt.Sprintf(os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=%d&cmo_id=%s", lobID, cmoID)
+
+	getDataFpd, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointURL, nil, header, constant.METHOD_GET, false, 0, timeout, "", accessToken)
+
+	if getDataFpd.StatusCode() == 504 || getDataFpd.StatusCode() == 502 {
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get FPD Data Timeout")
+		return
+	}
+
+	if getDataFpd.StatusCode() != 200 && getDataFpd.StatusCode() != 504 && getDataFpd.StatusCode() != 502 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get FPD Data Error")
+		return
+	}
+
+	if err == nil && getDataFpd.StatusCode() == 200 {
+		json.Unmarshal([]byte(jsoniter.Get(getDataFpd.Body()).ToString()), &respGetFPD)
+
+		// Mencari nilai fpd untuk bpkb_name_type "NAMA BEDA"
+		var fpdNamaBeda float64 = 0
+		var accSalesNamaBeda int = 0
+		for _, item := range respGetFPD.Data {
+			if item.BpkbNameType == "NAMA BEDA" {
+				fpdNamaBeda = item.Fpd
+				accSalesNamaBeda = item.AccSales
+				break
+			}
+		}
+
+		// Mencari nilai fpd untuk bpkb_name_type "NAMA SAMA"
+		var fpdNamaSama float64 = 0
+		var accSalesNamaSama int = 0
+		for _, item := range respGetFPD.Data {
+			if item.BpkbNameType == "NAMA SAMA" {
+				fpdNamaSama = item.Fpd
+				accSalesNamaSama = item.AccSales
+				break
+			}
+		}
+
+		if fpdNamaBeda <= 0 && accSalesNamaBeda <= 0 && fpdNamaSama <= 0 && accSalesNamaSama <= 0 {
+			// Ini pertanda CMO tidak punya SALES SAMA SEKALI,
+			// maka nantinya di usecase akan diarahkan ke Cluster Default sesuai jenis BPKBNameType nya,
+			// setelah itu dilakukan proses penyimpanan ke table "trx_cmo_no_fpd" sebagai data penampung rentang tanggal kapan hingga kapan CMO_ID tersebut diarahkan sebagai Default Cluster
+			data = response.FpdCMOResponse{}
+		} else {
+			if BPKBNameType == "NAMA BEDA" {
+				data = response.FpdCMOResponse{
+					FpdExist:    true,
+					CmoFpd:      fpdNamaBeda,
+					CmoAccSales: accSalesNamaBeda,
+				}
+			}
+
+			if BPKBNameType == "NAMA SAMA" {
+				data = response.FpdCMOResponse{
+					FpdExist:    true,
+					CmoFpd:      fpdNamaSama,
+					CmoAccSales: accSalesNamaSama,
+				}
+			}
+
+			if BPKBNameType != "NAMA BEDA" && BPKBNameType != "NAMA SAMA" {
+				data = response.FpdCMOResponse{}
+			}
+		}
+	} else {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Get FPD Data Error")
+		return
+	}
+
+	return
+}
+
+func (u usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory string, cmoJoinDate string, defaultCluster string, bpkbName string) (clusterCMOSaved string, entitySaveTrxNoFPd entity.TrxCmoNoFPD, err error) {
+	var (
+		today     string
+		todayTime time.Time
+	)
+
+	currentDate := time.Now().Format("2006-01-02")
+
+	if cmoCategory == constant.CMO_LAMA {
+		today = currentDate
+	} else {
+		today = cmoJoinDate
+	}
+
+	// Cek apakah CMO_ID sudah pernah tersimpan di dalam table `trx_cmo_no_fpd`
+	var TrxCmoNoFpd entity.TrxCmoNoFPD
+	TrxCmoNoFpd, err = u.repository.CheckCMONoFPD(cmoID, bpkbName)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Check CMO No FPD error")
+		return
+	}
+
+	clusterCMOSaved = "" // init data for default response
+	// Jika CMO_ID sudah ada
+	if TrxCmoNoFpd.CMOID != "" {
+		if currentDate >= TrxCmoNoFpd.DefaultClusterStartDate && currentDate <= TrxCmoNoFpd.DefaultClusterEndDate {
+			// CMO_ID sudah ada dan masih di dalam rentang tanggal `DefaultClusterStartDate` dan `DefaultClusterEndDate`
+			defaultCluster = TrxCmoNoFpd.DefaultCluster
+			clusterCMOSaved = defaultCluster
+		} else {
+			today = currentDate
+		}
+	}
+
+	if clusterCMOSaved == "" {
+		// Parsing tanggal hari ini ke dalam format time.Time
+		todayTime, err = time.Parse("2006-01-02", today)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - todayTime parse error")
+			return
+		}
+
+		// Menambahkan 3 bulan
+		defaultClusterMonthsDuration, _ := strconv.Atoi(os.Getenv("DEFAULT_CLUSTER_MONTHS_DURATION"))
+		threeMonthsLater := todayTime.AddDate(0, defaultClusterMonthsDuration, 0)
+		// Mengambil tanggal terakhir dari bulan tersebut
+		threeMonthsLater = time.Date(threeMonthsLater.Year(), threeMonthsLater.Month(), 0, 0, 0, 0, 0, threeMonthsLater.Location())
+		// Parsing threeMonthsLater ke dalam format "yyyy-mm-dd" sebagai string
+		threeMonthsLaterString := threeMonthsLater.Format("2006-01-02")
+
+		SaveTrxNoFPd := entity.TrxCmoNoFPD{
+			ProspectID:              prospectID,
+			BPKBName:                bpkbName,
+			CMOID:                   cmoID,
+			CmoCategory:             cmoCategory,
+			CmoJoinDate:             cmoJoinDate,
+			DefaultCluster:          defaultCluster,
+			DefaultClusterStartDate: today,
+			DefaultClusterEndDate:   threeMonthsLaterString,
+			CreatedAt:               time.Time{},
+		}
+
+		entitySaveTrxNoFPd = SaveTrxNoFPd
+	}
+
+	return
+}
+
+func (u usecase) CheckLatestPaidInstallment(ctx context.Context, prospectID string, customerID string, accessToken string) (respRrdDate string, monthsDiff int, err error) {
+	var (
+		resp                      *resty.Response
+		respLatestPaidInstallment response.LatestPaidInstallmentData
+		parsedRrddate             time.Time
+	)
+
+	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+customerID+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout")
+		return
+	}
+
+	if resp.StatusCode() != 200 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call LatestPaidInstallmentData Error")
+		return
+	}
+
+	if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &respLatestPaidInstallment); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal LatestPaidInstallmentData Error")
+		return
+	}
+
+	rrdDate := respLatestPaidInstallment.RRDDate
+	if rrdDate == "" {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Result LatestPaidInstallmentData rrd_date Empty String")
+		return
+	}
+
+	parsedRrddate, err = time.Parse(time.RFC3339, rrdDate)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of response rrd_date (" + rrdDate + ")")
+		return
+	}
+
+	respRrdDate = parsedRrddate.Format("2006-01-02")
+
+	currentDate := time.Now()
+
+	// calculate months difference of expired contract
+	monthsDiff, err = utils.PreciseMonthsDifference(parsedRrddate, currentDate)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Difference of months rrd_date and current_date is negative (-)")
+		return
+	}
+
+	return
 }

@@ -36,6 +36,8 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		trxFMFDupcheck    response.TrxFMF
 		trxDetailDupcheck []entity.TrxDetail
 		cbFound           bool
+		cmoCluster        string
+		mappingMaxDSR     entity.MasterMappingIncomeMaxDSR
 	)
 
 	// cek trx_master
@@ -191,11 +193,17 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		return
 	}
 
+	if clusterName, ok := filtering.CMOCluster.(string); ok {
+		cmoCluster = clusterName
+	} else {
+		cmoCluster = mappingCluster.Cluster
+	}
+
 	//  STEP 3 tenor 36
 	if reqMetrics.Apk.Tenor >= 36 {
 		var trxTenor response.UsecaseApi
 		if reqMetrics.Apk.Tenor == 36 {
-			trxTenor, err = u.usecase.RejectTenor36(mappingCluster.Cluster)
+			trxTenor, err = u.usecase.RejectTenor36(cmoCluster)
 			if err != nil {
 				return
 			}
@@ -217,7 +225,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 				SourceDecision: constant.SOURCE_DECISION_TENOR,
 				CreatedBy:      constant.SYSTEM_CREATED,
 				Reason:         trxTenor.Reason,
-				Info:           fmt.Sprintf("Cluster : %s", mappingCluster.Cluster),
+				Info:           fmt.Sprintf("Cluster : %s", cmoCluster),
 			})
 
 			resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, trxTenor.Reason)
@@ -237,7 +245,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 			NextStep:       constant.SOURCE_DECISION_DUPCHECK,
 			CreatedBy:      constant.SYSTEM_CREATED,
 			Reason:         trxTenor.Reason,
-			Info:           fmt.Sprintf("Cluster : %s", mappingCluster.Cluster),
+			Info:           fmt.Sprintf("Cluster : %s", cmoCluster),
 		})
 	}
 
@@ -273,6 +281,11 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		customerSegment = filtering.CustomerSegment.(string)
 	}
 
+	var numOfDependence int
+	if reqMetrics.CustomerPersonal.NumOfDependence != nil {
+		numOfDependence = *reqMetrics.CustomerPersonal.NumOfDependence
+	}
+
 	reqDupcheck = request.DupcheckApi{
 		ProspectID:            reqMetrics.Transaction.ProspectID,
 		BranchID:              reqMetrics.Transaction.BranchID,
@@ -289,7 +302,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		StaySinceYear:         reqMetrics.CustomerPersonal.StaySinceYear,
 		StaySinceMonth:        reqMetrics.CustomerPersonal.StaySinceMonth,
 		BirthDate:             reqMetrics.CustomerPersonal.BirthDate,
-		BirthPlace:            reqDupcheck.BirthPlace,
+		BirthPlace:            reqMetrics.CustomerPersonal.BirthPlace,
 		Tenor:                 reqMetrics.Apk.Tenor,
 		IDNumber:              reqMetrics.CustomerPersonal.IDNumber,
 		LegalName:             reqMetrics.CustomerPersonal.LegalName,
@@ -298,7 +311,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		RangkaNo:              reqMetrics.Item.NoChassis,
 		ManufactureYear:       reqMetrics.Item.ManufactureYear,
 		BPKBName:              reqMetrics.Item.BPKBName,
-		NumOfDependence:       reqDupcheck.NumOfDependence,
+		NumOfDependence:       numOfDependence,
 		DPAmount:              reqMetrics.Apk.DPAmount,
 		OTRPrice:              reqMetrics.Apk.OTR,
 		NTF:                   reqMetrics.Apk.NTF,
@@ -310,6 +323,9 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		CustomerSegment:       customerSegment,
 		Dealer:                reqMetrics.Apk.Dealer,
 		AdminFee:              reqMetrics.Apk.AdminFee,
+		CMOCluster:            cmoCluster,
+		AF:                    reqMetrics.Apk.AF,
+		Filtering:             filtering,
 	}
 
 	if reqMetrics.CustomerSpouse != nil {
@@ -344,10 +360,8 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 
 	reqDupcheck.Cluster = mappingCluster.Cluster
 
-	mappingMaxDSR := entity.MasterMappingMaxDSR{
-		Cluster: mappingCluster.Cluster,
-	}
-	mappingMaxDSR, err = u.repository.MasterMappingMaxDSR(mappingMaxDSR)
+	totalIncome := reqDupcheck.MonthlyFixedIncome + reqDupcheck.MonthlyVariableIncome + reqDupcheck.SpouseIncome
+	mappingMaxDSR, err = u.repository.MasterMappingIncomeMaxDSR(totalIncome)
 	if err != nil {
 		if err.Error() != constant.DATA_NOT_FOUND {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Max DSR error")
@@ -506,7 +520,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		scoreBiro = filtering.ScoreBiro.(string)
 	}
 
-	responseScs, metricsScs, pefindoIDX, err := u.usecase.Scorepro(ctx, reqMetrics, scoreBiro, customerSegment, dupcheckData, accessToken)
+	responseScs, metricsScs, pefindoIDX, err := u.usecase.Scorepro(ctx, reqMetrics, scoreBiro, customerSegment, dupcheckData, accessToken, filtering)
 	if err != nil {
 		return
 	}
@@ -517,20 +531,50 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		ScsScore:  responseScs.ScoreResult,
 	}
 
-	if metricsScs.Result == constant.DECISION_REJECT {
+	// handling flow deviasi scorepro
+	if metricsScs.IsDeviasi {
 
-		addDetail := entity.TrxDetail{
+		// insert deviasi
+		trxFMF.TrxDeviasi = entity.TrxDeviasi{
+			ProspectID: reqMetrics.Transaction.ProspectID,
+			DeviasiID:  constant.CODE_DEVIASI_SCOREPRO,
+			Reason:     metricsScs.Reason,
+		}
+
+		// detail scorepro
+		details = append(details, entity.TrxDetail{
 			ProspectID:     reqMetrics.Transaction.ProspectID,
-			StatusProcess:  constant.STATUS_FINAL,
-			Activity:       constant.ACTIVITY_STOP,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
 			Decision:       constant.DB_DECISION_REJECT,
 			RuleCode:       metricsScs.Code,
 			SourceDecision: metricsScs.Source,
 			Info:           metricsScs.Info,
 			Reason:         responseScs.ScoreResult,
-		}
+			NextStep:       constant.SOURCE_DECISION_DEVIASI,
+		})
 
-		details = append(details, addDetail)
+		// detail deviasi
+		details = append(details, entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
+			Decision:       constant.DB_DECISION_PASS,
+			RuleCode:       constant.RULE_CODE_DEVIASI_SCOREPRO,
+			SourceDecision: constant.SOURCE_DECISION_DEVIASI,
+			Reason:         metricsScs.Reason,
+			NextStep:       constant.SOURCE_DECISION_CA,
+		})
+
+		// detail ca
+		details = append(details, entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_UNPROCESS,
+			Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+			RuleCode:       constant.CODE_CREDIT_COMMITTEE,
+			SourceDecision: constant.SOURCE_DECISION_CA,
+		})
 
 		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, metricsScs.Reason)
 		if err != nil {
@@ -538,19 +582,43 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		}
 
 		return
-	}
 
-	details = append(details, entity.TrxDetail{
-		ProspectID:     reqMetrics.Transaction.ProspectID,
-		StatusProcess:  constant.STATUS_ONPROCESS,
-		Activity:       constant.ACTIVITY_PROCESS,
-		Decision:       constant.DB_DECISION_PASS,
-		RuleCode:       metricsScs.Code,
-		SourceDecision: metricsScs.Source,
-		Info:           metricsScs.Info,
-		Reason:         responseScs.ScoreResult,
-		NextStep:       constant.SOURCE_DECISION_DSR,
-	})
+	} else {
+		if metricsScs.Result == constant.DECISION_REJECT {
+
+			addDetail := entity.TrxDetail{
+				ProspectID:     reqMetrics.Transaction.ProspectID,
+				StatusProcess:  constant.STATUS_FINAL,
+				Activity:       constant.ACTIVITY_STOP,
+				Decision:       constant.DB_DECISION_REJECT,
+				RuleCode:       metricsScs.Code,
+				SourceDecision: metricsScs.Source,
+				Info:           metricsScs.Info,
+				Reason:         responseScs.ScoreResult,
+			}
+
+			details = append(details, addDetail)
+
+			resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, metricsScs.Reason)
+			if err != nil {
+				return
+			}
+
+			return
+		}
+
+		details = append(details, entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
+			Decision:       constant.DB_DECISION_PASS,
+			RuleCode:       metricsScs.Code,
+			SourceDecision: metricsScs.Source,
+			Info:           metricsScs.Info,
+			Reason:         responseScs.ScoreResult,
+			NextStep:       constant.SOURCE_DECISION_DSR,
+		})
+	}
 
 	var totalInstallmentPBK float64
 	if filtering.TotalInstallmentAmountBiro != nil {
@@ -562,7 +630,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	}
 
 	income := reqDupcheck.MonthlyFixedIncome + reqDupcheck.MonthlyVariableIncome + reqDupcheck.SpouseIncome
-	metricsTotalDsrFmfPbk, trxFMFTotalDsrFmfPbk, err := u.usecase.TotalDsrFmfPbk(ctx, income, reqMetrics.Apk.InstallmentAmount, totalInstallmentPBK, reqMetrics.Transaction.ProspectID, customerSegment, accessToken, dupcheckData, configValue)
+	metricsTotalDsrFmfPbk, trxFMFTotalDsrFmfPbk, err := u.usecase.TotalDsrFmfPbk(ctx, income, reqMetrics.Apk.InstallmentAmount, totalInstallmentPBK, reqMetrics.Transaction.ProspectID, customerSegment, accessToken, dupcheckData, configValue, filtering)
 	if err != nil {
 		return
 	}
@@ -582,20 +650,48 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		trxFMF.LatestInstallmentAmount = trxFMFTotalDsrFmfPbk.LatestInstallmentAmount
 	}
 
-	if metricsTotalDsrFmfPbk.Result == constant.DECISION_REJECT {
+	if metricsTotalDsrFmfPbk.IsDeviasi {
+		// insert deviasi
+		trxFMF.TrxDeviasi = entity.TrxDeviasi{
+			ProspectID: reqMetrics.Transaction.ProspectID,
+			DeviasiID:  constant.CODE_DEVIASI_DSR,
+			Reason:     metricsTotalDsrFmfPbk.Reason,
+		}
 
-		addDetail := entity.TrxDetail{
+		// detail TotalDsrFmfPbk
+		details = append(details, entity.TrxDetail{
 			ProspectID:     reqMetrics.Transaction.ProspectID,
-			StatusProcess:  constant.STATUS_FINAL,
-			Activity:       constant.ACTIVITY_STOP,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
 			Decision:       constant.DB_DECISION_REJECT,
 			RuleCode:       metricsTotalDsrFmfPbk.Code,
 			SourceDecision: metricsTotalDsrFmfPbk.SourceDecision,
 			Info:           string(utils.SafeEncoding(infoTotalDSR)),
 			Reason:         metricsTotalDsrFmfPbk.Reason,
-		}
+			NextStep:       constant.SOURCE_DECISION_DEVIASI,
+		})
 
-		details = append(details, addDetail)
+		// detail deviasi
+		details = append(details, entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
+			Decision:       constant.DB_DECISION_PASS,
+			RuleCode:       constant.RULE_CODE_DEVIASI_DSR,
+			SourceDecision: constant.SOURCE_DECISION_DEVIASI,
+			Reason:         metricsTotalDsrFmfPbk.Reason,
+			NextStep:       constant.SOURCE_DECISION_CA,
+		})
+
+		// detail ca
+		details = append(details, entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_UNPROCESS,
+			Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+			RuleCode:       constant.CODE_CREDIT_COMMITTEE,
+			SourceDecision: constant.SOURCE_DECISION_CA,
+		})
 
 		resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, metricsTotalDsrFmfPbk.Reason)
 		if err != nil {
@@ -603,19 +699,42 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		}
 
 		return
-	}
+	} else {
+		if metricsTotalDsrFmfPbk.Result == constant.DECISION_REJECT {
 
-	details = append(details, entity.TrxDetail{
-		ProspectID:     reqMetrics.Transaction.ProspectID,
-		StatusProcess:  constant.STATUS_ONPROCESS,
-		Activity:       constant.ACTIVITY_PROCESS,
-		Decision:       constant.DB_DECISION_PASS,
-		RuleCode:       metricsTotalDsrFmfPbk.Code,
-		SourceDecision: metricsTotalDsrFmfPbk.SourceDecision,
-		Info:           string(utils.SafeEncoding(infoTotalDSR)),
-		Reason:         metricsTotalDsrFmfPbk.Reason,
-		NextStep:       constant.SOURCE_DECISION_ELABORATE_LTV,
-	})
+			addDetail := entity.TrxDetail{
+				ProspectID:     reqMetrics.Transaction.ProspectID,
+				StatusProcess:  constant.STATUS_FINAL,
+				Activity:       constant.ACTIVITY_STOP,
+				Decision:       constant.DB_DECISION_REJECT,
+				RuleCode:       metricsTotalDsrFmfPbk.Code,
+				SourceDecision: metricsTotalDsrFmfPbk.SourceDecision,
+				Info:           string(utils.SafeEncoding(infoTotalDSR)),
+				Reason:         metricsTotalDsrFmfPbk.Reason,
+			}
+
+			details = append(details, addDetail)
+
+			resultMetrics, err = u.usecase.SaveTransaction(countTrx, reqMetrics, trxPrescreening, trxFMF, details, metricsTotalDsrFmfPbk.Reason)
+			if err != nil {
+				return
+			}
+
+			return
+		}
+
+		details = append(details, entity.TrxDetail{
+			ProspectID:     reqMetrics.Transaction.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
+			Decision:       constant.DB_DECISION_PASS,
+			RuleCode:       metricsTotalDsrFmfPbk.Code,
+			SourceDecision: metricsTotalDsrFmfPbk.SourceDecision,
+			Info:           string(utils.SafeEncoding(infoTotalDSR)),
+			Reason:         metricsTotalDsrFmfPbk.Reason,
+			NextStep:       constant.SOURCE_DECISION_ELABORATE_LTV,
+		})
+	}
 
 	metricsElaborateScheme, err := u.usecase.ElaborateScheme(reqMetrics)
 	if err != nil {

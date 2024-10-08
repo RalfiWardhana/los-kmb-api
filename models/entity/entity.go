@@ -827,10 +827,17 @@ type FilteringKMB struct {
 	TotalBakiDebetNonCollateralBiro interface{} `gorm:"column:total_baki_debet_non_collateral_biro" json:"total_baki_debet_non_collateral_biro"`
 	ScoreBiro                       interface{} `gorm:"column:score_biro;type:varchar(20)" json:"score_biro"`
 	Cluster                         interface{} `gorm:"column:cluster;type:varchar(20)" json:"cluster"`
+	CMOID                           interface{} `gorm:"column:cmo_id;type:varchar(20)" json:"cmo_id"`
+	CMOJoinDate                     interface{} `gorm:"column:cmo_join_date" json:"cmo_join_date"`
+	CMOCategory                     interface{} `gorm:"column:cmo_category;type:char(3)" json:"cmo_category"`
+	CMOFPD                          interface{} `gorm:"column:cmo_fpd" json:"cmo_fpd"`
+	CMOAccSales                     interface{} `gorm:"column:cmo_acc_sales" json:"cmo_acc_sales"`
+	CMOCluster                      interface{} `gorm:"column:cmo_cluster;type:varchar(20)" json:"cmo_cluster"`
 	Reason                          interface{} `gorm:"column:reason;type:varchar(250)" json:"reason"`
 	Category                        interface{} `gorm:"column:category" json:"category"`
 	MaxOverdueKORules               interface{} `gorm:"column:max_overdue_ko_rules" json:"max_overdue_ko_rules"`
 	MaxOverdueLast12MonthsKORules   interface{} `gorm:"column:max_overdue_last12months_ko_rules" json:"max_overdue_last12months_ko_rules"`
+	RrdDate                         interface{} `gorm:"column:rrd_date" json:"rrd_date"`
 	CreatedAt                       time.Time   `gorm:"column:created_at" json:"created_at"`
 }
 
@@ -998,9 +1005,10 @@ func (c *LogOrchestrator) TableName() string {
 }
 
 type TrxJourney struct {
-	ProspectID string    `gorm:"type:varchar(20);column:ProspectID"`
-	Request    string    `gorm:"type:varchar(8000);column:request"`
-	CreatedAt  time.Time `gorm:"column:created_at"`
+	ProspectID string      `gorm:"type:varchar(20);column:ProspectID"`
+	Request    string      `gorm:"type:varchar(8000);column:request"`
+	Request2   interface{} `gorm:"type:varchar(8000);column:request2"`
+	CreatedAt  time.Time   `gorm:"column:created_at"`
 }
 
 func (c *TrxJourney) TableName() string {
@@ -1045,6 +1053,7 @@ type TrxAkkk struct {
 	InstallmentAmountOtherSpouse interface{} `gorm:"column:InstallmentAmountOtherSpouse"`
 	InstallmentTopup             interface{} `gorm:"column:InstallmentTopup"`
 	LatestInstallment            interface{} `gorm:"column:LatestInstallment"`
+	UrlFormAkkk                  interface{} `gorm:"column:UrlFormAkkk"`
 	CreatedAt                    time.Time   `gorm:"column:created_at"`
 }
 
@@ -1493,6 +1502,7 @@ type InquiryCa struct {
 	ShowAction         bool    `gorm:"column:ShowAction"`
 	ActionDate         string  `gorm:"column:ActionDate"`
 	ActionFormAkk      bool    `gorm:"column:ActionFormAkk"`
+	UrlFormAkkk        string  `gorm:"column:UrlFormAkkk"`
 	ActionEditData     bool    `gorm:"column:ActionEditData"`
 	AdditionalDP       float64 `gorm:"column:additional_dp"`
 	Activity           string  `gorm:"column:activity"`
@@ -1618,6 +1628,10 @@ type InquiryCa struct {
 	EmergencyCity      string `gorm:"column:EmergencyCity"`
 	EmergencyAreaPhone string `gorm:"column:EmergencyAreaPhone"`
 	EmergencyPhone     string `gorm:"column:EmergencyPhone"`
+	DeviasiID          string `gorm:"column:deviasi_id"`
+	DeviasiDescription string `gorm:"column:deviasi_description"`
+	DeviasiDecision    string `gorm:"column:deviasi_decision"`
+	DeviasiReason      string `gorm:"column:deviasi_reason"`
 }
 
 type InquiryDataCa struct {
@@ -1634,6 +1648,7 @@ type InquiryDataCa struct {
 	Emcon          CustomerEmcon       `json:"emcon"`
 	Address        DataAddress         `json:"address"`
 	Photo          []DataPhoto         `json:"photo"`
+	Deviasi        Deviasi             `json:"deviasi"`
 }
 
 type DataCa struct {
@@ -1699,6 +1714,7 @@ type InquirySearch struct {
 	ActionReturn   bool   `gorm:"column:ActionReturn"`
 	ActionCancel   bool   `gorm:"column:ActionCancel"`
 	ActionFormAkk  bool   `gorm:"column:ActionFormAkk"`
+	UrlFormAkkk    string `gorm:"column:UrlFormAkkk"`
 	ProspectID     string `gorm:"column:ProspectID"`
 	FinalStatus    string `gorm:"column:FinalStatus"`
 	BranchName     string `gorm:"column:BranchName"`
@@ -1800,6 +1816,10 @@ type InquirySearch struct {
 	EmergencyCity      string `gorm:"column:EmergencyCity"`
 	EmergencyAreaPhone string `gorm:"column:EmergencyAreaPhone"`
 	EmergencyPhone     string `gorm:"column:EmergencyPhone"`
+	DeviasiID          string `gorm:"column:deviasi_id"`
+	DeviasiDescription string `gorm:"column:deviasi_description"`
+	DeviasiDecision    string `gorm:"column:deviasi_decision"`
+	DeviasiReason      string `gorm:"column:deviasi_reason"`
 }
 
 type InquiryDataSearch struct {
@@ -1814,6 +1834,7 @@ type InquiryDataSearch struct {
 	Emcon          CustomerEmcon      `json:"emcon"`
 	Address        DataAddress        `json:"address"`
 	Photo          []DataPhoto        `json:"photo"`
+	Deviasi        Deviasi            `json:"deviasi"`
 }
 
 type DataPersonal struct {
@@ -1843,6 +1864,7 @@ type ActionSearch struct {
 	ActionReturn  bool   `gorm:"column:ActionReturn" json:"action_return"`
 	ActionCancel  bool   `gorm:"column:ActionCancel" json:"action_cancel"`
 	ActionFormAkk bool   `gorm:"column:ActionFormAkk" json:"action_form_akk"`
+	UrlFormAkkk   string `gorm:"column:UrlFormAkkk" json:"url_form_akkk"`
 }
 
 type HistoryApproval struct {
@@ -1876,11 +1898,13 @@ type InquiryDataApproval struct {
 	Emcon          CustomerEmcon       `json:"emcon"`
 	Address        DataAddress         `json:"address"`
 	Photo          []DataPhoto         `json:"photo"`
+	Deviasi        Deviasi             `json:"deviasi"`
 }
 
 type DataApproval struct {
 	ShowAction         bool   `gorm:"column:ShowAction" json:"show_action"`
 	ActionFormAkk      bool   `gorm:"column:ActionFormAkk" json:"action_form_akk"`
+	UrlFormAkkk        string `gorm:"column:UrlFormAkkk" json:"url_form_akkk"`
 	IsLastApproval     bool   `gorm:"column:IsLastApproval" json:"is_last_approval"`
 	HasReturn          bool   `gorm:"column:HasReturn" json:"has_return"`
 	StatusDecision     string `gorm:"column:decision" json:"status_decision"`
@@ -2366,4 +2390,107 @@ type MappingClusterChangeLog struct {
 	DataAfter  string `json:"data_after"`
 	UserName   string `json:"user_name"`
 	CreatedAt  string `json:"created_at"`
+}
+
+type MasterMappingFpdCluster struct {
+	Cluster     string    `gorm:"column:cluster"`
+	FpdStartHte float64   `gorm:"column:fpd_start_hte"`
+	FpdEndLt    float64   `gorm:"column:fpd_end_lt"`
+	CreatedAt   time.Time `gorm:"column:created_at"`
+}
+
+func (c *MasterMappingFpdCluster) TableName() string {
+	return "m_mapping_fpd_cluster"
+}
+
+type TrxCmoNoFPD struct {
+	ProspectID              string    `gorm:"column:prospect_id;type:varchar(20)" json:"prospect_id"`
+	CMOID                   string    `gorm:"column:cmo_id;type:varchar(20)" json:"cmo_id"`
+	BPKBName                string    `gorm:"column:bpkb_name;type:varchar(9)" json:"bpkb_name"`
+	CmoCategory             string    `gorm:"column:cmo_category;char(3)" json:"cmo_category"`
+	CmoJoinDate             string    `gorm:"column:cmo_join_date" json:"cmo_join_date"`
+	DefaultCluster          string    `gorm:"column:default_cluster;type:varchar(20)" json:"default_cluster"`
+	DefaultClusterStartDate string    `gorm:"column:default_cluster_start_date" json:"default_cluster_start_date"`
+	DefaultClusterEndDate   string    `gorm:"column:default_cluster_end_date" json:"default_cluster_end_date"`
+	CreatedAt               time.Time `gorm:"column:created_at" json:"created_at"`
+}
+
+func (c *TrxCmoNoFPD) TableName() string {
+	return "trx_cmo_no_fpd"
+}
+
+type EncryptString struct {
+	Encrypt string `json:"encrypt"`
+}
+
+type Deviasi struct {
+	DeviasiID          string `json:"deviasi_id"`
+	DeviasiDescription string `json:"deviasi_description"`
+	DeviasiDecision    string `json:"deviasi_decision"`
+	DeviasiReason      string `json:"deviasi_reason"`
+}
+
+type TrxDeviasi struct {
+	ProspectID string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	DeviasiID  string    `gorm:"type:varchar(20);column:deviasi_id"`
+	Reason     string    `gorm:"type:varchar(255);column:reason"`
+	CreatedAt  time.Time `gorm:"column:created_at" json:"-"`
+}
+
+func (c *TrxDeviasi) TableName() string {
+	return "trx_deviasi"
+}
+
+type MappingKodeDeviasi struct {
+	DeviasiID string `gorm:"type:varchar(20);column:deviasi_id"`
+	Deskripsi string `gorm:"type:varchar(255);column:deskripsi"`
+}
+
+func (c *MappingKodeDeviasi) TableName() string {
+	return "m_kode_deviasi"
+}
+
+type MappingBranchDeviasi struct {
+	BranchID      string `gorm:"type:varchar(10);column:BranchID" json:"branch_id"`
+	FinalApproval string `gorm:"type:varchar(3);column:final_approval"`
+}
+
+func (c *MappingBranchDeviasi) TableName() string {
+	return "m_branch_deviasi"
+}
+
+type MasterMappingDeviasiDSR struct {
+	TotalIncomeStart float64 `gorm:"column:total_income_start"`
+	TotalIncomeEnd   float64 `gorm:"column:total_income_end"`
+	DSRThreshold     float64 `gorm:"column:dsr_threshold"`
+}
+
+func (c *MasterMappingDeviasiDSR) TableName() string {
+	return "m_mapping_deviasi_dsr"
+}
+
+type MappingVehicleAge struct {
+	VehicleAgeStart int         `gorm:"column:vehicle_age_start"`
+	VehicleAgeEnd   int         `gorm:"column:vehicle_age_end"`
+	Cluster         string      `gorm:"type:varchar(50);column:cluster"`
+	BPKBNameType    int         `gorm:"column:bpkb_name_type"`
+	TenorStart      int         `gorm:"column:tenor_start"`
+	TenorEnd        int         `gorm:"column:tenor_end"`
+	Decision        string      `gorm:"type:varchar(20);column:decision"`
+	CreatedAt       time.Time   `gorm:"type:datetime2(2);column:created_at"`
+	Info            interface{} `gorm:"column:info"`
+}
+
+func (c *MappingVehicleAge) TableName() string {
+	return "m_mapping_vehicle_age"
+}
+
+type MasterMappingIncomeMaxDSR struct {
+	TotalIncomeStart float64 `gorm:"column:total_income_start"`
+	TotalIncomeEnd   float64 `gorm:"column:total_income_end"`
+	DSRThreshold     float64 `gorm:"column:dsr_threshold"`
+}
+
+func (c *MasterMappingIncomeMaxDSR) TableName() string {
+	return "kmb_mapping_income_dsr"
 }

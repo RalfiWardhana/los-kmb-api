@@ -1580,6 +1580,70 @@ var doc = `{
                 }
             }
         },
+        "/api/v3/kmb/employee/employee-data/{employee_id}": {
+            "get": {
+                "description": "Api Get Employee Data",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Employee"
+                ],
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Employee ID",
+                        "name": "employee_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/response.EmployeeResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.ApiResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "error": {
+                                            "$ref": "#/definitions/response.ErrorValidation"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.ApiResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v3/kmb/encrypt-decrypt": {
             "post": {
                 "description": "Encrypt Decrypt",
@@ -2101,7 +2165,6 @@ var doc = `{
                 "ins_asset_paid_by",
                 "ins_asset_period",
                 "installment_amount",
-                "insurance_amount",
                 "interest_amount",
                 "interest_rate",
                 "is_fidusia_covered",
@@ -2781,6 +2844,7 @@ var doc = `{
                 "birth_date",
                 "bpkb_name",
                 "branch_id",
+                "cmo_id",
                 "gender",
                 "id_number",
                 "legal_name",
@@ -2798,6 +2862,10 @@ var doc = `{
                 "branch_id": {
                     "type": "string",
                     "example": "426"
+                },
+                "cmo_id": {
+                    "type": "string",
+                    "example": "123456"
                 },
                 "gender": {
                     "type": "string",
@@ -3691,6 +3759,23 @@ var doc = `{
                 },
                 "total_balki_debet": {
                     "type": "number"
+                }
+            }
+        },
+        "response.EmployeeResponse": {
+            "type": "object",
+            "properties": {
+                "employee_id": {
+                    "type": "string"
+                },
+                "employee_id_with_name": {
+                    "type": "string"
+                },
+                "employee_name": {
+                    "type": "string"
+                },
+                "join_date": {
+                    "type": "string"
                 }
             }
         },

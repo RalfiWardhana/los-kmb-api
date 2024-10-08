@@ -13,7 +13,7 @@ import (
 
 type handlerTools struct {
 	Json     common.JSON
-	producer platformevent.PlatformEvent
+	producer platformevent.PlatformEventInterface
 }
 
 type RequestEncryption struct {
@@ -21,7 +21,7 @@ type RequestEncryption struct {
 	Decrypt []string `json:"decrypt" example:"6gs+t7lBQTYM5SPuqJTNonWLjvmmmc9FaWIj"`
 }
 
-func ToolsHandler(kmbroute *echo.Group, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEvent) {
+func ToolsHandler(kmbroute *echo.Group, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEventInterface) {
 	handler := handlerTools{
 		Json:     json,
 		producer: producer,
