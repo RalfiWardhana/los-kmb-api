@@ -446,7 +446,7 @@ func TestReviewPrescreening(t *testing.T) {
 			DecisionBy: "User123",
 		}
 
-		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dalam prescreening")
+		errFinal := errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dalam prescreening")
 
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(entity.TrxStatus{
 			Activity:       constant.ACTIVITY_PROCESS,
@@ -529,7 +529,7 @@ func TestReviewPrescreeningInvalidStatus(t *testing.T) {
 			Reason:     "Valid reason",
 			DecisionBy: "User123",
 		}
-		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dalam prescreening")
+		errFinal := errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dalam prescreening")
 
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(entity.TrxStatus{
 			Activity:       constant.ACTIVITY_PROCESS,
@@ -1502,7 +1502,7 @@ func TestCancelOrder(t *testing.T) {
 		var cache *bigcache.BigCache
 		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
 
-		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dapat dicancel")
+		errFinal := errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dapat dicancel")
 
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(entity.TrxStatus{
 			Activity:       constant.ACTIVITY_STOP,
@@ -1510,7 +1510,7 @@ func TestCancelOrder(t *testing.T) {
 			Decision:       constant.DB_DECISION_REJECT,
 		}, errSave).Once()
 
-		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dapat dicancel")).Once()
+		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dapat dicancel")).Once()
 
 		_, err := usecase.CancelOrder(context.Background(), req)
 
@@ -1701,7 +1701,7 @@ func TestSubmitDecision(t *testing.T) {
 		var cache *bigcache.BigCache
 		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
 
-		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Status order tidak sedang dalam credit process")
+		errFinal := errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak sedang dalam credit process")
 
 		mockRepository.On("GetTrxStatus", mock.Anything).Return(entity.TrxStatus{
 			Activity: constant.ACTIVITY_PROCESS,
@@ -1842,7 +1842,7 @@ func TestSubmitDecision(t *testing.T) {
 			Alias: "CBM",
 		}, nil).Once()
 
-		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")
+		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error " + constant.ERROR_UPSTREAM + " - Submit Decision error")
 
 		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")).Once()
 
@@ -2709,7 +2709,7 @@ func TestSubmitApproval(t *testing.T) {
 			Reason:         req.Reason,
 		}
 
-		mockRepository.On("SubmitApproval", req, trxStatus, trxDetail, entity.TrxRecalculate{}, approvalScheme).Return(errSave).Once()
+		mockRepository.On("SubmitApproval", req, trxStatus, trxDetail, entity.TrxRecalculate{}, approvalScheme).Return(trxStatus, errSave).Once()
 
 		result, err := usecase.SubmitApproval(context.Background(), req)
 
@@ -2721,6 +2721,71 @@ func TestSubmitApproval(t *testing.T) {
 		// Verifikasi bahwa data yang dikembalikan sesuai dengan ekspektasi
 		// Anda dapat menambahkan lebih banyak asserstion sesuai kebutuhan
 		assert.Equal(t, constant.DECISION_APPROVE, result.Decision)
+	})
+
+	t.Run("ValidSubmitApprovalCaseDeviasiREJECT", func(t *testing.T) {
+		mockRepository := new(mocks.Repository)
+		mockHttpClient := new(httpclient.MockHttpClient)
+		var cache *bigcache.BigCache
+		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		req := request.ReqSubmitApproval{
+			ProspectID:    "TST-DEV",
+			FinalApproval: "GMC",
+			Decision:      constant.DECISION_APPROVE,
+			RuleCode:      "3741",
+			Alias:         "CBM",
+			Reason:        "Oke",
+			Note:          "noted",
+			CreatedBy:     "agsa6srt",
+			DecisionBy:    "User123",
+		}
+
+		approvalScheme := response.RespApprovalScheme{
+			Name:         "Branch Manager",
+			NextStep:     "DRM",
+			IsFinal:      false,
+			IsEscalation: false,
+		}
+
+		trxStatus := entity.TrxStatus{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_UNPROCESS,
+			Decision:       constant.DB_DECISION_CREDIT_PROCESS,
+			RuleCode:       req.RuleCode,
+			SourceDecision: approvalScheme.NextStep,
+			Reason:         req.Reason,
+		}
+
+		status := entity.TrxStatus{
+			Reason: constant.REASON_REJECT_KUOTA_DEVIASI,
+		}
+
+		trxDetail := entity.TrxDetail{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  constant.STATUS_ONPROCESS,
+			Activity:       constant.ACTIVITY_PROCESS,
+			Decision:       constant.DB_DECISION_PASS,
+			RuleCode:       req.RuleCode,
+			SourceDecision: req.Alias,
+			Info:           req.Reason,
+			NextStep:       "DRM",
+			CreatedBy:      req.CreatedBy,
+			Reason:         req.Reason,
+		}
+
+		mockRepository.On("SubmitApproval", req, trxStatus, trxDetail, entity.TrxRecalculate{}, approvalScheme).Return(status, errSave).Once()
+
+		result, err := usecase.SubmitApproval(context.Background(), req)
+
+		// Verifikasi bahwa tidak ada error yang terjadi
+		if err != nil {
+			t.Errorf("Expected no error, but got: %v", err)
+		}
+
+		// Verifikasi bahwa data yang dikembalikan sesuai dengan ekspektasi
+		// Anda dapat menambahkan lebih banyak asserstion sesuai kebutuhan
+		assert.Equal(t, constant.DECISION_REJECT, result.Decision)
 	})
 
 	t.Run("ErrorSubmitApproval", func(t *testing.T) {
@@ -2741,9 +2806,9 @@ func TestSubmitApproval(t *testing.T) {
 			DecisionBy:    "User123",
 		}
 
-		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error")
+		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error query Submit Approval failed")
 
-		mockRepository.On("SubmitApproval", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error")).Once()
+		mockRepository.On("SubmitApproval", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(entity.TrxStatus{}, errors.New("query Submit Approval failed")).Once()
 
 		_, err := usecase.SubmitApproval(context.Background(), req)
 

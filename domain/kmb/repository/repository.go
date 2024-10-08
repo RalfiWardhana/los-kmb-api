@@ -332,6 +332,22 @@ func (r repoHandler) GetMoblast(customerID string) (score entity.GetMoblast, err
 	return
 }
 
+func (r repoHandler) GetMappingDeviasi(prospectID string) (confirmDeviasi entity.ConfirmDeviasi, err error) {
+	// cek kuota deviasi
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT ta.NTF, mbd.*,
+			CASE 
+				WHEN mbd.balance_amount >= ta.NTF AND mbd.balance_account > 0 THEN 1
+				ELSE 0
+			END AS deviasi
+			FROM trx_master tm 
+			LEFT JOIN trx_apk ta ON tm.ProspectID = ta.ProspectID 
+			LEFT JOIN m_branch_deviasi mbd ON tm.BranchID = mbd.BranchID 
+			WHERE tm.ProspectID = '%s'`, prospectID)).Scan(&confirmDeviasi).Error; err != nil {
+		return
+	}
+	return
+}
+
 func (r repoHandler) GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error) {
 
 	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT CASE WHEN mmel.ltv IS NULL THEN mmelovd.ltv ELSE mmel.ltv END AS ltv FROM trx_elaborate_ltv tel WITH (nolock) 
