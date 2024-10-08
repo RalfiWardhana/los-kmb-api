@@ -22,12 +22,13 @@ import (
 func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string, configValue response.DupcheckConfig) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error) {
 
 	var (
-		customer     []request.SpouseDupcheck
-		blackList    response.UsecaseApi
-		sp           response.SpDupCekCustomerByID
-		dataCustomer []response.SpDupCekCustomerByID
-		spMap        response.SpDupcheckMap
-		customerType string
+		customer        []request.SpouseDupcheck
+		blackList       response.UsecaseApi
+		sp              response.SpDupCekCustomerByID
+		dataCustomer    []response.SpDupCekCustomerByID
+		spMap           response.SpDupcheckMap
+		customerType    string
+		isPrimePriority bool
 	)
 
 	// Check Banned Chassis Number
@@ -268,6 +269,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	reasonCustomer := customerKMB
 	if strings.Contains("PRIME PRIORITY", req.CustomerSegment) {
 		reasonCustomer = fmt.Sprintf("%s %s", customerKMB, req.CustomerSegment)
+		isPrimePriority = true
 	}
 
 	if customerKMB == constant.STATUS_KONSUMEN_RO {
@@ -315,7 +317,25 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 			mapping.Reason = data.Reason
 			return
 		} else {
+			var skipCheckJatuhTempo bool
+			if mapping.NumberOfPaidInstallment > 1 && mapping.NumberOfPaidInstallment < configValue.Data.AngsuranBerjalan {
+				var paramCustomerID string
+				paramCustomerID, ok := mainCustomer.CustomerID.(string)
+				if !ok || paramCustomerID == "" {
+					err = errors.New(constant.ERROR_UPSTREAM + " - Customer AO < 6 bulan angsuran should be have CustomerID")
+					return
+				}
+
+				_, skipCheckJatuhTempo, err = u.usecase.CheckAgreementLunas(ctx, req.ProspectID, paramCustomerID, isPrimePriority, accessToken)
+				if err != nil {
+					return
+				}
+
+				mapping.AgreementSettledExist = skipCheckJatuhTempo
+			}
+
 			if mapping.NumberOfPaidInstallment >= configValue.Data.AngsuranBerjalan {
+				skipCheckJatuhTempo = true
 				if mapping.MaxOverdueDaysROAO > configValue.Data.MaxOvd {
 					checkConfins := response.UsecaseApi{
 						Result:         constant.DECISION_REJECT,
@@ -369,7 +389,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 					mapping.Reason = data.Reason
 
 				}
-			} else if mapping.NumberOfPaidInstallment <= 1 {
+			} else if mapping.NumberOfPaidInstallment <= 1 && !skipCheckJatuhTempo {
 				if mapping.MaxOverdueDaysforActiveAgreement == 0 {
 					checkConfins := response.UsecaseApi{
 						Result:         constant.DECISION_REJECT,
@@ -812,6 +832,44 @@ func (u usecase) VehicleCheck(manufactureYear, cmoCluster, bkpbName string, teno
 		return
 	}
 
+}
+
+func (u usecase) CheckAgreementLunas(ctx context.Context, prospectID string, customerId string, filterKMBOnly bool, accessToken string) (responseMDM response.ConfinsAgreementCustomer, isDataExist bool, err error) {
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	header := map[string]string{
+		"Authorization": accessToken,
+	}
+
+	assetTypeID := constant.ASSET_TYPE_ID_ALL_LOB
+	if filterKMBOnly {
+		assetTypeID = constant.ASSET_TYPE_ID_KMB_ONLY
+	}
+
+	endpointURL := fmt.Sprintf(os.Getenv("CONFINS_AGREEMENT_CUSTOMER")+"%s?asset_type_id=%s&contract_status=RRD,EXP,ICP&outstanding_principal=0", customerId, assetTypeID)
+
+	agreementCust, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointURL, nil, header, constant.METHOD_GET, true, 6, timeout, prospectID, accessToken)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Confins Check Agreement Timeout")
+		return
+	}
+
+	if agreementCust.StatusCode() != 200 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call Confins Check Agreement Error")
+		return
+	}
+
+	err = json.Unmarshal([]byte(jsoniter.Get(agreementCust.Body()).ToString()), &responseMDM)
+	if err != nil {
+		return
+	}
+
+	if responseMDM.Data != nil {
+		isDataExist = true
+	}
+
+	return
 }
 
 func checkResultPefindo(filtering entity.FilteringKMB) (resultPefindo string) {

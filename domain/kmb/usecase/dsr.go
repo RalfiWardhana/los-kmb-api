@@ -383,7 +383,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 						}
 					}
 				} else {
-					if SpDupcheckMap.NumberOfPaidInstallment >= 6 {
+					if SpDupcheckMap.NumberOfPaidInstallment >= 6 || SpDupcheckMap.AgreementSettledExist {
 						totalDSR = SpDupcheckMap.Dsr
 						trxFMF.TotalDSR = SpDupcheckMap.Dsr
 					}
@@ -400,7 +400,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 						trxFMF.TotalDSR = SpDupcheckMap.Dsr
 					}
 				} else {
-					if SpDupcheckMap.NumberOfPaidInstallment >= 6 {
+					if SpDupcheckMap.NumberOfPaidInstallment >= 6 || SpDupcheckMap.AgreementSettledExist {
 						totalDSR = SpDupcheckMap.Dsr
 						trxFMF.TotalDSR = SpDupcheckMap.Dsr
 					}
