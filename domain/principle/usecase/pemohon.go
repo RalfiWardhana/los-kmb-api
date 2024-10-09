@@ -297,7 +297,17 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		data                response.Filtering
 		principleStepOne    entity.TrxPrincipleStepOne
 		trxPrincipleStepTwo entity.TrxPrincipleStepTwo
+		spouseGender        string
 	)
+
+	if r.SpouseIDNumber != "" {
+
+		if r.Gender == "M" {
+			spouseGender = "F"
+		} else {
+			spouseGender = "M"
+		}
+	}
 
 	defer func() {
 
@@ -361,7 +371,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			trxPrincipleStepTwo.SpouseFullName = utils.CheckEmptyString(r.SpouseFullName)
 			trxPrincipleStepTwo.SpouseBirthDate = spouseBirthDate
 			trxPrincipleStepTwo.SpouseBirthPlace = utils.CheckEmptyString(r.SpouseBirthPlace)
-			trxPrincipleStepTwo.SpouseGender = utils.CheckEmptyString(r.SpouseGender)
+			trxPrincipleStepTwo.SpouseGender = utils.CheckEmptyString(spouseGender)
 			trxPrincipleStepTwo.SpouseLegalName = utils.CheckEmptyString(r.SpouseLegalName)
 			trxPrincipleStepTwo.SpouseMobilePhone = utils.CheckEmptyString(r.SpouseMobilePhone)
 			trxPrincipleStepTwo.SpouseSurgateMotherName = utils.CheckEmptyString(r.SpouseSurgateMotherName)
@@ -585,7 +595,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		reqPefindo.SpouseLegalName = r.SpouseLegalName
 		reqPefindo.SpouseBirthDate = r.SpouseBirthDate
 		reqPefindo.SpouseSurgateMotherName = r.SpouseSurgateMotherName
-		reqPefindo.SpouseGender = r.SpouseGender
+		reqPefindo.SpouseGender = spouseGender
 	}
 
 	/* Process Get Cluster based on CMO_ID starts here */

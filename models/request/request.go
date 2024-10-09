@@ -1045,7 +1045,6 @@ type PrinciplePemohon struct {
 	SpouseBirthDate         string  `json:"spouse_birth_date" example:"1992-09-11"`
 	SpouseBirthPlace        string  `json:"spouse_birth_place" example:"Jakarta"`
 	SpouseSurgateMotherName string  `json:"spouse_surgate_mother_name"  example:"MAMA"`
-	SpouseGender            string  `json:"spouse_gender" example:"F"`
 	SpouseMobilePhone       string  `json:"spouse_mobile_phone" example:"085880529111"`
 	SpouseIncome            float64 `json:"spouse_income" example:"5000000"`
 	SelfiePhoto             string  `json:"selfie_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/selfie_SAL-1140024081400003.jpg"`
