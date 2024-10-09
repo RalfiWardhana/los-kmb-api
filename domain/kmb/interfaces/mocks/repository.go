@@ -443,6 +443,27 @@ func (_m *Repository) GetLogOrchestrator(prospectID string) (entity.LogOrchestra
 	return r0, r1
 }
 
+// GetMappingDeviasi provides a mock function with given fields: prospectID
+func (_m *Repository) GetMappingDeviasi(prospectID string) (entity.ConfirmDeviasi, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 entity.ConfirmDeviasi
+	if rf, ok := ret.Get(0).(func(string) entity.ConfirmDeviasi); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.ConfirmDeviasi)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetMappingDukcapil provides a mock function with given fields: statusVD, statusFR, customerStatus, customerSegment
 func (_m *Repository) GetMappingDukcapil(statusVD string, statusFR string, customerStatus string, customerSegment string) (entity.MappingResultDukcapil, error) {
 	ret := _m.Called(statusVD, statusFR, customerStatus, customerSegment)

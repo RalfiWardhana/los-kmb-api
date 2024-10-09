@@ -32,6 +32,7 @@ type Repository interface {
 	GetActiveLoanTypeLast6M(customerID string) (score entity.GetActiveLoanTypeLast6M, err error)
 	GetActiveLoanTypeLast24M(customerID string) (score entity.GetActiveLoanTypeLast24M, err error)
 	GetMoblast(customerID string) (score entity.GetMoblast, err error)
+	GetMappingDeviasi(prospectID string) (confirmDeviasi entity.ConfirmDeviasi, err error)
 
 	GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error)
 	GetMasterBranch(branchID string) (masterBranch entity.MasterBranch, err error)
