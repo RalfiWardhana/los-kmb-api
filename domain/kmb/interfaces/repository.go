@@ -68,5 +68,5 @@ type Repository interface {
 	MasterMappingIncomeMaxDSR(totalIncome float64) (data entity.MasterMappingIncomeMaxDSR, err error)
 
 	MasterMappingDeviasiDSR(totalIncome float64) (data entity.MasterMappingDeviasiDSR, err error)
-	GetBranchDeviasi(BranchID string) (data entity.MappingBranchDeviasi, err error)
+	GetBranchDeviasi(BranchID string, customerStatus string, NTF float64) (data entity.MappingBranchDeviasi, err error)
 }

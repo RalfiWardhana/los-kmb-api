@@ -124,20 +124,20 @@ func (_m *Repository) GetBannedPMKDSR(idNumber string) (entity.TrxBannedPMKDSR, 
 	return r0, r1
 }
 
-// GetBranchDeviasi provides a mock function with given fields: BranchID
-func (_m *Repository) GetBranchDeviasi(BranchID string) (entity.MappingBranchDeviasi, error) {
-	ret := _m.Called(BranchID)
+// GetBranchDeviasi provides a mock function with given fields: BranchID, customerStatus, NTF
+func (_m *Repository) GetBranchDeviasi(BranchID string, customerStatus string, NTF float64) (entity.MappingBranchDeviasi, error) {
+	ret := _m.Called(BranchID, customerStatus, NTF)
 
 	var r0 entity.MappingBranchDeviasi
-	if rf, ok := ret.Get(0).(func(string) entity.MappingBranchDeviasi); ok {
-		r0 = rf(BranchID)
+	if rf, ok := ret.Get(0).(func(string, string, float64) entity.MappingBranchDeviasi); ok {
+		r0 = rf(BranchID, customerStatus, NTF)
 	} else {
 		r0 = ret.Get(0).(entity.MappingBranchDeviasi)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(BranchID)
+	if rf, ok := ret.Get(1).(func(string, string, float64) error); ok {
+		r1 = rf(BranchID, customerStatus, NTF)
 	} else {
 		r1 = ret.Error(1)
 	}

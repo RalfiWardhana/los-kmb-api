@@ -1445,7 +1445,7 @@ func TestCancelOrder(t *testing.T) {
 
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(status, errSave).Once()
 
-		mockRepository.On("ProcessTransaction", trxCaDecision, mock.Anything, trxStatus, trxDetail).Return(errSave).Once()
+		mockRepository.On("ProcessTransaction", trxCaDecision, mock.Anything, trxStatus, trxDetail, true).Return(errSave).Once()
 
 		result, err := usecase.CancelOrder(context.Background(), req)
 
@@ -1488,7 +1488,7 @@ func TestCancelOrder(t *testing.T) {
 
 		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Process Cancel Order error")
 
-		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_UPSTREAM + " - Process Cancel Order error")).Once()
+		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_UPSTREAM + " - Process Cancel Order error")).Once()
 
 		_, err := usecase.CancelOrder(context.Background(), req)
 
@@ -1510,7 +1510,7 @@ func TestCancelOrder(t *testing.T) {
 			Decision:       constant.DB_DECISION_REJECT,
 		}, errSave).Once()
 
-		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dapat dicancel")).Once()
+		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dapat dicancel")).Once()
 
 		_, err := usecase.CancelOrder(context.Background(), req)
 
@@ -1599,7 +1599,7 @@ func TestSubmitDecision(t *testing.T) {
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(status, errSave).Once()
 		mockRepository.On("GetLimitApprovalDeviasi", req.ProspectID).Return(limit, errSave).Once()
 		mockRepository.On("GetLimitApproval", req.NTFAkumulasi).Return(limit, errSave).Once()
-		mockRepository.On("ProcessTransaction", trxCaDecision, trxHistoryApproval, trxStatus, trxDetail).Return(errSave).Once()
+		mockRepository.On("ProcessTransaction", trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, false).Return(errSave).Once()
 
 		result, err := usecase.SubmitDecision(context.Background(), req)
 
@@ -1681,7 +1681,7 @@ func TestSubmitDecision(t *testing.T) {
 		mockRepository.On("GetTrxStatus", req.ProspectID).Return(status, errSave).Once()
 		mockRepository.On("GetLimitApprovalDeviasi", req.ProspectID).Return(limit, errSave).Once()
 		mockRepository.On("GetLimitApproval", req.NTFAkumulasi).Return(limit, errSave).Once()
-		mockRepository.On("ProcessTransaction", trxCaDecision, trxHistoryApproval, trxStatus, trxDetail).Return(errSave).Once()
+		mockRepository.On("ProcessTransaction", trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, false).Return(errSave).Once()
 
 		result, err := usecase.SubmitDecision(context.Background(), req)
 
@@ -1844,7 +1844,7 @@ func TestSubmitDecision(t *testing.T) {
 
 		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error " + constant.ERROR_UPSTREAM + " - Submit Decision error")
 
-		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")).Once()
+		mockRepository.On("ProcessTransaction", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")).Once()
 
 		_, err := usecase.SubmitDecision(context.Background(), req)
 

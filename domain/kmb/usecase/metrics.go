@@ -630,7 +630,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	}
 
 	income := reqDupcheck.MonthlyFixedIncome + reqDupcheck.MonthlyVariableIncome + reqDupcheck.SpouseIncome
-	metricsTotalDsrFmfPbk, trxFMFTotalDsrFmfPbk, err := u.usecase.TotalDsrFmfPbk(ctx, income, reqMetrics.Apk.InstallmentAmount, totalInstallmentPBK, reqMetrics.Transaction.ProspectID, customerSegment, accessToken, dupcheckData, configValue, filtering)
+	metricsTotalDsrFmfPbk, trxFMFTotalDsrFmfPbk, err := u.usecase.TotalDsrFmfPbk(ctx, income, reqMetrics.Apk.InstallmentAmount, totalInstallmentPBK, reqMetrics.Transaction.ProspectID, customerSegment, accessToken, dupcheckData, configValue, filtering, reqMetrics.Apk.NTF)
 	if err != nil {
 		return
 	}

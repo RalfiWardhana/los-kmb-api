@@ -2460,7 +2460,7 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 	return
 }
 
-func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxHistoryApproval entity.TrxHistoryApprovalScheme, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error) {
+func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxHistoryApproval entity.TrxHistoryApprovalScheme, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, isCancel bool) (err error) {
 
 	trxCaDecision.CreatedAt = time.Now()
 	trxStatus.CreatedAt = time.Now()
@@ -2521,6 +2521,47 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 				ProspectID: trxStatus.ProspectID,
 			}
 			tx.Create(&trxAkkk)
+		}
+
+		if isCancel {
+			var resultCheckDeviation struct {
+				BranchID       string
+				NTF            float64
+				CustomerStatus string
+				Decision       interface{}
+			}
+
+			selectQuery := `
+                SELECT mbd.BranchID, ta.NTF, tf.customer_status, tfa.decision
+				FROM trx_deviasi AS td WITH (nolock)
+				LEFT JOIN trx_apk AS ta ON (td.ProspectID = ta.ProspectID)
+				LEFT JOIN trx_master AS tm ON (td.ProspectID = tm.ProspectID)
+				LEFT JOIN m_branch_deviasi AS mbd ON (tm.BranchID = mbd.BranchID)
+				LEFT JOIN trx_filtering AS tf ON (td.ProspectID = tf.prospect_id)
+				LEFT JOIN trx_final_approval AS tfa ON (td.ProspectID = tfa.ProspectID)
+                WHERE ta.ProspectID = ?
+            `
+			if err = tx.Raw(selectQuery, trxCaDecision.ProspectID).Scan(&resultCheckDeviation).Error; err != nil {
+				if err != gorm.ErrRecordNotFound {
+					return err
+				}
+			}
+
+			if resultCheckDeviation.BranchID != "" && resultCheckDeviation.CustomerStatus != "" && resultCheckDeviation.CustomerStatus == constant.STATUS_KONSUMEN_NEW && resultCheckDeviation.Decision != nil {
+				if decisionStr, ok := resultCheckDeviation.Decision.(string); ok && decisionStr == constant.DB_DECISION_APR {
+					updateQuery := `
+						UPDATE m_branch_deviasi
+						SET booking_amount = booking_amount - ?,
+							booking_account = booking_account - 1,
+							balance_amount = (quota_amount - booking_amount) + ?,
+							balance_account = (quota_account - booking_account) + 1
+						WHERE BranchID = ?
+					`
+					if err = tx.Exec(updateQuery, resultCheckDeviation.NTF, resultCheckDeviation.NTF, resultCheckDeviation.BranchID).Error; err != nil {
+						return err
+					}
+				}
+			}
 		}
 
 		return nil

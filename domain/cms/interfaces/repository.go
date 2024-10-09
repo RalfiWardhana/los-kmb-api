@@ -29,7 +29,7 @@ type Repository interface {
 	GetInquiryNE(req request.ReqInquiryNE, pagination interface{}) (data []entity.InquiryDataNE, rowTotal int, err error)
 	GetInquiryNEDetail(prospectID string) (data entity.NewEntry, err error)
 	GetHistoryProcess(prospectID string) (detail []entity.HistoryProcess, err error)
-	ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxHistoryApproval entity.TrxHistoryApprovalScheme, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error)
+	ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxHistoryApproval entity.TrxHistoryApprovalScheme, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, isCancel bool) (err error)
 	ProcessReturnOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) (err error)
 	ProcessRecalculateOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, trxHistoryApproval entity.TrxHistoryApprovalScheme) (err error)
 	GetInquiryApproval(req request.ReqInquiryApproval, pagination interface{}) (data []entity.InquiryCa, rowTotal int, err error)

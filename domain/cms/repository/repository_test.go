@@ -5859,7 +5859,7 @@ func TestProcessTransaction(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
 
-		err := newDB.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail)
+		err := newDB.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, false)
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
 		}
