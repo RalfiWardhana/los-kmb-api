@@ -935,6 +935,24 @@ func (_m *Repository) UpdatePrincipleStepOne(prospectID string, data entity.TrxP
 	return r0
 }
 
+// UpdatePrincipleStepTwo provides a mock function with given fields: prospectID, data
+func (_m *Repository) UpdatePrincipleStepTwo(prospectID string, data entity.TrxPrincipleStepTwo) error {
+	ret := _m.Called(prospectID, data)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdatePrincipleStepTwo")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, entity.TrxPrincipleStepTwo) error); ok {
+		r0 = rf(prospectID, data)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // NewRepository creates a new instance of Repository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewRepository(t interface {

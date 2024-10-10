@@ -2562,6 +2562,7 @@ type TrxPrincipleStepOne struct {
 	StaySinceYear      int         `gorm:"column:StaySinceYear;type:varchar(4)"`
 	StaySinceMonth     int         `gorm:"column:StaySinceMonth;type:varchar(2)"`
 	Decision           string      `gorm:"column:Decision;type:varchar(20)"`
+	RuleCode           string      `gorm:"column:RuleCode;type:varchar(10);"`
 	Reason             string      `gorm:"column:Reason;type:varchar(255)"`
 	BPKBName           string      `gorm:"column:BPKBName;type:varchar(2)"`
 	AssetCode          string      `gorm:"column:AssetCode;type:varchar(200)"`
@@ -2642,12 +2643,16 @@ type TrxPrincipleStepTwo struct {
 	CheckEkycResult         interface{} `gorm:"column:CheckEkycResult;type:varchar(50);"`
 	CheckEkycCode           interface{} `gorm:"column:CheckEkycCode;type:varchar(50);"`
 	CheckEkycReason         interface{} `gorm:"column:CheckEkycReason;type:varchar(200);"`
+	CheckEkycSource         interface{} `gorm:"column:CheckEkycSource;type:varchar(5);"`
+	CheckEkycInfo           interface{} `gorm:"column:CheckEkycInfo;type:text;"`
+	CheckEkycSimiliarity    interface{} `gorm:"column:CheckEkycSimiliarity;type:float;"`
 	FilteringResult         interface{} `gorm:"column:FilteringResult;type:varchar(50);"`
 	FilteringCode           interface{} `gorm:"column:FilteringCode;type:varchar(50);"`
 	FilteringReason         interface{} `gorm:"column:FilteringReason;type:varchar(200);"`
 	Decision                string      `gorm:"column:Decision;type:varchar(20)"`
 	Reason                  string      `gorm:"column:Reason;type:varchar(255)"`
 	CreatedAt               time.Time   `gorm:"column:created_at"`
+	DupcheckData            string      `gorm:"column:DupcheckData;type:text"`
 }
 
 func (c *TrxPrincipleStepTwo) TableName() string {
@@ -2671,15 +2676,22 @@ type TrxPrincipleStepThree struct {
 	CheckVehicleResult       interface{} `gorm:"column:CheckVehicleResult;type:varchar(50);"`
 	CheckVehicleCode         interface{} `gorm:"column:CheckVehicleCode;type:varchar(50);"`
 	CheckVehicleReason       interface{} `gorm:"column:CheckVehicleReason;type:varchar(200);"`
+	CheckVehicleInfo         interface{} `gorm:"column:CheckVehicleInfo;type:text;"`
 	CheckRejectTenor36Result interface{} `gorm:"column:CheckRejectTenor36Result;type:varchar(50);"`
 	CheckRejectTenor36Code   interface{} `gorm:"column:CheckRejectTenor36Code;type:varchar(50);"`
 	CheckRejectTenor36Reason interface{} `gorm:"column:CheckRejectTenor36Reason;type:varchar(200);"`
 	ScoreProResult           interface{} `gorm:"column:ScoreProResult;type:varchar(50);"`
 	ScoreProCode             interface{} `gorm:"column:ScoreProCode;type:varchar(50);"`
 	ScoreProReason           interface{} `gorm:"column:ScoreProReason;type:varchar(200);"`
+	ScoreProInfo             interface{} `gorm:"column:ScoreProInfo;type:text;"`
+	ScoreProScoreResult      interface{} `gorm:"column:ScoreProScoreResult;type:varchar(20);"`
 	CheckDSRResult           interface{} `gorm:"column:CheckDSRResult;type:varchar(50);"`
 	CheckDSRCode             interface{} `gorm:"column:CheckDSRCode;type:varchar(50);"`
 	CheckDSRReason           interface{} `gorm:"column:CheckDSRReason;type:varchar(200);"`
+	CheckDSRFMFPBKResult     interface{} `gorm:"column:CheckDSRFMFPBKResult;type:varchar(50);"`
+	CheckDSRFMFPBKCode       interface{} `gorm:"column:CheckDSRFMFPBKCode;type:varchar(50);"`
+	CheckDSRFMFPBKReason     interface{} `gorm:"column:CheckDSRFMFPBKReason;type:varchar(200);"`
+	CheckDSRFMFPBKInfo       interface{} `gorm:"column:CheckDSRFMFPBKInfo;type:text;"`
 	Decision                 string      `gorm:"column:Decision;type:varchar(20)"`
 	Reason                   string      `gorm:"column:Reason;type:varchar(255)"`
 	CreatedAt                time.Time   `gorm:"column:created_at"`

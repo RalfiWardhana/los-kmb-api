@@ -358,66 +358,48 @@ func TestPrinciplePemohon(t *testing.T) {
 	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
 
 	testcases := []struct {
-		name                          string
-		request                       request.PrinciplePemohon
-		resGetPrincipleStepOne        entity.TrxPrincipleStepOne
-		errGetPrincipleStepOne        error
-		resGetConfig                  entity.AppConfig
-		errGetConfig                  error
-		resBannedPMKOrDSR             response.UsecaseApi
-		errBannedPMKOrDSR             error
-		resRejection                  response.UsecaseApi
-		errRejection                  error
-		resDupcheckIntegrator         response.SpDupCekCustomerByID
-		errDupcheckIntegrator         error
-		resBlacklistCheck             response.UsecaseApi
-		resCustomerKMB                string
-		errCustomerKMB                error
-		resCheckPMK                   response.UsecaseApi
-		errCheckPMK                   error
-		resGetEmployeeData            response.EmployeeCMOResponse
-		errGetEmployeeData            error
-		resGetFpdCMO                  response.FpdCMOResponse
-		errGetFpdCMO                  error
-		resMasterMappingFpdCluster    entity.MasterMappingFpdCluster
-		errMasterMappingFpdCluster    error
-		resClusterCheckCmoNoFPD       string
-		resEntityCheckCmoNoFPD        entity.TrxCmoNoFPD
-		errCheckCmoNoFPD              error
-		resFilteringPefindo           response.Filtering
-		resPefindo                    response.PefindoResult
-		resDetailBiroPefindo          []entity.TrxDetailBiro
-		errPefindo                    error
-		resDukcapil                   response.Ekyc
-		errDukcapil                   error
-		resAsliri                     response.Ekyc
-		errAsliri                     error
-		resKtp                        response.Ekyc
-		errKtp                        error
-		errSave                       error
-		errSavePrincipleStepTwo       error
-		errUpdatePrincipleStepOne     error
-		result                        response.UsecaseApi
-		err                           error
-		expectGetConfig               bool
-		expectBannedPMKOrDSR          bool
-		expectRejection               bool
-		expectDupcheckIntegrator      bool
-		expectBlacklistCheck          bool
-		expectCustomerKMB             bool
-		expectCheckPMK                bool
-		expectGetEmployeeData         bool
-		expectGetFpdCMO               bool
-		expectMasterMappingFpdCluster bool
-		expectCheckCmoNoFPD           bool
-		expectPefindo                 bool
-		expectDukcapil                bool
-		expectAsliri                  bool
-		expectKtp                     bool
-		expectSave                    bool
-		expectSavePrincipleStepTwo    bool
-		expectUpdatePrincipleStepOne  bool
-		expectPublishEvent            bool
+		name                       string
+		request                    request.PrinciplePemohon
+		resGetPrincipleStepOne     entity.TrxPrincipleStepOne
+		errGetPrincipleStepOne     error
+		resGetConfig               entity.AppConfig
+		errGetConfig               error
+		resBannedPMKOrDSR          response.UsecaseApi
+		errBannedPMKOrDSR          error
+		resRejection               response.UsecaseApi
+		errRejection               error
+		resDupcheckIntegrator      response.SpDupCekCustomerByID
+		errDupcheckIntegrator      error
+		resBlacklistCheck          response.UsecaseApi
+		resCustomerKMB             string
+		errCustomerKMB             error
+		resCheckPMK                response.UsecaseApi
+		errCheckPMK                error
+		resGetEmployeeData         response.EmployeeCMOResponse
+		errGetEmployeeData         error
+		resGetFpdCMO               response.FpdCMOResponse
+		errGetFpdCMO               error
+		resMasterMappingFpdCluster entity.MasterMappingFpdCluster
+		errMasterMappingFpdCluster error
+		resClusterCheckCmoNoFPD    string
+		resEntityCheckCmoNoFPD     entity.TrxCmoNoFPD
+		errCheckCmoNoFPD           error
+		resFilteringPefindo        response.Filtering
+		resPefindo                 response.PefindoResult
+		resDetailBiroPefindo       []entity.TrxDetailBiro
+		errPefindo                 error
+		resDukcapil                response.Ekyc
+		errDukcapil                error
+		resAsliri                  response.Ekyc
+		errAsliri                  error
+		resKtp                     response.Ekyc
+		errKtp                     error
+		errSave                    error
+		errSavePrincipleStepTwo    error
+		errUpdatePrincipleStepOne  error
+		result                     response.UsecaseApi
+		err                        error
+		expectPublishEvent         bool
 	}{
 		{
 			name: "error get principle step one",
@@ -434,9 +416,8 @@ func TestPrinciplePemohon(t *testing.T) {
 				ProspectID: "SAL-123",
 				IDNumber:   "1234567890",
 			},
-			errGetConfig:    errors.New("something wrong"),
-			err:             errors.New("something wrong"),
-			expectGetConfig: true,
+			errGetConfig: errors.New("something wrong"),
+			err:          errors.New("something wrong"),
 		},
 		{
 			name: "error banned pmk dsr",
@@ -444,10 +425,8 @@ func TestPrinciplePemohon(t *testing.T) {
 				ProspectID: "SAL-123",
 				IDNumber:   "1234567890",
 			},
-			errBannedPMKOrDSR:    errors.New("something wrong"),
-			err:                  errors.New("something wrong"),
-			expectGetConfig:      true,
-			expectBannedPMKOrDSR: true,
+			errBannedPMKOrDSR: errors.New("something wrong"),
+			err:               errors.New("something wrong"),
 		},
 		{
 			name: "reject banned pmk dsr",
@@ -465,11 +444,7 @@ func TestPrinciplePemohon(t *testing.T) {
 				Code:   constant.CODE_PERNAH_REJECT_PMK_DSR,
 				Reason: "Data diri tidak lolos verifikasi",
 			},
-			expectGetConfig:              true,
-			expectBannedPMKOrDSR:         true,
-			expectSavePrincipleStepTwo:   true,
-			expectUpdatePrincipleStepOne: true,
-			expectPublishEvent:           true,
+			expectPublishEvent: true,
 		},
 		{
 			name: "error rejection",
@@ -484,11 +459,8 @@ func TestPrinciplePemohon(t *testing.T) {
 			resBannedPMKOrDSR: response.UsecaseApi{
 				Result: constant.DECISION_PASS,
 			},
-			errRejection:         errors.New("something wrong"),
-			err:                  errors.New("something wrong"),
-			expectGetConfig:      true,
-			expectBannedPMKOrDSR: true,
-			expectRejection:      true,
+			errRejection: errors.New("something wrong"),
+			err:          errors.New("something wrong"),
 		},
 		{
 			name: "reject rejection",
@@ -513,12 +485,7 @@ func TestPrinciplePemohon(t *testing.T) {
 				Code:   constant.CODE_PERNAH_REJECT_PMK_DSR,
 				Reason: "Data diri tidak lolos verifikasi",
 			},
-			expectGetConfig:              true,
-			expectBannedPMKOrDSR:         true,
-			expectRejection:              true,
-			expectSavePrincipleStepTwo:   true,
-			expectUpdatePrincipleStepOne: true,
-			expectPublishEvent:           true,
+			expectPublishEvent: true,
 		},
 		{
 			name: "error dupcheck integrator",
@@ -538,12 +505,8 @@ func TestPrinciplePemohon(t *testing.T) {
 			resRejection: response.UsecaseApi{
 				Result: constant.DECISION_PASS,
 			},
-			errDupcheckIntegrator:    errors.New("something wrong"),
-			err:                      errors.New("something wrong"),
-			expectGetConfig:          true,
-			expectBannedPMKOrDSR:     true,
-			expectRejection:          true,
-			expectDupcheckIntegrator: true,
+			errDupcheckIntegrator: errors.New("something wrong"),
+			err:                   errors.New("something wrong"),
 		},
 		{
 			name: "reject check blacklist",
@@ -576,14 +539,7 @@ func TestPrinciplePemohon(t *testing.T) {
 				Code:   constant.CODE_KONSUMEN_SIMILIAR,
 				Reason: "Data diri tidak lolos verifikasi",
 			},
-			expectGetConfig:              true,
-			expectBannedPMKOrDSR:         true,
-			expectRejection:              true,
-			expectDupcheckIntegrator:     true,
-			expectBlacklistCheck:         true,
-			expectSavePrincipleStepTwo:   true,
-			expectUpdatePrincipleStepOne: true,
-			expectPublishEvent:           true,
+			expectPublishEvent: true,
 		},
 		{
 			name: "error customer kmb",
@@ -609,14 +565,8 @@ func TestPrinciplePemohon(t *testing.T) {
 			resBlacklistCheck: response.UsecaseApi{
 				Result: constant.DECISION_PASS,
 			},
-			errCustomerKMB:           errors.New("something wrong"),
-			err:                      errors.New("something wrong"),
-			expectGetConfig:          true,
-			expectBannedPMKOrDSR:     true,
-			expectRejection:          true,
-			expectDupcheckIntegrator: true,
-			expectBlacklistCheck:     true,
-			expectCustomerKMB:        true,
+			errCustomerKMB: errors.New("something wrong"),
+			err:            errors.New("something wrong"),
 		},
 		{
 			name: "error get employee data",
@@ -651,16 +601,8 @@ func TestPrinciplePemohon(t *testing.T) {
 				Code:   constant.CODE_REJECT_INCOME,
 				Reason: fmt.Sprintf(" %s", constant.REASON_REJECT_INCOME),
 			},
-			errGetEmployeeData:       errors.New("something wrong"),
-			err:                      errors.New("something wrong"),
-			expectGetConfig:          true,
-			expectBannedPMKOrDSR:     true,
-			expectRejection:          true,
-			expectDupcheckIntegrator: true,
-			expectBlacklistCheck:     true,
-			expectCustomerKMB:        true,
-			expectCheckPMK:           true,
-			expectGetEmployeeData:    true,
+			errGetEmployeeData: errors.New("something wrong"),
+			err:                errors.New("something wrong"),
 		},
 		{
 			name: "error cmo category",
@@ -696,17 +638,7 @@ func TestPrinciplePemohon(t *testing.T) {
 			resGetEmployeeData: response.EmployeeCMOResponse{
 				CMOCategory: "",
 			},
-			expectGetConfig:              true,
-			expectBannedPMKOrDSR:         true,
-			expectRejection:              true,
-			expectDupcheckIntegrator:     true,
-			expectBlacklistCheck:         true,
-			expectCustomerKMB:            true,
-			expectCheckPMK:               true,
-			expectGetEmployeeData:        true,
-			expectSavePrincipleStepTwo:   true,
-			expectUpdatePrincipleStepOne: true,
-			expectPublishEvent:           true,
+			expectPublishEvent: true,
 		},
 		{
 			name: "error get fpd cmo",
@@ -745,17 +677,8 @@ func TestPrinciplePemohon(t *testing.T) {
 			resGetEmployeeData: response.EmployeeCMOResponse{
 				CMOCategory: constant.CMO_LAMA,
 			},
-			errGetFpdCMO:             errors.New("something wrong"),
-			err:                      errors.New("something wrong"),
-			expectGetConfig:          true,
-			expectBannedPMKOrDSR:     true,
-			expectRejection:          true,
-			expectDupcheckIntegrator: true,
-			expectBlacklistCheck:     true,
-			expectCustomerKMB:        true,
-			expectCheckPMK:           true,
-			expectGetEmployeeData:    true,
-			expectGetFpdCMO:          true,
+			errGetFpdCMO: errors.New("something wrong"),
+			err:          errors.New("something wrong"),
 		},
 		{
 			name: "error master mapping fpd cluster",
@@ -797,18 +720,8 @@ func TestPrinciplePemohon(t *testing.T) {
 			resGetFpdCMO: response.FpdCMOResponse{
 				FpdExist: true,
 			},
-			errMasterMappingFpdCluster:    errors.New("something wrong"),
-			err:                           errors.New("something wrong"),
-			expectGetConfig:               true,
-			expectBannedPMKOrDSR:          true,
-			expectRejection:               true,
-			expectDupcheckIntegrator:      true,
-			expectBlacklistCheck:          true,
-			expectCustomerKMB:             true,
-			expectCheckPMK:                true,
-			expectGetEmployeeData:         true,
-			expectGetFpdCMO:               true,
-			expectMasterMappingFpdCluster: true,
+			errMasterMappingFpdCluster: errors.New("something wrong"),
+			err:                        errors.New("something wrong"),
 		},
 		{
 			name: "error check cmo no fpd",
@@ -847,17 +760,8 @@ func TestPrinciplePemohon(t *testing.T) {
 			resGetEmployeeData: response.EmployeeCMOResponse{
 				CMOCategory: constant.NEW,
 			},
-			errCheckCmoNoFPD:         errors.New("something wrong"),
-			err:                      errors.New("something wrong"),
-			expectGetConfig:          true,
-			expectBannedPMKOrDSR:     true,
-			expectRejection:          true,
-			expectDupcheckIntegrator: true,
-			expectBlacklistCheck:     true,
-			expectCustomerKMB:        true,
-			expectCheckPMK:           true,
-			expectGetEmployeeData:    true,
-			expectCheckCmoNoFPD:      true,
+			errCheckCmoNoFPD: errors.New("something wrong"),
+			err:              errors.New("something wrong"),
 		},
 		{
 			name: "error pefindo",
@@ -900,18 +804,8 @@ func TestPrinciplePemohon(t *testing.T) {
 			resEntityCheckCmoNoFPD: entity.TrxCmoNoFPD{
 				CmoCategory: constant.CMO_LAMA,
 			},
-			errPefindo:               errors.New("something wrong"),
-			err:                      errors.New("something wrong"),
-			expectGetConfig:          true,
-			expectBannedPMKOrDSR:     true,
-			expectRejection:          true,
-			expectDupcheckIntegrator: true,
-			expectBlacklistCheck:     true,
-			expectCustomerKMB:        true,
-			expectCheckPMK:           true,
-			expectGetEmployeeData:    true,
-			expectCheckCmoNoFPD:      true,
-			expectPefindo:            true,
+			errPefindo: errors.New("something wrong"),
+			err:        errors.New("something wrong"),
 		},
 		{
 			name: "error dukcapil",
@@ -956,19 +850,8 @@ func TestPrinciplePemohon(t *testing.T) {
 			resEntityCheckCmoNoFPD: entity.TrxCmoNoFPD{
 				CmoCategory: constant.CMO_LAMA,
 			},
-			errDukcapil:              errors.New("something wrong"),
-			err:                      errors.New("something wrong"),
-			expectGetConfig:          true,
-			expectBannedPMKOrDSR:     true,
-			expectRejection:          true,
-			expectDupcheckIntegrator: true,
-			expectBlacklistCheck:     true,
-			expectCustomerKMB:        true,
-			expectCheckPMK:           true,
-			expectGetEmployeeData:    true,
-			expectCheckCmoNoFPD:      true,
-			expectPefindo:            true,
-			expectDukcapil:           true,
+			errDukcapil: errors.New("something wrong"),
+			err:         errors.New("something wrong"),
 		},
 		{
 			name: "error asliri ktp",
@@ -1021,23 +904,10 @@ func TestPrinciplePemohon(t *testing.T) {
 				MaxOverdueKORules:             10,
 				MaxOverdueLast12MonthsKORules: 12,
 			},
-			errDukcapil:              errors.New(fmt.Sprintf("%s - Dukcapil", constant.TYPE_CONTINGENCY)),
-			errAsliri:                errors.New("something wrong"),
-			errKtp:                   errors.New("something wrong"),
-			err:                      errors.New("something wrong"),
-			expectGetConfig:          true,
-			expectBannedPMKOrDSR:     true,
-			expectRejection:          true,
-			expectDupcheckIntegrator: true,
-			expectBlacklistCheck:     true,
-			expectCustomerKMB:        true,
-			expectCheckPMK:           true,
-			expectGetEmployeeData:    true,
-			expectCheckCmoNoFPD:      true,
-			expectPefindo:            true,
-			expectDukcapil:           true,
-			expectAsliri:             true,
-			expectKtp:                true,
+			errDukcapil: errors.New(fmt.Sprintf("%s - Dukcapil", constant.TYPE_CONTINGENCY)),
+			errAsliri:   errors.New("something wrong"),
+			errKtp:      errors.New("something wrong"),
+			err:         errors.New("something wrong"),
 		},
 		{
 			name: "error save",
@@ -1089,20 +959,8 @@ func TestPrinciplePemohon(t *testing.T) {
 			resDukcapil: response.Ekyc{
 				Result: constant.DECISION_PASS,
 			},
-			errSave:                  errors.New("something wrong"),
-			err:                      errors.New("something wrong"),
-			expectGetConfig:          true,
-			expectBannedPMKOrDSR:     true,
-			expectRejection:          true,
-			expectDupcheckIntegrator: true,
-			expectBlacklistCheck:     true,
-			expectCustomerKMB:        true,
-			expectCheckPMK:           true,
-			expectGetEmployeeData:    true,
-			expectCheckCmoNoFPD:      true,
-			expectPefindo:            true,
-			expectDukcapil:           true,
-			expectSave:               true,
+			errSave: errors.New("something wrong"),
+			err:     errors.New("something wrong"),
 		},
 		{
 			name: "error save principle step two",
@@ -1154,21 +1012,8 @@ func TestPrinciplePemohon(t *testing.T) {
 			resDukcapil: response.Ekyc{
 				Result: constant.DECISION_PASS,
 			},
-			errSavePrincipleStepTwo:    errors.New("something wrong"),
-			err:                        errors.New("something wrong"),
-			expectGetConfig:            true,
-			expectBannedPMKOrDSR:       true,
-			expectRejection:            true,
-			expectDupcheckIntegrator:   true,
-			expectBlacklistCheck:       true,
-			expectCustomerKMB:          true,
-			expectCheckPMK:             true,
-			expectGetEmployeeData:      true,
-			expectCheckCmoNoFPD:        true,
-			expectPefindo:              true,
-			expectDukcapil:             true,
-			expectSave:                 true,
-			expectSavePrincipleStepTwo: true,
+			errSavePrincipleStepTwo: errors.New("something wrong"),
+			err:                     errors.New("something wrong"),
 		},
 		{
 			name: "error update principle step one",
@@ -1220,22 +1065,8 @@ func TestPrinciplePemohon(t *testing.T) {
 			resDukcapil: response.Ekyc{
 				Result: constant.DECISION_PASS,
 			},
-			errUpdatePrincipleStepOne:    errors.New("something wrong"),
-			err:                          errors.New("something wrong"),
-			expectGetConfig:              true,
-			expectBannedPMKOrDSR:         true,
-			expectRejection:              true,
-			expectDupcheckIntegrator:     true,
-			expectBlacklistCheck:         true,
-			expectCustomerKMB:            true,
-			expectCheckPMK:               true,
-			expectGetEmployeeData:        true,
-			expectCheckCmoNoFPD:          true,
-			expectPefindo:                true,
-			expectDukcapil:               true,
-			expectSave:                   true,
-			expectSavePrincipleStepTwo:   true,
-			expectUpdatePrincipleStepOne: true,
+			errUpdatePrincipleStepOne: errors.New("something wrong"),
+			err:                       errors.New("something wrong"),
 		},
 	}
 
@@ -1247,66 +1078,30 @@ func TestPrinciplePemohon(t *testing.T) {
 			var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
 
 			mockRepository.On("GetPrincipleStepOne", tc.request.ProspectID).Return(tc.resGetPrincipleStepOne, tc.errGetPrincipleStepOne)
-			if tc.expectGetConfig {
-				mockRepository.On("GetConfig", "dupcheck", constant.LOB_KMB_OFF, "dupcheck_kmb_config").Return(tc.resGetConfig, tc.errGetConfig)
-			}
-			if tc.expectMasterMappingFpdCluster {
-				mockRepository.On("MasterMappingFpdCluster", mock.Anything).Return(tc.resMasterMappingFpdCluster, tc.errMasterMappingFpdCluster)
-			}
-			if tc.expectSavePrincipleStepTwo {
-				mockRepository.On("SavePrincipleStepTwo", mock.AnythingOfType("entity.TrxPrincipleStepTwo")).Return(tc.errSavePrincipleStepTwo)
-			}
-			if tc.expectUpdatePrincipleStepOne {
-				mockRepository.On("UpdatePrincipleStepOne", tc.request.ProspectID, mock.AnythingOfType("entity.TrxPrincipleStepOne")).Return(tc.errUpdatePrincipleStepOne)
-			}
+			mockRepository.On("GetConfig", "dupcheck", constant.LOB_KMB_OFF, "dupcheck_kmb_config").Return(tc.resGetConfig, tc.errGetConfig)
+			mockRepository.On("MasterMappingFpdCluster", mock.Anything).Return(tc.resMasterMappingFpdCluster, tc.errMasterMappingFpdCluster)
+			mockRepository.On("SavePrincipleStepTwo", mock.AnythingOfType("entity.TrxPrincipleStepTwo")).Return(tc.errSavePrincipleStepTwo)
+			mockRepository.On("UpdatePrincipleStepOne", tc.request.ProspectID, mock.AnythingOfType("entity.TrxPrincipleStepOne")).Return(tc.errUpdatePrincipleStepOne)
 
 			mockUsecase := new(mocks.Usecase)
-			if tc.expectBannedPMKOrDSR {
-				mockRepository.On("GetEncB64", tc.request.IDNumber).Return(entity.EncryptedString{MyString: "encryted"}, nil)
-				mockUsecase.On("BannedPMKOrDSR", mock.Anything).Return(tc.resBannedPMKOrDSR, tc.errBannedPMKOrDSR)
+			mockRepository.On("GetEncB64", tc.request.IDNumber).Return(entity.EncryptedString{MyString: "encryted"}, nil)
+			mockUsecase.On("BannedPMKOrDSR", mock.Anything).Return(tc.resBannedPMKOrDSR, tc.errBannedPMKOrDSR)
+			mockUsecase.On("Rejection", tc.request.ProspectID, mock.Anything, mock.Anything).Return(tc.resRejection, entity.TrxBannedPMKDSR{}, tc.errRejection)
+			mockUsecase.On("DupcheckIntegrator", ctx, tc.request.ProspectID, mock.Anything, mock.Anything, mock.Anything, mock.Anything, "").Return(tc.resDupcheckIntegrator, tc.errDupcheckIntegrator)
+			mockUsecase.On("BlacklistCheck", mock.Anything, tc.resDupcheckIntegrator).Return(tc.resBlacklistCheck, mock.Anything)
+			if tc.resBlacklistCheck.Result == constant.DECISION_REJECT {
+				mockUsecase.On("Save", mock.AnythingOfType("entity.FilteringKMB"), mock.AnythingOfType("[]entity.TrxDetailBiro"), mock.AnythingOfType("entity.TrxCmoNoFPD")).Return(nil)
 			}
-			if tc.expectRejection {
-				mockUsecase.On("Rejection", tc.request.ProspectID, mock.Anything, mock.Anything).Return(tc.resRejection, entity.TrxBannedPMKDSR{}, tc.errRejection)
-			}
-			if tc.expectDupcheckIntegrator {
-				mockUsecase.On("DupcheckIntegrator", ctx, tc.request.ProspectID, mock.Anything, mock.Anything, mock.Anything, mock.Anything, "").Return(tc.resDupcheckIntegrator, tc.errDupcheckIntegrator)
-			}
-			if tc.expectBlacklistCheck {
-				mockUsecase.On("BlacklistCheck", mock.Anything, tc.resDupcheckIntegrator).Return(tc.resBlacklistCheck, mock.Anything)
-				if tc.resBlacklistCheck.Result == constant.DECISION_REJECT {
-					mockUsecase.On("Save", mock.AnythingOfType("entity.FilteringKMB"), mock.AnythingOfType("[]entity.TrxDetailBiro"), mock.AnythingOfType("entity.TrxCmoNoFPD")).Return(nil)
-				}
-			}
-			if tc.expectCustomerKMB {
-				mockUsecase.On("CustomerKMB", mock.AnythingOfType("response.SpDupCekCustomerByID")).Return(tc.resCustomerKMB, tc.errCustomerKMB)
-			}
-			if tc.expectCheckPMK {
-				mockUsecase.On("CheckPMK", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resCheckPMK, tc.errCheckPMK)
-			}
-			if tc.expectGetEmployeeData {
-				mockUsecase.On("GetEmployeeData", ctx, mock.Anything).Return(tc.resGetEmployeeData, tc.errGetEmployeeData)
-			}
-			if tc.expectGetFpdCMO {
-				mockUsecase.On("GetFpdCMO", ctx, mock.Anything, mock.Anything).Return(tc.resGetFpdCMO, tc.errGetFpdCMO)
-			}
-			if tc.expectCheckCmoNoFPD {
-				mockUsecase.On("CheckCmoNoFPD", tc.request.ProspectID, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resClusterCheckCmoNoFPD, tc.resEntityCheckCmoNoFPD, tc.errCheckCmoNoFPD)
-			}
-			if tc.expectPefindo {
-				mockUsecase.On("Pefindo", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resFilteringPefindo, tc.resPefindo, tc.resDetailBiroPefindo, tc.errPefindo)
-			}
-			if tc.expectDukcapil {
-				mockUsecase.On("Dukcapil", ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.resDukcapil, tc.errDukcapil)
-			}
-			if tc.expectAsliri {
-				mockUsecase.On("Asliri", ctx, mock.Anything, mock.Anything).Return(tc.resAsliri, tc.errAsliri)
-			}
-			if tc.expectAsliri {
-				mockUsecase.On("Ktp", ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.resKtp, tc.errKtp)
-			}
-			if tc.expectSave {
-				mockUsecase.On("Save", mock.Anything, mock.Anything, mock.Anything).Return(tc.errSave)
-			}
+			mockUsecase.On("CustomerKMB", mock.AnythingOfType("response.SpDupCekCustomerByID")).Return(tc.resCustomerKMB, tc.errCustomerKMB)
+			mockUsecase.On("CheckPMK", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resCheckPMK, tc.errCheckPMK)
+			mockUsecase.On("GetEmployeeData", ctx, mock.Anything).Return(tc.resGetEmployeeData, tc.errGetEmployeeData)
+			mockUsecase.On("GetFpdCMO", ctx, mock.Anything, mock.Anything).Return(tc.resGetFpdCMO, tc.errGetFpdCMO)
+			mockUsecase.On("CheckCmoNoFPD", tc.request.ProspectID, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resClusterCheckCmoNoFPD, tc.resEntityCheckCmoNoFPD, tc.errCheckCmoNoFPD)
+			mockUsecase.On("Pefindo", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resFilteringPefindo, tc.resPefindo, tc.resDetailBiroPefindo, tc.errPefindo)
+			mockUsecase.On("Dukcapil", ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.resDukcapil, tc.errDukcapil)
+			mockUsecase.On("Asliri", ctx, mock.Anything, mock.Anything).Return(tc.resAsliri, tc.errAsliri)
+			mockUsecase.On("Ktp", ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.resKtp, tc.errKtp)
+			mockUsecase.On("Save", mock.Anything, mock.Anything, mock.Anything).Return(tc.errSave)
 
 			if tc.expectPublishEvent {
 				mockPlatformEvent.On("PublishEvent", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, 0).Return(nil).Once()
@@ -1325,10 +1120,6 @@ func TestPrinciplePemohon(t *testing.T) {
 			}
 
 			time.Sleep(100 * time.Millisecond)
-
-			mockRepository.AssertExpectations(t)
-			mockHttpClient.AssertExpectations(t)
-			mockUsecase.AssertExpectations(t)
 		})
 	}
 }
@@ -1515,7 +1306,7 @@ func TestCheckLatestPaidInstallment(t *testing.T) {
 			httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.customerID+"/2", httpmock.NewStringResponder(tc.mockStatusCode, mockResponseBody))
 			resp, _ := rst.R().SetHeaders(map[string]string{"Content-Type": "application/json", "Authorization": accessToken}).Get(os.Getenv("LASTEST_PAID_INSTALLMENT_URL") + tc.customerID + "/2")
 
-			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.customerID+"/2", []byte(nil), map[string]string{}, constant.METHOD_GET, false, 0, timeout, tc.prospectID, accessToken).Return(resp, tc.mockError).Once()
+			mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.customerID+"/2", []byte(nil), map[string]string{}, constant.METHOD_GET, false, 0, timeout, tc.prospectID, accessToken).Return(resp, tc.mockError).Once()
 			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
 			rrdDate, monthsDiff, err := usecase.CheckLatestPaidInstallment(ctx, tc.prospectID, tc.customerID, accessToken)

@@ -298,6 +298,9 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		principleStepOne    entity.TrxPrincipleStepOne
 		trxPrincipleStepTwo entity.TrxPrincipleStepTwo
 		spouseGender        string
+		dupcheckData        response.SpDupcheckMap
+		spMap               response.SpDupcheckMap
+		married             bool
 	)
 
 	if r.SpouseIDNumber != "" {
@@ -329,6 +332,8 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			if r.SpouseBirthDate != "" {
 				spouseBirthDate, _ = time.Parse(constant.FORMAT_DATE, r.SpouseBirthDate)
 			}
+
+			savedDupcheckData, _ := json.Marshal(dupcheckData)
 
 			trxPrincipleStepTwo.ProspectID = r.ProspectID
 			trxPrincipleStepTwo.IDNumber = r.IDNumber
@@ -385,6 +390,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			trxPrincipleStepTwo.ProfessionID = r.ProfessionID
 			trxPrincipleStepTwo.Decision = data.Decision
 			trxPrincipleStepTwo.Reason = data.Reason
+			trxPrincipleStepTwo.DupcheckData = string(utils.SafeEncoding(savedDupcheckData))
 
 			err = u.repository.SavePrincipleStepTwo(trxPrincipleStepTwo)
 			if err != nil {
@@ -432,6 +438,10 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	if err != nil {
 		// err = errors.New(constant.ERROR_UPSTREAM + " - Get Dupcheck Config Error")
 		return
+	}
+
+	if r.MaritalStatus == constant.MARRIED {
+		married = true
 	}
 
 	var configValue response.DupcheckConfig
@@ -519,7 +529,13 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			return
 		}
 
-		blackList, _ = u.usecase.BlacklistCheck(i, sp)
+		blackList, customerType := u.usecase.BlacklistCheck(i, sp)
+
+		if i == 0 {
+			spMap.CustomerType = customerType
+		} else if i == 1 {
+			spMap.SpouseType = customerType
+		}
 
 		trxPrincipleStepTwo.CheckBlacklistResult = blackList.Result
 		trxPrincipleStepTwo.CheckBlacklistCode = blackList.Code
@@ -535,11 +551,17 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			save.Reason = blackList.Reason
 			save.IsBlacklist = 1
 
+			dupcheckData.CustomerType = spMap.CustomerType
+			dupcheckData.SpouseType = spMap.SpouseType
+
 			err = u.usecase.Save(save, trxDetailBiro, entityTransactionCMOnoFPD)
 
 			return
 		}
 	}
+
+	dupcheckData.CustomerType = spMap.CustomerType
+	dupcheckData.SpouseType = spMap.SpouseType
 
 	mainCustomer := dataCustomer[0]
 
@@ -560,6 +582,33 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		}
 	}
 
+	dupcheckData.StatusKonsumen = mainCustomer.CustomerStatusKMB
+
+	if mainCustomer.MaxOverdueDaysROAO != nil {
+		dupcheckData.MaxOverdueDaysROAO = *mainCustomer.MaxOverdueDaysROAO
+	}
+
+	if mainCustomer.NumberOfPaidInstallment != nil {
+		dupcheckData.NumberOfPaidInstallment = *mainCustomer.NumberOfPaidInstallment
+	}
+
+	if mainCustomer.MaxOverdueDaysforActiveAgreement != nil {
+		dupcheckData.MaxOverdueDaysforActiveAgreement = *mainCustomer.MaxOverdueDaysforActiveAgreement
+	}
+
+	dupcheckData.CustomerID = mainCustomer.CustomerID
+
+	dupcheckData.OSInstallmentDue = mainCustomer.OSInstallmentDue
+	dupcheckData.NumberofAgreement = mainCustomer.NumberofAgreement
+
+	if mainCustomer.CustomerStatusKMB == constant.STATUS_KONSUMEN_AO || mainCustomer.CustomerStatusKMB == constant.STATUS_KONSUMEN_RO {
+		if dupcheckData.NumberofAgreement == 0 {
+			dupcheckData.AgreementStatus = constant.AGREEMENT_LUNAS
+		} else {
+			dupcheckData.AgreementStatus = constant.AGREEMENT_AKTIF
+		}
+	}
+
 	mainCustomer.CustomerStatus = mainCustomer.CustomerStatusKMB
 
 	pmk, _ := u.usecase.CheckPMK(principleStepOne.BranchID, mainCustomer.CustomerStatusKMB, income, principleStepOne.HomeStatus, r.ProfessionID, r.BirthDate, 12, r.MaritalStatus, r.EmploymentSinceYear, r.EmploymentSinceMonth, principleStepOne.StaySinceYear, principleStepOne.StaySinceMonth)
@@ -573,6 +622,11 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		data.Reason = pmk.Reason
 
 		// belum save
+	}
+
+	dupcheckData.InstallmentAmountFMF = dataCustomer[0].TotalInstallment
+	if married {
+		dupcheckData.InstallmentAmountSpouseFMF = dataCustomer[1].TotalInstallment
 	}
 
 	reqPefindo = request.Pefindo{
@@ -683,6 +737,8 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 
 	save.CustomerStatusKMB = mainCustomer.CustomerStatusKMB
 	save.Cluster = filtering.Cluster
+
+	dupcheckData.Cluster = filtering.Cluster
 
 	trxPrincipleStepTwo.FilteringResult = filtering.Decision
 	trxPrincipleStepTwo.FilteringCode = filtering.Code
@@ -813,6 +869,9 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			trxPrincipleStepTwo.CheckEkycResult = ktp.Result
 			trxPrincipleStepTwo.CheckEkycCode = ktp.Code
 			trxPrincipleStepTwo.CheckEkycReason = ktp.Reason
+			trxPrincipleStepTwo.CheckEkycSource = ktp.Source
+			trxPrincipleStepTwo.CheckEkycInfo = ktp.Info
+			trxPrincipleStepTwo.CheckEkycSimiliarity = ktp.Similiarity
 		}
 
 		// trxFMF.EkycSource = "ASLI RI"
@@ -822,6 +881,9 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		trxPrincipleStepTwo.CheckEkycResult = asliri.Result
 		trxPrincipleStepTwo.CheckEkycCode = asliri.Code
 		trxPrincipleStepTwo.CheckEkycReason = asliri.Reason
+		trxPrincipleStepTwo.CheckEkycSource = asliri.Source
+		trxPrincipleStepTwo.CheckEkycInfo = asliri.Info
+		trxPrincipleStepTwo.CheckEkycSimiliarity = asliri.Similiarity
 	}
 
 	// trxFMF.EkycSource = "DUKCAPIL"
@@ -831,6 +893,9 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	trxPrincipleStepTwo.CheckEkycResult = dukcapil.Result
 	trxPrincipleStepTwo.CheckEkycCode = dukcapil.Code
 	trxPrincipleStepTwo.CheckEkycReason = dukcapil.Reason
+	trxPrincipleStepTwo.CheckEkycSource = dukcapil.Source
+	trxPrincipleStepTwo.CheckEkycInfo = dukcapil.Info
+	trxPrincipleStepTwo.CheckEkycSimiliarity = dukcapil.Similiarity
 
 	err = u.usecase.Save(save, trxDetailBiro, entityTransactionCMOnoFPD)
 
@@ -862,7 +927,7 @@ func (u usecase) CheckLatestPaidInstallment(ctx context.Context, prospectID stri
 		parsedRrddate             time.Time
 	)
 
-	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+customerID+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
+	resp, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+customerID+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout")

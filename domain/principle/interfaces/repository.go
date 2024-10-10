@@ -21,6 +21,7 @@ type Repository interface {
 	GetTrxPrincipleStatus(nik string) (data entity.TrxPrincipleStatus, err error)
 	SavePrincipleStepTwo(data entity.TrxPrincipleStepTwo) (err error)
 	GetPrincipleStepTwo(prospectID string) (data entity.TrxPrincipleStepTwo, err error)
+	UpdatePrincipleStepTwo(prospectID string, data entity.TrxPrincipleStepTwo) (err error)
 	GetFilteringResult(prospectID string) (filtering entity.FilteringKMB, err error)
 	GetMappingElaborateLTV(resultPefindo, cluster string) (data []entity.MappingElaborateLTV, err error)
 	SaveTrxElaborateLTV(data entity.TrxElaborateLTV) (err error)

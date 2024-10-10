@@ -2113,3 +2113,65 @@ func (r repoHandler) GetBranchDeviasi(BranchID string) (data entity.MappingBranc
 
 	return
 }
+
+func (r repoHandler) ScanTrxPrinciple(prospectID string) (count int, err error) {
+
+	var (
+		trxEmcon []entity.TrxPrincipleEmergencyContact
+	)
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf("SELECT ProspectID FROM trx_principle_emergency_contact WITH (nolock) WHERE ProspectID = '%s'", prospectID)).Scan(&trxEmcon).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	count = len(trxEmcon)
+
+	return
+}
+
+func (r repoHandler) GetPrincipleStepOne(prospectID string) (data entity.TrxPrincipleStepOne, err error) {
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_one WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmbDB.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetPrincipleStepTwo(prospectID string) (data entity.TrxPrincipleStepTwo, err error) {
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_two WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmbDB.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetPrincipleStepThree(prospectID string) (data entity.TrxPrincipleStepThree, err error) {
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_three WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmbDB.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetPrincipleEmergencyContact(prospectID string) (data entity.TrxPrincipleEmergencyContact, err error) {
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_emergency_contact WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmbDB.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
