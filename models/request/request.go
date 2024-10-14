@@ -987,8 +987,8 @@ type PrincipleAsset struct {
 	ResidenceKecamatan string `json:"residence_kecamatan" validate:"required,max=30" example:"Duren Sawit"`
 	ResidenceKelurahan string `json:"residence_kelurahan" validate:"required,max=30" example:"Klender"`
 	ResidenceZipCode   string `json:"residence_zipcode" validate:"required,max=5" example:"13470"`
-	ResidenceAreaPhone string `json:"residence_area_phone" validate:"required,min=2,max=4" example:"021"`
-	ResidencePhone     string `json:"residence_phone" validate:"required,max=10" example:"86605224"`
+	ResidenceAreaPhone string `json:"residence_area_phone" example:"021"`
+	ResidencePhone     string `json:"residence_phone" example:"86605224"`
 	HomeStatus         string `json:"home_status" validate:"required,max=2" example:"SD"`
 	StaySinceYear      int    `json:"stay_since_year" validate:"required" example:"2024"`
 	StaySinceMonth     int    `json:"stay_since_month" validate:"required,min=1,max=12" example:"4"`
