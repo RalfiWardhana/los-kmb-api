@@ -1066,7 +1066,7 @@ type PrinciplePembiayaan struct {
 	AF                    float64  `json:"af" validate:"required,max=999999999999" example:"84000000"`
 	NTF                   float64  `json:"ntf" validate:"required,max=999999999999" example:"150528000"`
 	OTR                   float64  `json:"otr" validate:"required,max=999999999999" example:"105000000"`
-	DPAmount              float64  `json:"down_payment_amount" validate:"required,max=999999999999" example:"22000000"`
+	DPAmount              float64  `json:"down_payment_amount" validate:"omitempty,max=999999999999" example:"22000000"`
 	AdminFee              float64  `json:"admin_fee" validate:"required,max=999999999999" example:"1500000"`
 	InstallmentAmount     float64  `json:"installment_amount" validate:"required,max=999999999999" example:"4181333"`
 	Dealer                string   `json:"dealer" validate:"omitempty,max=50"`
