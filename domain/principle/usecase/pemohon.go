@@ -571,8 +571,6 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	if pmk.Result == constant.DECISION_REJECT {
 		data.Decision = pmk.Result
 		data.Reason = pmk.Reason
-
-		// belum save
 	}
 
 	reqPefindo = request.Pefindo{
@@ -606,7 +604,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	}
 
 	if hrisCMO.CMOCategory == "" {
-		// err = errors.New(constant.ERROR_BAD_REQUEST + " - CMO_ID " + req.CMOID + " not found on HRIS API")
+		err = errors.New(constant.ERROR_UPSTREAM + " - CMO Not Found")
 		return
 	}
 
@@ -723,7 +721,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 					data.NextProcess = filtering.NextProcess
 				}
 			} else {
-				// err = errors.New(constant.ERROR_BAD_REQUEST + " - Customer RO then CustomerID should not be empty")
+				err = errors.New(constant.ERROR_BAD_REQUEST + " - Customer RO then CustomerID should not be empty")
 				return
 			}
 		}
@@ -806,27 +804,15 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 				return response.UsecaseApi{}, err
 			}
 
-			// trxFMF.EkycSource = "KTP VALIDATOR"
-			// trxFMF.EkycSimiliarity = data.Similiarity
-			// trxFMF.EkycReason = data.Reason
-
 			trxPrincipleStepTwo.CheckEkycResult = ktp.Result
 			trxPrincipleStepTwo.CheckEkycCode = ktp.Code
 			trxPrincipleStepTwo.CheckEkycReason = ktp.Reason
 		}
 
-		// trxFMF.EkycSource = "ASLI RI"
-		// trxFMF.EkycSimiliarity = data.Similiarity
-		// trxFMF.EkycReason = data.Reason
-
 		trxPrincipleStepTwo.CheckEkycResult = asliri.Result
 		trxPrincipleStepTwo.CheckEkycCode = asliri.Code
 		trxPrincipleStepTwo.CheckEkycReason = asliri.Reason
 	}
-
-	// trxFMF.EkycSource = "DUKCAPIL"
-	// trxFMF.EkycSimiliarity = data.Similiarity
-	// trxFMF.EkycReason = data.Reason
 
 	trxPrincipleStepTwo.CheckEkycResult = dukcapil.Result
 	trxPrincipleStepTwo.CheckEkycCode = dukcapil.Code
@@ -845,11 +831,8 @@ func (u usecase) Save(transaction entity.FilteringKMB, trxDetailBiro []entity.Tr
 	if err != nil {
 
 		if strings.Contains(err.Error(), "deadline") {
-			// err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Save Filtering Timeout")
 			return
 		}
-
-		// err = errors.New(constant.ERROR_BAD_REQUEST + " - Save Filtering Error ProspectID Already Exist")
 	}
 
 	return
