@@ -442,7 +442,7 @@ func TestElaborateLTV(t *testing.T) {
 		_ = handler.ElaborateLTV(c)
 
 		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Contains(t, rec.Body.String(), "PRINCIPLE-001")
+		assert.Contains(t, rec.Body.String(), "PRINCIPLE-004")
 
 		mockUsecase.AssertExpectations(t)
 	})

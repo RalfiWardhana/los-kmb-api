@@ -176,22 +176,6 @@ func TestPrincipleSubmission(t *testing.T) {
 			err:                      errors.New(constant.ERROR_UPSTREAM + " - Get Principle Step Three Error"),
 		},
 		{
-			name: "error first save transaction",
-			reqMetrics: request.Metrics{
-				Transaction: request.Transaction{
-					ProspectID: "TEST1",
-				},
-			},
-			trxMaster: 0,
-			filtering: entity.FilteringKMB{
-				NextProcess:    1,
-				CustomerStatus: "NEW",
-			},
-			resultMetrics:      response.Metrics{},
-			errSaveTransaction: errors.New(constant.ERROR_UPSTREAM + " - Save Transaction Error"),
-			err:                errors.New(constant.ERROR_UPSTREAM + " - Save Transaction Error"),
-		},
-		{
 			name: "error get ntf pending",
 			reqMetrics: request.Metrics{
 				Transaction: request.Transaction{
@@ -209,7 +193,6 @@ func TestPrincipleSubmission(t *testing.T) {
 				NextProcess:    1,
 				CustomerStatus: "NEW",
 			},
-			resultMetrics:       response.Metrics{},
 			errGetNTFPending:    errors.New(constant.ERROR_UPSTREAM + " - Call NTF Pending API Error"),
 			err:                 errors.New(constant.ERROR_UPSTREAM + " - Call NTF Pending API Error"),
 			expectGetNTFPending: true,
@@ -232,7 +215,6 @@ func TestPrincipleSubmission(t *testing.T) {
 				NextProcess:    1,
 				CustomerStatus: "NEW",
 			},
-			resultMetrics:       response.Metrics{},
 			codeGetNTFPending:   400,
 			err:                 errors.New(constant.ERROR_UPSTREAM + " - Call NTF Pending API Error"),
 			expectGetNTFPending: true,
@@ -258,7 +240,6 @@ func TestPrincipleSubmission(t *testing.T) {
 				NextProcess:    1,
 				CustomerStatus: "NEW",
 			},
-			resultMetrics:       response.Metrics{},
 			codeGetNTFPending:   200,
 			errGetNTFPending:    nil,
 			errGetNTFTopUp:      errors.New(constant.ERROR_UPSTREAM + " - Call NTF Topup API Error"),
@@ -287,7 +268,6 @@ func TestPrincipleSubmission(t *testing.T) {
 				NextProcess:    1,
 				CustomerStatus: "NEW",
 			},
-			resultMetrics:       response.Metrics{},
 			codeGetNTFPending:   200,
 			errGetNTFPending:    nil,
 			codeGetNTFTopUp:     400,
@@ -317,13 +297,44 @@ func TestPrincipleSubmission(t *testing.T) {
 				NextProcess:    1,
 				CustomerStatus: "NEW",
 			},
-			resultMetrics:       response.Metrics{},
 			codeGetNTFPending:   200,
 			errGetNTFPending:    nil,
 			codeGetNTFTopUp:     200,
 			errGetNTFTopUp:      nil,
 			bodyGetNTFTopUp:     `invalid json`,
 			err:                 errors.New(constant.ERROR_UPSTREAM + " - Call NTF Topup API Error"),
+			expectGetNTFPending: true,
+			expectGetNTFTopUp:   true,
+		},
+		{
+			reqMetrics: request.Metrics{
+				Transaction: request.Transaction{
+					ProspectID: "TEST1",
+				},
+				Item: request.Item{
+					NoChassis: "ASD123",
+				},
+				CustomerPersonal: request.CustomerPersonal{
+					MaritalStatus: constant.MARRIED,
+				},
+				CustomerSpouse: &request.CustomerSpouse{
+					IDNumber: "123456",
+				},
+			},
+			trxMaster: 0,
+			filtering: entity.FilteringKMB{
+				NextProcess:    1,
+				CustomerStatus: "RO",
+				CustomerID:     "123",
+			},
+			resultMetrics:       response.Metrics{},
+			codeGetNTFPending:   200,
+			errGetNTFPending:    nil,
+			codeGetNTFTopUp:     200,
+			errGetNTFTopUp:      nil,
+			bodyGetNTFTopUp:     `{"data":{"lc_installment":100000}}`,
+			errSaveTransaction:  errors.New(constant.ERROR_UPSTREAM + " - Save Transaction Error"),
+			err:                 errors.New(constant.ERROR_UPSTREAM + " - Save Transaction Error"),
 			expectGetNTFPending: true,
 			expectGetNTFTopUp:   true,
 		},
