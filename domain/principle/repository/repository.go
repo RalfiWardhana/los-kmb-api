@@ -347,6 +347,25 @@ func (r repoHandler) GetPrincipleStepTwo(prospectID string) (data entity.TrxPrin
 	return
 }
 
+func (r repoHandler) UpdatePrincipleStepTwo(prospectID string, data entity.TrxPrincipleStepTwo) (err error) {
+
+	return r.newKmb.Transaction(func(tx *gorm.DB) error {
+		var existing entity.TrxPrincipleStepTwo
+		if err := tx.Where("ProspectID = ?", prospectID).Order("created_at DESC").First(&existing).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Model(&entity.TrxPrincipleStepTwo{}).
+			Where("ProspectID = ?", data.ProspectID).
+			Updates(&data).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		return nil
+	})
+}
+
 func (r repoHandler) GetFilteringResult(prospectID string) (filtering entity.FilteringKMB, err error) {
 	var x sql.TxOptions
 

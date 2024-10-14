@@ -35,6 +35,20 @@ func structToSlice(data interface{}) []driver.Value {
 	return values
 }
 
+func structToSliceWithTimeArgs(obj interface{}) []driver.Value {
+	v := reflect.ValueOf(obj)
+	values := make([]driver.Value, v.NumField())
+	for i := 0; i < v.NumField(); i++ {
+		field := v.Field(i)
+		if field.Type() == reflect.TypeOf(time.Time{}) {
+			values[i] = sqlmock.AnyArg()
+		} else {
+			values[i] = field.Interface()
+		}
+	}
+	return values
+}
+
 func TestGetConfig(t *testing.T) {
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -873,10 +887,13 @@ func TestSavePrincipleStepTwo(t *testing.T) {
 
 	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
+	fixedTime := time.Date(2024, 10, 7, 9, 48, 22, 0, time.UTC)
+
 	dataStepTwo := entity.TrxPrincipleStepTwo{
 		ProspectID: "SAL-1140024080800016",
 		IDNumber:   "123",
 		Decision:   "approved",
+		CreatedAt:  fixedTime,
 	}
 
 	dataStatus := entity.TrxPrincipleStatus{
@@ -884,14 +901,14 @@ func TestSavePrincipleStepTwo(t *testing.T) {
 		IDNumber:   dataStepTwo.IDNumber,
 		Step:       2,
 		Decision:   dataStepTwo.Decision,
-		UpdatedAt:  time.Now(),
+		UpdatedAt:  fixedTime,
 	}
 
 	mock.ExpectBegin()
 
-	stepOne := structToSlice(dataStepTwo)
+	data := structToSliceWithTimeArgs(dataStepTwo)
 	mock.ExpectExec(`INSERT INTO "trx_principle_step_two" (.*)`).
-		WithArgs(stepOne...).
+		WithArgs(data...).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
 	mock.ExpectExec(`INSERT INTO "trx_principle_status" (.*)`).
@@ -901,6 +918,54 @@ func TestSavePrincipleStepTwo(t *testing.T) {
 	mock.ExpectCommit()
 
 	err := repo.SavePrincipleStepTwo(dataStepTwo)
+
+	if err != nil {
+		t.Errorf("error '%s' was not expected, but got: %s", err, err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestUpdatePrincipleStepTwo(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	existingData := entity.TrxPrincipleStepTwo{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "pending",
+		CreatedAt:  time.Now().Add(-time.Hour),
+	}
+
+	updatedData := entity.TrxPrincipleStepTwo{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "approved",
+	}
+
+	mock.ExpectBegin()
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "trx_principle_step_two" WHERE (ProspectID = ?) ORDER BY created_at DESC LIMIT 1`)).
+		WithArgs(existingData.ProspectID).
+		WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "IDNumber", "Decision", "created_at"}).
+			AddRow(existingData.ProspectID, existingData.IDNumber, existingData.Decision, existingData.CreatedAt))
+
+	mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_principle_step_two" SET "Decision" = ?, "IDNumber" = ?, "ProspectID" = ? WHERE (ProspectID = ?)`)).
+		WithArgs(updatedData.Decision, updatedData.IDNumber, updatedData.ProspectID, updatedData.ProspectID).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectCommit()
+
+	err := repo.UpdatePrincipleStepTwo(existingData.ProspectID, updatedData)
 
 	if err != nil {
 		t.Errorf("error '%s' was not expected, but got: %s", err, err)

@@ -298,6 +298,9 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		principleStepOne    entity.TrxPrincipleStepOne
 		trxPrincipleStepTwo entity.TrxPrincipleStepTwo
 		spouseGender        string
+		dupcheckData        response.SpDupcheckMap
+		spMap               response.SpDupcheckMap
+		married             bool
 	)
 
 	if r.SpouseIDNumber != "" {
@@ -329,6 +332,8 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			if r.SpouseBirthDate != "" {
 				spouseBirthDate, _ = time.Parse(constant.FORMAT_DATE, r.SpouseBirthDate)
 			}
+
+			savedDupcheckData, _ := json.Marshal(dupcheckData)
 
 			trxPrincipleStepTwo.ProspectID = r.ProspectID
 			trxPrincipleStepTwo.IDNumber = r.IDNumber
@@ -385,6 +390,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			trxPrincipleStepTwo.ProfessionID = r.ProfessionID
 			trxPrincipleStepTwo.Decision = data.Decision
 			trxPrincipleStepTwo.Reason = data.Reason
+			trxPrincipleStepTwo.DupcheckData = string(utils.SafeEncoding(savedDupcheckData))
 
 			err = u.repository.SavePrincipleStepTwo(trxPrincipleStepTwo)
 			if err != nil {
@@ -397,10 +403,10 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			}
 
 			statusCode := constant.PRINCIPLE_STATUS_PEMOHON_APPROVE
-			data.Reason = "Verifikasi data diri berhasil"
+			resp.Reason = "Verifikasi data diri berhasil"
 			if data.Decision == constant.DECISION_REJECT {
 				statusCode = constant.PRINCIPLE_STATUS_PEMOHON_REJECT
-				data.Reason = "Data diri tidak lolos verifikasi"
+				resp.Reason = "Data diri tidak lolos verifikasi"
 			}
 
 			go u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
@@ -432,6 +438,10 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	if err != nil {
 		// err = errors.New(constant.ERROR_UPSTREAM + " - Get Dupcheck Config Error")
 		return
+	}
+
+	if r.MaritalStatus == constant.MARRIED {
+		married = true
 	}
 
 	var configValue response.DupcheckConfig
@@ -473,7 +483,6 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		data.Code = trxReject.Code
 		data.Reason = trxReject.Reason
 
-		// trxFMF.TrxBannedPMKDSR = trxBannedPMKDSR
 		return
 	}
 
@@ -519,7 +528,13 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			return
 		}
 
-		blackList, _ = u.usecase.BlacklistCheck(i, sp)
+		blackList, customerType := u.usecase.BlacklistCheck(i, sp)
+
+		if i == 0 {
+			spMap.CustomerType = customerType
+		} else if i == 1 {
+			spMap.SpouseType = customerType
+		}
 
 		trxPrincipleStepTwo.CheckBlacklistResult = blackList.Result
 		trxPrincipleStepTwo.CheckBlacklistCode = blackList.Code
@@ -535,11 +550,17 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			save.Reason = blackList.Reason
 			save.IsBlacklist = 1
 
+			dupcheckData.CustomerType = spMap.CustomerType
+			dupcheckData.SpouseType = spMap.SpouseType
+
 			err = u.usecase.Save(save, trxDetailBiro, entityTransactionCMOnoFPD)
 
 			return
 		}
 	}
+
+	dupcheckData.CustomerType = spMap.CustomerType
+	dupcheckData.SpouseType = spMap.SpouseType
 
 	mainCustomer := dataCustomer[0]
 
@@ -560,6 +581,33 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		}
 	}
 
+	dupcheckData.StatusKonsumen = mainCustomer.CustomerStatusKMB
+
+	if mainCustomer.MaxOverdueDaysROAO != nil {
+		dupcheckData.MaxOverdueDaysROAO = *mainCustomer.MaxOverdueDaysROAO
+	}
+
+	if mainCustomer.NumberOfPaidInstallment != nil {
+		dupcheckData.NumberOfPaidInstallment = *mainCustomer.NumberOfPaidInstallment
+	}
+
+	if mainCustomer.MaxOverdueDaysforActiveAgreement != nil {
+		dupcheckData.MaxOverdueDaysforActiveAgreement = *mainCustomer.MaxOverdueDaysforActiveAgreement
+	}
+
+	dupcheckData.CustomerID = mainCustomer.CustomerID
+
+	dupcheckData.OSInstallmentDue = mainCustomer.OSInstallmentDue
+	dupcheckData.NumberofAgreement = mainCustomer.NumberofAgreement
+
+	if mainCustomer.CustomerStatusKMB == constant.STATUS_KONSUMEN_AO || mainCustomer.CustomerStatusKMB == constant.STATUS_KONSUMEN_RO {
+		if dupcheckData.NumberofAgreement == 0 {
+			dupcheckData.AgreementStatus = constant.AGREEMENT_LUNAS
+		} else {
+			dupcheckData.AgreementStatus = constant.AGREEMENT_AKTIF
+		}
+	}
+
 	mainCustomer.CustomerStatus = mainCustomer.CustomerStatusKMB
 
 	pmk, _ := u.usecase.CheckPMK(principleStepOne.BranchID, mainCustomer.CustomerStatusKMB, income, principleStepOne.HomeStatus, r.ProfessionID, r.BirthDate, 12, r.MaritalStatus, r.EmploymentSinceYear, r.EmploymentSinceMonth, principleStepOne.StaySinceYear, principleStepOne.StaySinceMonth)
@@ -570,7 +618,15 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 
 	if pmk.Result == constant.DECISION_REJECT {
 		data.Decision = pmk.Result
+		data.Code = pmk.Code
 		data.Reason = pmk.Reason
+
+		return
+	}
+
+	dupcheckData.InstallmentAmountFMF = dataCustomer[0].TotalInstallment
+	if married {
+		dupcheckData.InstallmentAmountSpouseFMF = dataCustomer[1].TotalInstallment
 	}
 
 	reqPefindo = request.Pefindo{
@@ -682,15 +738,13 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	save.CustomerStatusKMB = mainCustomer.CustomerStatusKMB
 	save.Cluster = filtering.Cluster
 
-	trxPrincipleStepTwo.FilteringResult = filtering.Decision
-	trxPrincipleStepTwo.FilteringCode = filtering.Code
-	trxPrincipleStepTwo.FilteringReason = filtering.Reason
+	dupcheckData.Cluster = filtering.Cluster
 
 	primePriority, _ := utils.ItemExists(mainCustomer.CustomerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
 
 	if primePriority && (mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_AO || mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO) {
 		data.Code = blackList.Code
-		data.Decision = blackList.Result
+		data.Decision = constant.DECISION_PASS
 		data.Reason = mainCustomer.CustomerStatus + " " + mainCustomer.CustomerSegment
 		data.NextProcess = true
 
@@ -793,13 +847,23 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		return
 	}
 
+	trxPrincipleStepTwo.CheckEkycResult = dukcapil.Result
+	trxPrincipleStepTwo.CheckEkycCode = dukcapil.Code
+	trxPrincipleStepTwo.CheckEkycReason = dukcapil.Reason
+	trxPrincipleStepTwo.CheckEkycSource = dukcapil.Source
+	trxPrincipleStepTwo.CheckEkycInfo = dukcapil.Info
+	trxPrincipleStepTwo.CheckEkycSimiliarity = dukcapil.Similiarity
+
 	if err != nil && err.Error() == fmt.Sprintf("%s - Dukcapil", constant.TYPE_CONTINGENCY) {
 
-		asliri, err := u.usecase.Asliri(ctx, r, middlewares.UserInfoData.AccessToken)
+		asliri, errAsliri := u.usecase.Asliri(ctx, r, middlewares.UserInfoData.AccessToken)
+		err = errAsliri
 
 		if err != nil {
 
-			ktp, err := u.usecase.Ktp(ctx, r, reqMetricsEkyc, middlewares.UserInfoData.AccessToken)
+			ktp, errKtp := u.usecase.Ktp(ctx, r, reqMetricsEkyc, middlewares.UserInfoData.AccessToken)
+			err = errKtp
+
 			if err != nil {
 				return response.UsecaseApi{}, err
 			}
@@ -807,18 +871,55 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			trxPrincipleStepTwo.CheckEkycResult = ktp.Result
 			trxPrincipleStepTwo.CheckEkycCode = ktp.Code
 			trxPrincipleStepTwo.CheckEkycReason = ktp.Reason
-		}
+			trxPrincipleStepTwo.CheckEkycSource = ktp.Source
+			trxPrincipleStepTwo.CheckEkycInfo = ktp.Info
+			trxPrincipleStepTwo.CheckEkycSimiliarity = ktp.Similiarity
 
-		trxPrincipleStepTwo.CheckEkycResult = asliri.Result
-		trxPrincipleStepTwo.CheckEkycCode = asliri.Code
-		trxPrincipleStepTwo.CheckEkycReason = asliri.Reason
+		} else {
+
+			trxPrincipleStepTwo.CheckEkycResult = asliri.Result
+			trxPrincipleStepTwo.CheckEkycCode = asliri.Code
+			trxPrincipleStepTwo.CheckEkycReason = asliri.Reason
+			trxPrincipleStepTwo.CheckEkycSource = asliri.Source
+			trxPrincipleStepTwo.CheckEkycInfo = asliri.Info
+			trxPrincipleStepTwo.CheckEkycSimiliarity = asliri.Similiarity
+
+		}
 	}
 
-	trxPrincipleStepTwo.CheckEkycResult = dukcapil.Result
-	trxPrincipleStepTwo.CheckEkycCode = dukcapil.Code
-	trxPrincipleStepTwo.CheckEkycReason = dukcapil.Reason
+	if trxPrincipleStepTwo.CheckEkycResult != nil && trxPrincipleStepTwo.CheckEkycResult == constant.DECISION_REJECT {
+		data.Decision = trxPrincipleStepTwo.CheckEkycResult.(string)
+		data.Code = trxPrincipleStepTwo.CheckEkycCode
+
+		if trxPrincipleStepTwo.CheckEkycReason != nil {
+			data.Reason = trxPrincipleStepTwo.CheckEkycReason.(string)
+		}
+
+		return
+	}
 
 	err = u.usecase.Save(save, trxDetailBiro, entityTransactionCMOnoFPD)
+	if err != nil {
+		return
+	}
+
+	trxPrincipleStepTwo.FilteringResult = filtering.Decision
+	trxPrincipleStepTwo.FilteringCode = filtering.Code
+	trxPrincipleStepTwo.FilteringReason = filtering.Reason
+
+	if !data.NextProcess {
+		trxPrincipleStepTwo.FilteringResult = constant.DECISION_REJECT
+
+		data.Decision = constant.DECISION_REJECT
+		data.Code = filtering.Code
+		data.Reason = filtering.Reason
+	} else {
+		trxPrincipleStepTwo.FilteringResult = constant.DECISION_PASS
+
+		data.Decision = constant.DECISION_PASS
+		data.Code = filtering.Code
+		data.Reason = filtering.Reason
+	}
 
 	return
 
@@ -845,7 +946,7 @@ func (u usecase) CheckLatestPaidInstallment(ctx context.Context, prospectID stri
 		parsedRrddate             time.Time
 	)
 
-	resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+customerID+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
+	resp, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+customerID+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout")

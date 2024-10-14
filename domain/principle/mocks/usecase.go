@@ -285,7 +285,7 @@ func (_m *Usecase) CustomerKMB(spDupcheck response.SpDupCekCustomerByID) (string
 }
 
 // DsrCheck provides a mock function with given fields: ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, agreementChasisNumber, accessToken, configValue
-func (_m *Usecase) DsrCheck(ctx context.Context, req request.PrinciplePembiayaan, customerData []request.CustomerData, installmentAmount float64, installmentConfins float64, installmentConfinsSpouse float64, income float64, agreementChasisNumber response.AgreementChassisNumber, accessToken string, configValue response.DupcheckConfig) (response.UsecaseApi, error) {
+func (_m *Usecase) DsrCheck(ctx context.Context, req request.PrinciplePembiayaan, customerData []request.CustomerData, installmentAmount float64, installmentConfins float64, installmentConfinsSpouse float64, income float64, agreementChasisNumber response.AgreementChassisNumber, accessToken string, configValue response.DupcheckConfig) (response.UsecaseApi, response.Dsr, float64, float64, float64, error) {
 	ret := _m.Called(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, agreementChasisNumber, accessToken, configValue)
 
 	if len(ret) == 0 {
@@ -293,8 +293,12 @@ func (_m *Usecase) DsrCheck(ctx context.Context, req request.PrinciplePembiayaan
 	}
 
 	var r0 response.UsecaseApi
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, request.PrinciplePembiayaan, []request.CustomerData, float64, float64, float64, float64, response.AgreementChassisNumber, string, response.DupcheckConfig) (response.UsecaseApi, error)); ok {
+	var r1 response.Dsr
+	var r2 float64
+	var r3 float64
+	var r4 float64
+	var r5 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.PrinciplePembiayaan, []request.CustomerData, float64, float64, float64, float64, response.AgreementChassisNumber, string, response.DupcheckConfig) (response.UsecaseApi, response.Dsr, float64, float64, float64, error)); ok {
 		return rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, agreementChasisNumber, accessToken, configValue)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, request.PrinciplePembiayaan, []request.CustomerData, float64, float64, float64, float64, response.AgreementChassisNumber, string, response.DupcheckConfig) response.UsecaseApi); ok {
@@ -303,13 +307,37 @@ func (_m *Usecase) DsrCheck(ctx context.Context, req request.PrinciplePembiayaan
 		r0 = ret.Get(0).(response.UsecaseApi)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, request.PrinciplePembiayaan, []request.CustomerData, float64, float64, float64, float64, response.AgreementChassisNumber, string, response.DupcheckConfig) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, request.PrinciplePembiayaan, []request.CustomerData, float64, float64, float64, float64, response.AgreementChassisNumber, string, response.DupcheckConfig) response.Dsr); ok {
 		r1 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, agreementChasisNumber, accessToken, configValue)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(response.Dsr)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, request.PrinciplePembiayaan, []request.CustomerData, float64, float64, float64, float64, response.AgreementChassisNumber, string, response.DupcheckConfig) float64); ok {
+		r2 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, agreementChasisNumber, accessToken, configValue)
+	} else {
+		r2 = ret.Get(2).(float64)
+	}
+
+	if rf, ok := ret.Get(3).(func(context.Context, request.PrinciplePembiayaan, []request.CustomerData, float64, float64, float64, float64, response.AgreementChassisNumber, string, response.DupcheckConfig) float64); ok {
+		r3 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, agreementChasisNumber, accessToken, configValue)
+	} else {
+		r3 = ret.Get(3).(float64)
+	}
+
+	if rf, ok := ret.Get(4).(func(context.Context, request.PrinciplePembiayaan, []request.CustomerData, float64, float64, float64, float64, response.AgreementChassisNumber, string, response.DupcheckConfig) float64); ok {
+		r4 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, agreementChasisNumber, accessToken, configValue)
+	} else {
+		r4 = ret.Get(4).(float64)
+	}
+
+	if rf, ok := ret.Get(5).(func(context.Context, request.PrinciplePembiayaan, []request.CustomerData, float64, float64, float64, float64, response.AgreementChassisNumber, string, response.DupcheckConfig) error); ok {
+		r5 = rf(ctx, req, customerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income, agreementChasisNumber, accessToken, configValue)
+	} else {
+		r5 = ret.Error(5)
+	}
+
+	return r0, r1, r2, r3, r4, r5
 }
 
 // Dukcapil provides a mock function with given fields: ctx, r, reqMetricsEkyc, accessToken
@@ -755,32 +783,81 @@ func (_m *Usecase) Save(transaction entity.FilteringKMB, trxDetailBiro []entity.
 	return r0
 }
 
-// Scorepro provides a mock function with given fields: ctx, req, principleStepOne, principleStepTwo, pefindoScore, customerStatus, customerSegment, installmentTopUp, spDupcheck, accessToken
-func (_m *Usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan, principleStepOne entity.TrxPrincipleStepOne, principleStepTwo entity.TrxPrincipleStepTwo, pefindoScore string, customerStatus string, customerSegment string, installmentTopUp float64, spDupcheck response.SpDupCekCustomerByID, accessToken string) (response.ScorePro, error) {
-	ret := _m.Called(ctx, req, principleStepOne, principleStepTwo, pefindoScore, customerStatus, customerSegment, installmentTopUp, spDupcheck, accessToken)
+// Scorepro provides a mock function with given fields: ctx, req, principleStepOne, principleStepTwo, pefindoScore, customerStatus, customerSegment, installmentTopUp, spDupcheck, filtering, accessToken
+func (_m *Usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan, principleStepOne entity.TrxPrincipleStepOne, principleStepTwo entity.TrxPrincipleStepTwo, pefindoScore string, customerStatus string, customerSegment string, installmentTopUp float64, spDupcheck response.SpDupCekCustomerByID, filtering entity.FilteringKMB, accessToken string) (response.IntegratorScorePro, response.ScorePro, response.PefindoIDX, error) {
+	ret := _m.Called(ctx, req, principleStepOne, principleStepTwo, pefindoScore, customerStatus, customerSegment, installmentTopUp, spDupcheck, filtering, accessToken)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Scorepro")
 	}
 
-	var r0 response.ScorePro
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, request.PrinciplePembiayaan, entity.TrxPrincipleStepOne, entity.TrxPrincipleStepTwo, string, string, string, float64, response.SpDupCekCustomerByID, string) (response.ScorePro, error)); ok {
-		return rf(ctx, req, principleStepOne, principleStepTwo, pefindoScore, customerStatus, customerSegment, installmentTopUp, spDupcheck, accessToken)
+	var r0 response.IntegratorScorePro
+	var r1 response.ScorePro
+	var r2 response.PefindoIDX
+	var r3 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.PrinciplePembiayaan, entity.TrxPrincipleStepOne, entity.TrxPrincipleStepTwo, string, string, string, float64, response.SpDupCekCustomerByID, entity.FilteringKMB, string) (response.IntegratorScorePro, response.ScorePro, response.PefindoIDX, error)); ok {
+		return rf(ctx, req, principleStepOne, principleStepTwo, pefindoScore, customerStatus, customerSegment, installmentTopUp, spDupcheck, filtering, accessToken)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, request.PrinciplePembiayaan, entity.TrxPrincipleStepOne, entity.TrxPrincipleStepTwo, string, string, string, float64, response.SpDupCekCustomerByID, string) response.ScorePro); ok {
-		r0 = rf(ctx, req, principleStepOne, principleStepTwo, pefindoScore, customerStatus, customerSegment, installmentTopUp, spDupcheck, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, request.PrinciplePembiayaan, entity.TrxPrincipleStepOne, entity.TrxPrincipleStepTwo, string, string, string, float64, response.SpDupCekCustomerByID, entity.FilteringKMB, string) response.IntegratorScorePro); ok {
+		r0 = rf(ctx, req, principleStepOne, principleStepTwo, pefindoScore, customerStatus, customerSegment, installmentTopUp, spDupcheck, filtering, accessToken)
 	} else {
-		r0 = ret.Get(0).(response.ScorePro)
+		r0 = ret.Get(0).(response.IntegratorScorePro)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, request.PrinciplePembiayaan, entity.TrxPrincipleStepOne, entity.TrxPrincipleStepTwo, string, string, string, float64, response.SpDupCekCustomerByID, string) error); ok {
-		r1 = rf(ctx, req, principleStepOne, principleStepTwo, pefindoScore, customerStatus, customerSegment, installmentTopUp, spDupcheck, accessToken)
+	if rf, ok := ret.Get(1).(func(context.Context, request.PrinciplePembiayaan, entity.TrxPrincipleStepOne, entity.TrxPrincipleStepTwo, string, string, string, float64, response.SpDupCekCustomerByID, entity.FilteringKMB, string) response.ScorePro); ok {
+		r1 = rf(ctx, req, principleStepOne, principleStepTwo, pefindoScore, customerStatus, customerSegment, installmentTopUp, spDupcheck, filtering, accessToken)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(response.ScorePro)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, request.PrinciplePembiayaan, entity.TrxPrincipleStepOne, entity.TrxPrincipleStepTwo, string, string, string, float64, response.SpDupCekCustomerByID, entity.FilteringKMB, string) response.PefindoIDX); ok {
+		r2 = rf(ctx, req, principleStepOne, principleStepTwo, pefindoScore, customerStatus, customerSegment, installmentTopUp, spDupcheck, filtering, accessToken)
+	} else {
+		r2 = ret.Get(2).(response.PefindoIDX)
+	}
+
+	if rf, ok := ret.Get(3).(func(context.Context, request.PrinciplePembiayaan, entity.TrxPrincipleStepOne, entity.TrxPrincipleStepTwo, string, string, string, float64, response.SpDupCekCustomerByID, entity.FilteringKMB, string) error); ok {
+		r3 = rf(ctx, req, principleStepOne, principleStepTwo, pefindoScore, customerStatus, customerSegment, installmentTopUp, spDupcheck, filtering, accessToken)
+	} else {
+		r3 = ret.Error(3)
+	}
+
+	return r0, r1, r2, r3
+}
+
+// TotalDsrFmfPbk provides a mock function with given fields: ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering
+func (_m *Usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome float64, newInstallment float64, totalInstallmentPBK float64, prospectID string, customerSegment string, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig, filtering entity.FilteringKMB) (response.UsecaseApi, response.TrxFMF, error) {
+	ret := _m.Called(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering)
+
+	if len(ret) == 0 {
+		panic("no return value specified for TotalDsrFmfPbk")
+	}
+
+	var r0 response.UsecaseApi
+	var r1 response.TrxFMF
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig, entity.FilteringKMB) (response.UsecaseApi, response.TrxFMF, error)); ok {
+		return rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig, entity.FilteringKMB) response.UsecaseApi); ok {
+		r0 = rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig, entity.FilteringKMB) response.TrxFMF); ok {
+		r1 = rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering)
+	} else {
+		r1 = ret.Get(1).(response.TrxFMF)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig, entity.FilteringKMB) error); ok {
+		r2 = rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // VehicleCheck provides a mock function with given fields: manufactureYear, cmoCluster, bkpbName, tenor, configValue, filtering, af

@@ -47,6 +47,7 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 		wg                         sync.WaitGroup
 		errChan                    = make(chan error, 4)
 		trxPrincipleStepThree      entity.TrxPrincipleStepThree
+		dupcheckData               response.SpDupcheckMap
 	)
 
 	defer func() {
@@ -71,7 +72,18 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 			trxPrincipleStepThree.Decision = resp.Result
 			trxPrincipleStepThree.Reason = resp.Reason
 
-			_ = u.repository.SavePrincipleStepThree(trxPrincipleStepThree)
+			err = u.repository.SavePrincipleStepThree(trxPrincipleStepThree)
+			if err != nil {
+				return
+			}
+
+			savedDupcheckData, _ := json.Marshal(dupcheckData)
+			principleStepTwo.DupcheckData = string(utils.SafeEncoding(savedDupcheckData))
+
+			err = u.repository.UpdatePrincipleStepTwo(r.ProspectID, principleStepTwo)
+			if err != nil {
+				return
+			}
 
 			statusCode := constant.PRINCIPLE_STATUS_BIAYA_APPROVE
 			resp.Reason = "Verifikasi data pembiayaan berhasil"
@@ -171,9 +183,12 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 	trxPrincipleStepThree.CheckVehicleResult = ageVehicle.Result
 	trxPrincipleStepThree.CheckVehicleCode = ageVehicle.Code
 	trxPrincipleStepThree.CheckVehicleReason = ageVehicle.Reason
+	trxPrincipleStepThree.CheckVehicleInfo = ageVehicle.Info
 
 	if ageVehicle.Result == constant.DECISION_REJECT {
-		resp = ageVehicle
+		resp.Result = ageVehicle.Result
+		resp.Code = ageVehicle.Code
+		resp.Reason = ageVehicle.Reason
 		return
 	}
 
@@ -198,7 +213,9 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 		trxPrincipleStepThree.CheckRejectTenor36Reason = trxTenor.Reason
 
 		if trxTenor.Result == constant.DECISION_REJECT {
-			resp = trxTenor
+			resp.Result = trxTenor.Result
+			resp.Code = trxTenor.Code
+			resp.Reason = trxTenor.Reason
 			return
 		}
 	}
@@ -258,7 +275,7 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 		customerSegment = filteringKMB.CustomerSegment.(string)
 	}
 
-	metricsScs, err := u.usecase.Scorepro(ctx, r, principleStepOne, principleStepTwo, scoreBiro, customerStatus, customerSegment, installmentTopup, mainCustomer, accessToken)
+	responseScs, metricsScs, _, err := u.usecase.Scorepro(ctx, r, principleStepOne, principleStepTwo, scoreBiro, customerStatus, customerSegment, installmentTopup, mainCustomer, filteringKMB, accessToken)
 	if err != nil {
 		return
 	}
@@ -266,13 +283,13 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 	trxPrincipleStepThree.ScoreProResult = metricsScs.Result
 	trxPrincipleStepThree.ScoreProCode = metricsScs.Code
 	trxPrincipleStepThree.ScoreProReason = metricsScs.Reason
+	trxPrincipleStepThree.ScoreProInfo = metricsScs.Info
+	trxPrincipleStepThree.ScoreProScoreResult = responseScs.ScoreResult
 
 	if metricsScs.Result == constant.DECISION_REJECT {
 		resp.Result = metricsScs.Result
 		resp.Code = metricsScs.Code
 		resp.Reason = metricsScs.Reason
-		resp.SourceDecision = metricsScs.Source
-		resp.Info = metricsScs.Info
 		return
 	}
 
@@ -310,16 +327,65 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 
 	income = principleStepTwo.MonthlyFixedIncome + monthlyVariableIncome + spouseIncome
 
-	dsr, err := u.usecase.DsrCheck(ctx, r, customerData, r.InstallmentAmount, installmentAmountFMF, installmentAmountSpouseFMF, income, agereementChassisNumber, accessToken, configValue)
+	dsr, mappingDSR, instOther, instOtherSpouse, instTopup, err := u.usecase.DsrCheck(ctx, r, customerData, r.InstallmentAmount, installmentAmountFMF, installmentAmountSpouseFMF, income, agereementChassisNumber, accessToken, configValue)
 	if err != nil {
 		return
 	}
+
+	decodedData := utils.SafeDecoding(principleStepTwo.DupcheckData)
+	err = json.Unmarshal([]byte(decodedData), &dupcheckData)
+	if err != nil {
+		return
+	}
+
+	dupcheckData.InstallmentAmountOther = instOther
+	dupcheckData.InstallmentAmountOtherSpouse = instOtherSpouse
+	dupcheckData.InstallmentTopup = instTopup
+	dupcheckData.Dsr = dsr.Dsr
+	dupcheckData.DetailsDSR = mappingDSR.Details
+	dupcheckData.ConfigMaxDSR = configValue.Data.MaxDsr
 
 	trxPrincipleStepThree.CheckDSRResult = dsr.Result
 	trxPrincipleStepThree.CheckDSRCode = dsr.Code
 	trxPrincipleStepThree.CheckDSRReason = dsr.Reason
 
-	resp = dsr
+	if dsr.Result == constant.DECISION_REJECT {
+		resp.Result = dsr.Result
+		resp.Code = dsr.Code
+		resp.Reason = dsr.Reason
+		return
+	}
+
+	var totalInstallmentPBK float64
+	if filteringKMB.TotalInstallmentAmountBiro != nil {
+		totalInstallmentPBK, err = utils.GetFloat(filteringKMB.TotalInstallmentAmountBiro)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - GetFloat TotalInstallmentAmountBiro Error")
+			return
+		}
+	}
+
+	metricsTotalDsrFmfPbk, trxFMFTotalDsrFmfPbk, err := u.usecase.TotalDsrFmfPbk(ctx, income, r.InstallmentAmount, totalInstallmentPBK, r.ProspectID, customerSegment, accessToken, dupcheckData, configValue, filteringKMB)
+	if err != nil {
+		return
+	}
+
+	infoTotalDSR, _ := json.Marshal(map[string]interface{}{
+		"dsr_fmf":                   dupcheckData.Dsr,
+		"dsr_pbk":                   trxFMFTotalDsrFmfPbk.DSRPBK,
+		"total_dsr":                 trxFMFTotalDsrFmfPbk.TotalDSR,
+		"installment_threshold":     trxFMFTotalDsrFmfPbk.InstallmentThreshold,
+		"latest_installment_amount": trxFMFTotalDsrFmfPbk.LatestInstallmentAmount,
+	})
+
+	trxPrincipleStepThree.CheckDSRFMFPBKResult = metricsTotalDsrFmfPbk.Result
+	trxPrincipleStepThree.CheckDSRFMFPBKCode = metricsTotalDsrFmfPbk.Code
+	trxPrincipleStepThree.CheckDSRFMFPBKReason = metricsTotalDsrFmfPbk.Reason
+	trxPrincipleStepThree.CheckDSRFMFPBKInfo = string(utils.SafeEncoding(infoTotalDSR))
+
+	resp.Result = metricsTotalDsrFmfPbk.Result
+	resp.Code = metricsTotalDsrFmfPbk.Code
+	resp.Reason = metricsTotalDsrFmfPbk.Reason
 
 	return
 }
@@ -447,7 +513,7 @@ func (u usecase) RejectTenor36(cluster string) (result response.UsecaseApi, err 
 	return
 }
 
-func (u usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan, principleStepOne entity.TrxPrincipleStepOne, principleStepTwo entity.TrxPrincipleStepTwo, pefindoScore, customerStatus, customerSegment string, installmentTopUp float64, spDupcheck response.SpDupCekCustomerByID, accessToken string) (data response.ScorePro, err error) {
+func (u usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan, principleStepOne entity.TrxPrincipleStepOne, principleStepTwo entity.TrxPrincipleStepTwo, pefindoScore, customerStatus, customerSegment string, installmentTopUp float64, spDupcheck response.SpDupCekCustomerByID, filtering entity.FilteringKMB, accessToken string) (responseScs response.IntegratorScorePro, data response.ScorePro, respPefindoIDX response.PefindoIDX, err error) {
 
 	var (
 		residenceZipCode              string
@@ -456,8 +522,13 @@ func (u usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan, 
 		trxDetailBiro                 []entity.TrxDetailBiro
 		pefindoIDX                    request.PefindoIDX
 		reqScoreproIntegrator         request.ScoreProIntegrator
-		responseScs                   response.IntegratorScorePro
-		respPefindoIDX                response.PefindoIDX
+		RrdDateString                 string
+		CreatedAtString               string
+		RrdDate                       time.Time
+		CreatedAt                     time.Time
+		MonthsOfExpiredContract       int
+		OverrideFlowLikeRegular       bool
+		expiredContractConfig         entity.AppConfig
 	)
 
 	// DEFAULT
@@ -603,14 +674,14 @@ func (u usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan, 
 		getActiveLoanTypeLast6M, err := u.repository.GetActiveLoanTypeLast6M(spDupcheck.CustomerID.(string))
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - GetActiveLoanTypeLast6M Scorepro Error")
-			return data, err
+			return responseScs, data, respPefindoIDX, err
 		}
 
 		if strings.Replace(getActiveLoanTypeLast6M.ActiveLoanTypeLast6M, " ", "", -1) == ";;" {
 			getActiveLoanTypeLast24M, err := u.repository.GetActiveLoanTypeLast24M(spDupcheck.CustomerID.(string))
 			if err != nil {
 				err = errors.New(constant.ERROR_UPSTREAM + " - GetActiveLoanTypeLast24M Scorepro Error")
-				return data, err
+				return responseScs, data, respPefindoIDX, err
 			}
 
 			if getActiveLoanTypeLast24M.AgreementNo != "" {
@@ -630,7 +701,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan, 
 		getMoblast, err := u.repository.GetMoblast(spDupcheck.CustomerID.(string))
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - GetMoblast Scorepro Error")
-			return data, err
+			return responseScs, data, respPefindoIDX, err
 		}
 
 		if getMoblast.Moblast == "" {
@@ -717,7 +788,44 @@ func (u usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan, 
 			return
 		}
 
-		if customerStatus == constant.STATUS_KONSUMEN_RO || (installmentTopUp > 0 && spDupcheck.MaxOverdueDaysforActiveAgreement != nil && *spDupcheck.MaxOverdueDaysforActiveAgreement <= 30) {
+		// INTERCEPT PERBAIKAN FLOW RO PRIME/PRIORITY (NON-TOPUP) | CHECK EXPIRED_CONTRACT
+		if customerStatus == constant.STATUS_KONSUMEN_RO && (installmentTopUp <= 0 && spDupcheck.MaxOverdueDaysforActiveAgreement != nil && *spDupcheck.MaxOverdueDaysforActiveAgreement > 30) {
+			if filtering.RrdDate == nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
+				return
+			}
+
+			RrdDateTime, ok := filtering.RrdDate.(time.Time)
+			if !ok {
+				err = errors.New(constant.ERROR_UPSTREAM + " - RrdDate is not of type time.Time")
+				return
+			}
+
+			RrdDateString = RrdDateTime.Format(time.RFC3339)
+			CreatedAtString = filtering.CreatedAt.Format(time.RFC3339)
+
+			RrdDate, _ = time.Parse(time.RFC3339, RrdDateString)
+			CreatedAt, _ = time.Parse(time.RFC3339, CreatedAtString)
+			MonthsOfExpiredContract, _ = utils.PreciseMonthsDifference(RrdDate, CreatedAt)
+
+			// Get config expired_contract
+			expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
+				return
+			}
+
+			var configValueExpContract response.ExpiredContractConfig
+			json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+
+			if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
+				// Jalur mirip seperti customer segment "REGULAR"
+				OverrideFlowLikeRegular = true
+			}
+		}
+
+		// ADD INTERCEPT CONDITIONAL RELATED TO `PERBAIKAN RO PRIME/PRIORITY (NON-TOPUP)`
+		if ((customerStatus == constant.STATUS_KONSUMEN_RO || (installmentTopUp > 0 && spDupcheck.MaxOverdueDaysforActiveAgreement != nil && *spDupcheck.MaxOverdueDaysforActiveAgreement <= 30)) && !OverrideFlowLikeRegular) || (OverrideFlowLikeRegular && !cbFound) {
 			data.Result = constant.DECISION_PASS
 			data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 			data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
@@ -867,14 +975,13 @@ func (u usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan, 
 	return
 }
 
-func (u usecase) DsrCheck(ctx context.Context, req request.PrinciplePembiayaan, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, agreementChasisNumber response.AgreementChassisNumber, accessToken string, configValue response.DupcheckConfig) (data response.UsecaseApi, err error) {
+func (u usecase) DsrCheck(ctx context.Context, req request.PrinciplePembiayaan, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, agreementChasisNumber response.AgreementChassisNumber, accessToken string, configValue response.DupcheckConfig) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error) {
 
 	var (
-		dsr, installmentOther, installmentOtherSpouse, installmentTopup float64
-		instOther                                                       response.InstallmentOther
-		dsrDetails                                                      response.DsrDetails
-		reasonCustomerStatus                                            string
-		result                                                          response.Dsr
+		dsr                  float64
+		instOther            response.InstallmentOther
+		dsrDetails           response.DsrDetails
+		reasonCustomerStatus string
 	)
 
 	reasonMaxDsr := "Threshold"
@@ -1055,6 +1162,204 @@ func (u usecase) DsrCheck(ctx context.Context, req request.PrinciplePembiayaan, 
 	data.SourceDecision = constant.SOURCE_DECISION_DSR
 
 	_ = mapstructure.Decode(data, &result)
+	return
+}
+
+func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment, totalInstallmentPBK float64, prospectID, customerSegment, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig, filtering entity.FilteringKMB) (data response.UsecaseApi, trxFMF response.TrxFMF, err error) {
+
+	var (
+		RrdDateString           string
+		CreatedAtString         string
+		RrdDate                 time.Time
+		CreatedAt               time.Time
+		MonthsOfExpiredContract int
+		OverrideFlowLikeRegular bool
+		expiredContractConfig   entity.AppConfig
+	)
+
+	dsrPBK := totalInstallmentPBK / totalIncome * 100
+
+	totalDSR := SpDupcheckMap.Dsr + dsrPBK
+
+	trxFMF = response.TrxFMF{
+		DSRPBK:   dsrPBK,
+		TotalDSR: totalDSR,
+	}
+
+	reasonMaxDsr := "Threshold"
+
+	var reasonCustomerStatus string
+	if customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY {
+		reasonCustomerStatus = SpDupcheckMap.StatusKonsumen + " " + customerSegment
+	} else {
+		reasonCustomerStatus = SpDupcheckMap.StatusKonsumen
+	}
+
+	if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
+		if SpDupcheckMap.InstallmentTopup > 0 {
+			reasonCustomerStatus = reasonCustomerStatus + " " + constant.TOP_UP
+		}
+	}
+
+	// INTERCEPT PERBAIKAN FLOW RO PRIME/PRIORITY (NON-TOPUP) | CHECK EXPIRED_CONTRACT
+	if (customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY) && (SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO && SpDupcheckMap.InstallmentTopup <= 0) {
+		if filtering.RrdDate == nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
+			return
+		}
+
+		RrdDateTime, ok := filtering.RrdDate.(time.Time)
+		if !ok {
+			err = errors.New(constant.ERROR_UPSTREAM + " - RrdDate is not of type time.Time")
+			return
+		}
+
+		RrdDateString = RrdDateTime.Format(time.RFC3339)
+		CreatedAtString = filtering.CreatedAt.Format(time.RFC3339)
+
+		RrdDate, _ = time.Parse(time.RFC3339, RrdDateString)
+		CreatedAt, _ = time.Parse(time.RFC3339, CreatedAtString)
+		MonthsOfExpiredContract, _ = utils.PreciseMonthsDifference(RrdDate, CreatedAt)
+
+		// Get config expired_contract
+		expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
+			return
+		}
+
+		var configValueExpContract response.ExpiredContractConfig
+		json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+
+		if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
+			// Jalur mirip seperti customer segment "REGULAR"
+			OverrideFlowLikeRegular = true
+		}
+	}
+
+	RuleCodeForDSRLTE35 := constant.CODE_TOTAL_DSRLTE35
+	if OverrideFlowLikeRegular {
+		totalDSR = SpDupcheckMap.Dsr
+		trxFMF.TotalDSR = SpDupcheckMap.Dsr
+
+		reasonCustomerStatus = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + reasonCustomerStatus
+		RuleCodeForDSRLTE35 = constant.CODE_TOTAL_DSRLTE35_EXP_CONTRACT_6MONTHS
+	}
+
+	if !OverrideFlowLikeRegular {
+		if (SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO || SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO) && customerSegment == constant.RO_AO_PRIME {
+			var (
+				resp                      *resty.Response
+				respLatestPaidInstallment response.LatestPaidInstallmentData
+				latestInstallmentAmount   float64
+			)
+
+			if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO {
+				resp, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+SpDupcheckMap.CustomerID.(string)+"/2", nil, map[string]string{}, constant.METHOD_GET, false, 0, 30, prospectID, accessToken)
+
+				if err != nil {
+					err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call LatestPaidInstallmentData Timeout")
+					return
+				}
+
+				if resp.StatusCode() != 200 {
+					err = errors.New(constant.ERROR_UPSTREAM + " - Call LatestPaidInstallmentData Error")
+					return
+				}
+
+				err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &respLatestPaidInstallment)
+				if err != nil {
+					err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal LatestPaidInstallmentData Error")
+					return
+				}
+
+				latestInstallmentAmount = respLatestPaidInstallment.InstallmentAmount // RO PRIME
+
+			} else if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
+				if SpDupcheckMap.InstallmentTopup > 0 {
+					latestInstallmentAmount = SpDupcheckMap.InstallmentTopup // RO TOP UP PRIME (secara teknis datanya adalah AO TOP UP PRIME)
+				}
+			}
+
+			installmentThreshold := latestInstallmentAmount * 1.5
+
+			trxFMF.LatestInstallmentAmount = latestInstallmentAmount
+			trxFMF.InstallmentThreshold = installmentThreshold
+
+			if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO {
+				if newInstallment < installmentThreshold {
+					trxFMF.TotalDSR = SpDupcheckMap.Dsr
+					data = response.UsecaseApi{
+						Result:         constant.DECISION_PASS,
+						Code:           RuleCodeForDSRLTE35,
+						Reason:         fmt.Sprintf("%s", reasonCustomerStatus),
+						SourceDecision: constant.SOURCE_DECISION_DSR,
+					}
+					return
+				} else {
+					totalDSR = SpDupcheckMap.Dsr
+					trxFMF.TotalDSR = SpDupcheckMap.Dsr
+				}
+			} else if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
+				if SpDupcheckMap.InstallmentTopup > 0 {
+					if SpDupcheckMap.MaxOverdueDaysforActiveAgreement <= 30 {
+						if newInstallment < installmentThreshold {
+							trxFMF.TotalDSR = SpDupcheckMap.Dsr
+							data = response.UsecaseApi{
+								Result:         constant.DECISION_PASS,
+								Code:           RuleCodeForDSRLTE35,
+								Reason:         fmt.Sprintf("%s", reasonCustomerStatus),
+								SourceDecision: constant.SOURCE_DECISION_DSR,
+							}
+							return
+						} else {
+							totalDSR = SpDupcheckMap.Dsr
+							trxFMF.TotalDSR = SpDupcheckMap.Dsr
+						}
+					}
+				} else {
+					if SpDupcheckMap.NumberOfPaidInstallment >= 6 {
+						totalDSR = SpDupcheckMap.Dsr
+						trxFMF.TotalDSR = SpDupcheckMap.Dsr
+					}
+				}
+			}
+		} else if (SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO || SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO) && customerSegment == constant.RO_AO_PRIORITY {
+			if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO {
+				totalDSR = SpDupcheckMap.Dsr
+				trxFMF.TotalDSR = SpDupcheckMap.Dsr
+			} else if SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_AO {
+				if SpDupcheckMap.InstallmentTopup > 0 {
+					if SpDupcheckMap.MaxOverdueDaysforActiveAgreement <= 30 {
+						totalDSR = SpDupcheckMap.Dsr
+						trxFMF.TotalDSR = SpDupcheckMap.Dsr
+					}
+				} else {
+					if SpDupcheckMap.NumberOfPaidInstallment >= 6 {
+						totalDSR = SpDupcheckMap.Dsr
+						trxFMF.TotalDSR = SpDupcheckMap.Dsr
+					}
+				}
+			}
+		}
+	}
+
+	if totalDSR <= configValue.Data.MaxDsr {
+		data = response.UsecaseApi{
+			Result:         constant.DECISION_PASS,
+			Code:           RuleCodeForDSRLTE35,
+			Reason:         fmt.Sprintf("%s %s %s", reasonCustomerStatus, constant.REASON_TOTAL_DSRLTE, reasonMaxDsr),
+			SourceDecision: constant.SOURCE_DECISION_DSR,
+		}
+	} else {
+		data = response.UsecaseApi{
+			Result:         constant.DECISION_REJECT,
+			Code:           constant.CODE_TOTAL_DSRGT35,
+			Reason:         fmt.Sprintf("%s %s %s", reasonCustomerStatus, constant.REASON_TOTAL_DSRGT, reasonMaxDsr),
+			SourceDecision: constant.SOURCE_DECISION_DSR,
+		}
+	}
+
 	return
 }
 

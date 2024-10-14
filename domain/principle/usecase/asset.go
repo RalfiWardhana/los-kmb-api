@@ -149,6 +149,7 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		StaySinceYear:      r.StaySinceYear,
 		StaySinceMonth:     r.StaySinceMonth,
 		Decision:           data.Result,
+		RuleCode:           data.Code,
 		Reason:             data.Reason,
 		AssetCode:          r.AssetCode,
 		STNKPhoto:          r.STNKPhoto,

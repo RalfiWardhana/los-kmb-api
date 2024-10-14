@@ -218,7 +218,6 @@ func TestVerifyPemohon(t *testing.T) {
 		SpouseBirthDate:         "1992-09-11",
 		SpouseBirthPlace:        "Jakarta",
 		SpouseSurgateMotherName: "MAMA",
-		SpouseGender:            "F",
 		SpouseMobilePhone:       "085880529111",
 		SpouseIncome:            5000000,
 		SelfiePhoto:             "https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/selfie_SAL-1140024081400003.jpg",
@@ -528,6 +527,7 @@ func TestVerifyPembiayaan(t *testing.T) {
 		Dealer:            "NON PSA",
 		AssetCategoryID:   "BEBEK",
 		FinancePurpose:    "Modal Kerja Fasilitas Modal Usaha",
+		TipeUsaha:         "Jasa Kesehatan",
 	}
 
 	t.Run("success", func(t *testing.T) {
