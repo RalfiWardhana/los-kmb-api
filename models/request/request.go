@@ -968,11 +968,11 @@ type PrincipleAsset struct {
 	ProspectID         string `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
 	IDNumber           string `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
 	SpouseIDNumber     string `json:"spouse_id_number" example:"3506126712000002"`
-	ManufactureYear    string `json:"manufacture_year" validate:"len=4,number" example:"2020"`
+	ManufactureYear    int    `json:"manufacture_year" validate:"len=4,number" example:"2020"`
 	NoChassis          string `json:"chassis_number" validate:"required,max=30" example:"MHKV1AA2JBK107322"`
 	NoEngine           string `json:"engine_number" validate:"required,max=30" example:"73218JAJK"`
 	BranchID           string `json:"branch_id" validate:"required,max=10" example:"426"`
-	CC                 string `json:"cc" validate:"required,max=10" example:"1500"`
+	CC                 int    `json:"cc" validate:"required" example:"1500"`
 	TaxDate            string `json:"tax_date" validate:"required,dateformat" example:"2022-03-02"`
 	STNKExpiredDate    string `json:"stnk_expired_date" validate:"required,dateformat" example:"2025-03-20"`
 	OwnerAsset         string `json:"owner_asset" validate:"required,max=50" example:"JONATHAN"`
