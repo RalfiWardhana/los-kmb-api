@@ -67,6 +67,7 @@ func TestVerifyAsset(t *testing.T) {
 		StaySinceMonth:     4,
 		AssetCode:          "K-KWS.MOTOR.SMASH MUFLER",
 		STNKPhoto:          "http://www.example.com",
+		KPMID:              123456,
 	}
 
 	t.Run("success", func(t *testing.T) {

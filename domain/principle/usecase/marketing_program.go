@@ -505,7 +505,7 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 		statusCode := constant.PRINCIPLE_STATUS_SUBMIT_SALLY
 		go u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, prospectID, utils.StructToMap(request.Update2wPrincipleTransaction{
 			OrderID:     prospectID,
-			KpmID:       principleEmergencyContact.KPMID,
+			KpmID:       principleStepOne.KPMID,
 			Source:      3,
 			StatusCode:  statusCode,
 			ProductName: principleStepOne.AssetCode,

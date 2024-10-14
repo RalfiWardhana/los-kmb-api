@@ -2567,6 +2567,7 @@ type TrxPrincipleStepOne struct {
 	BPKBName           string      `gorm:"column:BPKBName;type:varchar(2)"`
 	AssetCode          string      `gorm:"column:AssetCode;type:varchar(200)"`
 	STNKPhoto          interface{} `gorm:"column:STNKPhoto;type:varchar(250);"`
+	KPMID              int         `gorm:"column:KPMID;"`
 	CreatedAt          time.Time   `gorm:"column:created_at"`
 }
 

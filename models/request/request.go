@@ -968,7 +968,7 @@ type PrincipleAsset struct {
 	ProspectID         string `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
 	IDNumber           string `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
 	SpouseIDNumber     string `json:"spouse_id_number" example:"3506126712000002"`
-	ManufactureYear    int    `json:"manufacture_year" validate:"len=4,number" example:"2020"`
+	ManufactureYear    int    `json:"manufacture_year" validate:"required" example:"2020"`
 	NoChassis          string `json:"chassis_number" validate:"required,max=30" example:"MHKV1AA2JBK107322"`
 	NoEngine           string `json:"engine_number" validate:"required,max=30" example:"73218JAJK"`
 	BranchID           string `json:"branch_id" validate:"required,max=10" example:"426"`
@@ -994,6 +994,7 @@ type PrincipleAsset struct {
 	StaySinceMonth     int    `json:"stay_since_month" validate:"required,min=1,max=12" example:"4"`
 	AssetCode          string `json:"asset_code" validate:"required,max=200" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
 	STNKPhoto          string `json:"stnk_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/stnk_SAL-1140024081400003.jpg"`
+	KPMID              int    `json:"kpm_id" validate:"required" example:"2024"`
 }
 
 type PrinciplePemohon struct {

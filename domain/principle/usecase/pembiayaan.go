@@ -93,6 +93,7 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 			}
 
 			go u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+				KpmID:       principleStepOne.KPMID,
 				OrderID:     r.ProspectID,
 				Source:      3,
 				StatusCode:  statusCode,

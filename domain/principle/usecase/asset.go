@@ -153,6 +153,7 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		Reason:             data.Reason,
 		AssetCode:          r.AssetCode,
 		STNKPhoto:          r.STNKPhoto,
+		KPMID:              r.KPMID,
 	})
 
 	//masking reason
@@ -164,6 +165,7 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 	}
 
 	go u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+		KpmID:       r.KPMID,
 		OrderID:     r.ProspectID,
 		Source:      3,
 		StatusCode:  statusCode,
