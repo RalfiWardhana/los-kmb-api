@@ -151,16 +151,12 @@ func (u metrics) PrincipleSubmission(ctx context.Context, req request.Metrics, a
 		RuleCode:       constant.CODE_PASS_PRESCREENING,
 		SourceDecision: constant.PRESCREENING,
 		NextStep:       constant.SOURCE_DECISION_DUPCHECK,
+		Info:           "Sesuai",
 		CreatedBy:      constant.SYSTEM_CREATED,
 		Reason:         trxPrescreening.Reason,
 	}
 
 	details = append(details, trxDetailPrescreening)
-
-	resultMetrics, err = u.usecase.SaveTransaction(0, req, trxPrescreening, trxFMF, details, trxPrescreening.Reason)
-	if err != nil {
-		return
-	}
 
 	if filtering.CustomerID != nil {
 		customerID = filtering.CustomerID.(string)
@@ -256,6 +252,15 @@ func (u metrics) PrincipleSubmission(ctx context.Context, req request.Metrics, a
 		NTFConfins:           confins.TotalOutstanding,
 		NTFTopup:             topup.OutstandingPrincipal,
 	}
+
+	req.Transaction.ApplicationSource = "K"
+
+	resultMetrics, err = u.usecase.SaveTransaction(0, req, trxPrescreening, trxFMF, details, trxPrescreening.Reason)
+	if err != nil {
+		return
+	}
+
+	details = []entity.TrxDetail{}
 
 	// get mapping cluster
 	mappingCluster := entity.MasterMappingCluster{
@@ -569,7 +574,7 @@ func (u metrics) PrincipleSubmission(ctx context.Context, req request.Metrics, a
 		Activity:       constant.ACTIVITY_PROCESS,
 		Decision:       constant.DB_DECISION_PASS,
 		RuleCode:       constant.STRING_CODE_PASS_ELABORATE,
-		SourceDecision: constant.SOURCE_DECISION_DSR,
+		SourceDecision: constant.SOURCE_DECISION_ELABORATE_LTV,
 		Reason:         constant.REASON_PASS_ELABORATE,
 		NextStep:       constant.SOURCE_DECISION_CA,
 	}
