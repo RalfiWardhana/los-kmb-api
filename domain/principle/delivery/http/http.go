@@ -39,6 +39,7 @@ func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, u
 	principleRoute.POST("/core-customer/:prospectID", handler.CoreCustomer, middlewares.AccessMiddleware())
 	principleRoute.POST("/marketing-program/:prospectID", handler.MarketingProgram, middlewares.AccessMiddleware())
 	principleRoute.POST("/principle-data", handler.GetPrincipleData, middlewares.AccessMiddleware())
+	principleRoute.GET("/auto-cancel", handler.AutoCancel, middlewares.AccessMiddleware())
 }
 
 // KmbPrinciple Tools godoc
@@ -354,5 +355,29 @@ func (c *handler) GetPrincipleData(ctx echo.Context) (err error) {
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
+
+}
+
+// KmbPrinciple Tools godoc
+// @Description KmbPrinciple
+// @Tags KmbPrinciple
+// @Produce json
+// @Param prospectID path string true "Prospect ID"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/auto-cancel [get]
+func (c *handler) AutoCancel(ctx echo.Context) (err error) {
+
+	err = c.usecase.CheckOrderPendingPrinciple(ctx.Request().Context())
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), "sukses auto cancel")
 
 }

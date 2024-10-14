@@ -2781,3 +2781,10 @@ type TrxPrincipleMarketingProgram struct {
 func (c *TrxPrincipleMarketingProgram) TableName() string {
 	return "trx_principle_marketing_program"
 }
+
+type AutoCancel struct {
+	ProspectID string `gorm:"column:ProspectID;type:varchar(20)"`
+	AssetCode  string `gorm:"column:AssetCode;type:varchar(200)"`
+	KPMID      int    `gorm:"column:KPMID;"`
+	BranchID   string `gorm:"column:BranchID;type:varchar(10)"`
+}

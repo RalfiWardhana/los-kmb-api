@@ -275,7 +275,6 @@ func (r repoHandler) SavePrincipleStepOne(data entity.TrxPrincipleStepOne) (err 
 			Decision:   data.Decision,
 			UpdatedAt:  time.Now(),
 		}).Error; err != nil {
-			tx.Rollback()
 			return err
 		}
 		return nil
@@ -305,7 +304,6 @@ func (r repoHandler) UpdatePrincipleStepOne(prospectID string, data entity.TrxPr
 		if err := tx.Model(&entity.TrxPrincipleStepOne{}).
 			Where("ProspectID = ?", data.ProspectID).
 			Updates(&data).Error; err != nil {
-			tx.Rollback()
 			return err
 		}
 
@@ -321,14 +319,15 @@ func (r repoHandler) SavePrincipleStepTwo(data entity.TrxPrincipleStepTwo) (err 
 			return err
 		}
 
-		if err := tx.Create(&entity.TrxPrincipleStatus{
-			ProspectID: data.ProspectID,
-			IDNumber:   data.IDNumber,
-			Step:       2,
-			Decision:   data.Decision,
-			UpdatedAt:  time.Now(),
-		}).Error; err != nil {
-			tx.Rollback()
+		if err := tx.Model(&entity.TrxPrincipleStatus{}).
+			Where("ProspectID = ?", data.ProspectID).
+			Updates(&entity.TrxPrincipleStatus{
+				ProspectID: data.ProspectID,
+				IDNumber:   data.IDNumber,
+				Step:       2,
+				Decision:   data.Decision,
+				UpdatedAt:  time.Now(),
+			}).Error; err != nil {
 			return err
 		}
 		return nil
@@ -358,7 +357,6 @@ func (r repoHandler) UpdatePrincipleStepTwo(prospectID string, data entity.TrxPr
 		if err := tx.Model(&entity.TrxPrincipleStepTwo{}).
 			Where("ProspectID = ?", data.ProspectID).
 			Updates(&data).Error; err != nil {
-			tx.Rollback()
 			return err
 		}
 
@@ -579,16 +577,18 @@ func (r repoHandler) SavePrincipleStepThree(data entity.TrxPrincipleStepThree) (
 			return err
 		}
 
-		if err := tx.Create(&entity.TrxPrincipleStatus{
-			ProspectID: data.ProspectID,
-			IDNumber:   data.IDNumber,
-			Step:       3,
-			Decision:   data.Decision,
-			UpdatedAt:  time.Now(),
-		}).Error; err != nil {
-			tx.Rollback()
+		if err := tx.Model(&entity.TrxPrincipleStatus{}).
+			Where("ProspectID = ?", data.ProspectID).
+			Updates(&entity.TrxPrincipleStatus{
+				ProspectID: data.ProspectID,
+				IDNumber:   data.IDNumber,
+				Step:       3,
+				Decision:   data.Decision,
+				UpdatedAt:  time.Now(),
+			}).Error; err != nil {
 			return err
 		}
+
 		return nil
 	})
 
@@ -614,14 +614,15 @@ func (r repoHandler) SavePrincipleEmergencyContact(data entity.TrxPrincipleEmerg
 				if err := tx.Create(&data).Error; err != nil {
 					return err
 				}
-				if err := tx.Create(&entity.TrxPrincipleStatus{
-					ProspectID: data.ProspectID,
-					IDNumber:   idNumber,
-					Step:       4,
-					Decision:   constant.DECISION_CREDIT_PROCESS,
-					UpdatedAt:  time.Now(),
-				}).Error; err != nil {
-					tx.Rollback()
+				if err := tx.Model(&entity.TrxPrincipleStatus{}).
+					Where("ProspectID = ?", data.ProspectID).
+					Updates(&entity.TrxPrincipleStatus{
+						ProspectID: data.ProspectID,
+						IDNumber:   idNumber,
+						Step:       4,
+						Decision:   constant.DECISION_CREDIT_PROCESS,
+						UpdatedAt:  time.Now(),
+					}).Error; err != nil {
 					return err
 				}
 			} else {
@@ -641,7 +642,6 @@ func (r repoHandler) SavePrincipleEmergencyContact(data entity.TrxPrincipleEmerg
 					Decision:  constant.DECISION_CREDIT_PROCESS,
 					UpdatedAt: time.Now(),
 				}).Error; err != nil {
-				tx.Rollback()
 				return err
 			}
 		}
@@ -700,6 +700,21 @@ func (r repoHandler) SavePrincipleMarketingProgram(data entity.TrxPrincipleMarke
 func (r repoHandler) GetPrincipleMarketingProgram(prospectID string) (data entity.TrxPrincipleMarketingProgram, err error) {
 
 	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmb.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) ScanOrderPending() (data []entity.AutoCancel, err error) {
+
+	query := `SELECT DISTINCT tps.ProspectID, tpso.KPMID, tpso.BranchID, tpso.AssetCode  
+	FROM trx_principle_status tps WITH (nolock)
+	INNER JOIN trx_principle_step_one tpso WITH (nolock)
+	ON tps.ProspectID  = tpso.ProspectID 
+	WHERE tps.created_at < DATEADD(day, -3, GETDATE())`
 
 	if err = r.newKmb.Raw(query).Scan(&data).Error; err != nil {
 		return

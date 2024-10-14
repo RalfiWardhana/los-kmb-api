@@ -37,6 +37,7 @@ type Usecase interface {
 	PrincipleMarketingProgram(ctx context.Context, prospectID string, accessToken string) (err error)
 	MDMGetMasterMappingBranchEmployee(ctx context.Context, prospectID, branchID, accessToken string) (data response.MDMMasterMappingBranchEmployeeResponse, err error)
 	GetDataPrinciple(ctx context.Context, req request.PrincipleGetData, accessToken string) (data map[string]interface{}, err error)
+	CheckOrderPendingPrinciple(ctx context.Context) (err error)
 }
 
 type MultiUsecase interface {

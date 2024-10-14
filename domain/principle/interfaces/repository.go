@@ -40,4 +40,5 @@ type Repository interface {
 	GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error)
 	SavePrincipleMarketingProgram(data entity.TrxPrincipleMarketingProgram) (err error)
 	GetPrincipleMarketingProgram(prospectID string) (data entity.TrxPrincipleMarketingProgram, err error)
+	ScanOrderPending() (data []entity.AutoCancel, err error)
 }

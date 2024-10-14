@@ -164,7 +164,7 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		data.Reason = "Data STNK tidak lolos verifikasi"
 	}
 
-	go u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+	u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
 		KpmID:       r.KPMID,
 		OrderID:     r.ProspectID,
 		Source:      3,
