@@ -816,20 +816,18 @@ func (u usecase) VehicleCheck(manufactureYear, cmoCluster, bkpbName string, teno
 
 func checkResultPefindo(filtering entity.FilteringKMB) (resultPefindo string) {
 	// check hit pefindo
-	if filtering.ScoreBiro != nil {
-		if filtering.ScoreBiro.(string) != "" && filtering.ScoreBiro.(string) != constant.DECISION_PBK_NO_HIT && filtering.ScoreBiro.(string) != constant.PEFINDO_UNSCORE {
-			// use ovd pefindo all
-			maxOverdueLast12Months, _ := utils.GetFloat(filtering.MaxOverdueLast12monthsBiro)
-			maxOverdueDays, _ := utils.GetFloat(filtering.MaxOverdueBiro)
+	if filtering.ScoreBiro != nil && filtering.ScoreBiro.(string) != "" && filtering.ScoreBiro.(string) != constant.DECISION_PBK_NO_HIT && filtering.ScoreBiro.(string) != constant.PEFINDO_UNSCORE {
+		// use ovd pefindo all
+		maxOverdueLast12Months, _ := utils.GetFloat(filtering.MaxOverdueLast12monthsBiro)
+		maxOverdueDays, _ := utils.GetFloat(filtering.MaxOverdueBiro)
 
-			// pass or reject
-			if maxOverdueLast12Months > constant.PBK_OVD_LAST_12 {
-				resultPefindo = constant.DECISION_REJECT
-			} else if maxOverdueDays > constant.PBK_OVD_CURRENT {
-				resultPefindo = constant.DECISION_REJECT
-			} else {
-				resultPefindo = constant.DECISION_PASS
-			}
+		// pass or reject
+		if maxOverdueLast12Months > constant.PBK_OVD_LAST_12 {
+			resultPefindo = constant.DECISION_REJECT
+		} else if maxOverdueDays > constant.PBK_OVD_CURRENT {
+			resultPefindo = constant.DECISION_REJECT
+		} else {
+			resultPefindo = constant.DECISION_PASS
 		}
 	} else {
 		resultPefindo = constant.NO_HIT_PBK

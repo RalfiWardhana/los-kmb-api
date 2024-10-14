@@ -118,7 +118,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		cluster = filteringKMB.CMOCluster.(string)
 	}
 
-	if (filteringKMB.CustomerSegment != nil && !strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string))) || (OverrideFlowLikeRegular && resultPefindo == constant.DECISION_REJECT) {
+	if (filteringKMB.CustomerSegment != nil && !strings.Contains("PRIME PRIORITY", filteringKMB.CustomerSegment.(string))) || (OverrideFlowLikeRegular) {
 		if filteringKMB.ScoreBiro == nil || filteringKMB.ScoreBiro == "" || filteringKMB.ScoreBiro == constant.UNSCORE_PBK {
 			resultPefindo = constant.DECISION_PBK_NO_HIT
 		} else if filteringKMB.MaxOverdueBiro != nil || filteringKMB.MaxOverdueLast12monthsBiro != nil {
@@ -207,8 +207,15 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 
 			//pass
 			if resultPefindo == constant.DECISION_PASS && m.TenorStart <= reqs.Tenor && reqs.Tenor <= m.TenorEnd {
-				data.LTV = m.LTV
-				trxElaborateLTV.MappingElaborateLTVID = m.ID
+				if m.BPKBNameType == 1 {
+					if bpkbNameType == m.BPKBNameType {
+						data.LTV = m.LTV
+						trxElaborateLTV.MappingElaborateLTVID = m.ID
+					}
+				} else {
+					data.LTV = m.LTV
+					trxElaborateLTV.MappingElaborateLTVID = m.ID
+				}
 			}
 
 			//reject
@@ -219,25 +226,20 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		}
 
 		// max tenor
-		if resultPefindo == constant.DECISION_REJECT && int(bakiDebet) > constant.RANGE_CLUSTER_BAKI_DEBET_REJECT && strings.Contains("Cluster E Cluster F", cluster) {
-			data.LTV = 0
-			data.MaxTenor = 0
-			data.AdjustTenor = false
-			data.Reason = constant.REASON_REJECT_ELABORATE
-			if OverrideFlowLikeRegular {
-				data.Reason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + constant.REASON_REJECT_ELABORATE
-			}
-		} else {
-			if m.TenorEnd >= data.MaxTenor && m.LTV > 0 {
-				if m.BPKBNameType == 1 && m.AgeVehicle != "" {
-					if bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
-						data.MaxTenor = m.TenorEnd
-						data.AdjustTenor = true
-					}
-				} else {
+		if m.TenorEnd >= data.MaxTenor && m.LTV > 0 {
+			if m.AgeVehicle != "" {
+				if bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
 					data.MaxTenor = m.TenorEnd
 					data.AdjustTenor = true
 				}
+			} else if m.BPKBNameType == 1 {
+				if bpkbNameType == m.BPKBNameType {
+					data.MaxTenor = m.TenorEnd
+					data.AdjustTenor = true
+				}
+			} else {
+				data.MaxTenor = m.TenorEnd
+				data.AdjustTenor = true
 			}
 		}
 	}

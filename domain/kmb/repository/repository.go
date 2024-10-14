@@ -332,6 +332,22 @@ func (r repoHandler) GetMoblast(customerID string) (score entity.GetMoblast, err
 	return
 }
 
+func (r repoHandler) GetMappingDeviasi(prospectID string) (confirmDeviasi entity.ConfirmDeviasi, err error) {
+	// cek kuota deviasi
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT ta.NTF, mbd.*,
+			CASE 
+				WHEN mbd.balance_amount >= ta.NTF AND mbd.balance_account > 0 THEN 1
+				ELSE 0
+			END AS deviasi
+			FROM trx_master tm 
+			LEFT JOIN trx_apk ta ON tm.ProspectID = ta.ProspectID 
+			LEFT JOIN m_branch_deviasi mbd ON tm.BranchID = mbd.BranchID 
+			WHERE tm.ProspectID = '%s'`, prospectID)).Scan(&confirmDeviasi).Error; err != nil {
+		return
+	}
+	return
+}
+
 func (r repoHandler) GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error) {
 
 	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT CASE WHEN mmel.ltv IS NULL THEN mmelovd.ltv ELSE mmel.ltv END AS ltv FROM trx_elaborate_ltv tel WITH (nolock) 
@@ -2093,7 +2109,7 @@ func (r repoHandler) MasterMappingDeviasiDSR(totalIncome float64) (data entity.M
 	return
 }
 
-func (r repoHandler) GetBranchDeviasi(BranchID string) (data entity.MappingBranchDeviasi, err error) {
+func (r repoHandler) GetBranchDeviasi(BranchID string, customerStatus string, NTF float64) (data entity.MappingBranchDeviasi, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
@@ -2102,9 +2118,26 @@ func (r repoHandler) GetBranchDeviasi(BranchID string) (data entity.MappingBranc
 	defer cancel()
 
 	db := r.newKmbDB.BeginTx(ctx, &x)
-	defer db.Commit()
+	defer func() {
+		if r := recover(); r != nil {
+			db.Rollback()
+			panic(r)
+		} else if err != nil {
+			db.Rollback()
+		} else {
+			db.Commit()
+		}
+	}()
 
-	if err = db.Raw("SELECT * FROM dbo.m_branch_deviasi WITH (nolock) WHERE BranchID = ?", BranchID).Scan(&data).Error; err != nil {
+	query := "SELECT * FROM dbo.m_branch_deviasi WITH (nolock) WHERE BranchID = ? AND is_active = 1"
+	args := []interface{}{BranchID}
+
+	if customerStatus != constant.STATUS_KONSUMEN_RO && customerStatus != constant.STATUS_KONSUMEN_AO {
+		query += " AND balance_amount >= ? AND balance_account >= 1"
+		args = append(args, NTF)
+	}
+
+	if err = db.Raw(query, args...).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
