@@ -32,6 +32,7 @@ type Repository interface {
 	GetActiveLoanTypeLast6M(customerID string) (score entity.GetActiveLoanTypeLast6M, err error)
 	GetActiveLoanTypeLast24M(customerID string) (score entity.GetActiveLoanTypeLast24M, err error)
 	GetMoblast(customerID string) (score entity.GetMoblast, err error)
+	GetMappingDeviasi(prospectID string) (confirmDeviasi entity.ConfirmDeviasi, err error)
 
 	GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error)
 	GetMasterBranch(branchID string) (masterBranch entity.MasterBranch, err error)
@@ -67,7 +68,7 @@ type Repository interface {
 	MasterMappingIncomeMaxDSR(totalIncome float64) (data entity.MasterMappingIncomeMaxDSR, err error)
 
 	MasterMappingDeviasiDSR(totalIncome float64) (data entity.MasterMappingDeviasiDSR, err error)
-	GetBranchDeviasi(BranchID string) (data entity.MappingBranchDeviasi, err error)
+	GetBranchDeviasi(BranchID string, customerStatus string, NTF float64) (data entity.MappingBranchDeviasi, err error)
 
 	ScanTrxPrinciple(prospectID string) (count int, err error)
 	GetPrincipleStepOne(prospectID string) (data entity.TrxPrincipleStepOne, err error)

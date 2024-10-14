@@ -379,6 +379,7 @@ const (
 	TOKEN_INVALID         = "token tidak valid."
 	RESTY_MAX_RETRY_ERROR = "Max retry attempt exceeded"
 	ERROR_NOT_FOUND       = "data_not_found"
+	ERROR_ROWS_AFFECTED   = "RowsAffected 0"
 
 	//PRE SCREENING
 	QUICK_APPROVE      = false
@@ -449,11 +450,13 @@ const (
 	REASON_NON_BLACKLIST                      = "Non Blacklist"
 
 	//DEVIASI
-	SOURCE_DECISION_DEVIASI    = "DEV"
-	RULE_CODE_DEVIASI_DSR      = "1032"
-	CODE_DEVIASI_DSR           = "Dev 32"
-	RULE_CODE_DEVIASI_SCOREPRO = "1033"
-	CODE_DEVIASI_SCOREPRO      = "Dev 33"
+	CODE_REJECT_KUOTA_DEVIASI   = "1101"
+	REASON_REJECT_KUOTA_DEVIASI = "Kuota Deviasi Tidak Tersedia"
+	SOURCE_DECISION_DEVIASI     = "DEV"
+	RULE_CODE_DEVIASI_DSR       = "1032"
+	CODE_DEVIASI_DSR            = "Dev 32"
+	RULE_CODE_DEVIASI_SCOREPRO  = "1033"
+	CODE_DEVIASI_SCOREPRO       = "Dev 33"
 
 	//DSR
 	SOURCE_DECISION_DSR                      = "DSR"

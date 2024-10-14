@@ -649,6 +649,9 @@ func TestVehicleCheck(t *testing.T) {
 			},
 			year:  yearReject,
 			label: "TEST_VEHICLE_REJECT",
+			filtering: entity.FilteringKMB{
+				ScoreBiro: "LOW RISK",
+			},
 		},
 		{
 			dupcheckConfig: config,
