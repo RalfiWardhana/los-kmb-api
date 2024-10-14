@@ -403,10 +403,10 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 			}
 
 			statusCode := constant.PRINCIPLE_STATUS_PEMOHON_APPROVE
-			data.Reason = "Verifikasi data diri berhasil"
+			resp.Reason = "Verifikasi data diri berhasil"
 			if data.Decision == constant.DECISION_REJECT {
 				statusCode = constant.PRINCIPLE_STATUS_PEMOHON_REJECT
-				data.Reason = "Data diri tidak lolos verifikasi"
+				resp.Reason = "Data diri tidak lolos verifikasi"
 			}
 
 			go u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
@@ -744,7 +744,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 
 	if primePriority && (mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_AO || mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO) {
 		data.Code = blackList.Code
-		data.Decision = blackList.Result
+		data.Decision = constant.DECISION_PASS
 		data.Reason = mainCustomer.CustomerStatus + " " + mainCustomer.CustomerSegment
 		data.NextProcess = true
 
@@ -911,6 +911,12 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		trxPrincipleStepTwo.FilteringResult = constant.DECISION_REJECT
 
 		data.Decision = constant.DECISION_REJECT
+		data.Code = filtering.Code
+		data.Reason = filtering.Reason
+	} else {
+		trxPrincipleStepTwo.FilteringResult = constant.DECISION_PASS
+
+		data.Decision = constant.DECISION_PASS
 		data.Code = filtering.Code
 		data.Reason = filtering.Reason
 	}
