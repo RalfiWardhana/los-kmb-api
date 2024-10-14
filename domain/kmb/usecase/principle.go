@@ -127,11 +127,6 @@ func (u metrics) PrincipleSubmission(ctx context.Context, req request.Metrics, a
 		DecisionBy: constant.SYSTEM_CREATED,
 	}
 
-	resultMetrics, err = u.usecase.SaveTransaction(0, req, trxPrescreening, trxFMF, details, trxPrescreening.Reason)
-	if err != nil {
-		return
-	}
-
 	// trx detail cmo
 	trxDetailCMO := entity.TrxDetail{
 		ProspectID:     req.Transaction.ProspectID,
@@ -161,6 +156,11 @@ func (u metrics) PrincipleSubmission(ctx context.Context, req request.Metrics, a
 	}
 
 	details = append(details, trxDetailPrescreening)
+
+	resultMetrics, err = u.usecase.SaveTransaction(0, req, trxPrescreening, trxFMF, details, trxPrescreening.Reason)
+	if err != nil {
+		return
+	}
 
 	if filtering.CustomerID != nil {
 		customerID = filtering.CustomerID.(string)
