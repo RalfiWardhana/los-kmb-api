@@ -483,7 +483,6 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		data.Code = trxReject.Code
 		data.Reason = trxReject.Reason
 
-		// trxFMF.TrxBannedPMKDSR = trxBannedPMKDSR
 		return
 	}
 
@@ -619,9 +618,10 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 
 	if pmk.Result == constant.DECISION_REJECT {
 		data.Decision = pmk.Result
+		data.Code = pmk.Code
 		data.Reason = pmk.Reason
 
-		// belum save
+		return
 	}
 
 	dupcheckData.InstallmentAmountFMF = dataCustomer[0].TotalInstallment
@@ -740,10 +740,6 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 
 	dupcheckData.Cluster = filtering.Cluster
 
-	trxPrincipleStepTwo.FilteringResult = filtering.Decision
-	trxPrincipleStepTwo.FilteringCode = filtering.Code
-	trxPrincipleStepTwo.FilteringReason = filtering.Reason
-
 	primePriority, _ := utils.ItemExists(mainCustomer.CustomerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
 
 	if primePriority && (mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_AO || mainCustomer.CustomerStatus == constant.STATUS_KONSUMEN_RO) {
@@ -851,45 +847,6 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		return
 	}
 
-	if err != nil && err.Error() == fmt.Sprintf("%s - Dukcapil", constant.TYPE_CONTINGENCY) {
-
-		asliri, err := u.usecase.Asliri(ctx, r, middlewares.UserInfoData.AccessToken)
-
-		if err != nil {
-
-			ktp, err := u.usecase.Ktp(ctx, r, reqMetricsEkyc, middlewares.UserInfoData.AccessToken)
-			if err != nil {
-				return response.UsecaseApi{}, err
-			}
-
-			// trxFMF.EkycSource = "KTP VALIDATOR"
-			// trxFMF.EkycSimiliarity = data.Similiarity
-			// trxFMF.EkycReason = data.Reason
-
-			trxPrincipleStepTwo.CheckEkycResult = ktp.Result
-			trxPrincipleStepTwo.CheckEkycCode = ktp.Code
-			trxPrincipleStepTwo.CheckEkycReason = ktp.Reason
-			trxPrincipleStepTwo.CheckEkycSource = ktp.Source
-			trxPrincipleStepTwo.CheckEkycInfo = ktp.Info
-			trxPrincipleStepTwo.CheckEkycSimiliarity = ktp.Similiarity
-		}
-
-		// trxFMF.EkycSource = "ASLI RI"
-		// trxFMF.EkycSimiliarity = data.Similiarity
-		// trxFMF.EkycReason = data.Reason
-
-		trxPrincipleStepTwo.CheckEkycResult = asliri.Result
-		trxPrincipleStepTwo.CheckEkycCode = asliri.Code
-		trxPrincipleStepTwo.CheckEkycReason = asliri.Reason
-		trxPrincipleStepTwo.CheckEkycSource = asliri.Source
-		trxPrincipleStepTwo.CheckEkycInfo = asliri.Info
-		trxPrincipleStepTwo.CheckEkycSimiliarity = asliri.Similiarity
-	}
-
-	// trxFMF.EkycSource = "DUKCAPIL"
-	// trxFMF.EkycSimiliarity = data.Similiarity
-	// trxFMF.EkycReason = data.Reason
-
 	trxPrincipleStepTwo.CheckEkycResult = dukcapil.Result
 	trxPrincipleStepTwo.CheckEkycCode = dukcapil.Code
 	trxPrincipleStepTwo.CheckEkycReason = dukcapil.Reason
@@ -897,7 +854,66 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	trxPrincipleStepTwo.CheckEkycInfo = dukcapil.Info
 	trxPrincipleStepTwo.CheckEkycSimiliarity = dukcapil.Similiarity
 
+	if err != nil && err.Error() == fmt.Sprintf("%s - Dukcapil", constant.TYPE_CONTINGENCY) {
+
+		asliri, errAsliri := u.usecase.Asliri(ctx, r, middlewares.UserInfoData.AccessToken)
+		err = errAsliri
+
+		if err != nil {
+
+			ktp, errKtp := u.usecase.Ktp(ctx, r, reqMetricsEkyc, middlewares.UserInfoData.AccessToken)
+			err = errKtp
+
+			if err != nil {
+				return response.UsecaseApi{}, err
+			}
+
+			trxPrincipleStepTwo.CheckEkycResult = ktp.Result
+			trxPrincipleStepTwo.CheckEkycCode = ktp.Code
+			trxPrincipleStepTwo.CheckEkycReason = ktp.Reason
+			trxPrincipleStepTwo.CheckEkycSource = ktp.Source
+			trxPrincipleStepTwo.CheckEkycInfo = ktp.Info
+			trxPrincipleStepTwo.CheckEkycSimiliarity = ktp.Similiarity
+
+		} else {
+
+			trxPrincipleStepTwo.CheckEkycResult = asliri.Result
+			trxPrincipleStepTwo.CheckEkycCode = asliri.Code
+			trxPrincipleStepTwo.CheckEkycReason = asliri.Reason
+			trxPrincipleStepTwo.CheckEkycSource = asliri.Source
+			trxPrincipleStepTwo.CheckEkycInfo = asliri.Info
+			trxPrincipleStepTwo.CheckEkycSimiliarity = asliri.Similiarity
+
+		}
+	}
+
+	if trxPrincipleStepTwo.CheckEkycResult != nil && trxPrincipleStepTwo.CheckEkycResult == constant.DECISION_REJECT {
+		data.Decision = trxPrincipleStepTwo.CheckEkycResult.(string)
+		data.Code = trxPrincipleStepTwo.CheckEkycCode
+
+		if trxPrincipleStepTwo.CheckEkycReason != nil {
+			data.Reason = trxPrincipleStepTwo.CheckEkycReason.(string)
+		}
+
+		return
+	}
+
 	err = u.usecase.Save(save, trxDetailBiro, entityTransactionCMOnoFPD)
+	if err != nil {
+		return
+	}
+
+	trxPrincipleStepTwo.FilteringResult = filtering.Decision
+	trxPrincipleStepTwo.FilteringCode = filtering.Code
+	trxPrincipleStepTwo.FilteringReason = filtering.Reason
+
+	if !data.NextProcess {
+		trxPrincipleStepTwo.FilteringResult = constant.DECISION_REJECT
+
+		data.Decision = constant.DECISION_REJECT
+		data.Code = filtering.Code
+		data.Reason = filtering.Reason
+	}
 
 	return
 

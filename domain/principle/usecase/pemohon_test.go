@@ -569,7 +569,7 @@ func TestPrinciplePemohon(t *testing.T) {
 			err:            errors.New("something wrong"),
 		},
 		{
-			name: "error get employee data",
+			name: "reject check pmk",
 			request: request.PrinciplePemohon{
 				ProspectID:              "SAL-123",
 				IDNumber:                "1234567890",
@@ -599,7 +599,45 @@ func TestPrinciplePemohon(t *testing.T) {
 			resCheckPMK: response.UsecaseApi{
 				Result: constant.DECISION_REJECT,
 				Code:   constant.CODE_REJECT_INCOME,
-				Reason: fmt.Sprintf(" %s", constant.REASON_REJECT_INCOME),
+				Reason: "Data diri tidak lolos verifikasi",
+			},
+			result: response.UsecaseApi{
+				Result: constant.DECISION_REJECT,
+				Code:   constant.CODE_REJECT_INCOME,
+				Reason: "Data diri tidak lolos verifikasi",
+			},
+			expectPublishEvent: true,
+		},
+		{
+			name: "error get employee data",
+			request: request.PrinciplePemohon{
+				ProspectID:              "SAL-123",
+				IDNumber:                "1234567890",
+				MaritalStatus:           constant.MARRIED,
+				SpouseIDNumber:          "987654321",
+				SpouseLegalName:         "Test Legal Name",
+				SpouseBirthDate:         "2000-11-11",
+				SpouseSurgateMotherName: "Test Mother Name",
+			},
+			resGetConfig: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			resBannedPMKOrDSR: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resRejection: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resDupcheckIntegrator: response.SpDupCekCustomerByID{
+				CustomerID: "123",
+			},
+			resBlacklistCheck: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resCustomerKMB: constant.STATUS_KONSUMEN_NEW,
+			resCheckPMK: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
 			},
 			errGetEmployeeData: errors.New("something wrong"),
 			err:                errors.New("something wrong"),
@@ -910,6 +948,194 @@ func TestPrinciplePemohon(t *testing.T) {
 			err:         errors.New("something wrong"),
 		},
 		{
+			name: "reject dukcapil",
+			request: request.PrinciplePemohon{
+				ProspectID:              "SAL-123",
+				IDNumber:                "1234567890",
+				MaritalStatus:           constant.MARRIED,
+				SpouseIDNumber:          "987654321",
+				SpouseLegalName:         "Test Legal Name",
+				SpouseBirthDate:         "2000-11-11",
+				SpouseSurgateMotherName: "Test Mother Name",
+			},
+			resGetPrincipleStepOne: entity.TrxPrincipleStepOne{
+				BPKBName:   "P",
+				OwnerAsset: "Test Legal Name",
+			},
+			resGetConfig: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			resBannedPMKOrDSR: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resRejection: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resDupcheckIntegrator: response.SpDupCekCustomerByID{
+				CustomerID:      "123",
+				CustomerStatus:  constant.STATUS_KONSUMEN_AO,
+				CustomerSegment: constant.RO_AO_PRIME,
+			},
+			resBlacklistCheck: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resCustomerKMB: constant.STATUS_KONSUMEN_NEW,
+			resCheckPMK: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resGetEmployeeData: response.EmployeeCMOResponse{
+				CMOCategory: constant.NEW,
+			},
+			resClusterCheckCmoNoFPD: "Cluster A",
+			resEntityCheckCmoNoFPD: entity.TrxCmoNoFPD{
+				CmoCategory: constant.CMO_LAMA,
+			},
+			resFilteringPefindo: response.Filtering{
+				NextProcess: true,
+			},
+			resDukcapil: response.Ekyc{
+				Result: constant.DECISION_REJECT,
+				Code:   "262",
+				Reason: "Data diri tidak lolos verifikasi",
+			},
+			result: response.UsecaseApi{
+				Result: constant.DECISION_REJECT,
+				Code:   "262",
+				Reason: "Data diri tidak lolos verifikasi",
+			},
+			expectPublishEvent: true,
+		},
+		{
+			name: "reject asliri",
+			request: request.PrinciplePemohon{
+				ProspectID:              "SAL-123",
+				IDNumber:                "1234567890",
+				MaritalStatus:           constant.MARRIED,
+				SpouseIDNumber:          "987654321",
+				SpouseLegalName:         "Test Legal Name",
+				SpouseBirthDate:         "2000-11-11",
+				SpouseSurgateMotherName: "Test Mother Name",
+			},
+			resGetPrincipleStepOne: entity.TrxPrincipleStepOne{
+				BPKBName: "K",
+			},
+			resGetConfig: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			resBannedPMKOrDSR: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resRejection: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resDupcheckIntegrator: response.SpDupCekCustomerByID{
+				CustomerID:      "123",
+				CustomerStatus:  constant.STATUS_KONSUMEN_AO,
+				CustomerSegment: constant.RO_AO_PRIME,
+			},
+			resBlacklistCheck: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resCustomerKMB: constant.STATUS_KONSUMEN_NEW,
+			resCheckPMK: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resGetEmployeeData: response.EmployeeCMOResponse{
+				CMOCategory: constant.NEW,
+			},
+			resClusterCheckCmoNoFPD: "Cluster A",
+			resEntityCheckCmoNoFPD: entity.TrxCmoNoFPD{
+				CmoCategory: constant.CMO_LAMA,
+			},
+			resPefindo: response.PefindoResult{
+				Score:                         "HIGH RISK",
+				Category:                      3,
+				WoContract:                    true,
+				WoAdaAgunan:                   true,
+				MaxOverdueKORules:             10,
+				MaxOverdueLast12MonthsKORules: 12,
+			},
+			errDukcapil: errors.New(fmt.Sprintf("%s - Dukcapil", constant.TYPE_CONTINGENCY)),
+			resAsliri: response.Ekyc{
+				Result: constant.DECISION_REJECT,
+				Code:   constant.CODE_REJECT_ASLIRI_SELFIE,
+				Reason: "Data diri tidak lolos verifikasi",
+			},
+			result: response.UsecaseApi{
+				Result: constant.DECISION_REJECT,
+				Code:   constant.CODE_REJECT_ASLIRI_SELFIE,
+				Reason: "Data diri tidak lolos verifikasi",
+			},
+			expectPublishEvent: true,
+		},
+		{
+			name: "reject ktp",
+			request: request.PrinciplePemohon{
+				ProspectID:              "SAL-123",
+				IDNumber:                "1234567890",
+				MaritalStatus:           constant.MARRIED,
+				SpouseIDNumber:          "987654321",
+				SpouseLegalName:         "Test Legal Name",
+				SpouseBirthDate:         "2000-11-11",
+				SpouseSurgateMotherName: "Test Mother Name",
+			},
+			resGetPrincipleStepOne: entity.TrxPrincipleStepOne{
+				BPKBName: "K",
+			},
+			resGetConfig: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			resBannedPMKOrDSR: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resRejection: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resDupcheckIntegrator: response.SpDupCekCustomerByID{
+				CustomerID:      "123",
+				CustomerStatus:  constant.STATUS_KONSUMEN_AO,
+				CustomerSegment: constant.RO_AO_PRIME,
+			},
+			resBlacklistCheck: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resCustomerKMB: constant.STATUS_KONSUMEN_NEW,
+			resCheckPMK: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resGetEmployeeData: response.EmployeeCMOResponse{
+				CMOCategory: constant.NEW,
+			},
+			resClusterCheckCmoNoFPD: "Cluster A",
+			resEntityCheckCmoNoFPD: entity.TrxCmoNoFPD{
+				CmoCategory: constant.CMO_LAMA,
+			},
+			resPefindo: response.PefindoResult{
+				Score:                         "HIGH RISK",
+				Category:                      3,
+				WoContract:                    true,
+				WoAdaAgunan:                   true,
+				MaxOverdueKORules:             10,
+				MaxOverdueLast12MonthsKORules: 12,
+			},
+			errDukcapil: errors.New(fmt.Sprintf("%s - Dukcapil", constant.TYPE_CONTINGENCY)),
+			errAsliri:   errors.New("something wrong"),
+			resKtp: response.Ekyc{
+				Result: constant.DECISION_REJECT,
+				Code:   "2600",
+				Reason: "Data diri tidak lolos verifikasi",
+			},
+			result: response.UsecaseApi{
+				Result: constant.DECISION_REJECT,
+				Code:   "2600",
+				Reason: "Data diri tidak lolos verifikasi",
+			},
+			expectPublishEvent: true,
+		},
+		{
 			name: "error save",
 			request: request.PrinciplePemohon{
 				ProspectID:              "SAL-123",
@@ -961,6 +1187,65 @@ func TestPrinciplePemohon(t *testing.T) {
 			},
 			errSave: errors.New("something wrong"),
 			err:     errors.New("something wrong"),
+		},
+		{
+			name: "reject filtering",
+			request: request.PrinciplePemohon{
+				ProspectID:              "SAL-123",
+				IDNumber:                "1234567890",
+				MaritalStatus:           constant.MARRIED,
+				SpouseIDNumber:          "987654321",
+				SpouseLegalName:         "Test Legal Name",
+				SpouseBirthDate:         "2000-11-11",
+				SpouseSurgateMotherName: "Test Mother Name",
+			},
+			resGetPrincipleStepOne: entity.TrxPrincipleStepOne{
+				BPKBName:   "P",
+				OwnerAsset: "Test Legal Name",
+			},
+			resGetConfig: entity.AppConfig{
+				Key:   "parameterize",
+				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
+			},
+			resBannedPMKOrDSR: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resRejection: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resDupcheckIntegrator: response.SpDupCekCustomerByID{
+				CustomerID:      "123",
+				CustomerStatus:  constant.STATUS_KONSUMEN_AO,
+				CustomerSegment: constant.RO_AO_PRIME,
+			},
+			resBlacklistCheck: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resCustomerKMB: constant.STATUS_KONSUMEN_NEW,
+			resCheckPMK: response.UsecaseApi{
+				Result: constant.DECISION_PASS,
+			},
+			resGetEmployeeData: response.EmployeeCMOResponse{
+				CMOCategory: constant.NEW,
+			},
+			resClusterCheckCmoNoFPD: "Cluster A",
+			resEntityCheckCmoNoFPD: entity.TrxCmoNoFPD{
+				CmoCategory: constant.CMO_LAMA,
+			},
+			resFilteringPefindo: response.Filtering{
+				NextProcess: false,
+				Code:        constant.NAMA_SAMA_CURRENT_OVD_UNDER_LIMIT_CODE,
+				Reason:      "Data diri tidak lolos verifikasi",
+			},
+			resDukcapil: response.Ekyc{
+				Result: constant.DECISION_PASS,
+			},
+			result: response.UsecaseApi{
+				Result: constant.DECISION_REJECT,
+				Code:   constant.NAMA_SAMA_CURRENT_OVD_UNDER_LIMIT_CODE,
+				Reason: "Data diri tidak lolos verifikasi",
+			},
+			expectPublishEvent: true,
 		},
 		{
 			name: "error save principle step two",
