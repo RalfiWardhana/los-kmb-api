@@ -529,6 +529,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 		filtering                                        entity.FilteringKMB
 		mappingBranchDeviasi                             entity.MappingBranchDeviasi
 		mappingDeviasiDSR                                entity.MasterMappingDeviasiDSR
+		trxApk                                           entity.TrxApk
 		errResult                                        error
 		config                                           entity.AppConfig
 		errGetConfig                                     error
@@ -541,6 +542,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			prospectID:          "TEST1",
 			customerSegment:     "",
 			accessToken:         "token",
+			trxApk: entity.TrxApk{
+				NTF: 10000000,
+			},
 			filtering: entity.FilteringKMB{
 				BranchID: "400",
 			},
@@ -581,6 +585,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			prospectID:          "TEST1",
 			customerSegment:     "",
 			accessToken:         "token",
+			trxApk: entity.TrxApk{
+				NTF: 10000000,
+			},
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":45,"minimum_pencairan_ro_top_up":5000000}}`,
@@ -610,6 +617,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			prospectID:          "TEST1",
 			customerSegment:     constant.RO_AO_PRIME,
 			accessToken:         "token",
+			trxApk: entity.TrxApk{
+				NTF: 10000000,
+			},
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
@@ -649,6 +659,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			prospectID:          "TEST1",
 			customerSegment:     constant.RO_AO_PRIME,
 			accessToken:         "token",
+			trxApk: entity.TrxApk{
+				NTF: 10000000,
+			},
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
@@ -692,6 +705,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			prospectID:          "TEST1",
 			customerSegment:     constant.RO_AO_PRIME,
 			accessToken:         "token",
+			trxApk: entity.TrxApk{
+				NTF: 10000000,
+			},
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
@@ -727,6 +743,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			prospectID:          "TEST1",
 			customerSegment:     constant.RO_AO_PRIME,
 			accessToken:         "token",
+			trxApk: entity.TrxApk{
+				NTF: 10000000,
+			},
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
@@ -765,6 +784,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			prospectID:          "TEST1",
 			customerSegment:     constant.RO_AO_PRIORITY,
 			accessToken:         "token",
+			trxApk: entity.TrxApk{
+				NTF: 10000000,
+			},
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
@@ -797,6 +819,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			prospectID:          "TEST1",
 			customerSegment:     constant.RO_AO_PRIME,
 			accessToken:         "token",
+			trxApk: entity.TrxApk{
+				NTF: 10000000,
+			},
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
@@ -833,6 +858,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			prospectID:          "TEST1",
 			customerSegment:     constant.RO_AO_PRIME,
 			accessToken:         "token",
+			trxApk: entity.TrxApk{
+				NTF: 10000000,
+			},
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
@@ -869,6 +897,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			prospectID:          "TEST1",
 			customerSegment:     constant.RO_AO_PRIME,
 			accessToken:         "token",
+			trxApk: entity.TrxApk{
+				NTF: 10000000,
+			},
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
@@ -899,6 +930,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			prospectID:          "TEST1",
 			customerSegment:     constant.RO_AO_PRIORITY,
 			accessToken:         "token",
+			trxApk: entity.TrxApk{
+				NTF: 10000000,
+			},
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
@@ -929,6 +963,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			prospectID:          "TEST1",
 			customerSegment:     constant.RO_AO_PRIORITY,
 			accessToken:         "token",
+			trxApk: entity.TrxApk{
+				NTF: 10000000,
+			},
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
@@ -959,6 +996,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			prospectID:          "TEST1",
 			customerSegment:     constant.RO_AO_PRIME,
 			accessToken:         "token",
+			trxApk: entity.TrxApk{
+				NTF: 10000000,
+			},
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
@@ -991,6 +1031,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			prospectID:          "TEST1",
 			customerSegment:     constant.RO_AO_PRIME,
 			accessToken:         "token",
+			trxApk: entity.TrxApk{
+				NTF: 10000000,
+			},
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
@@ -1022,6 +1065,9 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			prospectID:          "TEST1",
 			customerSegment:     constant.RO_AO_PRIME,
 			accessToken:         "token",
+			trxApk: entity.TrxApk{
+				NTF: 10000000,
+			},
 			configValue: entity.AppConfig{
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
@@ -1069,7 +1115,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 
 			mockRepository.On("GetConfig", "expired_contract", "KMB-OFF", "expired_contract_check").Return(tc.config, tc.errGetConfig)
 
-			mockRepository.On("GetBranchDeviasi", "400").Return(tc.mappingBranchDeviasi, tc.errGetConfig)
+			mockRepository.On("GetBranchDeviasi", "400", tc.SpDupcheckMap.StatusKonsumen, tc.trxApk.NTF).Return(tc.mappingBranchDeviasi, tc.errGetConfig)
 
 			mockRepository.On("MasterMappingDeviasiDSR", tc.totalIncome).Return(tc.mappingDeviasiDSR, tc.errGetConfig)
 
@@ -1077,7 +1123,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
-			data, trx, err := usecase.TotalDsrFmfPbk(ctx, tc.totalIncome, tc.newInstallment, tc.totalInstallmentPBK, tc.prospectID, tc.customerSegment, tc.accessToken, tc.SpDupcheckMap, configValue, tc.filtering)
+			data, trx, err := usecase.TotalDsrFmfPbk(ctx, tc.totalIncome, tc.newInstallment, tc.totalInstallmentPBK, tc.prospectID, tc.customerSegment, tc.accessToken, tc.SpDupcheckMap, configValue, tc.filtering, tc.trxApk.NTF)
 
 			require.Equal(t, tc.result, data)
 			require.Equal(t, tc.trxFMF, trx)

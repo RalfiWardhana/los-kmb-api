@@ -578,27 +578,27 @@ func (_m *Usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoSco
 	return r0, r1, r2, r3
 }
 
-// TotalDsrFmfPbk provides a mock function with given fields: ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering
-func (_m *Usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome float64, newInstallment float64, totalInstallmentPBK float64, prospectID string, customerSegment string, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig, filtering entity.FilteringKMB) (response.UsecaseApi, response.TrxFMF, error) {
-	ret := _m.Called(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering)
+// TotalDsrFmfPbk provides a mock function with given fields: ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering, NTF
+func (_m *Usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome float64, newInstallment float64, totalInstallmentPBK float64, prospectID string, customerSegment string, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig, filtering entity.FilteringKMB, NTF float64) (response.UsecaseApi, response.TrxFMF, error) {
+	ret := _m.Called(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering, NTF)
 
 	var r0 response.UsecaseApi
-	if rf, ok := ret.Get(0).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig, entity.FilteringKMB) response.UsecaseApi); ok {
-		r0 = rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering)
+	if rf, ok := ret.Get(0).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig, entity.FilteringKMB, float64) response.UsecaseApi); ok {
+		r0 = rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering, NTF)
 	} else {
 		r0 = ret.Get(0).(response.UsecaseApi)
 	}
 
 	var r1 response.TrxFMF
-	if rf, ok := ret.Get(1).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig, entity.FilteringKMB) response.TrxFMF); ok {
-		r1 = rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering)
+	if rf, ok := ret.Get(1).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig, entity.FilteringKMB, float64) response.TrxFMF); ok {
+		r1 = rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering, NTF)
 	} else {
 		r1 = ret.Get(1).(response.TrxFMF)
 	}
 
 	var r2 error
-	if rf, ok := ret.Get(2).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig, entity.FilteringKMB) error); ok {
-		r2 = rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering)
+	if rf, ok := ret.Get(2).(func(context.Context, float64, float64, float64, string, string, string, response.SpDupcheckMap, response.DupcheckConfig, entity.FilteringKMB, float64) error); ok {
+		r2 = rf(ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering, NTF)
 	} else {
 		r2 = ret.Error(2)
 	}

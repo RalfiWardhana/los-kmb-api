@@ -591,7 +591,7 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 
 		decisionInfo, ok := decisionMapping[req.Decision]
 		if !ok {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Decision tidak valid")
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Decision tidak valid")
 			return
 		}
 
@@ -638,7 +638,7 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 		data.Reason = reason
 
 	} else {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dalam prescreening")
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dalam prescreening")
 		return
 	}
 
@@ -1106,10 +1106,14 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 			NextStep:              trxDetail.NextStep.(string),
 		}
 
-		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail)
+		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, false)
 		if err != nil {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error")
-			return
+			if err.Error() == constant.ERROR_ROWS_AFFECTED {
+				err = nil
+			} else {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Submit Decision error " + err.Error())
+				return
+			}
 		}
 
 		data = response.CAResponse{
@@ -1119,7 +1123,7 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 			Note:       req.Note,
 		}
 	} else {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Status order tidak sedang dalam credit process")
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak sedang dalam credit process")
 		return
 	}
 
@@ -1447,7 +1451,7 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 			SourceDecision:        trxDetail.SourceDecision,
 		}
 
-		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail)
+		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, true)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Process Cancel Order error")
 			return
@@ -1460,7 +1464,7 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 		}
 
 	} else {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Status order tidak dapat dicancel")
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dapat dicancel")
 		return
 	}
 
@@ -1921,6 +1925,7 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 	var (
 		trxDetail                                     entity.TrxDetail
 		trxStatus                                     entity.TrxStatus
+		status                                        entity.TrxStatus
 		recentDP                                      entity.AFMobilePhone
 		trxRecalculate                                entity.TrxRecalculate
 		approvalScheme                                response.RespApprovalScheme
@@ -2031,19 +2036,38 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 		}
 	}
 
-	err = u.repository.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+	status, err = u.repository.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error")
+		if err.Error() == constant.RECORD_NOT_FOUND {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Submit Approval error status order tidak dapat diproses")
+		} else if strings.Contains(err.Error(), "duplicate") {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Submit Approval error " + err.Error())
+		} else {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Submit Approval error " + err.Error())
+		}
 		return
 	}
 
-	data = response.ApprovalResponse{
-		ProspectID:     req.ProspectID,
-		Decision:       req.Decision,
-		Reason:         req.Reason,
-		Note:           req.Note,
-		IsFinal:        approvalScheme.IsFinal,
-		NeedEscalation: approvalScheme.IsEscalation,
+	if status.Reason == constant.REASON_REJECT_KUOTA_DEVIASI {
+		data = response.ApprovalResponse{
+			ProspectID:     req.ProspectID,
+			Decision:       constant.DECISION_REJECT,
+			Code:           constant.CODE_REJECT_KUOTA_DEVIASI,
+			Reason:         status.Reason,
+			Note:           status.Reason,
+			IsFinal:        approvalScheme.IsFinal,
+			NeedEscalation: approvalScheme.IsEscalation,
+		}
+	} else {
+		data = response.ApprovalResponse{
+			ProspectID:     req.ProspectID,
+			Decision:       req.Decision,
+			Code:           req.RuleCode,
+			Reason:         req.Reason,
+			Note:           req.Note,
+			IsFinal:        approvalScheme.IsFinal,
+			NeedEscalation: approvalScheme.IsEscalation,
+		}
 	}
 
 	return

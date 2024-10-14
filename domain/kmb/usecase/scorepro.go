@@ -481,7 +481,39 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 	}
 
 	if !strings.Contains(responseScs.Status, "ASS-") && !strings.Contains(responseScs.Status, "ASSCB-") && data.Result == constant.DECISION_REJECT {
-		data.IsDeviasi = true
+		// get kuota deviasi
+		var confirmDeviasi entity.ConfirmDeviasi
+		confirmDeviasi, err = u.repository.GetMappingDeviasi(req.Transaction.ProspectID)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Scorepro GetMappingDeviasi Error")
+			return
+		}
+
+		// unmarshal info resp int scorepro
+		var infoRespScp response.IntegratorScorePro
+		err = json.Unmarshal(info, &infoRespScp)
+
+		// add info deviasi
+		infoRespScp.Deviasi = confirmDeviasi
+
+		// return info
+		info, _ := json.Marshal(infoRespScp)
+		data.Info = string(utils.SafeEncoding(info))
+
+		// check branch deviasi
+		if confirmDeviasi.IsActive {
+			// check deviasi konsumen
+			if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_NEW {
+				// check kuota deviasi
+				if confirmDeviasi.Deviasi {
+					// kuota tersedia, bisa deviasi
+					data.IsDeviasi = true
+				}
+			} else {
+				// branch deviasi aktif, konsumen ro/ao tidak perlu cek kuota
+				data.IsDeviasi = true
+			}
+		}
 	}
 	return
 }

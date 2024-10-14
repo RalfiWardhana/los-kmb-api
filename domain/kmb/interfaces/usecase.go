@@ -28,7 +28,7 @@ type Usecase interface {
 	Scorepro(ctx context.Context, req request.Metrics, pefindoScore, customerSegment string, spDupcheck response.SpDupcheckMap, accessToken string, filtering entity.FilteringKMB) (responseScs response.IntegratorScorePro, data response.ScorePro, pefindoIDX response.PefindoIDX, err error)
 	ElaborateScheme(req request.Metrics) (data response.UsecaseApi, err error)
 	ElaborateIncome(ctx context.Context, req request.Metrics, filtering entity.FilteringKMB, pefindoIDX response.PefindoIDX, spDupcheckMap response.SpDupcheckMap, responseScs response.IntegratorScorePro, accessToken string) (data response.UsecaseApi, err error)
-	TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment, totalInstallmentPBK float64, prospectID, customerSegment, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig, filtering entity.FilteringKMB) (data response.UsecaseApi, trxFMF response.TrxFMF, err error)
+	TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment, totalInstallmentPBK float64, prospectID, customerSegment, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig, filtering entity.FilteringKMB, NTF float64) (data response.UsecaseApi, trxFMF response.TrxFMF, err error)
 	SaveTransaction(countTrx int, data request.Metrics, trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, details []entity.TrxDetail, reason string) (resp response.Metrics, err error)
 	CheckAgreementLunas(ctx context.Context, prospectID string, customerId string, filterKMBOnly bool, accessToken string) (responseMDM response.ConfinsAgreementCustomer, isDataExist bool, err error)
 	Recalculate(ctx context.Context, req request.Recalculate) (data response.Recalculate, err error)
