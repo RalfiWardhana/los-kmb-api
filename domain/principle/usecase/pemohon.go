@@ -660,7 +660,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	}
 
 	if hrisCMO.CMOCategory == "" {
-		// err = errors.New(constant.ERROR_BAD_REQUEST + " - CMO_ID " + req.CMOID + " not found on HRIS API")
+		err = errors.New(constant.ERROR_UPSTREAM + " - CMO Not Found")
 		return
 	}
 
@@ -775,7 +775,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 					data.NextProcess = filtering.NextProcess
 				}
 			} else {
-				// err = errors.New(constant.ERROR_BAD_REQUEST + " - Customer RO then CustomerID should not be empty")
+				err = errors.New(constant.ERROR_BAD_REQUEST + " - Customer RO then CustomerID should not be empty")
 				return
 			}
 		}
@@ -926,11 +926,8 @@ func (u usecase) Save(transaction entity.FilteringKMB, trxDetailBiro []entity.Tr
 	if err != nil {
 
 		if strings.Contains(err.Error(), "deadline") {
-			// err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Save Filtering Timeout")
 			return
 		}
-
-		// err = errors.New(constant.ERROR_BAD_REQUEST + " - Save Filtering Error ProspectID Already Exist")
 	}
 
 	return
