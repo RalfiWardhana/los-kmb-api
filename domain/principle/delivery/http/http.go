@@ -188,6 +188,9 @@ func (c *handler) ElaborateLTV(ctx echo.Context) (err error) {
 		return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "003"), data, response.WithMessage(data.Reason))
 	}
 
+	if r.LoanAmount > 0 {
+		return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "004"), data)
+	}
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
 
 }
