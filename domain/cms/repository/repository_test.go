@@ -724,6 +724,14 @@ func TestGetInquiryPrescreening(t *testing.T) {
 	ti.color,
 	chassis_number,
 	engine_number,
+	CASE
+		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+	END AS bpkb_name,
+	ti.owner_asset,
+	ti.license_plate,
 	interest_rate,
 	Tenor AS InstallmentPeriod,
 	OTR,
@@ -1177,6 +1185,14 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 	ti.color,
 	chassis_number,
 	engine_number,
+	CASE
+		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+	END AS bpkb_name,
+	ti.owner_asset,
+	ti.license_plate,
 	interest_rate,
 	Tenor AS InstallmentPeriod,
 	OTR,
@@ -1627,6 +1643,14 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 	ti.color,
 	chassis_number,
 	engine_number,
+	CASE
+		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+	END AS bpkb_name,
+	ti.owner_asset,
+	ti.license_plate,
 	interest_rate,
 	Tenor AS InstallmentPeriod,
 	OTR,
@@ -2077,6 +2101,14 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 	ti.color,
 	chassis_number,
 	engine_number,
+	CASE
+		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+	END AS bpkb_name,
+	ti.owner_asset,
+	ti.license_plate,
 	interest_rate,
 	Tenor AS InstallmentPeriod,
 	OTR,
@@ -2368,6 +2400,14 @@ func TestGetInquiryPrescreeningRecordNotFound(t *testing.T) {
         ti.color,
         chassis_number,
         engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
         interest_rate,
         Tenor AS InstallmentPeriod,
         OTR,
@@ -3515,6 +3555,14 @@ func TestGetInquiryCa(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		ta.interest_rate,
 		ta.Tenor AS InstallmentPeriod,
 		OTR,
@@ -4005,6 +4053,14 @@ func TestGetInquiryCa(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		ta.interest_rate,
 		ta.Tenor AS InstallmentPeriod,
 		OTR,
@@ -4495,6 +4551,14 @@ func TestGetInquiryCa(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		ta.interest_rate,
 		ta.Tenor AS InstallmentPeriod,
 		OTR,
@@ -4996,6 +5060,14 @@ func TestGetInquiryCa(t *testing.T) {
 				ti.color,
 				chassis_number,
 				engine_number,
+				CASE
+				WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+				WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+				WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+				WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+				END AS bpkb_name,
+				ti.owner_asset,
+				ti.license_plate,
 				ta.interest_rate,
 				ta.Tenor AS InstallmentPeriod,
 				OTR,
@@ -5497,6 +5569,14 @@ func TestGetInquiryCa(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		ta.interest_rate,
 		ta.Tenor AS InstallmentPeriod,
 		OTR,
@@ -6103,6 +6183,14 @@ func TestGetInquirySearch(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -6485,6 +6573,14 @@ func TestGetInquirySearch(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -6866,6 +6962,14 @@ func TestGetInquirySearch(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -7237,6 +7341,14 @@ func TestGetInquirySearch(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -8242,6 +8354,14 @@ func TestGetInquiryApproval(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -8674,6 +8794,14 @@ func TestGetInquiryApproval(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -9102,6 +9230,14 @@ func TestGetInquiryApproval(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -9543,6 +9679,14 @@ func TestGetInquiryApproval(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -9984,6 +10128,14 @@ func TestGetInquiryApproval(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,

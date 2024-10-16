@@ -2645,6 +2645,15 @@ func TestGetInquiryNEDetail(t *testing.T) {
 
 			var data request.MetricsNE
 			json.Unmarshal([]byte(tc.trxNewEntry.PayloadNE), &data)
+			if data.Item.BPKBName == "K" {
+				data.Item.BPKBName = "Sendiri"
+			} else if data.Item.BPKBName == "P" {
+				data.Item.BPKBName = "Pasangan"
+			} else if data.Item.BPKBName == "KK" {
+				data.Item.BPKBName = "Nama Satu KK"
+			} else if data.Item.BPKBName == "O" {
+				data.Item.BPKBName = "Orang Lain"
+			}
 			assert.Equal(t, tc.errFinal, err)
 			assert.Equal(t, data, result)
 
