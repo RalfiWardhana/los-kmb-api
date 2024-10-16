@@ -60,6 +60,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.GET("/cms/quota-deviasi/inquiry", handler.QuotaDeviasiInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/quota-deviasi/branch", handler.QuotaDeviasiBranch, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/quota-deviasi/update", handler.QuotaDeviasiUpdate, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/quota-deviasi/download", handler.QuotaDeviasiDownload, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
@@ -1059,6 +1060,35 @@ func (c *handlerCMS) QuotaDeviasiBranch(ctx echo.Context) (err error) {
 		RecordFiltered: len(data),
 		RecordTotal:    len(data),
 	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Mapping Cluster
+// @Tags Mapping Cluster
+// @Produce octet-stream
+// @Success 200 {file} file "application/octet-stream"
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/quota-deviasi/download [get]
+func (c *handlerCMS) QuotaDeviasiDownload(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		genName     string
+	)
+
+	defer func() {
+		if genName != "" {
+			os.Remove(fmt.Sprintf("./%s.xlsx", genName))
+		}
+	}()
+
+	genName, filename, err := c.usecase.GenerateExcelQuotaDeviasi()
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Data Setting Quota Deviasi", nil, err)
+	}
+
+	return ctx.Attachment(fmt.Sprintf("./%s.xlsx", genName), filename)
 }
 
 // CMS NEW KMB Tools godoc

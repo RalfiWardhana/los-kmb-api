@@ -2134,6 +2134,115 @@ func (u usecase) UpdateQuotaDeviasiBranch(ctx context.Context, req request.ReqUp
 	return
 }
 
+func (u usecase) GenerateExcelQuotaDeviasi() (genName, fileName string, err error) {
+
+	var (
+		settingQuotaDeviasi []entity.InquirySettingQuotaDeviasi
+	)
+
+	settingQuotaDeviasi, _, err = u.repository.GetInquiryQuotaDeviasi(request.ReqListQuotaDeviasi{}, nil)
+	if err != nil && err.Error() != constant.RECORD_NOT_FOUND {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get quota deviasi branch error")
+		return
+	}
+
+	xlsx := excelize.NewFile()
+	defer func() {
+		if err := xlsx.Close(); err != nil {
+			return
+		}
+	}()
+
+	sheetName := "Quota Deviasi Branch"
+
+	index := xlsx.NewSheet("Sheet1")
+	xlsx.SetActiveSheet(index)
+	xlsx.SetSheetName("Sheet1", sheetName)
+
+	rowHeader := []string{"branch_id", "branch_name", "quota_amount", "quota_account", "is_active"}
+
+	colSize := []float64{13, 34, 20, 15, 8}
+
+	centerAlignment := &excelize.Alignment{
+		Horizontal: "center",
+	}
+
+	boldFont := &excelize.Font{
+		Bold: true, Family: "Calibri", Size: 11, Color: "000000",
+	}
+
+	border := []excelize.Border{
+		{Type: "left", Color: "000000", Style: 1}, {Type: "top", Color: "000000", Style: 1}, {Type: "bottom", Color: "000000", Style: 1}, {Type: "right", Color: "000000", Style: 1},
+	}
+
+	colorHeader := excelize.Fill{
+		Type: "pattern", Color: []string{"#BCBCBC"}, Pattern: 1,
+	}
+
+	styleHeader, _ := xlsx.NewStyle(&excelize.Style{
+		Alignment: centerAlignment,
+		Font:      boldFont,
+		Border:    border,
+		Fill:      colorHeader,
+	})
+
+	styleBodyLeft, _ := xlsx.NewStyle(&excelize.Style{
+		Alignment: centerAlignment,
+		Border:    border,
+	})
+
+	styleBodyCenter, _ := xlsx.NewStyle(&excelize.Style{
+		Alignment: centerAlignment,
+		Border:    border,
+	})
+
+	styleBodyRight, _ := xlsx.NewStyle(&excelize.Style{
+		Alignment: centerAlignment,
+		Border:    border,
+	})
+
+	streamWriter, err := xlsx.NewStreamWriter(sheetName)
+	if err != nil {
+		return
+	}
+
+	for rowID := 1; rowID <= len(settingQuotaDeviasi)+1; rowID++ {
+		row := make([]interface{}, 5)
+		if rowID == 1 {
+			for idx, val := range rowHeader {
+				row[idx] = excelize.Cell{StyleID: styleHeader, Value: val}
+				streamWriter.SetColWidth(idx+1, idx+2, colSize[idx])
+			}
+		} else {
+			row[0] = excelize.Cell{StyleID: styleBodyCenter, Value: settingQuotaDeviasi[rowID-2].BranchID}
+			row[1] = excelize.Cell{StyleID: styleBodyLeft, Value: settingQuotaDeviasi[rowID-2].BranchName}
+			row[2] = excelize.Cell{StyleID: styleBodyRight, Value: settingQuotaDeviasi[rowID-2].QuotaAmount}
+			row[3] = excelize.Cell{StyleID: styleBodyCenter, Value: settingQuotaDeviasi[rowID-2].QuotaAccount}
+			row[4] = excelize.Cell{StyleID: styleBodyCenter, Value: settingQuotaDeviasi[rowID-2].IsActive}
+		}
+
+		cell, _ := excelize.CoordinatesToCellName(1, rowID)
+		if err = streamWriter.SetRow(cell, row); err != nil {
+			return
+		}
+	}
+
+	if err = streamWriter.Flush(); err != nil {
+		return
+	}
+
+	now := time.Now()
+	fileName = "SettingQuotaDeviasi_" + now.Format("20060102150405") + ".xlsx"
+	genName = utils.GenerateUUID()
+
+	if err = xlsx.SaveAs(fmt.Sprintf("./%s.xlsx", genName)); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Save excel quota deviasi error")
+		return
+	}
+
+	return
+}
+
 func (u usecase) GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error) {
 
 	data, rowTotal, err = u.repository.GetInquiryMappingCluster(req, pagination)

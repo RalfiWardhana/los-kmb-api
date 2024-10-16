@@ -31,6 +31,7 @@ type Usecase interface {
 	GetInquiryQuotaDeviasi(req request.ReqListQuotaDeviasi, pagination interface{}) (data []entity.InquirySettingQuotaDeviasi, rowTotal int, err error)
 	GetQuotaDeviasiBranch(req request.ReqListQuotaDeviasiBranch) (data []entity.ConfinsBranch, err error)
 	UpdateQuotaDeviasiBranch(ctx context.Context, req request.ReqUpdateQuotaDeviasi) (data response.UpdateQuotaDeviasiBranchResponse, err error)
+	GenerateExcelQuotaDeviasi() (genName, fileName string, err error)
 
 	GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error)
 	GenerateExcelMappingCluster() (genName, fileName string, err error)
