@@ -261,6 +261,16 @@ func (u usecase) GetInquiryNEDetail(ctx context.Context, prospectID string) (dat
 
 	json.Unmarshal([]byte(trxNewEntry.PayloadNE), &data)
 
+	if data.Item.BPKBName == "K" {
+		data.Item.BPKBName = "Sendiri"
+	} else if data.Item.BPKBName == "P" {
+		data.Item.BPKBName = "Pasangan"
+	} else if data.Item.BPKBName == "KK" {
+		data.Item.BPKBName = "Nama Satu KK"
+	} else if data.Item.BPKBName == "O" {
+		data.Item.BPKBName = "Orang Lain"
+	}
+
 	return
 }
 
@@ -472,6 +482,9 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				Color:                 inq.Color,
 				ChassisNumber:         inq.ChassisNumber,
 				EngineNumber:          inq.EngineNumber,
+				BPKBName:              inq.BPKBName,
+				OwnerAsset:            inq.OwnerAsset,
+				LicensePlate:          inq.LicensePlate,
 				InterestRate:          inq.InterestRate,
 				Tenor:                 inq.InstallmentPeriod,
 				OTR:                   inq.OTR,
@@ -900,6 +913,9 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 				Color:                 inq.Color,
 				ChassisNumber:         inq.ChassisNumber,
 				EngineNumber:          inq.EngineNumber,
+				BPKBName:              inq.BPKBName,
+				OwnerAsset:            inq.OwnerAsset,
+				LicensePlate:          inq.LicensePlate,
 				InterestRate:          inq.InterestRate,
 				Tenor:                 inq.InstallmentPeriod,
 				OTR:                   inq.OTR,
@@ -1319,6 +1335,9 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 				Color:                 inq.Color,
 				ChassisNumber:         inq.ChassisNumber,
 				EngineNumber:          inq.EngineNumber,
+				BPKBName:              inq.BPKBName,
+				OwnerAsset:            inq.OwnerAsset,
+				LicensePlate:          inq.LicensePlate,
 				InterestRate:          inq.InterestRate,
 				Tenor:                 inq.InstallmentPeriod,
 				OTR:                   inq.OTR,
@@ -1851,6 +1870,9 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 				Color:                 inq.Color,
 				ChassisNumber:         inq.ChassisNumber,
 				EngineNumber:          inq.EngineNumber,
+				BPKBName:              inq.BPKBName,
+				OwnerAsset:            inq.OwnerAsset,
+				LicensePlate:          inq.LicensePlate,
 				InterestRate:          inq.InterestRate,
 				Tenor:                 inq.InstallmentPeriod,
 				OTR:                   inq.OTR,

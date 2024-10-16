@@ -1299,6 +1299,9 @@ type InquiryPrescreening struct {
 	Color              string  `gorm:"column:color"`
 	ChassisNumber      string  `gorm:"column:chassis_number"`
 	EngineNumber       string  `gorm:"column:engine_number"`
+	BPKBName           string  `gorm:"column:bpkb_name"`
+	OwnerAsset         string  `gorm:"column:owner_asset"`
+	LicensePlate       string  `gorm:"column:license_plate"`
 	InterestRate       float64 `gorm:"column:interest_rate"`
 	InstallmentPeriod  int     `gorm:"column:InstallmentPeriod"`
 	OTR                float64 `gorm:"column:OTR"`
@@ -1439,6 +1442,9 @@ type DataItemApk struct {
 	Color                 string  `gorm:"column:color" json:"color"`
 	ChassisNumber         string  `gorm:"column:chassis_number" json:"chassis_number"`
 	EngineNumber          string  `gorm:"column:engine_number" json:"engine_number"`
+	BPKBName              string  `gorm:"column:bpkb_name" json:"bpkb_name"`
+	OwnerAsset            string  `gorm:"column:owner_asset" json:"owner_asset"`
+	LicensePlate          string  `gorm:"column:license_plate" json:"license_plate"`
 	InterestRate          float64 `gorm:"column:interest_rate" json:"interest_rate"`
 	Tenor                 int     `gorm:"column:InstallmentPeriod" json:"installment_period"`
 	OTR                   float64 `gorm:"column:OTR" json:"otr"`
@@ -1561,6 +1567,9 @@ type InquiryCa struct {
 	Color              string  `gorm:"column:color"`
 	ChassisNumber      string  `gorm:"column:chassis_number"`
 	EngineNumber       string  `gorm:"column:engine_number"`
+	BPKBName           string  `gorm:"column:bpkb_name"`
+	OwnerAsset         string  `gorm:"column:owner_asset"`
+	LicensePlate       string  `gorm:"column:license_plate"`
 	InterestRate       float64 `gorm:"column:interest_rate"`
 	InstallmentPeriod  int     `gorm:"column:InstallmentPeriod"`
 	OTR                float64 `gorm:"column:OTR"`
@@ -1749,6 +1758,9 @@ type InquirySearch struct {
 	Color              string  `gorm:"column:color"`
 	ChassisNumber      string  `gorm:"column:chassis_number"`
 	EngineNumber       string  `gorm:"column:engine_number"`
+	BPKBName           string  `gorm:"column:bpkb_name"`
+	OwnerAsset         string  `gorm:"column:owner_asset"`
+	LicensePlate       string  `gorm:"column:license_plate"`
 	InterestRate       float64 `gorm:"column:interest_rate"`
 	InstallmentPeriod  int     `gorm:"column:InstallmentPeriod"`
 	OTR                float64 `gorm:"column:OTR"`
