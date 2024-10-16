@@ -2073,6 +2073,67 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 	return
 }
 
+func (u usecase) GetInquiryQuotaDeviasi(req request.ReqListQuotaDeviasi, pagination interface{}) (data []entity.InquirySettingQuotaDeviasi, rowTotal int, err error) {
+
+	data, rowTotal, err = u.repository.GetInquiryQuotaDeviasi(req, pagination)
+
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (u usecase) GetQuotaDeviasiBranch(req request.ReqListQuotaDeviasiBranch) (data []entity.ConfinsBranch, err error) {
+
+	data, err = u.repository.GetQuotaDeviasiBranch(req)
+
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (u usecase) UpdateQuotaDeviasiBranch(ctx context.Context, req request.ReqUpdateQuotaDeviasi) (data response.UpdateQuotaDeviasiBranchResponse, err error) {
+
+	var (
+		dataBefore     entity.DataQuotaDeviasiBranch
+		dataAfter      entity.DataQuotaDeviasiBranch
+		mBranchDeviasi entity.MappingBranchDeviasi
+	)
+
+	mBranchDeviasi = entity.MappingBranchDeviasi{
+		QuotaAmount:  req.QuotaAmount,
+		QuotaAccount: req.QuotaAccount,
+		IsActive:     req.IsActive,
+		UpdatedBy:    req.UpdatedByName,
+	}
+
+	dataBefore, dataAfter, err = u.repository.ProcessUpdateQuotaDeviasiBranch(req.BranchID, mBranchDeviasi)
+
+	if err != nil {
+		if strings.Contains(err.Error(), "BookingAmount > QuotaAmount") {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - BookingAmount exceeds new QuotaAmount")
+		} else if strings.Contains(err.Error(), "BookingAccount > QuotaAccount") {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - BookingAccount exceeds new QuotaAccount")
+		} else {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Process Update Quota Deviasi Branch error")
+		}
+		return
+	}
+
+	data = response.UpdateQuotaDeviasiBranchResponse{
+		Status:           constant.RESULT_OK,
+		Message:          constant.UPDATE_DEVIASI_SUCCESS,
+		BranchID:         req.BranchID,
+		DataBeforeUpdate: dataBefore,
+		DataAfterUpdate:  dataAfter,
+	}
+
+	return
+}
+
 func (u usecase) GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error) {
 
 	data, rowTotal, err = u.repository.GetInquiryMappingCluster(req, pagination)

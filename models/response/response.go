@@ -881,6 +881,14 @@ type SubmitRecalculateResponse struct {
 	ServerTime string      `json:"timestamp"`
 }
 
+type UpdateQuotaDeviasiBranchResponse struct {
+	Status           string                        `json:"status"`
+	Message          string                        `json:"message"`
+	BranchID         string                        `json:"branch_id"`
+	DataBeforeUpdate entity.DataQuotaDeviasiBranch `json:"data_before_update,omitempty"`
+	DataAfterUpdate  entity.DataQuotaDeviasiBranch `json:"data_after_update,omitempty"`
+}
+
 type EmployeeCMOResponse struct {
 	EmployeeID         string `json:"employee_id"`
 	EmployeeName       string `json:"employee_name"`

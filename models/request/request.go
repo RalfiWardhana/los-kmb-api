@@ -939,6 +939,25 @@ type ReqInquiryApproval struct {
 	Alias       string `json:"alias" validate:"required,max=3"`
 }
 
+type ReqListQuotaDeviasi struct {
+	Search   string `json:"search"`
+	BranchID string `json:"branch_id" example:"400"`
+	IsActive string `json:"is_active" example:"1 / 0"`
+}
+
+type ReqListQuotaDeviasiBranch struct {
+	BranchID   string `json:"branch_id" example:"400"`
+	BranchName string `json:"customer_status" example:"BEKASI"`
+}
+
+type ReqUpdateQuotaDeviasi struct {
+	BranchID      string  `json:"branch_id" example:"400"`
+	QuotaAmount   float64 `json:"quota_amount" example:"97500000"`
+	QuotaAccount  int     `json:"quota_account" example:"65"`
+	IsActive      bool    `json:"is_active" example:"true / false"`
+	UpdatedByName string  `json:"updated_by_name" example:"MUHAMMAD RONALD"`
+}
+
 type ReqListMappingCluster struct {
 	Search         string `json:"search"`
 	BranchID       string `json:"branch_id" example:"400"`

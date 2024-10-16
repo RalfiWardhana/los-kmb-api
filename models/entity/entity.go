@@ -2352,6 +2352,30 @@ func (c *NewEntry) TableName() string {
 	return "trx_new_entry"
 }
 
+type InquirySettingQuotaDeviasi struct {
+	BranchID       string  `gorm:"column:branch_id" json:"branch_id"`
+	BranchName     string  `gorm:"column:branch_name" json:"branch_name"`
+	QuotaAmount    float64 `gorm:"column:quota_amount" json:"quota_amount"`
+	QuotaAccount   int     `gorm:"column:quota_account" json:"quota_account"`
+	BookingAmount  float64 `gorm:"column:booking_amount" json:"booking_amount"`
+	BookingAccount int     `gorm:"column:booking_account" json:"booking_account"`
+	BalanceAmount  float64 `gorm:"column:balance_amount" json:"balance_amount"`
+	BalanceAccount int     `gorm:"column:balance_account" json:"balance_account"`
+	IsActive       bool    `gorm:"column:is_active" json:"is_active"`
+}
+
+type DataQuotaDeviasiBranch struct {
+	QuotaAmount    float64   `gorm:"column:quota_amount" json:"quota_amount"`
+	QuotaAccount   int       `gorm:"column:quota_account" json:"quota_account"`
+	BookingAmount  float64   `gorm:"column:booking_amount" json:"booking_amount"`
+	BookingAccount int       `gorm:"column:booking_account" json:"booking_account"`
+	BalanceAmount  float64   `gorm:"column:balance_amount" json:"balance_amount"`
+	BalanceAccount int       `gorm:"column:balance_account" json:"balance_account"`
+	IsActive       bool      `gorm:"column:is_active" json:"is_active"`
+	UpdatedAt      time.Time `gorm:"column:updated_at" json:"updated_at"`
+	UpdatedBy      string    `gorm:"column:updated_by" json:"updated_by"`
+}
+
 type InquiryMappingCluster struct {
 	BranchID       string `gorm:"column:branch_id" json:"branch_id"`
 	BranchName     string `gorm:"column:branch_name" json:"branch_name"`
