@@ -425,6 +425,11 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		return
 	}
 
+	if principleStepOne.Decision == constant.DECISION_REJECT {
+		err = errors.New(constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE)
+		return
+	}
+
 	bpkbNameType := "O"
 	if principleStepOne.OwnerAsset == r.LegalName {
 		bpkbNameType = "K"

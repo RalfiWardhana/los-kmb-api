@@ -98,10 +98,14 @@ func (c *handler) VerifyPemohon(ctx echo.Context) (err error) {
 	data, err := c.multiusecase.PrinciplePemohon(ctx.Request().Context(), r)
 
 	if err != nil {
+		errorMessage := constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE
+		if err.Error() == constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE {
+			errorMessage = constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE
+		}
 
 		code, err := utils.WrapError(err)
 
-		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(errorMessage))
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data, response.WithMessage(data.Reason))
@@ -219,10 +223,14 @@ func (c *handler) VerifyPembiayaan(ctx echo.Context) (err error) {
 	data, err := c.multiusecase.PrinciplePembiayaan(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
+		errorMessage := constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE
+		if err.Error() == constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE {
+			errorMessage = constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE
+		}
 
 		code, err := utils.WrapError(err)
 
-		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(errorMessage))
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data, response.WithMessage(data.Reason))
@@ -252,10 +260,14 @@ func (c *handler) EmergencyContact(ctx echo.Context) (err error) {
 	data, err := c.usecase.PrincipleEmergencyContact(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
+		errorMessage := constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE
+		if err.Error() == constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE {
+			errorMessage = constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE
+		}
 
 		code, err := utils.WrapError(err)
 
-		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(errorMessage))
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)

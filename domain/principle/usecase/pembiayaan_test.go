@@ -116,6 +116,17 @@ func TestPrinciplePembiayaan(t *testing.T) {
 			err:          errors.New("something wrong"),
 		},
 		{
+			name: "error get config",
+			request: request.PrinciplePembiayaan{
+				ProspectID:        "SAL-123",
+				InstallmentAmount: 10000000,
+			},
+			resGetPrincipleStepTwo: entity.TrxPrincipleStepTwo{
+				Decision: constant.DECISION_REJECT,
+			},
+			err: errors.New(constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE),
+		},
+		{
 			name: "error get master mapping cluster",
 			request: request.PrinciplePembiayaan{
 				ProspectID:        "SAL-123",
@@ -804,8 +815,6 @@ func TestPrinciplePembiayaan(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, tc.result, result)
 			}
-
-			time.Sleep(100 * time.Millisecond)
 		})
 	}
 }

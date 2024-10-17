@@ -149,6 +149,11 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 		return response.UsecaseApi{}, err
 	}
 
+	if principleStepOne.Decision == constant.DECISION_REJECT || principleStepTwo.Decision == constant.DECISION_REJECT {
+		err = errors.New(constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE)
+		return
+	}
+
 	json.Unmarshal([]byte(config.Value), &configValue)
 
 	// get mapping cluster
