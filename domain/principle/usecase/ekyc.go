@@ -213,7 +213,7 @@ func (u usecase) Dukcapil(ctx context.Context, r request.PrinciplePemohon, reqMe
 		data.Source = constant.SOURCE_DECISION_DUKCAPIL
 		info, _ := json.Marshal(infoDukcapil)
 		data.Info = string(info)
-		// err = fmt.Errorf("%s - Dukcapil", constant.TYPE_CONTINGENCY)
+		err = fmt.Errorf("%s - Dukcapil", constant.TYPE_CONTINGENCY)
 		return
 	case constant.DECISION_REJECT:
 		data.Result = resultDukcapil.Decision

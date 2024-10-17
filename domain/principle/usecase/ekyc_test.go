@@ -315,7 +315,7 @@ func TestDukcapil(t *testing.T) {
 				},
 			},
 			expected: expectedResult{
-				err: nil,
+				err: fmt.Errorf("%s - Dukcapil", constant.TYPE_CONTINGENCY),
 				data: response.Ekyc{
 					Result: "CONTINGENCY",
 					Code:   "1626",
@@ -381,7 +381,7 @@ func TestDukcapil(t *testing.T) {
 				},
 			},
 			expected: expectedResult{
-				err: nil,
+				err: fmt.Errorf("%s - Dukcapil", constant.TYPE_CONTINGENCY),
 				data: response.Ekyc{
 					Result: "CONTINGENCY",
 					Code:   "",
