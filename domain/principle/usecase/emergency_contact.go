@@ -3,66 +3,51 @@ package usecase
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"os"
 	"strconv"
-	"sync"
 )
 
 func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (data response.UsecaseApi, err error) {
 	var (
 		principleStepThree           entity.TrxPrincipleStepThree
 		trxPrincipleEmergencyContact entity.TrxPrincipleEmergencyContact
-		wg                           sync.WaitGroup
-		errChan                      = make(chan error, 2)
 	)
 
-	wg.Add(2)
-	go func() {
-		defer wg.Done()
-		principleStepThree, err = u.repository.GetPrincipleStepThree(req.ProspectID)
+	principleStepThree, err = u.repository.GetPrincipleStepThree(req.ProspectID)
+	if err != nil {
+		return
+	}
 
-		if err != nil {
-			errChan <- err
-		}
-	}()
+	if principleStepThree.Decision == constant.DECISION_REJECT {
+		err = errors.New(constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE)
+		return
+	}
 
-	go func() {
-		defer wg.Done()
-		trxPrincipleEmergencyContact = entity.TrxPrincipleEmergencyContact{
-			ProspectID:   req.ProspectID,
-			Name:         req.Name,
-			Relationship: req.Relationship,
-			MobilePhone:  req.MobilePhone,
-			Address:      req.Address,
-			Rt:           req.Rt,
-			Rw:           req.Rw,
-			Kelurahan:    req.Kelurahan,
-			Kecamatan:    req.Kecamatan,
-			City:         req.City,
-			Province:     req.Province,
-			ZipCode:      req.ZipCode,
-			AreaPhone:    req.AreaPhone,
-			Phone:        req.Phone,
-		}
+	trxPrincipleEmergencyContact = entity.TrxPrincipleEmergencyContact{
+		ProspectID:   req.ProspectID,
+		Name:         req.Name,
+		Relationship: req.Relationship,
+		MobilePhone:  req.MobilePhone,
+		Address:      req.Address,
+		Rt:           req.Rt,
+		Rw:           req.Rw,
+		Kelurahan:    req.Kelurahan,
+		Kecamatan:    req.Kecamatan,
+		City:         req.City,
+		Province:     req.Province,
+		ZipCode:      req.ZipCode,
+		AreaPhone:    req.AreaPhone,
+		Phone:        req.Phone,
+	}
 
-		err = u.repository.SavePrincipleEmergencyContact(trxPrincipleEmergencyContact, principleStepThree.IDNumber)
-
-		if err != nil {
-			errChan <- err
-		}
-	}()
-
-	go func() {
-		wg.Wait()
-		close(errChan)
-	}()
-
-	if err := <-errChan; err != nil {
-		return data, err
+	err = u.repository.SavePrincipleEmergencyContact(trxPrincipleEmergencyContact, principleStepThree.IDNumber)
+	if err != nil {
+		return
 	}
 
 	timeOut, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))

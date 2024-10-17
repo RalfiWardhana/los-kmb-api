@@ -896,14 +896,6 @@ func TestSavePrincipleStepTwo(t *testing.T) {
 		CreatedAt:  fixedTime,
 	}
 
-	dataStatus := entity.TrxPrincipleStatus{
-		ProspectID: dataStepTwo.ProspectID,
-		IDNumber:   dataStepTwo.IDNumber,
-		Step:       2,
-		Decision:   dataStepTwo.Decision,
-		UpdatedAt:  fixedTime,
-	}
-
 	mock.ExpectBegin()
 
 	data := structToSliceWithTimeArgs(dataStepTwo)
@@ -911,9 +903,9 @@ func TestSavePrincipleStepTwo(t *testing.T) {
 		WithArgs(data...).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	mock.ExpectExec(`INSERT INTO "trx_principle_status" (.*)`).
-		WithArgs(dataStatus.ProspectID, dataStatus.IDNumber, dataStatus.Step, dataStatus.Decision, sqlmock.AnyArg(), sqlmock.AnyArg()).
-		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(`UPDATE "trx_principle_status" SET "Decision" = \?, "IDNumber" = \?, "ProspectID" = \?, "Step" = \?, "updated_at" = \? WHERE \(ProspectID = \?\)`).
+		WithArgs("approved", "123", "SAL-1140024080800016", 2, sqlmock.AnyArg(), "SAL-1140024080800016").
+		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	mock.ExpectCommit()
 
@@ -1454,24 +1446,16 @@ func TestSavePrincipleStepThree(t *testing.T) {
 		Decision:   "approved",
 	}
 
-	dataStatus := entity.TrxPrincipleStatus{
-		ProspectID: dataStepThree.ProspectID,
-		IDNumber:   dataStepThree.IDNumber,
-		Step:       3,
-		Decision:   dataStepThree.Decision,
-		UpdatedAt:  time.Now(),
-	}
-
 	mock.ExpectBegin()
 
-	stepOne := structToSlice(dataStepThree)
+	stepThree := structToSlice(dataStepThree)
 	mock.ExpectExec(`INSERT INTO "trx_principle_step_three" (.*)`).
-		WithArgs(stepOne...).
+		WithArgs(stepThree...).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	mock.ExpectExec(`INSERT INTO "trx_principle_status" (.*)`).
-		WithArgs(dataStatus.ProspectID, dataStatus.IDNumber, dataStatus.Step, dataStatus.Decision, sqlmock.AnyArg(), sqlmock.AnyArg()).
-		WillReturnResult(sqlmock.NewResult(1, 1))
+	mock.ExpectExec(`UPDATE "trx_principle_status" SET "Decision" = \?, "IDNumber" = \?, "ProspectID" = \?, "Step" = \?, "updated_at" = \? WHERE \(ProspectID = \?\)`).
+		WithArgs("approved", "123", "SAL-1140024080800016", 3, sqlmock.AnyArg(), "SAL-1140024080800016").
+		WillReturnResult(sqlmock.NewResult(0, 1))
 
 	mock.ExpectCommit()
 
@@ -1571,9 +1555,9 @@ func TestSavePrincipleEmergencyContact(t *testing.T) {
 			).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		mock.ExpectExec(`INSERT INTO "trx_principle_status" (.*)`).
-			WithArgs(data.ProspectID, idNumber, 4, constant.DECISION_CREDIT_PROCESS, sqlmock.AnyArg(), sqlmock.AnyArg()).
-			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`UPDATE "trx_principle_status" SET (.*) WHERE .*ProspectID = \?`).
+			WithArgs(constant.DECISION_CREDIT_PROCESS, idNumber, data.ProspectID, 4, sqlmock.AnyArg(), data.ProspectID).
+			WillReturnResult(sqlmock.NewResult(0, 1))
 
 		mock.ExpectCommit()
 
@@ -1590,15 +1574,13 @@ func TestSavePrincipleEmergencyContact(t *testing.T) {
 			WithArgs(data.ProspectID).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID"}).AddRow(data.ProspectID))
 
-		mock.ExpectExec(`UPDATE "trx_principle_emergency_contact" SET (.*) WHERE .*ProspectID = \?`).
-			WithArgs(
-				data.Name, data.ProspectID, sqlmock.AnyArg(), data.ProspectID,
-			).
-			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(`UPDATE "trx_principle_emergency_contact" SET "Name" = \?, "ProspectID" = \?, "updated_at" = \?  WHERE \(ProspectID = \?\)`).
+			WithArgs(data.Name, data.ProspectID, sqlmock.AnyArg(), data.ProspectID).
+			WillReturnResult(sqlmock.NewResult(0, 1))
 
 		mock.ExpectExec(`UPDATE "trx_principle_status" SET (.*) WHERE .*ProspectID = \? AND Step = \?`).
 			WithArgs(constant.DECISION_CREDIT_PROCESS, idNumber, sqlmock.AnyArg(), data.ProspectID, 4).
-			WillReturnResult(sqlmock.NewResult(1, 1))
+			WillReturnResult(sqlmock.NewResult(0, 1))
 
 		mock.ExpectCommit()
 

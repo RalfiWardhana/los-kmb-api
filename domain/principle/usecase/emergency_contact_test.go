@@ -12,7 +12,6 @@ import (
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -31,8 +30,9 @@ func TestPrincipleEmergencyContact(t *testing.T) {
 		errGetPrincipleStepThree         error
 		errSavePrincipleEmergencyContact error
 		errSaveToWorker                  error
+		expectSaveEmergencyContact       bool
 		expectSaveToWorker               bool
-		err                              error
+		expectedError                    error
 	}{
 		{
 			name: "success",
@@ -42,24 +42,39 @@ func TestPrincipleEmergencyContact(t *testing.T) {
 				Relationship: "Friend",
 				MobilePhone:  "1234567890",
 			},
-			principleStepThree: entity.TrxPrincipleStepThree{IDNumber: "123456"},
-			expectSaveToWorker: true,
+			principleStepThree:         entity.TrxPrincipleStepThree{IDNumber: "123456"},
+			expectSaveEmergencyContact: true,
+			expectSaveToWorker:         true,
 		},
 		{
 			name: "error get principle step three",
 			request: request.PrincipleEmergencyContact{
 				ProspectID: "PROS-002",
 			},
-			errGetPrincipleStepThree: errors.New("failed to get principle step three"),
-			err:                      errors.New("failed to get principle step three"),
+			errGetPrincipleStepThree:   errors.New("failed to get principle step three"),
+			expectSaveEmergencyContact: false,
+			expectedError:              errors.New("failed to get principle step three"),
+		},
+		{
+			name: "error reject principle step three",
+			request: request.PrincipleEmergencyContact{
+				ProspectID: "PROS-002",
+			},
+			principleStepThree: entity.TrxPrincipleStepThree{
+				Decision: constant.DECISION_REJECT,
+			},
+			expectSaveEmergencyContact: false,
+			expectedError:              errors.New(constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE),
 		},
 		{
 			name: "error save principle emergency contact",
 			request: request.PrincipleEmergencyContact{
 				ProspectID: "PROS-003",
 			},
+			principleStepThree:               entity.TrxPrincipleStepThree{IDNumber: "123456"},
 			errSavePrincipleEmergencyContact: errors.New("failed to save principle emergency contact"),
-			err:                              errors.New("failed to save principle emergency contact"),
+			expectSaveEmergencyContact:       true,
+			expectedError:                    errors.New("failed to save principle emergency contact"),
 		},
 	}
 
@@ -71,7 +86,10 @@ func TestPrincipleEmergencyContact(t *testing.T) {
 			var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
 
 			mockRepository.On("GetPrincipleStepThree", tc.request.ProspectID).Return(tc.principleStepThree, tc.errGetPrincipleStepThree)
-			mockRepository.On("SavePrincipleEmergencyContact", mock.Anything, mock.Anything).Return(tc.errSavePrincipleEmergencyContact)
+
+			if tc.expectSaveEmergencyContact {
+				mockRepository.On("SavePrincipleEmergencyContact", mock.Anything, mock.Anything).Return(tc.errSavePrincipleEmergencyContact)
+			}
 
 			if tc.expectSaveToWorker {
 				mockRepository.On("SaveToWorker", mock.Anything).Return(tc.errSaveToWorker).Maybe()
@@ -81,14 +99,12 @@ func TestPrincipleEmergencyContact(t *testing.T) {
 
 			_, err := usecase.PrincipleEmergencyContact(ctx, tc.request, accessToken)
 
-			if tc.err != nil {
+			if tc.expectedError != nil {
 				require.Error(t, err)
-				require.Equal(t, tc.err.Error(), err.Error())
+				require.Equal(t, tc.expectedError.Error(), err.Error())
 			} else {
 				require.NoError(t, err)
 			}
-
-			time.Sleep(100 * time.Millisecond)
 
 			mockRepository.AssertExpectations(t)
 			mockHttpClient.AssertExpectations(t)

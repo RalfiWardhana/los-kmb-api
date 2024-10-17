@@ -15,7 +15,6 @@ import (
 	"os"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
@@ -229,8 +228,6 @@ func TestCheckNokaNosin(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
-
-			time.Sleep(100 * time.Millisecond)
 
 			mockRepository.AssertExpectations(t)
 			mockHttpClient.AssertExpectations(t)

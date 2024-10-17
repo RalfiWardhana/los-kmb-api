@@ -715,7 +715,8 @@ const (
 	EMERGENCY_PASS_CODE   = "4701"
 	EMERGENCY_PASS_REASON = "Sukses Submit To Sally"
 
-	PRINCIPLE_ERROR_RESPONSE_MESSAGE = "Terjadi kesalahan pada sistem, silahkan coba lagi"
+	PRINCIPLE_ERROR_RESPONSE_MESSAGE   = "Terjadi kesalahan pada sistem, silahkan coba lagi"
+	PRINCIPLE_ALREADY_REJECTED_MESSAGE = "Pengajuan anda telah reject sebelumnya"
 
 	WORKER_UNPROCESS                    = "UNPR"
 	WORKER_IDLE                         = "IDLE"

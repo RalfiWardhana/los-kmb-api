@@ -411,6 +411,19 @@ func TestPrinciplePemohon(t *testing.T) {
 			err:                    errors.New("something wrong"),
 		},
 		{
+			name: "error already reject",
+			request: request.PrinciplePemohon{
+				ProspectID:     "SAL-123",
+				IDNumber:       "1234567890",
+				SpouseIDNumber: "987654321",
+				Gender:         "M",
+			},
+			resGetPrincipleStepOne: entity.TrxPrincipleStepOne{
+				Decision: constant.DECISION_REJECT,
+			},
+			err: errors.New(constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE),
+		},
+		{
 			name: "error get config",
 			request: request.PrinciplePemohon{
 				ProspectID: "SAL-123",
@@ -676,7 +689,7 @@ func TestPrinciplePemohon(t *testing.T) {
 			resGetEmployeeData: response.EmployeeCMOResponse{
 				CMOCategory: "",
 			},
-			expectPublishEvent: true,
+			err: errors.New(constant.ERROR_UPSTREAM + " - CMO Not Found"),
 		},
 		{
 			name: "error get fpd cmo",
@@ -1403,8 +1416,6 @@ func TestPrinciplePemohon(t *testing.T) {
 				require.NoError(t, err)
 				require.Equal(t, tc.result, result)
 			}
-
-			time.Sleep(100 * time.Millisecond)
 		})
 	}
 }
