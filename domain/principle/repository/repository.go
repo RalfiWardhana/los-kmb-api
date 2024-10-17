@@ -722,3 +722,21 @@ func (r repoHandler) ScanOrderPending() (data []entity.AutoCancel, err error) {
 
 	return
 }
+
+func (r repoHandler) UpdateToCancel(prospectID string) (err error) {
+
+	return r.newKmb.Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Model(&entity.TrxPrincipleStatus{}).
+			Where("ProspectID = ?", prospectID).
+			Updates(&entity.TrxPrincipleStatus{
+				Decision:  constant.DECISION_CANCEL,
+				UpdatedAt: time.Now(),
+			}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+}

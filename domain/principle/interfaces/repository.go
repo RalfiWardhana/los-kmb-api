@@ -41,4 +41,5 @@ type Repository interface {
 	SavePrincipleMarketingProgram(data entity.TrxPrincipleMarketingProgram) (err error)
 	GetPrincipleMarketingProgram(prospectID string) (data entity.TrxPrincipleMarketingProgram, err error)
 	ScanOrderPending() (data []entity.AutoCancel, err error)
+	UpdateToCancel(prospectID string) (err error)
 }
