@@ -165,12 +165,13 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 	}
 
 	u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
-		KpmID:       r.KPMID,
-		OrderID:     r.ProspectID,
-		Source:      3,
-		StatusCode:  statusCode,
-		ProductName: r.AssetCode,
-		BranchCode:  r.BranchID,
+		KpmID:         r.KPMID,
+		OrderID:       r.ProspectID,
+		Source:        3,
+		StatusCode:    statusCode,
+		ProductName:   r.AssetCode,
+		BranchCode:    r.BranchID,
+		AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
 	}), 0)
 
 	return

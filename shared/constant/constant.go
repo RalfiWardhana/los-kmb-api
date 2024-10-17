@@ -718,6 +718,8 @@ const (
 	PRINCIPLE_ERROR_RESPONSE_MESSAGE   = "Terjadi kesalahan pada sistem, silahkan coba lagi"
 	PRINCIPLE_ALREADY_REJECTED_MESSAGE = "Pengajuan anda telah reject sebelumnya"
 
+	KPM_ASSET_TYPE_CODE_MOTOR = "11"
+
 	WORKER_UNPROCESS                    = "UNPR"
 	WORKER_IDLE                         = "IDLE"
 	WORKER_TYPE_RAW                     = "RAW"

@@ -504,12 +504,13 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 
 		statusCode := constant.PRINCIPLE_STATUS_SUBMIT_SALLY
 		u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, prospectID, utils.StructToMap(request.Update2wPrincipleTransaction{
-			OrderID:     prospectID,
-			KpmID:       principleStepOne.KPMID,
-			Source:      3,
-			StatusCode:  statusCode,
-			ProductName: principleStepOne.AssetCode,
-			BranchCode:  principleStepOne.BranchID,
+			OrderID:       prospectID,
+			KpmID:         principleStepOne.KPMID,
+			Source:        3,
+			StatusCode:    statusCode,
+			ProductName:   principleStepOne.AssetCode,
+			BranchCode:    principleStepOne.BranchID,
+			AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
 		}), 0)
 	}
 
