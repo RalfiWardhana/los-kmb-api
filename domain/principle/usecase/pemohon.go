@@ -611,7 +611,10 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 
 	mainCustomer.CustomerStatus = mainCustomer.CustomerStatusKMB
 
-	pmk, _ := u.usecase.CheckPMK(principleStepOne.BranchID, mainCustomer.CustomerStatusKMB, income, principleStepOne.HomeStatus, r.ProfessionID, r.BirthDate, 12, r.MaritalStatus, r.EmploymentSinceYear, r.EmploymentSinceMonth, principleStepOne.StaySinceYear, principleStepOne.StaySinceMonth)
+	pmk, err := u.usecase.CheckPMK(principleStepOne.BranchID, mainCustomer.CustomerStatusKMB, income, principleStepOne.HomeStatus, r.ProfessionID, r.BirthDate, 12, r.MaritalStatus, r.EmploymentSinceYear, r.EmploymentSinceMonth, principleStepOne.StaySinceYear, principleStepOne.StaySinceMonth)
+	if err != nil {
+		return
+	}
 
 	trxPrincipleStepTwo.CheckPMKResult = pmk.Result
 	trxPrincipleStepTwo.CheckPMKCode = pmk.Code

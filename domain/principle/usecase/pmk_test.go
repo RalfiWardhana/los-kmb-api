@@ -59,7 +59,7 @@ func TestCheckPMK(t *testing.T) {
 			stayMonth:     6,
 			resGetConfig: entity.AppConfig{
 				GroupName: constant.GROUP_PMK,
-				Lob:       constant.LOB_KMB,
+				Lob:       constant.LOB_KMB_OFF,
 				Key:       constant.KEY_PMK,
 				Value:     `{"data":{"min_age_marital_status_m":19,"min_age_marital_status_s":21,"marital_checking":true,"max_age_limit":58,"length_of_business":2,"length_of_work":1,"length_of_stay":{"sd":1,"rd":1,"rk":2},"minimal_income":0,"manufacturing_year":0}}`,
 				IsActive:  1,
@@ -68,7 +68,7 @@ func TestCheckPMK(t *testing.T) {
 				BranchID:       "426",
 				StatusKonsumen: "12345",
 				Income:         3000000,
-				Lob:            constant.LOB_KMB,
+				Lob:            constant.LOB_KMB_OFF,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_PASS,
@@ -94,7 +94,7 @@ func TestCheckPMK(t *testing.T) {
 			stayMonth:     6,
 			resGetConfig: entity.AppConfig{
 				GroupName: constant.GROUP_PMK,
-				Lob:       constant.LOB_KMB,
+				Lob:       constant.LOB_KMB_OFF,
 				Key:       constant.KEY_PMK,
 				Value:     `{"data":{"min_age_marital_status_m":19,"min_age_marital_status_s":21,"marital_checking":true,"max_age_limit":58,"length_of_business":2,"length_of_work":1,"length_of_stay":{"sd":1,"rd":1,"rk":2},"minimal_income":0,"manufacturing_year":0}}`,
 				IsActive:  1,
@@ -103,7 +103,7 @@ func TestCheckPMK(t *testing.T) {
 				BranchID:       "426",
 				StatusKonsumen: "12345",
 				Income:         3000000,
-				Lob:            constant.LOB_KMB,
+				Lob:            constant.LOB_KMB_OFF,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
@@ -129,7 +129,7 @@ func TestCheckPMK(t *testing.T) {
 			stayMonth:     6,
 			resGetConfig: entity.AppConfig{
 				GroupName: constant.GROUP_PMK,
-				Lob:       constant.LOB_KMB,
+				Lob:       constant.LOB_KMB_OFF,
 				Key:       constant.KEY_PMK,
 				Value:     `{"data":{"min_age_marital_status_m":19,"min_age_marital_status_s":21,"marital_checking":true,"max_age_limit":58,"length_of_business":2,"length_of_work":1,"length_of_stay":{"sd":1,"rd":1,"rk":2},"minimal_income":0,"manufacturing_year":0}}`,
 				IsActive:  1,
@@ -138,7 +138,7 @@ func TestCheckPMK(t *testing.T) {
 				BranchID:       "426",
 				StatusKonsumen: "12345",
 				Income:         3000000,
-				Lob:            constant.LOB_KMB,
+				Lob:            constant.LOB_KMB_OFF,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
@@ -164,7 +164,7 @@ func TestCheckPMK(t *testing.T) {
 			stayMonth:     6,
 			resGetConfig: entity.AppConfig{
 				GroupName: constant.GROUP_PMK,
-				Lob:       constant.LOB_KMB,
+				Lob:       constant.LOB_KMB_OFF,
 				Key:       constant.KEY_PMK,
 				Value:     `{"data":{"min_age_marital_status_m":19,"min_age_marital_status_s":21,"marital_checking":true,"max_age_limit":58,"length_of_business":2,"length_of_work":1,"length_of_stay":{"sd":1,"rd":1,"rk":2},"minimal_income":0,"manufacturing_year":0}}`,
 				IsActive:  1,
@@ -173,7 +173,7 @@ func TestCheckPMK(t *testing.T) {
 				BranchID:       "426",
 				StatusKonsumen: "12345",
 				Income:         3000000,
-				Lob:            constant.LOB_KMB,
+				Lob:            constant.LOB_KMB_OFF,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
@@ -199,7 +199,7 @@ func TestCheckPMK(t *testing.T) {
 			stayMonth:     currentMonthInt,
 			resGetConfig: entity.AppConfig{
 				GroupName: constant.GROUP_PMK,
-				Lob:       constant.LOB_KMB,
+				Lob:       constant.LOB_KMB_OFF,
 				Key:       constant.KEY_PMK,
 				Value:     `{"data":{"min_age_marital_status_m":19,"min_age_marital_status_s":21,"marital_checking":true,"max_age_limit":58,"length_of_business":2,"length_of_work":1,"length_of_stay":{"sd":1,"rd":1,"rk":2},"minimal_income":0,"manufacturing_year":0}}`,
 				IsActive:  1,
@@ -208,7 +208,7 @@ func TestCheckPMK(t *testing.T) {
 				BranchID:       "426",
 				StatusKonsumen: "12345",
 				Income:         3000000,
-				Lob:            constant.LOB_KMB,
+				Lob:            constant.LOB_KMB_OFF,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
@@ -234,7 +234,7 @@ func TestCheckPMK(t *testing.T) {
 			stayMonth:     currentMonthInt,
 			resGetConfig: entity.AppConfig{
 				GroupName: constant.GROUP_PMK,
-				Lob:       constant.LOB_KMB,
+				Lob:       constant.LOB_KMB_OFF,
 				Key:       constant.KEY_PMK,
 				Value:     `{"data":{"min_age_marital_status_m":19,"min_age_marital_status_s":21,"marital_checking":true,"max_age_limit":58,"length_of_business":2,"length_of_work":1,"length_of_stay":{"sd":1,"rd":1,"rk":2},"minimal_income":0,"manufacturing_year":0}}`,
 				IsActive:  1,
@@ -243,7 +243,7 @@ func TestCheckPMK(t *testing.T) {
 				BranchID:       "426",
 				StatusKonsumen: "12345",
 				Income:         3000000,
-				Lob:            constant.LOB_KMB,
+				Lob:            constant.LOB_KMB_OFF,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
@@ -269,7 +269,7 @@ func TestCheckPMK(t *testing.T) {
 			stayMonth:     currentMonthInt,
 			resGetConfig: entity.AppConfig{
 				GroupName: constant.GROUP_PMK,
-				Lob:       constant.LOB_KMB,
+				Lob:       constant.LOB_KMB_OFF,
 				Key:       constant.KEY_PMK,
 				Value:     `{"data":{"min_age_marital_status_m":19,"min_age_marital_status_s":21,"marital_checking":true,"max_age_limit":58,"length_of_business":2,"length_of_work":1,"length_of_stay":{"sd":1,"rd":1,"rk":2},"minimal_income":0,"manufacturing_year":0}}`,
 				IsActive:  1,
@@ -278,7 +278,7 @@ func TestCheckPMK(t *testing.T) {
 				BranchID:       "426",
 				StatusKonsumen: "12345",
 				Income:         3000000,
-				Lob:            constant.LOB_KMB,
+				Lob:            constant.LOB_KMB_OFF,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
@@ -304,7 +304,7 @@ func TestCheckPMK(t *testing.T) {
 			stayMonth:     1,
 			resGetConfig: entity.AppConfig{
 				GroupName: constant.GROUP_PMK,
-				Lob:       constant.LOB_KMB,
+				Lob:       constant.LOB_KMB_OFF,
 				Key:       constant.KEY_PMK,
 				Value:     `{"data":{"min_age_marital_status_m":19,"min_age_marital_status_s":21,"marital_checking":true,"max_age_limit":58,"length_of_business":2,"length_of_work":1,"length_of_stay":{"sd":1,"rd":1,"rk":2},"minimal_income":0,"manufacturing_year":0}}`,
 				IsActive:  1,
@@ -313,7 +313,7 @@ func TestCheckPMK(t *testing.T) {
 				BranchID:       "426",
 				StatusKonsumen: "12345",
 				Income:         3000000,
-				Lob:            constant.LOB_KMB,
+				Lob:            constant.LOB_KMB_OFF,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
@@ -339,7 +339,7 @@ func TestCheckPMK(t *testing.T) {
 			stayMonth:     1,
 			resGetConfig: entity.AppConfig{
 				GroupName: constant.GROUP_PMK,
-				Lob:       constant.LOB_KMB,
+				Lob:       constant.LOB_KMB_OFF,
 				Key:       constant.KEY_PMK,
 				Value:     `{"data":{"min_age_marital_status_m":19,"min_age_marital_status_s":21,"marital_checking":true,"max_age_limit":58,"length_of_business":2,"length_of_work":1,"length_of_stay":{"sd":1,"rd":1,"rk":2},"minimal_income":0,"manufacturing_year":0}}`,
 				IsActive:  1,
@@ -348,7 +348,7 @@ func TestCheckPMK(t *testing.T) {
 				BranchID:       "426",
 				StatusKonsumen: "12345",
 				Income:         3000000,
-				Lob:            constant.LOB_KMB,
+				Lob:            constant.LOB_KMB_OFF,
 			},
 			result: response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
@@ -415,7 +415,7 @@ func TestCheckPMK(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
-			mockRepository.On("GetConfig", constant.GROUP_PMK, constant.LOB_KMB, constant.KEY_PMK).Return(tc.resGetConfig, tc.errGetConfig).Once()
+			mockRepository.On("GetConfig", constant.GROUP_PMK, constant.LOB_KMB_OFF, constant.KEY_PMK).Return(tc.resGetConfig, tc.errGetConfig).Once()
 
 			if tc.expectGetMinimalIncomePMK {
 				mockRepository.On("GetMinimalIncomePMK", tc.branchID, tc.customerKMB).Return(tc.resGetMinimalIncomePMK, tc.errGetMinimalIncomePMK).Once()
