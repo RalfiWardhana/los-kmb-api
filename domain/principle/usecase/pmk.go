@@ -18,7 +18,7 @@ func (u usecase) CheckPMK(branchID, customerKMB string, income float64, homeStat
 
 	data = response.UsecaseApi{Result: constant.DECISION_PASS, Code: constant.CODE_PMK_SESUAI, Reason: constant.REASON_PMK_SESUAI, SourceDecision: constant.SOURCE_DECISION_PMK}
 
-	config, err := u.repository.GetConfig(constant.GROUP_PMK, constant.LOB_KMB, constant.KEY_PMK)
+	config, err := u.repository.GetConfig(constant.GROUP_PMK, constant.LOB_KMB_OFF, constant.KEY_PMK)
 	if err != nil {
 		return
 	}
