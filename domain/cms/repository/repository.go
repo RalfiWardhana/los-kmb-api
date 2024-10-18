@@ -3538,7 +3538,7 @@ func (r repoHandler) GetQuotaDeviasiBranch(req request.ReqListQuotaDeviasiBranch
 func (r repoHandler) ProcessUpdateQuotaDeviasiBranch(branchID string, mBranchDeviasi entity.MappingBranchDeviasi) (dataBefore entity.DataQuotaDeviasiBranch, dataAfter entity.DataQuotaDeviasiBranch, err error) {
 	err = r.NewKmb.Transaction(func(tx *gorm.DB) error {
 		// Step 1: Retrieve current values for dataBefore
-		if err := tx.Where("BranchID = ?", branchID).First(&dataBefore).Error; err != nil {
+		if err := tx.Raw("SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?", branchID).Scan(&dataBefore).Error; err != nil {
 			return err
 		}
 
@@ -3570,7 +3570,7 @@ func (r repoHandler) ProcessUpdateQuotaDeviasiBranch(branchID string, mBranchDev
 		}
 
 		// Step 3: Retrieve updated values for dataAfter
-		if err := tx.Where("BranchID = ?", branchID).First(&dataAfter).Error; err != nil {
+		if err := tx.Raw("SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?", branchID).Scan(&dataAfter).Error; err != nil {
 			return err
 		}
 
