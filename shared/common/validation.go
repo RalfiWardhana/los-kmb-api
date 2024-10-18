@@ -84,6 +84,7 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("mustnull", mustNullValidation)
 	v.validator.RegisterValidation("decision", DecisionValidation)
 	v.validator.RegisterValidation("mobile_phone", MobilePhoneValidation)
+	v.validator.RegisterValidation("tipe_usaha", tipeUsahaValidation)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
@@ -600,6 +601,16 @@ func MobilePhoneValidation(fl validator.FieldLevel) bool {
 	if fl.Field().String() != "" {
 		regex := regexp.MustCompile(`^08\d{7,12}$`)
 		return regex.MatchString(fl.Field().String())
+	}
+	return true
+}
+
+func tipeUsahaValidation(fl validator.FieldLevel) bool {
+	tipeUsaha := fl.Field().String()
+	dealer := fl.Parent().FieldByName("Dealer").String()
+
+	if dealer == "NON PSA" && tipeUsaha == "" {
+		return false
 	}
 	return true
 }

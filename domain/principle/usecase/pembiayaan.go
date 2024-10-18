@@ -69,6 +69,7 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 			trxPrincipleStepThree.MonthlyVariableIncome = monthlyVariableIncome
 			trxPrincipleStepThree.AssetCategoryID = r.AssetCategoryID
 			trxPrincipleStepThree.FinancePurpose = r.FinancePurpose
+			trxPrincipleStepThree.TipeUsaha = r.TipeUsaha
 			trxPrincipleStepThree.Decision = resp.Result
 			trxPrincipleStepThree.Reason = resp.Reason
 

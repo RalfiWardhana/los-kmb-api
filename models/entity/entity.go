@@ -2697,6 +2697,7 @@ type TrxPrincipleStepThree struct {
 	MonthlyVariableIncome    float64     `gorm:"column:MonthlyVariableIncome"`
 	AssetCategoryID          string      `gorm:"column:AssetCategoryID;type:varchar(100);"`
 	FinancePurpose           string      `gorm:"column:FinancePurpose;type:varchar(100);"`
+	TipeUsaha                string      `gorm:"column:TipeUsaha;type:varchar(100);"`
 	CheckVehicleResult       interface{} `gorm:"column:CheckVehicleResult;type:varchar(50);"`
 	CheckVehicleCode         interface{} `gorm:"column:CheckVehicleCode;type:varchar(50);"`
 	CheckVehicleReason       interface{} `gorm:"column:CheckVehicleReason;type:varchar(200);"`
