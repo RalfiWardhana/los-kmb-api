@@ -954,7 +954,7 @@ type ReqUpdateQuotaDeviasi struct {
 	BranchID      string  `json:"branch_id" validate:"required" example:"400"`
 	QuotaAmount   float64 `json:"quota_amount" validate:"required,number" example:"97500000"`
 	QuotaAccount  int     `json:"quota_account" validate:"required,number" example:"65"`
-	IsActive      bool    `json:"is_active" validate:"required,notnull" example:"true / false"`
+	IsActive      bool    `json:"is_active" validate:"required,notnull" example:"true"`
 	UpdatedByName string  `json:"updated_by_name" validate:"required,max=200" example:"MUHAMMAD RONALD"`
 }
 

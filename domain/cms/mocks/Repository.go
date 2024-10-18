@@ -31,6 +31,38 @@ func (_m *Repository) BatchUpdateMappingCluster(data []entity.MasterMappingClust
 	return r0
 }
 
+// BatchUpdateQuotaDeviasi provides a mock function with given fields: data
+func (_m *Repository) BatchUpdateQuotaDeviasi(data []entity.MappingBranchDeviasi) ([]entity.MappingBranchDeviasi, []entity.MappingBranchDeviasi, error) {
+	ret := _m.Called(data)
+
+	var r0 []entity.MappingBranchDeviasi
+	if rf, ok := ret.Get(0).(func([]entity.MappingBranchDeviasi) []entity.MappingBranchDeviasi); ok {
+		r0 = rf(data)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.MappingBranchDeviasi)
+		}
+	}
+
+	var r1 []entity.MappingBranchDeviasi
+	if rf, ok := ret.Get(1).(func([]entity.MappingBranchDeviasi) []entity.MappingBranchDeviasi); ok {
+		r1 = rf(data)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]entity.MappingBranchDeviasi)
+		}
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func([]entity.MappingBranchDeviasi) error); ok {
+		r2 = rf(data)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // GetAFMobilePhone provides a mock function with given fields: prospectID
 func (_m *Repository) GetAFMobilePhone(prospectID string) (entity.AFMobilePhone, error) {
 	ret := _m.Called(prospectID)
@@ -373,6 +405,36 @@ func (_m *Repository) GetInquiryPrescreening(req request.ReqInquiryPrescreening,
 	return r0, r1, r2
 }
 
+// GetInquiryQuotaDeviasi provides a mock function with given fields: req, pagination
+func (_m *Repository) GetInquiryQuotaDeviasi(req request.ReqListQuotaDeviasi, pagination interface{}) ([]entity.InquirySettingQuotaDeviasi, int, error) {
+	ret := _m.Called(req, pagination)
+
+	var r0 []entity.InquirySettingQuotaDeviasi
+	if rf, ok := ret.Get(0).(func(request.ReqListQuotaDeviasi, interface{}) []entity.InquirySettingQuotaDeviasi); ok {
+		r0 = rf(req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.InquirySettingQuotaDeviasi)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(request.ReqListQuotaDeviasi, interface{}) int); ok {
+		r1 = rf(req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(request.ReqListQuotaDeviasi, interface{}) error); ok {
+		r2 = rf(req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // GetInquirySearch provides a mock function with given fields: req, pagination
 func (_m *Repository) GetInquirySearch(req request.ReqSearchInquiry, pagination interface{}) ([]entity.InquirySearch, int, error) {
 	ret := _m.Called(req, pagination)
@@ -544,6 +606,29 @@ func (_m *Repository) GetMappingClusterChangeLog(pagination interface{}) ([]enti
 	return r0, r1, r2
 }
 
+// GetQuotaDeviasiBranch provides a mock function with given fields: req
+func (_m *Repository) GetQuotaDeviasiBranch(req request.ReqListQuotaDeviasiBranch) ([]entity.ConfinsBranch, error) {
+	ret := _m.Called(req)
+
+	var r0 []entity.ConfinsBranch
+	if rf, ok := ret.Get(0).(func(request.ReqListQuotaDeviasiBranch) []entity.ConfinsBranch); ok {
+		r0 = rf(req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.ConfinsBranch)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(request.ReqListQuotaDeviasiBranch) error); ok {
+		r1 = rf(req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetReasonPrescreening provides a mock function with given fields: req, pagination
 func (_m *Repository) GetReasonPrescreening(req request.ReqReasonPrescreening, pagination interface{}) ([]entity.ReasonMessage, int, error) {
 	ret := _m.Called(req, pagination)
@@ -706,6 +791,34 @@ func (_m *Repository) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trx
 	return r0
 }
 
+// ProcessUpdateQuotaDeviasiBranch provides a mock function with given fields: branchID, mBranchDeviasi
+func (_m *Repository) ProcessUpdateQuotaDeviasiBranch(branchID string, mBranchDeviasi entity.MappingBranchDeviasi) (entity.DataQuotaDeviasiBranch, entity.DataQuotaDeviasiBranch, error) {
+	ret := _m.Called(branchID, mBranchDeviasi)
+
+	var r0 entity.DataQuotaDeviasiBranch
+	if rf, ok := ret.Get(0).(func(string, entity.MappingBranchDeviasi) entity.DataQuotaDeviasiBranch); ok {
+		r0 = rf(branchID, mBranchDeviasi)
+	} else {
+		r0 = ret.Get(0).(entity.DataQuotaDeviasiBranch)
+	}
+
+	var r1 entity.DataQuotaDeviasiBranch
+	if rf, ok := ret.Get(1).(func(string, entity.MappingBranchDeviasi) entity.DataQuotaDeviasiBranch); ok {
+		r1 = rf(branchID, mBranchDeviasi)
+	} else {
+		r1 = ret.Get(1).(entity.DataQuotaDeviasiBranch)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(string, entity.MappingBranchDeviasi) error); ok {
+		r2 = rf(branchID, mBranchDeviasi)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // SaveDraftData provides a mock function with given fields: draft
 func (_m *Repository) SaveDraftData(draft entity.TrxDraftCaDecision) error {
 	ret := _m.Called(draft)
@@ -781,16 +894,13 @@ func (_m *Repository) SubmitApproval(req request.ReqSubmitApproval, trxStatus en
 	ret := _m.Called(req, trxStatus, trxDetail, trxRecalculate, approval)
 
 	var r0 entity.TrxStatus
-	var r1 error
-	if rf, ok := ret.Get(0).(func(request.ReqSubmitApproval, entity.TrxStatus, entity.TrxDetail, entity.TrxRecalculate, response.RespApprovalScheme) (entity.TrxStatus, error)); ok {
-		return rf(req, trxStatus, trxDetail, trxRecalculate, approval)
-	}
 	if rf, ok := ret.Get(0).(func(request.ReqSubmitApproval, entity.TrxStatus, entity.TrxDetail, entity.TrxRecalculate, response.RespApprovalScheme) entity.TrxStatus); ok {
 		r0 = rf(req, trxStatus, trxDetail, trxRecalculate, approval)
 	} else {
 		r0 = ret.Get(0).(entity.TrxStatus)
 	}
 
+	var r1 error
 	if rf, ok := ret.Get(1).(func(request.ReqSubmitApproval, entity.TrxStatus, entity.TrxDetail, entity.TrxRecalculate, response.RespApprovalScheme) error); ok {
 		r1 = rf(req, trxStatus, trxDetail, trxRecalculate, approval)
 	} else {

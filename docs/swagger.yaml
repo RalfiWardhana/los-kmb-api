@@ -82,6 +82,25 @@ definitions:
     - cmo_nik
     - recom_date
     type: object
+  request.AgentNE:
+    properties:
+      cmo_name:
+        example: SETO MULYA
+        type: string
+      cmo_nik:
+        example: "93510"
+        type: string
+      cmo_recom:
+        example: "1"
+        type: string
+      recom_date:
+        example: "2021-07-15"
+        type: string
+    required:
+    - cmo_name
+    - cmo_nik
+    - recom_date
+    type: object
   request.Apk:
     properties:
       admin_fee:
@@ -213,6 +232,60 @@ definitions:
     - tenor
     - way_of_payment
     type: object
+  request.ApkNE:
+    properties:
+      admin_fee:
+        example: 1500000
+        type: number
+      af:
+        example: 84000000
+        type: number
+      dealer:
+        type: string
+      down_payment_amount:
+        example: 22000000
+        type: number
+      down_payment_rate:
+        example: 20.95
+        type: number
+      finance_purpose:
+        type: string
+      installment_amount:
+        example: 4181333
+        type: number
+      insurance_amount:
+        example: 3150000
+        type: number
+      loan_amount:
+        example: 105000000
+        type: number
+      ntf:
+        example: 150528000
+        type: number
+      otr:
+        example: 105000000
+        type: number
+      premium_amount_to_customer:
+        example: 2184000
+        type: number
+      provision_fee:
+        example: 2475000
+        type: number
+      tenor:
+        example: 36
+        type: integer
+    required:
+    - admin_fee
+    - af
+    - down_payment_amount
+    - down_payment_rate
+    - finance_purpose
+    - installment_amount
+    - ntf
+    - otr
+    - provision_fee
+    - tenor
+    type: object
   request.BodyRequestElaborate:
     properties:
       client_key:
@@ -222,6 +295,16 @@ definitions:
     required:
     - client_key
     - data
+    type: object
+  request.CreatedBy:
+    properties:
+      created_by_id:
+        type: string
+      created_by_name:
+        type: string
+    required:
+    - created_by_id
+    - created_by_name
     type: object
   request.CustomerEmcon:
     properties:
@@ -262,6 +345,18 @@ definitions:
     - known_customer_job
     - verification_with
     - verify_by
+    type: object
+  request.CustomerEmconNE:
+    properties:
+      mobile_phone:
+        example: 0856789XXX1
+        type: string
+      name:
+        example: MULYADI
+        type: string
+      relationship:
+        example: FM
+        type: string
     type: object
   request.CustomerEmployment:
     properties:
@@ -310,6 +405,18 @@ definitions:
     - spouse_income
     type: object
   request.CustomerOmset:
+    properties:
+      monthly_omset:
+        example: 5000000
+        type: number
+      monthly_omset_month:
+        example: "01"
+        type: string
+      monthly_omset_year:
+        example: "2021"
+        type: string
+    type: object
+  request.CustomerOmsetNE:
     properties:
       monthly_omset:
         example: 5000000
@@ -458,6 +565,63 @@ definitions:
     - surgate_mother_name
     - wna_country
     type: object
+  request.CustomerPersonalNE:
+    properties:
+      birth_date:
+        example: "1991-01-12"
+        type: string
+      birth_place:
+        example: JAKARTA
+        type: string
+      education:
+        example: S1
+        type: string
+      email:
+        example: jonathaxx@gmail.com
+        type: string
+      full_name:
+        example: ENCRYPTED
+        type: string
+      gender:
+        example: M
+        type: string
+      home_status:
+        example: KL
+        type: string
+      id_number:
+        example: "1234567890123456"
+        type: string
+      legal_name:
+        example: ENCRYPTED
+        type: string
+      marital_status:
+        example: M
+        type: string
+      mobile_phone:
+        example: 085689XXX01
+        type: string
+      npwp:
+        example: 994646808XXX895
+        type: string
+      num_of_dependence:
+        example: 1
+        type: integer
+      stay_since_month:
+        example: "03"
+        type: string
+      stay_since_year:
+        example: "2018"
+        type: string
+      surgate_mother_name:
+        example: ENCRYPTED
+        type: string
+    required:
+    - full_name
+    - id_number
+    - legal_name
+    - num_of_dependence
+    - surgate_mother_name
+    type: object
   request.CustomerPhoto:
     properties:
       id:
@@ -504,6 +668,32 @@ definitions:
         type: string
     required:
     - birth_place
+    - full_name
+    - id_number
+    - legal_name
+    - surgate_mother_name
+    type: object
+  request.CustomerSpouseNE:
+    properties:
+      birth_date:
+        example: "1991-01-29"
+        type: string
+      full_name:
+        example: SUSI BUNGA
+        type: string
+      gender:
+        example: F
+        type: string
+      id_number:
+        example: 177105550374XX01
+        type: string
+      legal_name:
+        example: SUSI BUNGA
+        type: string
+      surgate_mother_name:
+        example: TUTI
+        type: string
+    required:
     - full_name
     - id_number
     - legal_name
@@ -779,6 +969,56 @@ definitions:
     - supplier_id
     - tax_date
     type: object
+  request.ItemNE:
+    properties:
+      asset_code:
+        example: SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT
+        type: string
+      asset_description:
+        example: SUZUKI.KMOBIL.GRAND VITARA.JLX 2,0 AT
+        type: string
+      bpkb_name:
+        example: K
+        type: string
+      brand:
+        example: TOYOTA
+        type: string
+      category_id:
+        example: SEDAN
+        type: string
+      chassis_number:
+        example: MHKV1AA2JBK107322
+        type: string
+      color:
+        example: HITAM
+        type: string
+      condition:
+        example: U
+        type: string
+      engine_number:
+        example: 73218JAJK
+        type: string
+      manufacture_year:
+        example: "2020"
+        type: string
+      owner_asset:
+        example: JONATHAN
+        type: string
+      premium_amount_to_customer:
+        example: 2184000
+        type: number
+    required:
+    - asset_code
+    - asset_description
+    - bpkb_name
+    - brand
+    - category_id
+    - chassis_number
+    - color
+    - condition
+    - engine_number
+    - owner_asset
+    type: object
   request.Metrics:
     properties:
       address:
@@ -821,6 +1061,48 @@ definitions:
     - customer_personal
     - item
     - surveyor
+    - transaction
+    type: object
+  request.MetricsNE:
+    properties:
+      address:
+        items:
+          $ref: '#/definitions/request.Address'
+        type: array
+      agent:
+        $ref: '#/definitions/request.AgentNE'
+      apk:
+        $ref: '#/definitions/request.ApkNE'
+      created_by:
+        $ref: '#/definitions/request.CreatedBy'
+      customer_emcon:
+        $ref: '#/definitions/request.CustomerEmconNE'
+      customer_employment:
+        $ref: '#/definitions/request.CustomerEmployment'
+      customer_omset:
+        items:
+          $ref: '#/definitions/request.CustomerOmsetNE'
+        type: array
+      customer_personal:
+        $ref: '#/definitions/request.CustomerPersonalNE'
+      customer_photo:
+        items:
+          $ref: '#/definitions/request.CustomerPhoto'
+        type: array
+      customer_spouse:
+        $ref: '#/definitions/request.CustomerSpouseNE'
+      item:
+        $ref: '#/definitions/request.ItemNE'
+      transaction:
+        $ref: '#/definitions/request.TransactionNE'
+    required:
+    - agent
+    - apk
+    - created_by
+    - customer_emcon
+    - customer_employment
+    - customer_personal
+    - item
     - transaction
     type: object
   request.Recalculate:
@@ -1071,6 +1353,45 @@ definitions:
     - prospect_id
     - slik_result
     type: object
+  request.ReqUpdateQuotaDeviasi:
+    properties:
+      branch_id:
+        example: "400"
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      quota_account:
+        example: 65
+        type: integer
+      quota_amount:
+        example: 97500000
+        type: number
+      updated_by_name:
+        example: MUHAMMAD RONALD
+        type: string
+    required:
+    - branch_id
+    - is_active
+    - quota_account
+    - quota_amount
+    - updated_by_name
+    type: object
+  request.RequestGenerateFormAKKK:
+    properties:
+      lob:
+        example: new-kmb
+        type: string
+      prospect_id:
+        example: TEST-DEV
+        type: string
+      source:
+        example: SYSTEM
+        type: string
+    required:
+    - lob
+    - prospect_id
+    type: object
   request.Spouse:
     properties:
       Spouse_BirthDate:
@@ -1167,6 +1488,37 @@ definitions:
     - application_source
     - order_at
     type: object
+  request.TransactionNE:
+    properties:
+      application_source:
+        example: H
+        type: string
+      branch_id:
+        example: "426"
+        type: string
+      branch_name:
+        example: BANDUNG
+        type: string
+      channel:
+        example: "OFF"
+        type: string
+      incoming_source:
+        example: SLY
+        type: string
+      lob:
+        example: KMB
+        type: string
+      order_at:
+        example: "2021-07-15T11:44:05+07:00"
+        type: string
+      prospect_id:
+        example: SAL042600001
+        type: string
+    required:
+    - application_source
+    - branch_name
+    - order_at
+    type: object
   response.ApiResponse:
     properties:
       data:
@@ -1182,6 +1534,8 @@ definitions:
     type: object
   response.ApprovalResponse:
     properties:
+      code:
+        type: string
       decision:
         type: string
       is_final:
@@ -1263,8 +1617,10 @@ definitions:
       total_balki_debet:
         type: number
     type: object
-  response.EmployeeResponse:
+  response.EmployeeCMOResponse:
     properties:
+      cmo_category:
+        type: string
       employee_id:
         type: string
       employee_id_with_name:
@@ -1272,6 +1628,10 @@ definitions:
       employee_name:
         type: string
       join_date:
+        type: string
+      position_group_code:
+        type: string
+      position_group_name:
         type: string
     type: object
   response.ErrorValidation:
@@ -1298,6 +1658,13 @@ definitions:
         type: integer
       recordsTotal:
         type: integer
+    type: object
+  response.ResponseGenerateFormAKKK:
+    properties:
+      media_url:
+        type: string
+      path:
+        type: string
     type: object
   response.ReviewPrescreening:
     properties:
@@ -1787,6 +2154,43 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - CA
+  /api/v3/kmb/cms/form-akkk:
+    post:
+      description: Api Generate Form AKKK
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.RequestGenerateFormAKKK'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ResponseGenerateFormAKKK'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Generate Form AKKK
   /api/v3/kmb/cms/mapping-cluster/branch:
     get:
       description: Api Mapping Cluster
@@ -1968,6 +2372,116 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Mapping Cluster
+  /api/v3/kmb/cms/ne/inquiry:
+    get:
+      description: Api CA
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqInquiryCa'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.InquiryRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - CA
+  /api/v3/kmb/cms/ne/inquiry/{prospect_id}:
+    get:
+      description: Api CA
+      parameters:
+      - description: Prospect ID
+        in: path
+        name: prospect_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/request.MetricsNE'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - CA
+  /api/v3/kmb/cms/ne/submit:
+    post:
+      description: Api Submit NE
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.MetricsNE'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ApiResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Submit NE
   /api/v3/kmb/cms/prescreening/inquiry:
     get:
       description: Api Prescreening
@@ -2087,6 +2601,181 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Prescreening
+  /api/v3/kmb/cms/quota-deviasi/branch:
+    get:
+      description: Api Setting Quota Deviasi
+      parameters:
+      - description: branch_id
+        in: query
+        name: branch_id
+        type: string
+      - description: branch_name
+        in: query
+        name: branch_name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.InquiryRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Setting Quota Deviasi
+  /api/v3/kmb/cms/quota-deviasi/download:
+    get:
+      description: Api Setting Quota Deviasi
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: application/octet-stream
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Setting Quota Deviasi
+  /api/v3/kmb/cms/quota-deviasi/inquiry:
+    get:
+      description: Api Setting Quota Deviasi
+      parameters:
+      - description: search
+        in: query
+        name: search
+        type: string
+      - description: branch_id
+        in: query
+        name: branch_id
+        type: string
+      - description: is_active
+        in: query
+        name: is_active
+        type: string
+      - description: page
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.InquiryRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Setting Quota Deviasi
+  /api/v3/kmb/cms/quota-deviasi/update:
+    post:
+      description: Api Setting Quota Deviasi
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqUpdateQuotaDeviasi'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ApiResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Setting Quota Deviasi
+  /api/v3/kmb/cms/quota-deviasi/upload:
+    post:
+      description: Api Setting Quota Deviasi
+      parameters:
+      - description: upload file
+        in: formData
+        name: excel_file
+        required: true
+        type: file
+      - description: updated by name
+        in: formData
+        name: updated_by_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Setting Quota Deviasi
   /api/v3/kmb/cms/save-as-draft:
     post:
       description: Api CA
@@ -2217,7 +2906,7 @@ paths:
             - $ref: '#/definitions/response.ApiResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/response.EmployeeResponse'
+                  $ref: '#/definitions/response.EmployeeCMOResponse'
               type: object
         "400":
           description: Bad Request
@@ -2432,6 +3121,42 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Submit to LOS
+  /api/v3/kmb/produce/update-customer/{prospect_id}:
+    post:
+      description: Api Produce Messages Update Customer
+      parameters:
+      - description: Prospect ID
+        in: path
+        name: prospect_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ReasonMessageRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Update Customer
   /api/v3/kmb/recalculate:
     post:
       description: Recalculate

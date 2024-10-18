@@ -1065,7 +1065,7 @@ func (c *handlerCMS) QuotaDeviasiBranch(ctx echo.Context) (err error) {
 
 // CMS NEW KMB Tools godoc
 // @Description Api Setting Quota Deviasi
-// @Tags Mapping Cluster
+// @Tags Setting Quota Deviasi
 // @Produce octet-stream
 // @Success 200 {file} file "application/octet-stream"
 // @Failure 500 {object} response.ApiResponse{}
@@ -1094,7 +1094,7 @@ func (c *handlerCMS) QuotaDeviasiDownload(ctx echo.Context) (err error) {
 
 // CMS NEW KMB Tools godoc
 // @Description Api Setting Quota Deviasi
-// @Tags Mapping Cluster
+// @Tags Setting Quota Deviasi
 // @Produce json
 // @Param excel_file formData file true "upload file"
 // @Param updated_by_name formData string true "updated by name"
@@ -1144,7 +1144,7 @@ func (c *handlerCMS) QuotaDeviasiUpload(ctx echo.Context) (err error) {
 
 // CMS NEW KMB Tools godoc
 // @Description Api Setting Quota Deviasi
-// @Tags CA
+// @Tags Setting Quota Deviasi
 // @Produce json
 // @Param body body request.ReqUpdateQuotaDeviasi true "Body payload"
 // @Success 200 {object} response.ApiResponse{data=response.ApiResponse}
