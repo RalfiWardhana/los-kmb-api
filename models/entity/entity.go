@@ -2353,7 +2353,7 @@ func (c *NewEntry) TableName() string {
 }
 
 type InquirySettingQuotaDeviasi struct {
-	BranchID       string  `gorm:"column:branch_id" json:"branch_id"`
+	BranchID       string  `gorm:"column:BranchID" json:"branch_id"`
 	BranchName     string  `gorm:"column:branch_name" json:"branch_name"`
 	QuotaAmount    float64 `gorm:"column:quota_amount" json:"quota_amount"`
 	QuotaAccount   int     `gorm:"column:quota_account" json:"quota_account"`
