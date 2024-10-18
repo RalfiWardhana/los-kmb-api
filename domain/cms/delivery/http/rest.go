@@ -61,6 +61,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.GET("/cms/quota-deviasi/branch", handler.QuotaDeviasiBranch, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/quota-deviasi/update", handler.QuotaDeviasiUpdate, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/quota-deviasi/download", handler.QuotaDeviasiDownload, middlewares.AccessMiddleware())
+	cmsroute.POST("/cms/quota-deviasi/upload", handler.QuotaDeviasiUpload, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
@@ -1063,7 +1064,7 @@ func (c *handlerCMS) QuotaDeviasiBranch(ctx echo.Context) (err error) {
 }
 
 // CMS NEW KMB Tools godoc
-// @Description Api Mapping Cluster
+// @Description Api Setting Quota Deviasi
 // @Tags Mapping Cluster
 // @Produce octet-stream
 // @Success 200 {file} file "application/octet-stream"
@@ -1092,7 +1093,57 @@ func (c *handlerCMS) QuotaDeviasiDownload(ctx echo.Context) (err error) {
 }
 
 // CMS NEW KMB Tools godoc
-// @Description Api CA
+// @Description Api Setting Quota Deviasi
+// @Tags Mapping Cluster
+// @Produce json
+// @Param excel_file formData file true "upload file"
+// @Param updated_by_name formData string true "updated by name"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/quota-deviasi/upload [post]
+func (c *handlerCMS) QuotaDeviasiUpload(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		req         request.ReqUploadSettingQuotaDeviasi
+	)
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Quota Deviasi", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Quota Deviasi", req, err)
+	}
+
+	file, err := ctx.FormFile("excel_file")
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Quota Deviasi", nil, errors.New(constant.ERROR_BAD_REQUEST+" - Silakan unggah file excel yang valid"))
+	}
+
+	src, err := file.Open()
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Quota Deviasi", nil, errors.New(constant.ERROR_BAD_REQUEST+" - Silakan unggah file excel yang valid"))
+	}
+	defer src.Close()
+
+	mime := file.Header.Get("Content-Type")
+	if mime != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Quota Deviasi", nil, errors.New(constant.ERROR_BAD_REQUEST+" - Silakan unggah file berformat .xlsx"))
+	}
+
+	data, err := c.usecase.UploadQuotaDeviasi(req, src)
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Quota Deviasi", nil, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Quota Deviasi Success", nil, data)
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Setting Quota Deviasi
 // @Tags CA
 // @Produce json
 // @Param body body request.ReqUpdateQuotaDeviasi true "Body payload"

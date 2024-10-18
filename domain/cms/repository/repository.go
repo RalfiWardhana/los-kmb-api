@@ -3580,6 +3580,67 @@ func (r repoHandler) ProcessUpdateQuotaDeviasiBranch(branchID string, mBranchDev
 	return
 }
 
+func (r repoHandler) BatchUpdateQuotaDeviasi(data []entity.MappingBranchDeviasi) (dataBeforeList []entity.MappingBranchDeviasi, dataAfterList []entity.MappingBranchDeviasi, err error) {
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+	txOptions := &sql.TxOptions{}
+
+	db := r.NewKmb.BeginTx(ctx, txOptions)
+	defer db.Commit()
+
+	defer func() {
+		if r := recover(); r != nil || err != nil {
+			db.Rollback()
+		}
+	}()
+
+	for _, newData := range data {
+		var currentData entity.MappingBranchDeviasi
+		if err := db.Where("BranchID = ?", newData.BranchID).First(&currentData).Error; err != nil {
+			return nil, nil, err
+		}
+
+		updates := make(map[string]interface{})
+
+		if currentData.QuotaAmount != newData.QuotaAmount {
+			updates["quota_amount"] = newData.QuotaAmount
+		}
+		if currentData.QuotaAccount != newData.QuotaAccount {
+			updates["quota_account"] = newData.QuotaAccount
+		}
+		if currentData.IsActive != newData.IsActive {
+			updates["is_active"] = newData.IsActive
+		}
+
+		if len(updates) > 0 {
+			// Store dataBefore only if there are updates
+			dataBeforeList = append(dataBeforeList, currentData)
+
+			updates["updated_at"] = time.Now()
+			updates["updated_by"] = newData.UpdatedBy
+			if err := db.Model(&entity.MappingBranchDeviasi{}).
+				Where("BranchID = ?", newData.BranchID).
+				Updates(updates).Error; err != nil {
+				return nil, nil, err
+			}
+
+			// Retrieve dataAfter
+			var dataAfter entity.MappingBranchDeviasi
+			if err := db.Where("BranchID = ?", newData.BranchID).First(&dataAfter).Error; err != nil {
+				return nil, nil, err
+			}
+
+			// Append dataAfter only if there were updates
+			dataAfterList = append(dataAfterList, dataAfter)
+		}
+	}
+
+	return dataBeforeList, dataAfterList, nil
+}
+
 func (r repoHandler) GetMappingCluster() (data []entity.MasterMappingCluster, err error) {
 	var x sql.TxOptions
 

@@ -2243,6 +2243,91 @@ func (u usecase) GenerateExcelQuotaDeviasi() (genName, fileName string, err erro
 	return
 }
 
+func (u usecase) UploadQuotaDeviasi(req request.ReqUploadSettingQuotaDeviasi, file multipart.File) (data response.UploadQuotaDeviasiBranchResponse, err error) {
+	xlsx, err := excelize.OpenReader(file)
+	if err != nil {
+		err = errors.New(fmt.Sprintf("%s - failed to open Excel file", constant.ERROR_BAD_REQUEST))
+		return
+	}
+	defer xlsx.Close()
+
+	sheetName := "Quota Deviasi Branch"
+	rows, err := xlsx.GetRows(sheetName)
+	if err != nil {
+		err = errors.New(fmt.Sprintf("%s - failed to get rows from Excel sheet", constant.ERROR_BAD_REQUEST))
+		return
+	}
+
+	if len(rows) < 2 {
+		err = errors.New(fmt.Sprintf("%s - Excel file must have at least one data row", constant.ERROR_BAD_REQUEST))
+		return
+	}
+
+	headers := rows[0]
+	expectedHeaders := []string{"branch_id", "branch_name", "quota_amount", "quota_account", "is_active"}
+	for i, header := range headers {
+		if strings.ToLower(header) != expectedHeaders[i] {
+			err = errors.New(fmt.Sprintf("%s - invalid Excel header format", constant.ERROR_BAD_REQUEST))
+			return
+		}
+	}
+
+	var updates []entity.MappingBranchDeviasi
+	for rowIndex, row := range rows[1:] {
+		if len(row) < 5 {
+			err = errors.New(fmt.Sprintf("%s - each row must have 5 columns, error at row %d", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			break
+		}
+
+		quotaAmount, err := strconv.ParseFloat(row[2], 64)
+		if err != nil {
+			err = errors.New(fmt.Sprintf("%s - invalid quota_amount value at row %d, column 3", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			break
+		}
+
+		quotaAccount, err := strconv.Atoi(row[3])
+		if err != nil {
+			err = errors.New(fmt.Sprintf("%s - invalid quota_account value at row %d, column 4", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			break
+		}
+
+		isActive := false
+		if strings.ToLower(row[4]) == "true" {
+			isActive = true
+		} else if strings.ToLower(row[4]) != "false" {
+			err = errors.New(fmt.Sprintf("%s - invalid is_active value at row %d, column 5", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			break
+		}
+
+		updates = append(updates, entity.MappingBranchDeviasi{
+			BranchID:     row[0],
+			QuotaAmount:  quotaAmount,
+			QuotaAccount: quotaAccount,
+			IsActive:     isActive,
+			UpdatedBy:    req.UpdatedByName,
+			UpdatedAt:    time.Now(),
+		})
+	}
+
+	if err != nil {
+		return
+	}
+
+	dataBeforeUpdate, dataAfterUpdate, err := u.repository.BatchUpdateQuotaDeviasi(updates)
+	if err != nil {
+		return
+	}
+
+	data = response.UploadQuotaDeviasiBranchResponse{
+		Status:           "success",
+		Message:          "Quota deviasi updated successfully",
+		DataBeforeUpdate: dataBeforeUpdate,
+		DataAfterUpdate:  dataAfterUpdate,
+	}
+
+	return
+}
+
 func (u usecase) GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error) {
 
 	data, rowTotal, err = u.repository.GetInquiryMappingCluster(req, pagination)
