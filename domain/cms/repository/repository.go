@@ -3597,10 +3597,33 @@ func (r repoHandler) BatchUpdateQuotaDeviasi(data []entity.MappingBranchDeviasi)
 		}
 	}()
 
+	// Create a map to store the updates and a slice to store the branch IDs
+	updatesMap := make(map[string]map[string]interface{})
+	var branchIDs []string
+	var updatedBranchIDs []string
+
+	// Collect branch IDs
 	for _, newData := range data {
-		var currentData entity.MappingBranchDeviasi
-		if err := db.Raw("SELECT TOP 1 BranchID, final_approval, quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?", newData.BranchID).Scan(&currentData).Error; err != nil {
-			return nil, nil, err
+		branchIDs = append(branchIDs, newData.BranchID)
+	}
+
+	// Fetch all current data in one query
+	var currentDataList []entity.MappingBranchDeviasi
+	if err := db.Raw("SELECT BranchID, final_approval, quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID IN (?)", branchIDs).Scan(&currentDataList).Error; err != nil {
+		return nil, nil, err
+	}
+
+	// Create a map for quick lookup of current data by BranchID
+	currentDataMap := make(map[string]entity.MappingBranchDeviasi)
+	for _, currentData := range currentDataList {
+		currentDataMap[currentData.BranchID] = currentData
+	}
+
+	// Prepare updates
+	for _, newData := range data {
+		currentData, exists := currentDataMap[newData.BranchID]
+		if !exists {
+			continue
 		}
 
 		updates := make(map[string]interface{})
@@ -3619,26 +3642,34 @@ func (r repoHandler) BatchUpdateQuotaDeviasi(data []entity.MappingBranchDeviasi)
 			// Store dataBefore only if there are updates
 			dataBeforeList = append(dataBeforeList, currentData)
 
-			// calculate new balances
+			// Calculate new balances
 			updates["balance_amount"] = newData.QuotaAmount - currentData.BookingAmount
 			updates["balance_account"] = newData.QuotaAccount - currentData.BookingAccount
 
 			updates["updated_at"] = time.Now()
 			updates["updated_by"] = newData.UpdatedBy
+
+			// Store updates in the map
+			updatesMap[newData.BranchID] = updates
+
+			// Add to updatedBranchIDs
+			updatedBranchIDs = append(updatedBranchIDs, newData.BranchID)
+		}
+	}
+
+	if len(updatesMap) > 0 {
+		// Perform bulk update
+		for branchID, updates := range updatesMap {
 			if err := db.Model(&entity.MappingBranchDeviasi{}).
-				Where("BranchID = ?", newData.BranchID).
+				Where("BranchID = ?", branchID).
 				Updates(updates).Error; err != nil {
 				return nil, nil, err
 			}
+		}
 
-			// Retrieve dataAfter
-			var dataAfter entity.MappingBranchDeviasi
-			if err := db.Raw("SELECT TOP 1 BranchID, final_approval, quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?", newData.BranchID).Scan(&dataAfter).Error; err != nil {
-				return nil, nil, err
-			}
-
-			// Append dataAfter only if there were updates
-			dataAfterList = append(dataAfterList, dataAfter)
+		// Retrieve updated data in bulk
+		if err := db.Raw("SELECT BranchID, final_approval, quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID IN (?)", updatedBranchIDs).Scan(&dataAfterList).Error; err != nil {
+			return nil, nil, err
 		}
 	}
 
