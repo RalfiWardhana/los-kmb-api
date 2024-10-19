@@ -3643,8 +3643,19 @@ func (r repoHandler) BatchUpdateQuotaDeviasi(data []entity.MappingBranchDeviasi)
 			dataBeforeList = append(dataBeforeList, currentData)
 
 			// Calculate new balances
-			updates["balance_amount"] = newData.QuotaAmount - currentData.BookingAmount
-			updates["balance_account"] = newData.QuotaAccount - currentData.BookingAccount
+			newBalanceAmount := newData.QuotaAmount - currentData.BookingAmount
+			newBalanceAccount := newData.QuotaAccount - currentData.BookingAccount
+
+			// Check for negative balances
+			if newBalanceAmount < 0 {
+				return nil, nil, fmt.Errorf(constant.ERROR_BAD_REQUEST + " - BookingAmount > QuotaAmount")
+			}
+			if newBalanceAccount < 0 {
+				return nil, nil, fmt.Errorf(constant.ERROR_BAD_REQUEST + " - BookingAccount > QuotaAccount")
+			}
+
+			updates["balance_amount"] = newBalanceAmount
+			updates["balance_account"] = newBalanceAccount
 
 			updates["updated_at"] = time.Now()
 			updates["updated_by"] = newData.UpdatedBy
