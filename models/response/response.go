@@ -892,7 +892,6 @@ type UpdateQuotaDeviasiBranchResponse struct {
 type UploadQuotaDeviasiBranchResponse struct {
 	Status           string                        `json:"status"`
 	Message          string                        `json:"message"`
-	BranchID         string                        `json:"branch_id"`
 	DataBeforeUpdate []entity.MappingBranchDeviasi `json:"data_before_update,omitempty"`
 	DataAfterUpdate  []entity.MappingBranchDeviasi `json:"data_after_update,omitempty"`
 }

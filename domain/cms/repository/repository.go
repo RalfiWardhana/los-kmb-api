@@ -3599,7 +3599,7 @@ func (r repoHandler) BatchUpdateQuotaDeviasi(data []entity.MappingBranchDeviasi)
 
 	for _, newData := range data {
 		var currentData entity.MappingBranchDeviasi
-		if err := db.Where("BranchID = ?", newData.BranchID).First(&currentData).Error; err != nil {
+		if err := db.Raw("SELECT TOP 1 BranchID, final_approval, quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?", newData.BranchID).Scan(&currentData).Error; err != nil {
 			return nil, nil, err
 		}
 
@@ -3619,6 +3619,10 @@ func (r repoHandler) BatchUpdateQuotaDeviasi(data []entity.MappingBranchDeviasi)
 			// Store dataBefore only if there are updates
 			dataBeforeList = append(dataBeforeList, currentData)
 
+			// calculate new balances
+			updates["balance_amount"] = newData.QuotaAmount - currentData.BookingAmount
+			updates["balance_account"] = newData.QuotaAccount - currentData.BookingAccount
+
 			updates["updated_at"] = time.Now()
 			updates["updated_by"] = newData.UpdatedBy
 			if err := db.Model(&entity.MappingBranchDeviasi{}).
@@ -3629,7 +3633,7 @@ func (r repoHandler) BatchUpdateQuotaDeviasi(data []entity.MappingBranchDeviasi)
 
 			// Retrieve dataAfter
 			var dataAfter entity.MappingBranchDeviasi
-			if err := db.Where("BranchID = ?", newData.BranchID).First(&dataAfter).Error; err != nil {
+			if err := db.Raw("SELECT TOP 1 BranchID, final_approval, quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?", newData.BranchID).Scan(&dataAfter).Error; err != nil {
 				return nil, nil, err
 			}
 
