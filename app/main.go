@@ -198,6 +198,7 @@ func main() {
 
 	config.CreateCustomLogFile(constant.LOG_FILTERING_LOG)
 	config.CreateCustomLogFile(constant.NEW_KMB_LOG)
+	config.CreateCustomLogFile(constant.DILEN_KMB_LOG)
 
 	utils.NewCache(cache, kpLos, config.IsDevelopment)
 
