@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"los-kmb-api/domain/principle/mocks"
+	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/common/platformevent"
@@ -31,6 +32,8 @@ func TestCheckNokaNosin(t *testing.T) {
 	testcases := []struct {
 		name                         string
 		request                      request.PrincipleAsset
+		resGetPrincipleStepOne       entity.TrxPrincipleStepOne
+		errGetPrincipleStepOne       error
 		errAgreementChasisNumber     error
 		resAgreementChasisNumberCode int
 		resAgreementChasisNumberBody string
@@ -58,6 +61,7 @@ func TestCheckNokaNosin(t *testing.T) {
 				NoChassis:  "123",
 			},
 			resAgreementChasisNumberCode: 400,
+			err:                          errors.New(constant.ERROR_UPSTREAM + " - Call Get Agreement of Chassis Number Error"),
 		},
 		{
 			name: "error unmarshal",
@@ -190,6 +194,8 @@ func TestCheckNokaNosin(t *testing.T) {
 			mockHttpClient := new(httpclient.MockHttpClient)
 			mockPlatformEvent := mockplatformevent.NewPlatformEventInterface(t)
 			var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
+
+			mockRepository.On("GetPrincipleStepOne", tc.request.ProspectID).Return(tc.resGetPrincipleStepOne, tc.errGetPrincipleStepOne)
 
 			rst := resty.New()
 			httpmock.ActivateNonDefault(rst.GetClient())

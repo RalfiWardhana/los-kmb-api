@@ -48,42 +48,48 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 		errChan                    = make(chan error, 4)
 		trxPrincipleStepThree      entity.TrxPrincipleStepThree
 		dupcheckData               response.SpDupcheckMap
+		isSave                     bool
 	)
+
+	isSave = true
 
 	defer func() {
 		if err == nil {
-			if r.MonthlyVariableIncome != nil {
-				monthlyVariableIncome = *r.MonthlyVariableIncome
-			}
+			if isSave {
+				if r.MonthlyVariableIncome != nil {
+					monthlyVariableIncome = *r.MonthlyVariableIncome
+				}
 
-			trxPrincipleStepThree.ProspectID = r.ProspectID
-			trxPrincipleStepThree.IDNumber = principleStepTwo.IDNumber
-			trxPrincipleStepThree.Tenor = r.Tenor
-			trxPrincipleStepThree.AF = r.AF
-			trxPrincipleStepThree.NTF = r.NTF
-			trxPrincipleStepThree.OTR = r.OTR
-			trxPrincipleStepThree.DPAmount = r.DPAmount
-			trxPrincipleStepThree.AdminFee = r.AdminFee
-			trxPrincipleStepThree.InstallmentAmount = r.InstallmentAmount
-			trxPrincipleStepThree.Dealer = r.Dealer
-			trxPrincipleStepThree.MonthlyVariableIncome = monthlyVariableIncome
-			trxPrincipleStepThree.AssetCategoryID = r.AssetCategoryID
-			trxPrincipleStepThree.FinancePurpose = r.FinancePurpose
-			trxPrincipleStepThree.TipeUsaha = r.TipeUsaha
-			trxPrincipleStepThree.Decision = resp.Result
-			trxPrincipleStepThree.Reason = resp.Reason
+				trxPrincipleStepThree.ProspectID = r.ProspectID
+				trxPrincipleStepThree.IDNumber = principleStepTwo.IDNumber
+				trxPrincipleStepThree.Tenor = r.Tenor
+				trxPrincipleStepThree.AF = r.AF
+				trxPrincipleStepThree.NTF = r.NTF
+				trxPrincipleStepThree.OTR = r.OTR
+				trxPrincipleStepThree.DPAmount = r.DPAmount
+				trxPrincipleStepThree.AdminFee = r.AdminFee
+				trxPrincipleStepThree.InstallmentAmount = r.InstallmentAmount
+				trxPrincipleStepThree.Dealer = r.Dealer
+				trxPrincipleStepThree.MonthlyVariableIncome = monthlyVariableIncome
+				trxPrincipleStepThree.AssetCategoryID = r.AssetCategoryID
+				trxPrincipleStepThree.FinancePurpose = r.FinancePurpose
+				trxPrincipleStepThree.TipeUsaha = r.TipeUsaha
+				trxPrincipleStepThree.Decision = resp.Result
+				trxPrincipleStepThree.Reason = resp.Reason
+				trxPrincipleStepThree.RuleCode = resp.Code
 
-			err = u.repository.SavePrincipleStepThree(trxPrincipleStepThree)
-			if err != nil {
-				return
-			}
+				err = u.repository.SavePrincipleStepThree(trxPrincipleStepThree)
+				if err != nil {
+					return
+				}
 
-			savedDupcheckData, _ := json.Marshal(dupcheckData)
-			principleStepTwo.DupcheckData = string(utils.SafeEncoding(savedDupcheckData))
+				savedDupcheckData, _ := json.Marshal(dupcheckData)
+				principleStepTwo.DupcheckData = string(utils.SafeEncoding(savedDupcheckData))
 
-			err = u.repository.UpdatePrincipleStepTwo(r.ProspectID, principleStepTwo)
-			if err != nil {
-				return
+				err = u.repository.UpdatePrincipleStepTwo(r.ProspectID, principleStepTwo)
+				if err != nil {
+					return
+				}
 			}
 
 			statusCode := constant.PRINCIPLE_STATUS_BIAYA_APPROVE
@@ -154,6 +160,16 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 	if principleStepOne.Decision == constant.DECISION_REJECT || principleStepTwo.Decision == constant.DECISION_REJECT {
 		err = errors.New(constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE)
 		return
+	}
+
+	principleStepThree, _ := u.repository.GetPrincipleStepThree(r.ProspectID)
+	if principleStepThree != (entity.TrxPrincipleStepThree{}) {
+		resp.Code = principleStepThree.RuleCode
+		resp.Result = principleStepThree.Decision
+
+		isSave = false
+
+		return resp, nil
 	}
 
 	json.Unmarshal([]byte(config.Value), &configValue)

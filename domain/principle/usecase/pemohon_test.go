@@ -362,6 +362,8 @@ func TestPrinciplePemohon(t *testing.T) {
 		request                    request.PrinciplePemohon
 		resGetPrincipleStepOne     entity.TrxPrincipleStepOne
 		errGetPrincipleStepOne     error
+		resGetPrincipleStepTwo     entity.TrxPrincipleStepTwo
+		errGetPrincipleStepTwo     error
 		resGetConfig               entity.AppConfig
 		errGetConfig               error
 		resBannedPMKOrDSR          response.UsecaseApi
@@ -1376,6 +1378,7 @@ func TestPrinciplePemohon(t *testing.T) {
 			var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
 
 			mockRepository.On("GetPrincipleStepOne", tc.request.ProspectID).Return(tc.resGetPrincipleStepOne, tc.errGetPrincipleStepOne)
+			mockRepository.On("GetPrincipleStepTwo", tc.request.ProspectID).Return(tc.resGetPrincipleStepTwo, tc.errGetPrincipleStepTwo)
 			mockRepository.On("GetConfig", "dupcheck", constant.LOB_KMB_OFF, "dupcheck_kmb_config").Return(tc.resGetConfig, tc.errGetConfig)
 			mockRepository.On("MasterMappingFpdCluster", mock.Anything).Return(tc.resMasterMappingFpdCluster, tc.errMasterMappingFpdCluster)
 			mockRepository.On("SavePrincipleStepTwo", mock.AnythingOfType("entity.TrxPrincipleStepTwo")).Return(tc.errSavePrincipleStepTwo)

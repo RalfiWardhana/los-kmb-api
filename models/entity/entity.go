@@ -2675,6 +2675,7 @@ type TrxPrincipleStepTwo struct {
 	FilteringReason         interface{} `gorm:"column:FilteringReason;type:varchar(200);"`
 	Decision                string      `gorm:"column:Decision;type:varchar(20)"`
 	Reason                  string      `gorm:"column:Reason;type:varchar(255)"`
+	RuleCode                string      `gorm:"column:RuleCode;type:varchar(10);"`
 	CreatedAt               time.Time   `gorm:"column:created_at"`
 	DupcheckData            string      `gorm:"column:DupcheckData;type:text"`
 }
@@ -2719,6 +2720,7 @@ type TrxPrincipleStepThree struct {
 	CheckDSRFMFPBKInfo       interface{} `gorm:"column:CheckDSRFMFPBKInfo;type:text;"`
 	Decision                 string      `gorm:"column:Decision;type:varchar(20)"`
 	Reason                   string      `gorm:"column:Reason;type:varchar(255)"`
+	RuleCode                 string      `gorm:"column:RuleCode;type:varchar(10);"`
 	CreatedAt                time.Time   `gorm:"column:created_at"`
 }
 
