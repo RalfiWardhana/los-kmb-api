@@ -2073,6 +2073,261 @@ func (u usecase) SubmitApproval(ctx context.Context, req request.ReqSubmitApprov
 	return
 }
 
+func (u usecase) GetInquiryQuotaDeviasi(req request.ReqListQuotaDeviasi, pagination interface{}) (data []entity.InquirySettingQuotaDeviasi, rowTotal int, err error) {
+
+	data, rowTotal, err = u.repository.GetInquiryQuotaDeviasi(req, pagination)
+
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (u usecase) GetQuotaDeviasiBranch(req request.ReqListQuotaDeviasiBranch) (data []entity.ConfinsBranch, err error) {
+
+	data, err = u.repository.GetQuotaDeviasiBranch(req)
+
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (u usecase) UpdateQuotaDeviasiBranch(ctx context.Context, req request.ReqUpdateQuotaDeviasi) (data response.UpdateQuotaDeviasiBranchResponse, err error) {
+
+	var (
+		dataBefore     entity.DataQuotaDeviasiBranch
+		dataAfter      entity.DataQuotaDeviasiBranch
+		mBranchDeviasi entity.MappingBranchDeviasi
+	)
+
+	mBranchDeviasi = entity.MappingBranchDeviasi{
+		QuotaAmount:  req.QuotaAmount,
+		QuotaAccount: req.QuotaAccount,
+		IsActive:     req.IsActive,
+		UpdatedBy:    req.UpdatedByName,
+	}
+
+	dataBefore, dataAfter, err = u.repository.ProcessUpdateQuotaDeviasiBranch(req.BranchID, mBranchDeviasi)
+
+	if err != nil {
+		if strings.Contains(err.Error(), "BookingAmount > QuotaAmount") {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - BookingAmount exceeds new QuotaAmount")
+		} else if strings.Contains(err.Error(), "BookingAccount > QuotaAccount") {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - BookingAccount exceeds new QuotaAccount")
+		} else {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Process Update Quota Deviasi Branch error")
+		}
+		return
+	}
+
+	data = response.UpdateQuotaDeviasiBranchResponse{
+		Status:           constant.RESULT_OK,
+		Message:          constant.UPDATE_DEVIASI_SUCCESS,
+		BranchID:         req.BranchID,
+		DataBeforeUpdate: dataBefore,
+		DataAfterUpdate:  dataAfter,
+	}
+
+	return
+}
+
+func (u usecase) GenerateExcelQuotaDeviasi() (genName, fileName string, err error) {
+
+	var (
+		settingQuotaDeviasi []entity.InquirySettingQuotaDeviasi
+	)
+
+	settingQuotaDeviasi, _, err = u.repository.GetInquiryQuotaDeviasi(request.ReqListQuotaDeviasi{}, nil)
+	if err != nil && err.Error() != constant.RECORD_NOT_FOUND {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get quota deviasi branch error")
+		return
+	}
+
+	xlsx := excelize.NewFile()
+	defer func() {
+		if err := xlsx.Close(); err != nil {
+			return
+		}
+	}()
+
+	sheetName := "Quota Deviasi Branch"
+
+	index := xlsx.NewSheet("Sheet1")
+	xlsx.SetActiveSheet(index)
+	xlsx.SetSheetName("Sheet1", sheetName)
+
+	rowHeader := []string{"branch_id", "branch_name", "quota_amount", "quota_account", "is_active"}
+
+	colSize := []float64{13, 34, 20, 15, 8}
+
+	centerAlignment := &excelize.Alignment{
+		Horizontal: "center",
+	}
+
+	boldFont := &excelize.Font{
+		Bold: true, Family: "Calibri", Size: 11, Color: "000000",
+	}
+
+	border := []excelize.Border{
+		{Type: "left", Color: "000000", Style: 1}, {Type: "top", Color: "000000", Style: 1}, {Type: "bottom", Color: "000000", Style: 1}, {Type: "right", Color: "000000", Style: 1},
+	}
+
+	colorHeader := excelize.Fill{
+		Type: "pattern", Color: []string{"#BCBCBC"}, Pattern: 1,
+	}
+
+	styleHeader, _ := xlsx.NewStyle(&excelize.Style{
+		Alignment: centerAlignment,
+		Font:      boldFont,
+		Border:    border,
+		Fill:      colorHeader,
+	})
+
+	styleBodyLeft, _ := xlsx.NewStyle(&excelize.Style{
+		Alignment: centerAlignment,
+		Border:    border,
+	})
+
+	styleBodyCenter, _ := xlsx.NewStyle(&excelize.Style{
+		Alignment: centerAlignment,
+		Border:    border,
+	})
+
+	styleBodyRight, _ := xlsx.NewStyle(&excelize.Style{
+		Alignment: centerAlignment,
+		Border:    border,
+	})
+
+	streamWriter, err := xlsx.NewStreamWriter(sheetName)
+	if err != nil {
+		return
+	}
+
+	for rowID := 1; rowID <= len(settingQuotaDeviasi)+1; rowID++ {
+		row := make([]interface{}, 5)
+		if rowID == 1 {
+			for idx, val := range rowHeader {
+				row[idx] = excelize.Cell{StyleID: styleHeader, Value: val}
+				streamWriter.SetColWidth(idx+1, idx+2, colSize[idx])
+			}
+		} else {
+			row[0] = excelize.Cell{StyleID: styleBodyCenter, Value: settingQuotaDeviasi[rowID-2].BranchID}
+			row[1] = excelize.Cell{StyleID: styleBodyLeft, Value: settingQuotaDeviasi[rowID-2].BranchName}
+			row[2] = excelize.Cell{StyleID: styleBodyRight, Value: settingQuotaDeviasi[rowID-2].QuotaAmount}
+			row[3] = excelize.Cell{StyleID: styleBodyCenter, Value: settingQuotaDeviasi[rowID-2].QuotaAccount}
+			row[4] = excelize.Cell{StyleID: styleBodyCenter, Value: settingQuotaDeviasi[rowID-2].IsActive}
+		}
+
+		cell, _ := excelize.CoordinatesToCellName(1, rowID)
+		if err = streamWriter.SetRow(cell, row); err != nil {
+			return
+		}
+	}
+
+	if err = streamWriter.Flush(); err != nil {
+		return
+	}
+
+	now := time.Now()
+	fileName = "SettingQuotaDeviasi_" + now.Format("20060102150405") + ".xlsx"
+	genName = utils.GenerateUUID()
+
+	if err = xlsx.SaveAs(fmt.Sprintf("./%s.xlsx", genName)); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Save excel quota deviasi error")
+		return
+	}
+
+	return
+}
+
+func (u usecase) UploadQuotaDeviasi(req request.ReqUploadSettingQuotaDeviasi, file multipart.File) (data response.UploadQuotaDeviasiBranchResponse, err error) {
+	xlsx, err := excelize.OpenReader(file)
+	if err != nil {
+		err = errors.New(fmt.Sprintf("%s - failed to open Excel file", constant.ERROR_BAD_REQUEST))
+		return
+	}
+	defer xlsx.Close()
+
+	sheetName := "Quota Deviasi Branch"
+	rows, err := xlsx.GetRows(sheetName)
+	if err != nil {
+		err = errors.New(fmt.Sprintf("%s - failed to get rows from Excel sheet", constant.ERROR_BAD_REQUEST))
+		return
+	}
+
+	if len(rows) < 2 {
+		err = errors.New(fmt.Sprintf("%s - Excel file must have at least one data row", constant.ERROR_BAD_REQUEST))
+		return
+	}
+
+	headers := rows[0]
+	expectedHeaders := []string{"branch_id", "branch_name", "quota_amount", "quota_account", "is_active"}
+	for i, header := range headers {
+		if strings.ToLower(header) != expectedHeaders[i] {
+			err = errors.New(fmt.Sprintf("%s - invalid Excel header format", constant.ERROR_BAD_REQUEST))
+			return
+		}
+	}
+
+	var updates []entity.MappingBranchDeviasi
+	for rowIndex, row := range rows[1:] {
+		if len(row) < 5 {
+			err = errors.New(fmt.Sprintf("%s - each row must have 5 columns, error at row %d", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			break
+		}
+
+		quotaAmount, err := strconv.ParseFloat(row[2], 64)
+		if err != nil {
+			err = errors.New(fmt.Sprintf("%s - invalid quota_amount value at row %d, column 3", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			break
+		}
+
+		quotaAccount, err := strconv.Atoi(row[3])
+		if err != nil {
+			err = errors.New(fmt.Sprintf("%s - invalid quota_account value at row %d, column 4", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			break
+		}
+
+		isActive := false
+		if strings.ToLower(row[4]) == "true" {
+			isActive = true
+		} else if strings.ToLower(row[4]) != "false" {
+			err = errors.New(fmt.Sprintf("%s - invalid is_active value at row %d, column 5", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			break
+		}
+
+		updates = append(updates, entity.MappingBranchDeviasi{
+			BranchID:     row[0],
+			QuotaAmount:  quotaAmount,
+			QuotaAccount: quotaAccount,
+			IsActive:     isActive,
+			UpdatedBy:    req.UpdatedByName,
+			UpdatedAt:    time.Now(),
+		})
+	}
+
+	if err != nil {
+		return
+	}
+
+	dataBeforeUpdate, dataAfterUpdate, err := u.repository.BatchUpdateQuotaDeviasi(updates)
+	if err != nil {
+		return
+	}
+
+	data = response.UploadQuotaDeviasiBranchResponse{
+		Status:           "success",
+		Message:          "Quota deviasi updated successfully",
+		DataBeforeUpdate: dataBeforeUpdate,
+		DataAfterUpdate:  dataAfterUpdate,
+	}
+
+	return
+}
+
 func (u usecase) GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error) {
 
 	data, rowTotal, err = u.repository.GetInquiryMappingCluster(req, pagination)
