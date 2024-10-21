@@ -392,8 +392,11 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 
 	payloadSubmitSally.Kop = request.SallySubmit2wPrincipleKop{
 		IsPSA:              isPsa,
-		FinancingObject:    "Vehicle",
 		PurposeOfFinancing: principleStepThree.FinancePurpose,
+	}
+
+	if !isPsa {
+		payloadSubmitSally.Kop.FinancingObject = principleStepThree.TipeUsaha
 	}
 
 	expiredSTNKDate := principleStepOne.STNKExpiredDate.Format(constant.FORMAT_DATE)
