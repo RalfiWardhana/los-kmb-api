@@ -306,11 +306,6 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 				if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &marsevFilterProgramRes); err != nil {
 					return data, err
 				}
-
-				if len(marsevFilterProgramRes.Data) == 0 {
-					err = errors.New(constant.ERROR_UPSTREAM + " - Marsev Get Filter Program Error Not Found Data")
-					return data, err
-				}
 			}
 		}
 
@@ -324,8 +319,11 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			"type":             assetList.Records[0].Model,
 		}
 
-		if len(marsevFilterProgramRes.Data) > 0 {
-			data["tenors"] = marsevFilterProgramRes.Data[0].Tenors
+		if req.FinancePurpose != "" {
+			data["tenors"] = make([]interface{}, 0)
+			if len(marsevFilterProgramRes.Data) > 0 {
+				data["tenors"] = marsevFilterProgramRes.Data[0].Tenors
+			}
 		}
 
 		return data, err
