@@ -2299,8 +2299,8 @@ func TestAsliri(t *testing.T) {
 				KtpPhoto:             "http://www.example.com",
 				SelfiePhoto:          "http://www.example.com",
 			},
-			err:         fmt.Errorf("err"),
-			errExpected: fmt.Errorf("err"),
+			err:         fmt.Errorf(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Asliri"),
+			errExpected: fmt.Errorf(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Asliri"),
 			label:       "TEST_ASLIRI_RESPONSE_ERROR",
 		},
 		{
@@ -2337,8 +2337,9 @@ func TestAsliri(t *testing.T) {
 				KtpPhoto:             "http://www.example.com",
 				SelfiePhoto:          "http://www.example.com",
 			},
-			code:  503,
-			label: "TEST_ASLIRI_RESPONSE_ERROR_CODE",
+			code:        503,
+			errExpected: fmt.Errorf(constant.ERROR_UPSTREAM + " - Call Asliri"),
+			label:       "TEST_ASLIRI_RESPONSE_ERROR_CODE",
 		},
 		{
 			payload: request.PrinciplePemohon{
@@ -2498,6 +2499,7 @@ func TestKtp(t *testing.T) {
 				BpkbName:   "O",
 			},
 			codeKtpValidator: 500,
+			err:              errors.New(constant.ERROR_UPSTREAM + " - Call KTP Validator"),
 		},
 		{
 			name: "test KTP pass",

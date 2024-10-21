@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
@@ -257,12 +258,12 @@ func (u usecase) Asliri(ctx context.Context, r request.PrinciplePemohon, accessT
 	resp, err = u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("ASLIRI_URL"), paramARI, map[string]string{}, constant.METHOD_POST, false, 0, timeout, r.ProspectID, accessToken)
 
 	if err != nil {
-		// err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Asliri")
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Asliri")
 		return
 	}
 
 	if resp.StatusCode() != 200 {
-		// err = errors.New(constant.ERROR_UPSTREAM + " - Call Asliri")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call Asliri")
 		return
 	}
 
@@ -295,7 +296,7 @@ func (u usecase) Asliri(ctx context.Context, r request.PrinciplePemohon, accessT
 	config, err := u.repository.GetConfig("asliri", constant.LOB_KMB_OFF, "threshold_asliri")
 
 	if err != nil {
-		// err = errors.New(constant.ERROR_UPSTREAM + " - Get ASLI RI Config Error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get ASLI RI Config Error")
 		return
 	}
 
@@ -358,12 +359,12 @@ func (u usecase) Ktp(ctx context.Context, r request.PrinciplePemohon, reqMetrics
 	resp, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("KTP_VALIDATOR_URL"), paramKtp, map[string]string{}, constant.METHOD_POST, false, 0, timeout, r.ProspectID, accessToken)
 
 	if err != nil {
-		// err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call KTP Validator")
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call KTP Validator")
 		return
 	}
 
 	if resp.StatusCode() != 200 {
-		// err = errors.New(constant.ERROR_UPSTREAM + " - Call KTP Validator")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call KTP Validator")
 		return
 	}
 
