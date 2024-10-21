@@ -46,6 +46,8 @@ func TestPrinciplePembiayaan(t *testing.T) {
 		errGetPrincipleStepOne              error
 		resGetPrincipleStepTwo              entity.TrxPrincipleStepTwo
 		errGetPrincipleStepTwo              error
+		resGetPrincipleStepThree            entity.TrxPrincipleStepThree
+		errGetPrincipleStepThree            error
 		resGetFiltering                     entity.FilteringKMB
 		errGetFiltering                     error
 		resGetConfig                        entity.AppConfig
@@ -784,6 +786,7 @@ func TestPrinciplePembiayaan(t *testing.T) {
 
 			mockRepository.On("GetPrincipleStepOne", tc.request.ProspectID).Return(tc.resGetPrincipleStepOne, tc.errGetPrincipleStepOne)
 			mockRepository.On("GetPrincipleStepTwo", tc.request.ProspectID).Return(tc.resGetPrincipleStepTwo, tc.errGetPrincipleStepTwo)
+			mockRepository.On("GetPrincipleStepThree", tc.request.ProspectID).Return(tc.resGetPrincipleStepThree, tc.errGetPrincipleStepThree)
 			mockRepository.On("GetFilteringResult", tc.request.ProspectID).Return(tc.resGetFiltering, tc.errGetFiltering)
 			mockRepository.On("GetConfig", "dupcheck", constant.LOB_KMB_OFF, "dupcheck_kmb_config").Return(tc.resGetConfig, tc.errGetConfig)
 

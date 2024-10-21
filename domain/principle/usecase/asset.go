@@ -59,12 +59,43 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		cmoID, cmoName string
 	)
 
+	defer func() {
+		if err == nil {
+			// masking reason
+			statusCode := constant.PRINCIPLE_STATUS_ASSET_APPROVE
+			data.Reason = "Verifikasi data aset berhasil"
+			if data.Result == constant.DECISION_REJECT {
+				statusCode = constant.PRINCIPLE_STATUS_ASSET_REJECT
+				data.Reason = "Data STNK tidak lolos verifikasi"
+			}
+
+			u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+				KpmID:         r.KPMID,
+				OrderID:       r.ProspectID,
+				Source:        3,
+				StatusCode:    statusCode,
+				ProductName:   r.AssetCode,
+				BranchCode:    r.BranchID,
+				AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
+			}), 0)
+		}
+	}()
+
+	principleStepOne, _ := u.repository.GetPrincipleStepOne(r.ProspectID)
+	if principleStepOne != (entity.TrxPrincipleStepOne{}) {
+		data.Code = principleStepOne.RuleCode
+		data.Result = principleStepOne.Decision
+
+		return data, nil
+	}
+
 	hitChassisNumber, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+r.NoChassis, nil, map[string]string{}, constant.METHOD_GET, true, 6, 60, r.ProspectID, middlewares.UserInfoData.AccessToken)
 	if err != nil {
 		return
 	}
 
 	if hitChassisNumber.StatusCode() != 200 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call Get Agreement of Chassis Number Error")
 		return
 	}
 
@@ -155,24 +186,6 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		STNKPhoto:          r.STNKPhoto,
 		KPMID:              r.KPMID,
 	})
-
-	//masking reason
-	statusCode := constant.PRINCIPLE_STATUS_ASSET_APPROVE
-	data.Reason = "Verifikasi data aset berhasil"
-	if data.Result == constant.DECISION_REJECT {
-		statusCode = constant.PRINCIPLE_STATUS_ASSET_REJECT
-		data.Reason = "Data STNK tidak lolos verifikasi"
-	}
-
-	u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, r.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
-		KpmID:         r.KPMID,
-		OrderID:       r.ProspectID,
-		Source:        3,
-		StatusCode:    statusCode,
-		ProductName:   r.AssetCode,
-		BranchCode:    r.BranchID,
-		AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
-	}), 0)
 
 	return
 }

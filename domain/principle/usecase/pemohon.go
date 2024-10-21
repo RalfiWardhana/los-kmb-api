@@ -301,7 +301,10 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		dupcheckData        response.SpDupcheckMap
 		spMap               response.SpDupcheckMap
 		married             bool
+		isSave              bool
 	)
+
+	isSave = true
 
 	if r.SpouseIDNumber != "" {
 
@@ -327,79 +330,82 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		}
 
 		if err == nil {
-			birthDate, _ := time.Parse(constant.FORMAT_DATE, r.BirthDate)
-			var spouseBirthDate interface{}
-			if r.SpouseBirthDate != "" {
-				spouseBirthDate, _ = time.Parse(constant.FORMAT_DATE, r.SpouseBirthDate)
-			}
+			if isSave {
+				birthDate, _ := time.Parse(constant.FORMAT_DATE, r.BirthDate)
+				var spouseBirthDate interface{}
+				if r.SpouseBirthDate != "" {
+					spouseBirthDate, _ = time.Parse(constant.FORMAT_DATE, r.SpouseBirthDate)
+				}
 
-			savedDupcheckData, _ := json.Marshal(dupcheckData)
+				savedDupcheckData, _ := json.Marshal(dupcheckData)
 
-			trxPrincipleStepTwo.ProspectID = r.ProspectID
-			trxPrincipleStepTwo.IDNumber = r.IDNumber
-			trxPrincipleStepTwo.LegalName = r.LegalName
-			trxPrincipleStepTwo.MobilePhone = r.MobilePhone
-			trxPrincipleStepTwo.FullName = r.FullName
-			trxPrincipleStepTwo.BirthDate = birthDate
-			trxPrincipleStepTwo.BirthPlace = r.BirthPlace
-			trxPrincipleStepTwo.SurgateMotherName = r.SurgateMotherName
-			trxPrincipleStepTwo.Gender = r.Gender
-			trxPrincipleStepTwo.Email = r.Email
-			trxPrincipleStepTwo.Religion = r.Religion
-			trxPrincipleStepTwo.SpouseIDNumber = utils.CheckEmptyString(r.SpouseIDNumber)
-			trxPrincipleStepTwo.LegalAddress = r.LegalAddress
-			trxPrincipleStepTwo.LegalRT = r.LegalRT
-			trxPrincipleStepTwo.LegalRW = r.LegalRW
-			trxPrincipleStepTwo.LegalProvince = r.LegalProvince
-			trxPrincipleStepTwo.LegalCity = r.LegalCity
-			trxPrincipleStepTwo.LegalKecamatan = r.LegalKecamatan
-			trxPrincipleStepTwo.LegalKelurahan = r.LegalKelurahan
-			trxPrincipleStepTwo.LegalZipCode = r.LegalZipCode
-			trxPrincipleStepTwo.LegalAreaPhone = r.LegalPhoneArea
-			trxPrincipleStepTwo.LegalPhone = r.LegalPhone
-			trxPrincipleStepTwo.CompanyName = r.CompanyName
-			trxPrincipleStepTwo.CompanyAddress = r.CompanyAddress
-			trxPrincipleStepTwo.CompanyRT = r.CompanyRT
-			trxPrincipleStepTwo.CompanyRW = r.CompanyRW
-			trxPrincipleStepTwo.CompanyProvince = r.CompanyProvince
-			trxPrincipleStepTwo.CompanyCity = r.CompanyCity
-			trxPrincipleStepTwo.CompanyKecamatan = r.CompanyKecamatan
-			trxPrincipleStepTwo.CompanyKelurahan = r.CompanyKelurahan
-			trxPrincipleStepTwo.CompanyZipCode = r.CompanyZipCode
-			trxPrincipleStepTwo.CompanyAreaPhone = r.CompanyPhoneArea
-			trxPrincipleStepTwo.CompanyPhone = r.CompanyPhone
-			trxPrincipleStepTwo.MonthlyFixedIncome = r.MonthlyFixedIncome
-			trxPrincipleStepTwo.MaritalStatus = r.MaritalStatus
-			trxPrincipleStepTwo.SpouseIncome = r.SpouseIncome
-			trxPrincipleStepTwo.SelfiePhoto = utils.CheckEmptyString(r.SelfiePhoto)
-			trxPrincipleStepTwo.KtpPhoto = utils.CheckEmptyString(r.KtpPhoto)
-			trxPrincipleStepTwo.SpouseFullName = utils.CheckEmptyString(r.SpouseFullName)
-			trxPrincipleStepTwo.SpouseBirthDate = spouseBirthDate
-			trxPrincipleStepTwo.SpouseBirthPlace = utils.CheckEmptyString(r.SpouseBirthPlace)
-			trxPrincipleStepTwo.SpouseGender = utils.CheckEmptyString(spouseGender)
-			trxPrincipleStepTwo.SpouseLegalName = utils.CheckEmptyString(r.SpouseLegalName)
-			trxPrincipleStepTwo.SpouseMobilePhone = utils.CheckEmptyString(r.SpouseMobilePhone)
-			trxPrincipleStepTwo.SpouseSurgateMotherName = utils.CheckEmptyString(r.SpouseSurgateMotherName)
-			trxPrincipleStepTwo.EconomySectorID = r.EconomySectorID
-			trxPrincipleStepTwo.Education = r.Education
-			trxPrincipleStepTwo.EmploymentSinceMonth = r.EmploymentSinceMonth
-			trxPrincipleStepTwo.EmploymentSinceYear = r.EmploymentSinceYear
-			trxPrincipleStepTwo.IndustryTypeID = r.IndustryTypeID
-			trxPrincipleStepTwo.JobPosition = r.JobPosition
-			trxPrincipleStepTwo.JobType = r.JobType
-			trxPrincipleStepTwo.ProfessionID = r.ProfessionID
-			trxPrincipleStepTwo.Decision = data.Decision
-			trxPrincipleStepTwo.Reason = data.Reason
-			trxPrincipleStepTwo.DupcheckData = string(utils.SafeEncoding(savedDupcheckData))
+				trxPrincipleStepTwo.ProspectID = r.ProspectID
+				trxPrincipleStepTwo.IDNumber = r.IDNumber
+				trxPrincipleStepTwo.LegalName = r.LegalName
+				trxPrincipleStepTwo.MobilePhone = r.MobilePhone
+				trxPrincipleStepTwo.FullName = r.FullName
+				trxPrincipleStepTwo.BirthDate = birthDate
+				trxPrincipleStepTwo.BirthPlace = r.BirthPlace
+				trxPrincipleStepTwo.SurgateMotherName = r.SurgateMotherName
+				trxPrincipleStepTwo.Gender = r.Gender
+				trxPrincipleStepTwo.Email = r.Email
+				trxPrincipleStepTwo.Religion = r.Religion
+				trxPrincipleStepTwo.SpouseIDNumber = utils.CheckEmptyString(r.SpouseIDNumber)
+				trxPrincipleStepTwo.LegalAddress = r.LegalAddress
+				trxPrincipleStepTwo.LegalRT = r.LegalRT
+				trxPrincipleStepTwo.LegalRW = r.LegalRW
+				trxPrincipleStepTwo.LegalProvince = r.LegalProvince
+				trxPrincipleStepTwo.LegalCity = r.LegalCity
+				trxPrincipleStepTwo.LegalKecamatan = r.LegalKecamatan
+				trxPrincipleStepTwo.LegalKelurahan = r.LegalKelurahan
+				trxPrincipleStepTwo.LegalZipCode = r.LegalZipCode
+				trxPrincipleStepTwo.LegalAreaPhone = r.LegalPhoneArea
+				trxPrincipleStepTwo.LegalPhone = r.LegalPhone
+				trxPrincipleStepTwo.CompanyName = r.CompanyName
+				trxPrincipleStepTwo.CompanyAddress = r.CompanyAddress
+				trxPrincipleStepTwo.CompanyRT = r.CompanyRT
+				trxPrincipleStepTwo.CompanyRW = r.CompanyRW
+				trxPrincipleStepTwo.CompanyProvince = r.CompanyProvince
+				trxPrincipleStepTwo.CompanyCity = r.CompanyCity
+				trxPrincipleStepTwo.CompanyKecamatan = r.CompanyKecamatan
+				trxPrincipleStepTwo.CompanyKelurahan = r.CompanyKelurahan
+				trxPrincipleStepTwo.CompanyZipCode = r.CompanyZipCode
+				trxPrincipleStepTwo.CompanyAreaPhone = r.CompanyPhoneArea
+				trxPrincipleStepTwo.CompanyPhone = r.CompanyPhone
+				trxPrincipleStepTwo.MonthlyFixedIncome = r.MonthlyFixedIncome
+				trxPrincipleStepTwo.MaritalStatus = r.MaritalStatus
+				trxPrincipleStepTwo.SpouseIncome = r.SpouseIncome
+				trxPrincipleStepTwo.SelfiePhoto = utils.CheckEmptyString(r.SelfiePhoto)
+				trxPrincipleStepTwo.KtpPhoto = utils.CheckEmptyString(r.KtpPhoto)
+				trxPrincipleStepTwo.SpouseFullName = utils.CheckEmptyString(r.SpouseFullName)
+				trxPrincipleStepTwo.SpouseBirthDate = spouseBirthDate
+				trxPrincipleStepTwo.SpouseBirthPlace = utils.CheckEmptyString(r.SpouseBirthPlace)
+				trxPrincipleStepTwo.SpouseGender = utils.CheckEmptyString(spouseGender)
+				trxPrincipleStepTwo.SpouseLegalName = utils.CheckEmptyString(r.SpouseLegalName)
+				trxPrincipleStepTwo.SpouseMobilePhone = utils.CheckEmptyString(r.SpouseMobilePhone)
+				trxPrincipleStepTwo.SpouseSurgateMotherName = utils.CheckEmptyString(r.SpouseSurgateMotherName)
+				trxPrincipleStepTwo.EconomySectorID = r.EconomySectorID
+				trxPrincipleStepTwo.Education = r.Education
+				trxPrincipleStepTwo.EmploymentSinceMonth = r.EmploymentSinceMonth
+				trxPrincipleStepTwo.EmploymentSinceYear = r.EmploymentSinceYear
+				trxPrincipleStepTwo.IndustryTypeID = r.IndustryTypeID
+				trxPrincipleStepTwo.JobPosition = r.JobPosition
+				trxPrincipleStepTwo.JobType = r.JobType
+				trxPrincipleStepTwo.ProfessionID = r.ProfessionID
+				trxPrincipleStepTwo.Decision = data.Decision
+				trxPrincipleStepTwo.Reason = data.Reason
+				trxPrincipleStepTwo.RuleCode = code
+				trxPrincipleStepTwo.DupcheckData = string(utils.SafeEncoding(savedDupcheckData))
 
-			err = u.repository.SavePrincipleStepTwo(trxPrincipleStepTwo)
-			if err != nil {
-				return
-			}
+				err = u.repository.SavePrincipleStepTwo(trxPrincipleStepTwo)
+				if err != nil {
+					return
+				}
 
-			err = u.repository.UpdatePrincipleStepOne(r.ProspectID, principleStepOne)
-			if err != nil {
-				return
+				err = u.repository.UpdatePrincipleStepOne(r.ProspectID, principleStepOne)
+				if err != nil {
+					return
+				}
 			}
 
 			statusCode := constant.PRINCIPLE_STATUS_PEMOHON_APPROVE
@@ -429,6 +435,16 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	if principleStepOne.Decision == constant.DECISION_REJECT {
 		err = errors.New(constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE)
 		return
+	}
+
+	principleStepTwo, _ := u.repository.GetPrincipleStepTwo(r.ProspectID)
+	if principleStepTwo != (entity.TrxPrincipleStepTwo{}) {
+		data.Code = principleStepTwo.RuleCode
+		data.Decision = principleStepTwo.Decision
+
+		isSave = false
+
+		return resp, nil
 	}
 
 	bpkbNameType := "O"
