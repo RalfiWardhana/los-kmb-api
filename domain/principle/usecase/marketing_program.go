@@ -427,7 +427,7 @@ func (u usecase) PrincipleMarketingProgram(ctx context.Context, prospectID strin
 		LoanAmountMaximum:     trxPrincipleMarketingProgram.LoanAmountMaximum,
 		AdminFee:              trxPrincipleMarketingProgram.AdminFee,
 		ProvisionFee:          trxPrincipleMarketingProgram.ProvisionFee,
-		TotalDPAmount:         .DPAmount,
+		TotalDPAmount:         trxPrincipleMarketingProgram.DPAmount,
 		AmountFinance:         trxPrincipleMarketingProgram.FinanceAmount,
 		PaymentDay:            1,
 		RentPaymentMethod:     "Payment Point",
