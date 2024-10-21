@@ -78,7 +78,7 @@ func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.Prin
 		Category: constant.WORKER_CATEGORY_PRINCIPLE_KMB, Action: constant.WORKER_ACTION_GET_MARKETING_PROGRAM, Sequence: sequence,
 	})
 
-	go u.repository.SaveToWorker(worker)
+	u.repository.SaveToWorker(worker)
 
 	data.Code = constant.EMERGENCY_PASS_CODE
 	data.Result = constant.DECISION_PASS
