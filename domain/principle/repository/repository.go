@@ -714,7 +714,8 @@ func (r repoHandler) ScanOrderPending() (data []entity.AutoCancel, err error) {
 	FROM trx_principle_status tps WITH (nolock)
 	INNER JOIN trx_principle_step_one tpso WITH (nolock)
 	ON tps.ProspectID  = tpso.ProspectID 
-	WHERE tps.created_at < DATEADD(day, -3, GETDATE())`
+	WHERE tps.created_at < DATEADD(day, -3, GETDATE())
+	AND tps.Decision <> 'CANCEL' `
 
 	if err = r.newKmb.Raw(query).Scan(&data).Error; err != nil {
 		return

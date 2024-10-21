@@ -50,6 +50,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/KB-FMF/los-common-library/loslog"
+	"github.com/KB-FMF/los-common-library/platform/manager"
+
 	"los-kmb-api/shared/common/platformevent"
 
 	"github.com/KB-FMF/los-common-library/response"
@@ -251,8 +254,24 @@ func main() {
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
 	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, authorization, jsonResponse, accessToken, producer)
 
+	managers := manager.New(platformlog.GetPlatformEnv(), os.Getenv("PLATFORM_SECRET_KEY"), os.Getenv("PLATFORM_AUTH_BASE_URL")+"/v1/auth/login")
+
+	libLog := loslog.NewConfig(
+		"Orchestrator-kmb",
+		managers,
+		loslog.WithHookPlatform(true),
+	)
+
+	defer func() {
+		_ = libLog.Sync()
+	}()
+
 	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
 	// libTrace := tracer.Initialize(os.Getenv("APP_NAME"), tracer.IsEnable(config.IsDebug), tracer.LicenseKey(os.Getenv("NEWRELIC_CONFIG_LICENSE")))
+
+	// losLog
+	logMiddleware := loslog.New(libLog)
+	e.Use(logMiddleware.Log)
 
 	principleRepo := principleRepository.NewRepository(newKMB, kpLos, scorePro, confins)
 	principleCase := principleUsecase.NewUsecase(principleRepo, httpClient, producer)
