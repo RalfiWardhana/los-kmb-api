@@ -318,21 +318,19 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 			return
 		} else {
 			var skipCheckJatuhTempo bool
-			if mapping.NumberOfPaidInstallment > 1 && mapping.NumberOfPaidInstallment < configValue.Data.AngsuranBerjalan {
-				var paramCustomerID string
-				paramCustomerID, ok := mainCustomer.CustomerID.(string)
-				if !ok || paramCustomerID == "" {
-					err = errors.New(constant.ERROR_UPSTREAM + " - Customer AO < 6 bulan angsuran should be have CustomerID")
-					return
-				}
-
-				_, skipCheckJatuhTempo, err = u.usecase.CheckAgreementLunas(ctx, req.ProspectID, paramCustomerID, isPrimePriority, accessToken)
-				if err != nil {
-					return
-				}
-
-				mapping.AgreementSettledExist = skipCheckJatuhTempo
+			var paramCustomerID string
+			paramCustomerID, ok := mainCustomer.CustomerID.(string)
+			if !ok || paramCustomerID == "" {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Customer AO < 6 bulan angsuran should be have CustomerID")
+				return
 			}
+
+			_, skipCheckJatuhTempo, err = u.usecase.CheckAgreementLunas(ctx, req.ProspectID, paramCustomerID, isPrimePriority, accessToken)
+			if err != nil {
+				return
+			}
+
+			mapping.AgreementSettledExist = skipCheckJatuhTempo
 
 			if mapping.NumberOfPaidInstallment >= configValue.Data.AngsuranBerjalan {
 				skipCheckJatuhTempo = true
