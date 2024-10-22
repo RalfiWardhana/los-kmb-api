@@ -2800,7 +2800,6 @@ type AutoCancel struct {
 type TrxPrincipleError struct {
 	ProspectID string    `gorm:"column:ProspectID;;type:varchar(20)"`
 	KpmId      int       `gorm:"column:KpmID;type:varchar(20)"`
-	Code       int       `gorm:"column:Code"`
 	Step       int       `gorm:"column:Step"`
 	CreatedAt  time.Time `gorm:"column:created_at"`
 }

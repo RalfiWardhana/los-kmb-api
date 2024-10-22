@@ -63,7 +63,7 @@ func (m *bodyDumpMiddleware) BodyDumpConfig() middleware.BodyDumpConfig {
 						step = 1
 					}
 				case "/api/v3/kmb/verify-pemohon":
-					m.db.Raw("SELECT KpmID FROM trx_principle_step_one WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&trxStepOne)
+					m.db.Raw("SELECT KPMID FROM trx_principle_step_one WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&trxStepOne)
 					kpmId = trxStepOne.KPMID
 					result := m.db.Raw("SELECT KpmID FROM trx_principle_error WITH (nolock) WHERE KpmID = ? AND step = 2 AND created_at >= DATEADD (HOUR , -1 , GETDATE())", kpmId).Scan(&trxError)
 					if result.RowsAffected < 3 {
@@ -71,7 +71,7 @@ func (m *bodyDumpMiddleware) BodyDumpConfig() middleware.BodyDumpConfig {
 						step = 2
 					}
 				case "/api/v3/kmb/verify-pembiayaan ":
-					m.db.Raw("SELECT KpmID FROM trx_principle_step_one WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&trxStepOne)
+					m.db.Raw("SELECT KPMID FROM trx_principle_step_one WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&trxStepOne)
 					kpmId = trxStepOne.KPMID
 					result := m.db.Raw("SELECT KpmID FROM trx_principle_error WITH (nolock) WHERE KpmID = ? AND step = 2 AND created_at >= DATEADD (HOUR , -1 , GETDATE())", kpmId).Scan(&trxError)
 					if result.RowsAffected < 3 {
@@ -83,10 +83,10 @@ func (m *bodyDumpMiddleware) BodyDumpConfig() middleware.BodyDumpConfig {
 
 			if isSave {
 				m.db.Create(&entity.TrxPrincipleError{
-					KpmId:     kpmId,
-					Code:      e.Response().Status,
-					Step:      step,
-					CreatedAt: time.Now(),
+					ProspectID: prospectID,
+					KpmId:      kpmId,
+					Step:       step,
+					CreatedAt:  time.Now(),
 				})
 			}
 
