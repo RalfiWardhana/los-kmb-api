@@ -2771,13 +2771,18 @@ type TrxPrincipleMarketingProgram struct {
 	ProgramID                  string    `gorm:"column:ProgramID;type:varchar(50);"`
 	ProgramName                string    `gorm:"column:ProgramName;type:varchar(200);"`
 	ProductOfferingID          string    `gorm:"column:ProductOfferingID;type:varchar(50);"`
-	ProductOfferingDescription string    `gorm:"column:ProductOfferingDescription;type:varchar(50);"`
+	ProductOfferingDescription string    `gorm:"column:ProductOfferingDescription;type:varchar(255);"`
 	LoanAmount                 float64   `gorm:"column:LoanAmount"`
 	LoanAmountMaximum          float64   `gorm:"column:LoanAmountMaximum"`
 	AdminFee                   float64   `gorm:"column:AdminFee"`
 	ProvisionFee               float64   `gorm:"column:ProvisionFee"`
 	DPAmount                   float64   `gorm:"column:DPAmount"`
 	FinanceAmount              float64   `gorm:"column:FinanceAmount"`
+	InstallmentAmount          float64   `gorm:"column:InstallmentAmount"`
+	NTF                        float64   `gorm:"column:NTF"`
+	OTR                        float64   `gorm:"column:OTR"`
+	Dealer                     string    `gorm:"column:Dealer;type:varchar(50);"`
+	AssetCategoryID            string    `gorm:"column:AssetCategoryID;type:varchar(100);"`
 	CreatedAt                  time.Time `gorm:"column:created_at"`
 }
 

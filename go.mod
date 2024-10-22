@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.2
-	github.com/KB-FMF/los-common-library v1.0.5
+	github.com/KB-FMF/los-common-library v1.0.6
 	github.com/KB-FMF/platform-library v1.0.20
 	github.com/allegro/bigcache/v3 v3.1.0
 	github.com/confluentinc/confluent-kafka-go v1.9.2

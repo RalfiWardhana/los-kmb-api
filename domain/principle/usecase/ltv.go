@@ -516,15 +516,43 @@ func (u usecase) PrincipleElaborateLTV(ctx context.Context, reqs request.Princip
 		}
 
 		if len(marsevCalculateInstallmentRes.Data) > 0 {
+			dealer := "NON PSA"
+			adminFee := marsevCalculateInstallmentRes.Data[0].AdminFee
+			if marsevLoanAmountRes.Data.IsPsa {
+				dealer = "PSA"
+				adminFee = marsevCalculateInstallmentRes.Data[0].AdminFeePSA
+			}
+
+			trxPrincipleMarketingProgram := entity.TrxPrincipleMarketingProgram{
+				ProspectID:                 reqs.ProspectID,
+				ProgramID:                  filterProgramData.ID,
+				ProgramName:                filterProgramData.ProgramName,
+				ProductOfferingID:          filterProgramData.ProductOfferingID,
+				ProductOfferingDescription: filterProgramData.ProductOfferingDescription,
+				LoanAmount:                 reqs.LoanAmount,
+				LoanAmountMaximum:          marsevLoanAmountRes.Data.LoanAmountMaximum,
+				AdminFee:                   adminFee,
+				ProvisionFee:               marsevCalculateInstallmentRes.Data[0].ProvisionFee,
+				DPAmount:                   marsevCalculateInstallmentRes.Data[0].DPAmount,
+				FinanceAmount:              marsevCalculateInstallmentRes.Data[0].AmountOfFinance,
+				InstallmentAmount:          marsevCalculateInstallmentRes.Data[0].MonthlyInstallment,
+				NTF:                        marsevCalculateInstallmentRes.Data[0].NTF,
+				OTR:                        otr,
+				Dealer:                     dealer,
+				AssetCategoryID:            categoryId,
+			}
+
+			err = u.repository.SavePrincipleMarketingProgram(trxPrincipleMarketingProgram)
+			if err != nil {
+				return
+			}
+
 			data.InstallmentAmount = marsevCalculateInstallmentRes.Data[0].MonthlyInstallment
 			data.AF = marsevCalculateInstallmentRes.Data[0].AmountOfFinance
 			data.NTF = marsevCalculateInstallmentRes.Data[0].NTF
 			data.IsPsa = marsevLoanAmountRes.Data.IsPsa
-			data.Dealer = "NON PSA"
-			if marsevLoanAmountRes.Data.IsPsa {
-				data.Dealer = "PSA"
-			}
-			data.AdminFee = marsevCalculateInstallmentRes.Data[0].AdminFee
+			data.Dealer = dealer
+			data.AdminFee = adminFee
 			data.AssetCategoryID = categoryId
 			data.Otr = otr
 		}
