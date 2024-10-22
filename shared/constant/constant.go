@@ -676,6 +676,10 @@ const (
 	CMO_LAMA = "OLD"
 	CMO_BARU = "NEW"
 
+	// ASSET_TYPE_ID / LOB_ID CONFINS
+	ASSET_TYPE_ID_KMB_ONLY = "11"
+	ASSET_TYPE_ID_ALL_LOB  = "1,2,4,11"
+
 	// Max Months Difference for Expired Contract
 	EXPIRED_CONTRACT_LIMIT              = 6
 	EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS = "Expired Contract > 6 bln | "
