@@ -347,6 +347,7 @@ type SpDupcheckMap struct {
 	DetailsDSR                       interface{} `json:"details_dsr"`
 	ConfigMaxDSR                     float64     `json:"config_max_dsr"`
 	Cluster                          interface{} `json:"cluster"`
+	AgreementSettledExist            bool        `json:"agreement_settled_exist"`
 }
 
 type SpDupCekCustomerByID struct {
@@ -930,6 +931,40 @@ type GetFPDCmoByID struct {
 	Data     []FpdData   `json:"data"`
 	Errors   interface{} `json:"errors"`
 	Metadata interface{} `json:"metadata"`
+}
+
+type AgreementData struct {
+	BranchID              string    `json:"branch_id"`
+	CustomerID            string    `json:"customer_id"`
+	ApplicationID         string    `json:"application_id"`
+	AgreementNo           string    `json:"agreement_no"`
+	LegalName             string    `json:"legal_name"`
+	InstallmentAmount     int       `json:"installment_amount"`
+	DownPayment           int       `json:"down_payment"`
+	Tenor                 int       `json:"tenor"`
+	GoLiveDate            time.Time `json:"go_live_date"`
+	OutstandingPrincipal  int       `json:"outstanding_principal"`
+	ContractStatus        string    `json:"contract_status"`
+	NextInstallmentNumber int       `json:"next_installment_number"`
+	NextInstallmentDate   time.Time `json:"next_installment_date"`
+	LicensePlate          string    `json:"license_plate"`
+	AssetTypeID           string    `json:"asset_type_id"`
+	AssetCode             string    `json:"asset_code"`
+	ManufacturingYear     int       `json:"manufacturing_year"`
+	RrdDate               time.Time `json:"rrd_date"`
+	Bpkb                  string    `json:"bpkb"`
+	SerialNo1             string    `json:"serial_no_1"`
+	SerialNo2             string    `json:"serial_no_2"`
+	TotalOtr              int       `json:"total_otr"`
+	DiscountOtr           int       `json:"discount_otr"`
+}
+
+type ConfinsAgreementCustomer struct {
+	Code     string           `json:"code"`
+	Message  string           `json:"message"`
+	Data     *[]AgreementData `json:"data"`
+	Errors   interface{}      `json:"errors"`
+	Metadata interface{}      `json:"metadata"`
 }
 
 type ExpiredContractConfig struct {

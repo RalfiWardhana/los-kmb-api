@@ -286,7 +286,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 
 	// PRIME PRIORITY
 	if customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY {
-		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_AO && spDupcheck.InstallmentTopup == 0 && spDupcheck.NumberOfPaidInstallment >= 6 {
+		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_AO && spDupcheck.InstallmentTopup == 0 && (spDupcheck.NumberOfPaidInstallment >= 6 || spDupcheck.AgreementSettledExist) {
 			data.Result = constant.DECISION_PASS
 			data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 			data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
