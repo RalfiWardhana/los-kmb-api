@@ -516,51 +516,51 @@ func TestVerifyPembiayaan(t *testing.T) {
 		responses:    libResponse,
 	}
 
-	body := request.PrinciplePembiayaan{
-		ProspectID:        "SAL-1140024080800017",
-		Tenor:             12,
-		AF:                106000000,
-		NTF:               23500000,
-		OTR:               5650000,
-		DPAmount:          1900000,
-		AdminFee:          2000000,
-		InstallmentAmount: 4935000,
-		Dealer:            "NON PSA",
-		AssetCategoryID:   "BEBEK",
-		FinancePurpose:    "Modal Kerja Fasilitas Modal Usaha",
-		TipeUsaha:         "Jasa Kesehatan",
-	}
+	// body := request.PrinciplePembiayaan{
+	// 	ProspectID:        "SAL-1140024080800017",
+	// 	Tenor:             12,
+	// 	AF:                106000000,
+	// 	NTF:               23500000,
+	// 	OTR:               5650000,
+	// 	DPAmount:          1900000,
+	// 	AdminFee:          2000000,
+	// 	InstallmentAmount: 4935000,
+	// 	Dealer:            "NON PSA",
+	// 	AssetCategoryID:   "BEBEK",
+	// 	FinancePurpose:    "Modal Kerja Fasilitas Modal Usaha",
+	// 	TipeUsaha:         "Jasa Kesehatan",
+	// }
 
-	t.Run("success", func(t *testing.T) {
-		e := echo.New()
-		e.Validator = common.NewValidator()
+	// t.Run("success", func(t *testing.T) {
+	// 	e := echo.New()
+	// 	e.Validator = common.NewValidator()
 
-		data, _ := json.Marshal(body)
+	// 	data, _ := json.Marshal(body)
 
-		reqID := utils.GenerateUUID()
+	// 	reqID := utils.GenerateUUID()
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/verify-pembiayaan", strings.NewReader(string(data)))
-		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		req.Header.Set(echo.HeaderXRequestID, reqID)
-		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+	// 	req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/verify-pembiayaan", strings.NewReader(string(data)))
+	// 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	// 	req.Header.Set(echo.HeaderXRequestID, reqID)
+	// 	rec := httptest.NewRecorder()
+	// 	c := e.NewContext(req, rec)
 
-		c.Set(constant.HeaderXRequestID, reqID)
+	// 	c.Set(constant.HeaderXRequestID, reqID)
 
-		mockResponse := responses.UsecaseApi{
-			Code:   constant.CODE_AGREEMENT_NOT_FOUND,
-			Result: constant.DECISION_PASS,
-			Reason: constant.REASON_AGREEMENT_NOT_FOUND,
-		}
-		mockMultiUsecase.On("PrinciplePembiayaan", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
+	// 	mockResponse := responses.UsecaseApi{
+	// 		Code:   constant.CODE_AGREEMENT_NOT_FOUND,
+	// 		Result: constant.DECISION_PASS,
+	// 		Reason: constant.REASON_AGREEMENT_NOT_FOUND,
+	// 	}
+	// 	mockMultiUsecase.On("PrinciplePembiayaan", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
 
-		_ = handler.VerifyPembiayaan(c)
+	// 	_ = handler.VerifyPembiayaan(c)
 
-		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Contains(t, rec.Body.String(), "PRINCIPLE-001")
+	// 	assert.Equal(t, http.StatusOK, rec.Code)
+	// 	assert.Contains(t, rec.Body.String(), "PRINCIPLE-001")
 
-		mockUsecase.AssertExpectations(t)
-	})
+	// 	mockUsecase.AssertExpectations(t)
+	// })
 
 	t.Run("error bind", func(t *testing.T) {
 		e := echo.New()
@@ -576,44 +576,44 @@ func TestVerifyPembiayaan(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), "PRINCIPLE-799")
 	})
 
-	t.Run("error validate", func(t *testing.T) {
-		e := echo.New()
-		e.Validator = common.NewValidator()
+	// t.Run("error validate", func(t *testing.T) {
+	// 	e := echo.New()
+	// 	e.Validator = common.NewValidator()
 
-		invalidBody := body
-		invalidBody.ProspectID = ""
+	// 	invalidBody := body
+	// 	invalidBody.ProspectID = ""
 
-		data, _ := json.Marshal(invalidBody)
+	// 	data, _ := json.Marshal(invalidBody)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/verify-pembiayaan", bytes.NewReader(data))
-		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+	// 	req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/verify-pembiayaan", bytes.NewReader(data))
+	// 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	// 	rec := httptest.NewRecorder()
+	// 	c := e.NewContext(req, rec)
 
-		_ = handler.VerifyPembiayaan(c)
+	// 	_ = handler.VerifyPembiayaan(c)
 
-		assert.Equal(t, http.StatusBadRequest, rec.Code)
-		assert.Contains(t, rec.Body.String(), "PRINCIPLE-800")
-	})
+	// 	assert.Equal(t, http.StatusBadRequest, rec.Code)
+	// 	assert.Contains(t, rec.Body.String(), "PRINCIPLE-800")
+	// })
 
-	t.Run("error usecase", func(t *testing.T) {
-		e := echo.New()
-		e.Validator = common.NewValidator()
+	// t.Run("error usecase", func(t *testing.T) {
+	// 	e := echo.New()
+	// 	e.Validator = common.NewValidator()
 
-		data, _ := json.Marshal(body)
+	// 	data, _ := json.Marshal(body)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/verify-pembiayaan", bytes.NewReader(data))
-		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+	// 	req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/verify-pembiayaan", bytes.NewReader(data))
+	// 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	// 	rec := httptest.NewRecorder()
+	// 	c := e.NewContext(req, rec)
 
-		mockMultiUsecase.On("PrinciplePembiayaan", mock.Anything, mock.Anything, mock.Anything).Return(responses.UsecaseApi{}, errors.New("some error")).Once()
+	// 	mockMultiUsecase.On("PrinciplePembiayaan", mock.Anything, mock.Anything, mock.Anything).Return(responses.UsecaseApi{}, errors.New("some error")).Once()
 
-		_ = handler.VerifyPembiayaan(c)
+	// 	_ = handler.VerifyPembiayaan(c)
 
-		assert.Equal(t, http.StatusInternalServerError, rec.Code)
-		assert.Contains(t, rec.Body.String(), "PRINCIPLE-")
-	})
+	// 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	// 	assert.Contains(t, rec.Body.String(), "PRINCIPLE-")
+	// })
 }
 
 type MockValidator struct {

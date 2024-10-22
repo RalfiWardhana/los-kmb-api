@@ -969,16 +969,16 @@ type PrincipleAsset struct {
 	IDNumber           string `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
 	SpouseIDNumber     string `json:"spouse_id_number" example:"3506126712000002"`
 	ManufactureYear    int    `json:"manufacture_year" validate:"required" example:"2020"`
-	NoChassis          string `json:"chassis_number" validate:"required,max=30" example:"MHKV1AA2JBK107322"`
-	NoEngine           string `json:"engine_number" validate:"required,max=30" example:"73218JAJK"`
+	NoChassis          string `json:"chassis_number" validate:"required,max=25" example:"MHKV1AA2JBK107322"`
+	NoEngine           string `json:"engine_number" validate:"required,max=20" example:"73218JAJK"`
 	BranchID           string `json:"branch_id" validate:"required,max=10" example:"426"`
-	CC                 int    `json:"cc" validate:"required" example:"1500"`
+	CC                 int    `json:"cc" validate:"required,min=100,max=9999" example:"1500"`
 	TaxDate            string `json:"tax_date" validate:"required,dateformat" example:"2022-03-02"`
 	STNKExpiredDate    string `json:"stnk_expired_date" validate:"required,dateformat" example:"2025-03-20"`
-	OwnerAsset         string `json:"owner_asset" validate:"required,max=50" example:"JONATHAN"`
+	OwnerAsset         string `json:"owner_asset" validate:"required,min=2,max=50" example:"JONATHAN"`
 	LicensePlate       string `json:"license_plate" validate:"required,max=50" example:"B3006TBJ"`
-	Color              string `json:"color" validate:"required,max=50" example:"HITAM"`
-	Brand              string `json:"brand" validate:"required,max=255" example:"HONDA"`
+	Color              string `json:"color" validate:"required,min=4,max=30" example:"HITAM"`
+	Brand              string `json:"brand" validate:"required,max=50" example:"HONDA"`
 	ResidenceAddress   string `json:"residence_address" validate:"required,max=100" example:"Dermaga Baru"`
 	ResidenceRT        string `json:"residence_rt" validate:"required,min=1,max=3" example:"001"`
 	ResidenceRW        string `json:"residence_rw" validate:"required,min=1,max=3" example:"002"`
