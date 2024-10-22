@@ -2796,3 +2796,15 @@ type AutoCancel struct {
 	KPMID      int    `gorm:"column:KPMID;"`
 	BranchID   string `gorm:"column:BranchID;type:varchar(10)"`
 }
+
+type TrxPrincipleError struct {
+	ProspectID string    `gorm:"column:ProspectID;;type:varchar(20)"`
+	KpmId      int       `gorm:"column:KpmID;type:varchar(20)"`
+	Code       int       `gorm:"column:Code"`
+	Step       int       `gorm:"column:Step"`
+	CreatedAt  time.Time `gorm:"column:created_at"`
+}
+
+func (c *TrxPrincipleError) TableName() string {
+	return "trx_principle_error"
+}

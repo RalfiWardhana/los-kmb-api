@@ -51,6 +51,12 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 		isSave                     bool
 	)
 
+	errorCount := u.repository.ExceedErrorStepThree(r.ProspectID)
+	if errorCount >= 3 {
+		err = errors.New(constant.ERROR_MAX_EXCEED)
+		return resp, err
+	}
+
 	isSave = true
 
 	defer func() {

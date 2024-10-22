@@ -719,8 +719,9 @@ const (
 	EMERGENCY_PASS_CODE   = "4701"
 	EMERGENCY_PASS_REASON = "Sukses Submit To Sally"
 
-	PRINCIPLE_ERROR_RESPONSE_MESSAGE   = "Terjadi kesalahan pada sistem, silahkan coba lagi"
-	PRINCIPLE_ALREADY_REJECTED_MESSAGE = "Pengajuan anda telah reject sebelumnya"
+	PRINCIPLE_ERROR_RESPONSE_MESSAGE        = "Terjadi kesalahan pada sistem, silahkan coba lagi"
+	PRINCIPLE_ALREADY_REJECTED_MESSAGE      = "Pengajuan anda telah reject sebelumnya"
+	PRINCIPLE_ERROR_EXCEED_RESPONSE_MESSAGE = "Terjadi kesalahan pada sistem, silahkan coba lagi, kamu dapat mencoba verifikasi lagi setelah 1 jam"
 
 	KPM_ASSET_TYPE_CODE_MOTOR = "11"
 
@@ -733,4 +734,5 @@ const (
 	WORKER_ACTION_GET_MARKETING_PROGRAM = "GET_MARKETING_PROGRAM"
 
 	MARSEV_SOURCE_APPLICATION_KPM = "KPM"
+	ERROR_MAX_EXCEED              = "max retry exceed"
 )

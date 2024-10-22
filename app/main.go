@@ -9,15 +9,9 @@ import (
 	cmsDelivery "los-kmb-api/domain/cms/delivery/http"
 	cmsRepository "los-kmb-api/domain/cms/repository"
 	cmsUsecase "los-kmb-api/domain/cms/usecase"
-	elaborateDelivery "los-kmb-api/domain/elaborate/delivery/http"
-	elaborateRepository "los-kmb-api/domain/elaborate/repository"
-	elaborateUsecase "los-kmb-api/domain/elaborate/usecase"
 	elaborateLTVDelivery "los-kmb-api/domain/elaborate_ltv/delivery/http"
 	elaborateLTVRepository "los-kmb-api/domain/elaborate_ltv/repository"
 	elaborateLTVUsecase "los-kmb-api/domain/elaborate_ltv/usecase"
-	filteringDelivery "los-kmb-api/domain/filtering/delivery/http"
-	filteringRepository "los-kmb-api/domain/filtering/repository"
-	filteringUsecase "los-kmb-api/domain/filtering/usecase"
 	eventhandlers "los-kmb-api/domain/filtering_new/delivery/event"
 	newKmbFilteringDelivery "los-kmb-api/domain/filtering_new/delivery/http"
 	newKmbFilteringRepository "los-kmb-api/domain/filtering_new/repository"
@@ -58,7 +52,6 @@ import (
 	"github.com/KB-FMF/los-common-library/response"
 	"github.com/KB-FMF/platform-library/event"
 	"github.com/allegro/bigcache/v3"
-	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/newrelic/go-agent/v3/integrations/nrecho-v4"
@@ -133,13 +126,6 @@ func main() {
 	constant.KEY_PREFIX_UPDATE_CUSTOMER = os.Getenv("KEY_PREFIX_UPDATE_CUSTOMER")
 	constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE = os.Getenv("KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE")
 
-	var minilosWG *gorm.DB
-
-	minilosKMB, err := database.OpenMinilosKMB()
-	if err != nil {
-		panic(fmt.Sprintf("Failed to open database connection: %s", err))
-	}
-
 	kpLos, err := database.OpenKpLos()
 	if err != nil {
 		panic(fmt.Sprintf("Failed to open database connection: %s", err))
@@ -175,6 +161,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	e.Use(middleware.BodyDumpWithConfig(middlewares.NewBodyDumpMiddleware(newKMB).BodyDumpConfig()))
+
 	common.SetDB(newKMB)
 
 	var cache *bigcache.BigCache
@@ -207,7 +195,6 @@ func main() {
 	jsonResponse := json.NewResponse()
 	authRepo := authRepository.NewRepository(newKMB)
 	authorization := authorization.NewAuth(authRepo)
-	apiGroup := e.Group("/api/v2/kmb")
 	apiGroupv3 := e.Group("/api/v3/kmb")
 	httpClient := httpclient.NewHttpClient()
 
@@ -220,18 +207,6 @@ func main() {
 
 	producer := platformevent.NewPlatformEvent()
 	platformCache := platformcache.NewPlatformCache()
-
-	// define kmb filtering domain
-	kmbFilteringRepo := filteringRepository.NewRepository(minilosKMB, kpLos, kpLosLogs)
-	kmbElaborateRepo := elaborateRepository.NewRepository(minilosKMB, kpLos)
-	kmbFilteringUsecase := filteringUsecase.NewUsecase(kmbFilteringRepo, kmbElaborateRepo, httpClient)
-	kmbFilteringMultiCase, kmbFilteringCase := filteringUsecase.NewMultiUsecase(kmbFilteringRepo, httpClient, kmbFilteringUsecase)
-	filteringDelivery.FilteringHandler(apiGroup, kmbFilteringMultiCase, kmbFilteringCase, kmbFilteringRepo, jsonResponse, accessToken)
-
-	// define kmb elaborate domain
-	kmbElaborateUsecase := elaborateUsecase.NewUsecase(kmbElaborateRepo, httpClient)
-	kmbElaborateMultiCase, kmbElaborateCase := elaborateUsecase.NewMultiUsecase(kmbElaborateRepo, httpClient, kmbElaborateUsecase)
-	elaborateDelivery.ElaborateHandler(apiGroup, kmbElaborateMultiCase, kmbElaborateCase, kmbElaborateRepo, jsonResponse, accessToken)
 
 	// define new kmb filtering domain
 	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs, newKMB)
@@ -251,7 +226,7 @@ func main() {
 	cmsDelivery.CMSHandler(apiGroupv3, cmsUsecases, cmsRepositories, jsonResponse, producer, accessToken)
 
 	// define new kmb journey
-	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, core, staging, minilosWG, minilosKMB, newKMB, scorePro)
+	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, core, staging, newKMB, scorePro)
 	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
 	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)

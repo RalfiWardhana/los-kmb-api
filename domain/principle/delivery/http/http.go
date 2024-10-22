@@ -66,6 +66,10 @@ func (c *handler) VerifyAsset(ctx echo.Context) (err error) {
 
 	if err != nil {
 
+		if err.Error() == constant.ERROR_MAX_EXCEED {
+			return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", "429"), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_EXCEED_RESPONSE_MESSAGE))
+		}
+
 		code, err := utils.WrapError(err)
 
 		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
@@ -98,6 +102,11 @@ func (c *handler) VerifyPemohon(ctx echo.Context) (err error) {
 	data, err := c.multiusecase.PrinciplePemohon(ctx.Request().Context(), r)
 
 	if err != nil {
+
+		if err.Error() == constant.ERROR_MAX_EXCEED {
+			return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", "429"), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_EXCEED_RESPONSE_MESSAGE))
+		}
+
 		errorMessage := constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE
 		if err.Error() == constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE {
 			errorMessage = constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE
@@ -223,6 +232,11 @@ func (c *handler) VerifyPembiayaan(ctx echo.Context) (err error) {
 	data, err := c.multiusecase.PrinciplePembiayaan(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
+
+		if err.Error() == constant.ERROR_MAX_EXCEED {
+			return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", "429"), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_EXCEED_RESPONSE_MESSAGE))
+		}
+
 		errorMessage := constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE
 		if err.Error() == constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE {
 			errorMessage = constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE

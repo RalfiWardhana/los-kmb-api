@@ -37,6 +37,48 @@ func (_m *Repository) CheckCMONoFPD(cmoID string, bpkbName string) (entity.TrxCm
 	return r0, r1
 }
 
+// ExceedErrorStepOne provides a mock function with given fields: kpmId
+func (_m *Repository) ExceedErrorStepOne(kpmId int) int {
+	ret := _m.Called(kpmId)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(int) int); ok {
+		r0 = rf(kpmId)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	return r0
+}
+
+// ExceedErrorStepThree provides a mock function with given fields: prospectId
+func (_m *Repository) ExceedErrorStepThree(prospectId string) int {
+	ret := _m.Called(prospectId)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(string) int); ok {
+		r0 = rf(prospectId)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	return r0
+}
+
+// ExceedErrorStepTwo provides a mock function with given fields: prospectId
+func (_m *Repository) ExceedErrorStepTwo(prospectId string) int {
+	ret := _m.Called(prospectId)
+
+	var r0 int
+	if rf, ok := ret.Get(0).(func(string) int); ok {
+		r0 = rf(prospectId)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	return r0
+}
+
 // GetActiveLoanTypeLast24M provides a mock function with given fields: customerID
 func (_m *Repository) GetActiveLoanTypeLast24M(customerID string) (entity.GetActiveLoanTypeLast24M, error) {
 	ret := _m.Called(customerID)

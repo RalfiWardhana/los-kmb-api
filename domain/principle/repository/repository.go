@@ -741,3 +741,31 @@ func (r repoHandler) UpdateToCancel(prospectID string) (err error) {
 	})
 
 }
+
+func (r repoHandler) ExceedErrorStepOne(kpmId int) int {
+	var trxError entity.TrxPrincipleError
+
+	result := r.newKmb.Raw("SELECT KpmID FROM trx_principle_error WITH (nolock) WHERE KpmID = ? AND step = 1 AND created_at >= DATEADD (HOUR , -1 , GETDATE())", kpmId).Scan(&trxError)
+
+	return int(result.RowsAffected)
+}
+
+func (r repoHandler) ExceedErrorStepTwo(prospectId string) int {
+
+	var trxError entity.TrxPrincipleError
+
+	result := r.newKmb.Raw("SELECT KpmID FROM trx_principle_error WITH (nolock) WHERE ProspectID = ? AND step = 2 AND created_at >= DATEADD (HOUR , -1 , GETDATE())", prospectId).Scan(&trxError)
+
+	return int(result.RowsAffected)
+
+}
+
+func (r repoHandler) ExceedErrorStepThree(prospectId string) int {
+
+	var trxError entity.TrxPrincipleError
+
+	result := r.newKmb.Raw("SELECT KpmID FROM trx_principle_error WITH (nolock) WHERE ProspectID = ? AND step = 3 AND created_at >= DATEADD (HOUR , -1 , GETDATE())", prospectId).Scan(&trxError)
+
+	return int(result.RowsAffected)
+
+}

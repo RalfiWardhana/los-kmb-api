@@ -81,6 +81,12 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		}
 	}()
 
+	errorCount := u.repository.ExceedErrorStepOne(r.KPMID)
+	if errorCount >= 3 {
+		err = errors.New(constant.ERROR_MAX_EXCEED)
+		return data, err
+	}
+
 	principleStepOne, _ := u.repository.GetPrincipleStepOne(r.ProspectID)
 	if principleStepOne != (entity.TrxPrincipleStepOne{}) {
 		data.Code = principleStepOne.RuleCode

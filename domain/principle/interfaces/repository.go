@@ -42,4 +42,7 @@ type Repository interface {
 	GetPrincipleMarketingProgram(prospectID string) (data entity.TrxPrincipleMarketingProgram, err error)
 	ScanOrderPending() (data []entity.AutoCancel, err error)
 	UpdateToCancel(prospectID string) (err error)
+	ExceedErrorStepOne(kpmId int) int
+	ExceedErrorStepTwo(prospectId string) int
+	ExceedErrorStepThree(prospectId string) int
 }
