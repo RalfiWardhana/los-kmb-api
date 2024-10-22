@@ -1762,6 +1762,11 @@ func TestSavePrincipleMarketingProgram(t *testing.T) {
 		ProvisionFee:               0,
 		DPAmount:                   0,
 		FinanceAmount:              0,
+		InstallmentAmount:          0,
+		NTF:                        0,
+		OTR:                        0,
+		Dealer:                     "PSA",
+		AssetCategoryID:            "MATIC",
 	}
 
 	mock.ExpectBegin()
@@ -1779,6 +1784,11 @@ func TestSavePrincipleMarketingProgram(t *testing.T) {
 			data.ProvisionFee,
 			data.DPAmount,
 			data.FinanceAmount,
+			data.InstallmentAmount,
+			data.NTF,
+			data.OTR,
+			data.Dealer,
+			data.AssetCategoryID,
 			sqlmock.AnyArg(),
 		).
 		WillReturnResult(sqlmock.NewResult(1, 1))

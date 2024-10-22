@@ -520,7 +520,6 @@ func (u usecase) PrincipleElaborateLTV(ctx context.Context, reqs request.Princip
 			adminFee := marsevCalculateInstallmentRes.Data[0].AdminFee
 			if marsevLoanAmountRes.Data.IsPsa {
 				dealer = "PSA"
-				adminFee = marsevCalculateInstallmentRes.Data[0].AdminFeePSA
 			}
 
 			trxPrincipleMarketingProgram := entity.TrxPrincipleMarketingProgram{
