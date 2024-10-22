@@ -3476,7 +3476,7 @@ func (r repoHandler) GetInquiryQuotaDeviasi(req request.ReqListQuotaDeviasi, pag
 		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
 	}
 
-	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT mbd.*, cb.BranchName AS branch_name
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT mbd.BranchID, cb.BranchName AS branch_name, mbd.quota_amount, mbd.quota_account, mbd.booking_amount, mbd.booking_account, mbd.balance_amount, mbd.balance_account, mbd.is_active, mbd.updated_by, ISNULL(FORMAT(mbd.updated_at, 'yyyy-MM-dd HH:mm:ss'), '') AS updated_at
 			FROM m_branch_deviasi AS mbd WITH (nolock)
 			JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID) %s ORDER BY mbd.is_active DESC, mbd.BranchID ASC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
 		return

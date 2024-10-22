@@ -2362,6 +2362,8 @@ type InquirySettingQuotaDeviasi struct {
 	BalanceAmount  float64 `gorm:"column:balance_amount" json:"balance_amount"`
 	BalanceAccount int     `gorm:"column:balance_account" json:"balance_account"`
 	IsActive       bool    `gorm:"column:is_active" json:"is_active"`
+	UpdatedBy      string  `gorm:"column:updated_by" json:"updated_by"`
+	UpdatedAt      string  `gorm:"column:updated_at" json:"updated_at"`
 }
 
 type DataQuotaDeviasiBranch struct {
