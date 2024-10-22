@@ -175,6 +175,8 @@ func main() {
 		log.Fatal(err)
 	}
 
+	common.SetDB(newKMB)
+
 	var cache *bigcache.BigCache
 	isCacheActive, _ := strconv.ParseBool(config.Env("CACHE_ACTIVE"))
 	if isCacheActive {

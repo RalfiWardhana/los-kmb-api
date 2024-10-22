@@ -4,8 +4,8 @@ github.com/BurntSushi/toml v0.3.1 h1:WXkYYl6Yr3qBf1K79EBnL4mak0OimBfB0XUf9Vl28OQ
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
 github.com/DATA-DOG/go-sqlmock v1.5.2 h1:OcvFkGmslmlZibjAjaHm3L//6LiuBgolP7OputlJIzU=
 github.com/DATA-DOG/go-sqlmock v1.5.2/go.mod h1:88MAG/4G7SMwSE3CeA0ZKzrT5CiOU3OJ+JlNzwDqpNU=
-github.com/KB-FMF/los-common-library v1.0.5 h1:LpJgnDXM3cYxr9Z3javGrDd79r98nVKc0gHflS0Q3TQ=
-github.com/KB-FMF/los-common-library v1.0.5/go.mod h1:iMSjnhMqWbVUo1XR6Edrc0MuTBSDutMHZEwH2+DOd9g=
+github.com/KB-FMF/los-common-library v1.0.6 h1:mzXlsEGLIWFuCA2NVw63CusMQ/CacMoFygMcdJkDHRU=
+github.com/KB-FMF/los-common-library v1.0.6/go.mod h1:iMSjnhMqWbVUo1XR6Edrc0MuTBSDutMHZEwH2+DOd9g=
 github.com/KB-FMF/platform-library v1.0.20 h1:PPEQfNbG+1a1WvKH7wwdXbn6RUlhD75msAYCpjDZD9g=
 github.com/KB-FMF/platform-library v1.0.20/go.mod h1:UuA86SioNq0yXtWMydqu+3LSWAheonMrtsbJvn4tZBA=
 github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc=

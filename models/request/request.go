@@ -1063,15 +1063,15 @@ type PrincipleElaborateLTV struct {
 type PrinciplePembiayaan struct {
 	ProspectID            string   `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
 	Tenor                 int      `json:"tenor" validate:"required,max=60" example:"36"`
-	AF                    float64  `json:"af" validate:"required,max=999999999999" example:"84000000"`
-	NTF                   float64  `json:"ntf" validate:"required,max=999999999999" example:"150528000"`
-	OTR                   float64  `json:"otr" validate:"required,max=999999999999" example:"105000000"`
+	AF                    float64  `json:"af" validate:"required,max=999999999999,af_principle" example:"84000000"`
+	NTF                   float64  `json:"ntf" validate:"required,max=999999999999,ntf_principle" example:"150528000"`
+	OTR                   float64  `json:"otr" validate:"required,max=999999999999,otr_principle" example:"105000000"`
 	DPAmount              float64  `json:"down_payment_amount" validate:"omitempty,max=999999999999" example:"22000000"`
-	AdminFee              float64  `json:"admin_fee" validate:"required,max=999999999999" example:"1500000"`
-	InstallmentAmount     float64  `json:"installment_amount" validate:"required,max=999999999999" example:"4181333"`
-	Dealer                string   `json:"dealer" validate:"omitempty,max=50"`
+	AdminFee              float64  `json:"admin_fee" validate:"required,max=999999999999,admin_fee_principle" example:"1500000"`
+	InstallmentAmount     float64  `json:"installment_amount" validate:"required,max=999999999999,installment_amount_principle" example:"4181333"`
+	Dealer                string   `json:"dealer" validate:"omitempty,max=50,dealer_principle"`
 	MonthlyVariableIncome *float64 `json:"monthly_variable_income" validate:"omitempty,max=999999999999" example:"3000000"`
-	AssetCategoryID       string   `json:"asset_category_id" validate:"required,max=100" example:"BEBEK"`
+	AssetCategoryID       string   `json:"asset_category_id" validate:"required,max=100,asset_category_id_principle" example:"BEBEK"`
 	FinancePurpose        string   `json:"finance_purpose" validate:"required,max=100" example:"Multiguna Pembayaran dengan Angsuran"`
 	TipeUsaha             string   `json:"tipe_usaha" validate:"tipe_usaha,max=100" example:"Jasa Kesehatan"`
 }

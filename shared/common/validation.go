@@ -14,9 +14,16 @@ import (
 	"time"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/jinzhu/gorm"
 )
 
 var Key, ClientKey, Gender, StatusKonsumen, Channel, Lob, Incoming, Home, Education, Marital, ProfID, Photo, Relationship, AppSource, Address, Tenor, Relation, Decision string
+
+var DB *gorm.DB
+
+func SetDB(db *gorm.DB) {
+	DB = db
+}
 
 func NewValidator() *Validator {
 
@@ -85,6 +92,13 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("decision", DecisionValidation)
 	v.validator.RegisterValidation("mobile_phone", MobilePhoneValidation)
 	v.validator.RegisterValidation("tipe_usaha", tipeUsahaValidation)
+	v.validator.RegisterValidation("af_principle", afValidationPrinciple)
+	v.validator.RegisterValidation("admin_fee_principle", adminFeeValidationPrinciple)
+	v.validator.RegisterValidation("installment_amount_principle", installmentAmountValidationPrinciple)
+	v.validator.RegisterValidation("ntf_principle", ntfValidationPrinciple)
+	v.validator.RegisterValidation("otr_principle", otrValidationPrinciple)
+	v.validator.RegisterValidation("dealer_principle", dealerValidationPrinciple)
+	v.validator.RegisterValidation("asset_category_id_principle", assetCategoryIDValidationPrinciple)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
@@ -612,5 +626,138 @@ func tipeUsahaValidation(fl validator.FieldLevel) bool {
 	if dealer == "NON PSA" && tipeUsaha == "" {
 		return false
 	}
+	return true
+}
+
+func afValidationPrinciple(fl validator.FieldLevel) bool {
+	af := fl.Field().Float()
+
+	prospectID := fl.Parent().FieldByName("ProspectID").String()
+
+	var marketingProgram entity.TrxPrincipleMarketingProgram
+	query := fmt.Sprintf(`SELECT TOP 1 FinanceAmount FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err := DB.Raw(query).Scan(&marketingProgram).Error; err != nil {
+		return false
+	}
+
+	if af != marketingProgram.FinanceAmount {
+		return false
+	}
+
+	return true
+}
+
+func adminFeeValidationPrinciple(fl validator.FieldLevel) bool {
+	adminFee := fl.Field().Float()
+
+	prospectID := fl.Parent().FieldByName("ProspectID").String()
+
+	var marketingProgram entity.TrxPrincipleMarketingProgram
+	query := fmt.Sprintf(`SELECT TOP 1 AdminFee FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err := DB.Raw(query).Scan(&marketingProgram).Error; err != nil {
+		return false
+	}
+
+	if adminFee != marketingProgram.AdminFee {
+		return false
+	}
+
+	return true
+}
+
+func installmentAmountValidationPrinciple(fl validator.FieldLevel) bool {
+	installmentAmount := fl.Field().Float()
+
+	prospectID := fl.Parent().FieldByName("ProspectID").String()
+
+	var marketingProgram entity.TrxPrincipleMarketingProgram
+	query := fmt.Sprintf(`SELECT TOP 1 InstallmentAmount FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err := DB.Raw(query).Scan(&marketingProgram).Error; err != nil {
+		return false
+	}
+
+	if installmentAmount != marketingProgram.InstallmentAmount {
+		return false
+	}
+
+	return true
+}
+
+func ntfValidationPrinciple(fl validator.FieldLevel) bool {
+	ntf := fl.Field().Float()
+
+	prospectID := fl.Parent().FieldByName("ProspectID").String()
+
+	var marketingProgram entity.TrxPrincipleMarketingProgram
+	query := fmt.Sprintf(`SELECT TOP 1 NTF FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err := DB.Raw(query).Scan(&marketingProgram).Error; err != nil {
+		return false
+	}
+
+	if ntf != marketingProgram.NTF {
+		return false
+	}
+
+	return true
+}
+
+func otrValidationPrinciple(fl validator.FieldLevel) bool {
+	otr := fl.Field().Float()
+
+	prospectID := fl.Parent().FieldByName("ProspectID").String()
+
+	var marketingProgram entity.TrxPrincipleMarketingProgram
+	query := fmt.Sprintf(`SELECT TOP 1 OTR FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err := DB.Raw(query).Scan(&marketingProgram).Error; err != nil {
+		return false
+	}
+
+	if otr != marketingProgram.OTR {
+		return false
+	}
+
+	return true
+}
+
+func dealerValidationPrinciple(fl validator.FieldLevel) bool {
+	dealer := fl.Field().String()
+
+	prospectID := fl.Parent().FieldByName("ProspectID").String()
+
+	var marketingProgram entity.TrxPrincipleMarketingProgram
+	query := fmt.Sprintf(`SELECT TOP 1 Dealer FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err := DB.Raw(query).Scan(&marketingProgram).Error; err != nil {
+		return false
+	}
+
+	if dealer != marketingProgram.Dealer {
+		return false
+	}
+
+	return true
+}
+
+func assetCategoryIDValidationPrinciple(fl validator.FieldLevel) bool {
+	assetCategoryID := fl.Field().String()
+
+	prospectID := fl.Parent().FieldByName("ProspectID").String()
+
+	var marketingProgram entity.TrxPrincipleMarketingProgram
+	query := fmt.Sprintf(`SELECT TOP 1 AssetCategoryID FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err := DB.Raw(query).Scan(&marketingProgram).Error; err != nil {
+		return false
+	}
+
+	if assetCategoryID != marketingProgram.AssetCategoryID {
+		return false
+	}
+
 	return true
 }
