@@ -32,6 +32,7 @@ func TestCheckNokaNosin(t *testing.T) {
 	testcases := []struct {
 		name                         string
 		request                      request.PrincipleAsset
+		resExceedErrorStepOne        int
 		resGetPrincipleStepOne       entity.TrxPrincipleStepOne
 		errGetPrincipleStepOne       error
 		errAgreementChasisNumber     error
@@ -195,6 +196,7 @@ func TestCheckNokaNosin(t *testing.T) {
 			mockPlatformEvent := mockplatformevent.NewPlatformEventInterface(t)
 			var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
 
+			mockRepository.On("ExceedErrorStepOne", tc.request.KPMID).Return(tc.resExceedErrorStepOne)
 			mockRepository.On("GetPrincipleStepOne", tc.request.ProspectID).Return(tc.resGetPrincipleStepOne, tc.errGetPrincipleStepOne)
 
 			rst := resty.New()

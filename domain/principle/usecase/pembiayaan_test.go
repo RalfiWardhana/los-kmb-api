@@ -42,6 +42,7 @@ func TestPrinciplePembiayaan(t *testing.T) {
 	testcases := []struct {
 		name                                string
 		request                             request.PrinciplePembiayaan
+		resExceedErrorStepThree             int
 		resGetPrincipleStepOne              entity.TrxPrincipleStepOne
 		errGetPrincipleStepOne              error
 		resGetPrincipleStepTwo              entity.TrxPrincipleStepTwo
@@ -784,6 +785,7 @@ func TestPrinciplePembiayaan(t *testing.T) {
 			mockPlatformEvent := mockplatformevent.NewPlatformEventInterface(t)
 			var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
 
+			mockRepository.On("ExceedErrorStepThree", mock.Anything).Return(tc.resExceedErrorStepThree)
 			mockRepository.On("GetPrincipleStepOne", tc.request.ProspectID).Return(tc.resGetPrincipleStepOne, tc.errGetPrincipleStepOne)
 			mockRepository.On("GetPrincipleStepTwo", tc.request.ProspectID).Return(tc.resGetPrincipleStepTwo, tc.errGetPrincipleStepTwo)
 			mockRepository.On("GetPrincipleStepThree", tc.request.ProspectID).Return(tc.resGetPrincipleStepThree, tc.errGetPrincipleStepThree)

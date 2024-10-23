@@ -360,6 +360,7 @@ func TestPrinciplePemohon(t *testing.T) {
 	testcases := []struct {
 		name                       string
 		request                    request.PrinciplePemohon
+		resExceedErrorStepTwo      int
 		resGetPrincipleStepOne     entity.TrxPrincipleStepOne
 		errGetPrincipleStepOne     error
 		resGetPrincipleStepTwo     entity.TrxPrincipleStepTwo
@@ -1377,6 +1378,8 @@ func TestPrinciplePemohon(t *testing.T) {
 			mockPlatformEvent := mockplatformevent.NewPlatformEventInterface(t)
 			var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
 
+			mockRepository.On("ExceedErrorStepTwo", mock.Anything).Return(tc.resExceedErrorStepTwo)
+			mockRepository.On("GetPrincipleStepOne", tc.request.ProspectID).Return(tc.resGetPrincipleStepOne, tc.errGetPrincipleStepOne)
 			mockRepository.On("GetPrincipleStepOne", tc.request.ProspectID).Return(tc.resGetPrincipleStepOne, tc.errGetPrincipleStepOne)
 			mockRepository.On("GetPrincipleStepTwo", tc.request.ProspectID).Return(tc.resGetPrincipleStepTwo, tc.errGetPrincipleStepTwo)
 			mockRepository.On("GetConfig", "dupcheck", constant.LOB_KMB_OFF, "dupcheck_kmb_config").Return(tc.resGetConfig, tc.errGetConfig)
