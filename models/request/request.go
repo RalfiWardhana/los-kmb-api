@@ -952,8 +952,8 @@ type ReqListQuotaDeviasiBranch struct {
 
 type ReqUpdateQuotaDeviasi struct {
 	BranchID      string  `json:"branch_id" validate:"required" example:"400"`
-	QuotaAmount   float64 `json:"quota_amount" example:"97500000"`
-	QuotaAccount  int     `json:"quota_account" example:"65"`
+	QuotaAmount   float64 `json:"quota_amount" validate:"required,gt=0,max=99999999999" example:"97500000"`
+	QuotaAccount  int     `json:"quota_account" validate:"required,gt=0,max=999" example:"65"`
 	IsActive      bool    `json:"is_active" example:"true"`
 	UpdatedByName string  `json:"updated_by_name" validate:"required,max=200" example:"MUHAMMAD RONALD"`
 }

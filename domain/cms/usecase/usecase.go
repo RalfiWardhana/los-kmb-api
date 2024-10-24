@@ -2273,21 +2273,42 @@ func (u usecase) UploadQuotaDeviasi(req request.ReqUploadSettingQuotaDeviasi, fi
 	}
 
 	var updates []entity.MappingBranchDeviasi
+	var InvalidErr error
 	for rowIndex, row := range rows[1:] {
 		if len(row) < 5 {
-			err = errors.New(fmt.Sprintf("%s - each row must have 5 columns, error at row %d", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			InvalidErr = errors.New(fmt.Sprintf("%s - each row must have 5 columns, error at row %d", constant.ERROR_BAD_REQUEST, rowIndex+2))
 			break
 		}
 
 		quotaAmount, err := strconv.ParseFloat(row[2], 64)
 		if err != nil {
-			err = errors.New(fmt.Sprintf("%s - invalid quota_amount value at row %d, column 3", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			InvalidErr = errors.New(fmt.Sprintf("%s - invalid quota_amount value at row %d, column 3", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			break
+		}
+
+		if quotaAmount < 0 {
+			InvalidErr = errors.New(fmt.Sprintf("%s - quota_amount cannot be negative at row %d, column 3", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			break
+		}
+
+		if len(fmt.Sprintf("%.0f", quotaAmount)) > 11 {
+			InvalidErr = errors.New(fmt.Sprintf("%s - quota_amount exceeds 11 digits at row %d, column 3", constant.ERROR_BAD_REQUEST, rowIndex+2))
 			break
 		}
 
 		quotaAccount, err := strconv.Atoi(row[3])
 		if err != nil {
-			err = errors.New(fmt.Sprintf("%s - invalid quota_account value at row %d, column 4", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			InvalidErr = errors.New(fmt.Sprintf("%s - invalid quota_account value at row %d, column 4", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			break
+		}
+
+		if quotaAccount < 0 {
+			InvalidErr = errors.New(fmt.Sprintf("%s - quota_account cannot be negative at row %d, column 4", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			break
+		}
+
+		if len(fmt.Sprintf("%d", quotaAccount)) > 3 {
+			InvalidErr = errors.New(fmt.Sprintf("%s - quota_account exceeds 3 digits at row %d, column 4", constant.ERROR_BAD_REQUEST, rowIndex+2))
 			break
 		}
 
@@ -2295,7 +2316,7 @@ func (u usecase) UploadQuotaDeviasi(req request.ReqUploadSettingQuotaDeviasi, fi
 		if strings.ToLower(row[4]) == "true" {
 			isActive = true
 		} else if strings.ToLower(row[4]) != "false" {
-			err = errors.New(fmt.Sprintf("%s - invalid is_active value at row %d, column 5", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			InvalidErr = errors.New(fmt.Sprintf("%s - invalid is_active value at row %d, column 5", constant.ERROR_BAD_REQUEST, rowIndex+2))
 			break
 		}
 
@@ -2310,6 +2331,11 @@ func (u usecase) UploadQuotaDeviasi(req request.ReqUploadSettingQuotaDeviasi, fi
 	}
 
 	if err != nil {
+		return
+	}
+
+	if InvalidErr != nil {
+		err = InvalidErr
 		return
 	}
 

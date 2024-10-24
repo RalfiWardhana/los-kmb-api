@@ -1165,7 +1165,7 @@ func (c *handlerCMS) QuotaDeviasiUpdate(ctx echo.Context) (err error) {
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Quota Deviasi", req, err)
+		ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Quota Deviasi - Invalid Input", req, err)
 		return ctxJson
 	}
 

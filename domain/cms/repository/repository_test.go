@@ -10936,6 +10936,396 @@ func TestSubmitApproval(t *testing.T) {
 
 }
 
+func TestGetQuotaDeviasiBranch(t *testing.T) {
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	expectedBranches := []entity.ConfinsBranch{
+		{
+			BranchID:   "100",
+			BranchName: "JAKARTA",
+		},
+		{
+			BranchID:   "200",
+			BranchName: "SURABAYA",
+		},
+	}
+
+	t.Run("success with filter", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqListQuotaDeviasiBranch{
+			BranchID:   "100,200",
+			BranchName: "JAKARTA",
+		}
+
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT DISTINCT mbd.BranchID, cb.BranchName
+			FROM m_branch_deviasi AS mbd WITH (nolock)
+			JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            WHERE mbd.BranchID IN ('100','200') AND cb.BranchName LIKE '%JAKARTA%'
+            ORDER BY cb.BranchName ASC`)).
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
+				AddRow("100", "JAKARTA").
+				AddRow("200", "SURABAYA"))
+
+		mock.ExpectCommit()
+
+		// Call the function
+		branches, err := repo.GetQuotaDeviasiBranch(req)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedBranches, branches, "Expected branches slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqListQuotaDeviasiBranch{}
+
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT DISTINCT mbd.BranchID, cb.BranchName
+			FROM m_branch_deviasi AS mbd WITH (nolock)
+			JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+			ORDER BY cb.BranchName ASC`)).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		mock.ExpectCommit()
+
+		// Call the function
+		_, err := repo.GetQuotaDeviasiBranch(req)
+
+		// Verify the error message
+		expectedErr := errors.New(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestGetInquiryQuotaDeviasi(t *testing.T) {
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	expectedData := []entity.InquirySettingQuotaDeviasi{
+		{
+			BranchID:     "400",
+			BranchName:   "BEKASI",
+			QuotaAmount:  100,
+			QuotaAccount: 50,
+			IsActive:     true,
+		},
+	}
+
+	t.Run("success with search", func(t *testing.T) {
+		req := request.ReqListQuotaDeviasi{
+			Search: "abranchname",
+		}
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+                COUNT(*) AS totalRow
+            FROM (
+                SELECT mbd.*, cb.BranchName AS branch_name
+                FROM m_branch_deviasi AS mbd WITH (nolock)
+                JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+                WHERE (mbd.BranchID LIKE '%abranchname%' OR cb.BranchName LIKE '%abranchname%')
+            ) AS y`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT mbd.BranchID, cb.BranchName AS branch_name, mbd.quota_amount, mbd.quota_account, mbd.booking_amount, mbd.booking_account, mbd.balance_amount, mbd.balance_account, mbd.is_active, mbd.updated_by, ISNULL(FORMAT(mbd.updated_at, 'yyyy-MM-dd HH:mm:ss'), '') AS updated_at
+            FROM m_branch_deviasi AS mbd WITH (nolock)
+            JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            WHERE (mbd.BranchID LIKE '%abranchname%' OR cb.BranchName LIKE '%abranchname%') ORDER BY mbd.is_active DESC, mbd.BranchID ASC OFFSET 0 ROWS FETCH FIRST 10 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "branch_name", "quota_amount", "quota_account", "is_active"}).AddRow("400", "BEKASI", 100, 50, true))
+
+		mock.ExpectCommit()
+
+		data, _, err := repo.GetInquiryQuotaDeviasi(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success with filters", func(t *testing.T) {
+		req := request.ReqListQuotaDeviasi{
+			BranchID: "400",
+			IsActive: "1",
+		}
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+                COUNT(*) AS totalRow
+            FROM (
+                SELECT mbd.*, cb.BranchName AS branch_name
+                FROM m_branch_deviasi AS mbd WITH (nolock)
+                JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+                WHERE mbd.BranchID IN ('400') AND mbd.is_active = '1'
+            ) AS y`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT mbd.BranchID, cb.BranchName AS branch_name, mbd.quota_amount, mbd.quota_account, mbd.booking_amount, mbd.booking_account, mbd.balance_amount, mbd.balance_account, mbd.is_active, mbd.updated_by, ISNULL(FORMAT(mbd.updated_at, 'yyyy-MM-dd HH:mm:ss'), '') AS updated_at
+            FROM m_branch_deviasi AS mbd WITH (nolock)
+            JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            WHERE mbd.BranchID IN ('400') AND mbd.is_active = '1' ORDER BY mbd.is_active DESC, mbd.BranchID ASC OFFSET 0 ROWS FETCH FIRST 10 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "branch_name", "quota_amount", "quota_account", "is_active"}).AddRow("400", "BEKASI", 100, 50, "1"))
+
+		mock.ExpectCommit()
+
+		data, _, err := repo.GetInquiryQuotaDeviasi(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+		req := request.ReqListQuotaDeviasi{}
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+                COUNT(*) AS totalRow
+            FROM (
+                SELECT mbd.*, cb.BranchName AS branch_name
+                FROM m_branch_deviasi AS mbd WITH (nolock)
+                JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            ) AS y`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("0"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT mbd.BranchID, cb.BranchName AS branch_name, mbd.quota_amount, mbd.quota_account, mbd.booking_amount, mbd.booking_account, mbd.balance_amount, mbd.balance_account, mbd.is_active, mbd.updated_by, ISNULL(FORMAT(mbd.updated_at, 'yyyy-MM-dd HH:mm:ss'), '') AS updated_at
+            FROM m_branch_deviasi AS mbd WITH (nolock)
+            JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            ORDER BY mbd.is_active DESC, mbd.BranchID ASC OFFSET 0 ROWS FETCH FIRST 10 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "branch_name", "quota_amount", "quota_account", "is_active"}))
+
+		mock.ExpectCommit()
+
+		_, _, err := repo.GetInquiryQuotaDeviasi(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		expectedErr := fmt.Errorf(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("error get count data", func(t *testing.T) {
+		req := request.ReqListQuotaDeviasi{}
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+                COUNT(*) AS totalRow
+            FROM (
+                SELECT mbd.*, cb.BranchName AS branch_name
+                FROM m_branch_deviasi AS mbd WITH (nolock)
+                JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            ) AS y`)).
+			WillReturnError(sql.ErrNoRows)
+
+		mock.ExpectCommit()
+
+		_, _, err := repo.GetInquiryQuotaDeviasi(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		if err == nil {
+			t.Fatalf("Expected an error, got nil")
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("error get data", func(t *testing.T) {
+		req := request.ReqListQuotaDeviasi{}
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+                COUNT(*) AS totalRow
+            FROM (
+                SELECT mbd.*, cb.BranchName AS branch_name
+                FROM m_branch_deviasi AS mbd WITH (nolock)
+                JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            ) AS y`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT mbd.BranchID, cb.BranchName AS branch_name, mbd.quota_amount, mbd.quota_account, mbd.booking_amount, mbd.booking_account, mbd.balance_amount, mbd.balance_account, mbd.is_active, mbd.updated_by, ISNULL(FORMAT(mbd.updated_at, 'yyyy-MM-dd HH:mm:ss'), '') AS updated_at
+            FROM m_branch_deviasi AS mbd WITH (nolock)
+            JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            ORDER BY mbd.is_active DESC, mbd.BranchID ASC OFFSET 0 ROWS FETCH FIRST 10 ROWS ONLY`)).
+			WillReturnError(sql.ErrNoRows)
+
+		mock.ExpectCommit()
+
+		_, _, err := repo.GetInquiryQuotaDeviasi(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		if err == nil {
+			t.Fatalf("Expected an error, got nil")
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestProcessUpdateQuotaDeviasiBranch(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	branchID := "BR001"
+	mBranchDeviasi := entity.MappingBranchDeviasi{
+		BranchID:     branchID,
+		QuotaAmount:  10000,
+		QuotaAccount: 5,
+		IsActive:     true,
+		UpdatedBy:    "tester",
+	}
+
+	t.Run("success update", func(t *testing.T) {
+		dataBefore := entity.DataQuotaDeviasiBranch{
+			QuotaAmount:    8000,
+			QuotaAccount:   3,
+			BookingAmount:  2000,
+			BookingAccount: 2,
+			BalanceAmount:  6000,
+			BalanceAccount: 1,
+			IsActive:       true,
+			UpdatedAt:      time.Now(),
+			UpdatedBy:      "tester",
+		}
+
+		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?`)).
+			WithArgs(branchID).
+			WillReturnRows(sqlmock.NewRows([]string{"quota_amount", "quota_account", "booking_amount", "booking_account", "balance_amount", "balance_account", "is_active", "updated_at", "updated_by"}).
+				AddRow(dataBefore.QuotaAmount, dataBefore.QuotaAccount, dataBefore.BookingAmount, dataBefore.BookingAccount, 6000, 1, true, time.Now(), "tester"))
+
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "m_branch_deviasi" SET "balance_account" = ?, "balance_amount" = ?, "is_active" = ?, "quota_account" = ?, "quota_amount" = ?, "updated_at" = ?, "updated_by" = ? WHERE (BranchID = ?)`)).
+			WithArgs(3, 8000.00, mBranchDeviasi.IsActive, mBranchDeviasi.QuotaAccount, mBranchDeviasi.QuotaAmount, sqlmock.AnyArg(), mBranchDeviasi.UpdatedBy, branchID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?`)).
+			WithArgs(branchID).
+			WillReturnRows(sqlmock.NewRows([]string{"quota_amount", "quota_account", "booking_amount", "booking_account", "balance_amount", "balance_account", "is_active", "updated_at", "updated_by"}).
+				AddRow(dataBefore.QuotaAmount, dataBefore.QuotaAccount, dataBefore.BookingAmount, dataBefore.BookingAccount, 8000, 3, true, time.Now(), "tester"))
+
+		mock.ExpectCommit()
+
+		dataBeforeResult, dataAfterResult, err := repo.ProcessUpdateQuotaDeviasiBranch(branchID, mBranchDeviasi)
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if dataBeforeResult != dataBefore {
+			t.Errorf("expected dataBefore: %v, got: %v", dataBefore, dataBeforeResult)
+		}
+		if dataAfterResult.BalanceAmount != mBranchDeviasi.QuotaAmount-dataBefore.BookingAmount {
+			t.Errorf("expected balance amount: %v, got: %v", mBranchDeviasi.QuotaAmount-dataBefore.BookingAmount, dataAfterResult.BalanceAmount)
+		}
+		if dataAfterResult.BalanceAccount != mBranchDeviasi.QuotaAccount-dataBefore.BookingAccount {
+			t.Errorf("expected balance account: %v, got: %v", mBranchDeviasi.QuotaAccount-dataBefore.BookingAccount, dataAfterResult.BalanceAccount)
+		}
+	})
+
+	t.Run("error when booking amount exceeds quota", func(t *testing.T) {
+		dataBefore := entity.DataQuotaDeviasiBranch{
+			QuotaAmount:    8000,
+			QuotaAccount:   3,
+			BookingAmount:  11000, // Exceeds new quota
+			BookingAccount: 2,
+		}
+
+		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?`)).
+			WithArgs(branchID).
+			WillReturnRows(sqlmock.NewRows([]string{"quota_amount", "quota_account", "booking_amount", "booking_account", "balance_amount", "balance_account", "is_active", "updated_at", "updated_by"}).
+				AddRow(dataBefore.QuotaAmount, dataBefore.QuotaAccount, dataBefore.BookingAmount, dataBefore.BookingAccount, 6000, 3, true, time.Now(), "tester"))
+
+		mock.ExpectRollback()
+
+		_, _, err := repo.ProcessUpdateQuotaDeviasiBranch(branchID, mBranchDeviasi)
+		if err == nil || err.Error() != "BookingAmount > QuotaAmount" {
+			t.Errorf("expected error: BookingAmount > QuotaAmount, got: %v", err)
+		}
+	})
+
+	t.Run("error when booking account exceeds quota", func(t *testing.T) {
+		dataBefore := entity.DataQuotaDeviasiBranch{
+			QuotaAmount:    8000,
+			QuotaAccount:   3,
+			BookingAmount:  2000,
+			BookingAccount: 6, // Exceeds new quota
+		}
+
+		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?`)).
+			WithArgs(branchID).
+			WillReturnRows(sqlmock.NewRows([]string{"quota_amount", "quota_account", "booking_amount", "booking_account", "balance_amount", "balance_account", "is_active", "updated_at", "updated_by"}).
+				AddRow(dataBefore.QuotaAmount, dataBefore.QuotaAccount, dataBefore.BookingAmount, dataBefore.BookingAccount, 6000, 3, true, time.Now(), "tester"))
+
+		mock.ExpectRollback()
+
+		_, _, err := repo.ProcessUpdateQuotaDeviasiBranch(branchID, mBranchDeviasi)
+		if err == nil || err.Error() != "BookingAccount > QuotaAccount" {
+			t.Errorf("expected error: BookingAccount > QuotaAccount, got: %v", err)
+		}
+	})
+}
+
 func TestGetMappingCluster(t *testing.T) {
 	// Setup mock database connection
 	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
