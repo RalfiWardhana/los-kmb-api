@@ -2524,12 +2524,7 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 		}
 
 		if isCancel {
-			var resultCheckDeviation struct {
-				BranchID       string
-				NTF            float64
-				CustomerStatus string
-				Decision       interface{}
-			}
+			var resultCheckDeviation entity.ResultCheckDeviation
 
 			selectQuery := `
                 SELECT mbd.BranchID, ta.NTF, tf.customer_status, tfa.decision

@@ -2378,6 +2378,13 @@ type DataQuotaDeviasiBranch struct {
 	UpdatedBy      string    `gorm:"column:updated_by" json:"updated_by"`
 }
 
+type ResultCheckDeviation struct {
+	BranchID       string      `gorm:"column:BranchID"`
+	NTF            float64     `gorm:"column:NTF"`
+	CustomerStatus string      `gorm:"column:customer_status"`
+	Decision       interface{} `gorm:"column:decision"`
+}
+
 type InquiryMappingCluster struct {
 	BranchID       string `gorm:"column:branch_id" json:"branch_id"`
 	BranchName     string `gorm:"column:branch_name" json:"branch_name"`

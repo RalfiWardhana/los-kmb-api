@@ -1760,6 +1760,171 @@ func TestQuotaDeviasiUpdate(t *testing.T) {
 	})
 }
 
+func TestQuotaDeviasiUpload(t *testing.T) {
+	e := echo.New()
+	e.Validator = common.NewValidator()
+
+	mockUsecase := new(mocks.Usecase)
+	mockJson := new(mocksJson.JSON)
+
+	handler := &handlerCMS{
+		usecase: mockUsecase,
+		Json:    mockJson,
+	}
+
+	t.Run("success", func(t *testing.T) {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+
+		_ = writer.WriteField("updated_by_name", "valid_user")
+
+		fileHeader := make(textproto.MIMEHeader)
+		fileHeader.Set("Content-Disposition", `form-data; name="excel_file"; filename="test.xlsx"`)
+		fileHeader.Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+		excelContent := []byte{0x50, 0x4b, 0x3, 0x4, 0x14}
+
+		part, _ := writer.CreatePart(fileHeader)
+		part.Write(excelContent)
+
+		writer.Close()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/quota-deviasi/upload", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockUsecase.On("UploadQuotaDeviasi", mock.Anything, mock.Anything).Return(response.UploadQuotaDeviasiBranchResponse{}, nil).Once()
+
+		err := handler.QuotaDeviasiUpload(ctx)
+
+		assert.NoError(t, err)
+		mockUsecase.AssertExpectations(t)
+		mockJson.AssertExpectations(t)
+	})
+
+	t.Run("error binding request", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/quota-deviasi/upload", strings.NewReader("error"))
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		handler.QuotaDeviasiUpload(ctx)
+
+		mockJson.AssertExpectations(t)
+	})
+
+	t.Run("error validate request", func(t *testing.T) {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/quota-deviasi/upload", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		handler.QuotaDeviasiUpload(ctx)
+
+		mockJson.AssertExpectations(t)
+	})
+
+	t.Run("error invalid excel file", func(t *testing.T) {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+
+		_ = writer.WriteField("updated_by_name", "valid_user")
+		writer.Close()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/quota-deviasi/upload", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.MatchedBy(func(err error) bool {
+			return strings.Contains(err.Error(), constant.ERROR_BAD_REQUEST+" - Silakan unggah file excel yang valid")
+		})).Return(nil).Once()
+
+		err := handler.QuotaDeviasiUpload(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertExpectations(t)
+	})
+
+	t.Run("error file type", func(t *testing.T) {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+
+		_ = writer.WriteField("updated_by_name", "valid_user")
+
+		fileHeader := make(textproto.MIMEHeader)
+		fileHeader.Set("Content-Disposition", `form-data; name="excel_file"; filename="test.xlsx"`)
+		fileHeader.Set("Content-Type", "application/zip")
+
+		excelContent := []byte{0x50, 0x4b, 0x3, 0x4, 0x14}
+
+		part, _ := writer.CreatePart(fileHeader)
+		part.Write(excelContent)
+
+		writer.Close()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/quota-deviasi/upload", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.MatchedBy(func(err error) bool {
+			return strings.Contains(err.Error(), constant.ERROR_BAD_REQUEST+" - Silakan unggah file berformat .xlsx")
+		})).Return(nil).Once()
+
+		err := handler.QuotaDeviasiUpload(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertExpectations(t)
+	})
+
+	t.Run("error uploading quota deviasi", func(t *testing.T) {
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+
+		_ = writer.WriteField("updated_by_name", "valid_user")
+
+		fileHeader := make(textproto.MIMEHeader)
+		fileHeader.Set("Content-Disposition", `form-data; name="excel_file"; filename="test.xlsx"`)
+		fileHeader.Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+		excelContent := []byte{0x50, 0x4b, 0x3, 0x4, 0x14}
+
+		part, _ := writer.CreatePart(fileHeader)
+		part.Write(excelContent)
+
+		writer.Close()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/quota-deviasi/upload", body)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		mockUsecase.On("UploadQuotaDeviasi", mock.Anything, mock.Anything).Return(response.UploadQuotaDeviasiBranchResponse{}, errors.New("upload error")).Once()
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.MatchedBy(func(err error) bool {
+			return strings.Contains(err.Error(), "upload error")
+		})).Return(nil).Once()
+
+		err := handler.QuotaDeviasiUpload(ctx)
+
+		assert.NoError(t, err)
+		mockUsecase.AssertExpectations(t)
+		mockJson.AssertExpectations(t)
+	})
+}
+
 func TestMappingClusterInquiry(t *testing.T) {
 	mockUsecase := new(mocks.Usecase)
 	mockRepository := new(mocks.Repository)
