@@ -11326,6 +11326,74 @@ func TestProcessUpdateQuotaDeviasiBranch(t *testing.T) {
 	})
 }
 
+func TestBatchUpdateQuotaDeviasi(t *testing.T) {
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	// Expected input and output
+	data := []entity.MappingBranchDeviasi{
+		{
+			BranchID:       "400",
+			QuotaAmount:    1000,
+			QuotaAccount:   500,
+			BookingAmount:  200,
+			BookingAccount: 100,
+			IsActive:       true,
+			UpdatedBy:      "1234567",
+		},
+	}
+
+	t.Run("success without rollback", func(t *testing.T) {
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(
+			`SELECT BranchID, final_approval, quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID IN (?)`)).
+			WithArgs(data[0].BranchID).
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "quota_amount", "quota_account", "booking_amount", "booking_account", "is_active"}).
+				AddRow(data[0].BranchID, 800, 400, 200, 100, true))
+
+		mock.ExpectExec(regexp.QuoteMeta(
+			`UPDATE "m_branch_deviasi" SET "balance_account" = ?, "balance_amount" = ?, "quota_account" = ?, "quota_amount" = ?, "updated_at" = ?, "updated_by" = ? WHERE (BranchID = ?)`)).
+			WithArgs(400, 800.00, data[0].QuotaAccount, data[0].QuotaAmount, sqlmock.AnyArg(), data[0].UpdatedBy, data[0].BranchID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta(
+			`SELECT BranchID, final_approval, quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID IN (?)`)).
+			WithArgs(data[0].BranchID).
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "quota_amount", "quota_account", "booking_amount", "booking_account", "is_active"}).
+				AddRow(data[0].BranchID, 800, 400, 200, 100, true))
+
+		mock.ExpectCommit()
+
+		// Call the function
+		dataBefore, dataAfter, err := repo.BatchUpdateQuotaDeviasi(data)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		if dataBefore == nil || dataAfter == nil {
+			t.Fatalf("Expected non-nil dataBefore and dataAfter")
+		}
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
 func TestGetMappingCluster(t *testing.T) {
 	// Setup mock database connection
 	os.Setenv("DEFAULT_TIMEOUT_10S", "10")

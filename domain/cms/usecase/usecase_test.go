@@ -3123,6 +3123,297 @@ func TestGetInquiryApproval(t *testing.T) {
 	}
 }
 
+func TestGetInquiryQuotaDeviasi(t *testing.T) {
+	testcases := []struct {
+		name          string
+		req           request.ReqListQuotaDeviasi
+		pagination    interface{}
+		expectedData  []entity.InquirySettingQuotaDeviasi
+		expectedRow   int
+		mockError     error
+		expectedError error
+	}{
+		{
+			name: "error repository",
+			req: request.ReqListQuotaDeviasi{
+				BranchID: "400",
+			},
+			pagination:    request.RequestPagination{Page: 1, Limit: 10},
+			mockError:     errors.New("upstream_service_error - Get Inquiry Quota Deviasi"),
+			expectedError: errors.New("upstream_service_error - Get Inquiry Quota Deviasi"),
+		},
+		{
+			name: "success with data",
+			req: request.ReqListQuotaDeviasi{
+				BranchID: "400",
+			},
+			pagination: request.RequestPagination{Page: 1, Limit: 10},
+			expectedData: []entity.InquirySettingQuotaDeviasi{
+				{
+					BranchID:     "400",
+					BranchName:   "BEKASI",
+					QuotaAmount:  100,
+					QuotaAccount: 50,
+					IsActive:     true,
+				},
+			},
+			expectedRow: 1,
+		},
+		{
+			name: "no data found",
+			req: request.ReqListQuotaDeviasi{
+				BranchID: "999",
+			},
+			pagination:    request.RequestPagination{Page: 1, Limit: 10},
+			expectedData:  []entity.InquirySettingQuotaDeviasi{},
+			expectedRow:   0,
+			mockError:     nil,
+			expectedError: nil,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+			var cache *bigcache.BigCache
+
+			mockRepository.On("GetInquiryQuotaDeviasi", tc.req, tc.pagination).Return(tc.expectedData, tc.expectedRow, tc.mockError)
+
+			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+
+			resultData, resultRow, err := usecase.GetInquiryQuotaDeviasi(tc.req, tc.pagination)
+
+			require.Equal(t, tc.expectedData, resultData)
+			require.Equal(t, tc.expectedRow, resultRow)
+			if tc.expectedError != nil {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepository.AssertExpectations(t)
+		})
+	}
+}
+
+func TestGetQuotaDeviasiBranch(t *testing.T) {
+	testcases := []struct {
+		name          string
+		req           request.ReqListQuotaDeviasiBranch
+		expectedData  []entity.ConfinsBranch
+		mockError     error
+		expectedError error
+	}{
+		{
+			name: "error repository",
+			req: request.ReqListQuotaDeviasiBranch{
+				BranchID: "400",
+			},
+			mockError:     errors.New("upstream_service_error - Get Quota Deviasi Branch"),
+			expectedError: errors.New("upstream_service_error - Get Quota Deviasi Branch"),
+		},
+		{
+			name: "success",
+			req: request.ReqListQuotaDeviasiBranch{
+				BranchID: "400",
+			},
+			expectedData: []entity.ConfinsBranch{
+				{
+					BranchID:   "400",
+					BranchName: "BEKASI",
+				},
+			},
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+			var cache *bigcache.BigCache
+
+			mockRepository.On("GetQuotaDeviasiBranch", tc.req).Return(tc.expectedData, tc.mockError)
+
+			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+
+			resultData, err := usecase.GetQuotaDeviasiBranch(tc.req)
+
+			require.Equal(t, tc.expectedData, resultData)
+			if tc.expectedError != nil {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepository.AssertExpectations(t)
+		})
+	}
+}
+
+func TestGenerateExcelQuotaDeviasi(t *testing.T) {
+
+	recordNotFoundError := errors.New(constant.RECORD_NOT_FOUND)
+	upstreamError := errors.New(constant.ERROR_UPSTREAM + " - Get quota deviasi branch error")
+
+	testCases := []struct {
+		name           string
+		mockReturnData []entity.InquirySettingQuotaDeviasi
+		mockReturnErr  error
+		expectError    bool
+		errorMessage   string
+	}{
+		{
+			name: "success",
+			mockReturnData: []entity.InquirySettingQuotaDeviasi{
+				{
+					BranchID:     "400",
+					BranchName:   "BEKASI",
+					QuotaAmount:  100,
+					QuotaAccount: 50,
+					IsActive:     true,
+				},
+			},
+			mockReturnErr: nil,
+			expectError:   false,
+		},
+		{
+			name:          "error repository",
+			mockReturnErr: upstreamError,
+			expectError:   true,
+			errorMessage:  upstreamError.Error(),
+		},
+		{
+			name:          "error not found",
+			mockReturnErr: recordNotFoundError,
+			expectError:   false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+			var cache *bigcache.BigCache
+
+			mockRepository.On("GetInquiryQuotaDeviasi", mock.Anything, mock.Anything).Return(tc.mockReturnData, len(tc.mockReturnData), tc.mockReturnErr)
+
+			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+
+			genName, fileName, err := usecase.GenerateExcelQuotaDeviasi()
+
+			if tc.expectError {
+				assert.Error(t, err)
+				if tc.errorMessage != "" {
+					assert.EqualError(t, err, tc.errorMessage)
+				}
+			} else {
+				assert.NoError(t, err)
+				assert.NotEmpty(t, genName)
+				assert.True(t, strings.HasPrefix(fileName, "SettingQuotaDeviasi_"))
+
+				_, err := os.Stat("./" + genName + ".xlsx")
+				assert.NoError(t, err)
+
+				os.Remove("./" + genName + ".xlsx")
+			}
+		})
+	}
+}
+
+func TestUpdateQuotaDeviasiBranch(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		mockRepo := new(mocks.Repository)
+		usecase := usecase{repository: mockRepo}
+
+		ctx := context.Background()
+
+		req := request.ReqUpdateQuotaDeviasi{
+			BranchID:      "BR001",
+			QuotaAmount:   1000,
+			QuotaAccount:  10,
+			IsActive:      true,
+			UpdatedByName: "User123",
+		}
+
+		mockRepo.On("ProcessUpdateQuotaDeviasiBranch", req.BranchID, mock.Anything).Return(entity.DataQuotaDeviasiBranch{}, entity.DataQuotaDeviasiBranch{}, nil)
+
+		data, err := usecase.UpdateQuotaDeviasiBranch(ctx, req)
+
+		assert.NoError(t, err)
+		assert.Equal(t, constant.RESULT_OK, data.Status)
+		assert.Equal(t, constant.UPDATE_DEVIASI_SUCCESS, data.Message)
+	})
+
+	t.Run("error_booking_amount_exceeds_quota", func(t *testing.T) {
+		mockRepo := new(mocks.Repository)
+		usecase := usecase{repository: mockRepo}
+
+		ctx := context.Background()
+
+		req := request.ReqUpdateQuotaDeviasi{
+			BranchID:      "BR001",
+			QuotaAmount:   0,
+			QuotaAccount:  10,
+			IsActive:      true,
+			UpdatedByName: "User123",
+		}
+
+		mockRepo.On("ProcessUpdateQuotaDeviasiBranch", req.BranchID, mock.Anything).Return(entity.DataQuotaDeviasiBranch{}, entity.DataQuotaDeviasiBranch{}, errors.New("BookingAmount > QuotaAmount"))
+
+		_, err := usecase.UpdateQuotaDeviasiBranch(ctx, req)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "BookingAmount exceeds new QuotaAmount")
+	})
+
+	t.Run("error_booking_account_exceeds_quota", func(t *testing.T) {
+		mockRepo := new(mocks.Repository)
+		usecase := usecase{repository: mockRepo}
+
+		ctx := context.Background()
+
+		req := request.ReqUpdateQuotaDeviasi{
+			BranchID:      "BR001",
+			QuotaAmount:   1000,
+			QuotaAccount:  0,
+			IsActive:      true,
+			UpdatedByName: "User123",
+		}
+
+		mockRepo.On("ProcessUpdateQuotaDeviasiBranch", req.BranchID, mock.Anything).Return(entity.DataQuotaDeviasiBranch{}, entity.DataQuotaDeviasiBranch{}, errors.New("BookingAccount > QuotaAccount"))
+
+		_, err := usecase.UpdateQuotaDeviasiBranch(ctx, req)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "BookingAccount exceeds new QuotaAccount")
+	})
+
+	t.Run("error_upstream", func(t *testing.T) {
+		mockRepo := new(mocks.Repository)
+		usecase := usecase{repository: mockRepo}
+
+		ctx := context.Background()
+
+		req := request.ReqUpdateQuotaDeviasi{
+			BranchID:      "BR001",
+			QuotaAmount:   1000,
+			QuotaAccount:  10,
+			IsActive:      true,
+			UpdatedByName: "User123",
+		}
+
+		mockRepo.On("ProcessUpdateQuotaDeviasiBranch", req.BranchID, mock.Anything).Return(entity.DataQuotaDeviasiBranch{}, entity.DataQuotaDeviasiBranch{}, errors.New("some other error"))
+
+		_, err := usecase.UpdateQuotaDeviasiBranch(ctx, req)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Process Update Quota Deviasi Branch error")
+	})
+}
+
 func TestGetInquiryMappingCluster(t *testing.T) {
 	testcases := []struct {
 		name          string
