@@ -2114,11 +2114,11 @@ func (u usecase) UpdateQuotaDeviasiBranch(ctx context.Context, req request.ReqUp
 
 	if err != nil {
 		if strings.Contains(err.Error(), "BookingAmount > QuotaAmount") {
-			err = errors.New(constant.ERROR_BAD_REQUEST + " - BookingAmount exceeds new QuotaAmount")
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - BookingAmount lebih besar dari new QuotaAmount")
 		} else if strings.Contains(err.Error(), "BookingAccount > QuotaAccount") {
-			err = errors.New(constant.ERROR_BAD_REQUEST + " - BookingAccount exceeds new QuotaAccount")
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - BookingAccount lebih besar dari new QuotaAccount")
 		} else {
-			err = errors.New(constant.ERROR_UPSTREAM + " - Process Update Quota Deviasi Branch error")
+			err = errors.New(constant.ERROR_UPSTREAM + " - Process Update Kuota Deviasi Branch error")
 		}
 		return
 	}
@@ -2142,7 +2142,7 @@ func (u usecase) GenerateExcelQuotaDeviasi() (genName, fileName string, err erro
 
 	settingQuotaDeviasi, _, err = u.repository.GetInquiryQuotaDeviasi(request.ReqListQuotaDeviasi{}, nil)
 	if err != nil && err.Error() != constant.RECORD_NOT_FOUND {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Get quota deviasi branch error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get kuota deviasi branch error")
 		return
 	}
 
@@ -2236,7 +2236,7 @@ func (u usecase) GenerateExcelQuotaDeviasi() (genName, fileName string, err erro
 	genName = utils.GenerateUUID()
 
 	if err = xlsx.SaveAs(fmt.Sprintf("./%s.xlsx", genName)); err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Save excel quota deviasi error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - Save excel kuota deviasi error")
 		return
 	}
 
@@ -2246,7 +2246,7 @@ func (u usecase) GenerateExcelQuotaDeviasi() (genName, fileName string, err erro
 func (u usecase) UploadQuotaDeviasi(req request.ReqUploadSettingQuotaDeviasi, file multipart.File) (data response.UploadQuotaDeviasiBranchResponse, err error) {
 	xlsx, err := excelize.OpenReader(file)
 	if err != nil {
-		err = errors.New(fmt.Sprintf("%s - failed to open Excel file", constant.ERROR_BAD_REQUEST))
+		err = errors.New(fmt.Sprintf("%s - gagal membuka file excel", constant.ERROR_BAD_REQUEST))
 		return
 	}
 	defer xlsx.Close()
@@ -2254,12 +2254,12 @@ func (u usecase) UploadQuotaDeviasi(req request.ReqUploadSettingQuotaDeviasi, fi
 	sheetName := "Quota Deviasi Branch"
 	rows, err := xlsx.GetRows(sheetName)
 	if err != nil {
-		err = errors.New(fmt.Sprintf("%s - failed to get rows from Excel sheet", constant.ERROR_BAD_REQUEST))
+		err = errors.New(fmt.Sprintf("%s - gagal mendapatkan baris dari sheet excel", constant.ERROR_BAD_REQUEST))
 		return
 	}
 
 	if len(rows) < 2 {
-		err = errors.New(fmt.Sprintf("%s - Excel file must have at least one data row", constant.ERROR_BAD_REQUEST))
+		err = errors.New(fmt.Sprintf("%s - file excel membutuhkan setidaknya 1 baris data", constant.ERROR_BAD_REQUEST))
 		return
 	}
 
@@ -2267,7 +2267,7 @@ func (u usecase) UploadQuotaDeviasi(req request.ReqUploadSettingQuotaDeviasi, fi
 	expectedHeaders := []string{"branch_id", "branch_name", "quota_amount", "quota_account", "is_active"}
 	for i, header := range headers {
 		if strings.ToLower(header) != expectedHeaders[i] {
-			err = errors.New(fmt.Sprintf("%s - invalid Excel header format", constant.ERROR_BAD_REQUEST))
+			err = errors.New(fmt.Sprintf("%s - format header tidak valid", constant.ERROR_BAD_REQUEST))
 			return
 		}
 	}
@@ -2276,39 +2276,39 @@ func (u usecase) UploadQuotaDeviasi(req request.ReqUploadSettingQuotaDeviasi, fi
 	var InvalidErr error
 	for rowIndex, row := range rows[1:] {
 		if len(row) < 5 {
-			InvalidErr = errors.New(fmt.Sprintf("%s - each row must have 5 columns, error at row %d", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			InvalidErr = errors.New(fmt.Sprintf("%s - setiap baris harus memiliki 5 kolom, kesalahan pada baris ke %d", constant.ERROR_BAD_REQUEST, rowIndex+2))
 			break
 		}
 
 		quotaAmount, err := strconv.ParseFloat(row[2], 64)
 		if err != nil {
-			InvalidErr = errors.New(fmt.Sprintf("%s - invalid quota_amount value at row %d, column 3", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			InvalidErr = errors.New(fmt.Sprintf("%s - nilai quota_amount tidak valid pada baris ke %d, kolom 3", constant.ERROR_BAD_REQUEST, rowIndex+2))
 			break
 		}
 
 		if quotaAmount < 0 {
-			InvalidErr = errors.New(fmt.Sprintf("%s - quota_amount cannot be negative at row %d, column 3", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			InvalidErr = errors.New(fmt.Sprintf("%s - quota_amount tidak diperbolehkan negatif pada baris ke %d, kolom 3", constant.ERROR_BAD_REQUEST, rowIndex+2))
 			break
 		}
 
 		if len(fmt.Sprintf("%.0f", quotaAmount)) > 11 {
-			InvalidErr = errors.New(fmt.Sprintf("%s - quota_amount exceeds 11 digits at row %d, column 3", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			InvalidErr = errors.New(fmt.Sprintf("%s - quota_amount lebih dari 11 digit pada baris ke %d, kolom 3", constant.ERROR_BAD_REQUEST, rowIndex+2))
 			break
 		}
 
 		quotaAccount, err := strconv.Atoi(row[3])
 		if err != nil {
-			InvalidErr = errors.New(fmt.Sprintf("%s - invalid quota_account value at row %d, column 4", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			InvalidErr = errors.New(fmt.Sprintf("%s - nilai quota_account tidak valid pada baris ke %d, kolom 4", constant.ERROR_BAD_REQUEST, rowIndex+2))
 			break
 		}
 
 		if quotaAccount < 0 {
-			InvalidErr = errors.New(fmt.Sprintf("%s - quota_account cannot be negative at row %d, column 4", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			InvalidErr = errors.New(fmt.Sprintf("%s - quota_account tidak diperbolehkan negatif pada baris ke %d, kolom 4", constant.ERROR_BAD_REQUEST, rowIndex+2))
 			break
 		}
 
 		if len(fmt.Sprintf("%d", quotaAccount)) > 3 {
-			InvalidErr = errors.New(fmt.Sprintf("%s - quota_account exceeds 3 digits at row %d, column 4", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			InvalidErr = errors.New(fmt.Sprintf("%s - quota_account lebih dari 3 digit pada baris ke %d, kolom 4", constant.ERROR_BAD_REQUEST, rowIndex+2))
 			break
 		}
 
@@ -2316,7 +2316,7 @@ func (u usecase) UploadQuotaDeviasi(req request.ReqUploadSettingQuotaDeviasi, fi
 		if strings.ToLower(row[4]) == "true" {
 			isActive = true
 		} else if strings.ToLower(row[4]) != "false" {
-			InvalidErr = errors.New(fmt.Sprintf("%s - invalid is_active value at row %d, column 5", constant.ERROR_BAD_REQUEST, rowIndex+2))
+			InvalidErr = errors.New(fmt.Sprintf("%s - nilai is_active tidak valid pada baris ke %d, kolom 5", constant.ERROR_BAD_REQUEST, rowIndex+2))
 			break
 		}
 

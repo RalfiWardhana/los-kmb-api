@@ -1003,24 +1003,24 @@ func (c *handlerCMS) QuotaDeviasiInquiry(ctx echo.Context) (err error) {
 	}
 
 	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Setting Quota Deviasi Inquiry", err)
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Setting Kuota Deviasi Inquiry", err)
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Setting Quota Deviasi Inquiry", req, err)
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Setting Kuota Deviasi Inquiry", req, err)
 	}
 
 	data, rowTotal, err := c.usecase.GetInquiryQuotaDeviasi(req, pagination)
 
 	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
-		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Setting Quota Deviasi Inquiry", req, response.InquiryRow{Inquiry: data})
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Setting Kuota Deviasi Inquiry", req, response.InquiryRow{Inquiry: data})
 	}
 
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Setting Quota Deviasi Inquiry", req, err)
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Setting Kuota Deviasi Inquiry", req, err)
 	}
 
-	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Setting Quota Deviasi Inquiry", req, response.InquiryRow{
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Setting Kuota Deviasi Inquiry", req, response.InquiryRow{
 		Inquiry:        data,
 		RecordFiltered: len(data),
 		RecordTotal:    rowTotal,
@@ -1049,14 +1049,14 @@ func (c *handlerCMS) QuotaDeviasiBranch(ctx echo.Context) (err error) {
 	data, err := c.usecase.GetQuotaDeviasiBranch(req)
 
 	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
-		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Setting Quota Deviasi Branch", nil, response.InquiryRow{Inquiry: data})
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Setting Kuota Deviasi Branch", nil, response.InquiryRow{Inquiry: data})
 	}
 
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Setting Quota Deviasi Branch", nil, err)
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Setting Kuota Deviasi Branch", nil, err)
 	}
 
-	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Setting Quota Deviasi Branch", nil, response.InquiryRow{
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Setting Kuota Deviasi Branch", nil, response.InquiryRow{
 		Inquiry:        data,
 		RecordFiltered: len(data),
 		RecordTotal:    len(data),
@@ -1086,7 +1086,7 @@ func (c *handlerCMS) QuotaDeviasiDownload(ctx echo.Context) (err error) {
 	genName, filename, err := c.usecase.GenerateExcelQuotaDeviasi()
 
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Data Setting Quota Deviasi", nil, err)
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Data Setting Kuota Deviasi", nil, err)
 	}
 
 	return ctx.Attachment(fmt.Sprintf("./%s.xlsx", genName), filename)
@@ -1110,36 +1110,36 @@ func (c *handlerCMS) QuotaDeviasiUpload(ctx echo.Context) (err error) {
 	)
 
 	if err := ctx.Bind(&req); err != nil {
-		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Quota Deviasi", err)
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Kuota Deviasi", err)
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Quota Deviasi", req, err)
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Kuota Deviasi", req, err)
 	}
 
 	file, err := ctx.FormFile("excel_file")
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Quota Deviasi", nil, errors.New(constant.ERROR_BAD_REQUEST+" - Silakan unggah file excel yang valid"))
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Kuota Deviasi", nil, errors.New(constant.ERROR_BAD_REQUEST+" - Silakan unggah file excel yang valid"))
 	}
 
 	src, err := file.Open()
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Quota Deviasi", nil, errors.New(constant.ERROR_BAD_REQUEST+" - Silakan unggah file excel yang valid"))
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Kuota Deviasi", nil, errors.New(constant.ERROR_BAD_REQUEST+" - Silakan unggah file excel yang valid"))
 	}
 	defer src.Close()
 
 	mime := file.Header.Get("Content-Type")
 	if mime != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" {
-		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Quota Deviasi", nil, errors.New(constant.ERROR_BAD_REQUEST+" - Silakan unggah file berformat .xlsx"))
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Kuota Deviasi", nil, errors.New(constant.ERROR_BAD_REQUEST+" - Silakan unggah file berformat .xlsx"))
 	}
 
 	data, err := c.usecase.UploadQuotaDeviasi(req, src)
 
 	if err != nil {
-		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Quota Deviasi", nil, err)
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Kuota Deviasi", nil, err)
 	}
 
-	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Quota Deviasi Success", nil, data)
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Kuota Deviasi Success", nil, data)
 }
 
 // CMS NEW KMB Tools godoc
@@ -1160,23 +1160,23 @@ func (c *handlerCMS) QuotaDeviasiUpdate(ctx echo.Context) (err error) {
 	)
 
 	if err := ctx.Bind(&req); err != nil {
-		ctxJson, _ = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Quota Deviasi", err)
+		ctxJson, _ = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Kuota Deviasi", err)
 		return ctxJson
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Quota Deviasi - Invalid Input", req, err)
+		ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Kuota Deviasi - Input Tidak Valid", req, err)
 		return ctxJson
 	}
 
 	data, err := c.usecase.UpdateQuotaDeviasiBranch(ctx.Request().Context(), req)
 
 	if err != nil {
-		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Quota Deviasi", req, err)
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Kuota Deviasi", req, err)
 		return ctxJson
 	}
 
-	ctxJson, _ = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Quota Deviasi - Success", req, data)
+	ctxJson, _ = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Kuota Deviasi - Success", req, data)
 	return ctxJson
 }
 

@@ -3256,7 +3256,7 @@ func TestGetQuotaDeviasiBranch(t *testing.T) {
 func TestGenerateExcelQuotaDeviasi(t *testing.T) {
 
 	recordNotFoundError := errors.New(constant.RECORD_NOT_FOUND)
-	upstreamError := errors.New(constant.ERROR_UPSTREAM + " - Get quota deviasi branch error")
+	upstreamError := errors.New(constant.ERROR_UPSTREAM + " - Get kuota deviasi branch error")
 
 	testCases := []struct {
 		name           string
@@ -3366,7 +3366,7 @@ func TestUpdateQuotaDeviasiBranch(t *testing.T) {
 		_, err := usecase.UpdateQuotaDeviasiBranch(ctx, req)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "BookingAmount exceeds new QuotaAmount")
+		assert.Contains(t, err.Error(), "BookingAmount lebih besar dari new QuotaAmount")
 	})
 
 	t.Run("error_booking_account_exceeds_quota", func(t *testing.T) {
@@ -3388,7 +3388,7 @@ func TestUpdateQuotaDeviasiBranch(t *testing.T) {
 		_, err := usecase.UpdateQuotaDeviasiBranch(ctx, req)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "BookingAccount exceeds new QuotaAccount")
+		assert.Contains(t, err.Error(), "BookingAccount lebih besar dari new QuotaAccount")
 	})
 
 	t.Run("error_upstream", func(t *testing.T) {
@@ -3410,7 +3410,7 @@ func TestUpdateQuotaDeviasiBranch(t *testing.T) {
 		_, err := usecase.UpdateQuotaDeviasiBranch(ctx, req)
 
 		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "Process Update Quota Deviasi Branch error")
+		assert.Contains(t, err.Error(), "Process Update Kuota Deviasi Branch error")
 	})
 }
 
