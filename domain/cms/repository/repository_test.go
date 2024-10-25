@@ -11267,6 +11267,8 @@ func TestProcessUpdateQuotaDeviasiBranch(t *testing.T) {
 		mock.ExpectCommit()
 
 		dataBeforeResult, dataAfterResult, err := repo.ProcessUpdateQuotaDeviasiBranch(branchID, mBranchDeviasi)
+		dataBeforeResult.UpdatedAt = dataBefore.UpdatedAt
+
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
 		}
