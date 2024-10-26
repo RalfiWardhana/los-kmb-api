@@ -800,7 +800,7 @@ func TestPrinciplePembiayaan(t *testing.T) {
 			mockUsecase.On("VehicleCheck", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resVehicleCheck, tc.errVehicleCheck)
 			mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.resRejectTenor36, tc.errRejectTenor36)
 			mockUsecase.On("DupcheckIntegrator", ctx, tc.request.ProspectID, mock.Anything, mock.Anything, mock.Anything, mock.Anything, "").Return(tc.resDupcheckIntegrator, tc.errDupcheckIntegrator)
-			mockUsecase.On("AgreementChassisNumberIntegrator", ctx, mock.Anything, tc.request.ProspectID, mock.Anything).Return(tc.resAgreementChassisNumberIntegrator, tc.errAgreementChassisNumberIntegrator)
+			mockUsecase.On("AgreementChassisNumberIntegrator", ctx, tc.request.ProspectID, mock.Anything, mock.Anything).Return(tc.resAgreementChassisNumberIntegrator, tc.errAgreementChassisNumberIntegrator)
 			mockUsecase.On("Scorepro", ctx, tc.request, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resScorepro, tc.resMetricsScorepro, tc.resPefindoIDXScorepro, tc.errScorepro)
 			mockUsecase.On("DsrCheck", ctx, tc.request, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resDsrCheck, tc.resMappingDsr, tc.resInstOther, tc.resInstOtherSpouse, tc.resInstTopUp, tc.errDsrCheck)
 			mockUsecase.On("TotalDsrFmfPbk", ctx, mock.Anything, mock.Anything, mock.Anything, tc.request.ProspectID, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resTotalDsrFmfPbk, tc.resTrxFMFTotalDsrFmfPbk, tc.errTotalDsrFmfPbk)
