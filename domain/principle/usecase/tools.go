@@ -1,6 +1,7 @@
 package usecase
 
 import (
+	"los-kmb-api/models/entity"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 
@@ -41,6 +42,29 @@ func (u usecase) PrincipleStep(idNumber string) (step response.StepPrinciple, er
 		}
 
 	case constant.DECISION_CREDIT_PROCESS:
+
+		trxStatus, err := u.repository.GetTrxStatus(data.ProspectID)
+		if err != nil {
+			if err != gorm.ErrRecordNotFound {
+				return response.StepPrinciple{}, err
+			}
+		}
+
+		if trxStatus != (entity.TrxStatus{}) {
+			if trxStatus.Activity == constant.ACTIVITY_STOP {
+				switch trxStatus.Decision {
+				case constant.DB_DECISION_CANCEL:
+					_ = u.repository.UpdateToCancel(data.ProspectID)
+					return step, nil
+				case constant.DB_DECISION_REJECT:
+					_ = u.repository.UpdateTrxPrincipleStatus(data.ProspectID, constant.DECISION_REJECT, 4)
+					return step, nil
+				case constant.DB_DECISION_APR:
+					_ = u.repository.UpdateTrxPrincipleStatus(data.ProspectID, constant.DECISION_APPROVE, 4)
+					return step, nil
+				}
+			}
+		}
 
 		step.ColorCode = "#FFCC00"
 		step.Status = constant.REASON_PROSES_SURVEY

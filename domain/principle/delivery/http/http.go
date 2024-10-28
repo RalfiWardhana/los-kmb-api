@@ -1,8 +1,11 @@
 package http
 
 import (
+	"bytes"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"los-kmb-api/domain/principle/interfaces"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
@@ -55,6 +58,11 @@ func (c *handler) VerifyAsset(ctx echo.Context) (err error) {
 
 	var r request.PrincipleAsset
 
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
 	if err = ctx.Bind(&r); err != nil {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
 	}
@@ -91,6 +99,11 @@ func (c *handler) VerifyAsset(ctx echo.Context) (err error) {
 func (c *handler) VerifyPemohon(ctx echo.Context) (err error) {
 
 	var r request.PrinciplePemohon
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
 
 	if err = ctx.Bind(&r); err != nil {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
@@ -178,6 +191,11 @@ func (c *handler) ElaborateLTV(ctx echo.Context) (err error) {
 
 	var r request.PrincipleElaborateLTV
 
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
 	if err = ctx.Bind(&r); err != nil {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
 	}
@@ -222,6 +240,11 @@ func (c *handler) VerifyPembiayaan(ctx echo.Context) (err error) {
 
 	var r request.PrinciplePembiayaan
 
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
 	if err = ctx.Bind(&r); err != nil {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
 	}
@@ -263,6 +286,11 @@ func (c *handler) VerifyPembiayaan(ctx echo.Context) (err error) {
 func (c *handler) EmergencyContact(ctx echo.Context) (err error) {
 
 	var r request.PrincipleEmergencyContact
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
 
 	if err = ctx.Bind(&r); err != nil {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
@@ -363,6 +391,11 @@ func (c *handler) MarketingProgram(ctx echo.Context) (err error) {
 func (c *handler) GetPrincipleData(ctx echo.Context) (err error) {
 
 	var r request.PrincipleGetData
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
 
 	if err = ctx.Bind(&r); err != nil {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)

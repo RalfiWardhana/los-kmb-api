@@ -277,7 +277,7 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 	}
 	mainCustomer := dataCustomer[0]
 
-	agereementChassisNumber, err = u.usecase.AgreementChassisNumberIntegrator(ctx, principleStepOne.NoChassis, r.ProspectID, accessToken)
+	agereementChassisNumber, err = u.usecase.AgreementChassisNumberIntegrator(ctx, r.ProspectID, principleStepOne.NoChassis, accessToken)
 	if err != nil {
 		return
 	}

@@ -742,6 +742,25 @@ func (r repoHandler) UpdateToCancel(prospectID string) (err error) {
 
 }
 
+func (r repoHandler) UpdateTrxPrincipleStatus(prospectID string, decision string, step int) (err error) {
+
+	return r.newKmb.Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Model(&entity.TrxPrincipleStatus{}).
+			Where("ProspectID = ?", prospectID).
+			Updates(&entity.TrxPrincipleStatus{
+				Decision:  decision,
+				Step:      step,
+				UpdatedAt: time.Now(),
+			}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+}
+
 func (r repoHandler) ExceedErrorStepOne(kpmId int) int {
 	var trxError entity.TrxPrincipleError
 
@@ -768,4 +787,17 @@ func (r repoHandler) ExceedErrorStepThree(prospectId string) int {
 
 	return int(result.RowsAffected)
 
+}
+
+func (r repoHandler) GetTrxStatus(prospectID string) (status entity.TrxStatus, err error) {
+
+	if err = r.newKmb.Raw("SELECT activity, decision, source_decision FROM trx_status WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&status).Error; err != nil {
+
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
 }
