@@ -757,21 +757,16 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 
 		var (
 			historyData []entity.HistoryApproval
-			escalation  string
 		)
 
 		if len(histories) > 0 {
 			for _, history := range histories {
-				escalation = "No"
-				if history.NeedEscalation == 1 {
-					escalation = "Yes"
-				}
 				historyEntry := entity.HistoryApproval{
 					DecisionBy:            history.DecisionBy,
 					Decision:              history.Decision,
 					CreatedAt:             history.CreatedAt,
 					NextFinalApprovalFlag: history.NextFinalApprovalFlag,
-					NeedEscalation:        escalation,
+					NeedEscalation:        history.NeedEscalation,
 					SourceDecision:        history.SourceDecision,
 					NextStep:              history.NextStep,
 					Note:                  history.Note,
