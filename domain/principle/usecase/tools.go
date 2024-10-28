@@ -45,8 +45,12 @@ func (u usecase) PrincipleStep(idNumber string) (step response.StepPrinciple, er
 
 		trxStatus, err := u.repository.GetTrxStatus(data.ProspectID)
 		if err != nil {
-			if err != gorm.ErrRecordNotFound {
+			if err.Error() != constant.RECORD_NOT_FOUND {
 				return response.StepPrinciple{}, err
+			} else {
+				step.ColorCode = "#FFCC00"
+				step.Status = constant.REASON_PROSES_SURVEY
+				return step, nil
 			}
 		}
 
