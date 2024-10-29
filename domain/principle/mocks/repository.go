@@ -799,6 +799,36 @@ func (_m *Repository) GetTrxStatus(prospectID string) (entity.TrxStatus, error) 
 	return r0, r1
 }
 
+// GetTrxWorker provides a mock function with given fields: prospectID, category
+func (_m *Repository) GetTrxWorker(prospectID string, category string) ([]entity.TrxWorker, error) {
+	ret := _m.Called(prospectID, category)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTrxWorker")
+	}
+
+	var r0 []entity.TrxWorker
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, string) ([]entity.TrxWorker, error)); ok {
+		return rf(prospectID, category)
+	}
+	if rf, ok := ret.Get(0).(func(string, string) []entity.TrxWorker); ok {
+		r0 = rf(prospectID, category)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.TrxWorker)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(prospectID, category)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // MasterMappingCluster provides a mock function with given fields: req
 func (_m *Repository) MasterMappingCluster(req entity.MasterMappingCluster) (entity.MasterMappingCluster, error) {
 	ret := _m.Called(req)

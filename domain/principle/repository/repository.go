@@ -675,6 +675,16 @@ func (r repoHandler) SaveToWorker(data []entity.TrxWorker) (err error) {
 
 }
 
+func (r repoHandler) GetTrxWorker(prospectID, category string) (data []entity.TrxWorker, err error) {
+	query := fmt.Sprintf("SELECT * FROM trx_worker WITH (nolock) WHERE ProspectID = '%s' AND [category] = '%s'", prospectID, category)
+
+	if err = r.los.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error) {
 
 	if err = r.newKmb.Raw(fmt.Sprintf(`SELECT CASE WHEN mmel.ltv IS NULL THEN mmelovd.ltv ELSE mmel.ltv END AS ltv FROM trx_elaborate_ltv tel WITH (nolock) 
