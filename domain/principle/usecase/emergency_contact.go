@@ -12,7 +12,7 @@ import (
 	"strconv"
 )
 
-func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (data response.UsecaseApi, err error) {
+func (u multiUsecase) PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (data response.UsecaseApi, err error) {
 	var (
 		principleStepThree           entity.TrxPrincipleStepThree
 		trxPrincipleEmergencyContact entity.TrxPrincipleEmergencyContact
@@ -72,23 +72,42 @@ func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.Prin
 				"Authorization": os.Getenv("AUTH_LOS"),
 			})
 
-		// insert customer
-		sequence := 1
+		err = u.usecase.PrincipleCoreCustomer(ctx, req.ProspectID, accessToken)
 
-		worker = append(worker, entity.TrxWorker{ProspectID: req.ProspectID, Activity: constant.WORKER_UNPROCESS, EndPointTarget: os.Getenv("PRINCIPLE_CORE_CUSTOMER_URL") + req.ProspectID,
-			EndPointMethod: constant.METHOD_POST, Header: string(headerParamLos), Payload: "",
-			ResponseTimeout: timeOut, APIType: constant.WORKER_TYPE_RAW, MaxRetry: 6, CountRetry: 0,
-			Category: constant.WORKER_CATEGORY_PRINCIPLE_KMB, Action: constant.WORKER_ACTION_UPDATE_CORE_CUSTOMER, Sequence: sequence,
-		})
+		if err != nil {
+			//insert customer
+			sequence := 1
 
-		// get marketing program
-		sequence += 1
+			worker = append(worker, entity.TrxWorker{ProspectID: req.ProspectID, Activity: constant.WORKER_UNPROCESS, EndPointTarget: os.Getenv("PRINCIPLE_CORE_CUSTOMER_URL") + req.ProspectID,
+				EndPointMethod: constant.METHOD_POST, Header: string(headerParamLos), Payload: "",
+				ResponseTimeout: timeOut, APIType: constant.WORKER_TYPE_RAW, MaxRetry: 6, CountRetry: 0,
+				Category: constant.WORKER_CATEGORY_PRINCIPLE_KMB, Action: constant.WORKER_ACTION_UPDATE_CORE_CUSTOMER, Sequence: sequence,
+			})
 
-		worker = append(worker, entity.TrxWorker{ProspectID: req.ProspectID, Activity: constant.WORKER_IDLE, EndPointTarget: os.Getenv("PRINCIPLE_MARKETING_PROGRAM_URL") + req.ProspectID,
-			EndPointMethod: constant.METHOD_POST, Header: string(headerParamLos), Payload: "",
-			ResponseTimeout: timeOut, APIType: constant.WORKER_TYPE_RAW, MaxRetry: 6, CountRetry: 0,
-			Category: constant.WORKER_CATEGORY_PRINCIPLE_KMB, Action: constant.WORKER_ACTION_GET_MARKETING_PROGRAM, Sequence: sequence,
-		})
+			//get marketing program
+			sequence += 1
+
+			worker = append(worker, entity.TrxWorker{ProspectID: req.ProspectID, Activity: constant.WORKER_IDLE, EndPointTarget: os.Getenv("PRINCIPLE_MARKETING_PROGRAM_URL") + req.ProspectID,
+				EndPointMethod: constant.METHOD_POST, Header: string(headerParamLos), Payload: "",
+				ResponseTimeout: timeOut, APIType: constant.WORKER_TYPE_RAW, MaxRetry: 6, CountRetry: 0,
+				Category: constant.WORKER_CATEGORY_PRINCIPLE_KMB, Action: constant.WORKER_ACTION_GET_MARKETING_PROGRAM, Sequence: sequence,
+			})
+
+		}
+
+		err = u.usecase.PrincipleMarketingProgram(ctx, req.ProspectID, accessToken)
+
+		if err != nil {
+
+			sequence := 1
+
+			worker = append(worker, entity.TrxWorker{ProspectID: req.ProspectID, Activity: constant.WORKER_IDLE, EndPointTarget: os.Getenv("PRINCIPLE_MARKETING_PROGRAM_URL") + req.ProspectID,
+				EndPointMethod: constant.METHOD_POST, Header: string(headerParamLos), Payload: "",
+				ResponseTimeout: timeOut, APIType: constant.WORKER_TYPE_RAW, MaxRetry: 6, CountRetry: 0,
+				Category: constant.WORKER_CATEGORY_PRINCIPLE_KMB, Action: constant.WORKER_ACTION_GET_MARKETING_PROGRAM, Sequence: sequence,
+			})
+
+		}
 
 		u.repository.SaveToWorker(worker)
 	}

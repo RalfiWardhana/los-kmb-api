@@ -1019,7 +1019,7 @@ type PrinciplePemohon struct {
 	LegalKelurahan          string  `json:"legal_kelurahan" validate:"required,max=30" example:"Klender"`
 	LegalZipCode            string  `json:"legal_zipcode" validate:"required,max=5" example:"13470"`
 	LegalPhoneArea          string  `json:"legal_phone_area" validate:"required,min=2,max=4" example:"021"`
-	LegalPhone              string  `json:"legal_phone" validate:"required,max=10" example:"86605224"`
+	LegalPhone              string  `json:"legal_phone" validate:"required" example:"86605224"`
 	Education               string  `json:"education" validate:"required,max=10" example:"S1"`
 	ProfessionID            string  `json:"profession_id" validate:"required,max=10" example:"KRYSW"`
 	JobType                 string  `json:"job_type" validate:"required,max=10" example:"0012"`
@@ -1038,7 +1038,7 @@ type PrinciplePemohon struct {
 	CompanyKelurahan        string  `json:"company_kelurahan" validate:"required,max=30" example:"Klender"`
 	CompanyZipCode          string  `json:"company_zipcode" validate:"required,max=5" example:"13470"`
 	CompanyPhoneArea        string  `json:"company_phone_area" validate:"required,min=2,max=4" example:"021"`
-	CompanyPhone            string  `json:"company_phone" validate:"required,max=10" example:"86605224"`
+	CompanyPhone            string  `json:"company_phone" validate:"required" example:"86605224"`
 	MonthlyFixedIncome      float64 `json:"monthly_fixed_income" validate:"required" example:"5000000"`
 	MaritalStatus           string  `json:"marital_status" validate:"required,max=10" example:"M"`
 	SpouseLegalName         string  `json:"spouse_legal_name" example:"YULINAR NIATI"`
@@ -1090,7 +1090,7 @@ type PrincipleEmergencyContact struct {
 	Province     string `json:"province" validate:"required,max=50" example:"DKI JAKARTA"`
 	ZipCode      string `json:"zip_code" validate:"required,len=5,number,ne=0" example:"12790"`
 	AreaPhone    string `json:"area_phone" validate:"omitempty,min=3,max=4,number" example:"021"`
-	Phone        string `json:"phone" validate:"omitempty,min=5,max=10,number" example:"567892"`
+	Phone        string `json:"phone" validate:"omitempty,min=5,number" example:"567892"`
 }
 
 type ValidateNik struct {

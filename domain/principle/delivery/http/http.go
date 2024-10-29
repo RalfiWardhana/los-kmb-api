@@ -299,7 +299,7 @@ func (c *handler) EmergencyContact(ctx echo.Context) (err error) {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "800"), err)
 	}
 
-	data, err := c.usecase.PrincipleEmergencyContact(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
+	data, err := c.multiusecase.PrincipleEmergencyContact(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
 		errorMessage := constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE

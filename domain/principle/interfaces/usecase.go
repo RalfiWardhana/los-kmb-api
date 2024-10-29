@@ -32,7 +32,6 @@ type Usecase interface {
 	Scorepro(ctx context.Context, req request.PrinciplePembiayaan, principleStepOne entity.TrxPrincipleStepOne, principleStepTwo entity.TrxPrincipleStepTwo, pefindoScore, customerStatus, customerSegment string, installmentTopUp float64, spDupcheck response.SpDupCekCustomerByID, filtering entity.FilteringKMB, accessToken string) (responseScs response.IntegratorScorePro, data response.ScorePro, respPefindoIDX response.PefindoIDX, err error)
 	DsrCheck(ctx context.Context, req request.PrinciplePembiayaan, customerData []request.CustomerData, installmentAmount, installmentConfins, installmentConfinsSpouse, income float64, agreementChasisNumber response.AgreementChassisNumber, accessToken string, configValue response.DupcheckConfig) (data response.UsecaseApi, result response.Dsr, installmentOther, installmentOtherSpouse, installmentTopup float64, err error)
 	TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment, totalInstallmentPBK float64, prospectID, customerSegment, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig, filtering entity.FilteringKMB) (data response.UsecaseApi, trxFMF response.TrxFMF, err error)
-	PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (data response.UsecaseApi, err error)
 	PrincipleCoreCustomer(ctx context.Context, prospectID string, accessToken string) (err error)
 	PrincipleMarketingProgram(ctx context.Context, prospectID string, accessToken string) (err error)
 	MDMGetMasterMappingBranchEmployee(ctx context.Context, prospectID, branchID, accessToken string) (data response.MDMMasterMappingBranchEmployeeResponse, err error)
@@ -43,4 +42,5 @@ type Usecase interface {
 type MultiUsecase interface {
 	PrinciplePemohon(ctx context.Context, r request.PrinciplePemohon) (data response.UsecaseApi, err error)
 	PrinciplePembiayaan(ctx context.Context, r request.PrinciplePembiayaan, accessToken string) (data response.UsecaseApi, err error)
+	PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (data response.UsecaseApi, err error)
 }
