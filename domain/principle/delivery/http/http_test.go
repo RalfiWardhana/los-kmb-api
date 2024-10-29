@@ -681,7 +681,7 @@ func TestEmergencyContact(t *testing.T) {
 			Result: constant.DECISION_PASS,
 			Reason: constant.EMERGENCY_PASS_REASON,
 		}
-		mockUsecase.On("PrincipleEmergencyContact", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
+		mockMultiUsecase.On("PrincipleEmergencyContact", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
 
 		_ = handler.EmergencyContact(c)
 
@@ -743,7 +743,7 @@ func TestEmergencyContact(t *testing.T) {
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
-		mockUsecase.On("PrincipleEmergencyContact", mock.Anything, mock.Anything, mock.Anything).Return(responses.UsecaseApi{}, errors.New("some error")).Once()
+		mockMultiUsecase.On("PrincipleEmergencyContact", mock.Anything, mock.Anything, mock.Anything).Return(responses.UsecaseApi{}, errors.New("some error")).Once()
 
 		_ = handler.EmergencyContact(c)
 

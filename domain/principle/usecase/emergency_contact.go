@@ -8,15 +8,22 @@ import (
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 	"os"
 	"strconv"
 )
 
 func (u multiUsecase) PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (data response.UsecaseApi, err error) {
 	var (
+		principleStepOne             entity.TrxPrincipleStepOne
 		principleStepThree           entity.TrxPrincipleStepThree
 		trxPrincipleEmergencyContact entity.TrxPrincipleEmergencyContact
 	)
+
+	principleStepOne, err = u.repository.GetPrincipleStepOne(req.ProspectID)
+	if err != nil {
+		return
+	}
 
 	principleStepThree, err = u.repository.GetPrincipleStepThree(req.ProspectID)
 	if err != nil {
@@ -72,11 +79,13 @@ func (u multiUsecase) PrincipleEmergencyContact(ctx context.Context, req request
 				"Authorization": os.Getenv("AUTH_LOS"),
 			})
 
+		var sequence int
+
 		err = u.usecase.PrincipleCoreCustomer(ctx, req.ProspectID, accessToken)
 
 		if err != nil {
 			//insert customer
-			sequence := 1
+			sequence += 1
 
 			worker = append(worker, entity.TrxWorker{ProspectID: req.ProspectID, Activity: constant.WORKER_UNPROCESS, EndPointTarget: os.Getenv("PRINCIPLE_CORE_CUSTOMER_URL") + req.ProspectID,
 				EndPointMethod: constant.METHOD_POST, Header: string(headerParamLos), Payload: "",
@@ -93,19 +102,35 @@ func (u multiUsecase) PrincipleEmergencyContact(ctx context.Context, req request
 				Category: constant.WORKER_CATEGORY_PRINCIPLE_KMB, Action: constant.WORKER_ACTION_GET_MARKETING_PROGRAM, Sequence: sequence,
 			})
 
-		}
+		} else {
 
-		err = u.usecase.PrincipleMarketingProgram(ctx, req.ProspectID, accessToken)
+			err = u.usecase.PrincipleMarketingProgram(ctx, req.ProspectID, accessToken)
 
-		if err != nil {
+			if err != nil {
 
-			sequence := 1
+				//get marketing program
+				sequence += 1
 
-			worker = append(worker, entity.TrxWorker{ProspectID: req.ProspectID, Activity: constant.WORKER_IDLE, EndPointTarget: os.Getenv("PRINCIPLE_MARKETING_PROGRAM_URL") + req.ProspectID,
-				EndPointMethod: constant.METHOD_POST, Header: string(headerParamLos), Payload: "",
-				ResponseTimeout: timeOut, APIType: constant.WORKER_TYPE_RAW, MaxRetry: 6, CountRetry: 0,
-				Category: constant.WORKER_CATEGORY_PRINCIPLE_KMB, Action: constant.WORKER_ACTION_GET_MARKETING_PROGRAM, Sequence: sequence,
-			})
+				worker = append(worker, entity.TrxWorker{ProspectID: req.ProspectID, Activity: constant.WORKER_UNPROCESS, EndPointTarget: os.Getenv("PRINCIPLE_MARKETING_PROGRAM_URL") + req.ProspectID,
+					EndPointMethod: constant.METHOD_POST, Header: string(headerParamLos), Payload: "",
+					ResponseTimeout: timeOut, APIType: constant.WORKER_TYPE_RAW, MaxRetry: 6, CountRetry: 0,
+					Category: constant.WORKER_CATEGORY_PRINCIPLE_KMB, Action: constant.WORKER_ACTION_GET_MARKETING_PROGRAM, Sequence: sequence,
+				})
+
+			} else {
+
+				statusCode := constant.PRINCIPLE_STATUS_SUBMIT_SALLY
+				u.producer.PublishEvent(ctx, accessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+					OrderID:       req.ProspectID,
+					KpmID:         principleStepOne.KPMID,
+					Source:        3,
+					StatusCode:    statusCode,
+					ProductName:   principleStepOne.AssetCode,
+					BranchCode:    principleStepOne.BranchID,
+					AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
+				}), 0)
+
+			}
 
 		}
 
