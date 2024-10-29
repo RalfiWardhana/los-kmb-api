@@ -454,9 +454,9 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	}
 
 	bpkbNameType := "O"
-	if principleStepOne.OwnerAsset == r.LegalName {
+	if strings.EqualFold(principleStepOne.OwnerAsset, r.LegalName) {
 		bpkbNameType = "K"
-	} else if principleStepOne.OwnerAsset == r.SpouseLegalName {
+	} else if strings.EqualFold(principleStepOne.OwnerAsset, r.SpouseLegalName) {
 		bpkbNameType = "P"
 	}
 
