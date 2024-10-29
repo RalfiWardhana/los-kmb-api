@@ -28,8 +28,11 @@ func TestPrincipleEmergencyContact(t *testing.T) {
 		request                          request.PrincipleEmergencyContact
 		principleStepThree               entity.TrxPrincipleStepThree
 		errGetPrincipleStepThree         error
+		resGetTrxWorker                  []entity.TrxWorker
+		errGetTrxWorker                  error
 		errSavePrincipleEmergencyContact error
 		errSaveToWorker                  error
+		expectGetTrxWorker               bool
 		expectSaveEmergencyContact       bool
 		expectSaveToWorker               bool
 		expectedError                    error
@@ -43,6 +46,7 @@ func TestPrincipleEmergencyContact(t *testing.T) {
 				MobilePhone:  "1234567890",
 			},
 			principleStepThree:         entity.TrxPrincipleStepThree{IDNumber: "123456"},
+			expectGetTrxWorker:         true,
 			expectSaveEmergencyContact: true,
 			expectSaveToWorker:         true,
 		},
@@ -74,6 +78,7 @@ func TestPrincipleEmergencyContact(t *testing.T) {
 			principleStepThree:               entity.TrxPrincipleStepThree{IDNumber: "123456"},
 			errSavePrincipleEmergencyContact: errors.New("failed to save principle emergency contact"),
 			expectSaveEmergencyContact:       true,
+			expectGetTrxWorker:               true,
 			expectedError:                    errors.New("failed to save principle emergency contact"),
 		},
 	}
@@ -86,6 +91,10 @@ func TestPrincipleEmergencyContact(t *testing.T) {
 			var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
 
 			mockRepository.On("GetPrincipleStepThree", tc.request.ProspectID).Return(tc.principleStepThree, tc.errGetPrincipleStepThree)
+
+			if tc.expectGetTrxWorker {
+				mockRepository.On("GetTrxWorker", tc.request.ProspectID, mock.Anything).Return(tc.resGetTrxWorker, tc.errGetTrxWorker)
+			}
 
 			if tc.expectSaveEmergencyContact {
 				mockRepository.On("SavePrincipleEmergencyContact", mock.Anything, mock.Anything).Return(tc.errSavePrincipleEmergencyContact)
