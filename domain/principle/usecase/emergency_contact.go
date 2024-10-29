@@ -34,6 +34,12 @@ func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.Prin
 	}
 
 	if len(trxWorker) == 0 {
+
+		phone := req.Phone
+		if len(req.Phone) > 10 {
+			phone = req.Phone[:10]
+		}
+
 		trxPrincipleEmergencyContact = entity.TrxPrincipleEmergencyContact{
 			ProspectID:   req.ProspectID,
 			Name:         req.Name,
@@ -48,7 +54,7 @@ func (u usecase) PrincipleEmergencyContact(ctx context.Context, req request.Prin
 			Province:     req.Province,
 			ZipCode:      req.ZipCode,
 			AreaPhone:    req.AreaPhone,
-			Phone:        req.Phone,
+			Phone:        phone,
 		}
 
 		err = u.repository.SavePrincipleEmergencyContact(trxPrincipleEmergencyContact, principleStepThree.IDNumber)

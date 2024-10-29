@@ -343,6 +343,16 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 					spouseBirthDate, _ = time.Parse(constant.FORMAT_DATE, r.SpouseBirthDate)
 				}
 
+				legalPhone := r.LegalPhone
+				if len(r.LegalPhone) > 10 {
+					legalPhone = r.LegalPhone[:10]
+				}
+
+				companyPhone := r.CompanyPhone
+				if len(r.CompanyPhone) > 10 {
+					companyPhone = r.CompanyPhone[:10]
+				}
+
 				savedDupcheckData, _ := json.Marshal(dupcheckData)
 
 				trxPrincipleStepTwo.ProspectID = r.ProspectID
@@ -366,7 +376,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 				trxPrincipleStepTwo.LegalKelurahan = r.LegalKelurahan
 				trxPrincipleStepTwo.LegalZipCode = r.LegalZipCode
 				trxPrincipleStepTwo.LegalAreaPhone = r.LegalPhoneArea
-				trxPrincipleStepTwo.LegalPhone = r.LegalPhone
+				trxPrincipleStepTwo.LegalPhone = legalPhone
 				trxPrincipleStepTwo.CompanyName = r.CompanyName
 				trxPrincipleStepTwo.CompanyAddress = r.CompanyAddress
 				trxPrincipleStepTwo.CompanyRT = r.CompanyRT
@@ -377,7 +387,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 				trxPrincipleStepTwo.CompanyKelurahan = r.CompanyKelurahan
 				trxPrincipleStepTwo.CompanyZipCode = r.CompanyZipCode
 				trxPrincipleStepTwo.CompanyAreaPhone = r.CompanyPhoneArea
-				trxPrincipleStepTwo.CompanyPhone = r.CompanyPhone
+				trxPrincipleStepTwo.CompanyPhone = companyPhone
 				trxPrincipleStepTwo.MonthlyFixedIncome = r.MonthlyFixedIncome
 				trxPrincipleStepTwo.MaritalStatus = r.MaritalStatus
 				trxPrincipleStepTwo.SpouseIncome = r.SpouseIncome
