@@ -155,6 +155,11 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		cmoName = cmoData.CMOName
 	}
 
+	residencePhone := r.ResidencePhone
+	if len(r.ResidencePhone) > 10 {
+		residencePhone = r.ResidencePhone[:10]
+	}
+
 	_ = u.repository.SavePrincipleStepOne(entity.TrxPrincipleStepOne{
 		ProspectID:         r.ProspectID,
 		IDNumber:           r.IDNumber,
@@ -181,7 +186,7 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		ResidenceKelurahan: r.ResidenceKelurahan,
 		ResidenceZipCode:   r.ResidenceZipCode,
 		ResidenceAreaPhone: r.ResidenceAreaPhone,
-		ResidencePhone:     r.ResidencePhone,
+		ResidencePhone:     residencePhone,
 		HomeStatus:         r.HomeStatus,
 		StaySinceYear:      r.StaySinceYear,
 		StaySinceMonth:     r.StaySinceMonth,
