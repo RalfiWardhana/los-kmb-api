@@ -375,7 +375,7 @@ func (r repoHandler) GetFilteringResult(prospectID string) (filtering entity.Fil
 	db := r.newKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.newKmb.Raw("SELECT bpkb_name, customer_status, customer_status_kmb, decision, reason, is_blacklist, next_process, max_overdue_biro, max_overdue_last12months_biro, customer_segment, total_baki_debet_non_collateral_biro, score_biro, cluster, cmo_cluster, FORMAT(rrd_date, 'yyyy-MM-ddTHH:mm:ss') + 'Z' AS rrd_date, created_at FROM trx_filtering WITH (nolock) WHERE prospect_id = ?", prospectID).Scan(&filtering).Error; err != nil {
+	if err = r.newKmb.Raw("SELECT bpkb_name, customer_status, customer_status_kmb, decision, reason, is_blacklist, next_process, max_overdue_biro, max_overdue_last12months_biro, customer_segment, total_baki_debet_non_collateral_biro, total_installment_amount_biro, score_biro, cluster, cmo_cluster, FORMAT(rrd_date, 'yyyy-MM-ddTHH:mm:ss') + 'Z' AS rrd_date, created_at FROM trx_filtering WITH (nolock) WHERE prospect_id = ?", prospectID).Scan(&filtering).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
 		}
