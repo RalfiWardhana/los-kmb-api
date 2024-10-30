@@ -43,6 +43,7 @@ func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, u
 	principleRoute.POST("/marketing-program/:prospectID", handler.MarketingProgram, middlewares.AccessMiddleware())
 	principleRoute.POST("/principle-data", handler.GetPrincipleData, middlewares.AccessMiddleware())
 	principleRoute.GET("/auto-cancel", handler.AutoCancel, middlewares.AccessMiddleware())
+	principleRoute.POST("/principle-publish", handler.PrinciplePublish, middlewares.AccessMiddleware())
 }
 
 // KmbPrinciple Tools godoc
@@ -438,5 +439,43 @@ func (c *handler) AutoCancel(ctx echo.Context) (err error) {
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), "sukses auto cancel")
+
+}
+
+// KmbPrinciple Tools godoc
+// @Description KmbPrinciple
+// @Tags KmbPrinciple
+// @Produce json
+// @Param body body request.PrinciplePublish true "Body payload"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/principle-publish [post]
+func (c *handler) PrinciplePublish(ctx echo.Context) (err error) {
+
+	var r request.PrinciplePublish
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "800"), err)
+	}
+
+	err = c.usecase.PrinciplePublish(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), "success publish event principle")
 
 }

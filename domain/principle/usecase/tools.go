@@ -1,9 +1,12 @@
 package usecase
 
 import (
+	"context"
 	"los-kmb-api/models/entity"
+	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 
 	"github.com/jinzhu/gorm"
 )
@@ -75,4 +78,22 @@ func (u usecase) PrincipleStep(idNumber string) (step response.StepPrinciple, er
 	}
 
 	return
+}
+
+func (u usecase) PrinciplePublish(ctx context.Context, req request.PrinciplePublish, accessToken string) (err error) {
+
+	principleStepOne, err := u.repository.GetPrincipleStepOne(req.ProspectID)
+	if err != nil {
+		return
+	}
+
+	return u.producer.PublishEvent(ctx, accessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+		OrderID:       req.ProspectID,
+		KpmID:         principleStepOne.KPMID,
+		Source:        3,
+		StatusCode:    req.StatusCode,
+		ProductName:   principleStepOne.AssetCode,
+		BranchCode:    principleStepOne.BranchID,
+		AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
+	}), 0)
 }

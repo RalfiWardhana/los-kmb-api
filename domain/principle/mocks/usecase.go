@@ -664,6 +664,24 @@ func (_m *Usecase) PrincipleMarketingProgram(ctx context.Context, prospectID str
 	return r0
 }
 
+// PrinciplePublish provides a mock function with given fields: ctx, req, accessToken
+func (_m *Usecase) PrinciplePublish(ctx context.Context, req request.PrinciplePublish, accessToken string) error {
+	ret := _m.Called(ctx, req, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for PrinciplePublish")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.PrinciplePublish, string) error); ok {
+		r0 = rf(ctx, req, accessToken)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // PrincipleStep provides a mock function with given fields: idNumber
 func (_m *Usecase) PrincipleStep(idNumber string) (response.StepPrinciple, error) {
 	ret := _m.Called(idNumber)

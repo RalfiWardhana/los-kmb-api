@@ -1264,3 +1264,8 @@ type PrincipleGetData struct {
 	ProspectID     string `json:"prospect_id" validate:"required"`
 	FinancePurpose string `json:"finance_purpose"`
 }
+
+type PrinciplePublish struct {
+	StatusCode string `json:"status_code" validate:"required"`
+	ProspectID string `json:"prospect_id" validate:"required"`
+}
