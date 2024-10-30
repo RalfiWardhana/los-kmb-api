@@ -368,6 +368,8 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 		return
 	}
 
+	dupcheckData.InstallmentAmountFMF = installmentAmountFMF
+	dupcheckData.InstallmentAmountSpouseFMF = installmentAmountSpouseFMF
 	dupcheckData.InstallmentAmountOther = instOther
 	dupcheckData.InstallmentAmountOtherSpouse = instOtherSpouse
 	dupcheckData.InstallmentTopup = instTopup
