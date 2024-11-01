@@ -2345,10 +2345,52 @@ func (u usecase) UploadQuotaDeviasi(req request.ReqUploadSettingQuotaDeviasi, fi
 	}
 
 	data = response.UploadQuotaDeviasiBranchResponse{
-		Status:           "success",
-		Message:          "Quota deviasi updated successfully",
+		Status:           constant.RESULT_OK,
+		Message:          constant.UPDATE_DEVIASI_SUCCESS,
 		DataBeforeUpdate: dataBeforeUpdate,
 		DataAfterUpdate:  dataAfterUpdate,
+	}
+
+	return
+}
+
+func (u usecase) ResetQuotaDeviasiBranch(ctx context.Context, req request.ReqResetQuotaDeviasiBranch) (data response.UpdateQuotaDeviasiBranchResponse, err error) {
+
+	var (
+		dataBefore entity.DataQuotaDeviasiBranch
+		dataAfter  entity.DataQuotaDeviasiBranch
+	)
+
+	dataBefore, dataAfter, err = u.repository.ProcessResetQuotaDeviasiBranch(req.BranchID, req.UpdatedByName)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Process Reset Kuota Deviasi Branch error")
+		return
+	}
+
+	data = response.UpdateQuotaDeviasiBranchResponse{
+		Status:           constant.RESULT_OK,
+		Message:          constant.RESET_DEVIASI_SUCCESS,
+		BranchID:         req.BranchID,
+		DataBeforeUpdate: dataBefore,
+		DataAfterUpdate:  dataAfter,
+	}
+
+	return
+}
+
+func (u usecase) ResetAllQuotaDeviasi(ctx context.Context, req request.ReqResetAllQuotaDeviasi) (data response.UploadQuotaDeviasiBranchResponse, err error) {
+
+	err = u.repository.ProcessResetAllQuotaDeviasi(req.UpdatedByName)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Process Reset All Kuota Deviasi error")
+		return
+	}
+
+	data = response.UploadQuotaDeviasiBranchResponse{
+		Status:  constant.RESULT_OK,
+		Message: constant.UPDATE_DEVIASI_SUCCESS,
 	}
 
 	return

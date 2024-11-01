@@ -962,6 +962,15 @@ type ReqUploadSettingQuotaDeviasi struct {
 	UpdatedByName string `form:"updated_by_name" validate:"required,max=200"`
 }
 
+type ReqResetQuotaDeviasiBranch struct {
+	BranchID      string `json:"branch_id" validate:"required" example:"400"`
+	UpdatedByName string `json:"updated_by_name" validate:"required,max=200" example:"MUHAMMAD RONALD"`
+}
+
+type ReqResetAllQuotaDeviasi struct {
+	UpdatedByName string `json:"updated_by_name" validate:"required,max=200" example:"MUHAMMAD RONALD"`
+}
+
 type ReqListMappingCluster struct {
 	Search         string `json:"search"`
 	BranchID       string `json:"branch_id" example:"400"`

@@ -3682,6 +3682,66 @@ func (r repoHandler) BatchUpdateQuotaDeviasi(data []entity.MappingBranchDeviasi)
 	return dataBeforeList, dataAfterList, nil
 }
 
+func (r repoHandler) ProcessResetQuotaDeviasiBranch(branchID string, updatedBy string) (dataBefore entity.DataQuotaDeviasiBranch, dataAfter entity.DataQuotaDeviasiBranch, err error) {
+	err = r.NewKmb.Transaction(func(tx *gorm.DB) error {
+		// Step 1: Retrieve current values for dataBefore
+		if err := tx.Raw("SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?", branchID).Scan(&dataBefore).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Model(&entity.MappingBranchDeviasi{}).
+			Where("BranchID = ?", branchID).
+			Updates(map[string]interface{}{
+				"quota_amount":    0,
+				"quota_account":   0,
+				"booking_amount":  0,
+				"booking_account": 0,
+				"balance_amount":  0,
+				"balance_account": 0,
+				"is_active":       false,
+				"updated_at":      time.Now(),
+				"updated_by":      updatedBy,
+			}).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// Step 3: Retrieve updated values for dataAfter
+		if err := tx.Raw("SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?", branchID).Scan(&dataAfter).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return
+}
+
+func (r repoHandler) ProcessResetAllQuotaDeviasi(updatedBy string) (err error) {
+	err = r.NewKmb.Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Model(&entity.MappingBranchDeviasi{}).
+			Updates(map[string]interface{}{
+				"quota_amount":    0,
+				"quota_account":   0,
+				"booking_amount":  0,
+				"booking_account": 0,
+				"balance_amount":  0,
+				"balance_account": 0,
+				"is_active":       false,
+				"updated_at":      time.Now(),
+				"updated_by":      updatedBy,
+			}).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		return nil
+	})
+
+	return
+}
+
 func (r repoHandler) GetMappingCluster() (data []entity.MasterMappingCluster, err error) {
 	var x sql.TxOptions
 
