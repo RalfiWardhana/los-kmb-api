@@ -763,6 +763,48 @@ func (_m *Repository) ProcessRecalculateOrder(prospectID string, trxStatus entit
 	return r0
 }
 
+// ProcessResetAllQuotaDeviasi provides a mock function with given fields: updatedBy
+func (_m *Repository) ProcessResetAllQuotaDeviasi(updatedBy string) error {
+	ret := _m.Called(updatedBy)
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string) error); ok {
+		r0 = rf(updatedBy)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// ProcessResetQuotaDeviasiBranch provides a mock function with given fields: branchID, updatedBy
+func (_m *Repository) ProcessResetQuotaDeviasiBranch(branchID string, updatedBy string) (entity.DataQuotaDeviasiBranch, entity.DataQuotaDeviasiBranch, error) {
+	ret := _m.Called(branchID, updatedBy)
+
+	var r0 entity.DataQuotaDeviasiBranch
+	if rf, ok := ret.Get(0).(func(string, string) entity.DataQuotaDeviasiBranch); ok {
+		r0 = rf(branchID, updatedBy)
+	} else {
+		r0 = ret.Get(0).(entity.DataQuotaDeviasiBranch)
+	}
+
+	var r1 entity.DataQuotaDeviasiBranch
+	if rf, ok := ret.Get(1).(func(string, string) entity.DataQuotaDeviasiBranch); ok {
+		r1 = rf(branchID, updatedBy)
+	} else {
+		r1 = ret.Get(1).(entity.DataQuotaDeviasiBranch)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(string, string) error); ok {
+		r2 = rf(branchID, updatedBy)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // ProcessReturnOrder provides a mock function with given fields: prospectID, trxStatus, trxDetail
 func (_m *Repository) ProcessReturnOrder(prospectID string, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail) error {
 	ret := _m.Called(prospectID, trxStatus, trxDetail)

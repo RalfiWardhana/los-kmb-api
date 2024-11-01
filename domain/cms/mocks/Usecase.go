@@ -559,6 +559,48 @@ func (_m *Usecase) RecalculateOrder(ctx context.Context, req request.ReqRecalcul
 	return r0, r1
 }
 
+// ResetAllQuotaDeviasi provides a mock function with given fields: ctx, req
+func (_m *Usecase) ResetAllQuotaDeviasi(ctx context.Context, req request.ReqResetAllQuotaDeviasi) (response.UploadQuotaDeviasiBranchResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	var r0 response.UploadQuotaDeviasiBranchResponse
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqResetAllQuotaDeviasi) response.UploadQuotaDeviasiBranchResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(response.UploadQuotaDeviasiBranchResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqResetAllQuotaDeviasi) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ResetQuotaDeviasiBranch provides a mock function with given fields: ctx, req
+func (_m *Usecase) ResetQuotaDeviasiBranch(ctx context.Context, req request.ReqResetQuotaDeviasiBranch) (response.UpdateQuotaDeviasiBranchResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	var r0 response.UpdateQuotaDeviasiBranchResponse
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqResetQuotaDeviasiBranch) response.UpdateQuotaDeviasiBranchResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(response.UpdateQuotaDeviasiBranchResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqResetQuotaDeviasiBranch) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ReturnOrder provides a mock function with given fields: ctx, req
 func (_m *Usecase) ReturnOrder(ctx context.Context, req request.ReqReturnOrder) (response.ReturnResponse, error) {
 	ret := _m.Called(ctx, req)
