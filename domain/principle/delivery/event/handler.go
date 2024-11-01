@@ -30,7 +30,7 @@ func NewServicePrinciple(app *platformevent.ConsumerRouter, repository interface
 		producer:   producer,
 		Json:       json,
 	}
-	app.Handle("new_kmb_status_update", handler.PrincipleUpdateStatus)
+	app.Handle("new_kmb_update_status", handler.PrincipleUpdateStatus)
 }
 
 // event update status principle order
