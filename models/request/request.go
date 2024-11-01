@@ -979,7 +979,7 @@ type PrincipleAsset struct {
 	LicensePlate       string `json:"license_plate" validate:"required,max=50" example:"B3006TBJ"`
 	Color              string `json:"color" validate:"required,min=4,max=30" example:"HITAM"`
 	Brand              string `json:"brand" validate:"required,max=50" example:"HONDA"`
-	ResidenceAddress   string `json:"residence_address" validate:"required,max=100" example:"Dermaga Baru"`
+	ResidenceAddress   string `json:"residence_address" validate:"required,allowcharsaddress,max=100" example:"Dermaga Baru"`
 	ResidenceRT        string `json:"residence_rt" validate:"required,min=1,max=3" example:"001"`
 	ResidenceRW        string `json:"residence_rw" validate:"required,min=1,max=3" example:"002"`
 	ResidenceProvince  string `json:"residence_province" validate:"required,max=50" example:"Jakarta"`
@@ -1010,7 +1010,7 @@ type PrinciplePemohon struct {
 	SurgateMotherName       string  `json:"surgate_mother_name" validate:"required,max=50" example:"IBU"`
 	Gender                  string  `json:"gender" validate:"required,max=1" example:"M"`
 	Religion                string  `json:"religion" validate:"required,len=1"  example:"1"`
-	LegalAddress            string  `json:"legal_address" validate:"required,max=100" example:"Dermaga Baru"`
+	LegalAddress            string  `json:"legal_address" validate:"required,allowcharsaddress,max=100" example:"Dermaga Baru"`
 	LegalRT                 string  `json:"legal_rt" validate:"required,min=1,max=3" example:"001"`
 	LegalRW                 string  `json:"legal_rw" validate:"required,min=1,max=3" example:"003"`
 	LegalProvince           string  `json:"legal_province" validate:"required,max=50" example:"Jakarta"`
@@ -1029,7 +1029,7 @@ type PrinciplePemohon struct {
 	CompanyName             string  `json:"company_name" validate:"required,min=2,max=50" example:"PT KB Finansia"`
 	EconomySectorID         string  `json:"economy_sector" validate:"required,max=10" example:"06"`
 	IndustryTypeID          string  `json:"industry_type_id" validate:"required,max=10" example:"1000"`
-	CompanyAddress          string  `json:"company_address" validate:"required,max=100" example:"Dermaga Baru"`
+	CompanyAddress          string  `json:"company_address" validate:"required,allowcharsaddress,max=100" example:"Dermaga Baru"`
 	CompanyRT               string  `json:"company_rt" validate:"required,min=1,max=3" example:"001"`
 	CompanyRW               string  `json:"company_rw" validate:"required,min=1,max=3" example:"003"`
 	CompanyProvince         string  `json:"company_province" validate:"required,max=50" example:"Jakarta"`
@@ -1081,7 +1081,7 @@ type PrincipleEmergencyContact struct {
 	Name         string `json:"name" validate:"required,min=2,max=50,allowcharsname" example:"MULYADI"`
 	Relationship string `json:"relationship" validate:"required,relationship,max=10" example:"FM"`
 	MobilePhone  string `json:"mobile_phone" validate:"required,min=9,max=14,number,mobile_phone" example:"0856789XXX1"`
-	Address      string `json:"address" validate:"required,max=90" example:"JL.PEGANGSAAN 1"`
+	Address      string `json:"address" validate:"required,allowcharsaddress,max=90" example:"JL.PEGANGSAAN 1"`
 	Rt           string `json:"rt" validate:"required,min=1,max=3,number" example:"008"`
 	Rw           string `json:"rw" validate:"required,min=1,max=3,number" example:"017"`
 	Kelurahan    string `json:"kelurahan" validate:"required,max=30" example:"TEGAL PARANG"`
