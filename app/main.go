@@ -20,6 +20,7 @@ import (
 	kmbDelivery "los-kmb-api/domain/kmb/delivery/http"
 	kmbRepository "los-kmb-api/domain/kmb/repository"
 	kmbUsecase "los-kmb-api/domain/kmb/usecase"
+	eventPrincipleHandler "los-kmb-api/domain/principle/delivery/event"
 	principleDelivery "los-kmb-api/domain/principle/delivery/http"
 	principleRepository "los-kmb-api/domain/principle/repository"
 	principleUsecase "los-kmb-api/domain/principle/usecase"
@@ -125,6 +126,7 @@ func main() {
 	constant.KEY_PREFIX_CALLBACK_GOLIVE = os.Getenv("KEY_PREFIX_CALLBACK_GOLIVE")
 	constant.KEY_PREFIX_UPDATE_CUSTOMER = os.Getenv("KEY_PREFIX_UPDATE_CUSTOMER")
 	constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE = os.Getenv("KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE")
+	constant.KEY_PREFIX_UPDATE_STATUS_NEW_KMB = os.Getenv("KEY_PREFIX_UPDATE_STATUS_NEW_KMB")
 
 	kpLos, err := database.OpenKpLos()
 	if err != nil {
@@ -301,6 +303,27 @@ func main() {
 	eventHandler.NewServiceKMB(consumerJourneyRouter, kmbRepositories, kmbUsecases, kmbMetrics, validator, producer, jsonResponse, cmsUsecases)
 
 	if err := consumerJourneyRouter.StartConsume(); err != nil {
+		panic(err)
+	}
+
+	consumerPrincipleRouter := platformevent.NewConsumerRouter(constant.TOPIC_SUBMISSION, os.Getenv("LOS_SUBMISSION_KMB"), auth)
+
+	consumerPrincipleRouter.Use(func(next event.ConsumerProcessor) event.ConsumerProcessor {
+		return func(ctx context.Context, event event.Event) error {
+			startTime := utils.GenerateTimeInMilisecond()
+			reqID := utils.GenerateUUID()
+
+			ctx = context.WithValue(ctx, constant.CTX_KEY_REQUEST_TIME, startTime)
+			ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
+			ctx = context.WithValue(ctx, constant.CTX_KEY_IS_CONSUMER, true)
+
+			return next(ctx, event)
+		}
+	})
+
+	eventPrincipleHandler.NewServicePrinciple(consumerPrincipleRouter, principleRepo, principleCase, validator, producer, jsonResponse)
+
+	if err := consumerPrincipleRouter.StartConsume(); err != nil {
 		panic(err)
 	}
 

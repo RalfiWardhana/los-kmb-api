@@ -1269,3 +1269,8 @@ type PrinciplePublish struct {
 	StatusCode string `json:"status_code" validate:"required"`
 	ProspectID string `json:"prospect_id" validate:"required"`
 }
+
+type PrincipleUpdateStatus struct {
+	ProspectID  string `json:"prospect_id"`
+	OrderStatus string `json:"order_status"`
+}
