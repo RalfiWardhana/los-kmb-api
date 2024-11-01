@@ -99,6 +99,7 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("otr_principle", otrValidationPrinciple)
 	v.validator.RegisterValidation("dealer_principle", dealerValidationPrinciple)
 	v.validator.RegisterValidation("asset_category_id_principle", assetCategoryIDValidationPrinciple)
+	v.validator.RegisterValidation("allowcharsaddress", allowedCharsInAddress)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
@@ -760,4 +761,12 @@ func assetCategoryIDValidationPrinciple(fl validator.FieldLevel) bool {
 	}
 
 	return true
+}
+
+func allowedCharsInAddress(fl validator.FieldLevel) bool {
+
+	re := regexp.MustCompile("^[a-zA-Z0-9., ]+$")
+
+	return re.MatchString(fl.Field().String())
+
 }
