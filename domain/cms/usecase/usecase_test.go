@@ -3414,6 +3414,123 @@ func TestUpdateQuotaDeviasiBranch(t *testing.T) {
 	})
 }
 
+func TestResetQuotaDeviasiBranch(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		mockRepo := new(mocks.Repository)
+		usecase := usecase{repository: mockRepo}
+
+		ctx := context.Background()
+
+		req := request.ReqResetQuotaDeviasiBranch{
+			BranchID:      "BR001",
+			UpdatedByName: "IT Support",
+		}
+
+		mockRepo.On("ProcessResetQuotaDeviasiBranch", req.BranchID, mock.Anything).Return(entity.DataQuotaDeviasiBranch{}, entity.DataQuotaDeviasiBranch{}, nil)
+
+		data, err := usecase.ResetQuotaDeviasiBranch(ctx, req)
+
+		assert.NoError(t, err)
+		assert.Equal(t, constant.RESULT_OK, data.Status)
+		assert.Equal(t, constant.RESET_DEVIASI_SUCCESS, data.Message)
+	})
+
+	t.Run("error_branch_not_found", func(t *testing.T) {
+		mockRepo := new(mocks.Repository)
+		usecase := usecase{repository: mockRepo}
+
+		ctx := context.Background()
+
+		req := request.ReqResetQuotaDeviasiBranch{
+			BranchID:      "BR002",
+			UpdatedByName: "IT Support",
+		}
+
+		mockRepo.On("ProcessResetQuotaDeviasiBranch", req.BranchID, mock.Anything).Return(entity.DataQuotaDeviasiBranch{}, entity.DataQuotaDeviasiBranch{}, errors.New("Branch not found"))
+
+		_, err := usecase.ResetQuotaDeviasiBranch(ctx, req)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Process Reset Kuota Deviasi Branch error")
+	})
+
+	t.Run("error_upstream", func(t *testing.T) {
+		mockRepo := new(mocks.Repository)
+		usecase := usecase{repository: mockRepo}
+
+		ctx := context.Background()
+
+		req := request.ReqResetQuotaDeviasiBranch{
+			BranchID:      "BR001",
+			UpdatedByName: "IT Support",
+		}
+
+		mockRepo.On("ProcessResetQuotaDeviasiBranch", req.BranchID, mock.Anything).Return(entity.DataQuotaDeviasiBranch{}, entity.DataQuotaDeviasiBranch{}, errors.New("some other error"))
+
+		_, err := usecase.ResetQuotaDeviasiBranch(ctx, req)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Process Reset Kuota Deviasi Branch error")
+	})
+}
+
+func TestResetAllQuotaDeviasi(t *testing.T) {
+	t.Run("success", func(t *testing.T) {
+		mockRepo := new(mocks.Repository)
+		usecase := usecase{repository: mockRepo}
+
+		ctx := context.Background()
+
+		req := request.ReqResetAllQuotaDeviasi{
+			UpdatedByName: "IT Support",
+		}
+
+		mockRepo.On("ProcessResetAllQuotaDeviasi", mock.Anything).Return(nil)
+
+		data, err := usecase.ResetAllQuotaDeviasi(ctx, req)
+
+		assert.NoError(t, err)
+		assert.Equal(t, constant.RESULT_OK, data.Status)
+		assert.Equal(t, constant.RESET_DEVIASI_SUCCESS, data.Message)
+	})
+
+	t.Run("error_no_branches_found", func(t *testing.T) {
+		mockRepo := new(mocks.Repository)
+		usecase := usecase{repository: mockRepo}
+
+		ctx := context.Background()
+
+		req := request.ReqResetAllQuotaDeviasi{
+			UpdatedByName: "IT Support",
+		}
+
+		mockRepo.On("ProcessResetAllQuotaDeviasi", mock.Anything).Return(errors.New("No branches found"))
+
+		_, err := usecase.ResetAllQuotaDeviasi(ctx, req)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Process Reset All Kuota Deviasi error")
+	})
+
+	t.Run("error_upstream", func(t *testing.T) {
+		mockRepo := new(mocks.Repository)
+		usecase := usecase{repository: mockRepo}
+
+		ctx := context.Background()
+
+		req := request.ReqResetAllQuotaDeviasi{
+			UpdatedByName: "IT Support",
+		}
+
+		mockRepo.On("ProcessResetAllQuotaDeviasi", mock.Anything).Return(errors.New("some other error"))
+
+		_, err := usecase.ResetAllQuotaDeviasi(ctx, req)
+
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "Process Reset All Kuota Deviasi error")
+	})
+}
+
 func TestGetInquiryMappingCluster(t *testing.T) {
 	testcases := []struct {
 		name          string

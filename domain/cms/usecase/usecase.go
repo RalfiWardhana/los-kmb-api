@@ -2390,7 +2390,7 @@ func (u usecase) ResetAllQuotaDeviasi(ctx context.Context, req request.ReqResetA
 
 	data = response.UploadQuotaDeviasiBranchResponse{
 		Status:  constant.RESULT_OK,
-		Message: constant.UPDATE_DEVIASI_SUCCESS,
+		Message: constant.RESET_DEVIASI_SUCCESS,
 	}
 
 	return

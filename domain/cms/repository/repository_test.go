@@ -11396,6 +11396,91 @@ func TestBatchUpdateQuotaDeviasi(t *testing.T) {
 	})
 }
 
+func TestProcessResetQuotaDeviasiBranch(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	branchID := "BR001"
+	updatedBy := "tester"
+
+	t.Run("success update", func(t *testing.T) {
+		dataBefore := entity.DataQuotaDeviasiBranch{
+			QuotaAmount:    8000,
+			QuotaAccount:   3,
+			BookingAmount:  2000,
+			BookingAccount: 2,
+			BalanceAmount:  6000,
+			BalanceAccount: 1,
+			IsActive:       true,
+			UpdatedAt:      time.Now(),
+			UpdatedBy:      "tester",
+		}
+
+		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?`)).
+			WithArgs(branchID).
+			WillReturnRows(sqlmock.NewRows([]string{"quota_amount", "quota_account", "booking_amount", "booking_account", "balance_amount", "balance_account", "is_active", "updated_at", "updated_by"}).
+				AddRow(dataBefore.QuotaAmount, dataBefore.QuotaAccount, dataBefore.BookingAmount, dataBefore.BookingAccount, dataBefore.BalanceAmount, dataBefore.BalanceAccount, true, time.Now(), "tester"))
+
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "m_branch_deviasi" SET "balance_account" = ?, "balance_amount" = ?, "booking_account" = ?, "booking_amount" = ?, "is_active" = ?, "quota_account" = ?, "quota_amount" = ?, "updated_at" = ?, "updated_by" = ? WHERE (BranchID = ?)`)).
+			WithArgs(0, 0.00, 0, 0.00, false, 0, 0.00, sqlmock.AnyArg(), updatedBy, branchID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?`)).
+			WithArgs(branchID).
+			WillReturnRows(sqlmock.NewRows([]string{"quota_amount", "quota_account", "booking_amount", "booking_account", "balance_amount", "balance_account", "is_active", "updated_at", "updated_by"}).
+				AddRow(0.00, 0, 0.00, 0, 0.00, 0, false, time.Now(), "tester"))
+
+		mock.ExpectCommit()
+
+		dataBeforeResult, dataAfterResult, err := repo.ProcessResetQuotaDeviasiBranch(branchID, updatedBy)
+		dataBeforeResult.UpdatedAt = dataBefore.UpdatedAt
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if dataBeforeResult != dataBefore {
+			t.Errorf("expected dataBefore: %v, got: %v", dataBefore, dataBeforeResult)
+		}
+		if dataAfterResult.BalanceAmount != 0.00 {
+			t.Errorf("expected balance amount: %v, got: %v", 0.00, dataAfterResult.BalanceAmount)
+		}
+	})
+}
+
+func TestProcessResetAllQuotaDeviasi(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	updatedBy := "tester"
+
+	t.Run("success update", func(t *testing.T) {
+
+		mock.ExpectBegin()
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "m_branch_deviasi" SET "balance_account" = ?, "balance_amount" = ?, "booking_account" = ?, "booking_amount" = ?, "is_active" = ?, "quota_account" = ?, "quota_amount" = ?, "updated_at" = ?, "updated_by" = ?`)).
+			WithArgs(0, 0.00, 0, 0.00, false, 0, 0.00, sqlmock.AnyArg(), updatedBy).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectCommit()
+
+		err := repo.ProcessResetAllQuotaDeviasi(updatedBy)
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+	})
+}
+
 func TestGetMappingCluster(t *testing.T) {
 	// Setup mock database connection
 	os.Setenv("DEFAULT_TIMEOUT_10S", "10")

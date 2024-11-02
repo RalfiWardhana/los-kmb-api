@@ -1925,6 +1925,198 @@ func TestQuotaDeviasiUpload(t *testing.T) {
 	})
 }
 
+func TestQuotaDeviasiResetBranch(t *testing.T) {
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	mockJson := new(mocksJson.JSON)
+
+	// Create an instance of the handler
+	handler := &handlerCMS{
+		usecase:    mockUsecase,
+		repository: mockRepository,
+		Json:       mockJson,
+	}
+	body := request.ReqResetQuotaDeviasiBranch{
+		BranchID:      "BR001",
+		UpdatedByName: "User123",
+	}
+
+	t.Run("success reset", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+		var errData error
+
+		data, _ := json.Marshal(body)
+
+		reqID := utils.GenerateUUID()
+
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/quota/reset", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderXRequestID, reqID)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.Set(constant.HeaderXRequestID, reqID)
+
+		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		// Set up the mock for ResetQuotaDeviasiBranch
+		mockUsecase.On("ResetQuotaDeviasiBranch", mock.Anything, body).Return(response.UpdateQuotaDeviasiBranchResponse{
+			Status:   constant.RESULT_OK,
+			Message:  constant.RESET_DEVIASI_SUCCESS,
+			BranchID: body.BranchID,
+		}, errData).Once()
+
+		mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		// Call the handler
+		err := handler.QuotaDeviasiResetBranch(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
+	t.Run("error bind", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/quota/reset", strings.NewReader("error"))
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+		reqID := utils.GenerateUUID()
+		ctx.Set(constant.HeaderXRequestID, reqID)
+
+		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		err := handler.QuotaDeviasiResetBranch(ctx)
+		assert.Nil(t, err)
+	})
+
+	t.Run("error bad request", func(t *testing.T) {
+		body.BranchID = "" // Invalid BranchID to trigger validation error
+		data, _ := json.Marshal(body)
+
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/quota/reset", bytes.NewBuffer(data))
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+		reqID := utils.GenerateUUID()
+		ctx.Set(constant.HeaderXRequestID, reqID)
+		ctx.Request().Header.Add("content-type", "application/json")
+
+		mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.QuotaDeviasiResetBranch(ctx)
+		assert.Nil(t, err)
+	})
+}
+
+func TestQuotaDeviasiResetAll(t *testing.T) {
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	mockJson := new(mocksJson.JSON)
+
+	// Create an instance of the handler
+	handler := &handlerCMS{
+		usecase:    mockUsecase,
+		repository: mockRepository,
+		Json:       mockJson,
+	}
+	body := request.ReqResetAllQuotaDeviasi{
+		UpdatedByName: "User123",
+	}
+
+	t.Run("success reset all", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+		var errData error
+
+		data, _ := json.Marshal(body)
+
+		reqID := utils.GenerateUUID()
+
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/quota/reset-all", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderXRequestID, reqID)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.Set(constant.HeaderXRequestID, reqID)
+
+		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		// Set up the mock for ResetQuotaDeviasiAll
+		mockUsecase.On("ResetAllQuotaDeviasi", mock.Anything, body).Return(response.UploadQuotaDeviasiBranchResponse{
+			Status:  constant.RESULT_OK,
+			Message: constant.RESET_DEVIASI_SUCCESS,
+		}, errData).Once()
+
+		mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		// Call the handler
+		err := handler.QuotaDeviasiResetAll(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
+	t.Run("error bind", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/quota/reset-all", strings.NewReader("error"))
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+		reqID := utils.GenerateUUID()
+		ctx.Set(constant.HeaderXRequestID, reqID)
+
+		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+		mockJson.On("InternalServerErrorCustomV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		err := handler.QuotaDeviasiResetAll(ctx)
+		assert.Nil(t, err)
+	})
+
+	t.Run("error bad request", func(t *testing.T) {
+		body.UpdatedByName = "" // Invalid UpdatedByName to trigger validation error
+		data, _ := json.Marshal(body)
+
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/quota/reset-all", bytes.NewBuffer(data))
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+		reqID := utils.GenerateUUID()
+		ctx.Set(constant.HeaderXRequestID, reqID)
+		ctx.Request().Header.Add("content-type", "application/json")
+
+		mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		mockRepository.On("SaveLogOrchestrator", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.QuotaDeviasiResetAll(ctx)
+		assert.Nil(t, err)
+	})
+}
+
 func TestMappingClusterInquiry(t *testing.T) {
 	mockUsecase := new(mocks.Usecase)
 	mockRepository := new(mocks.Repository)
