@@ -2534,7 +2534,7 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 				LEFT JOIN m_branch_deviasi AS mbd ON (tm.BranchID = mbd.BranchID)
 				LEFT JOIN trx_filtering AS tf ON (td.ProspectID = tf.prospect_id)
 				LEFT JOIN trx_final_approval AS tfa ON (td.ProspectID = tfa.ProspectID)
-                WHERE ta.ProspectID = ?
+                WHERE ta.ProspectID = ? AND mbd.is_active = 1
             `
 			if err = tx.Raw(selectQuery, trxCaDecision.ProspectID).Scan(&resultCheckDeviation).Error; err != nil {
 				if err != gorm.ErrRecordNotFound {
@@ -2550,7 +2550,7 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 							booking_account = booking_account - 1,
 							balance_amount = (quota_amount - booking_amount) + ?,
 							balance_account = (quota_account - booking_account) + 1
-						WHERE BranchID = ?
+						WHERE BranchID = ? AND is_active = 1
 					`
 					if err = tx.Exec(updateQuery, resultCheckDeviation.NTF, resultCheckDeviation.NTF, resultCheckDeviation.BranchID).Error; err != nil {
 						return err
