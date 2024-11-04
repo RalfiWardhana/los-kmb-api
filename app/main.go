@@ -305,7 +305,7 @@ func main() {
 		panic(err)
 	}
 
-	consumerPrincipleRouter := platformevent.NewConsumerRouter(constant.TOPIC_SUBMISSION, os.Getenv("LOS_SUBMISSION_KMB"), auth)
+	consumerPrincipleRouter := platformevent.NewConsumerRouter(constant.TOPIC_SUBMISSION_PRINCIPLE, os.Getenv("LOS_SUBMISSION_PRINCIPLE"), auth)
 
 	consumerPrincipleRouter.Use(func(next event.ConsumerProcessor) event.ConsumerProcessor {
 		return func(ctx context.Context, event event.Event) error {
@@ -322,7 +322,7 @@ func main() {
 
 	eventPrincipleHandler.NewServicePrinciple(consumerPrincipleRouter, principleRepo, principleCase, validator, producer, jsonResponse)
 
-	if err := consumerPrincipleRouter.StartConsume(); err != nil {
+	if err := consumerPrincipleRouter.StartConsumeWithoutTimestamp(); err != nil {
 		panic(err)
 	}
 

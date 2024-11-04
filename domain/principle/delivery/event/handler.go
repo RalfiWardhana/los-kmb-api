@@ -2,6 +2,7 @@ package eventhandlers
 
 import (
 	"context"
+	"encoding/base64"
 	"los-kmb-api/domain/principle/interfaces"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/entity"
@@ -9,6 +10,9 @@ import (
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/platformevent"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
+	"net/http"
+	"os"
 
 	"github.com/KB-FMF/platform-library/event"
 	jsoniter "github.com/json-iterator/go"
@@ -30,7 +34,7 @@ func NewServicePrinciple(app *platformevent.ConsumerRouter, repository interface
 		producer:   producer,
 		Json:       json,
 	}
-	app.Handle("new_kmb_update_status", handler.PrincipleUpdateStatus)
+	app.Handle("new_kmb_status_update", handler.PrincipleUpdateStatus)
 }
 
 // event update status principle order
@@ -44,6 +48,25 @@ func (h handlers) PrincipleUpdateStatus(ctx context.Context, event event.Event) 
 	)
 
 	_ = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(body, &req)
+
+	// Write Success Log
+	requestLog := utils.StructToMap(req)
+	requestLog["topic_key"] = string(event.GetKey())
+	requestLog["topic_name"] = constant.TOPIC_SUBMISSION
+	requestLog["rawBody"] = base64.RawStdEncoding.EncodeToString(body)
+	common.CentralizeLog(ctx, middlewares.UserInfoData.AccessToken, common.CentralizeLogParameter{
+		Link:       os.Getenv("DUMMY_URL_LOGS"),
+		Method:     http.MethodPost,
+		Action:     "CONSUME_EVENT",
+		Type:       "EVENT_PLATFORM_LIBRARY",
+		LogFile:    constant.NEW_KMB_LOG,
+		MsgLogFile: constant.MSG_CONSUME_DATA_STREAM,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_INFO,
+		Request:    requestLog,
+		Response: map[string]interface{}{
+			"messages": "success consume data stream",
+		},
+	})
 
 	principleData, _ = h.repository.GetPrincipleStepOne(req.ProspectID)
 	if principleData != (entity.TrxPrincipleStepOne{}) {
