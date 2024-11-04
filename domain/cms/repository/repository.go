@@ -599,6 +599,14 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	ti.color,
 	chassis_number,
 	engine_number,
+	CASE
+		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+	END AS bpkb_name,
+	ti.owner_asset,
+	ti.license_plate,
 	interest_rate,
 	Tenor AS InstallmentPeriod,
 	OTR,
@@ -1648,6 +1656,14 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		ta.interest_rate,
 		ta.Tenor AS InstallmentPeriod,
 		OTR,
@@ -2223,6 +2239,14 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+			WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+			WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+			WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+			WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -2915,6 +2939,14 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+			WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+			WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+			WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+			WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
