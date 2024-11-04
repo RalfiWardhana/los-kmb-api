@@ -707,6 +707,7 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				NTFConfins:                  trxFMF.NTFConfins,
 				NTFTopup:                    trxFMF.NTFTopup,
 				WayOfPayment:                data.Apk.WayOfPayment,
+				StampDutyFee:                data.Apk.StampDutyFee,
 			}
 
 			logInfo = apk
@@ -1838,6 +1839,7 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			InstallmentAmount: apk.InstallmentAmount,
 			EffectiveRate:     apk.EffectiveRate,
 			CommisionSubsidy:  apk.CommisionSubsidi,
+			StampDutyFee:      apk.StampDutyFee,
 			UsrCrt:            constant.LOS_CREATED,
 			DtmCrt:            time.Now(),
 		}).Error; err != nil {

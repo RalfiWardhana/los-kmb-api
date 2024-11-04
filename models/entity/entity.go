@@ -646,6 +646,7 @@ type TrxApk struct {
 	NTFConfins                  float64   `gorm:"column:NTFConfins"`
 	NTFTopup                    float64   `gorm:"column:NTFTopup"`
 	WayOfPayment                string    `gorm:"type:varchar(20);column:WayOfPayment"`
+	StampDutyFee                float64   `gorm:"column:stamp_duty_fee"`
 }
 
 func (c *TrxApk) TableName() string {
@@ -2130,6 +2131,7 @@ type STG_GEN_FIN struct {
 	DtmCrt             time.Time `gorm:"column:DtmCrt" json:"dtm_crt"`
 	TDPPaidAtCoy       float64   `gorm:"column:TDPPaidAtCoy" json:"tdp_paid_at_coy"`
 	PrepaidAmount      float64   `gorm:"column:PrepaidAmount" json:"prepaid_amount"`
+	StampDutyFee       float64   `gorm:"column:StampDutyFee" json:"stamp_duty_fee"`
 }
 
 func (c *STG_GEN_FIN) TableName() string {
