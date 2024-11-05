@@ -5377,6 +5377,74 @@ func TestCheckCmoNoFPD(t *testing.T) {
 			expectedEntitySave: entity.TrxCmoNoFPD{},
 			expectedError:      errors.New(constant.ERROR_UPSTREAM + " - Check CMO No FPD error"),
 		},
+		{
+			name:           "test CMO within date range",
+			prospectID:     "SAL0004",
+			cmoID:          "CMO04",
+			cmoCategory:    constant.CMO_BARU,
+			cmoJoinDate:    "2024-06-01",
+			defaultCluster: "Cluster A",
+			bpkbName:       "NAMA CMO",
+			mockReturnData: entity.TrxCmoNoFPD{
+				ProspectID:              "SAL0004",
+				BPKBName:                "NAMA CMO",
+				CMOID:                   "CMO04",
+				CmoCategory:             constant.CMO_BARU,
+				CmoJoinDate:             "2024-06-01",
+				DefaultCluster:          "Cluster A",
+				DefaultClusterStartDate: "2024-09-06",
+				DefaultClusterEndDate:   time.Now().AddDate(0, 0, 1).Format("2006-01-02"),
+			},
+			expectedCluster: "Cluster A",
+			expectedEntitySave: entity.TrxCmoNoFPD{
+				ProspectID:              "",
+				BPKBName:                "",
+				CMOID:                   "",
+				CmoCategory:             "",
+				CmoJoinDate:             "",
+				DefaultCluster:          "",
+				DefaultClusterStartDate: "",
+				DefaultClusterEndDate:   "",
+			},
+			expectedError: nil,
+		},
+		{
+			name:           "test CMO outside date range",
+			prospectID:     "SAL0005",
+			cmoID:          "CMO05",
+			cmoCategory:    constant.CMO_BARU,
+			cmoJoinDate:    "2024-08-01",
+			defaultCluster: "Cluster D",
+			bpkbName:       "NAMA CMO",
+			mockReturnData: entity.TrxCmoNoFPD{
+				ProspectID:              "SAL0005",
+				BPKBName:                "NAMA CMO",
+				CMOID:                   "CMO05",
+				CmoCategory:             constant.CMO_BARU,
+				CmoJoinDate:             "2024-08-01",
+				DefaultCluster:          "Cluster D",
+				DefaultClusterStartDate: "2024-05-01",
+				DefaultClusterEndDate:   "2024-08-01",
+			},
+			expectedCluster: "",
+			expectedEntitySave: entity.TrxCmoNoFPD{
+				ProspectID:              "SAL0005",
+				BPKBName:                "NAMA CMO",
+				CMOID:                   "CMO05",
+				CmoCategory:             constant.CMO_BARU,
+				CmoJoinDate:             "2024-08-01",
+				DefaultCluster:          "Cluster D",
+				DefaultClusterStartDate: time.Now().Format("2006-01-02"),
+				DefaultClusterEndDate: func() string {
+					today := time.Now().Format("2006-01-02")
+					todayTime, _ := time.Parse("2006-01-02", today)
+					threeMonthsLater := todayTime.AddDate(0, 0, 0)
+					threeMonthsLater = time.Date(threeMonthsLater.Year(), threeMonthsLater.Month(), 0, 0, 0, 0, 0, threeMonthsLater.Location())
+					return threeMonthsLater.Format("2006-01-02")
+				}(),
+			},
+			expectedError: nil,
+		},
 	}
 
 	for _, tc := range testcases {

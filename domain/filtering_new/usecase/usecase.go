@@ -72,6 +72,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		respRrdDate               string
 		monthsDiff                int
 		expiredContractConfig     entity.AppConfig
+		isSpvAsCMO                bool
 	)
 
 	requestID := ctx.Value(echo.HeaderXRequestID).(string)
@@ -147,6 +148,15 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	/* Process Get Cluster based on CMO_ID starts here */
 
+	// Truncate the suffix "MO" or "INH" from the req.CMOID if present
+	if strings.HasSuffix(req.CMOID, "MO") {
+		req.CMOID = strings.TrimSuffix(req.CMOID, "MO")
+		isSpvAsCMO = true
+	} else if strings.HasSuffix(req.CMOID, "INH") {
+		req.CMOID = strings.TrimSuffix(req.CMOID, "INH")
+		isSpvAsCMO = true
+	}
+
 	resCMO, err = u.usecase.GetEmployeeData(ctx, req.CMOID, accessToken, hrisAccessToken)
 	if err != nil {
 		return
@@ -198,7 +208,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		}
 	}
 
-	if useDefaultCluster == true {
+	if useDefaultCluster && !isSpvAsCMO {
 		savedCluster, entityTransactionCMOnoFPD, err = u.usecase.CheckCmoNoFPD(req.ProspectID, req.CMOID, resCMO.CMOCategory, resCMO.JoinDate, clusterCmo, bpkbString)
 		if err != nil {
 			return
@@ -1089,23 +1099,23 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 		json.Unmarshal([]byte(jsoniter.Get(getDataEmployee.Body()).ToString()), &respGetEmployeeData)
 
 		isCmoActive := false
-		if len(respGetEmployeeData.Data) > 0 && respGetEmployeeData.Data[0].PositionGroupCode == "AO" {
+		if len(respGetEmployeeData.Data) > 0 && (respGetEmployeeData.Data[0].PositionGroupCode == "AO" || respGetEmployeeData.Data[0].PositionGroupCode == "AOSPV") {
 			isCmoActive = true
 		}
 
 		var lastIndex int = -1
-		// Cek dulu apakah saat ini employee tersebut adalah berposisi sebagai "CMO"
+		// Cek dulu apakah saat ini employee tersebut adalah berposisi sebagai "CMO" atau "SPV as CMO"
 		if isCmoActive {
-			// Mencari index terakhir yang mengandung position_group_code "AO"
+			// Mencari index terakhir yang mengandung position_group_code "AO" atau "AOSPV"
 			for i, emp := range respGetEmployeeData.Data {
-				if emp.PositionGroupCode == "AO" {
+				if emp.PositionGroupCode == "AO" || emp.PositionGroupCode == "AOSPV" {
 					lastIndex = i
 				}
 			}
 		}
 
 		if lastIndex == -1 {
-			// Jika tidak ada data dengan position_group_code "AO"
+			// Jika tidak ada data dengan position_group_code "AO" atau "AOSPV"
 			data = response.EmployeeCMOResponse{}
 		} else {
 			dataEmployee = respGetEmployeeData.Data[lastIndex]
