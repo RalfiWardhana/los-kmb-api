@@ -149,15 +149,16 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	/* Process Get Cluster based on CMO_ID starts here */
 
 	// Truncate the suffix "MO" or "INH" from the req.CMOID if present
+	employeeID := req.CMOID
 	if strings.HasSuffix(req.CMOID, "MO") {
-		req.CMOID = strings.TrimSuffix(req.CMOID, "MO")
+		employeeID = strings.TrimSuffix(req.CMOID, "MO")
 		isSpvAsCMO = true
 	} else if strings.HasSuffix(req.CMOID, "INH") {
-		req.CMOID = strings.TrimSuffix(req.CMOID, "INH")
+		employeeID = strings.TrimSuffix(req.CMOID, "INH")
 		isSpvAsCMO = true
 	}
 
-	resCMO, err = u.usecase.GetEmployeeData(ctx, req.CMOID, accessToken, hrisAccessToken)
+	resCMO, err = u.usecase.GetEmployeeData(ctx, employeeID, accessToken, hrisAccessToken)
 	if err != nil {
 		return
 	}
