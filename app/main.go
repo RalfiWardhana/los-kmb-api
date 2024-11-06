@@ -82,6 +82,7 @@ func main() {
 	config.NewConfiguration(env)
 	e.Pre(middleware.RemoveTrailingSlash())
 	e.Use(middleware.RequestID())
+	e.Use(middleware.Secure())
 	e.Debug = config.IsDevelopment
 
 	if config.IsDevelopment {
