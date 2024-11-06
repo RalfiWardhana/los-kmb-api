@@ -967,7 +967,7 @@ type ReqHrisCareerHistory struct {
 type PrincipleAsset struct {
 	ProspectID         string `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
 	IDNumber           string `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
-	SpouseIDNumber     string `json:"spouse_id_number" example:"3506126712000002"`
+	SpouseIDNumber     string `json:"spouse_id_number"  validate:"omitempty,number,len=16" example:"3506126712000002"`
 	ManufactureYear    int    `json:"manufacture_year" validate:"required" example:"2020"`
 	NoChassis          string `json:"chassis_number" validate:"required,max=25" example:"MHKV1AA2JBK107322"`
 	NoEngine           string `json:"engine_number" validate:"required,max=20" example:"73218JAJK"`
@@ -1001,51 +1001,51 @@ type PrinciplePemohon struct {
 	ProspectID              string  `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
 	IDNumber                string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
 	SpouseIDNumber          string  `json:"spouse_id_number"  validate:"omitempty,number,len=16" example:"3506126712000002"`
-	MobilePhone             string  `json:"mobile_phone" validate:"required,min=9,max=14" example:"085880529100"`
+	MobilePhone             string  `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"085880529100"`
 	Email                   string  `json:"email" validate:"required,email,max=100" example:"jonathaxx@gmail.com"`
 	LegalName               string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
 	FullName                string  `json:"full_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
 	BirthDate               string  `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
-	BirthPlace              string  `json:"birth_place" validate:"required,max=100" example:"Jakarta"`
-	SurgateMotherName       string  `json:"surgate_mother_name" validate:"required,max=50" example:"IBU"`
-	Gender                  string  `json:"gender" validate:"required,max=1" example:"M"`
+	BirthPlace              string  `json:"birth_place" validate:"required,max=100,allowcharsname" example:"Jakarta"`
+	SurgateMotherName       string  `json:"surgate_mother_name" validate:"required,max=50,allowcharsname" example:"IBU"`
+	Gender                  string  `json:"gender" validate:"required,max=1,allowcharsname" example:"M"`
 	Religion                string  `json:"religion" validate:"required,len=1"  example:"1"`
 	LegalAddress            string  `json:"legal_address" validate:"required,allowcharsaddress,max=100" example:"Dermaga Baru"`
-	LegalRT                 string  `json:"legal_rt" validate:"required,min=1,max=3" example:"001"`
-	LegalRW                 string  `json:"legal_rw" validate:"required,min=1,max=3" example:"003"`
-	LegalProvince           string  `json:"legal_province" validate:"required,max=50" example:"Jakarta"`
-	LegalCity               string  `json:"legal_city" validate:"required,max=30" example:"Jakarta Timur"`
-	LegalKecamatan          string  `json:"legal_kecamatan" validate:"required,max=30" example:"Duren Sawit"`
-	LegalKelurahan          string  `json:"legal_kelurahan" validate:"required,max=30" example:"Klender"`
-	LegalZipCode            string  `json:"legal_zipcode" validate:"required,max=5" example:"13470"`
-	LegalPhoneArea          string  `json:"legal_phone_area" validate:"required,min=2,max=4" example:"021"`
-	LegalPhone              string  `json:"legal_phone" validate:"required" example:"86605224"`
+	LegalRT                 string  `json:"legal_rt" validate:"required,min=1,max=3,number" example:"001"`
+	LegalRW                 string  `json:"legal_rw" validate:"required,min=1,max=3,number" example:"003"`
+	LegalProvince           string  `json:"legal_province" validate:"required,max=50,allowcharsname" example:"Jakarta"`
+	LegalCity               string  `json:"legal_city" validate:"required,max=30,allowcharsname" example:"Jakarta Timur"`
+	LegalKecamatan          string  `json:"legal_kecamatan" validate:"required,max=30,allowcharsname" example:"Duren Sawit"`
+	LegalKelurahan          string  `json:"legal_kelurahan" validate:"required,max=30,allowcharsname" example:"Klender"`
+	LegalZipCode            string  `json:"legal_zipcode" validate:"required,max=5,number" example:"13470"`
+	LegalPhoneArea          string  `json:"legal_phone_area" validate:"required,min=2,max=4,number" example:"021"`
+	LegalPhone              string  `json:"legal_phone" validate:"required,min=5,max=14,number" example:"86605224"`
 	Education               string  `json:"education" validate:"required,max=10" example:"S1"`
 	ProfessionID            string  `json:"profession_id" validate:"required,max=10" example:"KRYSW"`
 	JobType                 string  `json:"job_type" validate:"required,max=10" example:"0012"`
 	JobPosition             string  `json:"job_position" validate:"required,max=10" example:"M"`
 	EmploymentSinceMonth    int     `json:"employement_since_month" validate:"required,min=1,max=12" example:"12"`
 	EmploymentSinceYear     int     `json:"employement_since_year" validate:"required" example:"2020"`
-	CompanyName             string  `json:"company_name" validate:"required,min=2,max=50" example:"PT KB Finansia"`
+	CompanyName             string  `json:"company_name" validate:"required,min=2,max=50,allowcharsaddress" example:"PT KB Finansia"`
 	EconomySectorID         string  `json:"economy_sector" validate:"required,max=10" example:"06"`
 	IndustryTypeID          string  `json:"industry_type_id" validate:"required,max=10" example:"1000"`
 	CompanyAddress          string  `json:"company_address" validate:"required,allowcharsaddress,max=100" example:"Dermaga Baru"`
-	CompanyRT               string  `json:"company_rt" validate:"required,min=1,max=3" example:"001"`
-	CompanyRW               string  `json:"company_rw" validate:"required,min=1,max=3" example:"003"`
-	CompanyProvince         string  `json:"company_province" validate:"required,max=50" example:"Jakarta"`
-	CompanyCity             string  `json:"company_city" validate:"required,max=30" example:"Jakarta Timur"`
-	CompanyKecamatan        string  `json:"company_kecamatan" validate:"required,max=30" example:"Duren Sawit"`
-	CompanyKelurahan        string  `json:"company_kelurahan" validate:"required,max=30" example:"Klender"`
-	CompanyZipCode          string  `json:"company_zipcode" validate:"required,max=5" example:"13470"`
-	CompanyPhoneArea        string  `json:"company_phone_area" validate:"required,min=2,max=4" example:"021"`
-	CompanyPhone            string  `json:"company_phone" validate:"required" example:"86605224"`
+	CompanyRT               string  `json:"company_rt" validate:"required,min=1,max=3,number" example:"001"`
+	CompanyRW               string  `json:"company_rw" validate:"required,min=1,max=3,number" example:"003"`
+	CompanyProvince         string  `json:"company_province" validate:"required,max=50,allowcharsname" example:"Jakarta"`
+	CompanyCity             string  `json:"company_city" validate:"required,max=30,allowcharsname" example:"Jakarta Timur"`
+	CompanyKecamatan        string  `json:"company_kecamatan" validate:"required,max=30,allowcharsname" example:"Duren Sawit"`
+	CompanyKelurahan        string  `json:"company_kelurahan" validate:"required,max=30,allowcharsname" example:"Klender"`
+	CompanyZipCode          string  `json:"company_zipcode" validate:"required,max=5,number" example:"13470"`
+	CompanyPhoneArea        string  `json:"company_phone_area" validate:"required,min=2,max=4,number" example:"021"`
+	CompanyPhone            string  `json:"company_phone" validate:"required,min=5,max=14,number" example:"86605224,number"`
 	MonthlyFixedIncome      float64 `json:"monthly_fixed_income" validate:"required" example:"5000000"`
-	MaritalStatus           string  `json:"marital_status" validate:"required,max=10" example:"M"`
+	MaritalStatus           string  `json:"marital_status" validate:"required,max=10,allowcharsname" example:"M"`
 	SpouseLegalName         string  `json:"spouse_legal_name" validate:"omitempty,allowcharsname,max=50" example:"YULINAR NIATI"`
 	SpouseFullName          string  `json:"spouse_full_name" validate:"omitempty,allowcharsname,max=50" example:"YULINAR NIATI"`
 	SpouseBirthDate         string  `json:"spouse_birth_date" validate:"omitempty,dateformat" example:"1992-09-11"`
-	SpouseBirthPlace        string  `json:"spouse_birth_place" validate:"omitempty,max=100" example:"Jakarta"`
-	SpouseSurgateMotherName string  `json:"spouse_surgate_mother_name"  validate:"omitempty,max=100"  example:"MAMA"`
+	SpouseBirthPlace        string  `json:"spouse_birth_place" validate:"omitempty,max=100,allowcharsname" example:"Jakarta"`
+	SpouseSurgateMotherName string  `json:"spouse_surgate_mother_name"  validate:"omitempty,max=100,allowcharsname"  example:"MAMA"`
 	SpouseMobilePhone       string  `json:"spouse_mobile_phone" validate:"omitempty,min=9,max=14,number" example:"085880529111"`
 	SpouseIncome            float64 `json:"spouse_income" example:"5000000"`
 	SelfiePhoto             string  `json:"selfie_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/selfie_SAL-1140024081400003.jpg"`
@@ -1073,7 +1073,7 @@ type PrinciplePembiayaan struct {
 	MonthlyVariableIncome *float64 `json:"monthly_variable_income" validate:"omitempty,max=999999999999" example:"3000000"`
 	AssetCategoryID       string   `json:"asset_category_id" validate:"required,max=100,asset_category_id_principle" example:"BEBEK"`
 	FinancePurpose        string   `json:"finance_purpose" validate:"required,max=100,oneof='Multiguna Pembayaran dengan Angsuran' 'Modal Kerja Fasilitas Modal Usaha' 'Multiguna Pembayaran dengan Cara Fasilitas Dana'" example:"Multiguna Pembayaran dengan Angsuran"`
-	TipeUsaha             string   `json:"tipe_usaha" validate:"tipe_usaha,max=100" example:"Jasa Kesehatan"`
+	TipeUsaha             string   `json:"tipe_usaha" validate:"tipe_usaha,max=100,allowcharsname" example:"Jasa Kesehatan"`
 }
 
 type PrincipleEmergencyContact struct {
