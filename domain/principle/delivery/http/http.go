@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"los-kmb-api/domain/principle/interfaces"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
@@ -33,12 +34,12 @@ func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, u
 		repository:   repository,
 		responses:    responses,
 	}
-	principleRoute.POST("/verify-asset", handler.VerifyAsset, middlewares.AccessMiddleware())
-	principleRoute.POST("/verify-pemohon", handler.VerifyPemohon, middlewares.AccessMiddleware())
+	principleRoute.POST("/verify-asset", handler.VerifyAsset, middlewares.AccessMiddleware(), utils.RateLimitMiddleware)
+	principleRoute.POST("/verify-pemohon", handler.VerifyPemohon, middlewares.AccessMiddleware(), utils.RateLimitMiddleware)
 	principleRoute.GET("/step-principle/:id_number", handler.StepPrinciple, middlewares.AccessMiddleware())
 	principleRoute.POST("/elaborate-ltv", handler.ElaborateLTV, middlewares.AccessMiddleware())
-	principleRoute.POST("/verify-pembiayaan", handler.VerifyPembiayaan, middlewares.AccessMiddleware())
-	principleRoute.POST("/emergency-contact", handler.EmergencyContact, middlewares.AccessMiddleware())
+	principleRoute.POST("/verify-pembiayaan", handler.VerifyPembiayaan, middlewares.AccessMiddleware(), utils.RateLimitMiddleware)
+	principleRoute.POST("/emergency-contact", handler.EmergencyContact, middlewares.AccessMiddleware(), utils.RateLimitMiddleware)
 	principleRoute.POST("/core-customer/:prospectID", handler.CoreCustomer, middlewares.AccessMiddleware())
 	principleRoute.POST("/marketing-program/:prospectID", handler.MarketingProgram, middlewares.AccessMiddleware())
 	principleRoute.POST("/principle-data", handler.GetPrincipleData, middlewares.AccessMiddleware())
@@ -63,6 +64,12 @@ func (c *handler) VerifyAsset(ctx echo.Context) (err error) {
 		body, _ := json.Marshal(r)
 		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 	}()
+
+	ctx, err = utils.Sanitized(ctx)
+
+	if err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
+	}
 
 	if err = ctx.Bind(&r); err != nil {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
@@ -105,6 +112,12 @@ func (c *handler) VerifyPemohon(ctx echo.Context) (err error) {
 		body, _ := json.Marshal(r)
 		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 	}()
+
+	ctx, err = utils.Sanitized(ctx)
+
+	if err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
+	}
 
 	if err = ctx.Bind(&r); err != nil {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
@@ -243,8 +256,14 @@ func (c *handler) VerifyPembiayaan(ctx echo.Context) (err error) {
 
 	defer func() {
 		body, _ := json.Marshal(r)
-		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+		ctx.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	}()
+
+	ctx, err = utils.Sanitized(ctx)
+
+	if err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
+	}
 
 	if err = ctx.Bind(&r); err != nil {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
@@ -290,8 +309,14 @@ func (c *handler) EmergencyContact(ctx echo.Context) (err error) {
 
 	defer func() {
 		body, _ := json.Marshal(r)
-		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+		ctx.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	}()
+
+	ctx, err = utils.Sanitized(ctx)
+
+	if err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
+	}
 
 	if err = ctx.Bind(&r); err != nil {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
@@ -395,7 +420,7 @@ func (c *handler) GetPrincipleData(ctx echo.Context) (err error) {
 
 	defer func() {
 		body, _ := json.Marshal(r)
-		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+		ctx.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	}()
 
 	if err = ctx.Bind(&r); err != nil {
@@ -457,7 +482,7 @@ func (c *handler) PrinciplePublish(ctx echo.Context) (err error) {
 
 	defer func() {
 		body, _ := json.Marshal(r)
-		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+		ctx.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	}()
 
 	if err = ctx.Bind(&r); err != nil {
