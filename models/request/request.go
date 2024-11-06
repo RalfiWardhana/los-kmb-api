@@ -1038,7 +1038,7 @@ type PrinciplePemohon struct {
 	CompanyKelurahan        string  `json:"company_kelurahan" validate:"required,max=30,allowcharsname" example:"Klender"`
 	CompanyZipCode          string  `json:"company_zipcode" validate:"required,max=5,number" example:"13470"`
 	CompanyPhoneArea        string  `json:"company_phone_area" validate:"required,min=2,max=4,number" example:"021"`
-	CompanyPhone            string  `json:"company_phone" validate:"required,min=5,max=14,number" example:"86605224,number"`
+	CompanyPhone            string  `json:"company_phone" validate:"required,min=5,max=14,number" example:"86605224"`
 	MonthlyFixedIncome      float64 `json:"monthly_fixed_income" validate:"required" example:"5000000"`
 	MaritalStatus           string  `json:"marital_status" validate:"required,max=10,allowcharsname" example:"M"`
 	SpouseLegalName         string  `json:"spouse_legal_name" validate:"omitempty,allowcharsname,max=50" example:"YULINAR NIATI"`

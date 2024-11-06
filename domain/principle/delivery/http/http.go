@@ -82,12 +82,6 @@ func (c *handler) VerifyAsset(ctx echo.Context) (err error) {
 		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 	}()
 
-	ctx, err = utils.Sanitized(ctx)
-
-	if err != nil {
-		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
-	}
-
 	if err = ctx.Bind(&r); err != nil {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
 	}
@@ -129,12 +123,6 @@ func (c *handler) VerifyPemohon(ctx echo.Context) (err error) {
 		body, _ := json.Marshal(r)
 		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 	}()
-
-	ctx, err = utils.Sanitized(ctx)
-
-	if err != nil {
-		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
-	}
 
 	if err = ctx.Bind(&r); err != nil {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
@@ -276,12 +264,6 @@ func (c *handler) VerifyPembiayaan(ctx echo.Context) (err error) {
 		ctx.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	}()
 
-	ctx, err = utils.Sanitized(ctx)
-
-	if err != nil {
-		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
-	}
-
 	if err = ctx.Bind(&r); err != nil {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
 	}
@@ -328,12 +310,6 @@ func (c *handler) EmergencyContact(ctx echo.Context) (err error) {
 		body, _ := json.Marshal(r)
 		ctx.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
 	}()
-
-	ctx, err = utils.Sanitized(ctx)
-
-	if err != nil {
-		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
-	}
 
 	if err = ctx.Bind(&r); err != nil {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
