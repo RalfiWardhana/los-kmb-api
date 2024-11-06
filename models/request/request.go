@@ -1072,7 +1072,7 @@ type PrinciplePembiayaan struct {
 	Dealer                string   `json:"dealer" validate:"omitempty,max=50,dealer_principle"`
 	MonthlyVariableIncome *float64 `json:"monthly_variable_income" validate:"omitempty,max=999999999999" example:"3000000"`
 	AssetCategoryID       string   `json:"asset_category_id" validate:"required,max=100,asset_category_id_principle" example:"BEBEK"`
-	FinancePurpose        string   `json:"finance_purpose" validate:"required,max=100" example:"Multiguna Pembayaran dengan Angsuran"`
+	FinancePurpose        string   `json:"finance_purpose" validate:"required,max=100,oneof='Multiguna Pembayaran dengan Angsuran' 'Modal Kerja Fasilitas Modal Usaha' 'Multiguna Pembayaran dengan Cara Fasilitas Dana'" example:"Multiguna Pembayaran dengan Angsuran"`
 	TipeUsaha             string   `json:"tipe_usaha" validate:"tipe_usaha,max=100" example:"Jasa Kesehatan"`
 }
 

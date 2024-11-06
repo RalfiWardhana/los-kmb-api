@@ -16,8 +16,10 @@ import (
 
 	_ "github.com/KB-FMF/los-common-library/errors"
 	"github.com/KB-FMF/los-common-library/response"
+	"golang.org/x/time/rate"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 type handler struct {
@@ -34,12 +36,27 @@ func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, u
 		repository:   repository,
 		responses:    responses,
 	}
-	principleRoute.POST("/verify-asset", handler.VerifyAsset, middlewares.AccessMiddleware(), utils.RateLimitMiddleware)
-	principleRoute.POST("/verify-pemohon", handler.VerifyPemohon, middlewares.AccessMiddleware(), utils.RateLimitMiddleware)
+
+	// Rate limiter configuration with a limit of 20 requests per second
+	limiter := middleware.RateLimiterWithConfig(middleware.RateLimiterConfig{
+		Store: middleware.NewRateLimiterMemoryStore(rate.Limit(3)), // Limit to 1 requests per second
+		DenyHandler: func(c echo.Context, identifier string, err error) error {
+			return c.JSON(http.StatusTooManyRequests, map[string]interface{}{
+				"message":     "Too many requests. Please try again after a few seconds.",
+				"errors":      "Too many requests",
+				"code":        "LOS-PRINCIPLE-429",
+				"data":        nil,
+				"server_time": utils.GenerateTimeNow(),
+			})
+		},
+	})
+
+	principleRoute.POST("/verify-asset", handler.VerifyAsset, middlewares.AccessMiddleware(), limiter)
+	principleRoute.POST("/verify-pemohon", handler.VerifyPemohon, middlewares.AccessMiddleware(), limiter)
 	principleRoute.GET("/step-principle/:id_number", handler.StepPrinciple, middlewares.AccessMiddleware())
 	principleRoute.POST("/elaborate-ltv", handler.ElaborateLTV, middlewares.AccessMiddleware())
-	principleRoute.POST("/verify-pembiayaan", handler.VerifyPembiayaan, middlewares.AccessMiddleware(), utils.RateLimitMiddleware)
-	principleRoute.POST("/emergency-contact", handler.EmergencyContact, middlewares.AccessMiddleware(), utils.RateLimitMiddleware)
+	principleRoute.POST("/verify-pembiayaan", handler.VerifyPembiayaan, middlewares.AccessMiddleware(), limiter)
+	principleRoute.POST("/emergency-contact", handler.EmergencyContact, middlewares.AccessMiddleware(), limiter)
 	principleRoute.POST("/core-customer/:prospectID", handler.CoreCustomer, middlewares.AccessMiddleware())
 	principleRoute.POST("/marketing-program/:prospectID", handler.MarketingProgram, middlewares.AccessMiddleware())
 	principleRoute.POST("/principle-data", handler.GetPrincipleData, middlewares.AccessMiddleware())
