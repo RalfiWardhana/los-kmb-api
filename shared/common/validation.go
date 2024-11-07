@@ -100,6 +100,7 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("dealer_principle", dealerValidationPrinciple)
 	v.validator.RegisterValidation("asset_category_id_principle", assetCategoryIDValidationPrinciple)
 	v.validator.RegisterValidation("allowcharsaddress", allowedCharsInAddress)
+	v.validator.RegisterValidation("htmlValidation", htmlValidation)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
@@ -116,6 +117,14 @@ func prospectIDValidation(fl validator.FieldLevel) (validator bool) {
 	}
 
 	return validator
+}
+
+func htmlValidation(fl validator.FieldLevel) (validator bool) {
+
+	// Regular expression to detect HTML tags
+	re := regexp.MustCompile(`<.*?>`)
+
+	return !re.MatchString(fl.Field().String())
 }
 
 func dateFormatValidation(fl validator.FieldLevel) (validator bool) {

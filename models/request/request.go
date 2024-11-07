@@ -969,30 +969,30 @@ type PrincipleAsset struct {
 	IDNumber           string `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
 	SpouseIDNumber     string `json:"spouse_id_number"  validate:"omitempty,number,len=16" example:"3506126712000002"`
 	ManufactureYear    int    `json:"manufacture_year" validate:"required" example:"2020"`
-	NoChassis          string `json:"chassis_number" validate:"required,max=25" example:"MHKV1AA2JBK107322"`
-	NoEngine           string `json:"engine_number" validate:"required,max=20" example:"73218JAJK"`
-	BranchID           string `json:"branch_id" validate:"required,max=10" example:"426"`
+	NoChassis          string `json:"chassis_number" validate:"required,max=25,htmlValidation" example:"MHKV1AA2JBK107322"`
+	NoEngine           string `json:"engine_number" validate:"required,max=20,htmlValidation" example:"73218JAJK"`
+	BranchID           string `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
 	CC                 int    `json:"cc" validate:"required,min=100,max=9999" example:"1500"`
 	TaxDate            string `json:"tax_date" validate:"required,dateformat" example:"2022-03-02"`
 	STNKExpiredDate    string `json:"stnk_expired_date" validate:"required,dateformat" example:"2025-03-20"`
-	OwnerAsset         string `json:"owner_asset" validate:"required,min=2,max=50" example:"JONATHAN"`
-	LicensePlate       string `json:"license_plate" validate:"required,max=50" example:"B3006TBJ"`
-	Color              string `json:"color" validate:"required,min=4,max=30" example:"HITAM"`
-	Brand              string `json:"brand" validate:"required,max=50" example:"HONDA"`
+	OwnerAsset         string `json:"owner_asset" validate:"required,min=2,max=50,allowcharsname" example:"JONATHAN"`
+	LicensePlate       string `json:"license_plate" validate:"required,max=50,htmlValidation" example:"B3006TBJ"`
+	Color              string `json:"color" validate:"required,min=4,max=30,allowcharsname" example:"HITAM"`
+	Brand              string `json:"brand" validate:"required,max=50,htmlValidation" example:"HONDA"`
 	ResidenceAddress   string `json:"residence_address" validate:"required,allowcharsaddress,max=100" example:"Dermaga Baru"`
-	ResidenceRT        string `json:"residence_rt" validate:"required,min=1,max=3" example:"001"`
-	ResidenceRW        string `json:"residence_rw" validate:"required,min=1,max=3" example:"002"`
-	ResidenceProvince  string `json:"residence_province" validate:"required,max=50" example:"Jakarta"`
-	ResidenceCity      string `json:"residence_city" validate:"required,max=30" example:"Jakarta Timur"`
-	ResidenceKecamatan string `json:"residence_kecamatan" validate:"required,max=30" example:"Duren Sawit"`
-	ResidenceKelurahan string `json:"residence_kelurahan" validate:"required,max=30" example:"Klender"`
-	ResidenceZipCode   string `json:"residence_zipcode" validate:"required,max=5" example:"13470"`
-	ResidenceAreaPhone string `json:"residence_area_phone" example:"021"`
-	ResidencePhone     string `json:"residence_phone" example:"86605224"`
-	HomeStatus         string `json:"home_status" validate:"required,max=2" example:"SD"`
+	ResidenceRT        string `json:"residence_rt" validate:"required,min=1,max=3,number" example:"001"`
+	ResidenceRW        string `json:"residence_rw" validate:"required,min=1,max=3,number" example:"002"`
+	ResidenceProvince  string `json:"residence_province" validate:"required,max=50,allowcharsname" example:"Jakarta"`
+	ResidenceCity      string `json:"residence_city" validate:"required,max=30,allowcharsname" example:"Jakarta Timur"`
+	ResidenceKecamatan string `json:"residence_kecamatan" validate:"required,max=30,allowcharsname" example:"Duren Sawit"`
+	ResidenceKelurahan string `json:"residence_kelurahan" validate:"required,max=30,allowcharsname" example:"Klender"`
+	ResidenceZipCode   string `json:"residence_zipcode" validate:"required,max=5,number" example:"13470"`
+	ResidenceAreaPhone string `json:"residence_area_phone" validate:"omitempty,max=5,number" example:"021"`
+	ResidencePhone     string `json:"residence_phone" validate:"omitempty,min=5,max=14,number" example:"86605224"`
+	HomeStatus         string `json:"home_status" validate:"required,max=2,allowcharsname" example:"SD"`
 	StaySinceYear      int    `json:"stay_since_year" validate:"required" example:"2024"`
 	StaySinceMonth     int    `json:"stay_since_month" validate:"required,min=1,max=12" example:"4"`
-	AssetCode          string `json:"asset_code" validate:"required,max=200" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
+	AssetCode          string `json:"asset_code" validate:"required,max=200,htmlValidation" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
 	STNKPhoto          string `json:"stnk_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/stnk_SAL-1140024081400003.jpg"`
 	KPMID              int    `json:"kpm_id" validate:"required"`
 }
