@@ -13,6 +13,8 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"net/http"
+	"os"
+	"strconv"
 
 	_ "github.com/KB-FMF/los-common-library/errors"
 	"github.com/KB-FMF/los-common-library/response"
@@ -37,9 +39,13 @@ func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, u
 		responses:    responses,
 	}
 
+	rps, _ := strconv.Atoi(os.Getenv("PRINCIPLE_RPS"))
+	if rps == 0 {
+		rps = 3
+	}
 	// Rate limiter configuration with a limit of 20 requests per second
 	limiter := middleware.RateLimiterWithConfig(middleware.RateLimiterConfig{
-		Store: middleware.NewRateLimiterMemoryStore(rate.Limit(3)), // Limit to 1 requests per second
+		Store: middleware.NewRateLimiterMemoryStore(rate.Limit(rps)), // Limit to 1 requests per second
 		DenyHandler: func(c echo.Context, identifier string, err error) error {
 			return c.JSON(http.StatusTooManyRequests, map[string]interface{}{
 				"message":     "Too many requests. Please try again after a few seconds.",
