@@ -874,6 +874,12 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 		if countTrx > 0 || len(details) > 2 {
 
 			// save data metrics
+			// insert trx edd
+			logInfo = trxFMF.TrxEDD
+			if err := tx.Create(&trxFMF.TrxEDD).Error; err != nil {
+				return err
+			}
+
 			// insert trx deviasi
 			if trxFMF.TrxDeviasi != (entity.TrxDeviasi{}) {
 
@@ -2062,6 +2068,18 @@ func (r repoHandler) GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNa
 	query := `SELECT TOP 1 * FROM m_mapping_vehicle_age WHERE vehicle_age_start <= ? AND vehicle_age_end >= ? AND cluster LIKE ? AND bpkb_name_type = ? AND tenor_start <= ? AND tenor_end >= ? AND result_pbk LIKE ? AND af_start < ? AND af_end >= ?`
 
 	if err = r.newKmbDB.Raw(query, vehicleAge, vehicleAge, fmt.Sprintf("%%%s%%", cluster), bpkbNameType, tenor, tenor, fmt.Sprintf("%%%s%%", resultPefindo), af, af).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+	}
+	return
+}
+
+func (r repoHandler) GetMappingNegativeCustomer(req response.NegativeCustomer) (data entity.MappingNegativeCustomer, err error) {
+
+	query := `SELECT TOP 1 * FROM m_mapping_negative_customer WHERE is_active = ? AND bad_type = ? AND is_blacklist = ? AND is_highrisk = ?`
+
+	if err = r.newKmbDB.Raw(query, req.IsActive, req.BadType, req.IsBlacklist, req.IsHighrisk).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
