@@ -87,14 +87,6 @@ func (u usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (
 		return data, err
 	}
 
-	principleStepOne, _ := u.repository.GetPrincipleStepOne(r.ProspectID)
-	if principleStepOne != (entity.TrxPrincipleStepOne{}) {
-		data.Code = principleStepOne.RuleCode
-		data.Result = principleStepOne.Decision
-
-		return data, nil
-	}
-
 	hitChassisNumber, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+r.NoChassis, nil, map[string]string{}, constant.METHOD_GET, true, 6, 60, r.ProspectID, middlewares.UserInfoData.AccessToken)
 	if err != nil {
 		return

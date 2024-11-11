@@ -168,16 +168,6 @@ func (u multiUsecase) PrinciplePembiayaan(ctx context.Context, r request.Princip
 		return
 	}
 
-	principleStepThree, _ := u.repository.GetPrincipleStepThree(r.ProspectID)
-	if principleStepThree != (entity.TrxPrincipleStepThree{}) {
-		resp.Code = principleStepThree.RuleCode
-		resp.Result = principleStepThree.Decision
-
-		isSave = false
-
-		return resp, nil
-	}
-
 	json.Unmarshal([]byte(config.Value), &configValue)
 
 	// get mapping cluster

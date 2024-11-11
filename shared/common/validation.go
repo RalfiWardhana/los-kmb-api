@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/shared/constant"
@@ -101,6 +102,9 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("asset_category_id_principle", assetCategoryIDValidationPrinciple)
 	v.validator.RegisterValidation("allowcharsaddress", allowedCharsInAddress)
 	v.validator.RegisterValidation("htmlValidation", htmlValidation)
+	v.validator.RegisterValidation("prospect_id_asset_principle", prospectIdAssetPrincipleNotExists)
+	v.validator.RegisterValidation("prospect_id_pemohon_principle", prospectIdPemohonPrincipleNotExists)
+	v.validator.RegisterValidation("prospect_id_pembiayaan_principle", prospectIdPembiayaanPrincipleNotExists)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
@@ -778,4 +782,61 @@ func allowedCharsInAddress(fl validator.FieldLevel) bool {
 
 	return re.MatchString(fl.Field().String())
 
+}
+
+func prospectIdAssetPrincipleNotExists(fl validator.FieldLevel) bool {
+	prospectID := fl.Field().String()
+
+	var principleStepOne entity.TrxPrincipleStepOne
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_one WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	result := DB.Raw(query).Scan(&principleStepOne)
+
+	if result.Error != nil {
+		return errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	if principleStepOne != (entity.TrxPrincipleStepOne{}) {
+		return false
+	}
+
+	return true
+}
+
+func prospectIdPemohonPrincipleNotExists(fl validator.FieldLevel) bool {
+	prospectID := fl.Field().String()
+
+	var principleStepTwo entity.TrxPrincipleStepTwo
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_two WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	result := DB.Raw(query).Scan(&principleStepTwo)
+
+	if result.Error != nil {
+		return errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	if principleStepTwo != (entity.TrxPrincipleStepTwo{}) {
+		return false
+	}
+
+	return true
+}
+
+func prospectIdPembiayaanPrincipleNotExists(fl validator.FieldLevel) bool {
+	prospectID := fl.Field().String()
+
+	var principleStepThree entity.TrxPrincipleStepThree
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_three WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	result := DB.Raw(query).Scan(&principleStepThree)
+
+	if result.Error != nil {
+		return errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	if principleStepThree != (entity.TrxPrincipleStepThree{}) {
+		return false
+	}
+
+	return true
 }

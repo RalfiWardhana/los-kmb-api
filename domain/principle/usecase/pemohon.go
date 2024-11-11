@@ -453,16 +453,6 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 		return
 	}
 
-	principleStepTwo, _ := u.repository.GetPrincipleStepTwo(r.ProspectID)
-	if principleStepTwo != (entity.TrxPrincipleStepTwo{}) {
-		data.Code = principleStepTwo.RuleCode
-		data.Decision = principleStepTwo.Decision
-
-		isSave = false
-
-		return resp, nil
-	}
-
 	bpkbNameType := "O"
 	if strings.EqualFold(principleStepOne.OwnerAsset, r.LegalName) {
 		bpkbNameType = "K"

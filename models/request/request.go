@@ -965,7 +965,7 @@ type ReqHrisCareerHistory struct {
 }
 
 type PrincipleAsset struct {
-	ProspectID         string `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
+	ProspectID         string `json:"prospect_id" validate:"required,max=20,prospect_id_asset_principle" example:"SAL-1140024080800004"`
 	IDNumber           string `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
 	SpouseIDNumber     string `json:"spouse_id_number"  validate:"omitempty,number,len=16" example:"3506126712000002"`
 	ManufactureYear    int    `json:"manufacture_year" validate:"required" example:"2020"`
@@ -998,7 +998,7 @@ type PrincipleAsset struct {
 }
 
 type PrinciplePemohon struct {
-	ProspectID              string  `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
+	ProspectID              string  `json:"prospect_id" validate:"required,max=20,prospect_id_pemohon_principle" example:"SAL-1140024080800004"`
 	IDNumber                string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
 	SpouseIDNumber          string  `json:"spouse_id_number"  validate:"omitempty,number,len=16" example:"3506126712000002"`
 	MobilePhone             string  `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"085880529100"`
@@ -1061,7 +1061,7 @@ type PrincipleElaborateLTV struct {
 }
 
 type PrinciplePembiayaan struct {
-	ProspectID            string   `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
+	ProspectID            string   `json:"prospect_id" validate:"required,max=20,prospect_id_pembiayaan_principle" example:"SAL-1140024080800004"`
 	Tenor                 int      `json:"tenor" validate:"required,max=60" example:"36"`
 	AF                    float64  `json:"af" validate:"required,max=999999999999,af_principle" example:"84000000"`
 	NTF                   float64  `json:"ntf" validate:"required,max=999999999999,ntf_principle" example:"150528000"`
