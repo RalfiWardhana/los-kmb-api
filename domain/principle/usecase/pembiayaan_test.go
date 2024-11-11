@@ -788,7 +788,6 @@ func TestPrinciplePembiayaan(t *testing.T) {
 			mockRepository.On("ExceedErrorStepThree", mock.Anything).Return(tc.resExceedErrorStepThree)
 			mockRepository.On("GetPrincipleStepOne", tc.request.ProspectID).Return(tc.resGetPrincipleStepOne, tc.errGetPrincipleStepOne)
 			mockRepository.On("GetPrincipleStepTwo", tc.request.ProspectID).Return(tc.resGetPrincipleStepTwo, tc.errGetPrincipleStepTwo)
-			mockRepository.On("GetPrincipleStepThree", tc.request.ProspectID).Return(tc.resGetPrincipleStepThree, tc.errGetPrincipleStepThree)
 			mockRepository.On("GetFilteringResult", tc.request.ProspectID).Return(tc.resGetFiltering, tc.errGetFiltering)
 			mockRepository.On("GetConfig", "dupcheck", constant.LOB_KMB_OFF, "dupcheck_kmb_config").Return(tc.resGetConfig, tc.errGetConfig)
 

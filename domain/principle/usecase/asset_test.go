@@ -197,7 +197,6 @@ func TestCheckNokaNosin(t *testing.T) {
 			var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
 
 			mockRepository.On("ExceedErrorStepOne", tc.request.KPMID).Return(tc.resExceedErrorStepOne)
-			mockRepository.On("GetPrincipleStepOne", tc.request.ProspectID).Return(tc.resGetPrincipleStepOne, tc.errGetPrincipleStepOne)
 
 			rst := resty.New()
 			httpmock.ActivateNonDefault(rst.GetClient())
