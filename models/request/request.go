@@ -940,6 +940,38 @@ type ReqInquiryApproval struct {
 	Alias       string `json:"alias" validate:"required,max=3"`
 }
 
+type ReqListQuotaDeviasi struct {
+	Search   string `json:"search"`
+	BranchID string `json:"branch_id" example:"400"`
+	IsActive string `json:"is_active" example:"1 / 0"`
+}
+
+type ReqListQuotaDeviasiBranch struct {
+	BranchID   string `json:"branch_id" example:"400"`
+	BranchName string `json:"customer_status" example:"BEKASI"`
+}
+
+type ReqUpdateQuotaDeviasi struct {
+	BranchID      string  `json:"branch_id" validate:"required" example:"400"`
+	QuotaAmount   float64 `json:"quota_amount" validate:"required,gt=0,max=99999999999" example:"97500000"`
+	QuotaAccount  int     `json:"quota_account" validate:"required,gt=0,max=999" example:"65"`
+	IsActive      bool    `json:"is_active" example:"true"`
+	UpdatedByName string  `json:"updated_by_name" validate:"required,max=200" example:"MUHAMMAD RONALD"`
+}
+
+type ReqUploadSettingQuotaDeviasi struct {
+	UpdatedByName string `form:"updated_by_name" validate:"required,max=200"`
+}
+
+type ReqResetQuotaDeviasiBranch struct {
+	BranchID      string `json:"branch_id" validate:"required" example:"400"`
+	UpdatedByName string `json:"updated_by_name" validate:"required,max=200" example:"MUHAMMAD RONALD"`
+}
+
+type ReqResetAllQuotaDeviasi struct {
+	UpdatedByName string `json:"updated_by_name" validate:"required,max=200" example:"MUHAMMAD RONALD"`
+}
+
 type ReqListMappingCluster struct {
 	Search         string `json:"search"`
 	BranchID       string `json:"branch_id" example:"400"`

@@ -69,6 +69,34 @@ func (_m *Usecase) GenerateExcelMappingCluster() (string, string, error) {
 	return r0, r1, r2
 }
 
+// GenerateExcelQuotaDeviasi provides a mock function with given fields:
+func (_m *Usecase) GenerateExcelQuotaDeviasi() (string, string, error) {
+	ret := _m.Called()
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	var r1 string
+	if rf, ok := ret.Get(1).(func() string); ok {
+		r1 = rf()
+	} else {
+		r1 = ret.Get(1).(string)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func() error); ok {
+		r2 = rf()
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // GenerateFormAKKK provides a mock function with given fields: ctx, req, accessToken
 func (_m *Usecase) GenerateFormAKKK(ctx context.Context, req request.RequestGenerateFormAKKK, accessToken string) (interface{}, error) {
 	ret := _m.Called(ctx, req, accessToken)
@@ -344,6 +372,36 @@ func (_m *Usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqIn
 	return r0, r1, r2
 }
 
+// GetInquiryQuotaDeviasi provides a mock function with given fields: req, pagination
+func (_m *Usecase) GetInquiryQuotaDeviasi(req request.ReqListQuotaDeviasi, pagination interface{}) ([]entity.InquirySettingQuotaDeviasi, int, error) {
+	ret := _m.Called(req, pagination)
+
+	var r0 []entity.InquirySettingQuotaDeviasi
+	if rf, ok := ret.Get(0).(func(request.ReqListQuotaDeviasi, interface{}) []entity.InquirySettingQuotaDeviasi); ok {
+		r0 = rf(req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.InquirySettingQuotaDeviasi)
+		}
+	}
+
+	var r1 int
+	if rf, ok := ret.Get(1).(func(request.ReqListQuotaDeviasi, interface{}) int); ok {
+		r1 = rf(req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	var r2 error
+	if rf, ok := ret.Get(2).(func(request.ReqListQuotaDeviasi, interface{}) error); ok {
+		r2 = rf(req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // GetMappingClusterBranch provides a mock function with given fields: req
 func (_m *Usecase) GetMappingClusterBranch(req request.ReqListMappingClusterBranch) ([]entity.ConfinsBranch, error) {
 	ret := _m.Called(req)
@@ -395,6 +453,29 @@ func (_m *Usecase) GetMappingClusterChangeLog(pagination interface{}) ([]entity.
 	}
 
 	return r0, r1, r2
+}
+
+// GetQuotaDeviasiBranch provides a mock function with given fields: req
+func (_m *Usecase) GetQuotaDeviasiBranch(req request.ReqListQuotaDeviasiBranch) ([]entity.ConfinsBranch, error) {
+	ret := _m.Called(req)
+
+	var r0 []entity.ConfinsBranch
+	if rf, ok := ret.Get(0).(func(request.ReqListQuotaDeviasiBranch) []entity.ConfinsBranch); ok {
+		r0 = rf(req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.ConfinsBranch)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(request.ReqListQuotaDeviasiBranch) error); ok {
+		r1 = rf(req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetReasonPrescreening provides a mock function with given fields: ctx, req, pagination
@@ -471,6 +552,48 @@ func (_m *Usecase) RecalculateOrder(ctx context.Context, req request.ReqRecalcul
 	var r1 error
 	if rf, ok := ret.Get(1).(func(context.Context, request.ReqRecalculateOrder, string) error); ok {
 		r1 = rf(ctx, req, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ResetAllQuotaDeviasi provides a mock function with given fields: ctx, req
+func (_m *Usecase) ResetAllQuotaDeviasi(ctx context.Context, req request.ReqResetAllQuotaDeviasi) (response.UploadQuotaDeviasiBranchResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	var r0 response.UploadQuotaDeviasiBranchResponse
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqResetAllQuotaDeviasi) response.UploadQuotaDeviasiBranchResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(response.UploadQuotaDeviasiBranchResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqResetAllQuotaDeviasi) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ResetQuotaDeviasiBranch provides a mock function with given fields: ctx, req
+func (_m *Usecase) ResetQuotaDeviasiBranch(ctx context.Context, req request.ReqResetQuotaDeviasiBranch) (response.UpdateQuotaDeviasiBranchResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	var r0 response.UpdateQuotaDeviasiBranchResponse
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqResetQuotaDeviasiBranch) response.UpdateQuotaDeviasiBranchResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(response.UpdateQuotaDeviasiBranchResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqResetQuotaDeviasiBranch) error); ok {
+		r1 = rf(ctx, req)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -618,4 +741,46 @@ func (_m *Usecase) UpdateMappingCluster(req request.ReqUploadMappingCluster, fil
 	}
 
 	return r0
+}
+
+// UpdateQuotaDeviasiBranch provides a mock function with given fields: ctx, req
+func (_m *Usecase) UpdateQuotaDeviasiBranch(ctx context.Context, req request.ReqUpdateQuotaDeviasi) (response.UpdateQuotaDeviasiBranchResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	var r0 response.UpdateQuotaDeviasiBranchResponse
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqUpdateQuotaDeviasi) response.UpdateQuotaDeviasiBranchResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(response.UpdateQuotaDeviasiBranchResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqUpdateQuotaDeviasi) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// UploadQuotaDeviasi provides a mock function with given fields: req, file
+func (_m *Usecase) UploadQuotaDeviasi(req request.ReqUploadSettingQuotaDeviasi, file multipart.File) (response.UploadQuotaDeviasiBranchResponse, error) {
+	ret := _m.Called(req, file)
+
+	var r0 response.UploadQuotaDeviasiBranchResponse
+	if rf, ok := ret.Get(0).(func(request.ReqUploadSettingQuotaDeviasi, multipart.File) response.UploadQuotaDeviasiBranchResponse); ok {
+		r0 = rf(req, file)
+	} else {
+		r0 = ret.Get(0).(response.UploadQuotaDeviasiBranchResponse)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(request.ReqUploadSettingQuotaDeviasi, multipart.File) error); ok {
+		r1 = rf(req, file)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
