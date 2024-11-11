@@ -102,6 +102,7 @@ type DupcheckApi struct {
 	HomeStatus            string              `json:"home_status" validate:"required,max=2"`
 	MonthlyVariableIncome float64             `json:"monthly_variable_income"`
 	SpouseIncome          float64             `json:"spouse_income"`
+	JobType               string              `json:"job_type" validate:"required"`
 	JobPosition           string              `json:"job_position" validate:"required"`
 	ProfessionID          string              `json:"profession_id" validate:"required"`
 	EmploymentSinceYear   string              `json:"employment_since_year" validate:"required,len=4"`
@@ -142,6 +143,17 @@ type SpouseDupcheck struct {
 	LegalName  string `json:"spouse_legal_name" validate:"required,allowcharsname"`
 	BirthDate  string `json:"spouse_birth_date" validate:"required,dateformat"`
 	MotherName string `json:"spouse_surgate_mother_name" validate:"required,allowcharsname"`
+}
+
+type NegativeCustomer struct {
+	ProspectID        string `json:"prospect_id"`
+	IDNumber          string `json:"id_number"`
+	LegalName         string `json:"legal_name"`
+	BirthDate         string `json:"birth_date"`
+	SurgateMotherName string `json:"surgate_mother_name"`
+	ProfessionID      string `json:"profession_id"`
+	JobType           string `json:"job_type_id"`
+	JobPosition       string `json:"job_position_id"`
 }
 
 type DupcheckApiSpouse struct {

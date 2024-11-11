@@ -15,6 +15,7 @@ type Usecase interface {
 	CheckRejection(idNumber, prospectID string, configValue response.DupcheckConfig) (data response.UsecaseApi, trxBannedPMKDSR entity.TrxBannedPMKDSR, err error)
 	DupcheckIntegrator(ctx context.Context, prospectID, idNumber, legalName, birthDate, surgateName string, accessToken string) (spDupcheck response.SpDupCekCustomerByID, err error)
 	BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerByID) (data response.UsecaseApi, customerType string)
+	NegativeCustomerCheck(ctx context.Context, reqs request.DupcheckApi, accessToken string) (data response.UsecaseApi, negativeCustomer response.NegativeCustomer, err error)
 	VehicleCheck(manufactureYear, cmoCluster, bpkbName string, tenor int, configValue response.DupcheckConfig, filteing entity.FilteringKMB, af float64) (data response.UsecaseApi, err error)
 	CheckRejectChassisNumber(req request.DupcheckApi, configValue response.DupcheckConfig) (data response.UsecaseApi, trxBannedChassisNumber entity.TrxBannedChassisNumber, err error)
 	CheckAgreementChassisNumber(ctx context.Context, reqs request.DupcheckApi, accessToken string) (data response.UsecaseApi, err error)

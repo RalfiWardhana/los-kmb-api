@@ -2433,6 +2433,35 @@ func (c *TrxCmoNoFPD) TableName() string {
 	return "trx_cmo_no_fpd"
 }
 
+type MappingNegativeCustomer struct {
+	IsActive    int    `gorm:"is_active"`
+	IsBlacklist int    `gorm:"is_blacklist"`
+	IsHighrisk  int    `gorm:"is_highrisk"`
+	BadType     string `gorm:"bad_type"`
+	Reason      string `gorm:"reason"`
+	Decision    string `gorm:"decision"`
+}
+
+func (c *MappingNegativeCustomer) TableName() string {
+	return "m_mapping_negative_customer"
+}
+
+type TrxEDD struct {
+	ProspectID  string      `gorm:"type:varchar(20);column:ProspectID;primary_key:true" json:"prospect_id"`
+	IsHighrisk  int         `gorm:"column:is_highrisk" json:"is_highrisk"`
+	Pernyataan1 interface{} `gorm:"column:pernyataan_1" json:"pernyataan_1"`
+	Pernyataan2 interface{} `gorm:"column:pernyataan_2" json:"pernyataan_2"`
+	Pernyataan3 interface{} `gorm:"column:pernyataan_3" json:"pernyataan_3"`
+	Pernyataan4 interface{} `gorm:"column:pernyataan_4" json:"pernyataan_4"`
+	Pernyataan5 interface{} `gorm:"column:pernyataan_5" json:"pernyataan_5"`
+	Pernyataan6 interface{} `gorm:"column:pernyataan_6" json:"pernyataan_6"`
+	CreatedAt   time.Time   `gorm:"column:created_at" json:"created_at"`
+}
+
+func (c *TrxEDD) TableName() string {
+	return "trx_edd"
+}
+
 type EncryptString struct {
 	Encrypt string `json:"encrypt"`
 }
