@@ -14,6 +14,7 @@ import (
 	"los-kmb-api/shared/utils"
 	"os"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -1063,11 +1064,11 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 		isSpvAsCMO          bool
 	)
 
-	// Truncate the suffix "MO" or "INH" from the employeeID if present
-	if strings.HasSuffix(employeeID, "MO") {
+	// Use regular expressions to match exact suffixes "MO" or "INH"
+	if matched, _ := regexp.MatchString(`\d+MO$`, employeeID); matched {
 		employeeID = strings.TrimSuffix(employeeID, "MO")
 		isSpvAsCMO = true
-	} else if strings.HasSuffix(employeeID, "INH") {
+	} else if matched, _ := regexp.MatchString(`\d+INH$`, employeeID); matched {
 		employeeID = strings.TrimSuffix(employeeID, "INH")
 		isSpvAsCMO = true
 	}
