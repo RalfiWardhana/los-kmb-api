@@ -1145,6 +1145,28 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 			data = response.EmployeeCMOResponse{}
 		} else {
 			dataEmployee = respGetEmployeeData.Data[lastIndex]
+			if isSpvAsCMO {
+				parsedTime, err = time.Parse("2006-01-02T15:04:05", dataEmployee.RealCareerDate)
+				if err != nil {
+					err = errors.New(constant.ERROR_UPSTREAM + " - Error Parse RealCareerDate")
+					return
+				}
+
+				dataEmployee.RealCareerDate = parsedTime.Format("2006-01-02")
+				data = response.EmployeeCMOResponse{
+					EmployeeID:         dataEmployee.EmployeeID,
+					EmployeeName:       dataEmployee.EmployeeName,
+					EmployeeIDWithName: dataEmployee.EmployeeID + " - " + dataEmployee.EmployeeName,
+					JoinDate:           dataEmployee.RealCareerDate,
+					PositionGroupCode:  dataEmployee.PositionGroupCode,
+					PositionGroupName:  dataEmployee.PositionGroupName,
+					CMOCategory:        "",
+					IsCmoSpv:           isSpvAsCMO,
+				}
+
+				return
+			}
+
 			if dataEmployee.RealCareerDate == "" {
 				err = errors.New(constant.ERROR_UPSTREAM + " - RealCareerDate Empty")
 				return
