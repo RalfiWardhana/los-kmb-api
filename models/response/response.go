@@ -889,7 +889,7 @@ type EmployeeCMOResponse struct {
 	JoinDate           string      `json:"join_date"`
 	PositionGroupCode  string      `json:"position_group_code"`
 	PositionGroupName  string      `json:"position_group_name"`
-	CMOCategory        interface{} `json:"cmo_category"`
+	CMOCategory        string      `json:"cmo_category"`
 	IsCmoSpv           interface{} `json:"is_cmo_spv"`
 }
 

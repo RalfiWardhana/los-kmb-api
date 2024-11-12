@@ -66,7 +66,6 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		resCMO                    response.EmployeeCMOResponse
 		resFPD                    response.FpdCMOResponse
 		bpkbName                  bool
-		cmoCategory               string
 		isCmoSpv                  bool
 		clusterCmo                string
 		savedCluster              string
@@ -168,15 +167,11 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		defaultCluster = constant.CLUSTER_B
 	}
 
-	if categoryCmo, ok := resCMO.CMOCategory.(string); ok {
-		cmoCategory = categoryCmo
-	}
-
 	if isSpv, ok := resCMO.IsCmoSpv.(bool); ok {
 		isCmoSpv = isSpv
 	}
 
-	if cmoCategory == constant.CMO_BARU && !isCmoSpv {
+	if resCMO.CMOCategory == constant.CMO_BARU && !isCmoSpv {
 		clusterCmo = defaultCluster
 		// set cluster menggunakan Default Cluster selama 3 bulan, terhitung sejak bulan join_date nya
 		useDefaultCluster = true
@@ -210,7 +205,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	}
 
 	if useDefaultCluster && !isCmoSpv {
-		savedCluster, entityTransactionCMOnoFPD, err = u.usecase.CheckCmoNoFPD(req.ProspectID, req.CMOID, cmoCategory, resCMO.JoinDate, clusterCmo, bpkbString)
+		savedCluster, entityTransactionCMOnoFPD, err = u.usecase.CheckCmoNoFPD(req.ProspectID, req.CMOID, resCMO.CMOCategory, resCMO.JoinDate, clusterCmo, bpkbString)
 		if err != nil {
 			return
 		}
@@ -221,10 +216,13 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	entityFiltering.CMOID = req.CMOID
 	entityFiltering.CMOJoinDate = resCMO.JoinDate
-	entityFiltering.CMOCategory = cmoCategory
+	entityFiltering.CMOCategory = resCMO.CMOCategory
 	entityFiltering.CMOFPD = resFPD.CmoFpd
 	entityFiltering.CMOAccSales = resFPD.CmoAccSales
 	entityFiltering.CMOCluster = clusterCmo
+	if resCMO.CMOCategory == "" {
+		entityFiltering.CMOCategory = nil
+	}
 
 	/* Process Get Cluster based on CMO_ID ends here */
 
@@ -1166,7 +1164,7 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 					JoinDate:           dataEmployee.RealCareerDate,
 					PositionGroupCode:  dataEmployee.PositionGroupCode,
 					PositionGroupName:  dataEmployee.PositionGroupName,
-					CMOCategory:        nil,
+					CMOCategory:        "",
 					IsCmoSpv:           isSpvAsCMO,
 				}
 
