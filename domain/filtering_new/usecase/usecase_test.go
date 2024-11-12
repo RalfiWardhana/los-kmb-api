@@ -5092,6 +5092,7 @@ func TestGetEmployeeData(t *testing.T) {
 				PositionGroupCode:  "AO",
 				PositionGroupName:  "Credit Marketing Officer",
 				CMOCategory:        constant.CMO_LAMA,
+				IsCmoSpv:           false,
 			},
 		},
 		{
