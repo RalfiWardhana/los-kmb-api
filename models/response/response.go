@@ -890,6 +890,7 @@ type EmployeeCMOResponse struct {
 	PositionGroupCode  string `json:"position_group_code"`
 	PositionGroupName  string `json:"position_group_name"`
 	CMOCategory        string `json:"cmo_category"`
+	IsCmoSpv           bool   `json:"is_cmo_spv"`
 }
 
 type EmployeeCareerHistory struct {
@@ -904,6 +905,7 @@ type EmployeeCareerHistory struct {
 	PositionNameOld   string `json:"position_name_old"`
 	PositionCodeNew   string `json:"position_code_new"`
 	PositionNameNew   string `json:"position_name_new"`
+	IsResign          bool   `json:"is_resign"`
 }
 
 type GetEmployeeByID struct {

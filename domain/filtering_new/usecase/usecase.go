@@ -72,7 +72,6 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		respRrdDate               string
 		monthsDiff                int
 		expiredContractConfig     entity.AppConfig
-		isSpvAsCMO                bool
 	)
 
 	requestID := ctx.Value(echo.HeaderXRequestID).(string)
@@ -148,22 +147,12 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	/* Process Get Cluster based on CMO_ID starts here */
 
-	// Truncate the suffix "MO" or "INH" from the req.CMOID if present
-	employeeID := req.CMOID
-	if strings.HasSuffix(req.CMOID, "MO") {
-		employeeID = strings.TrimSuffix(req.CMOID, "MO")
-		isSpvAsCMO = true
-	} else if strings.HasSuffix(req.CMOID, "INH") {
-		employeeID = strings.TrimSuffix(req.CMOID, "INH")
-		isSpvAsCMO = true
-	}
-
-	resCMO, err = u.usecase.GetEmployeeData(ctx, employeeID, accessToken, hrisAccessToken)
+	resCMO, err = u.usecase.GetEmployeeData(ctx, req.CMOID, accessToken, hrisAccessToken)
 	if err != nil {
 		return
 	}
 
-	if resCMO.CMOCategory == "" {
+	if resCMO.EmployeeID == "" {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - CMO_ID " + req.CMOID + " not found on HRIS API")
 		return
 	}
@@ -176,7 +165,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		defaultCluster = constant.CLUSTER_B
 	}
 
-	if resCMO.CMOCategory == constant.CMO_BARU {
+	if resCMO.CMOCategory == constant.CMO_BARU && !resCMO.IsCmoSpv {
 		clusterCmo = defaultCluster
 		// set cluster menggunakan Default Cluster selama 3 bulan, terhitung sejak bulan join_date nya
 		useDefaultCluster = true
@@ -209,7 +198,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		}
 	}
 
-	if useDefaultCluster && !isSpvAsCMO {
+	if useDefaultCluster && !resCMO.IsCmoSpv {
 		savedCluster, entityTransactionCMOnoFPD, err = u.usecase.CheckCmoNoFPD(req.ProspectID, req.CMOID, resCMO.CMOCategory, resCMO.JoinDate, clusterCmo, bpkbString)
 		if err != nil {
 			return
@@ -222,6 +211,10 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	entityFiltering.CMOID = req.CMOID
 	entityFiltering.CMOJoinDate = resCMO.JoinDate
 	entityFiltering.CMOCategory = resCMO.CMOCategory
+	if resCMO.IsCmoSpv {
+		entityFiltering.CMOCategory = ""
+	}
+
 	entityFiltering.CMOFPD = resFPD.CmoFpd
 	entityFiltering.CMOAccSales = resFPD.CmoAccSales
 	entityFiltering.CMOCluster = clusterCmo
@@ -1067,7 +1060,17 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 		parsedTime          time.Time
 		todayDate           time.Time
 		givenDate           time.Time
+		isSpvAsCMO          bool
 	)
+
+	// Truncate the suffix "MO" or "INH" from the employeeID if present
+	if strings.HasSuffix(employeeID, "MO") {
+		employeeID = strings.TrimSuffix(employeeID, "MO")
+		isSpvAsCMO = true
+	} else if strings.HasSuffix(employeeID, "INH") {
+		employeeID = strings.TrimSuffix(employeeID, "INH")
+		isSpvAsCMO = true
+	}
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
@@ -1099,23 +1102,44 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 	if err == nil && getDataEmployee.StatusCode() == 200 {
 		json.Unmarshal([]byte(jsoniter.Get(getDataEmployee.Body()).ToString()), &respGetEmployeeData)
 
+		employeeResign := false
+		for _, emp := range respGetEmployeeData.Data {
+			if emp.IsResign {
+				employeeResign = true
+			}
+		}
+
 		isCmoActive := false
-		if len(respGetEmployeeData.Data) > 0 && (respGetEmployeeData.Data[0].PositionGroupCode == "AO" || respGetEmployeeData.Data[0].PositionGroupCode == "AOSPV") {
-			isCmoActive = true
+		if isSpvAsCMO {
+			if len(respGetEmployeeData.Data) > 0 && (respGetEmployeeData.Data[0].PositionGroupCode == "AOSPV") {
+				isCmoActive = true
+			}
+		} else {
+			if len(respGetEmployeeData.Data) > 0 && (respGetEmployeeData.Data[0].PositionGroupCode == "AO") {
+				isCmoActive = true
+			}
 		}
 
 		var lastIndex int = -1
 		// Cek dulu apakah saat ini employee tersebut adalah berposisi sebagai "CMO" atau "SPV as CMO"
 		if isCmoActive {
 			// Mencari index terakhir yang mengandung position_group_code "AO" atau "AOSPV"
-			for i, emp := range respGetEmployeeData.Data {
-				if emp.PositionGroupCode == "AO" || emp.PositionGroupCode == "AOSPV" {
-					lastIndex = i
+			if isSpvAsCMO {
+				for i, emp := range respGetEmployeeData.Data {
+					if emp.PositionGroupCode == "AOSPV" {
+						lastIndex = i
+					}
+				}
+			} else {
+				for i, emp := range respGetEmployeeData.Data {
+					if emp.PositionGroupCode == "AO" {
+						lastIndex = i
+					}
 				}
 			}
 		}
 
-		if lastIndex == -1 {
+		if lastIndex == -1 || employeeResign {
 			// Jika tidak ada data dengan position_group_code "AO" atau "AOSPV"
 			data = response.EmployeeCMOResponse{}
 		} else {
@@ -1169,6 +1193,7 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 				PositionGroupCode:  dataEmployee.PositionGroupCode,
 				PositionGroupName:  dataEmployee.PositionGroupName,
 				CMOCategory:        cmoCategory,
+				IsCmoSpv:           isSpvAsCMO,
 			}
 		}
 	} else {
