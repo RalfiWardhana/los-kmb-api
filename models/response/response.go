@@ -883,14 +883,14 @@ type SubmitRecalculateResponse struct {
 }
 
 type EmployeeCMOResponse struct {
-	EmployeeID         string `json:"employee_id"`
-	EmployeeName       string `json:"employee_name"`
-	EmployeeIDWithName string `json:"employee_id_with_name"`
-	JoinDate           string `json:"join_date"`
-	PositionGroupCode  string `json:"position_group_code"`
-	PositionGroupName  string `json:"position_group_name"`
-	CMOCategory        string `json:"cmo_category"`
-	IsCmoSpv           bool   `json:"is_cmo_spv"`
+	EmployeeID         string      `json:"employee_id"`
+	EmployeeName       string      `json:"employee_name"`
+	EmployeeIDWithName string      `json:"employee_id_with_name"`
+	JoinDate           string      `json:"join_date"`
+	PositionGroupCode  string      `json:"position_group_code"`
+	PositionGroupName  string      `json:"position_group_name"`
+	CMOCategory        interface{} `json:"cmo_category"`
+	IsCmoSpv           interface{} `json:"is_cmo_spv"`
 }
 
 type EmployeeCareerHistory struct {
