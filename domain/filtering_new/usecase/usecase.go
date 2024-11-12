@@ -212,10 +212,6 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	entityFiltering.CMOID = req.CMOID
 	entityFiltering.CMOJoinDate = resCMO.JoinDate
 	entityFiltering.CMOCategory = resCMO.CMOCategory
-	if resCMO.IsCmoSpv {
-		entityFiltering.CMOCategory = ""
-	}
-
 	entityFiltering.CMOFPD = resFPD.CmoFpd
 	entityFiltering.CMOAccSales = resFPD.CmoAccSales
 	entityFiltering.CMOCluster = clusterCmo
