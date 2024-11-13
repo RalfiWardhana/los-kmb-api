@@ -1073,11 +1073,11 @@ type PrinciplePembiayaan struct {
 	MonthlyVariableIncome *float64 `json:"monthly_variable_income" validate:"omitempty,max=999999999999" example:"3000000"`
 	AssetCategoryID       string   `json:"asset_category_id" validate:"required,max=100,asset_category_id_principle" example:"BEBEK"`
 	FinancePurpose        string   `json:"finance_purpose" validate:"required,max=100,oneof='Multiguna Pembayaran dengan Angsuran' 'Modal Kerja Fasilitas Modal Usaha' 'Multiguna Pembayaran dengan Cara Fasilitas Dana'" example:"Multiguna Pembayaran dengan Angsuran"`
-	TipeUsaha             string   `json:"tipe_usaha" validate:"tipe_usaha,max=100,allowcharsname" example:"Jasa Kesehatan"`
+	TipeUsaha             string   `json:"tipe_usaha" validate:"tipe_usaha,max=100,allowcharstipeusaha" example:"Jasa Kesehatan"`
 }
 
 type PrincipleEmergencyContact struct {
-	ProspectID   string `json:"prospect_id" validate:"required,max=20" example:"SAL-1140024080800004"`
+	ProspectID   string `json:"prospect_id" validate:"required,max=20,prospect_id_emcon_principle" example:"SAL-1140024080800004"`
 	Name         string `json:"name" validate:"required,min=2,max=50,allowcharsname" example:"MULYADI"`
 	Relationship string `json:"relationship" validate:"required,relationship,max=10" example:"FM"`
 	MobilePhone  string `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"0856789XXX1"`

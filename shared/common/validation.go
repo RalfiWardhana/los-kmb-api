@@ -105,6 +105,8 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("prospect_id_asset_principle", prospectIdAssetPrincipleNotExists)
 	v.validator.RegisterValidation("prospect_id_pemohon_principle", prospectIdPemohonPrincipleNotExists)
 	v.validator.RegisterValidation("prospect_id_pembiayaan_principle", prospectIdPembiayaanPrincipleNotExists)
+	v.validator.RegisterValidation("prospect_id_emcon_principle", prospectIdEmconPrincipleNotExists)
+	v.validator.RegisterValidation("allowcharstipeusaha", allowedCharsInTipeUsaha)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
@@ -839,4 +841,30 @@ func prospectIdPembiayaanPrincipleNotExists(fl validator.FieldLevel) bool {
 	}
 
 	return true
+}
+
+func prospectIdEmconPrincipleNotExists(fl validator.FieldLevel) bool {
+	prospectID := fl.Field().String()
+
+	var principleEmergencyContact entity.TrxPrincipleEmergencyContact
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_emergency_contact WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	result := DB.Raw(query).Scan(&principleEmergencyContact)
+
+	if result.Error != nil {
+		return errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	if principleEmergencyContact != (entity.TrxPrincipleEmergencyContact{}) {
+		return false
+	}
+
+	return true
+}
+
+func allowedCharsInTipeUsaha(fl validator.FieldLevel) bool {
+
+	re := regexp.MustCompile(`^[a-zA-Z.,'/ ` + "`" + `]*$`)
+
+	return re.MatchString(fl.Field().String())
 }
