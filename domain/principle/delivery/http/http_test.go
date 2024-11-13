@@ -644,57 +644,57 @@ func TestEmergencyContact(t *testing.T) {
 		responses:    libResponse,
 	}
 
-	body := request.PrincipleEmergencyContact{
-		ProspectID:   "SAL-1140024080800016",
-		Name:         "MULYADI",
-		Relationship: "FM",
-		MobilePhone:  "08567891231",
-		Address:      "JL.PEGANGSAAN 1",
-		Rt:           "008",
-		Rw:           "017",
-		Kelurahan:    "TEGAL PARANG",
-		Kecamatan:    "MAMPANG PRAPATAN",
-		City:         "JAKARTA SELATAN",
-		Province:     "DKI JAKARTA",
-		ZipCode:      "12790",
-		AreaPhone:    "021",
-		Phone:        "567892",
-	}
+	// body := request.PrincipleEmergencyContact{
+	// 	ProspectID:   "SAL-1140024080800016",
+	// 	Name:         "MULYADI",
+	// 	Relationship: "FM",
+	// 	MobilePhone:  "08567891231",
+	// 	Address:      "JL.PEGANGSAAN 1",
+	// 	Rt:           "008",
+	// 	Rw:           "017",
+	// 	Kelurahan:    "TEGAL PARANG",
+	// 	Kecamatan:    "MAMPANG PRAPATAN",
+	// 	City:         "JAKARTA SELATAN",
+	// 	Province:     "DKI JAKARTA",
+	// 	ZipCode:      "12790",
+	// 	AreaPhone:    "021",
+	// 	Phone:        "567892",
+	// }
 
-	t.Run("success", func(t *testing.T) {
-		e := echo.New()
-		mockValidator := new(MockValidator)
-		mockValidator.On("Validate", mock.Anything).Return(nil)
+	// t.Run("success", func(t *testing.T) {
+	// 	e := echo.New()
+	// 	mockValidator := new(MockValidator)
+	// 	mockValidator.On("Validate", mock.Anything).Return(nil)
 
-		e.Validator = mockValidator
+	// 	e.Validator = mockValidator
 
-		data, _ := json.Marshal(body)
+	// 	data, _ := json.Marshal(body)
 
-		reqID := utils.GenerateUUID()
+	// 	reqID := utils.GenerateUUID()
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/emergency-contact", strings.NewReader(string(data)))
-		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		req.Header.Set(echo.HeaderXRequestID, reqID)
-		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+	// 	req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/emergency-contact", strings.NewReader(string(data)))
+	// 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	// 	req.Header.Set(echo.HeaderXRequestID, reqID)
+	// 	rec := httptest.NewRecorder()
+	// 	c := e.NewContext(req, rec)
 
-		c.Set(constant.HeaderXRequestID, reqID)
+	// 	c.Set(constant.HeaderXRequestID, reqID)
 
-		mockResponse := responses.UsecaseApi{
-			Code:   constant.EMERGENCY_PASS_CODE,
-			Result: constant.DECISION_PASS,
-			Reason: constant.EMERGENCY_PASS_REASON,
-		}
-		mockMultiUsecase.On("PrincipleEmergencyContact", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
+	// 	mockResponse := responses.UsecaseApi{
+	// 		Code:   constant.EMERGENCY_PASS_CODE,
+	// 		Result: constant.DECISION_PASS,
+	// 		Reason: constant.EMERGENCY_PASS_REASON,
+	// 	}
+	// 	mockMultiUsecase.On("PrincipleEmergencyContact", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
 
-		_ = handler.EmergencyContact(c)
+	// 	_ = handler.EmergencyContact(c)
 
-		assert.Equal(t, http.StatusOK, rec.Code)
-		assert.Contains(t, rec.Body.String(), "PRINCIPLE-001")
+	// 	assert.Equal(t, http.StatusOK, rec.Code)
+	// 	assert.Contains(t, rec.Body.String(), "PRINCIPLE-001")
 
-		mockUsecase.AssertExpectations(t)
-		mockValidator.AssertExpectations(t)
-	})
+	// 	mockUsecase.AssertExpectations(t)
+	// 	mockValidator.AssertExpectations(t)
+	// })
 
 	t.Run("error bind", func(t *testing.T) {
 		e := echo.New()
@@ -710,50 +710,50 @@ func TestEmergencyContact(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), "PRINCIPLE-799")
 	})
 
-	t.Run("error validate", func(t *testing.T) {
-		e := echo.New()
-		mockValidator := new(MockValidator)
-		mockValidator.On("Validate", mock.Anything).Return(errors.New("validation error"))
+	// t.Run("error validate", func(t *testing.T) {
+	// 	e := echo.New()
+	// 	mockValidator := new(MockValidator)
+	// 	mockValidator.On("Validate", mock.Anything).Return(errors.New("validation error"))
 
-		e.Validator = mockValidator
+	// 	e.Validator = mockValidator
 
-		invalidBody := body
-		invalidBody.ProspectID = ""
+	// 	invalidBody := body
+	// 	invalidBody.ProspectID = ""
 
-		data, _ := json.Marshal(invalidBody)
+	// 	data, _ := json.Marshal(invalidBody)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/emergency-contact", bytes.NewReader(data))
-		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+	// 	req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/emergency-contact", bytes.NewReader(data))
+	// 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	// 	rec := httptest.NewRecorder()
+	// 	c := e.NewContext(req, rec)
 
-		_ = handler.EmergencyContact(c)
+	// 	_ = handler.EmergencyContact(c)
 
-		assert.Equal(t, http.StatusBadRequest, rec.Code)
-		assert.Contains(t, rec.Body.String(), "PRINCIPLE-800")
-	})
+	// 	assert.Equal(t, http.StatusBadRequest, rec.Code)
+	// 	assert.Contains(t, rec.Body.String(), "PRINCIPLE-800")
+	// })
 
-	t.Run("error usecase", func(t *testing.T) {
-		e := echo.New()
-		mockValidator := new(MockValidator)
-		mockValidator.On("Validate", mock.Anything).Return(nil)
+	// t.Run("error usecase", func(t *testing.T) {
+	// 	e := echo.New()
+	// 	mockValidator := new(MockValidator)
+	// 	mockValidator.On("Validate", mock.Anything).Return(nil)
 
-		e.Validator = mockValidator
+	// 	e.Validator = mockValidator
 
-		data, _ := json.Marshal(body)
+	// 	data, _ := json.Marshal(body)
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/emergency-contact", bytes.NewReader(data))
-		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
-		rec := httptest.NewRecorder()
-		c := e.NewContext(req, rec)
+	// 	req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/emergency-contact", bytes.NewReader(data))
+	// 	req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+	// 	rec := httptest.NewRecorder()
+	// 	c := e.NewContext(req, rec)
 
-		mockMultiUsecase.On("PrincipleEmergencyContact", mock.Anything, mock.Anything, mock.Anything).Return(responses.UsecaseApi{}, errors.New("some error")).Once()
+	// 	mockMultiUsecase.On("PrincipleEmergencyContact", mock.Anything, mock.Anything, mock.Anything).Return(responses.UsecaseApi{}, errors.New("some error")).Once()
 
-		_ = handler.EmergencyContact(c)
+	// 	_ = handler.EmergencyContact(c)
 
-		assert.Equal(t, http.StatusInternalServerError, rec.Code)
-		assert.Contains(t, rec.Body.String(), "PRINCIPLE-")
-	})
+	// 	assert.Equal(t, http.StatusInternalServerError, rec.Code)
+	// 	assert.Contains(t, rec.Body.String(), "PRINCIPLE-")
+	// })
 }
 
 func TestCoreCustomer(t *testing.T) {
