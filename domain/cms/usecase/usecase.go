@@ -971,6 +971,15 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 				DeviasiDecision:    inq.DeviasiDecision,
 				DeviasiReason:      inq.DeviasiReason,
 			},
+			EDD: entity.TrxEDD{
+				IsHighrisk:  inq.IsHighrisk,
+				Pernyataan1: inq.Pernyataan1,
+				Pernyataan2: inq.Pernyataan2,
+				Pernyataan3: inq.Pernyataan3,
+				Pernyataan4: inq.Pernyataan4,
+				Pernyataan5: inq.Pernyataan5,
+				Pernyataan6: inq.Pernyataan6,
+			},
 		}
 
 		data = append(data, row)
@@ -1029,6 +1038,7 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 		nextFinal          int
 		decision           string
 		decision_detail    string
+		trxEdd             entity.TrxEDD
 	)
 
 	status, err := u.repository.GetTrxStatus(req.ProspectID)
@@ -1117,7 +1127,13 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 			NextStep:              trxDetail.NextStep.(string),
 		}
 
-		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, false)
+		// trx edd
+		if req.Edd != nil {
+			byteEdd, _ := json.Marshal(req.Edd)
+			json.Unmarshal(byteEdd, &trxEdd)
+		}
+
+		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, false, trxEdd)
 		if err != nil {
 			if err.Error() == constant.ERROR_ROWS_AFFECTED {
 				err = nil
@@ -1393,6 +1409,15 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 				DeviasiDecision:    inq.DeviasiDecision,
 				DeviasiReason:      inq.DeviasiReason,
 			},
+			EDD: entity.TrxEDD{
+				IsHighrisk:  inq.IsHighrisk,
+				Pernyataan1: inq.Pernyataan1,
+				Pernyataan2: inq.Pernyataan2,
+				Pernyataan3: inq.Pernyataan3,
+				Pernyataan4: inq.Pernyataan4,
+				Pernyataan5: inq.Pernyataan5,
+				Pernyataan6: inq.Pernyataan6,
+			},
 		}
 
 		data = append(data, row)
@@ -1409,6 +1434,7 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 		trxDetail          entity.TrxDetail
 		trxCaDecision      entity.TrxCaDecision
 		trxHistoryApproval entity.TrxHistoryApprovalScheme
+		trxedd             entity.TrxEDD
 	)
 
 	status, err := u.repository.GetTrxStatus(req.ProspectID)
@@ -1465,7 +1491,7 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 			SourceDecision:        trxDetail.SourceDecision,
 		}
 
-		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, true)
+		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, true, trxedd)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Process Cancel Order error")
 			return
@@ -1927,6 +1953,15 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 				DeviasiDescription: inq.DeviasiDescription,
 				DeviasiDecision:    inq.DeviasiDecision,
 				DeviasiReason:      inq.DeviasiReason,
+			},
+			EDD: entity.TrxEDD{
+				IsHighrisk:  inq.IsHighrisk,
+				Pernyataan1: inq.Pernyataan1,
+				Pernyataan2: inq.Pernyataan2,
+				Pernyataan3: inq.Pernyataan3,
+				Pernyataan4: inq.Pernyataan4,
+				Pernyataan5: inq.Pernyataan5,
+				Pernyataan6: inq.Pernyataan6,
 			},
 		}
 

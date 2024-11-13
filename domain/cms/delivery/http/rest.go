@@ -1,6 +1,7 @@
 package http
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"los-kmb-api/domain/cms/interfaces"
@@ -133,7 +134,7 @@ func (c *handlerCMS) ReviewPrescreening(ctx echo.Context) (err error) {
 	// Save Log Orchestrator
 	defer func() {
 		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
-		go c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/prescreening/review", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
+		c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/prescreening/review", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
 	}()
 
 	if err := ctx.Bind(&req); err != nil {
@@ -342,6 +343,59 @@ func (c *handlerCMS) SubmitDecision(ctx echo.Context) (err error) {
 
 	if err := ctx.Validate(&req); err != nil {
 		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Submit Decision", req, err)
+	}
+
+	getTrxEDD, err := c.repository.GetTrxEDD(req.ProspectID)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get trx_edd error - " + err.Error())
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Submit Decision", req, err)
+	}
+
+	if getTrxEDD.IsHighrisk {
+		if req.Edd == nil {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Form EDD is required")
+			return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Submit Decision", req, err)
+		}
+
+		jsonData, err := json.Marshal(req.Edd)
+		if err != nil {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Marshal EDD error - " + err.Error())
+			return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Submit Decision", req, err)
+		}
+
+		var reqEDD map[string]interface{}
+		err = json.Unmarshal(jsonData, &reqEDD)
+		if err != nil {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Unmarshal EDD error - " + err.Error())
+			return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Submit Decision", req, err)
+		}
+
+		// Looping setiap key dan value dalam map
+		var errString string
+		for key, value := range reqEDD {
+			if value == nil {
+				if errString == "" {
+					errString += key
+				} else {
+					errString += ", " + key
+				}
+			} else {
+				_, valueString := value.(string)
+				if valueString && (value.(string) == "" || len([]rune(value.(string))) > 250) {
+					if errString == "" {
+						errString += key + "(max 250 char)"
+					} else {
+						errString += ", " + key + "(max 250 char)"
+					}
+				}
+			}
+		}
+
+		if errString != "" {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - Form EDD is required (" + errString + ")")
+			return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Submit Decision", req, err)
+		}
 	}
 
 	data, err := c.usecase.SubmitDecision(ctx.Request().Context(), req)
