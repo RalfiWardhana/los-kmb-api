@@ -58,6 +58,13 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.POST("/cms/mapping-cluster/upload", handler.UploadMappingCluster, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/mapping-cluster/branch", handler.MappingClusterBranch, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/mapping-cluster/change-log", handler.MappingClusterChangeLog, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/quota-deviasi/inquiry", handler.QuotaDeviasiInquiry, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/quota-deviasi/branch", handler.QuotaDeviasiBranch, middlewares.AccessMiddleware())
+	cmsroute.POST("/cms/quota-deviasi/update", handler.QuotaDeviasiUpdate, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/quota-deviasi/download", handler.QuotaDeviasiDownload, middlewares.AccessMiddleware())
+	cmsroute.POST("/cms/quota-deviasi/upload", handler.QuotaDeviasiUpload, middlewares.AccessMiddleware())
+	cmsroute.POST("/cms/quota-deviasi/reset-all", handler.QuotaDeviasiResetAll, middlewares.AccessMiddleware())
+	cmsroute.POST("/cms/quota-deviasi/reset", handler.QuotaDeviasiResetBranch, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
@@ -1020,6 +1027,288 @@ func (c *handlerCMS) GenerateFormAKKK(ctx echo.Context) (err error) {
 	}
 
 	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Generate Form AKKK", req, data)
+	return ctxJson
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Setting Quota Deviasi
+// @Tags Setting Quota Deviasi
+// @Produce json
+// @Param search query string false "search"
+// @Param branch_id query string false "branch_id"
+// @Param is_active query string false "is_active"
+// @Param page query string false "page"
+// @Success 200 {object} response.ApiResponse{data=response.InquiryRow}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/quota-deviasi/inquiry [get]
+func (c *handlerCMS) QuotaDeviasiInquiry(ctx echo.Context) (err error) {
+
+	var accessToken = middlewares.UserInfoData.AccessToken
+
+	req := request.ReqListQuotaDeviasi{
+		Search:   ctx.QueryParam("search"),
+		BranchID: ctx.QueryParam("branch_id"),
+		IsActive: ctx.QueryParam("is_active"),
+	}
+
+	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	pagination := request.RequestPagination{
+		Page:  page,
+		Limit: 10,
+	}
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Setting Kuota Deviasi Inquiry", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Setting Kuota Deviasi Inquiry", req, err)
+	}
+
+	data, rowTotal, err := c.usecase.GetInquiryQuotaDeviasi(req, pagination)
+
+	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Setting Kuota Deviasi Inquiry", req, response.InquiryRow{Inquiry: data})
+	}
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Setting Kuota Deviasi Inquiry", req, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Setting Kuota Deviasi Inquiry", req, response.InquiryRow{
+		Inquiry:        data,
+		RecordFiltered: len(data),
+		RecordTotal:    rowTotal,
+	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Setting Quota Deviasi
+// @Tags Setting Quota Deviasi
+// @Produce json
+// @Param branch_id query string false "branch_id"
+// @Param branch_name query string false "branch_name"
+// @Success 200 {object} response.ApiResponse{data=response.InquiryRow}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/quota-deviasi/branch [get]
+func (c *handlerCMS) QuotaDeviasiBranch(ctx echo.Context) (err error) {
+
+	var accessToken = middlewares.UserInfoData.AccessToken
+
+	req := request.ReqListQuotaDeviasiBranch{
+		BranchID:   ctx.QueryParam("branch_id"),
+		BranchName: ctx.QueryParam("branch_name"),
+	}
+
+	data, err := c.usecase.GetQuotaDeviasiBranch(req)
+
+	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Setting Kuota Deviasi Branch", nil, response.InquiryRow{Inquiry: data})
+	}
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Setting Kuota Deviasi Branch", nil, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Setting Kuota Deviasi Branch", nil, response.InquiryRow{
+		Inquiry:        data,
+		RecordFiltered: len(data),
+		RecordTotal:    len(data),
+	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Setting Quota Deviasi
+// @Tags Setting Quota Deviasi
+// @Produce octet-stream
+// @Success 200 {file} file "application/octet-stream"
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/quota-deviasi/download [get]
+func (c *handlerCMS) QuotaDeviasiDownload(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		genName     string
+	)
+
+	defer func() {
+		if genName != "" {
+			os.Remove(fmt.Sprintf("./%s.xlsx", genName))
+		}
+	}()
+
+	genName, filename, err := c.usecase.GenerateExcelQuotaDeviasi()
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Data Setting Kuota Deviasi", nil, err)
+	}
+
+	return ctx.Attachment(fmt.Sprintf("./%s.xlsx", genName), filename)
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Setting Quota Deviasi
+// @Tags Setting Quota Deviasi
+// @Produce json
+// @Param excel_file formData file true "upload file"
+// @Param updated_by_name formData string true "updated by name"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/quota-deviasi/upload [post]
+func (c *handlerCMS) QuotaDeviasiUpload(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		req         request.ReqUploadSettingQuotaDeviasi
+	)
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Kuota Deviasi", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Kuota Deviasi", req, err)
+	}
+
+	file, err := ctx.FormFile("excel_file")
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Kuota Deviasi", nil, errors.New(constant.ERROR_BAD_REQUEST+" - Silakan unggah file excel yang valid"))
+	}
+
+	src, err := file.Open()
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Kuota Deviasi", nil, errors.New(constant.ERROR_BAD_REQUEST+" - Silakan unggah file excel yang valid"))
+	}
+	defer src.Close()
+
+	mime := file.Header.Get("Content-Type")
+	if mime != "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Kuota Deviasi", nil, errors.New(constant.ERROR_BAD_REQUEST+" - Silakan unggah file berformat .xlsx"))
+	}
+
+	data, err := c.usecase.UploadQuotaDeviasi(req, src)
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Kuota Deviasi", nil, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Upload Setting Kuota Deviasi Success", nil, data)
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Setting Quota Deviasi
+// @Tags Setting Quota Deviasi
+// @Produce json
+// @Param body body request.ReqUpdateQuotaDeviasi true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.ApiResponse}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/quota-deviasi/update [post]
+func (c *handlerCMS) QuotaDeviasiUpdate(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		req         request.ReqUpdateQuotaDeviasi
+		ctxJson     error
+	)
+
+	if err := ctx.Bind(&req); err != nil {
+		ctxJson, _ = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Kuota Deviasi", err)
+		return ctxJson
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Kuota Deviasi - Input Tidak Valid", req, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.UpdateQuotaDeviasiBranch(ctx.Request().Context(), req)
+
+	if err != nil {
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Kuota Deviasi", req, err)
+		return ctxJson
+	}
+
+	ctxJson, _ = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Update Kuota Deviasi - Success", req, data)
+	return ctxJson
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Setting Quota Deviasi
+// @Tags Setting Quota Deviasi
+// @Produce json
+// @Param body body request.ReqResetQuotaDeviasiBranch true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.ApiResponse}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/quota-deviasi/reset [post]
+func (c *handlerCMS) QuotaDeviasiResetBranch(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		req         request.ReqResetQuotaDeviasiBranch
+		ctxJson     error
+	)
+
+	if err := ctx.Bind(&req); err != nil {
+		ctxJson, _ = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Reset Kuota Branch Deviasi", err)
+		return ctxJson
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Reset Kuota Branch Deviasi - Input Tidak Valid", req, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.ResetQuotaDeviasiBranch(ctx.Request().Context(), req)
+
+	if err != nil {
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Reset Kuota Branch Deviasi", req, err)
+		return ctxJson
+	}
+
+	ctxJson, _ = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Reset Kuota Branch Deviasi - Success", req, data)
+	return ctxJson
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Setting Quota Deviasi
+// @Tags Setting Quota Deviasi
+// @Produce json
+// @Param body body request.ReqResetAllQuotaDeviasi true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.ApiResponse}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/quota-deviasi/reset-all [post]
+func (c *handlerCMS) QuotaDeviasiResetAll(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		req         request.ReqResetAllQuotaDeviasi
+		ctxJson     error
+	)
+
+	if err := ctx.Bind(&req); err != nil {
+		ctxJson, _ = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Reset Semua Kuota Deviasi", err)
+		return ctxJson
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Reset Semua Kuota Deviasi - Input Tidak Valid", req, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.ResetAllQuotaDeviasi(ctx.Request().Context(), req)
+
+	if err != nil {
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Reset Semua Kuota Deviasi", req, err)
+		return ctxJson
+	}
+
+	ctxJson, _ = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Reset Semua Kuota Deviasi - Success", req, data)
 	return ctxJson
 }
 

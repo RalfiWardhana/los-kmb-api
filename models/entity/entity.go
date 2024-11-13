@@ -2383,6 +2383,39 @@ func (c *NewEntry) TableName() string {
 	return "trx_new_entry"
 }
 
+type InquirySettingQuotaDeviasi struct {
+	BranchID       string  `gorm:"column:BranchID" json:"branch_id"`
+	BranchName     string  `gorm:"column:branch_name" json:"branch_name"`
+	QuotaAmount    float64 `gorm:"column:quota_amount" json:"quota_amount"`
+	QuotaAccount   int     `gorm:"column:quota_account" json:"quota_account"`
+	BookingAmount  float64 `gorm:"column:booking_amount" json:"booking_amount"`
+	BookingAccount int     `gorm:"column:booking_account" json:"booking_account"`
+	BalanceAmount  float64 `gorm:"column:balance_amount" json:"balance_amount"`
+	BalanceAccount int     `gorm:"column:balance_account" json:"balance_account"`
+	IsActive       bool    `gorm:"column:is_active" json:"is_active"`
+	UpdatedBy      string  `gorm:"column:updated_by" json:"updated_by"`
+	UpdatedAt      string  `gorm:"column:updated_at" json:"updated_at"`
+}
+
+type DataQuotaDeviasiBranch struct {
+	QuotaAmount    float64   `gorm:"column:quota_amount" json:"quota_amount"`
+	QuotaAccount   int       `gorm:"column:quota_account" json:"quota_account"`
+	BookingAmount  float64   `gorm:"column:booking_amount" json:"booking_amount"`
+	BookingAccount int       `gorm:"column:booking_account" json:"booking_account"`
+	BalanceAmount  float64   `gorm:"column:balance_amount" json:"balance_amount"`
+	BalanceAccount int       `gorm:"column:balance_account" json:"balance_account"`
+	IsActive       bool      `gorm:"column:is_active" json:"is_active"`
+	UpdatedAt      time.Time `gorm:"column:updated_at" json:"updated_at"`
+	UpdatedBy      string    `gorm:"column:updated_by" json:"updated_by"`
+}
+
+type ResultCheckDeviation struct {
+	BranchID       string      `gorm:"column:BranchID"`
+	NTF            float64     `gorm:"column:NTF"`
+	CustomerStatus string      `gorm:"column:customer_status"`
+	Decision       interface{} `gorm:"column:decision"`
+}
+
 type InquiryMappingCluster struct {
 	BranchID       string `gorm:"column:branch_id" json:"branch_id"`
 	BranchName     string `gorm:"column:branch_name" json:"branch_name"`
@@ -2526,7 +2559,7 @@ func (c *MappingKodeDeviasi) TableName() string {
 
 type MappingBranchDeviasi struct {
 	BranchID       string    `gorm:"type:varchar(10);column:BranchID" json:"branch_id"`
-	FinalApproval  string    `gorm:"type:varchar(3);column:final_approval"`
+	FinalApproval  string    `gorm:"type:varchar(3);column:final_approval" json:"final_approval"`
 	QuotaAmount    float64   `gorm:"column:quota_amount" json:"quota_amount"`
 	QuotaAccount   int       `gorm:"column:quota_account" json:"quota_account"`
 	BookingAmount  float64   `gorm:"column:booking_amount" json:"booking_amount"`

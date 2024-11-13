@@ -103,7 +103,7 @@ func (c *handlerKmbFiltering) RemoveCacheFiltering(ctx echo.Context) (err error)
 // @Tags Employee
 // @Produce json
 // @Param employee_id path string true "Employee ID"
-// @Success 200 {object} response.ApiResponse{data=response.EmployeeResponse}
+// @Success 200 {object} response.ApiResponse{data=response.EmployeeCMOResponse}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
 // @Router /api/v3/kmb/employee/employee-data/{employee_id} [get]
