@@ -5068,13 +5068,13 @@ func TestGetEmployeeData(t *testing.T) {
 	}{
 		{
 			name:            "Success - Active CMO",
-			employeeID:      "123",
+			employeeID:      "G010441066",
 			accessToken:     "access-token",
 			hrisAccessToken: "hris-access-token",
 			mockResponse: response.GetEmployeeByID{
 				Data: []response.EmployeeCareerHistory{
 					{
-						EmployeeID:        "123",
+						EmployeeID:        "G010441066",
 						EmployeeName:      "John Doe",
 						PositionGroupCode: "AO",
 						PositionGroupName: "Credit Marketing Officer",
@@ -5085,14 +5085,72 @@ func TestGetEmployeeData(t *testing.T) {
 			mockStatusCode: 200,
 			expectedError:  nil,
 			expectedData: response.EmployeeCMOResponse{
-				EmployeeID:         "123",
+				EmployeeID:         "G010441066",
 				EmployeeName:       "John Doe",
-				EmployeeIDWithName: "123 - John Doe",
+				EmployeeIDWithName: "G010441066 - John Doe",
 				JoinDate:           "2022-01-01",
 				PositionGroupCode:  "AO",
 				PositionGroupName:  "Credit Marketing Officer",
 				CMOCategory:        constant.CMO_LAMA,
 				IsCmoSpv:           false,
+			},
+		},
+		{
+			name:            "Stop Process - hit use NIK as AO SPV but resp HRIS as CMO",
+			employeeID:      "G010441066MO",
+			accessToken:     "access-token",
+			hrisAccessToken: "hris-access-token",
+			mockResponse: response.GetEmployeeByID{
+				Data: []response.EmployeeCareerHistory{
+					{
+						EmployeeID:        "G010441066",
+						EmployeeName:      "John Doe",
+						PositionGroupCode: "AO",
+						PositionGroupName: "Credit Marketing Officer",
+						RealCareerDate:    "2022-01-01T00:00:00",
+					},
+				},
+			},
+			mockStatusCode: 200,
+			expectedError:  nil,
+			expectedData: response.EmployeeCMOResponse{
+				EmployeeID:         "",
+				EmployeeName:       "",
+				EmployeeIDWithName: "",
+				JoinDate:           "",
+				PositionGroupCode:  "",
+				PositionGroupName:  "",
+				CMOCategory:        "",
+				IsCmoSpv:           nil,
+			},
+		},
+		{
+			name:            "Stop Process - hit use NIK as CMO but resp HRIS as AOSPV",
+			employeeID:      "G010441066",
+			accessToken:     "access-token",
+			hrisAccessToken: "hris-access-token",
+			mockResponse: response.GetEmployeeByID{
+				Data: []response.EmployeeCareerHistory{
+					{
+						EmployeeID:        "G010441066",
+						EmployeeName:      "John Doe",
+						PositionGroupCode: "AOSPV",
+						PositionGroupName: "SPV CMO",
+						RealCareerDate:    "2022-01-01T00:00:00",
+					},
+				},
+			},
+			mockStatusCode: 200,
+			expectedError:  nil,
+			expectedData: response.EmployeeCMOResponse{
+				EmployeeID:         "",
+				EmployeeName:       "",
+				EmployeeIDWithName: "",
+				JoinDate:           "",
+				PositionGroupCode:  "",
+				PositionGroupName:  "",
+				CMOCategory:        "",
+				IsCmoSpv:           nil,
 			},
 		},
 		{
