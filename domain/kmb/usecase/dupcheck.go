@@ -135,7 +135,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	}
 
 	trxFMF.TrxEDD.ProspectID = req.ProspectID
-	if negativeCustomer.Decision == "YES" {
+	if negativeCustomer.IsHighrisk == 1 {
 		trxFMF.TrxEDD.IsHighrisk = true
 	}
 
@@ -144,6 +144,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		mapping.CustomerType = spMap.CustomerType
 		mapping.SpouseType = spMap.SpouseType
 		mapping.Reason = data.Reason
+		mapping.NegativeCustomer = negativeCustomer
 		return
 	}
 
@@ -445,7 +446,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		checkConfins := response.UsecaseApi{
 			Result:         constant.DECISION_PASS,
 			Code:           constant.CODE_PASS_MAX_OVD_CONFINS,
-			Reason:         fmt.Sprintf("%s", reasonCustomer),
+			Reason:         reasonCustomer,
 			StatusKonsumen: customerKMB,
 			SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
 		}
@@ -787,7 +788,7 @@ func (u usecase) NegativeCustomerCheck(ctx context.Context, reqs request.Dupchec
 		resultNegativeCustomer, errRepo := u.repository.GetMappingNegativeCustomer(negativeCustomer)
 
 		if errRepo != nil {
-			err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - GetMappingNegativeCustomer Error - " + errRepo.Error())
+			err = errors.New(constant.ERROR_UPSTREAM + " - GetMappingNegativeCustomer Error - " + errRepo.Error())
 			return
 		}
 
@@ -822,6 +823,7 @@ func (u usecase) NegativeCustomerCheck(ctx context.Context, reqs request.Dupchec
 
 	info, _ := json.Marshal(negativeCustomer)
 	data.Info = string(info)
+	data.SourceDecision = constant.SOURCE_DECISION_BLACKLIST
 
 	return
 }

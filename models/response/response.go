@@ -348,6 +348,7 @@ type SpDupcheckMap struct {
 	ConfigMaxDSR                     float64     `json:"config_max_dsr"`
 	Cluster                          interface{} `json:"cluster"`
 	AgreementSettledExist            bool        `json:"agreement_settled_exist"`
+	NegativeCustomer                 interface{} `json:"negative_customer"`
 }
 
 type SpDupCekCustomerByID struct {
