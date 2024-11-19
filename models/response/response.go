@@ -440,6 +440,15 @@ type UsecaseApi struct {
 	IsDeviasi      bool        `json:"-"`
 }
 
+type NegativeCustomer struct {
+	IsActive    int    `json:"is_active"`
+	IsBlacklist int    `json:"is_blacklist"`
+	IsHighrisk  int    `json:"is_highrisk"`
+	BadType     string `json:"bad_type"`
+	Result      string `json:"result"`
+	Decision    string `json:"decision"`
+}
+
 type LowIncome struct {
 	NoApplication string  `json:"no_application"`
 	Income        float64 `json:"income"`
@@ -552,6 +561,7 @@ type TrxFMF struct {
 	EkycSimiliarity         interface{} `json:"ekyc_similiarity"`
 	EkycReason              interface{} `json:"ekyc_reason"`
 	TrxDeviasi              entity.TrxDeviasi
+	TrxEDD                  entity.TrxEDD
 }
 
 type RoaoAkkk struct {
