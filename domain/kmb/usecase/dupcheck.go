@@ -22,15 +22,15 @@ import (
 func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string, configValue response.DupcheckConfig) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error) {
 
 	var (
-		customer               []request.SpouseDupcheck
-		blackList              response.UsecaseApi
-		sp                     response.SpDupCekCustomerByID
-		dataCustomer           []response.SpDupCekCustomerByID
-		spMap                  response.SpDupcheckMap
-		customerType           string
-		isPrimePriority        bool
-		resultNegativeCustomer response.UsecaseApi
-		negativeCustomer       response.NegativeCustomer
+		customer                    []request.SpouseDupcheck
+		blackList                   response.UsecaseApi
+		sp                          response.SpDupCekCustomerByID
+		dataCustomer                []response.SpDupCekCustomerByID
+		spMap                       response.SpDupcheckMap
+		customerType                string
+		isPrimePriority             bool
+		resultNegativeCustomerCheck response.UsecaseApi
+		negativeCustomer            response.NegativeCustomer
 	)
 
 	// Check Banned Chassis Number
@@ -128,7 +128,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	mapping.CustomerType = spMap.CustomerType
 	mapping.SpouseType = spMap.SpouseType
 
-	resultNegativeCustomer, negativeCustomer, err = u.usecase.NegativeCustomerCheck(ctx, req, accessToken)
+	resultNegativeCustomerCheck, negativeCustomer, err = u.usecase.NegativeCustomerCheck(ctx, req, accessToken)
 
 	if err != nil {
 		return
@@ -139,14 +139,16 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		trxFMF.TrxEDD.IsHighrisk = true
 	}
 
-	if resultNegativeCustomer.Result == constant.DECISION_REJECT {
-		data = resultNegativeCustomer
+	if resultNegativeCustomerCheck.Result == constant.DECISION_REJECT {
+		data = resultNegativeCustomerCheck
 		mapping.CustomerType = spMap.CustomerType
 		mapping.SpouseType = spMap.SpouseType
 		mapping.Reason = data.Reason
+		mapping.NegativeCustomer = negativeCustomer
 		return
 	}
 
+	// trx_details for metrix blacklist or apu ppt
 	trxBlacklist := entity.TrxDetail{
 		ProspectID:     req.ProspectID,
 		StatusProcess:  constant.STATUS_ONPROCESS,
@@ -156,12 +158,12 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		SourceDecision: constant.SOURCE_DECISION_BLACKLIST,
 		Reason:         blackList.Reason,
 		NextStep:       constant.SOURCE_DECISION_PMK,
-		Info:           resultNegativeCustomer.Info,
+		Info:           resultNegativeCustomerCheck.Info,
 	}
 
 	if negativeCustomer.Decision == "YES" {
-		trxBlacklist.RuleCode = resultNegativeCustomer.Code
-		trxBlacklist.Reason = resultNegativeCustomer.Reason
+		trxBlacklist.RuleCode = resultNegativeCustomerCheck.Code
+		trxBlacklist.Reason = resultNegativeCustomerCheck.Reason
 	}
 
 	trxDetail = append(trxDetail, trxBlacklist)
@@ -445,7 +447,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		checkConfins := response.UsecaseApi{
 			Result:         constant.DECISION_PASS,
 			Code:           constant.CODE_PASS_MAX_OVD_CONFINS,
-			Reason:         fmt.Sprintf("%s", reasonCustomer),
+			Reason:         reasonCustomer,
 			StatusKonsumen: customerKMB,
 			SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
 		}
@@ -773,7 +775,7 @@ func (u usecase) NegativeCustomerCheck(ctx context.Context, reqs request.Dupchec
 	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("API_NEGATIVE_CUSTOMER"), req, header, constant.METHOD_POST, true, 6, timeout, reqs.ProspectID, accessToken)
 
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call API Negative Customer Error ")
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call API Negative Customer Error")
 		return
 	}
 
@@ -787,7 +789,7 @@ func (u usecase) NegativeCustomerCheck(ctx context.Context, reqs request.Dupchec
 		resultNegativeCustomer, errRepo := u.repository.GetMappingNegativeCustomer(negativeCustomer)
 
 		if errRepo != nil {
-			err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - GetMappingNegativeCustomer Error - " + errRepo.Error())
+			err = errors.New(constant.ERROR_UPSTREAM + " - GetMappingNegativeCustomer Error - " + errRepo.Error())
 			return
 		}
 
@@ -822,6 +824,7 @@ func (u usecase) NegativeCustomerCheck(ctx context.Context, reqs request.Dupchec
 
 	info, _ := json.Marshal(negativeCustomer)
 	data.Info = string(info)
+	data.SourceDecision = constant.SOURCE_DECISION_BLACKLIST
 
 	return
 }
