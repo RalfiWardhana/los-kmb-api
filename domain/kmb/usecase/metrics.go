@@ -295,6 +295,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		HomeStatus:            reqMetrics.CustomerPersonal.HomeStatus,
 		MonthlyVariableIncome: *reqMetrics.CustomerEmployment.MonthlyVariableIncome,
 		SpouseIncome:          *reqMetrics.CustomerEmployment.SpouseIncome,
+		JobType:               reqMetrics.CustomerEmployment.JobType,
 		JobPosition:           reqMetrics.CustomerEmployment.JobPosition,
 		ProfessionID:          reqMetrics.CustomerEmployment.ProfessionID,
 		EmploymentSinceYear:   reqMetrics.CustomerEmployment.EmploymentSinceYear,
