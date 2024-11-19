@@ -815,6 +815,28 @@ func (r repoHandler) GetTrxStatus(prospectID string) (status entity.TrxStatus, e
 	return
 }
 
+func (r repoHandler) GetTrxEDD(prospectID string) (trxEDD entity.TrxEDD, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.NewKmb.Raw("SELECT * FROM trx_edd WITH (nolock) WHERE ProspectID = ?", prospectID).Scan(&trxEDD).Error; err != nil {
+
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detail entity.TrxDetail, status entity.TrxStatus) (err error) {
 
 	prescreening.CreatedAt = time.Now()
@@ -1727,7 +1749,14 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 	  	FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -1741,6 +1770,7 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN
@@ -2302,7 +2332,14 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -2315,6 +2352,7 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN (
@@ -2484,7 +2522,7 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 	return
 }
 
-func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxHistoryApproval entity.TrxHistoryApprovalScheme, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, isCancel bool) (err error) {
+func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxHistoryApproval entity.TrxHistoryApprovalScheme, trxStatus entity.TrxStatus, trxDetail entity.TrxDetail, isCancel bool, trxEdd entity.TrxEDD) (err error) {
 
 	trxCaDecision.CreatedAt = time.Now()
 	trxStatus.CreatedAt = time.Now()
@@ -2531,6 +2569,13 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 		// trx_history_approval_scheme
 		if err := tx.Create(&trxHistoryApproval).Error; err != nil {
 			return err
+		}
+
+		// trx edd
+		if trxEdd != (entity.TrxEDD{}) {
+			if err := tx.Model(&trxEdd).Where("ProspectID = ?", trxStatus.ProspectID).Updates(trxEdd).Error; err != nil {
+				return err
+			}
 		}
 
 		// trx_draft_ca_decision
@@ -2606,6 +2651,11 @@ func (r repoHandler) ProcessReturnOrder(prospectID string, trxStatus entity.TrxS
 
 		// truncate the order from trx_deviasi
 		if err := tx.Where("ProspectID = ?", prospectID).Delete(&entity.TrxDeviasi{}).Error; err != nil {
+			return err
+		}
+
+		// truncate the order from trx_edd
+		if err := tx.Where("ProspectID = ?", prospectID).Delete(&entity.TrxEDD{}).Error; err != nil {
 			return err
 		}
 
@@ -3002,7 +3052,14 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -3016,6 +3073,7 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		OUTER APPLY (

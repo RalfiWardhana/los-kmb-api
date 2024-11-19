@@ -1610,38 +1610,45 @@ type InquiryCa struct {
 	Relationship     string `gorm:"column:Relationship"`
 	EmconMobilePhone string `gorm:"column:EmconMobilePhone"`
 
-	LegalAddress       string `gorm:"column:LegalAddress"`
-	LegalRTRW          string `gorm:"column:LegalRTRW"`
-	LegalKelurahan     string `gorm:"column:LegalKelurahan"`
-	LegalKecamatan     string `gorm:"column:LegalKecamatan"`
-	LegalZipCode       string `gorm:"column:LegalZipcode"`
-	LegalCity          string `gorm:"column:LegalCity"`
-	ResidenceAddress   string `gorm:"column:ResidenceAddress"`
-	ResidenceRTRW      string `gorm:"column:ResidenceRTRW"`
-	ResidenceKelurahan string `gorm:"column:ResidenceKelurahan"`
-	ResidenceKecamatan string `gorm:"column:ResidenceKecamatan"`
-	ResidenceZipCode   string `gorm:"column:ResidenceZipcode"`
-	ResidenceCity      string `gorm:"column:ResidenceCity"`
-	CompanyAddress     string `gorm:"column:CompanyAddress"`
-	CompanyRTRW        string `gorm:"column:CompanyRTRW"`
-	CompanyKelurahan   string `gorm:"column:CompanyKelurahan"`
-	CompanyKecamatan   string `gorm:"column:CompanyKecamatan"`
-	CompanyZipCode     string `gorm:"column:CompanyZipcode"`
-	CompanyCity        string `gorm:"column:CompanyCity"`
-	CompanyAreaPhone   string `gorm:"column:CompanyAreaPhone"`
-	CompanyPhone       string `gorm:"column:CompanyPhone"`
-	EmergencyAddress   string `gorm:"column:EmergencyAddress"`
-	EmergencyRTRW      string `gorm:"column:EmergencyRTRW"`
-	EmergencyKelurahan string `gorm:"column:EmergencyKelurahan"`
-	EmergencyKecamatan string `gorm:"column:EmergencyKecamatan"`
-	EmergencyZipcode   string `gorm:"column:EmergencyZipcode"`
-	EmergencyCity      string `gorm:"column:EmergencyCity"`
-	EmergencyAreaPhone string `gorm:"column:EmergencyAreaPhone"`
-	EmergencyPhone     string `gorm:"column:EmergencyPhone"`
-	DeviasiID          string `gorm:"column:deviasi_id"`
-	DeviasiDescription string `gorm:"column:deviasi_description"`
-	DeviasiDecision    string `gorm:"column:deviasi_decision"`
-	DeviasiReason      string `gorm:"column:deviasi_reason"`
+	LegalAddress       string      `gorm:"column:LegalAddress"`
+	LegalRTRW          string      `gorm:"column:LegalRTRW"`
+	LegalKelurahan     string      `gorm:"column:LegalKelurahan"`
+	LegalKecamatan     string      `gorm:"column:LegalKecamatan"`
+	LegalZipCode       string      `gorm:"column:LegalZipcode"`
+	LegalCity          string      `gorm:"column:LegalCity"`
+	ResidenceAddress   string      `gorm:"column:ResidenceAddress"`
+	ResidenceRTRW      string      `gorm:"column:ResidenceRTRW"`
+	ResidenceKelurahan string      `gorm:"column:ResidenceKelurahan"`
+	ResidenceKecamatan string      `gorm:"column:ResidenceKecamatan"`
+	ResidenceZipCode   string      `gorm:"column:ResidenceZipcode"`
+	ResidenceCity      string      `gorm:"column:ResidenceCity"`
+	CompanyAddress     string      `gorm:"column:CompanyAddress"`
+	CompanyRTRW        string      `gorm:"column:CompanyRTRW"`
+	CompanyKelurahan   string      `gorm:"column:CompanyKelurahan"`
+	CompanyKecamatan   string      `gorm:"column:CompanyKecamatan"`
+	CompanyZipCode     string      `gorm:"column:CompanyZipcode"`
+	CompanyCity        string      `gorm:"column:CompanyCity"`
+	CompanyAreaPhone   string      `gorm:"column:CompanyAreaPhone"`
+	CompanyPhone       string      `gorm:"column:CompanyPhone"`
+	EmergencyAddress   string      `gorm:"column:EmergencyAddress"`
+	EmergencyRTRW      string      `gorm:"column:EmergencyRTRW"`
+	EmergencyKelurahan string      `gorm:"column:EmergencyKelurahan"`
+	EmergencyKecamatan string      `gorm:"column:EmergencyKecamatan"`
+	EmergencyZipcode   string      `gorm:"column:EmergencyZipcode"`
+	EmergencyCity      string      `gorm:"column:EmergencyCity"`
+	EmergencyAreaPhone string      `gorm:"column:EmergencyAreaPhone"`
+	EmergencyPhone     string      `gorm:"column:EmergencyPhone"`
+	DeviasiID          string      `gorm:"column:deviasi_id"`
+	DeviasiDescription string      `gorm:"column:deviasi_description"`
+	DeviasiDecision    string      `gorm:"column:deviasi_decision"`
+	DeviasiReason      string      `gorm:"column:deviasi_reason"`
+	IsHighrisk         bool        `gorm:"column:is_highrisk"`
+	Pernyataan1        interface{} `gorm:"column:pernyataan_1"`
+	Pernyataan2        interface{} `gorm:"column:pernyataan_2"`
+	Pernyataan3        interface{} `gorm:"column:pernyataan_3"`
+	Pernyataan4        interface{} `gorm:"column:pernyataan_4"`
+	Pernyataan5        interface{} `gorm:"column:pernyataan_5"`
+	Pernyataan6        interface{} `gorm:"column:pernyataan_6"`
 }
 
 type InquiryDataCa struct {
@@ -1659,6 +1666,7 @@ type InquiryDataCa struct {
 	Address        DataAddress         `json:"address"`
 	Photo          []DataPhoto         `json:"photo"`
 	Deviasi        Deviasi             `json:"deviasi"`
+	EDD            TrxEDD              `json:"edd"`
 }
 
 type DataCa struct {
@@ -1801,38 +1809,45 @@ type InquirySearch struct {
 	Relationship     string `gorm:"column:Relationship"`
 	EmconMobilePhone string `gorm:"column:EmconMobilePhone"`
 
-	LegalAddress       string `gorm:"column:LegalAddress"`
-	LegalRTRW          string `gorm:"column:LegalRTRW"`
-	LegalKelurahan     string `gorm:"column:LegalKelurahan"`
-	LegalKecamatan     string `gorm:"column:LegalKecamatan"`
-	LegalZipCode       string `gorm:"column:LegalZipcode"`
-	LegalCity          string `gorm:"column:LegalCity"`
-	ResidenceAddress   string `gorm:"column:ResidenceAddress"`
-	ResidenceRTRW      string `gorm:"column:ResidenceRTRW"`
-	ResidenceKelurahan string `gorm:"column:ResidenceKelurahan"`
-	ResidenceKecamatan string `gorm:"column:ResidenceKecamatan"`
-	ResidenceZipCode   string `gorm:"column:ResidenceZipcode"`
-	ResidenceCity      string `gorm:"column:ResidenceCity"`
-	CompanyAddress     string `gorm:"column:CompanyAddress"`
-	CompanyRTRW        string `gorm:"column:CompanyRTRW"`
-	CompanyKelurahan   string `gorm:"column:CompanyKelurahan"`
-	CompanyKecamatan   string `gorm:"column:CompanyKecamatan"`
-	CompanyZipCode     string `gorm:"column:CompanyZipcode"`
-	CompanyCity        string `gorm:"column:CompanyCity"`
-	CompanyAreaPhone   string `gorm:"column:CompanyAreaPhone"`
-	CompanyPhone       string `gorm:"column:CompanyPhone"`
-	EmergencyAddress   string `gorm:"column:EmergencyAddress"`
-	EmergencyRTRW      string `gorm:"column:EmergencyRTRW"`
-	EmergencyKelurahan string `gorm:"column:EmergencyKelurahan"`
-	EmergencyKecamatan string `gorm:"column:EmergencyKecamatan"`
-	EmergencyZipcode   string `gorm:"column:EmergencyZipcode"`
-	EmergencyCity      string `gorm:"column:EmergencyCity"`
-	EmergencyAreaPhone string `gorm:"column:EmergencyAreaPhone"`
-	EmergencyPhone     string `gorm:"column:EmergencyPhone"`
-	DeviasiID          string `gorm:"column:deviasi_id"`
-	DeviasiDescription string `gorm:"column:deviasi_description"`
-	DeviasiDecision    string `gorm:"column:deviasi_decision"`
-	DeviasiReason      string `gorm:"column:deviasi_reason"`
+	LegalAddress       string      `gorm:"column:LegalAddress"`
+	LegalRTRW          string      `gorm:"column:LegalRTRW"`
+	LegalKelurahan     string      `gorm:"column:LegalKelurahan"`
+	LegalKecamatan     string      `gorm:"column:LegalKecamatan"`
+	LegalZipCode       string      `gorm:"column:LegalZipcode"`
+	LegalCity          string      `gorm:"column:LegalCity"`
+	ResidenceAddress   string      `gorm:"column:ResidenceAddress"`
+	ResidenceRTRW      string      `gorm:"column:ResidenceRTRW"`
+	ResidenceKelurahan string      `gorm:"column:ResidenceKelurahan"`
+	ResidenceKecamatan string      `gorm:"column:ResidenceKecamatan"`
+	ResidenceZipCode   string      `gorm:"column:ResidenceZipcode"`
+	ResidenceCity      string      `gorm:"column:ResidenceCity"`
+	CompanyAddress     string      `gorm:"column:CompanyAddress"`
+	CompanyRTRW        string      `gorm:"column:CompanyRTRW"`
+	CompanyKelurahan   string      `gorm:"column:CompanyKelurahan"`
+	CompanyKecamatan   string      `gorm:"column:CompanyKecamatan"`
+	CompanyZipCode     string      `gorm:"column:CompanyZipcode"`
+	CompanyCity        string      `gorm:"column:CompanyCity"`
+	CompanyAreaPhone   string      `gorm:"column:CompanyAreaPhone"`
+	CompanyPhone       string      `gorm:"column:CompanyPhone"`
+	EmergencyAddress   string      `gorm:"column:EmergencyAddress"`
+	EmergencyRTRW      string      `gorm:"column:EmergencyRTRW"`
+	EmergencyKelurahan string      `gorm:"column:EmergencyKelurahan"`
+	EmergencyKecamatan string      `gorm:"column:EmergencyKecamatan"`
+	EmergencyZipcode   string      `gorm:"column:EmergencyZipcode"`
+	EmergencyCity      string      `gorm:"column:EmergencyCity"`
+	EmergencyAreaPhone string      `gorm:"column:EmergencyAreaPhone"`
+	EmergencyPhone     string      `gorm:"column:EmergencyPhone"`
+	DeviasiID          string      `gorm:"column:deviasi_id"`
+	DeviasiDescription string      `gorm:"column:deviasi_description"`
+	DeviasiDecision    string      `gorm:"column:deviasi_decision"`
+	DeviasiReason      string      `gorm:"column:deviasi_reason"`
+	IsHighrisk         bool        `gorm:"column:is_highrisk"`
+	Pernyataan1        interface{} `gorm:"column:pernyataan_1"`
+	Pernyataan2        interface{} `gorm:"column:pernyataan_2"`
+	Pernyataan3        interface{} `gorm:"column:pernyataan_3"`
+	Pernyataan4        interface{} `gorm:"column:pernyataan_4"`
+	Pernyataan5        interface{} `gorm:"column:pernyataan_5"`
+	Pernyataan6        interface{} `gorm:"column:pernyataan_6"`
 }
 
 type InquiryDataSearch struct {
@@ -1848,6 +1863,7 @@ type InquiryDataSearch struct {
 	Address        DataAddress        `json:"address"`
 	Photo          []DataPhoto        `json:"photo"`
 	Deviasi        Deviasi            `json:"deviasi"`
+	EDD            TrxEDD             `json:"edd"`
 }
 
 type DataPersonal struct {
@@ -1912,6 +1928,7 @@ type InquiryDataApproval struct {
 	Address        DataAddress         `json:"address"`
 	Photo          []DataPhoto         `json:"photo"`
 	Deviasi        Deviasi             `json:"deviasi"`
+	EDD            TrxEDD              `json:"edd"`
 }
 
 type DataApproval struct {
@@ -2480,15 +2497,15 @@ func (c *MappingNegativeCustomer) TableName() string {
 }
 
 type TrxEDD struct {
-	ProspectID  string      `gorm:"type:varchar(20);column:ProspectID;primary_key:true" json:"prospect_id"`
-	IsHighrisk  int         `gorm:"column:is_highrisk" json:"is_highrisk"`
+	ProspectID  string      `gorm:"type:varchar(20);column:ProspectID;primary_key:true" json:"-"`
+	IsHighrisk  bool        `gorm:"column:is_highrisk;type:int" json:"is_highrisk"`
 	Pernyataan1 interface{} `gorm:"column:pernyataan_1" json:"pernyataan_1"`
 	Pernyataan2 interface{} `gorm:"column:pernyataan_2" json:"pernyataan_2"`
 	Pernyataan3 interface{} `gorm:"column:pernyataan_3" json:"pernyataan_3"`
 	Pernyataan4 interface{} `gorm:"column:pernyataan_4" json:"pernyataan_4"`
 	Pernyataan5 interface{} `gorm:"column:pernyataan_5" json:"pernyataan_5"`
 	Pernyataan6 interface{} `gorm:"column:pernyataan_6" json:"pernyataan_6"`
-	CreatedAt   time.Time   `gorm:"column:created_at" json:"created_at"`
+	CreatedAt   time.Time   `gorm:"column:created_at" json:"-"`
 }
 
 func (c *TrxEDD) TableName() string {

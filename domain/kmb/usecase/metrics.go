@@ -382,6 +382,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	trxFMF.DSRFMF = dupcheckData.Dsr
 	trxFMF.TrxBannedPMKDSR = trxFMFDupcheck.TrxBannedPMKDSR
 	trxFMF.TrxBannedChassisNumber = trxFMFDupcheck.TrxBannedChassisNumber
+	trxFMF.TrxEDD = trxFMFDupcheck.TrxEDD
 
 	// internal record
 	if dupcheckData.CustomerID != nil {

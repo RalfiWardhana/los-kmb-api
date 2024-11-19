@@ -134,9 +134,9 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		return
 	}
 
-	trxFMF.TrxEDD.ProspectID = prospectID
+	trxFMF.TrxEDD.ProspectID = req.ProspectID
 	if negativeCustomer.Decision == "YES" {
-		trxFMF.TrxEDD.IsHighrisk = 1
+		trxFMF.TrxEDD.IsHighrisk = true
 	}
 
 	if resultNegativeCustomer.Result == constant.DECISION_REJECT {

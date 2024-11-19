@@ -893,13 +893,14 @@ type ReqSaveAsDraft struct {
 }
 
 type ReqSubmitDecision struct {
-	ProspectID   string  `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
-	NTFAkumulasi float64 `json:"ntf_akumulasi" validate:"required,max=9999999999999"`
-	Decision     string  `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
-	SlikResult   string  `json:"slik_result" validate:"required,max=30"`
-	Note         string  `json:"note" validate:"max=525"`
-	CreatedBy    string  `json:"decision_by" validate:"required,max=100"`
-	DecisionBy   string  `json:"decision_by_name" validate:"required,max=250"`
+	ProspectID   string      `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
+	NTFAkumulasi float64     `json:"ntf_akumulasi" validate:"required,max=9999999999999"`
+	Decision     string      `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
+	SlikResult   string      `json:"slik_result" validate:"required,max=30"`
+	Note         string      `json:"note" validate:"max=525"`
+	CreatedBy    string      `json:"decision_by" validate:"required,max=100"`
+	DecisionBy   string      `json:"decision_by_name" validate:"required,max=250"`
+	Edd          interface{} `json:"edd"`
 }
 
 type ReqSubmitApproval struct {
