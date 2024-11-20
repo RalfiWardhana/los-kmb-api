@@ -1522,7 +1522,13 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 				x.note,
 				x.created_at,
 				x.created_by,
-				x.decision_by
+				x.decision_by,
+				x.pernyataan_1,
+				x.pernyataan_2,
+				x.pernyataan_3,
+				x.pernyataan_4,
+				x.pernyataan_5,
+				x.pernyataan_6
 			FROM
 				trx_draft_ca_decision x WITH (nolock)
 			WHERE
@@ -1633,6 +1639,12 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		tdd.created_at AS draft_created_at,
 		tdd.created_by AS draft_created_by,
 		tdd.decision_by AS draft_decision_by,
+		tdd.pernyataan_1 AS draft_pernyataan_1,
+		tdd.pernyataan_2 AS draft_pernyataan_2,
+		tdd.pernyataan_3 AS draft_pernyataan_3,
+		tdd.pernyataan_4 AS draft_pernyataan_4,
+		tdd.pernyataan_5 AS draft_pernyataan_5,
+		tdd.pernyataan_6 AS draft_pernyataan_6,
 		tcp.CustomerID,
 		tcp.CustomerStatus,
 		tcp.SurveyResult,
@@ -1916,8 +1928,12 @@ func (r repoHandler) SaveDraftData(draft entity.TrxDraftCaDecision) (err error) 
 
 	return r.NewKmb.Transaction(func(tx *gorm.DB) error {
 
+		var inInterface map[string]interface{}
+		inrec, _ := json.Marshal(draft)
+		json.Unmarshal(inrec, &inInterface)
+
 		// update trx_status
-		result := tx.Model(&draft).Where("ProspectID = ?", draft.ProspectID).Updates(draft)
+		result := tx.Model(&draft).Where("ProspectID = ?", draft.ProspectID).Updates(inInterface)
 
 		if err = result.Error; err != nil {
 			return err

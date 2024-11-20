@@ -847,9 +847,15 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 			InternalRecord: internalData,
 			Approval:       historyData,
 			Draft: entity.TrxDraftCaDecision{
-				Decision:   inq.DraftDecision,
-				SlikResult: inq.DraftSlikResult,
-				Note:       inq.DraftNote,
+				Decision:    inq.DraftDecision,
+				SlikResult:  inq.DraftSlikResult,
+				Note:        inq.DraftNote,
+				Pernyataan1: inq.DraftPernyataan1,
+				Pernyataan2: inq.DraftPernyataan2,
+				Pernyataan3: inq.DraftPernyataan3,
+				Pernyataan4: inq.DraftPernyataan4,
+				Pernyataan5: inq.DraftPernyataan5,
+				Pernyataan6: inq.DraftPernyataan6,
 			},
 			General: entity.DataGeneral{
 				ProspectID:     inq.ProspectID,
@@ -994,6 +1000,7 @@ func (u usecase) SaveAsDraft(ctx context.Context, req request.ReqSaveAsDraft) (d
 	var (
 		trxDraft entity.TrxDraftCaDecision
 		decision string
+		trxEdd   entity.TrxEDD
 	)
 
 	switch req.Decision {
@@ -1010,6 +1017,19 @@ func (u usecase) SaveAsDraft(ctx context.Context, req request.ReqSaveAsDraft) (d
 		Note:       req.Note,
 		CreatedBy:  req.CreatedBy,
 		DecisionBy: req.DecisionBy,
+	}
+
+	// trx edd
+	if req.Edd != nil {
+		byteEdd, _ := json.Marshal(req.Edd)
+		json.Unmarshal(byteEdd, &trxEdd)
+
+		trxDraft.Pernyataan1 = trxEdd.Pernyataan1
+		trxDraft.Pernyataan2 = trxEdd.Pernyataan2
+		trxDraft.Pernyataan3 = trxEdd.Pernyataan3
+		trxDraft.Pernyataan4 = trxEdd.Pernyataan4
+		trxDraft.Pernyataan5 = trxEdd.Pernyataan5
+		trxDraft.Pernyataan6 = trxEdd.Pernyataan6
 	}
 
 	data = response.CAResponse{

@@ -1239,13 +1239,19 @@ func (c *TrxHistoryApprovalScheme) TableName() string {
 }
 
 type TrxDraftCaDecision struct {
-	ProspectID string      `gorm:"type:varchar(20);column:ProspectID" json:"-"`
-	Decision   string      `gorm:"type:varchar(3);column:decision" json:"decision"`
-	SlikResult string      `gorm:"column:slik_result" json:"slik_result"`
-	Note       interface{} `gorm:"type:varchar(525);column:note" json:"note"`
-	CreatedAt  time.Time   `gorm:"column:created_at" json:"-"`
-	CreatedBy  string      `gorm:"type:varchar(100);column:created_by" json:"-"`
-	DecisionBy string      `gorm:"type:varchar(250);column:decision_by" json:"-"`
+	ProspectID  string      `gorm:"type:varchar(20);column:ProspectID" json:"-"`
+	Decision    string      `gorm:"type:varchar(3);column:decision" json:"decision"`
+	SlikResult  string      `gorm:"column:slik_result" json:"slik_result"`
+	Note        interface{} `gorm:"type:varchar(525);column:note" json:"note"`
+	CreatedAt   time.Time   `gorm:"column:created_at" json:"created_at"`
+	CreatedBy   string      `gorm:"type:varchar(100);column:created_by" json:"created_by"`
+	DecisionBy  string      `gorm:"type:varchar(250);column:decision_by" json:"decision_by"`
+	Pernyataan1 interface{} `gorm:"column:pernyataan_1" json:"pernyataan_1"`
+	Pernyataan2 interface{} `gorm:"column:pernyataan_2" json:"pernyataan_2"`
+	Pernyataan3 interface{} `gorm:"column:pernyataan_3" json:"pernyataan_3"`
+	Pernyataan4 interface{} `gorm:"column:pernyataan_4" json:"pernyataan_4"`
+	Pernyataan5 interface{} `gorm:"column:pernyataan_5" json:"pernyataan_5"`
+	Pernyataan6 interface{} `gorm:"column:pernyataan_6" json:"pernyataan_6"`
 }
 
 func (c *TrxDraftCaDecision) TableName() string {
@@ -1527,12 +1533,18 @@ type InquiryCa struct {
 	IsLastApproval     bool    `gorm:"column:is_last_approval"`
 	HasReturn          bool    `gorm:"column:HasReturn"`
 
-	DraftDecision   string    `gorm:"column:draft_decision"`
-	DraftSlikResult string    `gorm:"column:draft_slik_result"`
-	DraftNote       string    `gorm:"column:draft_note"`
-	DraftCreatedAt  time.Time `gorm:"column:draft_created_at"`
-	DraftCreatedBy  string    `gorm:"column:draft_created_by"`
-	DraftDecisionBy string    `gorm:"column:draft_decision_by"`
+	DraftDecision    string      `gorm:"column:draft_decision"`
+	DraftSlikResult  string      `gorm:"column:draft_slik_result"`
+	DraftNote        string      `gorm:"column:draft_note"`
+	DraftCreatedAt   time.Time   `gorm:"column:draft_created_at"`
+	DraftCreatedBy   string      `gorm:"column:draft_created_by"`
+	DraftDecisionBy  string      `gorm:"column:draft_decision_by"`
+	DraftPernyataan1 interface{} `gorm:"column:draft_pernyataan_1"`
+	DraftPernyataan2 interface{} `gorm:"column:draft_pernyataan_2"`
+	DraftPernyataan3 interface{} `gorm:"column:draft_pernyataan_3"`
+	DraftPernyataan4 interface{} `gorm:"column:draft_pernyataan_4"`
+	DraftPernyataan5 interface{} `gorm:"column:draft_pernyataan_5"`
+	DraftPernyataan6 interface{} `gorm:"column:draft_pernyataan_6"`
 
 	ProspectID     string `gorm:"column:ProspectID"`
 	BranchName     string `gorm:"column:BranchName"`

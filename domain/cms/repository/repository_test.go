@@ -3397,7 +3397,13 @@ func TestGetInquiryCa(t *testing.T) {
 				x.note,
 				x.created_at,
 				x.created_by,
-				x.decision_by
+				x.decision_by,
+				x.pernyataan_1,
+				x.pernyataan_2,
+				x.pernyataan_3,
+				x.pernyataan_4,
+				x.pernyataan_5,
+				x.pernyataan_6
 			FROM
 				trx_draft_ca_decision x WITH (nolock)
 			WHERE
@@ -3509,6 +3515,12 @@ func TestGetInquiryCa(t *testing.T) {
 		tdd.created_at AS draft_created_at,
 		tdd.created_by AS draft_created_by,
 		tdd.decision_by AS draft_decision_by,
+		tdd.pernyataan_1 AS draft_pernyataan_1,
+		tdd.pernyataan_2 AS draft_pernyataan_2,
+		tdd.pernyataan_3 AS draft_pernyataan_3,
+		tdd.pernyataan_4 AS draft_pernyataan_4,
+		tdd.pernyataan_5 AS draft_pernyataan_5,
+		tdd.pernyataan_6 AS draft_pernyataan_6,
 
 		tcp.CustomerID,
 		tcp.CustomerStatus,
@@ -3903,7 +3915,13 @@ func TestGetInquiryCa(t *testing.T) {
 				x.note,
 				x.created_at,
 				x.created_by,
-				x.decision_by
+				x.decision_by,
+				x.pernyataan_1,
+				x.pernyataan_2,
+				x.pernyataan_3,
+				x.pernyataan_4,
+				x.pernyataan_5,
+				x.pernyataan_6
 			FROM
 				trx_draft_ca_decision x WITH (nolock)
 			WHERE
@@ -4015,6 +4033,12 @@ func TestGetInquiryCa(t *testing.T) {
 		tdd.created_at AS draft_created_at,
 		tdd.created_by AS draft_created_by,
 		tdd.decision_by AS draft_decision_by,
+		tdd.pernyataan_1 AS draft_pernyataan_1,
+		tdd.pernyataan_2 AS draft_pernyataan_2,
+		tdd.pernyataan_3 AS draft_pernyataan_3,
+		tdd.pernyataan_4 AS draft_pernyataan_4,
+		tdd.pernyataan_5 AS draft_pernyataan_5,
+		tdd.pernyataan_6 AS draft_pernyataan_6,
 
 		tcp.CustomerID,
 		tcp.CustomerStatus,
@@ -4409,7 +4433,13 @@ func TestGetInquiryCa(t *testing.T) {
 				x.note,
 				x.created_at,
 				x.created_by,
-				x.decision_by
+				x.decision_by,
+				x.pernyataan_1,
+				x.pernyataan_2,
+				x.pernyataan_3,
+				x.pernyataan_4,
+				x.pernyataan_5,
+				x.pernyataan_6
 			FROM
 				trx_draft_ca_decision x WITH (nolock)
 			WHERE
@@ -4521,6 +4551,12 @@ func TestGetInquiryCa(t *testing.T) {
 		tdd.created_at AS draft_created_at,
 		tdd.created_by AS draft_created_by,
 		tdd.decision_by AS draft_decision_by,
+		tdd.pernyataan_1 AS draft_pernyataan_1,
+		tdd.pernyataan_2 AS draft_pernyataan_2,
+		tdd.pernyataan_3 AS draft_pernyataan_3,
+		tdd.pernyataan_4 AS draft_pernyataan_4,
+		tdd.pernyataan_5 AS draft_pernyataan_5,
+		tdd.pernyataan_6 AS draft_pernyataan_6,
 
 		tcp.CustomerID,
 		tcp.CustomerStatus,
@@ -4926,7 +4962,13 @@ func TestGetInquiryCa(t *testing.T) {
 				x.note,
 				x.created_at,
 				x.created_by,
-				x.decision_by
+				x.decision_by,
+				x.pernyataan_1,
+				x.pernyataan_2,
+				x.pernyataan_3,
+				x.pernyataan_4,
+				x.pernyataan_5,
+				x.pernyataan_6
 			FROM
 				trx_draft_ca_decision x WITH (nolock)
 			WHERE
@@ -5038,6 +5080,12 @@ func TestGetInquiryCa(t *testing.T) {
 				tdd.created_at AS draft_created_at,
 				tdd.created_by AS draft_created_by,
 				tdd.decision_by AS draft_decision_by,
+				tdd.pernyataan_1 AS draft_pernyataan_1,
+				tdd.pernyataan_2 AS draft_pernyataan_2,
+				tdd.pernyataan_3 AS draft_pernyataan_3,
+				tdd.pernyataan_4 AS draft_pernyataan_4,
+				tdd.pernyataan_5 AS draft_pernyataan_5,
+				tdd.pernyataan_6 AS draft_pernyataan_6,
 
 				tcp.CustomerID,
 				tcp.CustomerStatus,
@@ -5443,7 +5491,13 @@ func TestGetInquiryCa(t *testing.T) {
 				x.note,
 				x.created_at,
 				x.created_by,
-				x.decision_by
+				x.decision_by,
+				x.pernyataan_1,
+				x.pernyataan_2,
+				x.pernyataan_3,
+				x.pernyataan_4,
+				x.pernyataan_5,
+				x.pernyataan_6
 			FROM
 				trx_draft_ca_decision x WITH (nolock)
 			WHERE
@@ -5555,6 +5609,12 @@ func TestGetInquiryCa(t *testing.T) {
 		tdd.created_at AS draft_created_at,
 		tdd.created_by AS draft_created_by,
 		tdd.decision_by AS draft_decision_by,
+		tdd.pernyataan_1 AS draft_pernyataan_1,
+		tdd.pernyataan_2 AS draft_pernyataan_2,
+		tdd.pernyataan_3 AS draft_pernyataan_3,
+		tdd.pernyataan_4 AS draft_pernyataan_4,
+		tdd.pernyataan_5 AS draft_pernyataan_5,
+		tdd.pernyataan_6 AS draft_pernyataan_6,
 
 		tcp.CustomerID,
 		tcp.CustomerStatus,
@@ -5867,8 +5927,8 @@ func TestSaveDraftData(t *testing.T) {
 	t.Run("success update", func(t *testing.T) {
 
 		mock.ExpectBegin()
-		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_draft_ca_decision" SET "ProspectID" = ?, "created_at" = ?, "created_by" = ?, "decision" = ?, "decision_by" = ?, "note" = ?, "slik_result" = ? WHERE (ProspectID = ?)`)).
-			WithArgs(data.ProspectID, sqlmock.AnyArg(), data.CreatedBy, data.Decision, data.DecisionBy, data.Note, data.SlikResult, data.ProspectID).
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_draft_ca_decision" SET "created_at" = ?, "created_by" = ?, "decision" = ?, "decision_by" = ?, "note" = ?, "pernyataan_1" = ?, "pernyataan_2" = ?, "pernyataan_3" = ?, "pernyataan_4" = ?, "pernyataan_5" = ?, "pernyataan_6" = ?, "slik_result" = ? WHERE (ProspectID = ?)`)).
+			WithArgs(sqlmock.AnyArg(), data.CreatedBy, data.Decision, data.DecisionBy, data.Note, data.Pernyataan1, data.Pernyataan2, data.Pernyataan3, data.Pernyataan4, data.Pernyataan5, data.Pernyataan6, data.SlikResult, data.ProspectID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
 
@@ -5882,12 +5942,12 @@ func TestSaveDraftData(t *testing.T) {
 
 		mock.ExpectBegin()
 
-		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_draft_ca_decision" SET "ProspectID" = ?, "created_at" = ?, "created_by" = ?, "decision" = ?, "decision_by" = ?, "note" = ?, "slik_result" = ? WHERE (ProspectID = ?)`)).
-			WithArgs(data.ProspectID, sqlmock.AnyArg(), data.CreatedBy, data.Decision, data.DecisionBy, data.Note, data.SlikResult, data.ProspectID).
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_draft_ca_decision" SET "created_at" = ?, "created_by" = ?, "decision" = ?, "decision_by" = ?, "note" = ?, "pernyataan_1" = ?, "pernyataan_2" = ?, "pernyataan_3" = ?, "pernyataan_4" = ?, "pernyataan_5" = ?, "pernyataan_6" = ?, "slik_result" = ? WHERE (ProspectID = ?)`)).
+			WithArgs(sqlmock.AnyArg(), data.CreatedBy, data.Decision, data.DecisionBy, data.Note, data.Pernyataan1, data.Pernyataan2, data.Pernyataan3, data.Pernyataan4, data.Pernyataan5, data.Pernyataan6, data.SlikResult, data.ProspectID).
 			WillReturnResult(sqlmock.NewResult(0, 0))
 
-		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_draft_ca_decision" ("ProspectID","decision","slik_result","note","created_at","created_by","decision_by") VALUES (?,?,?,?,?,?,?)`)).
-			WithArgs(data.ProspectID, data.Decision, data.SlikResult, data.Note, sqlmock.AnyArg(), data.CreatedBy, data.DecisionBy).
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_draft_ca_decision" ("ProspectID","decision","slik_result","note","created_at","created_by","decision_by","pernyataan_1","pernyataan_2","pernyataan_3","pernyataan_4","pernyataan_5","pernyataan_6") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(data.ProspectID, data.Decision, data.SlikResult, data.Note, sqlmock.AnyArg(), data.CreatedBy, data.DecisionBy, data.Pernyataan1, data.Pernyataan2, data.Pernyataan3, data.Pernyataan4, data.Pernyataan5, data.Pernyataan6).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
 
