@@ -978,6 +978,7 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 				DeviasiReason:      inq.DeviasiReason,
 			},
 			EDD: entity.TrxEDD{
+				IsEDD:       inq.IsEDD,
 				IsHighrisk:  inq.IsHighrisk,
 				Pernyataan1: inq.Pernyataan1,
 				Pernyataan2: inq.Pernyataan2,
@@ -1430,6 +1431,7 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 				DeviasiReason:      inq.DeviasiReason,
 			},
 			EDD: entity.TrxEDD{
+				IsEDD:       inq.IsEDD,
 				IsHighrisk:  inq.IsHighrisk,
 				Pernyataan1: inq.Pernyataan1,
 				Pernyataan2: inq.Pernyataan2,
@@ -1975,6 +1977,7 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 				DeviasiReason:      inq.DeviasiReason,
 			},
 			EDD: entity.TrxEDD{
+				IsEDD:       inq.IsEDD,
 				IsHighrisk:  inq.IsHighrisk,
 				Pernyataan1: inq.Pernyataan1,
 				Pernyataan2: inq.Pernyataan2,

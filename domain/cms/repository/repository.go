@@ -1762,6 +1762,10 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,
@@ -2349,6 +2353,10 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,
@@ -3069,6 +3077,10 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,

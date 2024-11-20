@@ -1654,6 +1654,7 @@ type InquiryCa struct {
 	DeviasiDescription string      `gorm:"column:deviasi_description"`
 	DeviasiDecision    string      `gorm:"column:deviasi_decision"`
 	DeviasiReason      string      `gorm:"column:deviasi_reason"`
+	IsEDD              bool        `gorm:"column:is_edd"`
 	IsHighrisk         bool        `gorm:"column:is_highrisk"`
 	Pernyataan1        interface{} `gorm:"column:pernyataan_1"`
 	Pernyataan2        interface{} `gorm:"column:pernyataan_2"`
@@ -1853,6 +1854,7 @@ type InquirySearch struct {
 	DeviasiDescription string      `gorm:"column:deviasi_description"`
 	DeviasiDecision    string      `gorm:"column:deviasi_decision"`
 	DeviasiReason      string      `gorm:"column:deviasi_reason"`
+	IsEDD              bool        `gorm:"column:is_edd"`
 	IsHighrisk         bool        `gorm:"column:is_highrisk"`
 	Pernyataan1        interface{} `gorm:"column:pernyataan_1"`
 	Pernyataan2        interface{} `gorm:"column:pernyataan_2"`
@@ -2510,6 +2512,7 @@ func (c *MappingNegativeCustomer) TableName() string {
 
 type TrxEDD struct {
 	ProspectID  string      `gorm:"type:varchar(20);column:ProspectID;primary_key:true" json:"-"`
+	IsEDD       bool        `gorm:"-" json:"is_edd"`
 	IsHighrisk  bool        `gorm:"column:is_highrisk;type:int" json:"is_highrisk"`
 	Pernyataan1 interface{} `gorm:"column:pernyataan_1" json:"pernyataan_1"`
 	Pernyataan2 interface{} `gorm:"column:pernyataan_2" json:"pernyataan_2"`
