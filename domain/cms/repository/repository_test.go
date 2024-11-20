@@ -3639,6 +3639,10 @@ func TestGetInquiryCa(t *testing.T) {
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,
@@ -4157,6 +4161,10 @@ func TestGetInquiryCa(t *testing.T) {
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,
@@ -4675,6 +4683,10 @@ func TestGetInquiryCa(t *testing.T) {
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,
@@ -5204,6 +5216,10 @@ func TestGetInquiryCa(t *testing.T) {
 				mkd.deskripsi AS deviasi_description,
 				'REJECT' AS deviasi_decision,
 				tde.reason AS deviasi_reason,
+				CASE
+				WHEN ted.ProspectID IS NOT NULL THEN 1
+				ELSE 0
+				END AS is_edd,
 				ted.is_highrisk,
 				ted.pernyataan_1,
 				ted.pernyataan_2,
@@ -5733,6 +5749,10 @@ func TestGetInquiryCa(t *testing.T) {
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,
@@ -6351,6 +6371,10 @@ func TestGetInquirySearch(t *testing.T) {
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,
@@ -6749,6 +6773,10 @@ func TestGetInquirySearch(t *testing.T) {
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,
@@ -7146,6 +7174,10 @@ func TestGetInquirySearch(t *testing.T) {
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,
@@ -7533,6 +7565,10 @@ func TestGetInquirySearch(t *testing.T) {
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,
@@ -8559,6 +8595,10 @@ func TestGetInquiryApproval(t *testing.T) {
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,
@@ -9007,6 +9047,10 @@ func TestGetInquiryApproval(t *testing.T) {
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,
@@ -9451,6 +9495,10 @@ func TestGetInquiryApproval(t *testing.T) {
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,
@@ -9908,6 +9956,10 @@ func TestGetInquiryApproval(t *testing.T) {
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,
@@ -10365,6 +10417,10 @@ func TestGetInquiryApproval(t *testing.T) {
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
 		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
 		ted.is_highrisk,
 		ted.pernyataan_1,
 		ted.pernyataan_2,
