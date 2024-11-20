@@ -893,6 +893,15 @@ type ReqSaveAsDraft struct {
 	Edd        interface{} `json:"edd"`
 }
 
+type EDD struct {
+	Pernyataan1 interface{} `json:"pernyataan_1"`
+	Pernyataan2 interface{} `json:"pernyataan_2"`
+	Pernyataan3 interface{} `json:"pernyataan_3"`
+	Pernyataan4 interface{} `json:"pernyataan_4"`
+	Pernyataan5 interface{} `json:"pernyataan_5"`
+	Pernyataan6 interface{} `json:"pernyataan_6"`
+}
+
 type ReqSubmitDecision struct {
 	ProspectID   string      `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
 	NTFAkumulasi float64     `json:"ntf_akumulasi" validate:"required,max=9999999999999"`

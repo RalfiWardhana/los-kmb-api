@@ -1001,7 +1001,7 @@ func (u usecase) SaveAsDraft(ctx context.Context, req request.ReqSaveAsDraft) (d
 	var (
 		trxDraft entity.TrxDraftCaDecision
 		decision string
-		trxEdd   entity.TrxEDD
+		EDD      request.EDD
 	)
 
 	switch req.Decision {
@@ -1023,14 +1023,14 @@ func (u usecase) SaveAsDraft(ctx context.Context, req request.ReqSaveAsDraft) (d
 	// trx edd
 	if req.Edd != nil {
 		byteEdd, _ := json.Marshal(req.Edd)
-		json.Unmarshal(byteEdd, &trxEdd)
+		json.Unmarshal(byteEdd, &EDD)
 
-		trxDraft.Pernyataan1 = trxEdd.Pernyataan1
-		trxDraft.Pernyataan2 = trxEdd.Pernyataan2
-		trxDraft.Pernyataan3 = trxEdd.Pernyataan3
-		trxDraft.Pernyataan4 = trxEdd.Pernyataan4
-		trxDraft.Pernyataan5 = trxEdd.Pernyataan5
-		trxDraft.Pernyataan6 = trxEdd.Pernyataan6
+		trxDraft.Pernyataan1 = EDD.Pernyataan1
+		trxDraft.Pernyataan2 = EDD.Pernyataan2
+		trxDraft.Pernyataan3 = EDD.Pernyataan3
+		trxDraft.Pernyataan4 = EDD.Pernyataan4
+		trxDraft.Pernyataan5 = EDD.Pernyataan5
+		trxDraft.Pernyataan6 = EDD.Pernyataan6
 	}
 
 	data = response.CAResponse{
