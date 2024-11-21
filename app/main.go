@@ -352,6 +352,14 @@ func main() {
 			panic(err)
 		}
 
+		if err := consumerJourneyRouter.StopConsume(); err != nil {
+			panic(err)
+		}
+
+		if err := consumerPrincipleRouter.StopConsume(); err != nil {
+			panic(err)
+		}
+
 		fmt.Println("========== Shutdown Completed ==========")
 		os.Exit(0)
 	}
