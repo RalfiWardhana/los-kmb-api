@@ -599,6 +599,14 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	ti.color,
 	chassis_number,
 	engine_number,
+	CASE
+		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+	END AS bpkb_name,
+	ti.owner_asset,
+	ti.license_plate,
 	interest_rate,
 	Tenor AS InstallmentPeriod,
 	OTR,
@@ -1648,6 +1656,14 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		ta.interest_rate,
 		ta.Tenor AS InstallmentPeriod,
 		OTR,
@@ -2223,6 +2239,14 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+			WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+			WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+			WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+			WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -2524,12 +2548,7 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 		}
 
 		if isCancel {
-			var resultCheckDeviation struct {
-				BranchID       string
-				NTF            float64
-				CustomerStatus string
-				Decision       interface{}
-			}
+			var resultCheckDeviation entity.ResultCheckDeviation
 
 			selectQuery := `
                 SELECT mbd.BranchID, ta.NTF, tf.customer_status, tfa.decision
@@ -2539,7 +2558,7 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 				LEFT JOIN m_branch_deviasi AS mbd ON (tm.BranchID = mbd.BranchID)
 				LEFT JOIN trx_filtering AS tf ON (td.ProspectID = tf.prospect_id)
 				LEFT JOIN trx_final_approval AS tfa ON (td.ProspectID = tfa.ProspectID)
-                WHERE ta.ProspectID = ?
+                WHERE ta.ProspectID = ? AND mbd.is_active = 1
             `
 			if err = tx.Raw(selectQuery, trxCaDecision.ProspectID).Scan(&resultCheckDeviation).Error; err != nil {
 				if err != gorm.ErrRecordNotFound {
@@ -2555,7 +2574,7 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 							booking_account = booking_account - 1,
 							balance_amount = (quota_amount - booking_amount) + ?,
 							balance_account = (quota_account - booking_account) + 1
-						WHERE BranchID = ?
+						WHERE BranchID = ? AND is_active = 1
 					`
 					if err = tx.Exec(updateQuery, resultCheckDeviation.NTF, resultCheckDeviation.NTF, resultCheckDeviation.BranchID).Error; err != nil {
 						return err
@@ -2915,6 +2934,14 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+			WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+			WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+			WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+			WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -3407,6 +3434,344 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 	})
 
 	return trxStatus, err
+}
+
+func (r repoHandler) GetInquiryQuotaDeviasi(req request.ReqListQuotaDeviasi, pagination interface{}) (data []entity.InquirySettingQuotaDeviasi, rowTotal int, err error) {
+
+	var (
+		filterBuilder  strings.Builder
+		conditions     []string
+		filterPaginate string
+		x              sql.TxOptions
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if req.Search != "" {
+		conditions = append(conditions, fmt.Sprintf("(mbd.BranchID LIKE '%%%[1]s%%' OR cb.BranchName LIKE '%%%[1]s%%')", req.Search))
+	}
+
+	if req.BranchID != "" {
+		numbers := strings.Split(req.BranchID, ",")
+		for i, number := range numbers {
+			numbers[i] = "'" + number + "'"
+		}
+		conditions = append(conditions, fmt.Sprintf("mbd.BranchID IN (%s)", strings.Join(numbers, ",")))
+	}
+
+	if req.IsActive != "" {
+		conditions = append(conditions, fmt.Sprintf("mbd.is_active = '%s'", req.IsActive))
+	}
+
+	if len(conditions) > 0 {
+		filterBuilder.WriteString("WHERE ")
+		filterBuilder.WriteString(strings.Join(conditions, " AND "))
+	}
+
+	filter := filterBuilder.String()
+
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT
+				COUNT(*) AS totalRow
+			FROM (
+				SELECT mbd.*, cb.BranchName AS branch_name
+				FROM m_branch_deviasi AS mbd WITH (nolock)
+				JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID) %s
+			) AS y`, filter)).Scan(&row).Error; err != nil {
+			return
+		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
+	}
+
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT mbd.BranchID, cb.BranchName AS branch_name, mbd.quota_amount, mbd.quota_account, mbd.booking_amount, mbd.booking_account, mbd.balance_amount, mbd.balance_account, mbd.is_active, mbd.updated_by, ISNULL(FORMAT(mbd.updated_at, 'yyyy-MM-dd HH:mm:ss'), '') AS updated_at
+			FROM m_branch_deviasi AS mbd WITH (nolock)
+			JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID) %s ORDER BY mbd.is_active DESC, mbd.BranchID ASC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	if len(data) == 0 {
+		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
+	return
+}
+
+func (r repoHandler) GetQuotaDeviasiBranch(req request.ReqListQuotaDeviasiBranch) (data []entity.ConfinsBranch, err error) {
+	var (
+		filterBuilder strings.Builder
+		conditions    []string
+		x             sql.TxOptions
+	)
+
+	if req.BranchID != "" {
+		numbers := strings.Split(req.BranchID, ",")
+		for i, number := range numbers {
+			numbers[i] = "'" + number + "'"
+		}
+		conditions = append(conditions, fmt.Sprintf("mbd.BranchID IN (%s)", strings.Join(numbers, ",")))
+	}
+
+	if req.BranchName != "" {
+		conditions = append(conditions, fmt.Sprintf("cb.BranchName LIKE '%%%[1]s%%'", req.BranchName))
+	}
+
+	if len(conditions) > 0 {
+		filterBuilder.WriteString("WHERE ")
+		filterBuilder.WriteString(strings.Join(conditions, " AND "))
+	}
+
+	filter := filterBuilder.String()
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT DISTINCT mbd.BranchID, cb.BranchName
+			FROM m_branch_deviasi AS mbd WITH (nolock)
+			JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID) %s
+			ORDER BY cb.BranchName ASC`, filter)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) ProcessUpdateQuotaDeviasiBranch(branchID string, mBranchDeviasi entity.MappingBranchDeviasi) (dataBefore entity.DataQuotaDeviasiBranch, dataAfter entity.DataQuotaDeviasiBranch, err error) {
+	err = r.NewKmb.Transaction(func(tx *gorm.DB) error {
+		// Step 1: Retrieve current values for dataBefore
+		if err := tx.Raw("SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?", branchID).Scan(&dataBefore).Error; err != nil {
+			return err
+		}
+
+		// Check if BookingAmount or BookingAccount exceeds the new Quota
+		if dataBefore.BookingAmount > mBranchDeviasi.QuotaAmount {
+			return fmt.Errorf("BookingAmount > QuotaAmount")
+		}
+		if dataBefore.BookingAccount > mBranchDeviasi.QuotaAccount {
+			return fmt.Errorf("BookingAccount > QuotaAccount")
+		}
+
+		// Step 2: Update quota and calculate new balances
+		newBalanceAmount := mBranchDeviasi.QuotaAmount - dataBefore.BookingAmount
+		newBalanceAccount := mBranchDeviasi.QuotaAccount - dataBefore.BookingAccount
+
+		if err := tx.Model(&entity.MappingBranchDeviasi{}).
+			Where("BranchID = ?", branchID).
+			Updates(map[string]interface{}{
+				"quota_amount":    mBranchDeviasi.QuotaAmount,
+				"quota_account":   mBranchDeviasi.QuotaAccount,
+				"balance_amount":  newBalanceAmount,
+				"balance_account": newBalanceAccount,
+				"is_active":       mBranchDeviasi.IsActive,
+				"updated_at":      time.Now(),
+				"updated_by":      mBranchDeviasi.UpdatedBy,
+			}).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// Step 3: Retrieve updated values for dataAfter
+		if err := tx.Raw("SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?", branchID).Scan(&dataAfter).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return
+}
+
+func (r repoHandler) BatchUpdateQuotaDeviasi(data []entity.MappingBranchDeviasi) (dataBeforeList []entity.MappingBranchDeviasi, dataAfterList []entity.MappingBranchDeviasi, err error) {
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+	txOptions := &sql.TxOptions{}
+
+	db := r.NewKmb.BeginTx(ctx, txOptions)
+	defer db.Commit()
+
+	defer func() {
+		if r := recover(); r != nil || err != nil {
+			db.Rollback()
+		}
+	}()
+
+	// Create a map to store the updates and a slice to store the branch IDs
+	updatesMap := make(map[string]map[string]interface{})
+	var branchIDs []string
+	var updatedBranchIDs []string
+
+	// Collect branch IDs
+	for _, newData := range data {
+		branchIDs = append(branchIDs, newData.BranchID)
+	}
+
+	// Fetch all current data in one query
+	var currentDataList []entity.MappingBranchDeviasi
+	if err := db.Raw("SELECT BranchID, final_approval, quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID IN (?)", branchIDs).Scan(&currentDataList).Error; err != nil {
+		return nil, nil, err
+	}
+
+	// Create a map for quick lookup of current data by BranchID
+	currentDataMap := make(map[string]entity.MappingBranchDeviasi)
+	for _, currentData := range currentDataList {
+		currentDataMap[currentData.BranchID] = currentData
+	}
+
+	// Prepare updates
+	for _, newData := range data {
+		currentData, exists := currentDataMap[newData.BranchID]
+		if !exists {
+			continue
+		}
+
+		updates := make(map[string]interface{})
+
+		if currentData.QuotaAmount != newData.QuotaAmount {
+			updates["quota_amount"] = newData.QuotaAmount
+		}
+		if currentData.QuotaAccount != newData.QuotaAccount {
+			updates["quota_account"] = newData.QuotaAccount
+		}
+		if currentData.IsActive != newData.IsActive {
+			updates["is_active"] = newData.IsActive
+		}
+
+		if len(updates) > 0 {
+			// Store dataBefore only if there are updates
+			dataBeforeList = append(dataBeforeList, currentData)
+
+			// Calculate new balances
+			newBalanceAmount := newData.QuotaAmount - currentData.BookingAmount
+			newBalanceAccount := newData.QuotaAccount - currentData.BookingAccount
+
+			// Check for negative balances
+			if newBalanceAmount < 0 {
+				return nil, nil, fmt.Errorf(constant.ERROR_BAD_REQUEST + " - BookingAmount > QuotaAmount")
+			}
+			if newBalanceAccount < 0 {
+				return nil, nil, fmt.Errorf(constant.ERROR_BAD_REQUEST + " - BookingAccount > QuotaAccount")
+			}
+
+			updates["balance_amount"] = newBalanceAmount
+			updates["balance_account"] = newBalanceAccount
+
+			updates["updated_at"] = time.Now()
+			updates["updated_by"] = newData.UpdatedBy
+
+			// Store updates in the map
+			updatesMap[newData.BranchID] = updates
+
+			// Add to updatedBranchIDs
+			updatedBranchIDs = append(updatedBranchIDs, newData.BranchID)
+		}
+	}
+
+	if len(updatesMap) > 0 {
+		// Perform bulk update
+		for branchID, updates := range updatesMap {
+			if err := db.Model(&entity.MappingBranchDeviasi{}).
+				Where("BranchID = ?", branchID).
+				Updates(updates).Error; err != nil {
+				return nil, nil, err
+			}
+		}
+
+		// Retrieve updated data in bulk
+		if err := db.Raw("SELECT BranchID, final_approval, quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID IN (?)", updatedBranchIDs).Scan(&dataAfterList).Error; err != nil {
+			return nil, nil, err
+		}
+	}
+
+	return dataBeforeList, dataAfterList, nil
+}
+
+func (r repoHandler) ProcessResetQuotaDeviasiBranch(branchID string, updatedBy string) (dataBefore entity.DataQuotaDeviasiBranch, dataAfter entity.DataQuotaDeviasiBranch, err error) {
+	err = r.NewKmb.Transaction(func(tx *gorm.DB) error {
+		// Step 1: Retrieve current values for dataBefore
+		if err := tx.Raw("SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?", branchID).Scan(&dataBefore).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Model(&entity.MappingBranchDeviasi{}).
+			Where("BranchID = ?", branchID).
+			Updates(map[string]interface{}{
+				"quota_amount":    0,
+				"quota_account":   0,
+				"booking_amount":  0,
+				"booking_account": 0,
+				"balance_amount":  0,
+				"balance_account": 0,
+				"is_active":       false,
+				"updated_at":      time.Now(),
+				"updated_by":      updatedBy,
+			}).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		// Step 3: Retrieve updated values for dataAfter
+		if err := tx.Raw("SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?", branchID).Scan(&dataAfter).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return
+}
+
+func (r repoHandler) ProcessResetAllQuotaDeviasi(updatedBy string) (err error) {
+	err = r.NewKmb.Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Model(&entity.MappingBranchDeviasi{}).
+			Updates(map[string]interface{}{
+				"quota_amount":    0,
+				"quota_account":   0,
+				"booking_amount":  0,
+				"booking_account": 0,
+				"balance_amount":  0,
+				"balance_account": 0,
+				"is_active":       false,
+				"updated_at":      time.Now(),
+				"updated_by":      updatedBy,
+			}).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+
+		return nil
+	})
+
+	return
 }
 
 func (r repoHandler) GetMappingCluster() (data []entity.MasterMappingCluster, err error) {
