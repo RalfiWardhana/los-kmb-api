@@ -52,7 +52,9 @@ func (c *ConsumerRouter) Handle(key string, processorFunc event.ConsumerProcesso
 }
 
 func (c *ConsumerRouter) StartConsume() error {
-	err := c.consumerClient.StartConsume(c.topic, c.consumerGroup, c.auth, func(ctx context.Context, event event.Event) error {
+	var topic []string
+	topic = append(topic, c.topic)
+	err := c.consumerClient.StartConsume(topic, c.consumerGroup, c.auth, func(ctx context.Context, event event.Event) error {
 		key := string(event.GetKey())
 		key = strings.ReplaceAll(key, "\"", "")
 		key = strings.ReplaceAll(key, "\\", "")

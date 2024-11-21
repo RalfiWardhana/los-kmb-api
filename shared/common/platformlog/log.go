@@ -81,7 +81,7 @@ func (pl PlatformLog) WriteLog(accessToken, level, link, method string, duration
 		// log.Info("Payload body platform:", body) // gommon log
 		errPlatform, ok := errLogger.Errors.(error)
 		if !ok {
-			errPlatform = fmt.Errorf("unspecified error platform log: %s", errLogger.Messages)
+			errPlatform = fmt.Errorf("unspecified error platform log: %s", errPlatform)
 		}
 		return payloadBase64, errPlatform
 	}
