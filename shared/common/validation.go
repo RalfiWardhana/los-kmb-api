@@ -1,6 +1,7 @@
 package common
 
 import (
+	"errors"
 	"fmt"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/shared/constant"
@@ -13,10 +14,17 @@ import (
 	"sync"
 	"time"
 
-	"gopkg.in/go-playground/validator.v9"
+	"github.com/go-playground/validator/v10"
+	"github.com/jinzhu/gorm"
 )
 
 var Key, ClientKey, Gender, StatusKonsumen, Channel, Lob, Incoming, Home, Education, Marital, ProfID, Photo, Relationship, AppSource, Address, Tenor, Relation, Decision string
+
+var DB *gorm.DB
+
+func SetDB(db *gorm.DB) {
+	DB = db
+}
 
 func NewValidator() *Validator {
 
@@ -83,6 +91,22 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("notnull", notNullValidation)
 	v.validator.RegisterValidation("mustnull", mustNullValidation)
 	v.validator.RegisterValidation("decision", DecisionValidation)
+	v.validator.RegisterValidation("mobile_phone", MobilePhoneValidation)
+	v.validator.RegisterValidation("tipe_usaha", tipeUsahaValidation)
+	v.validator.RegisterValidation("af_principle", afValidationPrinciple)
+	v.validator.RegisterValidation("admin_fee_principle", adminFeeValidationPrinciple)
+	v.validator.RegisterValidation("installment_amount_principle", installmentAmountValidationPrinciple)
+	v.validator.RegisterValidation("ntf_principle", ntfValidationPrinciple)
+	v.validator.RegisterValidation("otr_principle", otrValidationPrinciple)
+	v.validator.RegisterValidation("dealer_principle", dealerValidationPrinciple)
+	v.validator.RegisterValidation("asset_category_id_principle", assetCategoryIDValidationPrinciple)
+	v.validator.RegisterValidation("allowcharsaddress", allowedCharsInAddress)
+	v.validator.RegisterValidation("htmlValidation", htmlValidation)
+	v.validator.RegisterValidation("prospect_id_asset_principle", prospectIdAssetPrincipleNotExists)
+	v.validator.RegisterValidation("prospect_id_pemohon_principle", prospectIdPemohonPrincipleNotExists)
+	v.validator.RegisterValidation("prospect_id_pembiayaan_principle", prospectIdPembiayaanPrincipleNotExists)
+	v.validator.RegisterValidation("prospect_id_emcon_principle", prospectIdEmconPrincipleNotExists)
+	v.validator.RegisterValidation("allowcharstipeusaha", allowedCharsInTipeUsaha)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
@@ -99,6 +123,14 @@ func prospectIDValidation(fl validator.FieldLevel) (validator bool) {
 	}
 
 	return validator
+}
+
+func htmlValidation(fl validator.FieldLevel) (validator bool) {
+
+	// Regular expression to detect HTML tags
+	re := regexp.MustCompile(`<.*?>`)
+
+	return !re.MatchString(fl.Field().String())
 }
 
 func dateFormatValidation(fl validator.FieldLevel) (validator bool) {
@@ -593,4 +625,246 @@ func DecisionValidation(fl validator.FieldLevel) (validator bool) {
 	Decision = decision
 
 	return
+}
+
+func MobilePhoneValidation(fl validator.FieldLevel) bool {
+	if fl.Field().String() != "" {
+		regex := regexp.MustCompile(`^08\d{7,12}$`)
+		return regex.MatchString(fl.Field().String())
+	}
+	return true
+}
+
+func tipeUsahaValidation(fl validator.FieldLevel) bool {
+	tipeUsaha := fl.Field().String()
+	dealer := fl.Parent().FieldByName("Dealer").String()
+
+	if dealer == "NON PSA" && tipeUsaha == "" {
+		return false
+	}
+	return true
+}
+
+func afValidationPrinciple(fl validator.FieldLevel) bool {
+	af := fl.Field().Float()
+
+	prospectID := fl.Parent().FieldByName("ProspectID").String()
+
+	var marketingProgram entity.TrxPrincipleMarketingProgram
+	query := fmt.Sprintf(`SELECT TOP 1 FinanceAmount FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err := DB.Raw(query).Scan(&marketingProgram).Error; err != nil {
+		return false
+	}
+
+	if af != marketingProgram.FinanceAmount {
+		return false
+	}
+
+	return true
+}
+
+func adminFeeValidationPrinciple(fl validator.FieldLevel) bool {
+	adminFee := fl.Field().Float()
+
+	prospectID := fl.Parent().FieldByName("ProspectID").String()
+
+	var marketingProgram entity.TrxPrincipleMarketingProgram
+	query := fmt.Sprintf(`SELECT TOP 1 AdminFee FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err := DB.Raw(query).Scan(&marketingProgram).Error; err != nil {
+		return false
+	}
+
+	if adminFee != marketingProgram.AdminFee {
+		return false
+	}
+
+	return true
+}
+
+func installmentAmountValidationPrinciple(fl validator.FieldLevel) bool {
+	installmentAmount := fl.Field().Float()
+
+	prospectID := fl.Parent().FieldByName("ProspectID").String()
+
+	var marketingProgram entity.TrxPrincipleMarketingProgram
+	query := fmt.Sprintf(`SELECT TOP 1 InstallmentAmount FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err := DB.Raw(query).Scan(&marketingProgram).Error; err != nil {
+		return false
+	}
+
+	if installmentAmount != marketingProgram.InstallmentAmount {
+		return false
+	}
+
+	return true
+}
+
+func ntfValidationPrinciple(fl validator.FieldLevel) bool {
+	ntf := fl.Field().Float()
+
+	prospectID := fl.Parent().FieldByName("ProspectID").String()
+
+	var marketingProgram entity.TrxPrincipleMarketingProgram
+	query := fmt.Sprintf(`SELECT TOP 1 NTF FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err := DB.Raw(query).Scan(&marketingProgram).Error; err != nil {
+		return false
+	}
+
+	if ntf != marketingProgram.NTF {
+		return false
+	}
+
+	return true
+}
+
+func otrValidationPrinciple(fl validator.FieldLevel) bool {
+	otr := fl.Field().Float()
+
+	prospectID := fl.Parent().FieldByName("ProspectID").String()
+
+	var marketingProgram entity.TrxPrincipleMarketingProgram
+	query := fmt.Sprintf(`SELECT TOP 1 OTR FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err := DB.Raw(query).Scan(&marketingProgram).Error; err != nil {
+		return false
+	}
+
+	if otr != marketingProgram.OTR {
+		return false
+	}
+
+	return true
+}
+
+func dealerValidationPrinciple(fl validator.FieldLevel) bool {
+	dealer := fl.Field().String()
+
+	prospectID := fl.Parent().FieldByName("ProspectID").String()
+
+	var marketingProgram entity.TrxPrincipleMarketingProgram
+	query := fmt.Sprintf(`SELECT TOP 1 Dealer FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err := DB.Raw(query).Scan(&marketingProgram).Error; err != nil {
+		return false
+	}
+
+	if dealer != marketingProgram.Dealer {
+		return false
+	}
+
+	return true
+}
+
+func assetCategoryIDValidationPrinciple(fl validator.FieldLevel) bool {
+	assetCategoryID := fl.Field().String()
+
+	prospectID := fl.Parent().FieldByName("ProspectID").String()
+
+	var marketingProgram entity.TrxPrincipleMarketingProgram
+	query := fmt.Sprintf(`SELECT TOP 1 AssetCategoryID FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err := DB.Raw(query).Scan(&marketingProgram).Error; err != nil {
+		return false
+	}
+
+	if assetCategoryID != marketingProgram.AssetCategoryID {
+		return false
+	}
+
+	return true
+}
+
+func allowedCharsInAddress(fl validator.FieldLevel) bool {
+
+	re := regexp.MustCompile("^[a-zA-Z0-9., ]+$")
+
+	return re.MatchString(fl.Field().String())
+
+}
+
+func prospectIdAssetPrincipleNotExists(fl validator.FieldLevel) bool {
+	prospectID := fl.Field().String()
+
+	var principleStepOne entity.TrxPrincipleStepOne
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_one WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	result := DB.Raw(query).Scan(&principleStepOne)
+
+	if result.Error != nil {
+		return errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	if principleStepOne != (entity.TrxPrincipleStepOne{}) {
+		return false
+	}
+
+	return true
+}
+
+func prospectIdPemohonPrincipleNotExists(fl validator.FieldLevel) bool {
+	prospectID := fl.Field().String()
+
+	var principleStepTwo entity.TrxPrincipleStepTwo
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_two WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	result := DB.Raw(query).Scan(&principleStepTwo)
+
+	if result.Error != nil {
+		return errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	if principleStepTwo != (entity.TrxPrincipleStepTwo{}) {
+		return false
+	}
+
+	return true
+}
+
+func prospectIdPembiayaanPrincipleNotExists(fl validator.FieldLevel) bool {
+	prospectID := fl.Field().String()
+
+	var principleStepThree entity.TrxPrincipleStepThree
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_three WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	result := DB.Raw(query).Scan(&principleStepThree)
+
+	if result.Error != nil {
+		return errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	if principleStepThree != (entity.TrxPrincipleStepThree{}) {
+		return false
+	}
+
+	return true
+}
+
+func prospectIdEmconPrincipleNotExists(fl validator.FieldLevel) bool {
+	prospectID := fl.Field().String()
+
+	var principleEmergencyContact entity.TrxPrincipleEmergencyContact
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_emergency_contact WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	result := DB.Raw(query).Scan(&principleEmergencyContact)
+
+	if result.Error != nil {
+		return errors.Is(result.Error, gorm.ErrRecordNotFound)
+	}
+
+	if principleEmergencyContact != (entity.TrxPrincipleEmergencyContact{}) {
+		return false
+	}
+
+	return true
+}
+
+func allowedCharsInTipeUsaha(fl validator.FieldLevel) bool {
+
+	re := regexp.MustCompile(`^[a-zA-Z.,'/ ` + "`" + `]*$`)
+
+	return re.MatchString(fl.Field().String())
 }
