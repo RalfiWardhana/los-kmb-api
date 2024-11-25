@@ -16,7 +16,7 @@ type ConsumerRouter struct {
 	consumerClient *event.Client
 	routes         map[string]event.ConsumerProcessor
 	middlewares    []EventMiddlewareFunc
-	topic          string
+	topic          []string
 	consumerGroup  string
 	auth           map[string]interface{}
 }
@@ -37,7 +37,7 @@ func NewConsumerRouter(topic string, consumerGroup string, auth map[string]inter
 	return &ConsumerRouter{
 		consumerClient: client,
 		routes:         map[string]event.ConsumerProcessor{},
-		topic:          topic,
+		topic:          []string{topic},
 		consumerGroup:  consumerGroup,
 		auth:           auth,
 	}

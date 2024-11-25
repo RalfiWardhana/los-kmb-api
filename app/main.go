@@ -207,7 +207,25 @@ func main() {
 		platformLog.CreateLogger()
 	}
 
-	producer := platformevent.NewPlatformEvent()
+	// init producer topic submission
+	producerSubmission, err := config.ProducerEvent(constant.TOPIC_SUBMISSION, 3)
+	if err != nil {
+		log.Fatalf("Failed Init Producer event %s with Error : %s", constant.TOPIC_SUBMISSION, err.Error())
+	}
+
+	// init producer topic submission-los
+	producerSubmissionLOS, err := config.ProducerEvent(constant.TOPIC_SUBMISSION_LOS, 3)
+	if err != nil {
+		log.Fatalf("Failed Init Producer event %s with Error : %s", constant.TOPIC_SUBMISSION_LOS, err.Error())
+	}
+
+	// init producer topic insert-customer
+	producerInsertCustomer, err := config.ProducerEvent(constant.TOPIC_INSERT_CUSTOMER, 3)
+	if err != nil {
+		log.Fatalf("Failed Init Producer event %s with Error : %s", constant.TOPIC_INSERT_CUSTOMER, err.Error())
+	}
+
+	producer := platformevent.NewPlatformEvent(producerSubmission, producerSubmissionLOS, producerInsertCustomer)
 	platformCache := platformcache.NewPlatformCache()
 
 	// define new kmb filtering domain
@@ -357,6 +375,16 @@ func main() {
 		}
 
 		if err := consumerPrincipleRouter.StopConsume(); err != nil {
+			panic(err)
+		}
+
+		// close producer topic submission
+		if err := producerSubmission.CloseProducer(); err != nil {
+			panic(err)
+		}
+
+		// close producer topic submission-los
+		if err := producerSubmissionLOS.CloseProducer(); err != nil {
 			panic(err)
 		}
 
