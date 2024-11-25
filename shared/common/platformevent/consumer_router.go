@@ -16,7 +16,7 @@ type ConsumerRouter struct {
 	consumerClient *event.Client
 	routes         map[string]event.ConsumerProcessor
 	middlewares    []EventMiddlewareFunc
-	topic          string
+	topic          []string
 	consumerGroup  string
 	auth           map[string]interface{}
 }
@@ -37,7 +37,7 @@ func NewConsumerRouter(topic string, consumerGroup string, auth map[string]inter
 	return &ConsumerRouter{
 		consumerClient: client,
 		routes:         map[string]event.ConsumerProcessor{},
-		topic:          topic,
+		topic:          []string{topic},
 		consumerGroup:  consumerGroup,
 		auth:           auth,
 	}
@@ -52,9 +52,7 @@ func (c *ConsumerRouter) Handle(key string, processorFunc event.ConsumerProcesso
 }
 
 func (c *ConsumerRouter) StartConsume() error {
-	var topic []string
-	topic = append(topic, c.topic)
-	err := c.consumerClient.StartConsume(topic, c.consumerGroup, c.auth, func(ctx context.Context, event event.Event) error {
+	err := c.consumerClient.StartConsume(c.topic, c.consumerGroup, c.auth, func(ctx context.Context, event event.Event) error {
 		key := string(event.GetKey())
 		key = strings.ReplaceAll(key, "\"", "")
 		key = strings.ReplaceAll(key, "\\", "")

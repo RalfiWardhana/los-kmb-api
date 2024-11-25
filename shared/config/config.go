@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"io"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/KB-FMF/platform-library/event"
 	"github.com/joho/godotenv"
 	logger "github.com/labstack/gommon/log"
 	"github.com/newrelic/go-agent/v3/newrelic"
@@ -20,6 +22,34 @@ var (
 	GetLogFile    map[string]*os.File
 	IsDevelopment bool
 )
+
+func ProducerEvent(topic string, countRetry int) (producer *event.Client, err error) {
+
+	var logEnv string
+
+	env := os.Getenv("APP_ENV")
+
+	if strings.Contains(strings.ToLower(env), "production") {
+		logEnv = event.ENV_PRODUCTION
+	} else if strings.Contains(strings.ToLower(env), "staging") {
+		logEnv = event.ENV_STAGING
+	} else {
+		logEnv = event.ENV_DEVELOPMENT
+	}
+
+	config := event.ProducerConfig{Topic: topic}
+
+	producer, errCreateProducer := event.NewProducer(logEnv, config)
+	if errCreateProducer != nil {
+		err = fmt.Errorf("error create producer: %w", errCreateProducer)
+		if countRetry < constant.MAX_RETRY_PUBLISH {
+			countRetry = countRetry + 1
+			_, err = ProducerEvent(topic, countRetry)
+		}
+		return
+	}
+	return
+}
 
 func LoadEnv() {
 	err := godotenv.Load("conf/config.env")
