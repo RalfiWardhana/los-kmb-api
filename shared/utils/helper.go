@@ -1,21 +1,16 @@
 package utils
 
 import (
-	"bufio"
 	"bytes"
 	"crypto/md5"
-	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"math"
 	"math/rand"
-	"net/http"
-	"os"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -261,39 +256,6 @@ func Contains(list []string, value string) bool {
 		}
 	}
 	return false
-}
-
-func GetIsMedia(urlImage string) bool {
-
-	urlMedia := strings.Split(os.Getenv("URL_MEDIA"), ",")
-
-	for _, url := range urlMedia {
-		if strings.Contains(urlImage, url) {
-			return true
-		}
-	}
-
-	return false
-}
-
-func DecodeNonMedia(url string) (base64Image string, err error) {
-
-	image, err := http.Get(url)
-
-	if err != nil {
-		return
-	}
-
-	reader := bufio.NewReader(image.Body)
-	ioutil, err := ioutil.ReadAll(reader)
-
-	if err != nil {
-		return
-	}
-
-	base64Image = base64.StdEncoding.EncodeToString(ioutil)
-
-	return
 }
 
 func SafeEncoding(arrByte []byte) []byte {

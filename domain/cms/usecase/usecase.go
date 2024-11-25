@@ -2172,7 +2172,7 @@ func (u usecase) GenerateExcelQuotaDeviasi() (genName, fileName string, err erro
 
 	sheetName := "Quota Deviasi Branch"
 
-	index := xlsx.NewSheet("Sheet1")
+	index, _ := xlsx.NewSheet("Sheet1")
 	xlsx.SetActiveSheet(index)
 	xlsx.SetSheetName("Sheet1", sheetName)
 

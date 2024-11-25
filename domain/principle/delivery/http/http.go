@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"los-kmb-api/domain/principle/interfaces"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
@@ -267,7 +266,7 @@ func (c *handler) VerifyPembiayaan(ctx echo.Context) (err error) {
 
 	defer func() {
 		body, _ := json.Marshal(r)
-		ctx.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 	}()
 
 	if err = ctx.Bind(&r); err != nil {
@@ -314,7 +313,7 @@ func (c *handler) EmergencyContact(ctx echo.Context) (err error) {
 
 	defer func() {
 		body, _ := json.Marshal(r)
-		ctx.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 	}()
 
 	if err = ctx.Bind(&r); err != nil {
@@ -419,7 +418,7 @@ func (c *handler) GetPrincipleData(ctx echo.Context) (err error) {
 
 	defer func() {
 		body, _ := json.Marshal(r)
-		ctx.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 	}()
 
 	if err = ctx.Bind(&r); err != nil {
@@ -481,7 +480,7 @@ func (c *handler) PrinciplePublish(ctx echo.Context) (err error) {
 
 	defer func() {
 		body, _ := json.Marshal(r)
-		ctx.Request().Body = ioutil.NopCloser(bytes.NewBuffer(body))
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
 	}()
 
 	if err = ctx.Bind(&r); err != nil {
