@@ -346,6 +346,11 @@ func main() {
 			panic(err)
 		}
 
+		// close producer topic insert-customer
+		if err := producerInsertCustomer.CloseProducer(); err != nil {
+			panic(err)
+		}
+
 		fmt.Println("========== Shutdown Completed ==========")
 		os.Exit(0)
 	}
