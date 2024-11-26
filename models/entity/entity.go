@@ -2527,6 +2527,28 @@ func (c *TrxEDD) TableName() string {
 	return "trx_edd"
 }
 
+type InquiryDataListOrder struct {
+	OrderAt     time.Time   `gorm:"column:OrderAt" json:"order_at"`
+	BranchName  string      `gorm:"column:BranchName" json:"branch_name"`
+	ProspectID  string      `gorm:"type:varchar(20);column:ProspectID" json:"prospect_id"`
+	LegalName   string      `gorm:"column:LegalName" json:"legal_name"`
+	IDNumber    string      `gorm:"column:IDNumber" json:"id_number"`
+	BirthDate   time.Time   `gorm:"column:BirthDate" json:"birth_date"`
+	Profession  string      `gorm:"column:Profession" json:"profession"`
+	JobType     string      `gorm:"column:JobType" json:"job_type"`
+	JobPosition string      `gorm:"column:JobPosition" json:"job_position"`
+	IsHighRisk  bool        `gorm:"column:IsHighRisk;type:int" json:"is_highrisk"`
+	Pernyataan1 interface{} `gorm:"column:Pernyataan1" json:"pernyataan_1"`
+	Pernyataan2 interface{} `gorm:"column:Pernyataan2" json:"pernyataan_2"`
+	Pernyataan3 interface{} `gorm:"column:Pernyataan3" json:"pernyataan_3"`
+	Pernyataan4 interface{} `gorm:"column:Pernyataan4" json:"pernyataan_4"`
+	Pernyataan5 interface{} `gorm:"column:Pernyataan5" json:"pernyataan_5"`
+	Pernyataan6 interface{} `gorm:"column:Pernyataan6" json:"pernyataan_6"`
+	Decision    string      `gorm:"column:Decision" json:"decision"`
+	DecisionBy  string      `gorm:"column:DecisionBy" json:"decision_by"`
+	DecisionAt  time.Time   `gorm:"column:DecisionAt" json:"decision_at"`
+}
+
 type EncryptString struct {
 	Encrypt string `json:"encrypt"`
 }

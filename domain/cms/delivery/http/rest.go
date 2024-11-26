@@ -15,6 +15,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
 )
@@ -65,6 +66,8 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.POST("/cms/quota-deviasi/upload", handler.QuotaDeviasiUpload, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/quota-deviasi/reset-all", handler.QuotaDeviasiResetAll, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/quota-deviasi/reset", handler.QuotaDeviasiResetBranch, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/list-order/inquiry", handler.ListOrderInquiry, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/list-order/inquiry/:prospect_id", handler.ListOrderDetail, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
@@ -1309,6 +1312,118 @@ func (c *handlerCMS) QuotaDeviasiResetAll(ctx echo.Context) (err error) {
 	}
 
 	ctxJson, _ = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Reset Semua Kuota Deviasi - Success", req, data)
+	return ctxJson
+}
+
+// CMS NEW KMB Tools godoc
+// @Description API List Order
+// @Tags List Order
+// @Produce json
+// @Param body body request.ReqInquiryListOrder true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.InquiryRow}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/list-order/inquiry [get]
+func (c *handlerCMS) ListOrderInquiry(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		ctxJson     error
+	)
+
+	req := request.ReqInquiryListOrder{
+		OrderDateStart: ctx.QueryParam("order_date_start"),
+		OrderDateEnd:   ctx.QueryParam("order_date_end"),
+		BranchID:       ctx.QueryParam("branch_id"),
+		Decision:       ctx.QueryParam("decision"),
+		IsHighRisk:     ctx.QueryParam("is_highrisk"),
+		LegalName:      ctx.QueryParam("legal_name"),
+		ProspectID:     ctx.QueryParam("prospect_id"),
+		IDNumber:       ctx.QueryParam("id_number"),
+	}
+
+	page, _ := strconv.Atoi(ctx.QueryParam("page"))
+	pagination := request.RequestPagination{
+		Page:  page,
+		Limit: 10,
+	}
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - List Order Inquiry", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - List Order Inquiry", req, err)
+	}
+
+	if req.ProspectID == "" && req.IDNumber == "" {
+		if req.OrderDateStart == "" || req.OrderDateEnd == "" {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - OrderDateStart or OrderDateEnd does not allowed to be empty")
+			ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - List Order Inquiry", req, err)
+			return ctxJson
+		} else {
+			startDate, _ := time.Parse("2006-01-02", req.OrderDateStart)
+			endDate, _ := time.Parse("2006-01-02", req.OrderDateEnd)
+
+			startDateTime := startDate.Format(time.RFC3339)
+			endDateTime := endDate.Format(time.RFC3339)
+
+			if startDateTime > endDateTime {
+				err = errors.New(constant.ERROR_BAD_REQUEST + " - Start date must be before End date")
+				ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - List Order Inquiry", req, err)
+				return ctxJson
+			}
+		}
+	}
+
+	data, rowTotal, err := c.usecase.GetInquiryListOrder(ctx.Request().Context(), req, pagination)
+
+	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - List Order Inquiry", req, response.InquiryRow{Inquiry: data})
+	}
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - List Order Inquiry", req, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - List Order Inquiry", req, response.InquiryRow{
+		Inquiry:        data,
+		RecordFiltered: len(data),
+		RecordTotal:    rowTotal,
+	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description API List Order
+// @Tags List Order
+// @Produce json
+// @Param prospect_id path string true "Prospect ID"
+// @Success 200 {object} response.ApiResponse{data=entity.InquiryDataListOrder}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/list-order/inquiry/{prospect_id} [get]
+func (c *handlerCMS) ListOrderDetail(ctx echo.Context) (err error) {
+
+	var (
+		ctxJson error
+	)
+
+	prospectID := ctx.Param("prospect_id")
+
+	if prospectID == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID does not exist")
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - List Order Detail", prospectID, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.GetInquiryListOrderDetail(ctx.Request().Context(), prospectID)
+
+	if err != nil {
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - List Order Detail", prospectID, err)
+		return ctxJson
+	}
+
+	ctxJson, _ = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - List Order Detail", prospectID, data)
 	return ctxJson
 }
 

@@ -43,6 +43,8 @@ type Repository interface {
 	BatchUpdateQuotaDeviasi(data []entity.MappingBranchDeviasi) (dataBeforeList []entity.MappingBranchDeviasi, dataAfterList []entity.MappingBranchDeviasi, err error)
 	ProcessResetQuotaDeviasiBranch(branchID string, updatedBy string) (dataBefore entity.DataQuotaDeviasiBranch, dataAfter entity.DataQuotaDeviasiBranch, err error)
 	ProcessResetAllQuotaDeviasi(updatedBy string) (err error)
+	GetInquiryListOrder(req request.ReqInquiryListOrder, pagination interface{}) (data []entity.InquiryDataListOrder, rowTotal int, err error)
+	GetInquiryListOrderDetail(prospectID string) (data entity.InquiryDataListOrder, err error)
 	GetMappingCluster() (data []entity.MasterMappingCluster, err error)
 	GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error)
 	BatchUpdateMappingCluster(data []entity.MasterMappingCluster, history entity.HistoryConfigChanges) (err error)

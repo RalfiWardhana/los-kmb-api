@@ -34,6 +34,8 @@ type Usecase interface {
 	UploadQuotaDeviasi(req request.ReqUploadSettingQuotaDeviasi, file multipart.File) (data response.UploadQuotaDeviasiBranchResponse, err error)
 	ResetQuotaDeviasiBranch(ctx context.Context, req request.ReqResetQuotaDeviasiBranch) (data response.UpdateQuotaDeviasiBranchResponse, err error)
 	ResetAllQuotaDeviasi(ctx context.Context, req request.ReqResetAllQuotaDeviasi) (data response.UploadQuotaDeviasiBranchResponse, err error)
+	GetInquiryListOrder(ctx context.Context, req request.ReqInquiryListOrder, pagination interface{}) (data []entity.InquiryDataListOrder, rowTotal int, err error)
+	GetInquiryListOrderDetail(ctx context.Context, prospectID string) (data entity.InquiryDataListOrder, err error)
 	GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error)
 	GenerateExcelMappingCluster() (genName, fileName string, err error)
 	UpdateMappingCluster(req request.ReqUploadMappingCluster, file multipart.File) (err error)

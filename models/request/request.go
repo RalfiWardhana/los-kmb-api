@@ -995,6 +995,17 @@ type ReqResetAllQuotaDeviasi struct {
 	UpdatedByName string `json:"updated_by_name" validate:"required,max=200" example:"MUHAMMAD RONALD"`
 }
 
+type ReqInquiryListOrder struct {
+	OrderDateStart string `json:"order_date_start" example:"2025-01-01"`
+	OrderDateEnd   string `json:"order_date_end" example:"2025-01-30"`
+	BranchID       string `json:"branch_id" validate:"max=3"`
+	Decision       string `json:"decision" validate:"max=3" example:"APR,REJ,CAN,CPR"`
+	IsHighRisk     string `json:"is_highrisk"`
+	LegalName      string `json:"legal_name" validate:"max=200"`
+	ProspectID     string `json:"prospect_id" validate:"max=20"`
+	IDNumber       string `json:"id_number" validate:"len=16,number" example:"357810XXXXXX0003"`
+}
+
 type ReqListMappingCluster struct {
 	Search         string `json:"search"`
 	BranchID       string `json:"branch_id" example:"400"`
