@@ -3878,52 +3878,42 @@ func (r repoHandler) GetInquiryListOrder(req request.ReqInquiryListOrder, pagina
 	defer db.Commit()
 
 	if req.BranchID != "" && req.BranchID != "999" {
-		conditions = append(conditions, fmt.Sprintf("tm.BranchID = %s", req.BranchID))
+		conditions = append(conditions, fmt.Sprintf("tm.BranchID = '%s'", req.BranchID))
 	}
 
 	if req.Decision != "" && req.Decision != "ALL" {
-		conditions = append(conditions, fmt.Sprintf("tcd.decision = %s", req.Decision))
+		conditions = append(conditions, fmt.Sprintf("sts.decision = '%s'", req.Decision))
 	}
 
 	if req.IsHighRisk != "" && req.IsHighRisk != "ALL" {
 		conditions = append(conditions, fmt.Sprintf("edd.is_highrisk = %s", req.IsHighRisk))
 	}
 
-	if req.LegalName != "" {
-		encrypted, _ := r.EncryptString(req.LegalName)
-		conditions = append(conditions, fmt.Sprintf("tcp.LegalName = %s", encrypted.Encrypt))
-	}
-
-	if req.ProspectID != "" || req.IDNumber != "" {
+	if req.ProspectID != "" || req.IDNumber != "" || req.LegalName != "" {
 		if req.ProspectID != "" {
-			conditions = append(conditions, fmt.Sprintf("tm.ProspectID = %s", req.ProspectID))
+			conditions = append(conditions, fmt.Sprintf("tm.ProspectID = '%s'", req.ProspectID))
 		}
 
 		if req.IDNumber != "" {
 			encrypted, _ := r.EncryptString(req.IDNumber)
-			conditions = append(conditions, fmt.Sprintf("tcp.IDNumber = %s", encrypted.Encrypt))
+			conditions = append(conditions, fmt.Sprintf("tcp.IDNumber = '%s'", encrypted.Encrypt))
+		}
+
+		if req.LegalName != "" {
+			encrypted, _ := r.EncryptString(req.LegalName)
+			conditions = append(conditions, fmt.Sprintf("tcp.LegalName = '%s'", encrypted.Encrypt))
 		}
 	} else {
-		if req.OrderDateStart != "" && req.OrderDateEnd != "" {
-			startDate, err := time.Parse("2006-01-02", req.OrderDateStart)
-			if err != nil {
-				return nil, 0, fmt.Errorf("invalid start date format: %v", err)
-			}
+		startDate, _ := time.Parse("2006-01-02", req.OrderDateStart)
+		endDate, _ := time.Parse("2006-01-02", req.OrderDateEnd)
 
-			endDate, err := time.Parse("2006-01-02", req.OrderDateEnd)
-			if err != nil {
-				return nil, 0, fmt.Errorf("invalid end date format: %v", err)
-			}
+		startDate = startDate.Add(time.Hour * 0).Add(time.Minute * 0).Add(time.Second * 0)
+		endDate = endDate.Add(time.Hour * 23).Add(time.Minute * 59).Add(time.Second * 59)
 
-			// ensure query covers entire day
-			startDate = startDate.Add(time.Hour * 0).Add(time.Minute * 0).Add(time.Second * 0) // 00:00:00
-			endDate = endDate.Add(time.Hour * 23).Add(time.Minute * 59).Add(time.Second * 59)  // 23:59:59
+		startDateFormatted := startDate.Format(time.RFC3339)
+		endDateFormatted := endDate.Format(time.RFC3339)
 
-			startDateFormatted := startDate.Format(time.RFC3339)
-			endDateFormatted := endDate.Format(time.RFC3339)
-
-			conditions = append(conditions, fmt.Sprintf("tm.created_at BETWEEN '%s' AND '%s'", startDateFormatted, endDateFormatted))
-		}
+		conditions = append(conditions, fmt.Sprintf("tm.created_at BETWEEN '%s' AND '%s'", startDateFormatted, endDateFormatted))
 	}
 
 	if len(conditions) > 0 {

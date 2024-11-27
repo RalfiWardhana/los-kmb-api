@@ -1001,9 +1001,9 @@ type ReqInquiryListOrder struct {
 	BranchID       string `json:"branch_id" validate:"max=3"`
 	Decision       string `json:"decision" validate:"max=3" example:"APR,REJ,CAN,CPR"`
 	IsHighRisk     string `json:"is_highrisk"`
-	LegalName      string `json:"legal_name" validate:"max=200"`
 	ProspectID     string `json:"prospect_id" validate:"max=20"`
-	IDNumber       string `json:"id_number" validate:"len=16,number" example:"357810XXXXXX0003"`
+	IDNumber       string `json:"id_number" validate:"max=16" example:"357810XXXXXX0003"`
+	LegalName      string `json:"legal_name" validate:"max=200"`
 }
 
 type ReqListMappingCluster struct {

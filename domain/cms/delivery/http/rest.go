@@ -1328,7 +1328,6 @@ func (c *handlerCMS) ListOrderInquiry(ctx echo.Context) (err error) {
 
 	var (
 		accessToken = middlewares.UserInfoData.AccessToken
-		ctxJson     error
 	)
 
 	req := request.ReqInquiryListOrder{
@@ -1337,9 +1336,9 @@ func (c *handlerCMS) ListOrderInquiry(ctx echo.Context) (err error) {
 		BranchID:       ctx.QueryParam("branch_id"),
 		Decision:       ctx.QueryParam("decision"),
 		IsHighRisk:     ctx.QueryParam("is_highrisk"),
-		LegalName:      ctx.QueryParam("legal_name"),
 		ProspectID:     ctx.QueryParam("prospect_id"),
 		IDNumber:       ctx.QueryParam("id_number"),
+		LegalName:      ctx.QueryParam("legal_name"),
 	}
 
 	page, _ := strconv.Atoi(ctx.QueryParam("page"))
@@ -1356,22 +1355,37 @@ func (c *handlerCMS) ListOrderInquiry(ctx echo.Context) (err error) {
 		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - List Order Inquiry", req, err)
 	}
 
-	if req.ProspectID == "" && req.IDNumber == "" {
+	if req.ProspectID == "" && req.IDNumber == "" && req.LegalName == "" {
 		if req.OrderDateStart == "" || req.OrderDateEnd == "" {
 			err = errors.New(constant.ERROR_BAD_REQUEST + " - OrderDateStart or OrderDateEnd does not allowed to be empty")
-			ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - List Order Inquiry", req, err)
-			return ctxJson
+			return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - List Order Inquiry", req, err)
 		} else {
-			startDate, _ := time.Parse("2006-01-02", req.OrderDateStart)
-			endDate, _ := time.Parse("2006-01-02", req.OrderDateEnd)
+			startDate, err := time.Parse("2006-01-02", req.OrderDateStart)
+			if err != nil {
+				err = errors.New(constant.ERROR_BAD_REQUEST + " - Start date format invalid")
+				return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - List Order Inquiry", req, err)
+			}
+
+			endDate, err := time.Parse("2006-01-02", req.OrderDateEnd)
+			if err != nil {
+				err = errors.New(constant.ERROR_BAD_REQUEST + " - End date format invalid")
+				return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - List Order Inquiry", req, err)
+			}
+
+			startDate = startDate.Add(time.Hour * 0).Add(time.Minute * 0).Add(time.Second * 0)
+			endDate = endDate.Add(time.Hour * 23).Add(time.Minute * 59).Add(time.Second * 59)
 
 			startDateTime := startDate.Format(time.RFC3339)
 			endDateTime := endDate.Format(time.RFC3339)
 
 			if startDateTime > endDateTime {
 				err = errors.New(constant.ERROR_BAD_REQUEST + " - Start date must be before End date")
-				ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - List Order Inquiry", req, err)
-				return ctxJson
+				return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - List Order Inquiry", req, err)
+			}
+
+			if endDate.Sub(startDate).Hours()/24 > 30 {
+				err = errors.New(constant.ERROR_BAD_REQUEST + " - Date range must not exceed 30 days")
+				return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - List Order Inquiry", req, err)
 			}
 		}
 	}

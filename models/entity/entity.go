@@ -2537,7 +2537,7 @@ type InquiryDataListOrder struct {
 	Profession  string      `gorm:"column:Profession" json:"profession"`
 	JobType     string      `gorm:"column:JobType" json:"job_type"`
 	JobPosition string      `gorm:"column:JobPosition" json:"job_position"`
-	IsHighRisk  bool        `gorm:"column:IsHighRisk;type:int" json:"is_highrisk"`
+	IsHighRisk  interface{} `gorm:"column:IsHighRisk;" json:"is_highrisk"`
 	Pernyataan1 interface{} `gorm:"column:Pernyataan1" json:"pernyataan_1"`
 	Pernyataan2 interface{} `gorm:"column:Pernyataan2" json:"pernyataan_2"`
 	Pernyataan3 interface{} `gorm:"column:Pernyataan3" json:"pernyataan_3"`
