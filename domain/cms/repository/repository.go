@@ -3940,17 +3940,19 @@ func (r repoHandler) GetInquiryListOrder(req request.ReqInquiryListOrder, pagina
 					edd.pernyataan_4 AS Pernyataan4,
 					edd.pernyataan_5 AS Pernyataan5,
 					edd.pernyataan_6 AS Pernyataan6,
+					tak.UrlFormAkkk,
 					sts.decision AS Decision,
 					tcd.decision_by AS DecisionBy,
 					edd.created_at AS DecisionAt
 				FROM 
 				trx_master AS tm WITH (nolock)
-				JOIN confins_branch AS b ON (tm.BranchID = b.BranchID)
-				JOIN trx_status AS sts ON (tm.ProspectID = sts.ProspectID)
-				JOIN trx_customer_personal AS tcp ON (tm.ProspectID = tcp.ProspectID)
-				JOIN trx_customer_employment AS emp ON (tm.ProspectID = emp.ProspectID)
-				LEFT JOIN trx_ca_decision AS tcd ON (tm.ProspectID = tcd.ProspectID) 
-				LEFT JOIN trx_edd AS edd ON (tm.ProspectID = edd.ProspectID)
+				JOIN confins_branch AS b WITH (nolock) ON (tm.BranchID = b.BranchID)
+				JOIN trx_status AS sts WITH (nolock) ON (tm.ProspectID = sts.ProspectID)
+				JOIN trx_customer_personal AS tcp WITH (nolock) ON (tm.ProspectID = tcp.ProspectID)
+				JOIN trx_customer_employment AS emp WITH (nolock) ON (tm.ProspectID = emp.ProspectID)
+				LEFT JOIN trx_ca_decision AS tcd WITH (nolock) ON (tm.ProspectID = tcd.ProspectID) 
+				LEFT JOIN trx_edd AS edd WITH (nolock) ON (tm.ProspectID = edd.ProspectID)
+				LEFT JOIN trx_akkk AS tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
 				LEFT JOIN (
 					SELECT [key], value
 					FROM app_config ap WITH (nolock)
@@ -4032,17 +4034,19 @@ func (r repoHandler) GetInquiryListOrderDetail(prospectID string) (data entity.I
 					edd.pernyataan_4 AS Pernyataan4,
 					edd.pernyataan_5 AS Pernyataan5,
 					edd.pernyataan_6 AS Pernyataan6,
+					tak.UrlFormAkkk,
 					sts.decision AS Decision,
 					tcd.decision_by AS DecisionBy,
 					edd.created_at AS DecisionAt
 				FROM 
 				trx_master AS tm WITH (nolock)
-				JOIN confins_branch AS b ON (tm.BranchID = b.BranchID)
-				JOIN trx_status AS sts ON (tm.ProspectID = sts.ProspectID)
-				JOIN trx_customer_personal AS tcp ON (tm.ProspectID = tcp.ProspectID)
-				JOIN trx_customer_employment AS emp ON (tm.ProspectID = emp.ProspectID)
-				LEFT JOIN trx_ca_decision AS tcd ON (tm.ProspectID = tcd.ProspectID) 
-				LEFT JOIN trx_edd AS edd ON (tm.ProspectID = edd.ProspectID)
+				JOIN confins_branch AS b WITH (nolock) ON (tm.BranchID = b.BranchID)
+				JOIN trx_status AS sts WITH (nolock) ON (tm.ProspectID = sts.ProspectID)
+				JOIN trx_customer_personal AS tcp WITH (nolock) ON (tm.ProspectID = tcp.ProspectID)
+				JOIN trx_customer_employment AS emp WITH (nolock) ON (tm.ProspectID = emp.ProspectID)
+				LEFT JOIN trx_ca_decision AS tcd WITH (nolock) ON (tm.ProspectID = tcd.ProspectID) 
+				LEFT JOIN trx_edd AS edd WITH (nolock) ON (tm.ProspectID = edd.ProspectID)
+				LEFT JOIN trx_akkk AS tak WITH (nolock) ON (tm.ProspectID = tak.ProspectID)
 				LEFT JOIN (
 					SELECT [key], value
 					FROM app_config ap WITH (nolock)
