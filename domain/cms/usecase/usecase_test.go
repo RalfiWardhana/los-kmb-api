@@ -3540,6 +3540,192 @@ func TestResetAllQuotaDeviasi(t *testing.T) {
 	})
 }
 
+func TestGetInquiryListOrder(t *testing.T) {
+	exampleOrderAt := time.Date(2024, time.November, 3, 14, 30, 0, 0, time.UTC)
+	exampleDecisionAt := time.Date(2024, time.November, 3, 15, 30, 0, 0, time.UTC)
+	exampleBirthDate := time.Date(1992, time.August, 28, 13, 10, 0, 0, time.UTC)
+
+	testcases := []struct {
+		name          string
+		req           request.ReqInquiryListOrder
+		pagination    interface{}
+		expectedData  []entity.InquiryDataListOrder
+		expectedRow   int
+		mockError     error
+		expectedError error
+	}{
+		{
+			name: "error repository",
+			req: request.ReqInquiryListOrder{
+				OrderDateStart: "2024-11-01",
+				OrderDateEnd:   "2024-11-30",
+				BranchID:       "400",
+			},
+			pagination:    request.RequestPagination{Page: 1, Limit: 10},
+			mockError:     errors.New("upstream_service_error - Get Inquiry Quota Deviasi"),
+			expectedError: errors.New("upstream_service_error - Get Inquiry Quota Deviasi"),
+		},
+		{
+			name: "success with data",
+			req: request.ReqInquiryListOrder{
+				OrderDateStart: "2024-11-01",
+				OrderDateEnd:   "2024-11-30",
+				BranchID:       "400",
+			},
+			pagination: request.RequestPagination{Page: 1, Limit: 10},
+			expectedData: []entity.InquiryDataListOrder{
+				{
+					OrderAt:     exampleOrderAt,
+					BranchName:  "BEKASI",
+					ProspectID:  "SAL-1140002411209992",
+					LegalName:   "THOM HAYE",
+					IDNumber:    "357810280892999",
+					BirthDate:   exampleBirthDate,
+					Profession:  "Karyawan Swasta",
+					JobType:     "Engineering",
+					JobPosition: "Staff",
+					IsHighRisk:  true,
+					Pernyataan1: false,
+					Pernyataan2: false,
+					Pernyataan3: false,
+					Pernyataan4: false,
+					Pernyataan5: false,
+					Pernyataan6: "Lorem Ipsum Dolor Sit a Jamet",
+					UrlFormAkkk: "https://dev-platform-media.kbfinansia.com/media/reference/140000/SAL-1140002411209992/formAKKK_SAL-1140002411209992.pdf",
+					Decision:    "APR",
+					DecisionBy:  "CA KMB BEKASI",
+					DecisionAt:  exampleDecisionAt,
+				},
+			},
+			expectedRow: 1,
+		},
+		{
+			name: "no data found",
+			req: request.ReqInquiryListOrder{
+				BranchID: "400",
+			},
+			pagination:    request.RequestPagination{Page: 1, Limit: 10},
+			expectedData:  []entity.InquiryDataListOrder{},
+			expectedRow:   0,
+			mockError:     nil,
+			expectedError: nil,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+			var cache *bigcache.BigCache
+
+			mockRepository.On("GetInquiryListOrder", tc.req, tc.pagination).Return(tc.expectedData, tc.expectedRow, tc.mockError)
+
+			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+
+			resultData, resultRow, err := usecase.GetInquiryListOrder(context.Background(), tc.req, tc.pagination)
+
+			require.Equal(t, tc.expectedData, resultData)
+			require.Equal(t, tc.expectedRow, resultRow)
+			if tc.expectedError != nil {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepository.AssertExpectations(t)
+		})
+	}
+}
+
+func TestGetInquiryListOrderDetail(t *testing.T) {
+	exampleOrderAt := time.Date(2024, time.November, 3, 14, 30, 0, 0, time.UTC)
+	exampleDecisionAt := time.Date(2024, time.November, 3, 15, 30, 0, 0, time.UTC)
+	exampleBirthDate := time.Date(1992, time.August, 28, 13, 10, 0, 0, time.UTC)
+
+	testcases := []struct {
+		name          string
+		prospectID    string
+		expectedData  entity.InquiryDataListOrder
+		expectedRow   int
+		mockError     error
+		expectedError error
+	}{
+		{
+			name:          "error repository",
+			prospectID:    "SAL-1140002411209992",
+			mockError:     errors.New("Get Inquiry Quota Deviasi"),
+			expectedError: errors.New("upstream_service_error - Get Inquiry Quota Deviasi"),
+		},
+		{
+			name:          "error record not found",
+			prospectID:    "SAL-1140002411209992",
+			mockError:     errors.New(constant.RECORD_NOT_FOUND),
+			expectedError: errors.New(constant.ERROR_BAD_REQUEST + " - " + constant.RECORD_NOT_FOUND),
+		},
+		{
+			name:       "success with data",
+			prospectID: "SAL-1140002411209992",
+			expectedData: entity.InquiryDataListOrder{
+				OrderAt:     exampleOrderAt,
+				BranchName:  "BEKASI",
+				ProspectID:  "SAL-1140002411209992",
+				LegalName:   "THOM HAYE",
+				IDNumber:    "357810280892999",
+				BirthDate:   exampleBirthDate,
+				Profession:  "Karyawan Swasta",
+				JobType:     "Engineering",
+				JobPosition: "Staff",
+				IsHighRisk:  true,
+				Pernyataan1: false,
+				Pernyataan2: false,
+				Pernyataan3: false,
+				Pernyataan4: false,
+				Pernyataan5: false,
+				Pernyataan6: "Lorem Ipsum Dolor Sit a Jamet",
+				UrlFormAkkk: "https://dev-platform-media.kbfinansia.com/media/reference/140000/SAL-1140002411209992/formAKKK_SAL-1140002411209992.pdf",
+				Decision:    "APR",
+				DecisionBy:  "CA KMB BEKASI",
+				DecisionAt:  exampleDecisionAt,
+			},
+			expectedRow: 1,
+		},
+		{
+			name:          "no data found",
+			prospectID:    "SAL-1140002411209992",
+			expectedData:  entity.InquiryDataListOrder{},
+			expectedRow:   0,
+			mockError:     nil,
+			expectedError: nil,
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+			var cache *bigcache.BigCache
+
+			mockRepository.On("GetInquiryListOrderDetail", tc.prospectID).Return(tc.expectedData, tc.mockError)
+
+			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+
+			resultData, err := usecase.GetInquiryListOrderDetail(context.Background(), tc.prospectID)
+
+			require.Equal(t, tc.expectedData, resultData)
+
+			if tc.expectedError != nil {
+				require.Error(t, err)
+				require.EqualError(t, err, tc.expectedError.Error())
+			} else {
+				require.NoError(t, err)
+			}
+
+			mockRepository.AssertExpectations(t)
+		})
+	}
+}
+
 func TestGetInquiryMappingCluster(t *testing.T) {
 	testcases := []struct {
 		name          string
