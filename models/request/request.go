@@ -116,6 +116,7 @@ type DupcheckApi struct {
 	LegalName             string              `json:"legal_name" validate:"required,allowcharsname"`
 	MotherName            string              `json:"surgate_mother_name" validate:"required,allowcharsname"`
 	Spouse                *DupcheckApiSpouse  `json:"spouse" validate:"omitempty"`
+	MobilePhone           string              `json:"mobile_phone" validate:"min=9,max=14" example:"085689XXX01"`
 	EngineNo              string              `json:"no_engine" validate:"required"`
 	RangkaNo              string              `json:"no_rangka" validate:"required"`
 	ManufactureYear       string              `json:"manufacture_year" validate:"required,len=4,number"`

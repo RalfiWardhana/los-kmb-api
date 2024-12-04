@@ -529,6 +529,11 @@ const (
 	REASON_AGREEMENT_NOT_FOUND       = "NokaNosin tidak terdaftar di KBFMF"
 	SOURCE_DECISION_NOKANOSIN        = "NKA"
 
+	// MOBILEPHONE FMF
+	SOURCE_DECISION_NOHP = "NHP"
+	REASON_REJECT_NOHP   = "Nomor Terdaftar di KB FMF - Bukan a.n Konsumen"
+	CODE_NOHP            = "251"
+
 	//FACE COMPARE
 	RESULT_COMPARE                    = true
 	CODE_REJECT_FACE_COMPARE          = "661"

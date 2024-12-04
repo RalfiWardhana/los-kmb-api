@@ -19,7 +19,7 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string, configValue response.DupcheckConfig) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error) {
+func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken, hrisAccessToken string, configValue response.DupcheckConfig) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error) {
 
 	var (
 		customer                    []request.SpouseDupcheck
@@ -167,6 +167,21 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	}
 
 	trxDetail = append(trxDetail, trxBlacklist)
+
+	//Check mobilephone fmf
+	checkMobilePhoneFMF, err := u.usecase.CheckMobilePhoneFMF(ctx, req, accessToken, hrisAccessToken)
+
+	if err != nil {
+		return
+	}
+
+	if checkMobilePhoneFMF.Result == constant.DECISION_REJECT {
+		data = checkMobilePhoneFMF
+		mapping.Reason = data.Reason
+		return
+	}
+
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: checkMobilePhoneFMF.Code, SourceDecision: checkMobilePhoneFMF.SourceDecision, Reason: checkMobilePhoneFMF.Reason, NextStep: constant.SOURCE_DECISION_PMK, Info: checkMobilePhoneFMF.Info})
 
 	//Check vehicle age
 	ageVehicle, err := u.usecase.VehicleCheck(req.ManufactureYear, req.CMOCluster, req.BPKBName, req.Tenor, configValue, req.Filtering, req.AF)
@@ -663,6 +678,56 @@ func (u usecase) CheckAgreementChassisNumber(ctx context.Context, reqs request.D
 	}
 
 	data.SourceDecision = constant.SOURCE_DECISION_NOKANOSIN
+	return
+}
+
+func (u usecase) CheckMobilePhoneFMF(ctx context.Context, reqs request.DupcheckApi, accessToken, hrisAccessToken string) (data response.UsecaseApi, err error) {
+	var (
+		listEmployee []response.HrisListEmployee
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	header := map[string]string{
+		"Authorization": "Bearer " + hrisAccessToken,
+	}
+
+	payload := map[string]interface{}{
+		"prospect_id": reqs.ProspectID,
+		"limit":       150,
+		"page":        1,
+		"column":      "",
+		"ascending":   true,
+		"query":       "phone_number==" + reqs.MobilePhone,
+	}
+
+	param, _ := json.Marshal(payload)
+	getListEmployee, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("HRIS_LIST_EMPLOYEE"), param, header, constant.METHOD_POST, false, 0, timeout, "", accessToken)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call API HRIS List Employee Error")
+		return
+	}
+
+	json.Unmarshal([]byte(jsoniter.Get(getListEmployee.Body(), "data").ToString()), &listEmployee)
+
+	// set default pass
+	data.SourceDecision = constant.SOURCE_DECISION_NOHP
+	data.Code = constant.CODE_NOHP
+	data.Result = constant.DECISION_PASS
+	info, _ := json.Marshal(listEmployee)
+	data.Info = string(info)
+
+	for _, v := range listEmployee {
+		if v.PhoneNumber != nil && v.IDNumber != nil {
+			if v.PhoneNumber.(string) == reqs.MobilePhone && v.IDNumber.(string) != reqs.IDNumber {
+				data.Code = constant.CODE_NOHP
+				data.Result = constant.DECISION_REJECT
+				data.Reason = constant.REASON_REJECT_NOHP
+			}
+		}
+	}
+
 	return
 }
 

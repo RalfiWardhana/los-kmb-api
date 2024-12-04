@@ -938,6 +938,12 @@ type GetEmployeeByID struct {
 	Data    []EmployeeCareerHistory `json:"data"`
 }
 
+type HrisListEmployee struct {
+	EmployeeID  string      `json:"employee_id"`
+	IDNumber    interface{} `json:"id_number"`
+	PhoneNumber interface{} `json:"phone_number"`
+}
+
 type FpdCMOResponse struct {
 	FpdExist    bool    `json:"fpd_exist"`
 	CmoFpd      float64 `json:"cmo_fpd"`

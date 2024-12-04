@@ -20,7 +20,7 @@ import (
 
 // func ini digunakan ketika Submit to LOS
 // dan ketika Approve prescreening di menu prescreening oleh CA
-func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, accessToken string) (resultMetrics interface{}, err error) {
+func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, accessToken, hrisAccessToken string) (resultMetrics interface{}, err error) {
 
 	var (
 		married           bool
@@ -308,6 +308,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		IDNumber:              reqMetrics.CustomerPersonal.IDNumber,
 		LegalName:             reqMetrics.CustomerPersonal.LegalName,
 		MotherName:            reqMetrics.CustomerPersonal.SurgateMotherName,
+		MobilePhone:           reqMetrics.CustomerPersonal.MobilePhone,
 		EngineNo:              reqMetrics.Item.NoEngine,
 		RangkaNo:              reqMetrics.Item.NoChassis,
 		ManufactureYear:       reqMetrics.Item.ManufactureYear,
@@ -372,7 +373,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		configValue.Data.MaxDsr = mappingMaxDSR.DSRThreshold
 	}
 
-	dupcheckData, customerStatus, metricsDupcheck, trxFMFDupcheck, trxDetailDupcheck, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken, configValue)
+	dupcheckData, customerStatus, metricsDupcheck, trxFMFDupcheck, trxDetailDupcheck, err = u.multiUsecase.Dupcheck(ctx, reqDupcheck, married, accessToken, hrisAccessToken, configValue)
 	if err != nil {
 		return
 	}
