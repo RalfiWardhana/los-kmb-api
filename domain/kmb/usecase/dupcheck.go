@@ -694,11 +694,12 @@ func (u usecase) CheckMobilePhoneFMF(ctx context.Context, reqs request.DupcheckA
 
 	payload := map[string]interface{}{
 		"prospect_id": reqs.ProspectID,
-		"limit":       150,
+		"limit":       3,
 		"page":        1,
 		"column":      "",
 		"ascending":   true,
-		"query":       "phone_number==" + reqs.MobilePhone,
+		"query":       "",
+		// "query":       "phone_number==" + reqs.MobilePhone,
 	}
 
 	param, _ := json.Marshal(payload)
@@ -719,12 +720,17 @@ func (u usecase) CheckMobilePhoneFMF(ctx context.Context, reqs request.DupcheckA
 	data.Info = string(info)
 
 	for _, v := range listEmployee {
-		if v.PhoneNumber != nil && v.IDNumber != nil {
-			if v.PhoneNumber.(string) == reqs.MobilePhone && v.IDNumber.(string) != reqs.IDNumber {
-				data.Code = constant.CODE_NOHP
-				data.Result = constant.DECISION_REJECT
-				data.Reason = constant.REASON_REJECT_NOHP
-			}
+		// if v.PhoneNumber != nil && v.IDNumber != nil {
+		// 	if v.PhoneNumber.(string) == reqs.MobilePhone && v.IDNumber.(string) != reqs.IDNumber {
+		// 		data.Code = constant.CODE_NOHP
+		// 		data.Result = constant.DECISION_REJECT
+		// 		data.Reason = constant.REASON_REJECT_NOHP
+		// 	}
+		// }
+		if v.EmployeeID != "" {
+			data.Code = constant.CODE_NOHP
+			data.Result = constant.DECISION_REJECT
+			data.Reason = constant.REASON_REJECT_NOHP
 		}
 	}
 
