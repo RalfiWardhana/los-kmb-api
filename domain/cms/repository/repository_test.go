@@ -11927,6 +11927,9 @@ func TestGetInquiryListOrder(t *testing.T) {
 							edd.pernyataan_6 AS Pernyataan6,
 							tak.UrlFormAkkk,
 							sts.decision AS Decision,
+							sts.source_decision AS SourceDecision,
+							sts.rule_code AS RuleCode,
+							sts.reason AS Reason,
 							tcd.decision_by AS DecisionBy,
 							edd.created_at AS DecisionAt
 						FROM 
@@ -11937,7 +11940,7 @@ func TestGetInquiryListOrder(t *testing.T) {
 						JOIN trx_customer_employment AS emp WITH (nolock) ON (tm.ProspectID = emp.ProspectID)
 						LEFT JOIN trx_ca_decision AS tcd WITH (nolock) ON (tm.ProspectID = tcd.ProspectID) 
 						LEFT JOIN trx_edd AS edd WITH (nolock) ON (tm.ProspectID = edd.ProspectID)
-						LEFT JOIN trx_akkk AS tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+						LEFT JOIN trx_akkk AS tak WITH (nolock) ON (tm.ProspectID = tak.ProspectID)
 						LEFT JOIN (
 							SELECT [key], value
 							FROM app_config ap WITH (nolock)
@@ -12126,6 +12129,9 @@ func TestGetInquiryListOrderDetail(t *testing.T) {
 					edd.pernyataan_6 AS Pernyataan6,
 					tak.UrlFormAkkk,
 					sts.decision AS Decision,
+					sts.source_decision AS SourceDecision,
+					sts.rule_code AS RuleCode,
+					sts.reason AS Reason,
 					tcd.decision_by AS DecisionBy,
 					edd.created_at AS DecisionAt
 				FROM 
