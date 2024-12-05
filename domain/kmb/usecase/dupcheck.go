@@ -33,44 +33,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		negativeCustomer            response.NegativeCustomer
 	)
 
-	// Check Banned Chassis Number
-	bannedChassisNumber, err := u.usecase.CheckBannedChassisNumber(req.RangkaNo)
-	if err != nil {
-		return
-	}
-
-	if bannedChassisNumber.Result == constant.DECISION_REJECT {
-		data = bannedChassisNumber
-		mapping.Reason = data.Reason
-		return
-	}
-
-	// Pernah Reject Chassis Number
-	rejectChassisNumber, trxBannedChassisNumber, err := u.usecase.CheckRejectChassisNumber(req, configValue)
-	if err != nil {
-		return
-	}
-
-	if rejectChassisNumber.Result == constant.DECISION_REJECT {
-		data = rejectChassisNumber
-		mapping.Reason = data.Reason
-
-		trxFMF.TrxBannedChassisNumber = trxBannedChassisNumber
-		return
-	}
-
-	// Check Banned PMK atau DSR
-	bannedPMKDSR, err := u.usecase.CheckBannedPMKDSR(req.IDNumber)
-	if err != nil {
-		return
-	}
-
-	if bannedPMKDSR.Result == constant.DECISION_REJECT {
-		data = bannedPMKDSR
-		mapping.Reason = data.Reason
-		return
-	}
-
 	// Pernah Reject PMK atau DSR atau NIK
 	trxReject, trxBannedPMKDSR, err := u.usecase.CheckRejection(req.IDNumber, req.ProspectID, configValue)
 	if err != nil {
@@ -720,17 +682,12 @@ func (u usecase) CheckMobilePhoneFMF(ctx context.Context, reqs request.DupcheckA
 	data.Info = string(info)
 
 	for _, v := range listEmployee {
-		// if v.PhoneNumber != nil && v.IDNumber != nil {
-		// 	if v.PhoneNumber.(string) == reqs.MobilePhone && v.IDNumber.(string) != reqs.IDNumber {
-		// 		data.Code = constant.CODE_NOHP
-		// 		data.Result = constant.DECISION_REJECT
-		// 		data.Reason = constant.REASON_REJECT_NOHP
-		// 	}
-		// }
-		if v.EmployeeID != "" {
-			data.Code = constant.CODE_NOHP
-			data.Result = constant.DECISION_REJECT
-			data.Reason = constant.REASON_REJECT_NOHP
+		if v.PhoneNumber != nil && v.IDNumber != nil {
+			if v.PhoneNumber.(string) == reqs.MobilePhone && v.IDNumber.(string) != reqs.IDNumber {
+				data.Code = constant.CODE_NOHP
+				data.Result = constant.DECISION_REJECT
+				data.Reason = constant.REASON_REJECT_NOHP
+			}
 		}
 	}
 
