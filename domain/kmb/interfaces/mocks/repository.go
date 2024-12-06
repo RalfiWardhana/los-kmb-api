@@ -835,6 +835,102 @@ func (_m *Repository) GetMoblast(customerID string) (entity.GetMoblast, error) {
 	return r0, r1
 }
 
+// GetPrincipleEmergencyContact provides a mock function with given fields: prospectID
+func (_m *Repository) GetPrincipleEmergencyContact(prospectID string) (entity.TrxPrincipleEmergencyContact, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 entity.TrxPrincipleEmergencyContact
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (entity.TrxPrincipleEmergencyContact, error)); ok {
+		return rf(prospectID)
+	}
+	if rf, ok := ret.Get(0).(func(string) entity.TrxPrincipleEmergencyContact); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.TrxPrincipleEmergencyContact)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetPrincipleStepOne provides a mock function with given fields: prospectID
+func (_m *Repository) GetPrincipleStepOne(prospectID string) (entity.TrxPrincipleStepOne, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 entity.TrxPrincipleStepOne
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (entity.TrxPrincipleStepOne, error)); ok {
+		return rf(prospectID)
+	}
+	if rf, ok := ret.Get(0).(func(string) entity.TrxPrincipleStepOne); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.TrxPrincipleStepOne)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetPrincipleStepThree provides a mock function with given fields: prospectID
+func (_m *Repository) GetPrincipleStepThree(prospectID string) (entity.TrxPrincipleStepThree, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 entity.TrxPrincipleStepThree
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (entity.TrxPrincipleStepThree, error)); ok {
+		return rf(prospectID)
+	}
+	if rf, ok := ret.Get(0).(func(string) entity.TrxPrincipleStepThree); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.TrxPrincipleStepThree)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetPrincipleStepTwo provides a mock function with given fields: prospectID
+func (_m *Repository) GetPrincipleStepTwo(prospectID string) (entity.TrxPrincipleStepTwo, error) {
+	ret := _m.Called(prospectID)
+
+	var r0 entity.TrxPrincipleStepTwo
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (entity.TrxPrincipleStepTwo, error)); ok {
+		return rf(prospectID)
+	}
+	if rf, ok := ret.Get(0).(func(string) entity.TrxPrincipleStepTwo); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.TrxPrincipleStepTwo)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetRecalculate provides a mock function with given fields: prospectID
 func (_m *Repository) GetRecalculate(prospectID string) (entity.GetRecalculate, error) {
 	ret := _m.Called(prospectID)
@@ -1324,6 +1420,30 @@ func (_m *Repository) ScanTrxPrescreening(prospectID string) (int, error) {
 	if len(ret) == 0 {
 		panic("no return value specified for ScanTrxPrescreening")
 	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (int, error)); ok {
+		return rf(prospectID)
+	}
+	if rf, ok := ret.Get(0).(func(string) int); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ScanTrxPrinciple provides a mock function with given fields: prospectID
+func (_m *Repository) ScanTrxPrinciple(prospectID string) (int, error) {
+	ret := _m.Called(prospectID)
 
 	var r0 int
 	var r1 error
