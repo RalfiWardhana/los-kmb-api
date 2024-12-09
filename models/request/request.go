@@ -687,6 +687,10 @@ type AgentNE struct {
 	RecomDate string `json:"recom_date" validate:"required" example:"2021-07-15"`
 }
 
+type LockSystem struct {
+	IDNumber string `json:"id_number" validate:"required,len=16,number"`
+}
+
 type Recalculate struct {
 	ProspectID                   string  `json:"prospect_id" validate:"prospect_id" example:"SAL042600001"`
 	Tenor                        int     `json:"tenor" validate:"required,max=60" example:"36"`

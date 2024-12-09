@@ -1031,6 +1031,36 @@ func (_m *Repository) GetScoreGeneratorROAO() (entity.ScoreGenerator, error) {
 	return r0, r1
 }
 
+// GetTrxCancel provides a mock function with given fields: idNumber, config
+func (_m *Repository) GetTrxCancel(idNumber string, config response.LockSystemConfig) ([]entity.TrxLockSystem, error) {
+	ret := _m.Called(idNumber, config)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTrxCancel")
+	}
+
+	var r0 []entity.TrxLockSystem
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, response.LockSystemConfig) ([]entity.TrxLockSystem, error)); ok {
+		return rf(idNumber, config)
+	}
+	if rf, ok := ret.Get(0).(func(string, response.LockSystemConfig) []entity.TrxLockSystem); ok {
+		r0 = rf(idNumber, config)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.TrxLockSystem)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, response.LockSystemConfig) error); ok {
+		r1 = rf(idNumber, config)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTrxDetailBIro provides a mock function with given fields: prospectID
 func (_m *Repository) GetTrxDetailBIro(prospectID string) ([]entity.TrxDetailBiro, error) {
 	ret := _m.Called(prospectID)
@@ -1082,6 +1112,36 @@ func (_m *Repository) GetTrxJourney(prospectID string) (entity.TrxJourney, error
 
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetTrxReject provides a mock function with given fields: idNumber, config
+func (_m *Repository) GetTrxReject(idNumber string, config response.LockSystemConfig) ([]entity.TrxLockSystem, error) {
+	ret := _m.Called(idNumber, config)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTrxReject")
+	}
+
+	var r0 []entity.TrxLockSystem
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, response.LockSystemConfig) ([]entity.TrxLockSystem, error)); ok {
+		return rf(idNumber, config)
+	}
+	if rf, ok := ret.Get(0).(func(string, response.LockSystemConfig) []entity.TrxLockSystem); ok {
+		r0 = rf(idNumber, config)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.TrxLockSystem)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string, response.LockSystemConfig) error); ok {
+		r1 = rf(idNumber, config)
 	} else {
 		r1 = ret.Error(1)
 	}

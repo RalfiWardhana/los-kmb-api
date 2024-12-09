@@ -37,6 +37,7 @@ func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interf
 	kmbroute.POST("/produce/journey", handler.ProduceJourney, middlewares.AccessMiddleware())
 	kmbroute.POST("/produce/journey-after-prescreening", handler.ProduceJourneyAfterPrescreening, middlewares.AccessMiddleware())
 	kmbroute.POST("/recalculate", handler.Recalculate, middlewares.AccessMiddleware())
+	kmbroute.POST("/lock-system", handler.LockSystem, middlewares.AccessMiddleware())
 	kmbroute.POST("/insert-staging/:prospectID", handler.InsertStagingIndex, middlewares.AccessMiddleware())
 	kmbroute.POST("/go-live", handler.GoLive, middlewares.AccessMiddleware())
 }
@@ -91,6 +92,44 @@ func (c *handlerKMB) ProduceJourneyAfterPrescreening(ctx echo.Context) (err erro
 	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_AFTER_PRESCREENING, req.ProspectID, utils.StructToMap(req), 0)
 
 	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB - Please wait, your request is being processed", req, nil)
+}
+
+func (c *handlerKMB) LockSystem(ctx echo.Context) (err error) {
+	var (
+		req     request.LockSystem
+		resp    interface{}
+		ctxJson error
+	)
+
+	// Save Log Orchestrator
+	defer func() {
+		go c.repository.SaveLogOrchestrator(ctx.Request().Header, req, resp, "/api/v3/kmb/lock-system", constant.METHOD_POST, req.IDNumber, ctx.Get(constant.HeaderXRequestID).(string))
+	}()
+
+	if err != nil {
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Lock System", req, err)
+		return ctxJson
+	}
+
+	if err := ctx.Bind(&req); err != nil {
+		ctxJson, resp = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Lock System", req, err)
+		return ctxJson
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Lock System", req, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.LockSystem(ctx.Request().Context(), req.IDNumber)
+
+	if err != nil {
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Lock System", req, err)
+		return ctxJson
+	}
+
+	ctxJson, resp = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Lock System - Success", req, data)
+	return ctxJson
 }
 
 // Recalculate

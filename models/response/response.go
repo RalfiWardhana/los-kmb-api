@@ -456,6 +456,12 @@ type LowIncome struct {
 	Range         string  `json:"range"`
 }
 
+type LockSystem struct {
+	IsBanned  bool   `json:"is_banned"`
+	Reason    string `json:"reason"`
+	UnbanDate string `json:"unban_date"`
+}
+
 type DupcheckConfig struct {
 	Data DataDupcheckConfig `json:"data"`
 }
@@ -475,6 +481,19 @@ type DataDupcheckConfig struct {
 		Priority float64 `json:"priority"`
 		Regular  float64 `json:"regular"`
 	} `json:"minimum_pencairan_ro_top_up"`
+}
+
+type LockSystemConfig struct {
+	Data DataLockSystemConfig `json:"data"`
+}
+
+type DataLockSystemConfig struct {
+	LockRejectAttempt int `json:"lock_reject_attempt"`
+	LockRejectBan     int `json:"lock_reject_ban"`
+	LockRejectCheck   int `json:"lock_reject_check"`
+	LockCancelAttempt int `json:"lock_cancel_attempt"`
+	LockCancelBan     int `json:"lock_cancel_ban"`
+	LockCancelCheck   int `json:"lock_cancel_check"`
 }
 
 type LatestPaidInstallment struct {
