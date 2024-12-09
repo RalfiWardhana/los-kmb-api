@@ -605,6 +605,211 @@ func TestBlacklistCheck(t *testing.T) {
 
 }
 
+func TestNegativeCustomerCheck(t *testing.T) {
+	// always set the valid url
+	os.Setenv("API_NEGATIVE_CUSTOMER", "http://localhost/")
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	accessToken := "token"
+	header := map[string]string{
+		"Authorization": accessToken,
+	}
+
+	testcases := []struct {
+		name                    string
+		respBody                string
+		result                  response.UsecaseApi
+		respNegativeCustomer    response.NegativeCustomer
+		negativeCustomer        response.NegativeCustomer
+		errResp                 error
+		errResult               error
+		mappingNegativeCustomer entity.MappingNegativeCustomer
+		errRepo                 error
+		req                     request.DupcheckApi
+	}{
+		{
+			name: "NegativeCustomerCheck error EngineAPI",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+			},
+			errResp:   errors.New("Get Error"),
+			errResult: errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call API Negative Customer Error"),
+		},
+		{
+			name: "NegativeCustomerCheck GetMappingNegativeCustomer error",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+			},
+			respBody: `{
+				"code": "OK",
+				"message": "operasi berhasil dieksekusi.",
+				"data": {
+					"is_active":1,
+					"is_blacklist":1,
+					"is_highrisk":1,
+					"bad_type":"B",
+					"result":"BLACKLIST APU-PPT"
+				},
+				"errors": null,
+				"request_id": "c240772b-5f78-489b-bdb4-6ed796dadaf6",
+				"timestamp": "2023-03-26 21:29:07"
+			}`,
+			errRepo: errors.New("Get Error"),
+			negativeCustomer: response.NegativeCustomer{
+				IsActive:    1,
+				IsBlacklist: 1,
+				IsHighrisk:  1,
+				BadType:     "B",
+				Result:      "BLACKLIST APU-PPT",
+				Decision:    "",
+			},
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - GetMappingNegativeCustomer Error - Get Error"),
+		},
+		{
+			name: "NegativeCustomerCheck reject",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+			},
+			respBody: `{
+				"code": "OK",
+				"message": "operasi berhasil dieksekusi.",
+				"data": {
+					"is_active":1,
+					"is_blacklist":1,
+					"is_highrisk":1,
+					"bad_type":"B",
+					"result":"BLACKLIST APU-PPT"
+				},
+				"errors": null,
+				"request_id": "c240772b-5f78-489b-bdb4-6ed796dadaf6",
+				"timestamp": "2023-03-26 21:29:07"
+			}`,
+			mappingNegativeCustomer: entity.MappingNegativeCustomer{
+				Decision: constant.DECISION_REJECT,
+				Reason:   "BLACKLIST APU-PPT",
+			},
+			negativeCustomer: response.NegativeCustomer{
+				IsActive:    1,
+				IsBlacklist: 1,
+				IsHighrisk:  1,
+				BadType:     "B",
+				Result:      "BLACKLIST APU-PPT",
+				Decision:    "REJECT",
+			},
+			result: response.UsecaseApi{
+				Code:           constant.CODE_NEGATIVE_CUSTOMER,
+				Reason:         "BLACKLIST APU-PPT",
+				Result:         constant.DECISION_REJECT,
+				SourceDecision: constant.SOURCE_DECISION_BLACKLIST,
+				Info:           "{\"is_active\":1,\"is_blacklist\":1,\"is_highrisk\":1,\"bad_type\":\"B\",\"result\":\"BLACKLIST APU-PPT\",\"decision\":\"REJECT\"}",
+			},
+		},
+		{
+			name: "NegativeCustomerCheck pass",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+			},
+			respBody: `{
+				"code": "OK",
+				"message": "operasi berhasil dieksekusi.",
+				"data": {
+					"is_active":1,
+					"is_blacklist":0,
+					"is_highrisk":1,
+					"bad_type":"",
+					"result":"HIGHRISK APU-PPT"
+				},
+				"errors": null,
+				"request_id": "c240772b-5f78-489b-bdb4-6ed796dadaf6",
+				"timestamp": "2023-03-26 21:29:07"
+			}`,
+			mappingNegativeCustomer: entity.MappingNegativeCustomer{
+				Decision: "YES",
+				Reason:   "HIGHRISK APU-PPT",
+			},
+			negativeCustomer: response.NegativeCustomer{
+				IsActive:    1,
+				IsBlacklist: 0,
+				IsHighrisk:  1,
+				BadType:     "0",
+				Result:      "HIGHRISK APU-PPT",
+				Decision:    "YES",
+			},
+			result: response.UsecaseApi{
+				Code:           constant.CODE_NEGATIVE_CUSTOMER,
+				Reason:         constant.REASON_NON_BLACKLIST,
+				Result:         constant.DECISION_PASS,
+				SourceDecision: constant.SOURCE_DECISION_BLACKLIST,
+				Info:           "{\"is_active\":1,\"is_blacklist\":0,\"is_highrisk\":1,\"bad_type\":\"0\",\"result\":\"HIGHRISK APU-PPT\",\"decision\":\"YES\"}",
+			},
+		},
+		{
+			name: "NegativeCustomerCheck pass no data",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+			},
+			respBody: `{
+				"code": "OK",
+				"message": "operasi berhasil dieksekusi.",
+				"data": {
+					"is_active":0,
+					"is_blacklist":0,
+					"is_highrisk":0,
+					"bad_type":"",
+					"result":""
+				},
+				"errors": null,
+				"request_id": "c240772b-5f78-489b-bdb4-6ed796dadaf6",
+				"timestamp": "2023-03-26 21:29:07"
+			}`,
+			result: response.UsecaseApi{
+				Code:           constant.CODE_NEGATIVE_CUSTOMER,
+				Reason:         constant.REASON_NON_BLACKLIST,
+				Result:         constant.DECISION_PASS,
+				SourceDecision: constant.SOURCE_DECISION_BLACKLIST,
+				Info:           "{\"is_active\":0,\"is_blacklist\":0,\"is_highrisk\":0,\"bad_type\":\"\",\"result\":\"\",\"decision\":\"\"}",
+			},
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			req, _ := json.Marshal(request.NegativeCustomer{
+				ProspectID:        tc.req.ProspectID,
+				IDNumber:          tc.req.IDNumber,
+				LegalName:         tc.req.LegalName,
+				BirthDate:         tc.req.BirthDate,
+				SurgateMotherName: tc.req.MotherName,
+				ProfessionID:      tc.req.ProfessionID,
+				JobType:           tc.req.JobType,
+				JobPosition:       tc.req.JobPosition,
+			})
+
+			rst := resty.New()
+			httpmock.ActivateNonDefault(rst.GetClient())
+			defer httpmock.DeactivateAndReset()
+
+			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("API_NEGATIVE_CUSTOMER"), httpmock.NewStringResponder(200, tc.respBody))
+			resp, _ := rst.R().Post(os.Getenv("API_NEGATIVE_CUSTOMER"))
+
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("API_NEGATIVE_CUSTOMER"), req, header, constant.METHOD_POST, true, 6, timeout, tc.req.ProspectID, accessToken).Return(resp, tc.errResp).Once()
+			mockRepository.On("GetMappingNegativeCustomer", mock.Anything).Return(tc.mappingNegativeCustomer, tc.errRepo)
+
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			result, negativeCustomer, err := usecase.NegativeCustomerCheck(ctx, tc.req, accessToken)
+			require.Equal(t, tc.result, result)
+			require.Equal(t, tc.negativeCustomer, negativeCustomer)
+			require.Equal(t, tc.errResult, err)
+		})
+	}
+
+}
+
 func TestVehicleCheck(t *testing.T) {
 
 	os.Setenv("NAMA_SAMA", "K,P")

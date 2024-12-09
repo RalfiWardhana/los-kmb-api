@@ -847,9 +847,15 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 			InternalRecord: internalData,
 			Approval:       historyData,
 			Draft: entity.TrxDraftCaDecision{
-				Decision:   inq.DraftDecision,
-				SlikResult: inq.DraftSlikResult,
-				Note:       inq.DraftNote,
+				Decision:    inq.DraftDecision,
+				SlikResult:  inq.DraftSlikResult,
+				Note:        inq.DraftNote,
+				Pernyataan1: inq.DraftPernyataan1,
+				Pernyataan2: inq.DraftPernyataan2,
+				Pernyataan3: inq.DraftPernyataan3,
+				Pernyataan4: inq.DraftPernyataan4,
+				Pernyataan5: inq.DraftPernyataan5,
+				Pernyataan6: inq.DraftPernyataan6,
 			},
 			General: entity.DataGeneral{
 				ProspectID:     inq.ProspectID,
@@ -971,6 +977,16 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 				DeviasiDecision:    inq.DeviasiDecision,
 				DeviasiReason:      inq.DeviasiReason,
 			},
+			EDD: entity.TrxEDD{
+				IsEDD:       inq.IsEDD,
+				IsHighrisk:  inq.IsHighrisk,
+				Pernyataan1: inq.Pernyataan1,
+				Pernyataan2: inq.Pernyataan2,
+				Pernyataan3: inq.Pernyataan3,
+				Pernyataan4: inq.Pernyataan4,
+				Pernyataan5: inq.Pernyataan5,
+				Pernyataan6: inq.Pernyataan6,
+			},
 		}
 
 		data = append(data, row)
@@ -985,6 +1001,7 @@ func (u usecase) SaveAsDraft(ctx context.Context, req request.ReqSaveAsDraft) (d
 	var (
 		trxDraft entity.TrxDraftCaDecision
 		decision string
+		EDD      request.EDD
 	)
 
 	switch req.Decision {
@@ -1001,6 +1018,19 @@ func (u usecase) SaveAsDraft(ctx context.Context, req request.ReqSaveAsDraft) (d
 		Note:       req.Note,
 		CreatedBy:  req.CreatedBy,
 		DecisionBy: req.DecisionBy,
+	}
+
+	// trx edd
+	if req.Edd != nil {
+		byteEdd, _ := json.Marshal(req.Edd)
+		json.Unmarshal(byteEdd, &EDD)
+
+		trxDraft.Pernyataan1 = EDD.Pernyataan1
+		trxDraft.Pernyataan2 = EDD.Pernyataan2
+		trxDraft.Pernyataan3 = EDD.Pernyataan3
+		trxDraft.Pernyataan4 = EDD.Pernyataan4
+		trxDraft.Pernyataan5 = EDD.Pernyataan5
+		trxDraft.Pernyataan6 = EDD.Pernyataan6
 	}
 
 	data = response.CAResponse{
@@ -1029,6 +1059,7 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 		nextFinal          int
 		decision           string
 		decision_detail    string
+		trxEdd             entity.TrxEDD
 	)
 
 	status, err := u.repository.GetTrxStatus(req.ProspectID)
@@ -1117,7 +1148,13 @@ func (u usecase) SubmitDecision(ctx context.Context, req request.ReqSubmitDecisi
 			NextStep:              trxDetail.NextStep.(string),
 		}
 
-		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, false)
+		// trx edd
+		if req.Edd != nil {
+			byteEdd, _ := json.Marshal(req.Edd)
+			json.Unmarshal(byteEdd, &trxEdd)
+		}
+
+		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, false, trxEdd)
 		if err != nil {
 			if err.Error() == constant.ERROR_ROWS_AFFECTED {
 				err = nil
@@ -1393,6 +1430,16 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 				DeviasiDecision:    inq.DeviasiDecision,
 				DeviasiReason:      inq.DeviasiReason,
 			},
+			EDD: entity.TrxEDD{
+				IsEDD:       inq.IsEDD,
+				IsHighrisk:  inq.IsHighrisk,
+				Pernyataan1: inq.Pernyataan1,
+				Pernyataan2: inq.Pernyataan2,
+				Pernyataan3: inq.Pernyataan3,
+				Pernyataan4: inq.Pernyataan4,
+				Pernyataan5: inq.Pernyataan5,
+				Pernyataan6: inq.Pernyataan6,
+			},
 		}
 
 		data = append(data, row)
@@ -1409,6 +1456,7 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 		trxDetail          entity.TrxDetail
 		trxCaDecision      entity.TrxCaDecision
 		trxHistoryApproval entity.TrxHistoryApprovalScheme
+		trxedd             entity.TrxEDD
 	)
 
 	status, err := u.repository.GetTrxStatus(req.ProspectID)
@@ -1465,7 +1513,7 @@ func (u usecase) CancelOrder(ctx context.Context, req request.ReqCancelOrder) (d
 			SourceDecision:        trxDetail.SourceDecision,
 		}
 
-		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, true)
+		err = u.repository.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, true, trxedd)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Process Cancel Order error")
 			return
@@ -1927,6 +1975,16 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 				DeviasiDescription: inq.DeviasiDescription,
 				DeviasiDecision:    inq.DeviasiDecision,
 				DeviasiReason:      inq.DeviasiReason,
+			},
+			EDD: entity.TrxEDD{
+				IsEDD:       inq.IsEDD,
+				IsHighrisk:  inq.IsHighrisk,
+				Pernyataan1: inq.Pernyataan1,
+				Pernyataan2: inq.Pernyataan2,
+				Pernyataan3: inq.Pernyataan3,
+				Pernyataan4: inq.Pernyataan4,
+				Pernyataan5: inq.Pernyataan5,
+				Pernyataan6: inq.Pernyataan6,
 			},
 		}
 

@@ -348,6 +348,7 @@ type SpDupcheckMap struct {
 	ConfigMaxDSR                     float64     `json:"config_max_dsr"`
 	Cluster                          interface{} `json:"cluster"`
 	AgreementSettledExist            bool        `json:"agreement_settled_exist"`
+	NegativeCustomer                 interface{} `json:"negative_customer"`
 }
 
 type SpDupCekCustomerByID struct {
@@ -440,10 +441,25 @@ type UsecaseApi struct {
 	IsDeviasi      bool        `json:"-"`
 }
 
+type NegativeCustomer struct {
+	IsActive    int    `json:"is_active"`
+	IsBlacklist int    `json:"is_blacklist"`
+	IsHighrisk  int    `json:"is_highrisk"`
+	BadType     string `json:"bad_type"`
+	Result      string `json:"result"`
+	Decision    string `json:"decision"`
+}
+
 type LowIncome struct {
 	NoApplication string  `json:"no_application"`
 	Income        float64 `json:"income"`
 	Range         string  `json:"range"`
+}
+
+type LockSystem struct {
+	IsBanned  bool   `json:"is_banned"`
+	Reason    string `json:"reason"`
+	UnbanDate string `json:"unban_date"`
 }
 
 type DupcheckConfig struct {
@@ -465,6 +481,19 @@ type DataDupcheckConfig struct {
 		Priority float64 `json:"priority"`
 		Regular  float64 `json:"regular"`
 	} `json:"minimum_pencairan_ro_top_up"`
+}
+
+type LockSystemConfig struct {
+	Data DataLockSystemConfig `json:"data"`
+}
+
+type DataLockSystemConfig struct {
+	LockRejectAttempt int `json:"lock_reject_attempt"`
+	LockRejectBan     int `json:"lock_reject_ban"`
+	LockRejectCheck   int `json:"lock_reject_check"`
+	LockCancelAttempt int `json:"lock_cancel_attempt"`
+	LockCancelBan     int `json:"lock_cancel_ban"`
+	LockCancelCheck   int `json:"lock_cancel_check"`
 }
 
 type LatestPaidInstallment struct {
@@ -552,6 +581,7 @@ type TrxFMF struct {
 	EkycSimiliarity         interface{} `json:"ekyc_similiarity"`
 	EkycReason              interface{} `json:"ekyc_reason"`
 	TrxDeviasi              entity.TrxDeviasi
+	TrxEDD                  entity.TrxEDD
 }
 
 type RoaoAkkk struct {
@@ -927,6 +957,12 @@ type GetEmployeeByID struct {
 	Error   interface{}             `json:"error"`
 	Message string                  `json:"message"`
 	Data    []EmployeeCareerHistory `json:"data"`
+}
+
+type HrisListEmployee struct {
+	EmployeeID  string      `json:"employee_id"`
+	IDNumber    interface{} `json:"id_number"`
+	PhoneNumber interface{} `json:"phone_number"`
 }
 
 type FpdCMOResponse struct {

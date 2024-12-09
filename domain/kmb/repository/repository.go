@@ -872,6 +872,12 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 		if countTrx > 0 || len(details) > 2 {
 
 			// save data metrics
+			// insert trx edd
+			logInfo = trxFMF.TrxEDD
+			if err := tx.Create(&trxFMF.TrxEDD).Error; err != nil {
+				return err
+			}
+
 			// insert trx deviasi
 			if trxFMF.TrxDeviasi != (entity.TrxDeviasi{}) {
 
@@ -1336,6 +1342,64 @@ func (r repoHandler) GetBannedPMKDSR(idNumber string) (data entity.TrxBannedPMKD
 	date := time.Now().AddDate(0, 0, -30).Format(constant.FORMAT_DATE)
 
 	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT * FROM trx_banned_pmk_dsr WITH (nolock) WHERE IDNumber = '%s' AND CAST(created_at as DATE) >= '%s'`, idNumber, date)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetTrxReject(idNumber string, config response.LockSystemConfig) (data []entity.TrxLockSystem, err error) {
+
+	lockSystemDate := os.Getenv("LOCK_SYSTEM_START_DATE")
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`DECLARE @date_range DATE = (SELECT TOP 1 CAST(DATEADD(DAY, -%d, ts.created_at) as DATE) as date_range
+			FROM trx_status ts with (nolock) 
+			LEFT JOIN trx_customer_personal tcp with (nolock) ON ts.ProspectID = tcp.ProspectID
+			WHERE ts.decision = 'REJ' 
+			AND tcp.IDNumber = '%s'
+			ORDER BY ts.created_at DESC)
+			SELECT TOP %d CAST(DATEADD(DAY, %d, ts.created_at) as DATE) as unban_date, 
+			ts.created_at, ts.ProspectID, tcp.IDNumber, ts.decision, ts.reason
+			FROM trx_status ts with (nolock) 
+			LEFT JOIN trx_customer_personal tcp with (nolock) ON ts.ProspectID = tcp.ProspectID
+			WHERE ts.decision = 'REJ' 
+			AND tcp.IDNumber = '%s'
+			AND ts.created_at >= '%s'
+			AND CAST(ts.created_at as DATE) >= @date_range AND @date_range <= CAST(ts.created_at as DATE) 
+			AND CAST(ts.created_at as DATE) >= CAST(DATEADD(DAY, -%d, GETDATE()) as DATE)
+			ORDER BY ts.created_at DESC`, config.Data.LockRejectCheck, idNumber, config.Data.LockRejectAttempt, config.Data.LockRejectBan+1, idNumber, lockSystemDate, config.Data.LockRejectBan)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetTrxCancel(idNumber string, config response.LockSystemConfig) (data []entity.TrxLockSystem, err error) {
+
+	lockSystemDate := os.Getenv("LOCK_SYSTEM_START_DATE")
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`DECLARE @date_range DATE = (SELECT TOP 1 CAST(DATEADD(DAY, -%d, ts.created_at) as DATE) as date_range
+			FROM trx_status ts with (nolock) 
+			LEFT JOIN trx_customer_personal tcp with (nolock) ON ts.ProspectID = tcp.ProspectID
+			WHERE ts.decision = 'CAN' 
+			AND tcp.IDNumber = '%s'
+			ORDER BY ts.created_at DESC)
+			SELECT TOP %d CAST(DATEADD(DAY, %d, ts.created_at) as DATE) as unban_date, 
+			ts.created_at, ts.ProspectID, tcp.IDNumber, ts.decision, ts.reason
+			FROM trx_status ts with (nolock) 
+			LEFT JOIN trx_customer_personal tcp with (nolock) ON ts.ProspectID = tcp.ProspectID
+			WHERE ts.decision = 'CAN' 
+			AND tcp.IDNumber = '%s'
+			AND ts.created_at >= '%s'
+			AND CAST(ts.created_at as DATE) >= @date_range AND @date_range <= CAST(ts.created_at as DATE) 
+			AND CAST(ts.created_at as DATE) >= CAST(DATEADD(DAY, -%d, GETDATE()) as DATE)
+			ORDER BY ts.created_at DESC`, config.Data.LockCancelCheck, idNumber, config.Data.LockCancelAttempt, config.Data.LockCancelBan+1, idNumber, lockSystemDate, config.Data.LockCancelBan)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
@@ -2060,6 +2124,18 @@ func (r repoHandler) GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNa
 	query := `SELECT TOP 1 * FROM m_mapping_vehicle_age WHERE vehicle_age_start <= ? AND vehicle_age_end >= ? AND cluster LIKE ? AND bpkb_name_type = ? AND tenor_start <= ? AND tenor_end >= ? AND result_pbk LIKE ? AND af_start < ? AND af_end >= ?`
 
 	if err = r.newKmbDB.Raw(query, vehicleAge, vehicleAge, fmt.Sprintf("%%%s%%", cluster), bpkbNameType, tenor, tenor, fmt.Sprintf("%%%s%%", resultPefindo), af, af).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+	}
+	return
+}
+
+func (r repoHandler) GetMappingNegativeCustomer(req response.NegativeCustomer) (data entity.MappingNegativeCustomer, err error) {
+
+	query := `SELECT TOP 1 * FROM m_mapping_negative_customer WHERE is_active = ? AND bad_type = ? AND is_blacklist = ? AND is_highrisk = ?`
+
+	if err = r.newKmbDB.Raw(query, req.IsActive, req.BadType, req.IsBlacklist, req.IsHighrisk).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
