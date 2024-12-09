@@ -33,7 +33,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		negativeCustomer            response.NegativeCustomer
 	)
 
-	// Pernah Reject PMK atau DSR atau NIK
+	// Pernah Reject
 	trxReject, trxBannedPMKDSR, err := u.usecase.CheckRejection(req.IDNumber, req.ProspectID, configValue)
 	if err != nil {
 		return
@@ -440,6 +440,53 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 	return
 
+}
+
+func (u usecase) CheckTrxReject(idNumber, prospectID string, configValue response.DupcheckConfig) (data response.UsecaseApi, trxBannedPMKDSR entity.TrxBannedPMKDSR, err error) {
+
+	var encryptedIDNumber entity.EncryptedString
+	encryptedIDNumber, err = u.repository.GetEncB64(idNumber)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - GetEncB64 ID Number Error")
+		return
+	}
+
+	var trxReject entity.TrxReject
+	trxReject, err = u.repository.GetTrxReject(encryptedIDNumber.MyString)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Trx Reject Error")
+		return
+	}
+
+	if trxReject.RejectPMKDSR > 0 {
+		if (trxReject.RejectPMKDSR + trxReject.RejectNIK) >= configValue.Data.AttemptPMKDSR {
+			//banned 30 hari
+			trxBannedPMKDSR = entity.TrxBannedPMKDSR{
+				ProspectID: prospectID,
+				IDNumber:   encryptedIDNumber.MyString,
+			}
+			data.Result = constant.DECISION_REJECT
+			data.Code = constant.CODE_PERNAH_REJECT_PMK_DSR
+			data.Reason = constant.REASON_PERNAH_REJECT_PMK_DSR
+			data.SourceDecision = constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR
+			return
+		}
+	}
+
+	if trxReject.RejectNIK >= configValue.Data.AttemptPMKDSR {
+		data.Result = constant.DECISION_REJECT
+		data.Code = constant.CODE_PERNAH_REJECT_NIK
+		data.Reason = constant.REASON_PERNAH_REJECT_NIK
+		data.SourceDecision = constant.SOURCE_DECISION_NIK
+		return
+	}
+
+	data.Result = constant.DECISION_PASS
+	data.Code = constant.CODE_BELUM_PERNAH_REJECT
+	data.Reason = constant.REASON_BELUM_PERNAH_REJECT
+	data.SourceDecision = constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR
+
+	return
 }
 
 func (u usecase) CheckBannedPMKDSR(idNumber string) (data response.UsecaseApi, err error) {
