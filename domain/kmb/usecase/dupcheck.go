@@ -694,12 +694,11 @@ func (u usecase) CheckMobilePhoneFMF(ctx context.Context, reqs request.DupcheckA
 
 	payload := map[string]interface{}{
 		"prospect_id": reqs.ProspectID,
-		"limit":       3,
+		"limit":       10,
 		"page":        1,
 		"column":      "",
 		"ascending":   true,
-		"query":       "",
-		// "query":       "phone_number==" + reqs.MobilePhone,
+		"query":       "phone_number==" + reqs.MobilePhone,
 	}
 
 	param, _ := json.Marshal(payload)
