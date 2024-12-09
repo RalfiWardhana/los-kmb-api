@@ -33,7 +33,7 @@ type Repository interface {
 	GetActiveLoanTypeLast24M(customerID string) (score entity.GetActiveLoanTypeLast24M, err error)
 	GetMoblast(customerID string) (score entity.GetMoblast, err error)
 	GetMappingDeviasi(prospectID string) (confirmDeviasi entity.ConfirmDeviasi, err error)
-
+	GetMappingNegativeCustomer(req response.NegativeCustomer) (data entity.MappingNegativeCustomer, err error)
 	GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error)
 	GetMasterBranch(branchID string) (masterBranch entity.MasterBranch, err error)
 	GetMappingElaborateIncome(mappingElaborateIncome entity.MappingElaborateIncome) (result entity.MappingElaborateIncome, err error)
@@ -53,6 +53,7 @@ type Repository interface {
 	MasterMappingCluster(req entity.MasterMappingCluster) (data entity.MasterMappingCluster, err error)
 	MasterMappingMaxDSR(req entity.MasterMappingMaxDSR) (data entity.MasterMappingMaxDSR, err error)
 	GetEncB64(myString string) (encryptedString entity.EncryptedString, err error)
+	GetTrxReject(idNumber string) (data entity.TrxReject, err error)
 	GetCurrentTrxWithRejectDSR(idNumber string) (data entity.TrxStatus, err error)
 	GetBannedPMKDSR(idNumber string) (data entity.TrxBannedPMKDSR, err error)
 	GetCurrentTrxWithReject(idNumber string) (data entity.TrxReject, err error)

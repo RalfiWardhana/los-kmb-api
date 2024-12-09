@@ -10,11 +10,14 @@ import (
 type Usecase interface {
 	Prescreening(ctx context.Context, reqs request.Metrics, filtering entity.FilteringKMB, accessToken string) (trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, trxDetail entity.TrxDetail, err error)
 	RejectTenor36(cluster string) (result response.UsecaseApi, err error)
+	CheckTrxReject(idNumber, prospectID string, configValue response.DupcheckConfig) (data response.UsecaseApi, trxBannedPMKDSR entity.TrxBannedPMKDSR, err error)
 	CheckBannedChassisNumber(chassisNumber string) (data response.UsecaseApi, err error)
 	CheckBannedPMKDSR(idNumber string) (data response.UsecaseApi, err error)
 	CheckRejection(idNumber, prospectID string, configValue response.DupcheckConfig) (data response.UsecaseApi, trxBannedPMKDSR entity.TrxBannedPMKDSR, err error)
 	DupcheckIntegrator(ctx context.Context, prospectID, idNumber, legalName, birthDate, surgateName string, accessToken string) (spDupcheck response.SpDupCekCustomerByID, err error)
 	BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerByID) (data response.UsecaseApi, customerType string)
+	NegativeCustomerCheck(ctx context.Context, reqs request.DupcheckApi, accessToken string) (data response.UsecaseApi, negativeCustomer response.NegativeCustomer, err error)
+	CheckMobilePhoneFMF(ctx context.Context, reqs request.DupcheckApi, accessToken, hrisAccessToken string) (data response.UsecaseApi, err error)
 	VehicleCheck(manufactureYear, cmoCluster, bpkbName string, tenor int, configValue response.DupcheckConfig, filteing entity.FilteringKMB, af float64) (data response.UsecaseApi, err error)
 	CheckRejectChassisNumber(req request.DupcheckApi, configValue response.DupcheckConfig) (data response.UsecaseApi, trxBannedChassisNumber entity.TrxBannedChassisNumber, err error)
 	CheckAgreementChassisNumber(ctx context.Context, reqs request.DupcheckApi, accessToken string) (data response.UsecaseApi, err error)
@@ -36,11 +39,11 @@ type Usecase interface {
 }
 
 type MultiUsecase interface {
-	Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken string, configValue response.DupcheckConfig) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error)
+	Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken, hrisAccessToken string, configValue response.DupcheckConfig) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error)
 	Ekyc(ctx context.Context, req request.Metrics, reqMetricsEkyc request.MetricsEkyc, accessToken string) (data response.Ekyc, trxDetail []entity.TrxDetail, trxFMF response.TrxFMF, err error)
 }
 
 type Metrics interface {
-	MetricsLos(ctx context.Context, req request.Metrics, accessToken string) (data interface{}, err error)
+	MetricsLos(ctx context.Context, req request.Metrics, accessToken, hrisAccessToken string) (data interface{}, err error)
 	PrincipleSubmission(ctx context.Context, req request.Metrics, accessToken string) (data interface{}, err error)
 }

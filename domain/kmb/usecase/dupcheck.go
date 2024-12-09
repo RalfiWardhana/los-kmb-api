@@ -19,57 +19,21 @@ import (
 	jsoniter "github.com/json-iterator/go"
 )
 
-func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string, configValue response.DupcheckConfig) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error) {
+func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken, hrisAccessToken string, configValue response.DupcheckConfig) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error) {
 
 	var (
-		customer        []request.SpouseDupcheck
-		blackList       response.UsecaseApi
-		sp              response.SpDupCekCustomerByID
-		dataCustomer    []response.SpDupCekCustomerByID
-		spMap           response.SpDupcheckMap
-		customerType    string
-		isPrimePriority bool
+		customer                    []request.SpouseDupcheck
+		blackList                   response.UsecaseApi
+		sp                          response.SpDupCekCustomerByID
+		dataCustomer                []response.SpDupCekCustomerByID
+		spMap                       response.SpDupcheckMap
+		customerType                string
+		isPrimePriority             bool
+		resultNegativeCustomerCheck response.UsecaseApi
+		negativeCustomer            response.NegativeCustomer
 	)
 
-	// Check Banned Chassis Number
-	bannedChassisNumber, err := u.usecase.CheckBannedChassisNumber(req.RangkaNo)
-	if err != nil {
-		return
-	}
-
-	if bannedChassisNumber.Result == constant.DECISION_REJECT {
-		data = bannedChassisNumber
-		mapping.Reason = data.Reason
-		return
-	}
-
-	// Pernah Reject Chassis Number
-	rejectChassisNumber, trxBannedChassisNumber, err := u.usecase.CheckRejectChassisNumber(req, configValue)
-	if err != nil {
-		return
-	}
-
-	if rejectChassisNumber.Result == constant.DECISION_REJECT {
-		data = rejectChassisNumber
-		mapping.Reason = data.Reason
-
-		trxFMF.TrxBannedChassisNumber = trxBannedChassisNumber
-		return
-	}
-
-	// Check Banned PMK atau DSR
-	bannedPMKDSR, err := u.usecase.CheckBannedPMKDSR(req.IDNumber)
-	if err != nil {
-		return
-	}
-
-	if bannedPMKDSR.Result == constant.DECISION_REJECT {
-		data = bannedPMKDSR
-		mapping.Reason = data.Reason
-		return
-	}
-
-	// Pernah Reject PMK atau DSR atau NIK
+	// Pernah Reject
 	trxReject, trxBannedPMKDSR, err := u.usecase.CheckRejection(req.IDNumber, req.ProspectID, configValue)
 	if err != nil {
 		return
@@ -122,11 +86,64 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		}
 	}
 
-	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: blackList.Code, SourceDecision: constant.SOURCE_DECISION_BLACKLIST, Reason: blackList.Reason, NextStep: constant.SOURCE_DECISION_PMK})
-
 	//Set Data customerType and spouseType -- Blacklist. Warning, Or Clean --
 	mapping.CustomerType = spMap.CustomerType
 	mapping.SpouseType = spMap.SpouseType
+
+	resultNegativeCustomerCheck, negativeCustomer, err = u.usecase.NegativeCustomerCheck(ctx, req, accessToken)
+
+	if err != nil {
+		return
+	}
+
+	trxFMF.TrxEDD.ProspectID = req.ProspectID
+	if negativeCustomer.Decision == "YES" || negativeCustomer.IsHighrisk == 1 {
+		trxFMF.TrxEDD.IsHighrisk = true
+	}
+
+	if resultNegativeCustomerCheck.Result == constant.DECISION_REJECT {
+		data = resultNegativeCustomerCheck
+		mapping.CustomerType = spMap.CustomerType
+		mapping.SpouseType = spMap.SpouseType
+		mapping.Reason = data.Reason
+		mapping.NegativeCustomer = negativeCustomer
+		return
+	}
+
+	// trx_details for metrix blacklist or apu ppt
+	trxBlacklist := entity.TrxDetail{
+		ProspectID:     req.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_PROCESS,
+		Decision:       constant.DB_DECISION_PASS,
+		RuleCode:       blackList.Code,
+		SourceDecision: constant.SOURCE_DECISION_BLACKLIST,
+		Reason:         blackList.Reason,
+		NextStep:       constant.SOURCE_DECISION_PMK,
+		Info:           resultNegativeCustomerCheck.Info,
+	}
+
+	if negativeCustomer.Decision == "YES" {
+		trxBlacklist.RuleCode = resultNegativeCustomerCheck.Code
+		trxBlacklist.Reason = resultNegativeCustomerCheck.Reason
+	}
+
+	trxDetail = append(trxDetail, trxBlacklist)
+
+	//Check mobilephone fmf
+	checkMobilePhoneFMF, err := u.usecase.CheckMobilePhoneFMF(ctx, req, accessToken, hrisAccessToken)
+
+	if err != nil {
+		return
+	}
+
+	if checkMobilePhoneFMF.Result == constant.DECISION_REJECT {
+		data = checkMobilePhoneFMF
+		mapping.Reason = data.Reason
+		return
+	}
+
+	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: checkMobilePhoneFMF.Code, SourceDecision: checkMobilePhoneFMF.SourceDecision, Reason: checkMobilePhoneFMF.Reason, NextStep: constant.SOURCE_DECISION_PMK, Info: checkMobilePhoneFMF.Info})
 
 	//Check vehicle age
 	ageVehicle, err := u.usecase.VehicleCheck(req.ManufactureYear, req.CMOCluster, req.BPKBName, req.Tenor, configValue, req.Filtering, req.AF)
@@ -407,7 +424,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		checkConfins := response.UsecaseApi{
 			Result:         constant.DECISION_PASS,
 			Code:           constant.CODE_PASS_MAX_OVD_CONFINS,
-			Reason:         fmt.Sprintf("%s", reasonCustomer),
+			Reason:         reasonCustomer,
 			StatusKonsumen: customerKMB,
 			SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
 		}
@@ -423,6 +440,53 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 	return
 
+}
+
+func (u usecase) CheckTrxReject(idNumber, prospectID string, configValue response.DupcheckConfig) (data response.UsecaseApi, trxBannedPMKDSR entity.TrxBannedPMKDSR, err error) {
+
+	var encryptedIDNumber entity.EncryptedString
+	encryptedIDNumber, err = u.repository.GetEncB64(idNumber)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - GetEncB64 ID Number Error")
+		return
+	}
+
+	var trxReject entity.TrxReject
+	trxReject, err = u.repository.GetTrxReject(encryptedIDNumber.MyString)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Trx Reject Error")
+		return
+	}
+
+	if trxReject.RejectPMKDSR > 0 {
+		if (trxReject.RejectPMKDSR + trxReject.RejectNIK) >= configValue.Data.AttemptPMKDSR {
+			//banned 30 hari
+			trxBannedPMKDSR = entity.TrxBannedPMKDSR{
+				ProspectID: prospectID,
+				IDNumber:   encryptedIDNumber.MyString,
+			}
+			data.Result = constant.DECISION_REJECT
+			data.Code = constant.CODE_PERNAH_REJECT_PMK_DSR
+			data.Reason = constant.REASON_PERNAH_REJECT_PMK_DSR
+			data.SourceDecision = constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR
+			return
+		}
+	}
+
+	if trxReject.RejectNIK >= configValue.Data.AttemptPMKDSR {
+		data.Result = constant.DECISION_REJECT
+		data.Code = constant.CODE_PERNAH_REJECT_NIK
+		data.Reason = constant.REASON_PERNAH_REJECT_NIK
+		data.SourceDecision = constant.SOURCE_DECISION_NIK
+		return
+	}
+
+	data.Result = constant.DECISION_PASS
+	data.Code = constant.CODE_BELUM_PERNAH_REJECT
+	data.Reason = constant.REASON_BELUM_PERNAH_REJECT
+	data.SourceDecision = constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR
+
+	return
 }
 
 func (u usecase) CheckBannedPMKDSR(idNumber string) (data response.UsecaseApi, err error) {
@@ -626,6 +690,57 @@ func (u usecase) CheckAgreementChassisNumber(ctx context.Context, reqs request.D
 	return
 }
 
+func (u usecase) CheckMobilePhoneFMF(ctx context.Context, reqs request.DupcheckApi, accessToken, hrisAccessToken string) (data response.UsecaseApi, err error) {
+	var (
+		listEmployee []response.HrisListEmployee
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	header := map[string]string{
+		"Authorization": "Bearer " + hrisAccessToken,
+	}
+
+	payload := map[string]interface{}{
+		"prospect_id": reqs.ProspectID,
+		"limit":       3,
+		"page":        1,
+		"column":      "",
+		"ascending":   true,
+		"query":       "",
+		// "query":       "phone_number==" + reqs.MobilePhone,
+	}
+
+	param, _ := json.Marshal(payload)
+	getListEmployee, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("HRIS_LIST_EMPLOYEE"), param, header, constant.METHOD_POST, false, 0, timeout, "", accessToken)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call API HRIS List Employee Error")
+		return
+	}
+
+	json.Unmarshal([]byte(jsoniter.Get(getListEmployee.Body(), "data").ToString()), &listEmployee)
+
+	// set default pass
+	data.SourceDecision = constant.SOURCE_DECISION_NOHP
+	data.Code = constant.CODE_NOHP
+	data.Result = constant.DECISION_PASS
+	info, _ := json.Marshal(listEmployee)
+	data.Info = string(info)
+
+	for _, v := range listEmployee {
+		if v.PhoneNumber != nil && v.IDNumber != nil {
+			if v.PhoneNumber.(string) == reqs.MobilePhone && v.IDNumber.(string) != reqs.IDNumber {
+				data.Code = constant.CODE_NOHP
+				data.Result = constant.DECISION_REJECT
+				data.Reason = constant.REASON_REJECT_NOHP
+			}
+		}
+	}
+
+	return
+}
+
 func (u usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerByID) (data response.UsecaseApi, customerType string) {
 
 	// index 0 = consument
@@ -710,6 +825,81 @@ func (u usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerB
 	}
 
 	data = response.UsecaseApi{StatusKonsumen: data.StatusKonsumen, Code: constant.CODE_NON_BLACKLIST_ALL, Reason: constant.REASON_NON_BLACKLIST, Result: constant.DECISION_PASS}
+
+	return
+}
+
+func (u usecase) NegativeCustomerCheck(ctx context.Context, reqs request.DupcheckApi, accessToken string) (data response.UsecaseApi, negativeCustomer response.NegativeCustomer, err error) {
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	header := map[string]string{
+		"Authorization": accessToken,
+	}
+
+	req, _ := json.Marshal(request.NegativeCustomer{
+		ProspectID:        reqs.ProspectID,
+		IDNumber:          reqs.IDNumber,
+		LegalName:         reqs.LegalName,
+		BirthDate:         reqs.BirthDate,
+		SurgateMotherName: reqs.MotherName,
+		ProfessionID:      reqs.ProfessionID,
+		JobType:           reqs.JobType,
+		JobPosition:       reqs.JobPosition,
+	})
+
+	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("API_NEGATIVE_CUSTOMER"), req, header, constant.METHOD_POST, true, 6, timeout, reqs.ProspectID, accessToken)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call API Negative Customer Error")
+		return
+	}
+
+	json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &negativeCustomer)
+
+	if negativeCustomer != (response.NegativeCustomer{}) {
+		if negativeCustomer.BadType == "" {
+			negativeCustomer.BadType = "0"
+		}
+
+		resultNegativeCustomer, errRepo := u.repository.GetMappingNegativeCustomer(negativeCustomer)
+
+		if errRepo != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - GetMappingNegativeCustomer Error - " + errRepo.Error())
+			return
+		}
+
+		negativeCustomer.Result = resultNegativeCustomer.Reason
+		negativeCustomer.Decision = resultNegativeCustomer.Decision
+
+		if resultNegativeCustomer.Decision == constant.DECISION_REJECT {
+
+			data = response.UsecaseApi{
+				Code:   constant.CODE_NEGATIVE_CUSTOMER,
+				Reason: resultNegativeCustomer.Reason,
+				Result: constant.DECISION_REJECT,
+			}
+
+		} else {
+
+			data = response.UsecaseApi{
+				Code:   constant.CODE_NEGATIVE_CUSTOMER,
+				Reason: constant.REASON_NON_BLACKLIST,
+				Result: constant.DECISION_PASS,
+			}
+
+		}
+
+	} else {
+		data = response.UsecaseApi{
+			Code:   constant.CODE_NEGATIVE_CUSTOMER,
+			Reason: constant.REASON_NON_BLACKLIST,
+			Result: constant.DECISION_PASS,
+		}
+	}
+
+	info, _ := json.Marshal(negativeCustomer)
+	data.Info = string(info)
+	data.SourceDecision = constant.SOURCE_DECISION_BLACKLIST
 
 	return
 }

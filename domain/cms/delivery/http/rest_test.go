@@ -980,6 +980,7 @@ func TestSubmitDecision(t *testing.T) {
 
 		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
+		mockRepository.On("GetTrxEDD", mock.Anything).Return(entity.TrxEDD{}, nil).Once()
 		mockUsecase.On("SubmitDecision", mock.Anything, mock.Anything).Return(response.CAResponse{}, errData).Once()
 
 		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
