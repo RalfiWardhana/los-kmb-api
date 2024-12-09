@@ -839,6 +839,10 @@ func (_m *Repository) GetMoblast(customerID string) (entity.GetMoblast, error) {
 func (_m *Repository) GetPrincipleEmergencyContact(prospectID string) (entity.TrxPrincipleEmergencyContact, error) {
 	ret := _m.Called(prospectID)
 
+	if len(ret) == 0 {
+		panic("no return value specified for GetPrincipleEmergencyContact")
+	}
+
 	var r0 entity.TrxPrincipleEmergencyContact
 	var r1 error
 	if rf, ok := ret.Get(0).(func(string) (entity.TrxPrincipleEmergencyContact, error)); ok {
@@ -862,6 +866,10 @@ func (_m *Repository) GetPrincipleEmergencyContact(prospectID string) (entity.Tr
 // GetPrincipleStepOne provides a mock function with given fields: prospectID
 func (_m *Repository) GetPrincipleStepOne(prospectID string) (entity.TrxPrincipleStepOne, error) {
 	ret := _m.Called(prospectID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPrincipleStepOne")
+	}
 
 	var r0 entity.TrxPrincipleStepOne
 	var r1 error
@@ -887,6 +895,10 @@ func (_m *Repository) GetPrincipleStepOne(prospectID string) (entity.TrxPrincipl
 func (_m *Repository) GetPrincipleStepThree(prospectID string) (entity.TrxPrincipleStepThree, error) {
 	ret := _m.Called(prospectID)
 
+	if len(ret) == 0 {
+		panic("no return value specified for GetPrincipleStepThree")
+	}
+
 	var r0 entity.TrxPrincipleStepThree
 	var r1 error
 	if rf, ok := ret.Get(0).(func(string) (entity.TrxPrincipleStepThree, error)); ok {
@@ -910,6 +922,10 @@ func (_m *Repository) GetPrincipleStepThree(prospectID string) (entity.TrxPrinci
 // GetPrincipleStepTwo provides a mock function with given fields: prospectID
 func (_m *Repository) GetPrincipleStepTwo(prospectID string) (entity.TrxPrincipleStepTwo, error) {
 	ret := _m.Called(prospectID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPrincipleStepTwo")
+	}
 
 	var r0 entity.TrxPrincipleStepTwo
 	var r1 error
@@ -1444,6 +1460,10 @@ func (_m *Repository) ScanTrxPrescreening(prospectID string) (int, error) {
 // ScanTrxPrinciple provides a mock function with given fields: prospectID
 func (_m *Repository) ScanTrxPrinciple(prospectID string) (int, error) {
 	ret := _m.Called(prospectID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ScanTrxPrinciple")
+	}
 
 	var r0 int
 	var r1 error

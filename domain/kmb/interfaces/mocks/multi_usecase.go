@@ -18,9 +18,9 @@ type MultiUsecase struct {
 	mock.Mock
 }
 
-// Dupcheck provides a mock function with given fields: ctx, reqs, married, accessToken, configValue
-func (_m *MultiUsecase) Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken string, configValue response.DupcheckConfig) (response.SpDupcheckMap, string, response.UsecaseApi, response.TrxFMF, []entity.TrxDetail, error) {
-	ret := _m.Called(ctx, reqs, married, accessToken, configValue)
+// Dupcheck provides a mock function with given fields: ctx, reqs, married, accessToken, hrisAccessToken, configValue
+func (_m *MultiUsecase) Dupcheck(ctx context.Context, reqs request.DupcheckApi, married bool, accessToken string, hrisAccessToken string, configValue response.DupcheckConfig) (response.SpDupcheckMap, string, response.UsecaseApi, response.TrxFMF, []entity.TrxDetail, error) {
+	ret := _m.Called(ctx, reqs, married, accessToken, hrisAccessToken, configValue)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Dupcheck")
@@ -32,43 +32,43 @@ func (_m *MultiUsecase) Dupcheck(ctx context.Context, reqs request.DupcheckApi, 
 	var r3 response.TrxFMF
 	var r4 []entity.TrxDetail
 	var r5 error
-	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, bool, string, response.DupcheckConfig) (response.SpDupcheckMap, string, response.UsecaseApi, response.TrxFMF, []entity.TrxDetail, error)); ok {
-		return rf(ctx, reqs, married, accessToken, configValue)
+	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, bool, string, string, response.DupcheckConfig) (response.SpDupcheckMap, string, response.UsecaseApi, response.TrxFMF, []entity.TrxDetail, error)); ok {
+		return rf(ctx, reqs, married, accessToken, hrisAccessToken, configValue)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, bool, string, response.DupcheckConfig) response.SpDupcheckMap); ok {
-		r0 = rf(ctx, reqs, married, accessToken, configValue)
+	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, bool, string, string, response.DupcheckConfig) response.SpDupcheckMap); ok {
+		r0 = rf(ctx, reqs, married, accessToken, hrisAccessToken, configValue)
 	} else {
 		r0 = ret.Get(0).(response.SpDupcheckMap)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, request.DupcheckApi, bool, string, response.DupcheckConfig) string); ok {
-		r1 = rf(ctx, reqs, married, accessToken, configValue)
+	if rf, ok := ret.Get(1).(func(context.Context, request.DupcheckApi, bool, string, string, response.DupcheckConfig) string); ok {
+		r1 = rf(ctx, reqs, married, accessToken, hrisAccessToken, configValue)
 	} else {
 		r1 = ret.Get(1).(string)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, request.DupcheckApi, bool, string, response.DupcheckConfig) response.UsecaseApi); ok {
-		r2 = rf(ctx, reqs, married, accessToken, configValue)
+	if rf, ok := ret.Get(2).(func(context.Context, request.DupcheckApi, bool, string, string, response.DupcheckConfig) response.UsecaseApi); ok {
+		r2 = rf(ctx, reqs, married, accessToken, hrisAccessToken, configValue)
 	} else {
 		r2 = ret.Get(2).(response.UsecaseApi)
 	}
 
-	if rf, ok := ret.Get(3).(func(context.Context, request.DupcheckApi, bool, string, response.DupcheckConfig) response.TrxFMF); ok {
-		r3 = rf(ctx, reqs, married, accessToken, configValue)
+	if rf, ok := ret.Get(3).(func(context.Context, request.DupcheckApi, bool, string, string, response.DupcheckConfig) response.TrxFMF); ok {
+		r3 = rf(ctx, reqs, married, accessToken, hrisAccessToken, configValue)
 	} else {
 		r3 = ret.Get(3).(response.TrxFMF)
 	}
 
-	if rf, ok := ret.Get(4).(func(context.Context, request.DupcheckApi, bool, string, response.DupcheckConfig) []entity.TrxDetail); ok {
-		r4 = rf(ctx, reqs, married, accessToken, configValue)
+	if rf, ok := ret.Get(4).(func(context.Context, request.DupcheckApi, bool, string, string, response.DupcheckConfig) []entity.TrxDetail); ok {
+		r4 = rf(ctx, reqs, married, accessToken, hrisAccessToken, configValue)
 	} else {
 		if ret.Get(4) != nil {
 			r4 = ret.Get(4).([]entity.TrxDetail)
 		}
 	}
 
-	if rf, ok := ret.Get(5).(func(context.Context, request.DupcheckApi, bool, string, response.DupcheckConfig) error); ok {
-		r5 = rf(ctx, reqs, married, accessToken, configValue)
+	if rf, ok := ret.Get(5).(func(context.Context, request.DupcheckApi, bool, string, string, response.DupcheckConfig) error); ok {
+		r5 = rf(ctx, reqs, married, accessToken, hrisAccessToken, configValue)
 	} else {
 		r5 = ret.Error(5)
 	}

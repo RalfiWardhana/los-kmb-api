@@ -53,7 +53,6 @@ type Repository interface {
 	MasterMappingCluster(req entity.MasterMappingCluster) (data entity.MasterMappingCluster, err error)
 	MasterMappingMaxDSR(req entity.MasterMappingMaxDSR) (data entity.MasterMappingMaxDSR, err error)
 	GetEncB64(myString string) (encryptedString entity.EncryptedString, err error)
-	GetTrxReject(idNumber string) (data entity.TrxReject, err error)
 	GetCurrentTrxWithRejectDSR(idNumber string) (data entity.TrxStatus, err error)
 	GetBannedPMKDSR(idNumber string) (data entity.TrxBannedPMKDSR, err error)
 	GetCurrentTrxWithReject(idNumber string) (data entity.TrxReject, err error)

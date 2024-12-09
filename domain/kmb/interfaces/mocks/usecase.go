@@ -193,6 +193,34 @@ func (_m *Usecase) CheckBannedPMKDSR(idNumber string) (response.UsecaseApi, erro
 	return r0, r1
 }
 
+// CheckMobilePhoneFMF provides a mock function with given fields: ctx, reqs, accessToken, hrisAccessToken
+func (_m *Usecase) CheckMobilePhoneFMF(ctx context.Context, reqs request.DupcheckApi, accessToken string, hrisAccessToken string) (response.UsecaseApi, error) {
+	ret := _m.Called(ctx, reqs, accessToken, hrisAccessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CheckMobilePhoneFMF")
+	}
+
+	var r0 response.UsecaseApi
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, string, string) (response.UsecaseApi, error)); ok {
+		return rf(ctx, reqs, accessToken, hrisAccessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, string, string) response.UsecaseApi); ok {
+		r0 = rf(ctx, reqs, accessToken, hrisAccessToken)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.DupcheckApi, string, string) error); ok {
+		r1 = rf(ctx, reqs, accessToken, hrisAccessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CheckRejectChassisNumber provides a mock function with given fields: req, configValue
 func (_m *Usecase) CheckRejectChassisNumber(req request.DupcheckApi, configValue response.DupcheckConfig) (response.UsecaseApi, entity.TrxBannedChassisNumber, error) {
 	ret := _m.Called(req, configValue)

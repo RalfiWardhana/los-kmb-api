@@ -1351,24 +1351,6 @@ func (r repoHandler) GetBannedPMKDSR(idNumber string) (data entity.TrxBannedPMKD
 	return
 }
 
-func (r repoHandler) GetTrxReject(idNumber string) (data entity.TrxReject, err error) {
-
-	currentDate := time.Now().Format(constant.FORMAT_DATE)
-
-	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT 
-	COUNT(CASE WHEN ts.source_decision = 'PMK' OR ts.source_decision = 'DSR' OR ts.source_decision = 'PRJ' THEN 1 END) as reject_pmk_dsr,
-	COUNT(CASE WHEN ts.source_decision != 'PMK' AND ts.source_decision != 'DSR' AND ts.source_decision != 'PRJ' AND ts.source_decision != 'NKA' THEN 1 END) as reject_nik 
-	FROM trx_status ts WITH (nolock) LEFT JOIN trx_customer_personal tcp WITH (nolock) ON ts.ProspectID = tcp.ProspectID
-	WHERE ts.decision = 'REJ' AND tcp.IDNumber = '%s' AND CAST(ts.created_at as DATE) = '%s'`, idNumber, currentDate)).Scan(&data).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			err = nil
-		}
-		return
-	}
-
-	return
-}
-
 func (r repoHandler) GetCurrentTrxWithReject(idNumber string) (data entity.TrxReject, err error) {
 
 	currentDate := time.Now().Format(constant.FORMAT_DATE)

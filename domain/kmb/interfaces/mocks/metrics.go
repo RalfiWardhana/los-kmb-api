@@ -15,9 +15,9 @@ type Metrics struct {
 	mock.Mock
 }
 
-// MetricsLos provides a mock function with given fields: ctx, req, accessToken
-func (_m *Metrics) MetricsLos(ctx context.Context, req request.Metrics, accessToken string) (interface{}, error) {
-	ret := _m.Called(ctx, req, accessToken)
+// MetricsLos provides a mock function with given fields: ctx, req, accessToken, hrisAccessToken
+func (_m *Metrics) MetricsLos(ctx context.Context, req request.Metrics, accessToken string, hrisAccessToken string) (interface{}, error) {
+	ret := _m.Called(ctx, req, accessToken, hrisAccessToken)
 
 	if len(ret) == 0 {
 		panic("no return value specified for MetricsLos")
@@ -25,19 +25,19 @@ func (_m *Metrics) MetricsLos(ctx context.Context, req request.Metrics, accessTo
 
 	var r0 interface{}
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, string) (interface{}, error)); ok {
-		return rf(ctx, req, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, string, string) (interface{}, error)); ok {
+		return rf(ctx, req, accessToken, hrisAccessToken)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, string) interface{}); ok {
-		r0 = rf(ctx, req, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, string, string) interface{}); ok {
+		r0 = rf(ctx, req, accessToken, hrisAccessToken)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(interface{})
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, string) error); ok {
-		r1 = rf(ctx, req, accessToken)
+	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, string, string) error); ok {
+		r1 = rf(ctx, req, accessToken, hrisAccessToken)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -48,6 +48,10 @@ func (_m *Metrics) MetricsLos(ctx context.Context, req request.Metrics, accessTo
 // PrincipleSubmission provides a mock function with given fields: ctx, req, accessToken
 func (_m *Metrics) PrincipleSubmission(ctx context.Context, req request.Metrics, accessToken string) (interface{}, error) {
 	ret := _m.Called(ctx, req, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for PrincipleSubmission")
+	}
 
 	var r0 interface{}
 	var r1 error

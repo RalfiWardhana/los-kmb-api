@@ -33,22 +33,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		negativeCustomer            response.NegativeCustomer
 	)
 
-	// Pernah Reject
-	trxReject, trxBannedPMKDSR, err := u.usecase.CheckRejection(req.IDNumber, req.ProspectID, configValue)
-	if err != nil {
-		return
-	}
-
-	if trxReject.Result == constant.DECISION_REJECT {
-		data = trxReject
-		mapping.Reason = data.Reason
-
-		trxFMF.TrxBannedPMKDSR = trxBannedPMKDSR
-		return
-	}
-
-	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: trxReject.Code, SourceDecision: constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR, Reason: trxReject.Reason, NextStep: constant.SOURCE_DECISION_BLACKLIST})
-
 	prospectID := req.ProspectID
 	income := req.MonthlyFixedIncome + req.MonthlyVariableIncome + req.SpouseIncome
 	customer = append(customer, request.SpouseDupcheck{IDNumber: req.IDNumber, LegalName: req.LegalName, BirthDate: req.BirthDate, MotherName: req.MotherName})
@@ -442,53 +426,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 }
 
-func (u usecase) CheckTrxReject(idNumber, prospectID string, configValue response.DupcheckConfig) (data response.UsecaseApi, trxBannedPMKDSR entity.TrxBannedPMKDSR, err error) {
-
-	var encryptedIDNumber entity.EncryptedString
-	encryptedIDNumber, err = u.repository.GetEncB64(idNumber)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - GetEncB64 ID Number Error")
-		return
-	}
-
-	var trxReject entity.TrxReject
-	trxReject, err = u.repository.GetTrxReject(encryptedIDNumber.MyString)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Get Trx Reject Error")
-		return
-	}
-
-	if trxReject.RejectPMKDSR > 0 {
-		if (trxReject.RejectPMKDSR + trxReject.RejectNIK) >= configValue.Data.AttemptPMKDSR {
-			//banned 30 hari
-			trxBannedPMKDSR = entity.TrxBannedPMKDSR{
-				ProspectID: prospectID,
-				IDNumber:   encryptedIDNumber.MyString,
-			}
-			data.Result = constant.DECISION_REJECT
-			data.Code = constant.CODE_PERNAH_REJECT_PMK_DSR
-			data.Reason = constant.REASON_PERNAH_REJECT_PMK_DSR
-			data.SourceDecision = constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR
-			return
-		}
-	}
-
-	if trxReject.RejectNIK >= configValue.Data.AttemptPMKDSR {
-		data.Result = constant.DECISION_REJECT
-		data.Code = constant.CODE_PERNAH_REJECT_NIK
-		data.Reason = constant.REASON_PERNAH_REJECT_NIK
-		data.SourceDecision = constant.SOURCE_DECISION_NIK
-		return
-	}
-
-	data.Result = constant.DECISION_PASS
-	data.Code = constant.CODE_BELUM_PERNAH_REJECT
-	data.Reason = constant.REASON_BELUM_PERNAH_REJECT
-	data.SourceDecision = constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR
-
-	return
-}
-
 func (u usecase) CheckBannedPMKDSR(idNumber string) (data response.UsecaseApi, err error) {
 
 	var encryptedIDNumber entity.EncryptedString
@@ -703,12 +640,11 @@ func (u usecase) CheckMobilePhoneFMF(ctx context.Context, reqs request.DupcheckA
 
 	payload := map[string]interface{}{
 		"prospect_id": reqs.ProspectID,
-		"limit":       3,
+		"limit":       10,
 		"page":        1,
 		"column":      "",
 		"ascending":   true,
-		"query":       "",
-		// "query":       "phone_number==" + reqs.MobilePhone,
+		"query":       "phone_number==" + reqs.MobilePhone,
 	}
 
 	param, _ := json.Marshal(payload)
