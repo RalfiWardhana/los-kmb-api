@@ -71,8 +71,9 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string) (data response
 	}
 
 	if len(trxReject) >= configValue.Data.LockRejectAttempt {
+		trxReject[0].Reason = constant.PERNAH_REJECT
 		data.IsBanned = true
-		data.Reason = constant.PERNAH_REJECT
+		data.Reason = trxReject[0].Reason
 		data.UnbanDate = trxReject[0].UnbanDate.Format(constant.FORMAT_DATE)
 
 		err = u.repository.SaveTrxLockSystem(trxReject[0])
@@ -90,8 +91,9 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string) (data response
 	}
 
 	if len(trxCancel) >= configValue.Data.LockCancelAttempt {
+		trxCancel[0].Reason = constant.PERNAH_CANCEL
 		data.IsBanned = true
-		data.Reason = constant.PERNAH_CANCEL
+		data.Reason = trxCancel[0].Reason
 		data.UnbanDate = trxCancel[0].UnbanDate.Format(constant.FORMAT_DATE)
 
 		err = u.repository.SaveTrxLockSystem(trxCancel[0])

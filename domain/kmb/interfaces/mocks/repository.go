@@ -1119,6 +1119,34 @@ func (_m *Repository) GetTrxJourney(prospectID string) (entity.TrxJourney, error
 	return r0, r1
 }
 
+// GetTrxLockSystem provides a mock function with given fields: idNumber
+func (_m *Repository) GetTrxLockSystem(idNumber string) (entity.TrxLockSystem, error) {
+	ret := _m.Called(idNumber)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTrxLockSystem")
+	}
+
+	var r0 entity.TrxLockSystem
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (entity.TrxLockSystem, error)); ok {
+		return rf(idNumber)
+	}
+	if rf, ok := ret.Get(0).(func(string) entity.TrxLockSystem); ok {
+		r0 = rf(idNumber)
+	} else {
+		r0 = ret.Get(0).(entity.TrxLockSystem)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(idNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTrxReject provides a mock function with given fields: idNumber, config
 func (_m *Repository) GetTrxReject(idNumber string, config response.LockSystemConfig) ([]entity.TrxLockSystem, error) {
 	ret := _m.Called(idNumber, config)
@@ -1380,6 +1408,24 @@ func (_m *Repository) SaveTrxJourney(prospectID string, _a1 interface{}) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, interface{}) error); ok {
 		r0 = rf(prospectID, _a1)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SaveTrxLockSystem provides a mock function with given fields: trxLockSystem
+func (_m *Repository) SaveTrxLockSystem(trxLockSystem entity.TrxLockSystem) error {
+	ret := _m.Called(trxLockSystem)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SaveTrxLockSystem")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(entity.TrxLockSystem) error); ok {
+		r0 = rf(trxLockSystem)
 	} else {
 		r0 = ret.Error(0)
 	}
