@@ -1409,6 +1409,26 @@ func (r repoHandler) GetTrxCancel(idNumber string, config response.LockSystemCon
 	return
 }
 
+func (r repoHandler) SaveTrxLockSystem(trxLockSystem entity.TrxLockSystem) (err error) {
+
+	if err = r.newKmbDB.Model(&entity.TrxLockSystem{}).Create(&trxLockSystem).Error; err != nil {
+		return
+	}
+	return
+}
+
+func (r repoHandler) GetTrxLockSystem(idNumber string) (data entity.TrxLockSystem, err error) {
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT * FROM trx_lock_system tls 
+			WHERE IDNumber = '%s' AND unban_date > CAST(GETDATE() as DATE)`, idNumber)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+	return
+}
+
 func (r repoHandler) GetCurrentTrxWithReject(idNumber string) (data entity.TrxReject, err error) {
 
 	currentDate := time.Now().Format(constant.FORMAT_DATE)

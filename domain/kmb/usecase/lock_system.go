@@ -16,7 +16,28 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string) (data response
 		encryptedIDNumber entity.EncryptedString
 		trxReject         []entity.TrxLockSystem
 		trxCancel         []entity.TrxLockSystem
+		trxLockSystem     entity.TrxLockSystem
 	)
+
+	encryptedIDNumber, err = u.repository.GetEncB64(idNumber)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetEncB64 Error")
+		return
+	}
+
+	//scan banned IDNumber
+	trxLockSystem, err = u.repository.GetTrxLockSystem(encryptedIDNumber.MyString)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetTrxLockSystem Error")
+		return
+	}
+
+	if trxLockSystem.ProspectID != "" {
+		data.IsBanned = true
+		data.Reason = trxLockSystem.Reason
+		data.UnbanDate = trxLockSystem.UnbanDate.Format(constant.FORMAT_DATE)
+		return
+	}
 
 	//Get parameterize config
 	config, err = u.repository.GetConfig("lock_system", "KMB-OFF", "lock_system_kmb")
@@ -43,12 +64,6 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string) (data response
 		configValue.Data.LockCancelCheck -= 1
 	}
 
-	encryptedIDNumber, err = u.repository.GetEncB64(idNumber)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetEncB64 Error")
-		return
-	}
-
 	trxReject, err = u.repository.GetTrxReject(encryptedIDNumber.MyString, configValue)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetTrxReject Error")
@@ -57,8 +72,14 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string) (data response
 
 	if len(trxReject) >= configValue.Data.LockRejectAttempt {
 		data.IsBanned = true
-		data.Reason = trxReject[0].Reason
+		data.Reason = constant.PERNAH_REJECT
 		data.UnbanDate = trxReject[0].UnbanDate.Format(constant.FORMAT_DATE)
+
+		err = u.repository.SaveTrxLockSystem(trxReject[0])
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - LockSystem SaveTrxLockSystem trxReject Error")
+			return
+		}
 		return
 	}
 
@@ -70,8 +91,14 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string) (data response
 
 	if len(trxCancel) >= configValue.Data.LockCancelAttempt {
 		data.IsBanned = true
-		data.Reason = trxCancel[0].Reason
+		data.Reason = constant.PERNAH_CANCEL
 		data.UnbanDate = trxCancel[0].UnbanDate.Format(constant.FORMAT_DATE)
+
+		err = u.repository.SaveTrxLockSystem(trxCancel[0])
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - LockSystem SaveTrxLockSystem trxCancel Error")
+			return
+		}
 		return
 	}
 
