@@ -382,6 +382,10 @@ const (
 	ERROR_NOT_FOUND       = "data_not_found"
 	ERROR_ROWS_AFFECTED   = "RowsAffected 0"
 
+	//LOCK SYSTEM
+	PERNAH_REJECT = "Pernah Reject"
+	PERNAH_CANCEL = "Pernah Cancel"
+
 	//PRE SCREENING
 	QUICK_APPROVE      = false
 	LIMIT_PRESCREENING = 0

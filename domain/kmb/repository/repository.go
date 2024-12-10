@@ -1353,8 +1353,6 @@ func (r repoHandler) GetBannedPMKDSR(idNumber string) (data entity.TrxBannedPMKD
 
 func (r repoHandler) GetTrxReject(idNumber string, config response.LockSystemConfig) (data []entity.TrxLockSystem, err error) {
 
-	lockSystemDate := os.Getenv("LOCK_SYSTEM_START_DATE")
-
 	if err = r.newKmbDB.Raw(fmt.Sprintf(`DECLARE @date_range DATE = (SELECT TOP 1 CAST(DATEADD(DAY, -%d, ts.created_at) as DATE) as date_range
 			FROM trx_status ts with (nolock) 
 			LEFT JOIN trx_customer_personal tcp with (nolock) ON ts.ProspectID = tcp.ProspectID
@@ -1370,7 +1368,7 @@ func (r repoHandler) GetTrxReject(idNumber string, config response.LockSystemCon
 			AND ts.created_at >= '%s'
 			AND CAST(ts.created_at as DATE) >= @date_range AND @date_range <= CAST(ts.created_at as DATE) 
 			AND CAST(ts.created_at as DATE) >= CAST(DATEADD(DAY, -%d, GETDATE()) as DATE)
-			ORDER BY ts.created_at DESC`, config.Data.LockRejectCheck, idNumber, config.Data.LockRejectAttempt, config.Data.LockRejectBan+1, idNumber, lockSystemDate, config.Data.LockRejectBan)).Scan(&data).Error; err != nil {
+			ORDER BY ts.created_at DESC`, config.Data.LockRejectCheck, idNumber, config.Data.LockRejectAttempt, config.Data.LockRejectBan+1, idNumber, config.Data.LockStartDate, config.Data.LockRejectBan)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
@@ -1382,8 +1380,6 @@ func (r repoHandler) GetTrxReject(idNumber string, config response.LockSystemCon
 
 func (r repoHandler) GetTrxCancel(idNumber string, config response.LockSystemConfig) (data []entity.TrxLockSystem, err error) {
 
-	lockSystemDate := os.Getenv("LOCK_SYSTEM_START_DATE")
-
 	if err = r.newKmbDB.Raw(fmt.Sprintf(`DECLARE @date_range DATE = (SELECT TOP 1 CAST(DATEADD(DAY, -%d, ts.created_at) as DATE) as date_range
 			FROM trx_status ts with (nolock) 
 			LEFT JOIN trx_customer_personal tcp with (nolock) ON ts.ProspectID = tcp.ProspectID
@@ -1399,13 +1395,33 @@ func (r repoHandler) GetTrxCancel(idNumber string, config response.LockSystemCon
 			AND ts.created_at >= '%s'
 			AND CAST(ts.created_at as DATE) >= @date_range AND @date_range <= CAST(ts.created_at as DATE) 
 			AND CAST(ts.created_at as DATE) >= CAST(DATEADD(DAY, -%d, GETDATE()) as DATE)
-			ORDER BY ts.created_at DESC`, config.Data.LockCancelCheck, idNumber, config.Data.LockCancelAttempt, config.Data.LockCancelBan+1, idNumber, lockSystemDate, config.Data.LockCancelBan)).Scan(&data).Error; err != nil {
+			ORDER BY ts.created_at DESC`, config.Data.LockCancelCheck, idNumber, config.Data.LockCancelAttempt, config.Data.LockCancelBan+1, idNumber, config.Data.LockStartDate, config.Data.LockCancelBan)).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
 		return
 	}
 
+	return
+}
+
+func (r repoHandler) SaveTrxLockSystem(trxLockSystem entity.TrxLockSystem) (err error) {
+
+	if err = r.newKmbDB.Model(&entity.TrxLockSystem{}).Create(&trxLockSystem).Error; err != nil {
+		return
+	}
+	return
+}
+
+func (r repoHandler) GetTrxLockSystem(idNumber string) (data entity.TrxLockSystem, err error) {
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT * FROM trx_lock_system tls 
+			WHERE IDNumber = '%s' AND unban_date > CAST(GETDATE() as DATE)`, idNumber)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
 	return
 }
 
