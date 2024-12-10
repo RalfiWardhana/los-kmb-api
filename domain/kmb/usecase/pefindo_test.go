@@ -59,9 +59,9 @@ func TestPefindo(t *testing.T) {
 			name: "Pefindo prime 2",
 			filtering: entity.FilteringKMB{
 				CustomerSegment: constant.RO_AO_PRIORITY,
-				RrdDate:         sixMonthsAgo,
 			},
 			spDupcheck: response.SpDupcheckMap{
+				RRDDate:        sixMonthsAgo,
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
 			},
 			result: response.UsecaseApi{
@@ -75,10 +75,10 @@ func TestPefindo(t *testing.T) {
 			name: "Pefindo - CR Perbaikan Flow RO PrimePriority PASS",
 			filtering: entity.FilteringKMB{
 				CustomerSegment: constant.RO_AO_PRIME,
-				RrdDate:         sevenMonthsAgo,
 				CreatedAt:       currentTime,
 			},
 			spDupcheck: response.SpDupcheckMap{
+				RRDDate:                          sevenMonthsAgo,
 				StatusKonsumen:                   constant.STATUS_KONSUMEN_RO,
 				InstallmentTopup:                 0,
 				MaxOverdueDaysforActiveAgreement: 31,
@@ -98,11 +98,11 @@ func TestPefindo(t *testing.T) {
 			name: "Pefindo - CR Perbaikan Flow RO PrimePriority RrdDate NULL",
 			filtering: entity.FilteringKMB{
 				CustomerSegment: constant.RO_AO_PRIME,
-				RrdDate:         nil,
 				CreatedAt:       currentTime,
 			},
 			spDupcheck: response.SpDupcheckMap{
 				StatusKonsumen:                   constant.STATUS_KONSUMEN_RO,
+				RRDDate:                          nil,
 				InstallmentTopup:                 0,
 				MaxOverdueDaysforActiveAgreement: 31,
 			},

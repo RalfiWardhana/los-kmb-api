@@ -268,12 +268,12 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 
 	// INTERCEPT PERBAIKAN FLOW RO PRIME/PRIORITY (NON-TOPUP) | CHECK EXPIRED_CONTRACT
 	if (customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY) && (SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO && SpDupcheckMap.InstallmentTopup <= 0) {
-		if filtering.RrdDate == nil {
+		if SpDupcheckMap.RRDDate == nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
 			return
 		}
 
-		RrdDateTime, ok := filtering.RrdDate.(time.Time)
+		RrdDateTime, ok := SpDupcheckMap.RRDDate.(time.Time)
 		if !ok {
 			err = errors.New(constant.ERROR_UPSTREAM + " - RrdDate is not of type time.Time")
 			return
