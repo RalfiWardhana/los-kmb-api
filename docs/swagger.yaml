@@ -22,6 +22,8 @@ definitions:
         type: string
       area_phone:
         example: "021"
+        maxLength: 4
+        minLength: 2
         type: string
       city:
         example: JAKARTA SELATAN
@@ -34,12 +36,17 @@ definitions:
         type: string
       phone:
         example: "84522"
+        maxLength: 10
         type: string
       rt:
         example: "008"
+        maxLength: 3
+        minLength: 1
         type: string
       rw:
         example: "017"
+        maxLength: 3
+        minLength: 1
         type: string
       type:
         example: RESIDENCE
@@ -59,6 +66,7 @@ definitions:
     properties:
       prospect_id:
         example: SAL042600001
+        maxLength: 20
         type: string
     required:
     - prospect_id
@@ -82,38 +90,68 @@ definitions:
     - cmo_nik
     - recom_date
     type: object
+  request.AgentNE:
+    properties:
+      cmo_name:
+        example: SETO MULYA
+        type: string
+      cmo_nik:
+        example: "93510"
+        type: string
+      cmo_recom:
+        example: "1"
+        type: string
+      recom_date:
+        example: "2021-07-15"
+        type: string
+    required:
+    - cmo_name
+    - cmo_nik
+    - recom_date
+    type: object
   request.Apk:
     properties:
       admin_fee:
         example: 1500000
+        maximum: 999999999999
         type: number
       af:
         example: 84000000
+        maximum: 999999999999
         type: number
       aoid:
         example: "81088"
+        maxLength: 20
         type: string
       commision_subsidi:
         example: 0
+        maximum: 999999999999
         type: number
       dealer:
+        maxLength: 50
         type: string
       down_payment_amount:
         example: 22000000
+        maximum: 999999999999
         type: number
       down_payment_rate:
         example: 20.95
+        maximum: 99
         type: number
       effective_rate:
         example: 26.4
+        maximum: 99
         type: number
       fidusia_fee:
         example: 0
+        maximum: 999999999999
         type: number
       finance_purpose:
+        maxLength: 100
         type: string
       first_installment:
         example: AR
+        maxLength: 2
         type: string
       ins_asset_paid_by:
         example: CU
@@ -123,53 +161,70 @@ definitions:
         type: string
       installment_amount:
         example: 4181333
+        maximum: 999999999999
         type: number
       insurance_amount:
         example: 3150000
+        maximum: 999999999999
         type: number
       interest_amount:
         example: 66528000
+        maximum: 999999999999
         type: number
       interest_rate:
         example: 2.2
+        maximum: 99
         type: number
       is_fidusia_covered:
         example: "Y"
         type: string
       life_insurance_amount_coverage:
         example: 105000000
+        maximum: 999999999999
         type: number
       life_insurance_coy_branch_id:
         example: "426"
+        maxLength: 20
         type: string
       loan_amount:
         example: 105000000
+        maximum: 999999999999
         type: number
       ntf:
         example: 150528000
+        maximum: 999999999999
         type: number
       other_fee:
         example: 0
+        maximum: 999999999999
         type: number
       otr:
         example: 105000000
+        maximum: 999999999999
         type: number
       payment_method:
         example: CR
+        maxLength: 2
         type: string
       premium_amount_to_customer:
         example: 2184000
+        maximum: 999999999999
+        minimum: 0
         type: number
       product_id:
         example: 1SNLMK
+        maxLength: 10
         type: string
       product_offering_desc:
+        maxLength: 200
         type: string
       product_offering_id:
         example: NLMKKAPSEP
+        maxLength: 10
         type: string
       provision_fee:
         example: 2475000
+        maximum: 999999999999
         type: number
       salesman_id:
         example: "81088"
@@ -179,12 +234,15 @@ definitions:
         type: string
       survey_fee:
         example: 0
+        maximum: 999999999999
         type: number
       tenor:
         example: 36
+        maximum: 60
         type: integer
       way_of_payment:
         example: CA
+        maxLength: 2
         type: string
     required:
     - admin_fee
@@ -213,6 +271,75 @@ definitions:
     - tenor
     - way_of_payment
     type: object
+  request.ApkNE:
+    properties:
+      admin_fee:
+        example: 1500000
+        maximum: 999999999999
+        type: number
+      af:
+        example: 84000000
+        maximum: 999999999999
+        type: number
+      dealer:
+        maxLength: 50
+        type: string
+      down_payment_amount:
+        example: 22000000
+        maximum: 999999999999
+        type: number
+      down_payment_rate:
+        example: 20.95
+        maximum: 99
+        type: number
+      finance_purpose:
+        maxLength: 100
+        type: string
+      installment_amount:
+        example: 4181333
+        maximum: 999999999999
+        type: number
+      insurance_amount:
+        example: 3150000
+        maximum: 999999999999
+        type: number
+      loan_amount:
+        example: 105000000
+        maximum: 999999999999
+        type: number
+      ntf:
+        example: 150528000
+        maximum: 999999999999
+        type: number
+      otr:
+        example: 105000000
+        maximum: 999999999999
+        type: number
+      premium_amount_to_customer:
+        example: 2184000
+        maximum: 999999999999
+        minimum: 0
+        type: number
+      provision_fee:
+        example: 2475000
+        maximum: 999999999999
+        type: number
+      tenor:
+        example: 36
+        maximum: 60
+        type: integer
+    required:
+    - admin_fee
+    - af
+    - down_payment_amount
+    - down_payment_rate
+    - finance_purpose
+    - installment_amount
+    - ntf
+    - otr
+    - provision_fee
+    - tenor
+    type: object
   request.BodyRequestElaborate:
     properties:
       client_key:
@@ -223,37 +350,58 @@ definitions:
     - client_key
     - data
     type: object
+  request.CreatedBy:
+    properties:
+      created_by_id:
+        type: string
+      created_by_name:
+        type: string
+    required:
+    - created_by_id
+    - created_by_name
+    type: object
   request.CustomerEmcon:
     properties:
       application_emcon_sesuai:
         example: "1"
+        maxLength: 1
         type: string
       emergency_area_phone_office:
         example: "021"
+        maxLength: 4
+        minLength: 2
         type: string
       emergency_phone_office:
         example: "567892"
+        maxLength: 20
         type: string
       known_customer_address:
         example: "1"
+        maxLength: 1
         type: string
       known_customer_job:
         example: "1"
+        maxLength: 1
         type: string
       mobile_phone:
         example: 0856789XXX1
+        maxLength: 14
+        minLength: 9
         type: string
       name:
         example: MULYADI
+        minLength: 2
         type: string
       relationship:
         example: FM
         type: string
       verification_with:
         example: JONO
+        maxLength: 100
         type: string
       verify_by:
         example: PHONE
+        maxLength: 10
         type: string
     required:
     - application_emcon_sesuai
@@ -263,13 +411,30 @@ definitions:
     - verification_with
     - verify_by
     type: object
+  request.CustomerEmconNE:
+    properties:
+      mobile_phone:
+        example: 0856789XXX1
+        maxLength: 14
+        minLength: 9
+        type: string
+      name:
+        example: MULYADI
+        minLength: 2
+        type: string
+      relationship:
+        example: FM
+        type: string
+    type: object
   request.CustomerEmployment:
     properties:
       company_name:
         example: PT.KIMIA FARMA
+        maxLength: 50
         type: string
       company_phone_ext:
         example: "442"
+        maxLength: 4
         type: string
       employment_since_month:
         example: "02"
@@ -279,27 +444,34 @@ definitions:
         type: string
       industry_type_id:
         example: "9990"
+        maxLength: 10
         type: string
       job_position:
         example: S
+        maxLength: 10
         type: string
       job_type:
         example: "008"
+        maxLength: 10
         type: string
       monthly_fixed_income:
         example: 5000000
+        maximum: 999999999999
         type: number
       monthly_variable_income:
         example: 3000000
+        maximum: 999999999999
         type: number
       profession_id:
         example: WRST
         type: string
       source_other_income:
         example: TOKO MAKMUR
+        maxLength: 30
         type: string
       spouse_income:
         example: 6000000
+        maximum: 999999999999
         type: number
     required:
     - company_name
@@ -313,6 +485,20 @@ definitions:
     properties:
       monthly_omset:
         example: 5000000
+        maximum: 999999999999999
+        type: number
+      monthly_omset_month:
+        example: "01"
+        type: string
+      monthly_omset_year:
+        example: "2021"
+        type: string
+    type: object
+  request.CustomerOmsetNE:
+    properties:
+      monthly_omset:
+        example: 5000000
+        maximum: 999999999999999
         type: number
       monthly_omset_month:
         example: "01"
@@ -325,42 +511,54 @@ definitions:
     properties:
       account_name:
         example: JONATHAN
+        maxLength: 50
         type: string
       account_no:
         example: 567XX021
+        maxLength: 20
         type: string
       agree_to_accept_other_offering:
         example: 1
+        maximum: 1
         type: integer
       bank_id:
         example: BCA
+        maxLength: 5
         type: string
       birth_date:
         example: "1991-01-12"
         type: string
       birth_place:
         example: JAKARTA
+        maxLength: 100
+        minLength: 3
         type: string
       counterpart:
         example: 169
+        maximum: 9999
         type: integer
       customer_group:
         example: "2"
+        maxLength: 1
         type: string
       data_type:
         example: G
+        maxLength: 1
         type: string
       debt_business_scale:
         example: "01"
+        maxLength: 10
         type: string
       debt_group:
         example: "303"
+        maxLength: 10
         type: string
       education:
         example: S1
         type: string
       email:
         example: jonathaxx@gmail.com
+        maxLength: 100
         type: string
       expired_date:
         example: "2021-07-29"
@@ -373,6 +571,7 @@ definitions:
         type: string
       home_location:
         example: "N"
+        maxLength: 10
         type: string
       home_status:
         example: KL
@@ -388,6 +587,7 @@ definitions:
         type: string
       is_affiliate_with_pp:
         example: "N"
+        maxLength: 1
         type: string
       kk_no:
         example: 97846094XXX34346
@@ -397,24 +597,30 @@ definitions:
         type: string
       living_cost_amount:
         example: 0
+        maximum: 999999999999
         type: number
       marital_status:
         example: M
         type: string
       mobile_phone:
         example: 085689XXX01
+        maxLength: 14
+        minLength: 9
         type: string
       nationality:
         example: WNI
+        maxLength: 3
         type: string
       npwp:
         example: 994646808XXX895
         type: string
       num_of_dependence:
         example: 1
+        maximum: 50
         type: integer
       personal_customer_type:
         example: M
+        maxLength: 20
         type: string
       religion:
         example: "1"
@@ -424,6 +630,7 @@ definitions:
         type: string
       status:
         example: F
+        maxLength: 1
         type: string
       stay_since_month:
         example: "03"
@@ -436,6 +643,7 @@ definitions:
         type: string
       wna_country:
         example: '-'
+        maxLength: 50
         type: string
     required:
     - agree_to_accept_other_offering
@@ -458,6 +666,72 @@ definitions:
     - surgate_mother_name
     - wna_country
     type: object
+  request.CustomerPersonalNE:
+    properties:
+      birth_date:
+        example: "1991-01-12"
+        type: string
+      birth_place:
+        example: JAKARTA
+        maxLength: 100
+        minLength: 3
+        type: string
+      education:
+        example: S1
+        type: string
+      email:
+        example: jonathaxx@gmail.com
+        maxLength: 100
+        type: string
+      full_name:
+        example: ENCRYPTED
+        minLength: 2
+        type: string
+      gender:
+        example: M
+        type: string
+      home_status:
+        example: KL
+        type: string
+      id_number:
+        example: "1234567890123456"
+        type: string
+      legal_name:
+        example: ENCRYPTED
+        minLength: 2
+        type: string
+      marital_status:
+        example: M
+        type: string
+      mobile_phone:
+        example: 085689XXX01
+        maxLength: 14
+        minLength: 9
+        type: string
+      npwp:
+        example: 994646808XXX895
+        type: string
+      num_of_dependence:
+        example: 1
+        maximum: 50
+        type: integer
+      stay_since_month:
+        example: "03"
+        type: string
+      stay_since_year:
+        example: "2018"
+        type: string
+      surgate_mother_name:
+        example: ENCRYPTED
+        minLength: 2
+        type: string
+    required:
+    - full_name
+    - id_number
+    - legal_name
+    - num_of_dependence
+    - surgate_mother_name
+    type: object
   request.CustomerPhoto:
     properties:
       id:
@@ -465,6 +739,7 @@ definitions:
         type: string
       url:
         example: https://dev-media.kreditplus.com/media/reference/20000/KPM-3677/ktp_EFM-3677.jpg
+        maxLength: 250
         type: string
     type: object
   request.CustomerSpouse:
@@ -474,12 +749,16 @@ definitions:
         type: string
       birth_place:
         example: JAKARTA
+        maxLength: 100
+        minLength: 3
         type: string
       company_name:
         example: PT.BUMI KARYA
+        maxLength: 50
         type: string
       company_phone:
         example: "865542"
+        maxLength: 30
         type: string
       full_name:
         example: SUSI BUNGA
@@ -495,6 +774,8 @@ definitions:
         type: string
       mobile_phone:
         example: 08772012XXX0
+        maxLength: 14
+        minLength: 9
         type: string
       profession_id:
         example: KRYSW
@@ -504,6 +785,35 @@ definitions:
         type: string
     required:
     - birth_place
+    - full_name
+    - id_number
+    - legal_name
+    - surgate_mother_name
+    type: object
+  request.CustomerSpouseNE:
+    properties:
+      birth_date:
+        example: "1991-01-29"
+        type: string
+      full_name:
+        example: SUSI BUNGA
+        minLength: 2
+        type: string
+      gender:
+        example: F
+        type: string
+      id_number:
+        example: 177105550374XX01
+        type: string
+      legal_name:
+        example: SUSI BUNGA
+        minLength: 2
+        type: string
+      surgate_mother_name:
+        example: TUTI
+        minLength: 2
+        type: string
+    required:
     - full_name
     - id_number
     - legal_name
@@ -532,6 +842,7 @@ definitions:
       ProfessionID:
         type: string
       ProspectID:
+        maxLength: 20
         type: string
       Spouse:
         $ref: '#/definitions/request.Spouse'
@@ -568,13 +879,13 @@ definitions:
       OTR:
         type: number
       ProspectID:
+        maxLength: 20
         type: string
       ResultPefindo:
         type: string
       Tenor:
         type: integer
-      TotalBakiDebet:
-        type: object
+      TotalBakiDebet: {}
     required:
     - BPKBName
     - BranchID
@@ -593,6 +904,7 @@ definitions:
       prospect_id:
         type: string
       tenor:
+        maximum: 60
         type: integer
     required:
     - manufacturing_year
@@ -611,6 +923,7 @@ definitions:
         type: string
       cmo_id:
         example: "123456"
+        maxLength: 20
         type: string
       gender:
         example: M
@@ -677,78 +990,100 @@ definitions:
     properties:
       asset_code:
         example: SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT
+        maxLength: 200
         type: string
       asset_description:
         example: SUZUKI.KMOBIL.GRAND VITARA.JLX 2,0 AT
+        maxLength: 200
         type: string
       asset_insurance_amount_coverage:
         example: 105000000
+        maximum: 999999999999
         type: number
       asset_usage:
         example: "N"
+        maxLength: 10
         type: string
       bpkb_name:
         example: K
         type: string
       brand:
         example: TOYOTA
+        maxLength: 255
         type: string
       category_id:
         example: SEDAN
+        maxLength: 100
         type: string
       cc:
         example: "1500"
+        maxLength: 10
         type: string
       chassis_number:
         example: MHKV1AA2JBK107322
+        maxLength: 30
         type: string
       color:
         example: HITAM
+        maxLength: 50
         type: string
       condition:
         example: U
+        maxLength: 10
         type: string
       coverage_type:
         example: TLO
+        maxLength: 10
         type: string
       engine_number:
         example: 73218JAJK
+        maxLength: 30
         type: string
       ins_asset_insured_by:
         example: CO
+        maxLength: 10
         type: string
       insurance_coy_branch_id:
         example: "426"
+        maxLength: 10
         type: string
       license_plate:
         example: 3006TBJ
+        maxLength: 50
         type: string
       manufacture_year:
         example: "2020"
         type: string
       owner_asset:
         example: JONATHAN
+        maxLength: 50
         type: string
       owner_ktp:
         example: 3172024508XXX002
         type: string
       pos:
         example: "426"
+        maxLength: 10
         type: string
       premium_amount_to_customer:
         example: 2184000
+        maximum: 999999999999
+        minimum: 0
         type: number
       qty:
         example: 1
+        maximum: 1
         type: integer
       region:
         example: "0"
+        maxLength: 10
         type: string
       stnk_expired_date:
         example: "2025-03-20"
         type: string
       supplier_id:
         example: "42600342"
+        maxLength: 100
         type: string
       tax_date:
         example: "2022-03-02"
@@ -778,6 +1113,67 @@ definitions:
     - stnk_expired_date
     - supplier_id
     - tax_date
+    type: object
+  request.ItemNE:
+    properties:
+      asset_code:
+        example: SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT
+        maxLength: 200
+        type: string
+      asset_description:
+        example: SUZUKI.KMOBIL.GRAND VITARA.JLX 2,0 AT
+        maxLength: 200
+        type: string
+      bpkb_name:
+        example: K
+        type: string
+      brand:
+        example: TOYOTA
+        maxLength: 255
+        type: string
+      category_id:
+        example: SEDAN
+        maxLength: 100
+        type: string
+      chassis_number:
+        example: MHKV1AA2JBK107322
+        maxLength: 30
+        type: string
+      color:
+        example: HITAM
+        maxLength: 50
+        type: string
+      condition:
+        example: U
+        maxLength: 10
+        type: string
+      engine_number:
+        example: 73218JAJK
+        maxLength: 30
+        type: string
+      manufacture_year:
+        example: "2020"
+        type: string
+      owner_asset:
+        example: JONATHAN
+        maxLength: 50
+        type: string
+      premium_amount_to_customer:
+        example: 2184000
+        maximum: 999999999999
+        minimum: 0
+        type: number
+    required:
+    - asset_code
+    - asset_description
+    - bpkb_name
+    - brand
+    - category_id
+    - chassis_number
+    - color
+    - condition
+    - engine_number
+    - owner_asset
     type: object
   request.Metrics:
     properties:
@@ -823,57 +1219,674 @@ definitions:
     - surveyor
     - transaction
     type: object
+  request.MetricsNE:
+    properties:
+      address:
+        items:
+          $ref: '#/definitions/request.Address'
+        type: array
+      agent:
+        $ref: '#/definitions/request.AgentNE'
+      apk:
+        $ref: '#/definitions/request.ApkNE'
+      created_by:
+        $ref: '#/definitions/request.CreatedBy'
+      customer_emcon:
+        $ref: '#/definitions/request.CustomerEmconNE'
+      customer_employment:
+        $ref: '#/definitions/request.CustomerEmployment'
+      customer_omset:
+        items:
+          $ref: '#/definitions/request.CustomerOmsetNE'
+        type: array
+      customer_personal:
+        $ref: '#/definitions/request.CustomerPersonalNE'
+      customer_photo:
+        items:
+          $ref: '#/definitions/request.CustomerPhoto'
+        type: array
+      customer_spouse:
+        $ref: '#/definitions/request.CustomerSpouseNE'
+      item:
+        $ref: '#/definitions/request.ItemNE'
+      transaction:
+        $ref: '#/definitions/request.TransactionNE'
+    required:
+    - agent
+    - apk
+    - created_by
+    - customer_emcon
+    - customer_employment
+    - customer_personal
+    - item
+    - transaction
+    type: object
+  request.PrincipleAsset:
+    properties:
+      asset_code:
+        example: SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT
+        maxLength: 200
+        type: string
+      branch_id:
+        example: "426"
+        maxLength: 10
+        type: string
+      brand:
+        example: HONDA
+        maxLength: 255
+        type: string
+      cc:
+        example: "1500"
+        maxLength: 10
+        type: string
+      chassis_number:
+        example: MHKV1AA2JBK107322
+        maxLength: 30
+        type: string
+      color:
+        example: HITAM
+        maxLength: 50
+        type: string
+      engine_number:
+        example: 73218JAJK
+        maxLength: 30
+        type: string
+      home_status:
+        example: SD
+        maxLength: 2
+        type: string
+      id_number:
+        example: "3506126712000001"
+        type: string
+      license_plate:
+        example: B3006TBJ
+        maxLength: 50
+        type: string
+      manufacture_year:
+        example: "2020"
+        type: string
+      owner_asset:
+        example: JONATHAN
+        maxLength: 50
+        type: string
+      prospect_id:
+        example: SAL-1140024080800004
+        maxLength: 20
+        type: string
+      residence_address:
+        example: Dermaga Baru
+        maxLength: 100
+        type: string
+      residence_area_phone:
+        example: "021"
+        maxLength: 4
+        minLength: 2
+        type: string
+      residence_city:
+        example: Jakarta Timur
+        maxLength: 30
+        type: string
+      residence_kecamatan:
+        example: Duren Sawit
+        maxLength: 30
+        type: string
+      residence_kelurahan:
+        example: Klender
+        maxLength: 30
+        type: string
+      residence_phone:
+        example: "86605224"
+        maxLength: 10
+        type: string
+      residence_province:
+        example: Jakarta
+        maxLength: 50
+        type: string
+      residence_rt:
+        example: "001"
+        maxLength: 3
+        minLength: 1
+        type: string
+      residence_rw:
+        example: "002"
+        maxLength: 3
+        minLength: 1
+        type: string
+      residence_zipcode:
+        example: "13470"
+        maxLength: 5
+        type: string
+      spouse_id_number:
+        example: "3506126712000002"
+        type: string
+      stay_since_month:
+        example: 4
+        maximum: 12
+        minimum: 1
+        type: integer
+      stay_since_year:
+        example: 2024
+        type: integer
+      stnk_expired_date:
+        example: "2025-03-20"
+        type: string
+      stnk_photo:
+        example: https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/stnk_SAL-1140024081400003.jpg
+        maxLength: 250
+        type: string
+      tax_date:
+        example: "2022-03-02"
+        type: string
+    required:
+    - asset_code
+    - branch_id
+    - brand
+    - cc
+    - chassis_number
+    - color
+    - engine_number
+    - home_status
+    - id_number
+    - license_plate
+    - owner_asset
+    - prospect_id
+    - residence_address
+    - residence_area_phone
+    - residence_city
+    - residence_kecamatan
+    - residence_kelurahan
+    - residence_phone
+    - residence_province
+    - residence_rt
+    - residence_rw
+    - residence_zipcode
+    - stay_since_month
+    - stay_since_year
+    - stnk_expired_date
+    - tax_date
+    type: object
+  request.PrincipleElaborateLTV:
+    properties:
+      finance_purpose:
+        type: string
+      loan_amount:
+        type: number
+      prospect_id:
+        type: string
+      tenor:
+        maximum: 60
+        type: integer
+    required:
+    - finance_purpose
+    - tenor
+    type: object
+  request.PrincipleEmergencyContact:
+    properties:
+      address:
+        example: JL.PEGANGSAAN 1
+        maxLength: 90
+        type: string
+      area_phone:
+        example: "021"
+        maxLength: 4
+        minLength: 3
+        type: string
+      city:
+        example: JAKARTA SELATAN
+        maxLength: 50
+        type: string
+      kecamatan:
+        example: MAMPANG PRAPATAN
+        maxLength: 30
+        type: string
+      kelurahan:
+        example: TEGAL PARANG
+        maxLength: 30
+        type: string
+      mobile_phone:
+        example: 0856789XXX1
+        maxLength: 14
+        minLength: 9
+        type: string
+      name:
+        example: MULYADI
+        maxLength: 50
+        minLength: 2
+        type: string
+      phone:
+        example: "567892"
+        maxLength: 10
+        minLength: 5
+        type: string
+      prospect_id:
+        example: SAL-1140024080800004
+        maxLength: 20
+        type: string
+      province:
+        example: DKI JAKARTA
+        maxLength: 50
+        type: string
+      relationship:
+        example: FM
+        maxLength: 10
+        type: string
+      rt:
+        example: "008"
+        maxLength: 3
+        minLength: 1
+        type: string
+      rw:
+        example: "017"
+        maxLength: 3
+        minLength: 1
+        type: string
+      zip_code:
+        example: "12790"
+        type: string
+    required:
+    - address
+    - city
+    - kecamatan
+    - kelurahan
+    - mobile_phone
+    - name
+    - prospect_id
+    - province
+    - relationship
+    - rt
+    - rw
+    - zip_code
+    type: object
+  request.PrincipleGetData:
+    properties:
+      context:
+        type: string
+      prospect_id:
+        type: string
+    type: object
+  request.PrinciplePembiayaan:
+    properties:
+      admin_fee:
+        example: 1500000
+        maximum: 999999999999
+        type: number
+      af:
+        example: 84000000
+        maximum: 999999999999
+        type: number
+      asset_category_id:
+        example: BEBEK
+        maxLength: 100
+        type: string
+      dealer:
+        maxLength: 50
+        type: string
+      down_payment_amount:
+        example: 22000000
+        maximum: 999999999999
+        type: number
+      finance_purpose:
+        example: Multiguna Pembayaran dengan Angsuran
+        maxLength: 100
+        type: string
+      installment_amount:
+        example: 4181333
+        maximum: 999999999999
+        type: number
+      monthly_variable_income:
+        example: 3000000
+        maximum: 999999999999
+        type: number
+      ntf:
+        example: 150528000
+        maximum: 999999999999
+        type: number
+      otr:
+        example: 105000000
+        maximum: 999999999999
+        type: number
+      prospect_id:
+        example: SAL-1140024080800004
+        maxLength: 20
+        type: string
+      tenor:
+        example: 36
+        maximum: 60
+        type: integer
+    required:
+    - admin_fee
+    - af
+    - asset_category_id
+    - down_payment_amount
+    - finance_purpose
+    - installment_amount
+    - ntf
+    - otr
+    - prospect_id
+    - tenor
+    type: object
+  request.PrinciplePemohon:
+    properties:
+      birth_date:
+        example: "1992-09-11"
+        type: string
+      birth_place:
+        example: Jakarta
+        maxLength: 100
+        type: string
+      company_address:
+        example: Dermaga Baru
+        maxLength: 100
+        type: string
+      company_city:
+        example: Jakarta Timur
+        maxLength: 30
+        type: string
+      company_kecamatan:
+        example: Duren Sawit
+        maxLength: 30
+        type: string
+      company_kelurahan:
+        example: Klender
+        maxLength: 30
+        type: string
+      company_name:
+        example: PT KB Finansia
+        maxLength: 50
+        minLength: 2
+        type: string
+      company_phone:
+        example: "86605224"
+        maxLength: 10
+        type: string
+      company_phone_area:
+        example: "021"
+        maxLength: 4
+        minLength: 2
+        type: string
+      company_province:
+        example: Jakarta
+        maxLength: 50
+        type: string
+      company_rt:
+        example: "001"
+        maxLength: 3
+        minLength: 1
+        type: string
+      company_rw:
+        example: "003"
+        maxLength: 3
+        minLength: 1
+        type: string
+      company_zipcode:
+        example: "13470"
+        maxLength: 5
+        type: string
+      economy_sector:
+        example: "06"
+        maxLength: 10
+        type: string
+      education:
+        example: S1
+        maxLength: 10
+        type: string
+      email:
+        example: jonathaxx@gmail.com
+        maxLength: 100
+        type: string
+      employement_since_month:
+        example: 12
+        maximum: 12
+        minimum: 1
+        type: integer
+      employement_since_year:
+        example: 2020
+        type: integer
+      full_name:
+        example: Arya Danu
+        maxLength: 50
+        type: string
+      gender:
+        example: M
+        maxLength: 1
+        type: string
+      id_number:
+        example: "3506126712000001"
+        type: string
+      industry_type_id:
+        example: "1000"
+        maxLength: 10
+        type: string
+      job_position:
+        example: M
+        maxLength: 10
+        type: string
+      job_type:
+        example: "0012"
+        maxLength: 10
+        type: string
+      ktp_photo:
+        example: https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/ktp_SAL-1140024081400003.jpg
+        maxLength: 250
+        type: string
+      legal_address:
+        example: Dermaga Baru
+        maxLength: 100
+        type: string
+      legal_city:
+        example: Jakarta Timur
+        maxLength: 30
+        type: string
+      legal_kecamatan:
+        example: Duren Sawit
+        maxLength: 30
+        type: string
+      legal_kelurahan:
+        example: Klender
+        maxLength: 30
+        type: string
+      legal_name:
+        example: Arya Danu
+        maxLength: 50
+        type: string
+      legal_phone:
+        example: "86605224"
+        maxLength: 10
+        type: string
+      legal_phone_area:
+        example: "021"
+        maxLength: 4
+        minLength: 2
+        type: string
+      legal_province:
+        example: Jakarta
+        maxLength: 50
+        type: string
+      legal_rt:
+        example: "001"
+        maxLength: 3
+        minLength: 1
+        type: string
+      legal_rw:
+        example: "003"
+        maxLength: 3
+        minLength: 1
+        type: string
+      legal_zipcode:
+        example: "13470"
+        maxLength: 5
+        type: string
+      marital_status:
+        example: M
+        maxLength: 10
+        type: string
+      mobile_phone:
+        example: "085880529100"
+        maxLength: 14
+        minLength: 9
+        type: string
+      monthly_fixed_income:
+        example: 5000000
+        type: number
+      profession_id:
+        example: KRYSW
+        maxLength: 10
+        type: string
+      prospect_id:
+        example: SAL-1140024080800004
+        maxLength: 20
+        type: string
+      religion:
+        example: "1"
+        type: string
+      selfie_photo:
+        example: https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/selfie_SAL-1140024081400003.jpg
+        maxLength: 250
+        type: string
+      spouse_birth_date:
+        example: "1992-09-11"
+        type: string
+      spouse_birth_place:
+        example: Jakarta
+        type: string
+      spouse_full_name:
+        example: YULINAR NIATI
+        type: string
+      spouse_gender:
+        example: F
+        type: string
+      spouse_id_number:
+        example: "3506126712000002"
+        type: string
+      spouse_income:
+        example: 5000000
+        type: number
+      spouse_legal_name:
+        example: YULINAR NIATI
+        type: string
+      spouse_mobile_phone:
+        example: "085880529111"
+        type: string
+      spouse_surgate_mother_name:
+        example: MAMA
+        type: string
+      surgate_mother_name:
+        example: IBU
+        maxLength: 50
+        type: string
+    required:
+    - birth_date
+    - birth_place
+    - company_address
+    - company_city
+    - company_kecamatan
+    - company_kelurahan
+    - company_name
+    - company_phone
+    - company_phone_area
+    - company_province
+    - company_rt
+    - company_rw
+    - company_zipcode
+    - economy_sector
+    - education
+    - email
+    - employement_since_month
+    - employement_since_year
+    - full_name
+    - gender
+    - id_number
+    - industry_type_id
+    - job_position
+    - job_type
+    - legal_address
+    - legal_city
+    - legal_kecamatan
+    - legal_kelurahan
+    - legal_name
+    - legal_phone
+    - legal_phone_area
+    - legal_province
+    - legal_rt
+    - legal_rw
+    - legal_zipcode
+    - marital_status
+    - mobile_phone
+    - monthly_fixed_income
+    - profession_id
+    - prospect_id
+    - religion
+    - surgate_mother_name
+    type: object
   request.Recalculate:
     properties:
       admin_fee:
         example: 1500000
+        maximum: 999999999999
         type: number
       af:
         example: 84000000
+        maximum: 999999999999
         type: number
       asset_premium_amount_to_customer:
         example: 2184000
+        maximum: 999999999999
+        minimum: 0
         type: number
       down_payment_amount:
         example: 22000000
+        maximum: 999999999999
         type: number
       down_payment_rate:
         example: 20.95
+        maximum: 99
         type: number
       fidusia_fee:
         example: 0
+        maximum: 999999999999
         type: number
       installment_amount:
         example: 4181333
+        maximum: 999999999999
         type: number
       interest_amount:
         example: 66528000
+        maximum: 999999999999
         type: number
       interest_rate:
         example: 2.2
+        maximum: 99
         type: number
       life_premium_amount_to_customer:
         example: 2184000
+        maximum: 999999999999
+        minimum: 0
         type: number
       loan_amount:
         example: 105000000
+        maximum: 999999999999
         type: number
       ntf:
         example: 150528000
+        maximum: 999999999999
         type: number
       product_offering_desc:
+        maxLength: 200
         type: string
       product_offering_id:
         example: NLMKKAPSEP
+        maxLength: 10
         type: string
       prospect_id:
         example: SAL042600001
         type: string
       provision_fee:
         example: 2475000
+        maximum: 999999999999
         type: number
       tenor:
         example: 36
+        maximum: 60
         type: integer
     required:
     - af
@@ -887,13 +1900,17 @@ definitions:
   request.ReqCancelOrder:
     properties:
       decision_by:
+        maxLength: 100
         type: string
       decision_by_name:
+        maxLength: 250
         type: string
       prospect_id:
         example: TEST-DEV
+        maxLength: 20
         type: string
       reason:
+        maxLength: 100
         type: string
     required:
     - decision_by
@@ -904,14 +1921,18 @@ definitions:
   request.ReqInquiryCa:
     properties:
       branch_id:
+        maxLength: 3
         type: string
       filter:
+        maxLength: 15
         type: string
       multi_branch:
+        maxLength: 1
         type: string
       search:
         type: string
       user_id:
+        maxLength: 20
         type: string
     required:
     - branch_id
@@ -921,14 +1942,17 @@ definitions:
   request.ReqRecalculateOrder:
     properties:
       decision_by:
+        maxLength: 100
         type: string
       decision_by_name:
+        maxLength: 250
         type: string
       dp_amount:
         example: 245000
         type: number
       prospect_id:
         example: TEST-DEV
+        maxLength: 20
         type: string
     required:
     - decision_by
@@ -939,11 +1963,14 @@ definitions:
   request.ReqReturnOrder:
     properties:
       decision_by:
+        maxLength: 100
         type: string
       decision_by_name:
+        maxLength: 250
         type: string
       prospect_id:
         example: TEST-DEV
+        maxLength: 20
         type: string
     required:
     - decision_by
@@ -954,15 +1981,20 @@ definitions:
     properties:
       decision:
         example: APPROVE,REJECT
+        maxLength: 7
         type: string
       decision_by:
+        maxLength: 100
         type: string
       decision_by_name:
+        maxLength: 250
         type: string
       prospect_id:
         example: TEST-DEV
+        maxLength: 20
         type: string
       reason:
+        maxLength: 255
         type: string
     required:
     - decision
@@ -974,17 +2006,23 @@ definitions:
     properties:
       decision:
         example: APPROVE,REJECT
+        maxLength: 7
         type: string
       decision_by:
+        maxLength: 100
         type: string
       decision_by_name:
+        maxLength: 250
         type: string
       note:
+        maxLength: 525
         type: string
       prospect_id:
         example: TEST-DEV
+        maxLength: 20
         type: string
       slik_result:
+        maxLength: 30
         type: string
     required:
     - decision
@@ -996,12 +2034,15 @@ definitions:
   request.ReqSearchInquiry:
     properties:
       branch_id:
+        maxLength: 3
         type: string
       multi_branch:
+        maxLength: 1
         type: string
       search:
         type: string
       user_id:
+        maxLength: 20
         type: string
     required:
     - branch_id
@@ -1012,28 +2053,37 @@ definitions:
   request.ReqSubmitApproval:
     properties:
       alias:
+        maxLength: 3
         type: string
       code:
+        maxLength: 4
         type: string
       decision:
         example: APPROVE,REJECT,RETURN
+        maxLength: 7
         type: string
       decision_by:
+        maxLength: 100
         type: string
       decision_by_name:
+        maxLength: 250
         type: string
       dp_amount:
         type: number
       final_approval:
+        maxLength: 3
         type: string
       need_escalation:
         type: boolean
       note:
+        maxLength: 525
         type: string
       prospect_id:
         example: TEST-DEV
+        maxLength: 20
         type: string
       reason:
+        maxLength: 100
         type: string
     required:
     - alias
@@ -1049,19 +2099,26 @@ definitions:
     properties:
       decision:
         example: APPROVE,REJECT
+        maxLength: 7
         type: string
       decision_by:
+        maxLength: 100
         type: string
       decision_by_name:
+        maxLength: 250
         type: string
       note:
+        maxLength: 525
         type: string
       ntf_akumulasi:
+        maximum: 9999999999999
         type: number
       prospect_id:
         example: TEST-DEV
+        maxLength: 20
         type: string
       slik_result:
+        maxLength: 30
         type: string
     required:
     - decision
@@ -1070,6 +2127,21 @@ definitions:
     - ntf_akumulasi
     - prospect_id
     - slik_result
+    type: object
+  request.RequestGenerateFormAKKK:
+    properties:
+      lob:
+        example: new-kmb
+        type: string
+      prospect_id:
+        example: TEST-DEV
+        type: string
+      source:
+        example: SYSTEM
+        type: string
+    required:
+    - lob
+    - prospect_id
     type: object
   request.Spouse:
     properties:
@@ -1144,6 +2216,7 @@ definitions:
     properties:
       application_source:
         example: H
+        maxLength: 10
         type: string
       branch_id:
         example: "426"
@@ -1167,12 +2240,42 @@ definitions:
     - application_source
     - order_at
     type: object
+  request.TransactionNE:
+    properties:
+      application_source:
+        example: H
+        maxLength: 10
+        type: string
+      branch_id:
+        example: "426"
+        type: string
+      branch_name:
+        example: BANDUNG
+        type: string
+      channel:
+        example: "OFF"
+        type: string
+      incoming_source:
+        example: SLY
+        type: string
+      lob:
+        example: KMB
+        type: string
+      order_at:
+        example: "2021-07-15T11:44:05+07:00"
+        type: string
+      prospect_id:
+        example: SAL042600001
+        type: string
+    required:
+    - application_source
+    - branch_name
+    - order_at
+    type: object
   response.ApiResponse:
     properties:
-      data:
-        type: object
-      errors:
-        type: object
+      data: {}
+      errors: {}
       messages:
         type: string
       request_id:
@@ -1208,8 +2311,7 @@ definitions:
     type: object
   response.DupcheckResult:
     properties:
-      code:
-        type: object
+      code: {}
       decision:
         type: string
       is_blacklist:
@@ -1263,8 +2365,10 @@ definitions:
       total_balki_debet:
         type: number
     type: object
-  response.EmployeeResponse:
+  response.EmployeeCMOResponse:
     properties:
+      cmo_category:
+        type: string
       employee_id:
         type: string
       employee_id_with_name:
@@ -1272,6 +2376,10 @@ definitions:
       employee_name:
         type: string
       join_date:
+        type: string
+      position_group_code:
+        type: string
+      position_group_name:
         type: string
     type: object
   response.ErrorValidation:
@@ -1283,8 +2391,7 @@ definitions:
     type: object
   response.InquiryRow:
     properties:
-      inquiry:
-        type: object
+      inquiry: {}
       recordsFiltered:
         type: integer
       recordsTotal:
@@ -1292,22 +2399,56 @@ definitions:
     type: object
   response.ReasonMessageRow:
     properties:
-      reason:
-        type: object
+      reason: {}
       recordsFiltered:
         type: integer
       recordsTotal:
         type: integer
     type: object
+  response.ResponseGenerateFormAKKK:
+    properties:
+      media_url:
+        type: string
+      path:
+        type: string
+    type: object
   response.ReviewPrescreening:
     properties:
-      code:
-        type: object
+      code: {}
       decision:
         type: string
       prospect_id:
         type: string
       reason:
+        type: string
+    type: object
+  response.StepPrinciple:
+    properties:
+      color_code:
+        type: string
+      prospect_id:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  response.UsecaseApi:
+    properties:
+      code:
+        type: string
+      confidence:
+        type: string
+      dsr:
+        type: number
+      info: {}
+      reason:
+        type: string
+      result:
+        type: string
+      source_decision:
+        type: string
+      status_konsumen:
         type: string
     type: object
 host: localhost:9710
@@ -1787,6 +2928,43 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - CA
+  /api/v3/kmb/cms/form-akkk:
+    post:
+      description: Api Generate Form AKKK
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.RequestGenerateFormAKKK'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ResponseGenerateFormAKKK'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Generate Form AKKK
   /api/v3/kmb/cms/mapping-cluster/branch:
     get:
       description: Api Mapping Cluster
@@ -1968,6 +3146,116 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Mapping Cluster
+  /api/v3/kmb/cms/ne/inquiry:
+    get:
+      description: Api CA
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqInquiryCa'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.InquiryRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - CA
+  /api/v3/kmb/cms/ne/inquiry/{prospect_id}:
+    get:
+      description: Api CA
+      parameters:
+      - description: Prospect ID
+        in: path
+        name: prospect_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/request.MetricsNE'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - CA
+  /api/v3/kmb/cms/ne/submit:
+    post:
+      description: Api Submit NE
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.MetricsNE'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ApiResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Submit NE
   /api/v3/kmb/cms/prescreening/inquiry:
     get:
       description: Api Prescreening
@@ -2161,6 +3449,37 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Search Inquiry
+  /api/v3/kmb/core-customer/{prospectID}:
+    post:
+      description: KmbPrinciple
+      parameters:
+      - description: Prospect ID
+        in: path
+        name: prospectID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - KmbPrinciple
   /api/v3/kmb/elaborate:
     post:
       description: ElaborateLTV
@@ -2198,6 +3517,80 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Filtering
+  /api/v3/kmb/elaborate-ltv:
+    post:
+      description: KmbPrinciple
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.PrincipleElaborateLTV'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.UsecaseApi'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - KmbPrinciple
+  /api/v3/kmb/emergency-contact:
+    post:
+      description: KmbPrinciple
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.PrincipleEmergencyContact'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.UsecaseApi'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - KmbPrinciple
   /api/v3/kmb/employee/employee-data/{employee_id}:
     get:
       description: Api Get Employee Data
@@ -2217,7 +3610,7 @@ paths:
             - $ref: '#/definitions/response.ApiResponse'
             - properties:
                 data:
-                  $ref: '#/definitions/response.EmployeeResponse'
+                  $ref: '#/definitions/response.EmployeeCMOResponse'
               type: object
         "400":
           description: Bad Request
@@ -2336,6 +3729,74 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Insert Staging
+  /api/v3/kmb/marketing-program/{prospectID}:
+    post:
+      description: KmbPrinciple
+      parameters:
+      - description: Prospect ID
+        in: path
+        name: prospectID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - KmbPrinciple
+  /api/v3/kmb/principle-data:
+    post:
+      description: KmbPrinciple
+      parameters:
+      - description: Prospect ID
+        in: path
+        name: prospectID
+        required: true
+        type: string
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.PrincipleGetData'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - KmbPrinciple
   /api/v3/kmb/produce/filtering:
     post:
       description: Produce Filtering via REST API
@@ -2432,6 +3893,42 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Submit to LOS
+  /api/v3/kmb/produce/update-customer/{prospect_id}:
+    post:
+      description: Api Produce Messages Update Customer
+      parameters:
+      - description: Prospect ID
+        in: path
+        name: prospect_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ReasonMessageRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Update Customer
   /api/v3/kmb/recalculate:
     post:
       description: Recalculate
@@ -2464,4 +3961,151 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Recalculate
+  /api/v3/kmb/step-principle/{id_number}:
+    get:
+      description: KmbPrinciple
+      parameters:
+      - description: ID Number
+        in: path
+        name: id_number
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.StepPrinciple'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - KmbPrinciple
+  /api/v3/kmb/verify-asset:
+    post:
+      description: KmbPrinciple
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.PrincipleAsset'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.UsecaseApi'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - KmbPrinciple
+  /api/v3/kmb/verify-pembiayaan:
+    post:
+      description: KmbPrinciple
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.PrinciplePembiayaan'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.UsecaseApi'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - KmbPrinciple
+  /api/v3/kmb/verify-pemohon:
+    post:
+      description: KmbPrinciple
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.PrinciplePemohon'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.UsecaseApi'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - KmbPrinciple
 swagger: "2.0"

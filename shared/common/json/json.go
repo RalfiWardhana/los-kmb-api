@@ -13,9 +13,9 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/iancoleman/strcase"
 	"github.com/labstack/echo/v4"
-	"gopkg.in/go-playground/validator.v9"
 )
 
 type (

@@ -140,7 +140,10 @@ func TestScorepro(t *testing.T) {
 				Code:   constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
 				Reason: constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
 				Source: constant.SOURCE_DECISION_SCOREPRO,
-				Info:   `{"prospect_id":"EFM0TSTRT87183109505","score":200,"result":"REJECT","score_band":"","score_result":"LOW","status":"ASS-LOW","segmen":"1","is_tsi":false,"score_bin":0,"deviasi":null}`,
+				Info:   `{"prospect_id":"EFM0TSTRT87183109505","score":200,"result":"REJECT","score_band":"","score_result":"LOW","status":"ASS-LOW","segmen":"1","is_tsi":false,"score_bin":0,"deviasi":{"NTF":0,"branch_id":"","FinalApproval":"","quota_amount":0,"quota_account":0,"booking_amount":0,"booking_account":0,"balance_amount":0,"balance_account":0,"is_active":true,"deviasi":false}}`,
+			},
+			confimDeviasi: entity.ConfirmDeviasi{
+				IsActive: true,
 			},
 		},
 		{
@@ -228,7 +231,10 @@ func TestScorepro(t *testing.T) {
 				Code:   constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
 				Reason: constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
 				Source: constant.SOURCE_DECISION_SCOREPRO,
-				Info:   `{"prospect_id":"EFMTESTAKKK0161109","score":230,"result":"PASS","score_band":"","score_result":"LOW","status":"ASSCB-HIGH","segmen":"3","is_tsi":false,"score_bin":"","deviasi":null}`,
+				Info:   `{"prospect_id":"EFMTESTAKKK0161109","score":230,"result":"PASS","score_band":"","score_result":"LOW","status":"ASSCB-HIGH","segmen":"3","is_tsi":false,"score_bin":"","deviasi":{"NTF":0,"branch_id":"","FinalApproval":"","quota_amount":0,"quota_account":0,"booking_amount":0,"booking_account":0,"balance_amount":0,"balance_account":0,"is_active":true,"deviasi":false}}`,
+			},
+			confimDeviasi: entity.ConfirmDeviasi{
+				IsActive: true,
 			},
 		},
 		{
@@ -273,7 +279,10 @@ func TestScorepro(t *testing.T) {
 				Code:   constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
 				Reason: constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
 				Source: constant.SOURCE_DECISION_SCOREPRO,
-				Info:   `{"prospect_id":"EFMTESTAKKK0161109","score":230,"result":"PASS","score_band":"","score_result":"LOW","status":"ASSCB-HIGH","segmen":"3","is_tsi":false,"score_bin":"","deviasi":null}`,
+				Info:   `{"prospect_id":"EFMTESTAKKK0161109","score":230,"result":"PASS","score_band":"","score_result":"LOW","status":"ASSCB-HIGH","segmen":"3","is_tsi":false,"score_bin":"","deviasi":{"NTF":0,"branch_id":"","FinalApproval":"","quota_amount":0,"quota_account":0,"booking_amount":0,"booking_account":0,"balance_amount":0,"balance_account":0,"is_active":true,"deviasi":false}}`,
+			},
+			confimDeviasi: entity.ConfirmDeviasi{
+				IsActive: true,
 			},
 		},
 		{
@@ -363,7 +372,10 @@ func TestScorepro(t *testing.T) {
 				Code:   constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
 				Reason: constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
 				Source: constant.SOURCE_DECISION_SCOREPRO,
-				Info:   `{"prospect_id":"EFMTESTAKKK0161109","score":230,"result":"PASS","score_band":"","score_result":"LOW","status":"ASSCB-HIGH","segmen":"1","is_tsi":false,"score_bin":"","deviasi":null}`,
+				Info:   `{"prospect_id":"EFMTESTAKKK0161109","score":230,"result":"PASS","score_band":"","score_result":"LOW","status":"ASSCB-HIGH","segmen":"1","is_tsi":false,"score_bin":"","deviasi":{"NTF":0,"branch_id":"","FinalApproval":"","quota_amount":0,"quota_account":0,"booking_amount":0,"booking_account":0,"balance_amount":0,"balance_account":0,"is_active":true,"deviasi":false}}`,
+			},
+			confimDeviasi: entity.ConfirmDeviasi{
+				IsActive: true,
 			},
 		},
 		{
@@ -772,11 +784,15 @@ func TestScorepro(t *testing.T) {
 			codeScoreproIDX: 200,
 			bodyScoreproIDX: `{"messages":"OK","data":{"prospect_id":"EFMTESTAKKK0161109","score":230,"result":"REJECT","score_result":"LOW","status":"ASSCB-HIGH","phone_number":"085716728933","segmen":"3","is_tsi":false,"score_band":"","score_bin":"","deviasi":null},"errors":null,"server_time":"2023-10-30T14:26:17+07:00"}`,
 			result: response.ScorePro{
-				Result: constant.DECISION_REJECT,
-				Code:   constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
-				Reason: constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
-				Source: constant.SOURCE_DECISION_SCOREPRO,
-				Info:   `{"prospect_id":"EFMTESTAKKK0161109","score":230,"result":"REJECT","score_band":"","score_result":"LOW","status":"ASSCB-HIGH","segmen":"3","is_tsi":false,"score_bin":"","deviasi":null}`,
+				Result:    constant.DECISION_REJECT,
+				Code:      constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
+				Reason:    constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
+				Source:    constant.SOURCE_DECISION_SCOREPRO,
+				Info:      `{"prospect_id":"EFMTESTAKKK0161109","score":230,"result":"REJECT","score_band":"","score_result":"LOW","status":"ASSCB-HIGH","segmen":"3","is_tsi":false,"score_bin":"","deviasi":{"NTF":0,"branch_id":"","FinalApproval":"","quota_amount":0,"quota_account":0,"booking_amount":0,"booking_account":0,"balance_amount":0,"balance_account":0,"is_active":true,"deviasi":false}}`,
+				IsDeviasi: true,
+			},
+			confimDeviasi: entity.ConfirmDeviasi{
+				IsActive: true,
 			},
 		},
 		{
@@ -804,11 +820,15 @@ func TestScorepro(t *testing.T) {
 			codeScoreproIDX: 200,
 			bodyScoreproIDX: `{"messages":"OK","data":{"prospect_id":"EFMTESTAKKK0161109","score":230,"result":"REJECT","score_result":"LOW","status":"ASSCB-HIGH","phone_number":"085716728933","segmen":"3","is_tsi":false,"score_band":"","score_bin":"","deviasi":null},"errors":null,"server_time":"2023-10-30T14:26:17+07:00"}`,
 			result: response.ScorePro{
-				Result: constant.DECISION_REJECT,
-				Code:   constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
-				Reason: constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
-				Source: constant.SOURCE_DECISION_SCOREPRO,
-				Info:   `{"prospect_id":"EFMTESTAKKK0161109","score":230,"result":"REJECT","score_band":"","score_result":"LOW","status":"ASSCB-HIGH","segmen":"3","is_tsi":false,"score_bin":"","deviasi":null}`,
+				Result:    constant.DECISION_REJECT,
+				Code:      constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
+				Reason:    constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
+				Source:    constant.SOURCE_DECISION_SCOREPRO,
+				Info:      `{"prospect_id":"EFMTESTAKKK0161109","score":230,"result":"REJECT","score_band":"","score_result":"LOW","status":"ASSCB-HIGH","segmen":"3","is_tsi":false,"score_bin":"","deviasi":{"NTF":0,"branch_id":"","FinalApproval":"","quota_amount":0,"quota_account":0,"booking_amount":0,"booking_account":0,"balance_amount":0,"balance_account":0,"is_active":true,"deviasi":false}}`,
+				IsDeviasi: true,
+			},
+			confimDeviasi: entity.ConfirmDeviasi{
+				IsActive: true,
 			},
 		},
 		{
@@ -932,11 +952,15 @@ func TestScorepro(t *testing.T) {
 			codeScoreproIDX: 200,
 			bodyScoreproIDX: `{"messages":"OK","data":{"prospect_id":"EFMTESTAKKK0161109","score":400,"result":"REJECT","score_result":"HIGH","status":"ASS-HIGH","phone_number":"085716728933","segmen":"2","is_tsi":false,"score_band":"","score_bin":"","deviasi":null},"errors":null,"server_time":"2023-10-30T14:26:17+07:00"}`,
 			result: response.ScorePro{
-				Result: constant.DECISION_REJECT,
-				Code:   constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
-				Reason: constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
-				Source: constant.SOURCE_DECISION_SCOREPRO,
-				Info:   `{"prospect_id":"EFMTESTAKKK0161109","score":400,"result":"REJECT","score_band":"","score_result":"HIGH","status":"ASS-HIGH","segmen":"2","is_tsi":false,"score_bin":"","deviasi":null}`,
+				Result:    constant.DECISION_REJECT,
+				Code:      constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
+				Reason:    constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
+				Source:    constant.SOURCE_DECISION_SCOREPRO,
+				Info:      `{"prospect_id":"EFMTESTAKKK0161109","score":400,"result":"REJECT","score_band":"","score_result":"HIGH","status":"ASS-HIGH","segmen":"2","is_tsi":false,"score_bin":"","deviasi":{"NTF":0,"branch_id":"","FinalApproval":"","quota_amount":0,"quota_account":0,"booking_amount":0,"booking_account":0,"balance_amount":0,"balance_account":0,"is_active":true,"deviasi":false}}`,
+				IsDeviasi: true,
+			},
+			confimDeviasi: entity.ConfirmDeviasi{
+				IsActive: true,
 			},
 		},
 		{

@@ -69,4 +69,10 @@ type Repository interface {
 
 	MasterMappingDeviasiDSR(totalIncome float64) (data entity.MasterMappingDeviasiDSR, err error)
 	GetBranchDeviasi(BranchID string, customerStatus string, NTF float64) (data entity.MappingBranchDeviasi, err error)
+
+	ScanTrxPrinciple(prospectID string) (count int, err error)
+	GetPrincipleStepOne(prospectID string) (data entity.TrxPrincipleStepOne, err error)
+	GetPrincipleStepTwo(prospectID string) (data entity.TrxPrincipleStepTwo, err error)
+	GetPrincipleStepThree(prospectID string) (data entity.TrxPrincipleStepThree, err error)
+	GetPrincipleEmergencyContact(prospectID string) (data entity.TrxPrincipleEmergencyContact, err error)
 }
