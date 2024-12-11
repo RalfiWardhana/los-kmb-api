@@ -37,9 +37,15 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 			return
 		}
 
-		RrdDateTime, ok := spDupcheck.RRDDate.(time.Time)
-		if !ok {
-			err = errors.New(constant.ERROR_UPSTREAM + " - RrdDate is not of type time.Time")
+		var RrdDateTime time.Time
+		if rrdDateStr, ok := spDupcheck.RRDDate.(string); ok {
+			RrdDateTime, err = time.Parse(time.RFC3339, rrdDateStr)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Invalid RrdDate format")
+				return
+			}
+		} else if RrdDateTime, ok = spDupcheck.RRDDate.(time.Time); !ok {
+			err = errors.New(constant.ERROR_UPSTREAM + " - RrdDate must be string or time.Time")
 			return
 		}
 

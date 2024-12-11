@@ -273,9 +273,15 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 			return
 		}
 
-		RrdDateTime, ok := SpDupcheckMap.RRDDate.(time.Time)
-		if !ok {
-			err = errors.New(constant.ERROR_UPSTREAM + " - RrdDate is not of type time.Time")
+		var RrdDateTime time.Time
+		if rrdDateStr, ok := SpDupcheckMap.RRDDate.(string); ok {
+			RrdDateTime, err = time.Parse(time.RFC3339, rrdDateStr)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Invalid RrdDate format")
+				return
+			}
+		} else if RrdDateTime, ok = SpDupcheckMap.RRDDate.(time.Time); !ok {
+			err = errors.New(constant.ERROR_UPSTREAM + " - RrdDate must be string or time.Time")
 			return
 		}
 
