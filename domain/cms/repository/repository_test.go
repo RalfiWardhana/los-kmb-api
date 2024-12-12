@@ -724,6 +724,14 @@ func TestGetInquiryPrescreening(t *testing.T) {
 	ti.color,
 	chassis_number,
 	engine_number,
+	CASE
+		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+	END AS bpkb_name,
+	ti.owner_asset,
+	ti.license_plate,
 	interest_rate,
 	Tenor AS InstallmentPeriod,
 	OTR,
@@ -1177,6 +1185,14 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 	ti.color,
 	chassis_number,
 	engine_number,
+	CASE
+		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+	END AS bpkb_name,
+	ti.owner_asset,
+	ti.license_plate,
 	interest_rate,
 	Tenor AS InstallmentPeriod,
 	OTR,
@@ -1627,6 +1643,14 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 	ti.color,
 	chassis_number,
 	engine_number,
+	CASE
+		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+	END AS bpkb_name,
+	ti.owner_asset,
+	ti.license_plate,
 	interest_rate,
 	Tenor AS InstallmentPeriod,
 	OTR,
@@ -2077,6 +2101,14 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 	ti.color,
 	chassis_number,
 	engine_number,
+	CASE
+		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+	END AS bpkb_name,
+	ti.owner_asset,
+	ti.license_plate,
 	interest_rate,
 	Tenor AS InstallmentPeriod,
 	OTR,
@@ -2368,6 +2400,14 @@ func TestGetInquiryPrescreeningRecordNotFound(t *testing.T) {
         ti.color,
         chassis_number,
         engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
         interest_rate,
         Tenor AS InstallmentPeriod,
         OTR,
@@ -3515,6 +3555,14 @@ func TestGetInquiryCa(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		ta.interest_rate,
 		ta.Tenor AS InstallmentPeriod,
 		OTR,
@@ -4005,6 +4053,14 @@ func TestGetInquiryCa(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		ta.interest_rate,
 		ta.Tenor AS InstallmentPeriod,
 		OTR,
@@ -4495,6 +4551,14 @@ func TestGetInquiryCa(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		ta.interest_rate,
 		ta.Tenor AS InstallmentPeriod,
 		OTR,
@@ -4996,6 +5060,14 @@ func TestGetInquiryCa(t *testing.T) {
 				ti.color,
 				chassis_number,
 				engine_number,
+				CASE
+				WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+				WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+				WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+				WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+				END AS bpkb_name,
+				ti.owner_asset,
+				ti.license_plate,
 				ta.interest_rate,
 				ta.Tenor AS InstallmentPeriod,
 				OTR,
@@ -5497,6 +5569,14 @@ func TestGetInquiryCa(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		ta.interest_rate,
 		ta.Tenor AS InstallmentPeriod,
 		OTR,
@@ -5838,12 +5918,12 @@ func TestProcessTransaction(t *testing.T) {
 	t.Run("success update", func(t *testing.T) {
 
 		mock.ExpectBegin()
-		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_ca_decision" ("ProspectID","decision","slik_result","note","created_at","created_by","decision_by","final_approval") VALUES (?,?,?,?,?,?,?,?)`)).
-			WithArgs(trxCaDecision.ProspectID, trxCaDecision.Decision, trxCaDecision.SlikResult, trxCaDecision.Note, sqlmock.AnyArg(), trxCaDecision.CreatedBy, trxCaDecision.DecisionBy, trxCaDecision.FinalApproval).
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "source_decision" = ?, "status_process" = ?  WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ? AND source_decision = 'CRA'))`)).
+			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
-		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "source_decision" = ?, "status_process" = ?  WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
-			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_ca_decision" ("ProspectID","decision","slik_result","note","created_at","created_by","decision_by","final_approval") VALUES (?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxCaDecision.ProspectID, trxCaDecision.Decision, trxCaDecision.SlikResult, trxCaDecision.Note, sqlmock.AnyArg(), trxCaDecision.CreatedBy, trxCaDecision.DecisionBy, trxCaDecision.FinalApproval).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","reason","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
@@ -5859,7 +5939,7 @@ func TestProcessTransaction(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
 
-		err := newDB.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail)
+		err := newDB.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, false)
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
 		}
@@ -5913,6 +5993,14 @@ func TestProcessReturnOrder(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "trx_deviasi" WHERE (ProspectID = ?)`)).
+			WithArgs(ppid).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "trx_final_approval" WHERE (ProspectID = ?)`)).
+			WithArgs(ppid).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "trx_agreements" WHERE (ProspectID = ?)`)).
 			WithArgs(ppid).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
@@ -6095,6 +6183,14 @@ func TestGetInquirySearch(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -6477,6 +6573,14 @@ func TestGetInquirySearch(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -6858,6 +6962,14 @@ func TestGetInquirySearch(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -7229,6 +7341,14 @@ func TestGetInquirySearch(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -8234,6 +8354,14 @@ func TestGetInquiryApproval(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -8666,6 +8794,14 @@ func TestGetInquiryApproval(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -9094,6 +9230,14 @@ func TestGetInquiryApproval(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -9535,6 +9679,14 @@ func TestGetInquiryApproval(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -9976,6 +10128,14 @@ func TestGetInquiryApproval(t *testing.T) {
 		ti.color,
 		chassis_number,
 		engine_number,
+		CASE
+		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
+		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
+		  WHEN ti.bpkb_name = 'KK' THEN 'Nama Satu KK'
+		  WHEN ti.bpkb_name = 'O' THEN 'Orang Lain'
+		END AS bpkb_name,
+		ti.owner_asset,
+		ti.license_plate,
 		interest_rate,
 		Tenor AS InstallmentPeriod,
 		OTR,
@@ -10432,6 +10592,18 @@ func TestSubmitApproval(t *testing.T) {
 		}
 
 		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT ts.ProspectID, 
+			CASE 
+				WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
+				ELSE NULL
+			END AS activity 
+			FROM trx_status ts
+			LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+			LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
+			WHERE ts.ProspectID = 'ppid' AND ts.status_process = 'ONP'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "activity"}).
+				AddRow("ppid", ""))
+
 		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "source_decision" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
 			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -10446,9 +10618,9 @@ func TestSubmitApproval(t *testing.T) {
 
 		mock.ExpectCommit()
 
-		err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+		trxStatus, err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
 		if err != nil {
-			t.Errorf("error '%s' was not expected, but got: ", err)
+			t.Errorf("error '%s'", err.Error())
 		}
 	})
 
@@ -10520,6 +10692,18 @@ func TestSubmitApproval(t *testing.T) {
 		}
 
 		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT ts.ProspectID, 
+			CASE 
+				WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
+				ELSE NULL
+			END AS activity 
+			FROM trx_status ts
+			LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+			LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
+			WHERE ts.ProspectID = 'ppid' AND ts.status_process = 'ONP'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "activity"}).
+				AddRow("ppid", ""))
+
 		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "source_decision" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
 			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.SourceDecision, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -10538,7 +10722,7 @@ func TestSubmitApproval(t *testing.T) {
 
 		mock.ExpectCommit()
 
-		err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+		trxStatus, err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
 		}
@@ -10613,6 +10797,18 @@ func TestSubmitApproval(t *testing.T) {
 		}
 
 		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT ts.ProspectID, 
+			CASE 
+				WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
+				ELSE NULL
+			END AS activity 
+			FROM trx_status ts
+			LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+			LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
+			WHERE ts.ProspectID = 'ppid' AND ts.status_process = 'ONP'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "activity"}).
+				AddRow("ppid", ""))
+
 		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
 			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -10631,13 +10827,13 @@ func TestSubmitApproval(t *testing.T) {
 
 		mock.ExpectCommit()
 
-		err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+		trxStatus, err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
 		}
 	})
 
-	t.Run("success submit rej final approval", func(t *testing.T) {
+	t.Run("success submit apr final approval", func(t *testing.T) {
 		os.Setenv("CLIENT_LOS", "2ck21b02")
 		os.Setenv("AUTH_LOS", "xYtKHAWHn2sZLm1IbXXu")
 		os.Setenv("INSERT_STAGING_URL", "http://10.9.100.131/los-kmb-api/api/v3/kmb/insert-staging")
@@ -10645,7 +10841,7 @@ func TestSubmitApproval(t *testing.T) {
 		req := request.ReqSubmitApproval{
 			ProspectID:     "ppid",
 			FinalApproval:  "GMO",
-			Decision:       "REJECT",
+			Decision:       "APPROVE",
 			NeedEscalation: false,
 			RuleCode:       "3750",
 			Alias:          "GMO",
@@ -10727,6 +10923,18 @@ func TestSubmitApproval(t *testing.T) {
 		}
 
 		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT ts.ProspectID, 
+			CASE 
+				WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
+				ELSE NULL
+			END AS activity 
+			FROM trx_status ts
+			LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+			LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
+			WHERE ts.ProspectID = 'ppid' AND ts.status_process = 'ONP'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "activity"}).
+				AddRow("ppid", ""))
+
 		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
 			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -10755,16 +10963,674 @@ func TestSubmitApproval(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_worker" ("ProspectID","activity","endpoint_target","endpoint_method","payload","header","response_timeout","api_type","max_retry","count_retry","created_at","category","action","status_code","sequence") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
 			WithArgs("ppid", "UNPR", "http://10.9.100.131/los-kmb-api/api/v3/kmb/insert-staging/ppid", "POST", sqlmock.AnyArg(), sqlmock.AnyArg(), 30, "RAW", 6, 0, sqlmock.AnyArg(), "CONFINS", "INSERT_STAGING_KMB", sqlmock.AnyArg(), sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(1, 1))
-
-		mock.ExpectCommit()
 		mock.ExpectCommit()
 
-		err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+		mock.ExpectCommit()
+
+		trxStatus, err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
 		}
 	})
 
+	t.Run("success submit rej final approval", func(t *testing.T) {
+		os.Setenv("CLIENT_LOS", "2ck21b02")
+		os.Setenv("AUTH_LOS", "xYtKHAWHn2sZLm1IbXXu")
+		os.Setenv("INSERT_STAGING_URL", "http://10.9.100.131/los-kmb-api/api/v3/kmb/insert-staging")
+
+		req := request.ReqSubmitApproval{
+			ProspectID:     "ppid",
+			FinalApproval:  "GMO",
+			Decision:       "REJECT",
+			NeedEscalation: false,
+			RuleCode:       "3750",
+			Alias:          "GMO",
+			Reason:         "Oke",
+			Note:           "final di gmo",
+			CreatedBy:      "abc123",
+			DecisionBy:     "GMO KMB",
+		}
+
+		switch req.Decision {
+		case constant.DECISION_REJECT:
+			decision = rej
+			decision_detail = rej
+
+		case constant.DECISION_APPROVE:
+			decision = apr
+			decision_detail = pas
+
+		case constant.DECISION_RETURN:
+			decision = rtn
+			decision_detail = rtn
+		}
+
+		approvalScheme, _ = utils.ApprovalScheme(req)
+
+		trxStatus := entity.TrxStatus{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  onp,
+			Activity:       unpr,
+			Decision:       cpr,
+			RuleCode:       req.RuleCode,
+			SourceDecision: approvalScheme.NextStep,
+			Reason:         req.Reason,
+		}
+
+		trxDetail := entity.TrxDetail{
+			ProspectID:     req.ProspectID,
+			StatusProcess:  onp,
+			Activity:       prcd,
+			Decision:       decision_detail,
+			RuleCode:       req.RuleCode,
+			SourceDecision: req.Alias,
+			Info:           req.Reason,
+			CreatedBy:      req.CreatedBy,
+			Reason:         req.Reason,
+		}
+
+		trxHistoryApproval := entity.TrxHistoryApprovalScheme{
+			ProspectID:     req.ProspectID,
+			Decision:       decision,
+			Reason:         req.Reason,
+			Note:           req.Note,
+			CreatedBy:      req.CreatedBy,
+			DecisionBy:     req.DecisionBy,
+			SourceDecision: trxDetail.SourceDecision,
+			NextStep:       approvalScheme.NextStep,
+		}
+
+		trxFinalApproval := entity.TrxFinalApproval{
+			ProspectID: req.ProspectID,
+			Decision:   decision,
+			Reason:     req.Reason,
+			Note:       req.Note,
+			CreatedBy:  req.CreatedBy,
+			DecisionBy: req.DecisionBy,
+		}
+
+		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT ts.ProspectID, 
+			CASE 
+				WHEN td.ProspectID IS NOT NULL AND tcp.CustomerStatus = 'NEW' THEN 'DEV'
+				ELSE NULL
+			END AS activity 
+			FROM trx_status ts
+			LEFT JOIN trx_customer_personal tcp ON ts.ProspectID = tcp.ProspectID
+			LEFT JOIN trx_deviasi td ON ts.ProspectID = td.ProspectID 
+			WHERE ts.ProspectID = 'ppid' AND ts.status_process = 'ONP'`)).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "activity"}).
+				AddRow("ppid", ""))
+
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_status" SET "ProspectID" = ?, "activity" = ?, "created_at" = ?, "decision" = ?, "reason" = ?, "rule_code" = ?, "status_process" = ? WHERE "trx_status"."ProspectID" = ? AND ((ProspectID = ?))`)).
+			WithArgs(trxStatus.ProspectID, trxStatus.Activity, sqlmock.AnyArg(), trxStatus.Decision, trxStatus.Reason, trxStatus.RuleCode, trxStatus.StatusProcess, trxStatus.ProspectID, trxStatus.ProspectID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_details" ("ProspectID","status_process","activity","decision","rule_code","source_decision","next_step","type","info","reason","created_by","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(trxDetail.ProspectID, trxDetail.StatusProcess, trxDetail.Activity, trxDetail.Decision, trxDetail.RuleCode, trxDetail.SourceDecision, trxDetail.NextStep, sqlmock.AnyArg(), trxDetail.Info, trxDetail.Reason, trxDetail.CreatedBy, sqlmock.AnyArg()).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_history_approval_scheme" ("id","ProspectID","decision","reason","note","created_at","created_by","decision_by","need_escalation","next_final_approval_flag","source_decision","next_step") VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(sqlmock.AnyArg(), trxHistoryApproval.ProspectID, trxHistoryApproval.Decision, trxHistoryApproval.Reason, trxHistoryApproval.Note, sqlmock.AnyArg(), trxHistoryApproval.CreatedBy, trxHistoryApproval.DecisionBy, sqlmock.AnyArg(), sqlmock.AnyArg(), trxHistoryApproval.SourceDecision, trxHistoryApproval.NextStep).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_final_approval" ("ProspectID","decision","reason","note","created_at","created_by","decision_by") VALUES (?,?,?,?,?,?,?)`)).
+			WithArgs(trxFinalApproval.ProspectID, trxFinalApproval.Decision, trxFinalApproval.Reason, trxFinalApproval.Note, sqlmock.AnyArg(), trxFinalApproval.CreatedBy, trxFinalApproval.DecisionBy).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectCommit()
+
+		trxStatus, err := newDB.SubmitApproval(req, trxStatus, trxDetail, trxRecalculate, approvalScheme)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
+}
+
+func TestGetQuotaDeviasiBranch(t *testing.T) {
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	expectedBranches := []entity.ConfinsBranch{
+		{
+			BranchID:   "100",
+			BranchName: "JAKARTA",
+		},
+		{
+			BranchID:   "200",
+			BranchName: "SURABAYA",
+		},
+	}
+
+	t.Run("success with filter", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqListQuotaDeviasiBranch{
+			BranchID:   "100,200",
+			BranchName: "JAKARTA",
+		}
+
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT DISTINCT mbd.BranchID, cb.BranchName
+			FROM m_branch_deviasi AS mbd WITH (nolock)
+			JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            WHERE mbd.BranchID IN ('100','200') AND cb.BranchName LIKE '%JAKARTA%'
+            ORDER BY cb.BranchName ASC`)).
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
+				AddRow("100", "JAKARTA").
+				AddRow("200", "SURABAYA"))
+
+		mock.ExpectCommit()
+
+		// Call the function
+		branches, err := repo.GetQuotaDeviasiBranch(req)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedBranches, branches, "Expected branches slice to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+		// Expected input and output
+		req := request.ReqListQuotaDeviasiBranch{}
+
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT DISTINCT mbd.BranchID, cb.BranchName
+			FROM m_branch_deviasi AS mbd WITH (nolock)
+			JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+			ORDER BY cb.BranchName ASC`)).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		mock.ExpectCommit()
+
+		// Call the function
+		_, err := repo.GetQuotaDeviasiBranch(req)
+
+		// Verify the error message
+		expectedErr := errors.New(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestGetInquiryQuotaDeviasi(t *testing.T) {
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	expectedData := []entity.InquirySettingQuotaDeviasi{
+		{
+			BranchID:     "400",
+			BranchName:   "BEKASI",
+			QuotaAmount:  100,
+			QuotaAccount: 50,
+			IsActive:     true,
+		},
+	}
+
+	t.Run("success with search", func(t *testing.T) {
+		req := request.ReqListQuotaDeviasi{
+			Search: "abranchname",
+		}
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+                COUNT(*) AS totalRow
+            FROM (
+                SELECT mbd.*, cb.BranchName AS branch_name
+                FROM m_branch_deviasi AS mbd WITH (nolock)
+                JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+                WHERE (mbd.BranchID LIKE '%abranchname%' OR cb.BranchName LIKE '%abranchname%')
+            ) AS y`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT mbd.BranchID, cb.BranchName AS branch_name, mbd.quota_amount, mbd.quota_account, mbd.booking_amount, mbd.booking_account, mbd.balance_amount, mbd.balance_account, mbd.is_active, mbd.updated_by, ISNULL(FORMAT(mbd.updated_at, 'yyyy-MM-dd HH:mm:ss'), '') AS updated_at
+            FROM m_branch_deviasi AS mbd WITH (nolock)
+            JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            WHERE (mbd.BranchID LIKE '%abranchname%' OR cb.BranchName LIKE '%abranchname%') ORDER BY mbd.is_active DESC, mbd.BranchID ASC OFFSET 0 ROWS FETCH FIRST 10 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "branch_name", "quota_amount", "quota_account", "is_active"}).AddRow("400", "BEKASI", 100, 50, true))
+
+		mock.ExpectCommit()
+
+		data, _, err := repo.GetInquiryQuotaDeviasi(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success with filters", func(t *testing.T) {
+		req := request.ReqListQuotaDeviasi{
+			BranchID: "400",
+			IsActive: "1",
+		}
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+                COUNT(*) AS totalRow
+            FROM (
+                SELECT mbd.*, cb.BranchName AS branch_name
+                FROM m_branch_deviasi AS mbd WITH (nolock)
+                JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+                WHERE mbd.BranchID IN ('400') AND mbd.is_active = '1'
+            ) AS y`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT mbd.BranchID, cb.BranchName AS branch_name, mbd.quota_amount, mbd.quota_account, mbd.booking_amount, mbd.booking_account, mbd.balance_amount, mbd.balance_account, mbd.is_active, mbd.updated_by, ISNULL(FORMAT(mbd.updated_at, 'yyyy-MM-dd HH:mm:ss'), '') AS updated_at
+            FROM m_branch_deviasi AS mbd WITH (nolock)
+            JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            WHERE mbd.BranchID IN ('400') AND mbd.is_active = '1' ORDER BY mbd.is_active DESC, mbd.BranchID ASC OFFSET 0 ROWS FETCH FIRST 10 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "branch_name", "quota_amount", "quota_account", "is_active"}).AddRow("400", "BEKASI", 100, 50, "1"))
+
+		mock.ExpectCommit()
+
+		data, _, err := repo.GetInquiryQuotaDeviasi(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+		req := request.ReqListQuotaDeviasi{}
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+                COUNT(*) AS totalRow
+            FROM (
+                SELECT mbd.*, cb.BranchName AS branch_name
+                FROM m_branch_deviasi AS mbd WITH (nolock)
+                JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            ) AS y`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("0"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT mbd.BranchID, cb.BranchName AS branch_name, mbd.quota_amount, mbd.quota_account, mbd.booking_amount, mbd.booking_account, mbd.balance_amount, mbd.balance_account, mbd.is_active, mbd.updated_by, ISNULL(FORMAT(mbd.updated_at, 'yyyy-MM-dd HH:mm:ss'), '') AS updated_at
+            FROM m_branch_deviasi AS mbd WITH (nolock)
+            JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            ORDER BY mbd.is_active DESC, mbd.BranchID ASC OFFSET 0 ROWS FETCH FIRST 10 ROWS ONLY`)).
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "branch_name", "quota_amount", "quota_account", "is_active"}))
+
+		mock.ExpectCommit()
+
+		_, _, err := repo.GetInquiryQuotaDeviasi(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		expectedErr := fmt.Errorf(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("error get count data", func(t *testing.T) {
+		req := request.ReqListQuotaDeviasi{}
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+                COUNT(*) AS totalRow
+            FROM (
+                SELECT mbd.*, cb.BranchName AS branch_name
+                FROM m_branch_deviasi AS mbd WITH (nolock)
+                JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            ) AS y`)).
+			WillReturnError(sql.ErrNoRows)
+
+		mock.ExpectCommit()
+
+		_, _, err := repo.GetInquiryQuotaDeviasi(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		if err == nil {
+			t.Fatalf("Expected an error, got nil")
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("error get data", func(t *testing.T) {
+		req := request.ReqListQuotaDeviasi{}
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
+                COUNT(*) AS totalRow
+            FROM (
+                SELECT mbd.*, cb.BranchName AS branch_name
+                FROM m_branch_deviasi AS mbd WITH (nolock)
+                JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            ) AS y`)).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT mbd.BranchID, cb.BranchName AS branch_name, mbd.quota_amount, mbd.quota_account, mbd.booking_amount, mbd.booking_account, mbd.balance_amount, mbd.balance_account, mbd.is_active, mbd.updated_by, ISNULL(FORMAT(mbd.updated_at, 'yyyy-MM-dd HH:mm:ss'), '') AS updated_at
+            FROM m_branch_deviasi AS mbd WITH (nolock)
+            JOIN confins_branch AS cb ON (mbd.BranchID = cb.BranchID)
+            ORDER BY mbd.is_active DESC, mbd.BranchID ASC OFFSET 0 ROWS FETCH FIRST 10 ROWS ONLY`)).
+			WillReturnError(sql.ErrNoRows)
+
+		mock.ExpectCommit()
+
+		_, _, err := repo.GetInquiryQuotaDeviasi(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		if err == nil {
+			t.Fatalf("Expected an error, got nil")
+		}
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestProcessUpdateQuotaDeviasiBranch(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	branchID := "BR001"
+	mBranchDeviasi := entity.MappingBranchDeviasi{
+		BranchID:     branchID,
+		QuotaAmount:  10000,
+		QuotaAccount: 5,
+		IsActive:     true,
+		UpdatedBy:    "tester",
+	}
+
+	t.Run("success update", func(t *testing.T) {
+		dataBefore := entity.DataQuotaDeviasiBranch{
+			QuotaAmount:    8000,
+			QuotaAccount:   3,
+			BookingAmount:  2000,
+			BookingAccount: 2,
+			BalanceAmount:  6000,
+			BalanceAccount: 1,
+			IsActive:       true,
+			UpdatedAt:      time.Now(),
+			UpdatedBy:      "tester",
+		}
+
+		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?`)).
+			WithArgs(branchID).
+			WillReturnRows(sqlmock.NewRows([]string{"quota_amount", "quota_account", "booking_amount", "booking_account", "balance_amount", "balance_account", "is_active", "updated_at", "updated_by"}).
+				AddRow(dataBefore.QuotaAmount, dataBefore.QuotaAccount, dataBefore.BookingAmount, dataBefore.BookingAccount, 6000, 1, true, time.Now(), "tester"))
+
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "m_branch_deviasi" SET "balance_account" = ?, "balance_amount" = ?, "is_active" = ?, "quota_account" = ?, "quota_amount" = ?, "updated_at" = ?, "updated_by" = ? WHERE (BranchID = ?)`)).
+			WithArgs(3, 8000.00, mBranchDeviasi.IsActive, mBranchDeviasi.QuotaAccount, mBranchDeviasi.QuotaAmount, sqlmock.AnyArg(), mBranchDeviasi.UpdatedBy, branchID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?`)).
+			WithArgs(branchID).
+			WillReturnRows(sqlmock.NewRows([]string{"quota_amount", "quota_account", "booking_amount", "booking_account", "balance_amount", "balance_account", "is_active", "updated_at", "updated_by"}).
+				AddRow(dataBefore.QuotaAmount, dataBefore.QuotaAccount, dataBefore.BookingAmount, dataBefore.BookingAccount, 8000, 3, true, time.Now(), "tester"))
+
+		mock.ExpectCommit()
+
+		dataBeforeResult, dataAfterResult, err := repo.ProcessUpdateQuotaDeviasiBranch(branchID, mBranchDeviasi)
+		dataBeforeResult.UpdatedAt = dataBefore.UpdatedAt
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if dataBeforeResult != dataBefore {
+			t.Errorf("expected dataBefore: %v, got: %v", dataBefore, dataBeforeResult)
+		}
+		if dataAfterResult.BalanceAmount != mBranchDeviasi.QuotaAmount-dataBefore.BookingAmount {
+			t.Errorf("expected balance amount: %v, got: %v", mBranchDeviasi.QuotaAmount-dataBefore.BookingAmount, dataAfterResult.BalanceAmount)
+		}
+		if dataAfterResult.BalanceAccount != mBranchDeviasi.QuotaAccount-dataBefore.BookingAccount {
+			t.Errorf("expected balance account: %v, got: %v", mBranchDeviasi.QuotaAccount-dataBefore.BookingAccount, dataAfterResult.BalanceAccount)
+		}
+	})
+
+	t.Run("error when booking amount exceeds quota", func(t *testing.T) {
+		dataBefore := entity.DataQuotaDeviasiBranch{
+			QuotaAmount:    8000,
+			QuotaAccount:   3,
+			BookingAmount:  11000, // Exceeds new quota
+			BookingAccount: 2,
+		}
+
+		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?`)).
+			WithArgs(branchID).
+			WillReturnRows(sqlmock.NewRows([]string{"quota_amount", "quota_account", "booking_amount", "booking_account", "balance_amount", "balance_account", "is_active", "updated_at", "updated_by"}).
+				AddRow(dataBefore.QuotaAmount, dataBefore.QuotaAccount, dataBefore.BookingAmount, dataBefore.BookingAccount, 6000, 3, true, time.Now(), "tester"))
+
+		mock.ExpectRollback()
+
+		_, _, err := repo.ProcessUpdateQuotaDeviasiBranch(branchID, mBranchDeviasi)
+		if err == nil || err.Error() != "BookingAmount > QuotaAmount" {
+			t.Errorf("expected error: BookingAmount > QuotaAmount, got: %v", err)
+		}
+	})
+
+	t.Run("error when booking account exceeds quota", func(t *testing.T) {
+		dataBefore := entity.DataQuotaDeviasiBranch{
+			QuotaAmount:    8000,
+			QuotaAccount:   3,
+			BookingAmount:  2000,
+			BookingAccount: 6, // Exceeds new quota
+		}
+
+		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?`)).
+			WithArgs(branchID).
+			WillReturnRows(sqlmock.NewRows([]string{"quota_amount", "quota_account", "booking_amount", "booking_account", "balance_amount", "balance_account", "is_active", "updated_at", "updated_by"}).
+				AddRow(dataBefore.QuotaAmount, dataBefore.QuotaAccount, dataBefore.BookingAmount, dataBefore.BookingAccount, 6000, 3, true, time.Now(), "tester"))
+
+		mock.ExpectRollback()
+
+		_, _, err := repo.ProcessUpdateQuotaDeviasiBranch(branchID, mBranchDeviasi)
+		if err == nil || err.Error() != "BookingAccount > QuotaAccount" {
+			t.Errorf("expected error: BookingAccount > QuotaAccount, got: %v", err)
+		}
+	})
+}
+
+func TestBatchUpdateQuotaDeviasi(t *testing.T) {
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	// Expected input and output
+	data := []entity.MappingBranchDeviasi{
+		{
+			BranchID:       "400",
+			QuotaAmount:    1000,
+			QuotaAccount:   500,
+			BookingAmount:  200,
+			BookingAccount: 100,
+			IsActive:       true,
+			UpdatedBy:      "1234567",
+		},
+	}
+
+	t.Run("success without rollback", func(t *testing.T) {
+		// Mock SQL query and result
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(
+			`SELECT BranchID, final_approval, quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID IN (?)`)).
+			WithArgs(data[0].BranchID).
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "quota_amount", "quota_account", "booking_amount", "booking_account", "is_active"}).
+				AddRow(data[0].BranchID, 800, 400, 200, 100, true))
+
+		mock.ExpectExec(regexp.QuoteMeta(
+			`UPDATE "m_branch_deviasi" SET "balance_account" = ?, "balance_amount" = ?, "quota_account" = ?, "quota_amount" = ?, "updated_at" = ?, "updated_by" = ? WHERE (BranchID = ?)`)).
+			WithArgs(400, 800.00, data[0].QuotaAccount, data[0].QuotaAmount, sqlmock.AnyArg(), data[0].UpdatedBy, data[0].BranchID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta(
+			`SELECT BranchID, final_approval, quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID IN (?)`)).
+			WithArgs(data[0].BranchID).
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "quota_amount", "quota_account", "booking_amount", "booking_account", "is_active"}).
+				AddRow(data[0].BranchID, 800, 400, 200, 100, true))
+
+		mock.ExpectCommit()
+
+		// Call the function
+		dataBefore, dataAfter, err := repo.BatchUpdateQuotaDeviasi(data)
+
+		// Verify the result
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		if dataBefore == nil || dataAfter == nil {
+			t.Fatalf("Expected non-nil dataBefore and dataAfter")
+		}
+
+		// Ensure all expectations were met
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestProcessResetQuotaDeviasiBranch(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	branchID := "BR001"
+	updatedBy := "tester"
+
+	t.Run("success update", func(t *testing.T) {
+		dataBefore := entity.DataQuotaDeviasiBranch{
+			QuotaAmount:    8000,
+			QuotaAccount:   3,
+			BookingAmount:  2000,
+			BookingAccount: 2,
+			BalanceAmount:  6000,
+			BalanceAccount: 1,
+			IsActive:       true,
+			UpdatedAt:      time.Now(),
+			UpdatedBy:      "tester",
+		}
+
+		mock.ExpectBegin()
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?`)).
+			WithArgs(branchID).
+			WillReturnRows(sqlmock.NewRows([]string{"quota_amount", "quota_account", "booking_amount", "booking_account", "balance_amount", "balance_account", "is_active", "updated_at", "updated_by"}).
+				AddRow(dataBefore.QuotaAmount, dataBefore.QuotaAccount, dataBefore.BookingAmount, dataBefore.BookingAccount, dataBefore.BalanceAmount, dataBefore.BalanceAccount, true, time.Now(), "tester"))
+
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "m_branch_deviasi" SET "balance_account" = ?, "balance_amount" = ?, "booking_account" = ?, "booking_amount" = ?, "is_active" = ?, "quota_account" = ?, "quota_amount" = ?, "updated_at" = ?, "updated_by" = ? WHERE (BranchID = ?)`)).
+			WithArgs(0, 0.00, 0, 0.00, false, 0, 0.00, sqlmock.AnyArg(), updatedBy, branchID).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 quota_amount, quota_account, booking_amount, booking_account, balance_amount, balance_account, is_active, updated_at, updated_by FROM m_branch_deviasi WITH (nolock) WHERE BranchID = ?`)).
+			WithArgs(branchID).
+			WillReturnRows(sqlmock.NewRows([]string{"quota_amount", "quota_account", "booking_amount", "booking_account", "balance_amount", "balance_account", "is_active", "updated_at", "updated_by"}).
+				AddRow(0.00, 0, 0.00, 0, 0.00, 0, false, time.Now(), "tester"))
+
+		mock.ExpectCommit()
+
+		dataBeforeResult, dataAfterResult, err := repo.ProcessResetQuotaDeviasiBranch(branchID, updatedBy)
+		dataBeforeResult.UpdatedAt = dataBefore.UpdatedAt
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+		if dataBeforeResult != dataBefore {
+			t.Errorf("expected dataBefore: %v, got: %v", dataBefore, dataBeforeResult)
+		}
+		if dataAfterResult.BalanceAmount != 0.00 {
+			t.Errorf("expected balance amount: %v, got: %v", 0.00, dataAfterResult.BalanceAmount)
+		}
+	})
+}
+
+func TestProcessResetAllQuotaDeviasi(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	updatedBy := "tester"
+
+	t.Run("success update", func(t *testing.T) {
+
+		mock.ExpectBegin()
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "m_branch_deviasi" SET "balance_account" = ?, "balance_amount" = ?, "booking_account" = ?, "booking_amount" = ?, "is_active" = ?, "quota_account" = ?, "quota_amount" = ?, "updated_at" = ?, "updated_by" = ?`)).
+			WithArgs(0, 0.00, 0, 0.00, false, 0, 0.00, sqlmock.AnyArg(), updatedBy).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectCommit()
+
+		err := repo.ProcessResetAllQuotaDeviasi(updatedBy)
+
+		if err != nil {
+			t.Errorf("unexpected error: %s", err)
+		}
+	})
 }
 
 func TestGetMappingCluster(t *testing.T) {

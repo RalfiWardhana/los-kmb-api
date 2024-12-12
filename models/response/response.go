@@ -75,6 +75,7 @@ type IntegratorScorePro struct {
 	Segmen      string      `json:"segmen"`
 	IsTsi       bool        `json:"is_tsi"`
 	ScoreBin    interface{} `json:"score_bin"`
+	Deviasi     interface{} `json:"deviasi"`
 }
 
 type ScorePro struct {
@@ -346,6 +347,7 @@ type SpDupcheckMap struct {
 	DetailsDSR                       interface{} `json:"details_dsr"`
 	ConfigMaxDSR                     float64     `json:"config_max_dsr"`
 	Cluster                          interface{} `json:"cluster"`
+	AgreementSettledExist            bool        `json:"agreement_settled_exist"`
 }
 
 type SpDupCekCustomerByID struct {
@@ -865,6 +867,7 @@ type ApprovalResponse struct {
 	ProspectID     string `json:"prospect_id"`
 	Decision       string `json:"decision"`
 	Reason         string `json:"reason"`
+	Code           string `json:"code"`
 	Note           string `json:"note"`
 	IsFinal        bool   `json:"is_final"`
 	NeedEscalation bool   `json:"need_escalation"`
@@ -879,14 +882,30 @@ type SubmitRecalculateResponse struct {
 	ServerTime string      `json:"timestamp"`
 }
 
+type UpdateQuotaDeviasiBranchResponse struct {
+	Status           string                        `json:"status"`
+	Message          string                        `json:"message"`
+	BranchID         string                        `json:"branch_id"`
+	DataBeforeUpdate entity.DataQuotaDeviasiBranch `json:"data_before_update,omitempty"`
+	DataAfterUpdate  entity.DataQuotaDeviasiBranch `json:"data_after_update,omitempty"`
+}
+
+type UploadQuotaDeviasiBranchResponse struct {
+	Status           string                        `json:"status"`
+	Message          string                        `json:"message"`
+	DataBeforeUpdate []entity.MappingBranchDeviasi `json:"data_before_update,omitempty"`
+	DataAfterUpdate  []entity.MappingBranchDeviasi `json:"data_after_update,omitempty"`
+}
+
 type EmployeeCMOResponse struct {
-	EmployeeID         string `json:"employee_id"`
-	EmployeeName       string `json:"employee_name"`
-	EmployeeIDWithName string `json:"employee_id_with_name"`
-	JoinDate           string `json:"join_date"`
-	PositionGroupCode  string `json:"position_group_code"`
-	PositionGroupName  string `json:"position_group_name"`
-	CMOCategory        string `json:"cmo_category"`
+	EmployeeID         string      `json:"employee_id"`
+	EmployeeName       string      `json:"employee_name"`
+	EmployeeIDWithName string      `json:"employee_id_with_name"`
+	JoinDate           string      `json:"join_date"`
+	PositionGroupCode  string      `json:"position_group_code"`
+	PositionGroupName  string      `json:"position_group_name"`
+	CMOCategory        string      `json:"cmo_category"`
+	IsCmoSpv           interface{} `json:"is_cmo_spv"`
 }
 
 type EmployeeCareerHistory struct {
@@ -901,6 +920,7 @@ type EmployeeCareerHistory struct {
 	PositionNameOld   string `json:"position_name_old"`
 	PositionCodeNew   string `json:"position_code_new"`
 	PositionNameNew   string `json:"position_name_new"`
+	IsResign          bool   `json:"is_resign"`
 }
 
 type GetEmployeeByID struct {
@@ -930,6 +950,40 @@ type GetFPDCmoByID struct {
 	Metadata interface{} `json:"metadata"`
 }
 
+type AgreementData struct {
+	BranchID              string    `json:"branch_id"`
+	CustomerID            string    `json:"customer_id"`
+	ApplicationID         string    `json:"application_id"`
+	AgreementNo           string    `json:"agreement_no"`
+	LegalName             string    `json:"legal_name"`
+	InstallmentAmount     int       `json:"installment_amount"`
+	DownPayment           int       `json:"down_payment"`
+	Tenor                 int       `json:"tenor"`
+	GoLiveDate            time.Time `json:"go_live_date"`
+	OutstandingPrincipal  int       `json:"outstanding_principal"`
+	ContractStatus        string    `json:"contract_status"`
+	NextInstallmentNumber int       `json:"next_installment_number"`
+	NextInstallmentDate   time.Time `json:"next_installment_date"`
+	LicensePlate          string    `json:"license_plate"`
+	AssetTypeID           string    `json:"asset_type_id"`
+	AssetCode             string    `json:"asset_code"`
+	ManufacturingYear     int       `json:"manufacturing_year"`
+	RrdDate               time.Time `json:"rrd_date"`
+	Bpkb                  string    `json:"bpkb"`
+	SerialNo1             string    `json:"serial_no_1"`
+	SerialNo2             string    `json:"serial_no_2"`
+	TotalOtr              int       `json:"total_otr"`
+	DiscountOtr           int       `json:"discount_otr"`
+}
+
+type ConfinsAgreementCustomer struct {
+	Code     string           `json:"code"`
+	Message  string           `json:"message"`
+	Data     *[]AgreementData `json:"data"`
+	Errors   interface{}      `json:"errors"`
+	Metadata interface{}      `json:"metadata"`
+}
+
 type ExpiredContractConfig struct {
 	Data ConfigExpiredContract `json:"data"`
 }
@@ -937,4 +991,278 @@ type ExpiredContractConfig struct {
 type ConfigExpiredContract struct {
 	ExpiredContractCheckEnabled bool `json:"expired_contract_check_enabled"`
 	ExpiredContractMaxMonths    int  `json:"expired_contract_max_months"`
+}
+
+type StepPrinciple struct {
+	ProspectID string `json:"prospect_id"`
+	ColorCode  string `json:"color_code"`
+	Status     string `json:"status"`
+	UpdatedAt  string `json:"updated_at"`
+}
+
+type CustomerDomainValidate struct {
+	Code      string                     `json:"code"`
+	Message   string                     `json:"message"`
+	Data      CustomerDomainValidateData `json:"data"`
+	Errors    interface{}                `json:"errors"`
+	RequestID string                     `json:"request_id"`
+	Timestamp string                     `json:"timestamp"`
+}
+
+type CustomerDomainValidateData struct {
+	CustomerID int `json:"customer_id"`
+	KPMID      int `json:"kpm_id"`
+}
+
+type CustomerDomainInsert struct {
+	Code      string                   `json:"code"`
+	Message   string                   `json:"message"`
+	Data      CustomerDomainInsertData `json:"data"`
+	Errors    interface{}              `json:"errors"`
+	RequestID string                   `json:"request_id"`
+	Timestamp string                   `json:"timestamp"`
+}
+
+type CustomerDomainInsertData struct {
+	CustomerID    int  `json:"customer_id"`
+	IsNewCustomer bool `json:"is_new_customer"`
+}
+
+type CustomerDomainUpdateCustomerTransaction struct {
+	Code      string      `json:"code"`
+	Message   string      `json:"message"`
+	Data      interface{} `json:"data"`
+	Errors    interface{} `json:"errors"`
+	RequestID string      `json:"request_id"`
+	Timestamp string      `json:"timestamp"`
+}
+
+type MarsevLoanAmountResponse struct {
+	Code    int                  `json:"code"`
+	Message string               `json:"message"`
+	Data    MarsevLoanAmountData `json:"data"`
+	Errors  interface{}          `json:"errors"`
+}
+
+type MarsevLoanAmountData struct {
+	LoanAmountMaximum  float64 `json:"loan_amount_maximum"`
+	AmountOfFinance    float64 `json:"amount_of_finance"`
+	DpAmount           float64 `json:"dp_amount"`
+	DpPercentFinal     float64 `json:"dp_percent_final"`
+	LtvPercentFinal    float64 `json:"ltv_percent_final"`
+	AdminFeeAmount     float64 `json:"admin_fee_amount"`
+	ProvisionFeeAmount float64 `json:"provision_fee_amount"`
+	LoanAmountFinal    float64 `json:"loan_amount_final"`
+	IsPsa              bool    `json:"is_psa"`
+}
+
+type MarsevFilterProgramResponse struct {
+	Code     int                       `json:"code"`
+	Message  string                    `json:"message"`
+	Data     []MarsevFilterProgramData `json:"data"`
+	PageInfo interface{}               `json:"page_info"`
+	Errors   interface{}               `json:"errors"`
+}
+
+type MarsevFilterProgramData struct {
+	ID                         string      `json:"id"`
+	ProgramName                string      `json:"program_name"`
+	MINumber                   int         `json:"mi_number"`
+	PeriodStart                string      `json:"period_start"`
+	PeriodEnd                  string      `json:"period_end"`
+	Priority                   int         `json:"priority"`
+	Description                string      `json:"description"`
+	ProductID                  string      `json:"product_id"`
+	ProductOfferingID          string      `json:"product_offering_id"`
+	ProductOfferingDescription string      `json:"product_offering_description"`
+	Tenors                     interface{} `json:"tenors"`
+}
+
+type MarsevCalculateInstallmentResponse struct {
+	Code    int                              `json:"code"`
+	Message string                           `json:"message"`
+	Data    []MarsevCalculateInstallmentData `json:"data"`
+	Errors  interface{}                      `json:"errors"`
+}
+
+type MarsevCalculateInstallmentData struct {
+	InstallmentTypeCode        string  `json:"installment_type_code"`
+	IsPSA                      bool    `json:"is_psa"`
+	Tenor                      int     `json:"tenor"`
+	AdminFee                   float64 `json:"admin_fee"`
+	AdminFeePSA                float64 `json:"admin_fee_psa"`
+	ProvisionFee               float64 `json:"provision_fee"`
+	AmountOfFinance            float64 `json:"amount_of_finance"`
+	DPAmount                   float64 `json:"dp_amount"`
+	DPPercent                  float64 `json:"dp_percent"`
+	AdditionalRate             float64 `json:"additional_rate"`
+	EffectiveRate              float64 `json:"effective_rate"`
+	LifeInsurance              float64 `json:"life_insurance"`
+	AssetInsurance             float64 `json:"asset_insurance"`
+	TotalInsurance             float64 `json:"total_insurance"`
+	FiduciaFee                 float64 `json:"fiducia_fee"`
+	NTF                        float64 `json:"ntf"`
+	MonthlyInstallment         float64 `json:"monthly_installment"`
+	MonthlyInstallmentMin      float64 `json:"monthly_installment_min"`
+	MonthlyInstallmentMax      float64 `json:"monthly_installment_max"`
+	TotalLoan                  float64 `json:"total_loan"`
+	AmountOfInterest           float64 `json:"amount_of_interest"`
+	FlatRateYearlyPercent      float64 `json:"flat_rate_yearly_percent"`
+	FlatRateMonthlyPercent     float64 `json:"flat_rate_monthly_percent"`
+	ProductID                  string  `json:"product_id"`
+	ProductOfferingID          string  `json:"product_offering_id"`
+	ProductOfferingDescription string  `json:"product_offering_description"`
+	SubsidyAmountScheme        float64 `json:"subsidy_amount_scheme"`
+	FineAmount                 float64 `json:"fine_amount"`
+	FineAmountFormula          string  `json:"fine_amount_formula"`
+	FineAmountDetail           string  `json:"fine_amount_detail"`
+	NTFFormula                 string  `json:"ntf_formula"`
+	NTFDetail                  string  `json:"ntf_detail"`
+	AmountOfInterestFormula    string  `json:"amount_of_interest_formula"`
+	AmountOfInterestDetail     string  `json:"amount_of_interest_detail"`
+	WanprestasiFreightFee      float64 `json:"wanprestasi_freight_fee"`
+	ExternalFreightFee         float64 `json:"external_freight_fee"`
+	WanprestasiFreightFormula  string  `json:"wanprestasi_freight_formula"`
+	WanprestasiFreightDetail   string  `json:"wanprestasi_freight_detail"`
+	ExternalFreightFormula     string  `json:"external_freight_formula"`
+	ExternalFreightDetail      string  `json:"external_freight_detail"`
+	IsStampDutyAsLoan          *bool   `json:"is_stamp_duty_as_loan"`
+	StampDutyFee               float64 `json:"stamp_duty_fee"`
+}
+
+type MDMMasterMappingLicensePlateResponse struct {
+	Code      string                           `json:"code"`
+	Message   string                           `json:"message"`
+	Data      MDMMasterMappingLicensePlateData `json:"data"`
+	Errors    interface{}                      `json:"errors"`
+	RequestID string                           `json:"request_id"`
+	Timestamp string                           `json:"timestamp"`
+}
+
+type MDMMasterMappingLicensePlateData struct {
+	Records     []MDMMasterMappingLicensePlateRecord `json:"records"`
+	MaxPage     int                                  `json:"max_page"`
+	Total       int                                  `json:"total"`
+	PageSize    int                                  `json:"page_size"`
+	CurrentPage int                                  `json:"current_page"`
+}
+
+type MDMMasterMappingLicensePlateRecord struct {
+	PlateAreaID     int     `json:"plate_area_id"`
+	PlateID         int     `json:"plate_id"`
+	PlateCode       string  `json:"plate_code"`
+	AreaID          string  `json:"area_id"`
+	AreaDescription string  `json:"area_description"`
+	LobID           int     `json:"lob_id"`
+	CreatedAt       string  `json:"created_at"`
+	CreatedBy       string  `json:"created_by"`
+	UpdatedAt       *string `json:"updated_at,omitempty"`
+	UpdatedBy       *string `json:"updated_by,omitempty"`
+	DeletedAt       *string `json:"deleted_at,omitempty"`
+	DeletedBy       *string `json:"deleted_by,omitempty"`
+}
+
+type MDMMasterDetailBranchResponse struct {
+	Code      string                    `json:"code"`
+	Message   string                    `json:"message"`
+	Data      MDMMasterDetailBranchData `json:"data"`
+	Errors    interface{}               `json:"errors"`
+	RequestID string                    `json:"request_id"`
+	Timestamp string                    `json:"timestamp"`
+}
+
+type MDMMasterDetailBranchData struct {
+	BranchID      string  `json:"branch_id"`
+	BranchName    string  `json:"branch_name"`
+	CreatedAt     string  `json:"created_at"`
+	CreatedBy     string  `json:"created_by"`
+	UpdatedAt     *string `json:"updated_at,omitempty"`
+	UpdatedBy     *string `json:"updated_by,omitempty"`
+	IsActive      bool    `json:"is_active"`
+	BranchAddress string  `json:"branch_address"`
+}
+
+type SallySubmit2wPrincipleResponse struct {
+	Code      int         `json:"code"`
+	Message   string      `json:"message"`
+	Data      interface{} `json:"data"`
+	Errors    interface{} `json:"errors"`
+	RequestID string      `json:"request_id"`
+	Timestamp string      `json:"timestamp"`
+}
+
+type MDMMasterMappingBranchEmployeeResponse struct {
+	Code     string                                 `json:"code"`
+	Message  string                                 `json:"message"`
+	Data     []MDMMasterMappingBranchEmployeeRecord `json:"data"`
+	Errors   interface{}                            `json:"errors"`
+	Metadata MDMMasterMappingBranchEmployeeMetadata `json:"metadata"`
+}
+
+type MDMMasterMappingBranchEmployeeRecord struct {
+	ID         int     `json:"id"`
+	BranchID   string  `json:"branch_id"`
+	BranchName string  `json:"branch_name"`
+	CMOID      string  `json:"cmo_id"`
+	CMOName    string  `json:"cmo_name"`
+	LobID      int     `json:"lob_id"`
+	CreatedAt  string  `json:"created_at"`
+	CreatedBy  string  `json:"created_by"`
+	UpdatedAt  *string `json:"updated_at,omitempty"`
+	UpdatedBy  *string `json:"updated_by,omitempty"`
+	DeletedAt  *string `json:"deleted_at,omitempty"`
+	DeletedBy  *string `json:"deleted_by,omitempty"`
+}
+
+type MDMMasterMappingBranchEmployeeMetadata struct {
+	Pagination MDMMasterMappingBranchEmployeePagination `json:"pagination"`
+}
+
+type MDMMasterMappingBranchEmployeePagination struct {
+	Limit    int  `json:"limit"`
+	NextPage bool `json:"next_page"`
+	Page     int  `json:"page"`
+	PrevPage bool `json:"prev_page"`
+	Total    int  `json:"total"`
+}
+
+type AssetYearList struct {
+	Records []struct {
+		AssetCode        string `json:"asset_code"`
+		BranchID         string `json:"branch_id"`
+		Brand            string `json:"brand"`
+		ManufactureYear  int    `json:"manufacturing_year"`
+		MarketPriceValue int    `json:"market_price_value"`
+	} `json:"records"`
+}
+
+type PrincipleElaborateLTV struct {
+	LTV               int         `json:"ltv"`
+	AdjustTenor       bool        `json:"adjust_tenor"`
+	MaxTenor          int         `json:"max_tenor"`
+	Reason            string      `json:"reason"`
+	LoanAmountMaximum float64     `json:"loan_amount_maximum"`
+	IsPsa             interface{} `json:"is_psa,omitempty"`
+	Dealer            interface{} `json:"dealer,omitempty"`
+	InstallmentAmount interface{} `json:"installment_amount,omitempty"`
+	AF                interface{} `json:"af,omitempty"`
+	AdminFee          interface{} `json:"admin_fee,omitempty"`
+	NTF               interface{} `json:"ntf,omitempty"`
+	AssetCategoryID   interface{} `json:"asset_category_id,omitempty"`
+	Otr               interface{} `json:"otr,omitempty"`
+}
+
+type AssetList struct {
+	Records []struct {
+		AssetCode           string `json:"asset_code"`
+		AssetDescription    string `json:"asset_description"`
+		AssetDisplay        string `json:"asset_display"`
+		AssetTypeID         string `json:"asset_type_id"`
+		BranchID            string `json:"branch_id"`
+		Brand               string `json:"brand"`
+		CategoryID          string `json:"category_id"`
+		CategoryDescription string `json:"category_description"`
+		IsElectric          bool   `json:"is_electric"`
+		Model               string `json:"model"`
+	} `json:"records"`
 }

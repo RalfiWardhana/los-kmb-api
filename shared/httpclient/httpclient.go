@@ -106,7 +106,7 @@ func (h httpClientHandler) EngineAPI(ctx context.Context, logFile, link string, 
 		})
 		err = fmt.Errorf(constant.ERROR_CONNECTION)
 		if retryNumber > 0 && currentRetryAttempt >= retryNumber {
-			err = fmt.Errorf(constant.RESTY_MAX_RETRY_ERROR)
+			err = fmt.Errorf(link + " " + constant.RESTY_MAX_RETRY_ERROR)
 		}
 		return
 	}
@@ -131,7 +131,7 @@ func (h httpClientHandler) EngineAPI(ctx context.Context, logFile, link string, 
 				Request:    mapRequest,
 				Response:   respBody,
 			})
-			err = errors.New(constant.RESTY_MAX_RETRY_ERROR)
+			err = errors.New(link + " " + constant.RESTY_MAX_RETRY_ERROR)
 			return
 		}
 	}

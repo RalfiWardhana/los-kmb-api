@@ -35,14 +35,12 @@ type repoHandler struct {
 	scoreProDB *gorm.DB
 }
 
-func NewRepository(los, logs, confins, staging, wgOffDB, kmbOff, newKmbDB, scorePro *gorm.DB) interfaces.Repository {
+func NewRepository(los, logs, confins, staging, newKmbDB, scorePro *gorm.DB) interfaces.Repository {
 	return &repoHandler{
 		losDB:      los,
 		logsDB:     logs,
 		confinsDB:  confins,
 		stagingDB:  staging,
-		wgOffDB:    wgOffDB,
-		kmbOffDB:   kmbOff,
 		newKmbDB:   newKmbDB,
 		scoreProDB: scorePro,
 	}
@@ -329,6 +327,22 @@ func (r repoHandler) GetMoblast(customerID string) (score entity.GetMoblast, err
 		return
 	}
 
+	return
+}
+
+func (r repoHandler) GetMappingDeviasi(prospectID string) (confirmDeviasi entity.ConfirmDeviasi, err error) {
+	// cek kuota deviasi
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT ta.NTF, mbd.*,
+			CASE 
+				WHEN mbd.balance_amount >= ta.NTF AND mbd.balance_account > 0 THEN 1
+				ELSE 0
+			END AS deviasi
+			FROM trx_master tm 
+			LEFT JOIN trx_apk ta ON tm.ProspectID = ta.ProspectID 
+			LEFT JOIN m_branch_deviasi mbd ON tm.BranchID = mbd.BranchID 
+			WHERE tm.ProspectID = '%s'`, prospectID)).Scan(&confirmDeviasi).Error; err != nil {
+		return
+	}
 	return
 }
 
@@ -691,6 +705,7 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				NTFConfins:                  trxFMF.NTFConfins,
 				NTFTopup:                    trxFMF.NTFTopup,
 				WayOfPayment:                data.Apk.WayOfPayment,
+				StampDutyFee:                data.Apk.StampDutyFee,
 			}
 
 			logInfo = apk
@@ -1822,6 +1837,7 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			InstallmentAmount: apk.InstallmentAmount,
 			EffectiveRate:     apk.EffectiveRate,
 			CommisionSubsidy:  apk.CommisionSubsidi,
+			StampDutyFee:      apk.StampDutyFee,
 			UsrCrt:            constant.LOS_CREATED,
 			DtmCrt:            time.Now(),
 		}).Error; err != nil {
@@ -2093,7 +2109,7 @@ func (r repoHandler) MasterMappingDeviasiDSR(totalIncome float64) (data entity.M
 	return
 }
 
-func (r repoHandler) GetBranchDeviasi(BranchID string) (data entity.MappingBranchDeviasi, err error) {
+func (r repoHandler) GetBranchDeviasi(BranchID string, customerStatus string, NTF float64) (data entity.MappingBranchDeviasi, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
@@ -2102,12 +2118,91 @@ func (r repoHandler) GetBranchDeviasi(BranchID string) (data entity.MappingBranc
 	defer cancel()
 
 	db := r.newKmbDB.BeginTx(ctx, &x)
-	defer db.Commit()
+	defer func() {
+		if r := recover(); r != nil {
+			db.Rollback()
+			panic(r)
+		} else if err != nil {
+			db.Rollback()
+		} else {
+			db.Commit()
+		}
+	}()
 
-	if err = db.Raw("SELECT * FROM dbo.m_branch_deviasi WITH (nolock) WHERE BranchID = ?", BranchID).Scan(&data).Error; err != nil {
+	query := "SELECT * FROM dbo.m_branch_deviasi WITH (nolock) WHERE BranchID = ? AND is_active = 1"
+	args := []interface{}{BranchID}
+
+	if customerStatus != constant.STATUS_KONSUMEN_RO && customerStatus != constant.STATUS_KONSUMEN_AO {
+		query += " AND balance_amount >= ? AND balance_account >= 1"
+		args = append(args, NTF)
+	}
+
+	if err = db.Raw(query, args...).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) ScanTrxPrinciple(prospectID string) (count int, err error) {
+
+	var (
+		trxEmcon []entity.TrxPrincipleEmergencyContact
+	)
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf("SELECT ProspectID FROM trx_principle_emergency_contact WITH (nolock) WHERE ProspectID = '%s'", prospectID)).Scan(&trxEmcon).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	count = len(trxEmcon)
+
+	return
+}
+
+func (r repoHandler) GetPrincipleStepOne(prospectID string) (data entity.TrxPrincipleStepOne, err error) {
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_one WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmbDB.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetPrincipleStepTwo(prospectID string) (data entity.TrxPrincipleStepTwo, err error) {
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_two WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmbDB.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetPrincipleStepThree(prospectID string) (data entity.TrxPrincipleStepThree, err error) {
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_three WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmbDB.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetPrincipleEmergencyContact(prospectID string) (data entity.TrxPrincipleEmergencyContact, err error) {
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_emergency_contact WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmbDB.Raw(query).Scan(&data).Error; err != nil {
 		return
 	}
 

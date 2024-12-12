@@ -40,6 +40,19 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		mappingMaxDSR     entity.MasterMappingIncomeMaxDSR
 	)
 
+	// cek principle order
+	var countTrxPrinciple int
+	countTrxPrinciple, err = u.repository.ScanTrxPrinciple(reqMetrics.Transaction.ProspectID)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Check Principle Order Error")
+		return
+	}
+
+	if countTrxPrinciple > 0 {
+		resultMetrics, err = u.PrincipleSubmission(ctx, reqMetrics, accessToken)
+		return
+	}
+
 	// cek trx_master
 	var trxMaster int
 	trxMaster, err = u.repository.ScanTrxMaster(reqMetrics.Transaction.ProspectID)
@@ -630,7 +643,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	}
 
 	income := reqDupcheck.MonthlyFixedIncome + reqDupcheck.MonthlyVariableIncome + reqDupcheck.SpouseIncome
-	metricsTotalDsrFmfPbk, trxFMFTotalDsrFmfPbk, err := u.usecase.TotalDsrFmfPbk(ctx, income, reqMetrics.Apk.InstallmentAmount, totalInstallmentPBK, reqMetrics.Transaction.ProspectID, customerSegment, accessToken, dupcheckData, configValue, filtering)
+	metricsTotalDsrFmfPbk, trxFMFTotalDsrFmfPbk, err := u.usecase.TotalDsrFmfPbk(ctx, income, reqMetrics.Apk.InstallmentAmount, totalInstallmentPBK, reqMetrics.Transaction.ProspectID, customerSegment, accessToken, dupcheckData, configValue, filtering, reqMetrics.Apk.NTF)
 	if err != nil {
 		return
 	}

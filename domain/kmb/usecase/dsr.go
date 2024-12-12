@@ -230,7 +230,7 @@ func (u usecase) DsrCheck(ctx context.Context, req request.DupcheckApi, customer
 	return
 }
 
-func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment, totalInstallmentPBK float64, prospectID, customerSegment, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig, filtering entity.FilteringKMB) (data response.UsecaseApi, trxFMF response.TrxFMF, err error) {
+func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment, totalInstallmentPBK float64, prospectID, customerSegment, accessToken string, SpDupcheckMap response.SpDupcheckMap, configValue response.DupcheckConfig, filtering entity.FilteringKMB, NTF float64) (data response.UsecaseApi, trxFMF response.TrxFMF, err error) {
 
 	var (
 		RrdDateString           string
@@ -383,7 +383,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 						}
 					}
 				} else {
-					if SpDupcheckMap.NumberOfPaidInstallment >= 6 {
+					if SpDupcheckMap.NumberOfPaidInstallment >= 6 || SpDupcheckMap.AgreementSettledExist {
 						totalDSR = SpDupcheckMap.Dsr
 						trxFMF.TotalDSR = SpDupcheckMap.Dsr
 					}
@@ -400,7 +400,7 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 						trxFMF.TotalDSR = SpDupcheckMap.Dsr
 					}
 				} else {
-					if SpDupcheckMap.NumberOfPaidInstallment >= 6 {
+					if SpDupcheckMap.NumberOfPaidInstallment >= 6 || SpDupcheckMap.AgreementSettledExist {
 						totalDSR = SpDupcheckMap.Dsr
 						trxFMF.TotalDSR = SpDupcheckMap.Dsr
 					}
@@ -429,7 +429,12 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 			mappingDeviasiDSR entity.MasterMappingDeviasiDSR
 			maxDsrDeviasi     float64
 		)
-		branchDeviasi, err = u.repository.GetBranchDeviasi(filtering.BranchID)
+		branchDeviasi, err = u.repository.GetBranchDeviasi(filtering.BranchID, SpDupcheckMap.StatusKonsumen, NTF)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - GetBranchDeviasi on usecase TotalDsrFmfPbk Error")
+			return
+		}
+
 		if branchDeviasi.BranchID != "" {
 			mappingDeviasiDSR, err = u.repository.MasterMappingDeviasiDSR(totalIncome)
 			maxDsrDeviasi = mappingDeviasiDSR.DSRThreshold

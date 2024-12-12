@@ -286,7 +286,7 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 
 	// PRIME PRIORITY
 	if customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY {
-		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_AO && spDupcheck.InstallmentTopup == 0 && spDupcheck.NumberOfPaidInstallment >= 6 {
+		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_AO && spDupcheck.InstallmentTopup == 0 && (spDupcheck.NumberOfPaidInstallment >= 6 || spDupcheck.AgreementSettledExist) {
 			data.Result = constant.DECISION_PASS
 			data.Code = constant.CODE_SCOREPRO_GTEMIN_THRESHOLD
 			data.Reason = constant.REASON_SCOREPRO_GTEMIN_THRESHOLD
@@ -480,8 +480,40 @@ func (u usecase) Scorepro(ctx context.Context, req request.Metrics, pefindoScore
 		}
 	}
 
-	if !strings.Contains(responseScs.Status, "ASS-") && !strings.Contains(responseScs.Status, "ASSCB-") && data.Result == constant.DECISION_REJECT {
-		data.IsDeviasi = true
+	if data.Result == constant.DECISION_REJECT {
+		// get kuota deviasi
+		var confirmDeviasi entity.ConfirmDeviasi
+		confirmDeviasi, err = u.repository.GetMappingDeviasi(req.Transaction.ProspectID)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Scorepro GetMappingDeviasi Error")
+			return
+		}
+
+		// unmarshal info resp int scorepro
+		var infoRespScp response.IntegratorScorePro
+		err = json.Unmarshal(info, &infoRespScp)
+
+		// add info deviasi
+		infoRespScp.Deviasi = confirmDeviasi
+
+		// return info
+		info, _ := json.Marshal(infoRespScp)
+		data.Info = string(utils.SafeEncoding(info))
+
+		// check branch deviasi
+		if confirmDeviasi.IsActive {
+			// check deviasi konsumen
+			if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_NEW {
+				// check kuota deviasi
+				if confirmDeviasi.Deviasi {
+					// kuota tersedia, bisa deviasi
+					data.IsDeviasi = true
+				}
+			} else {
+				// branch deviasi aktif, konsumen ro/ao tidak perlu cek kuota
+				data.IsDeviasi = true
+			}
+		}
 	}
 	return
 }

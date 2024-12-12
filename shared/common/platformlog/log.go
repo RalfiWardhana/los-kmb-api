@@ -27,20 +27,24 @@ func NewPlatformLog() *PlatformLog {
 	return &PlatformLog{}
 }
 
-func (pl PlatformLog) CreateLogger() {
-	var logEnv string
+func GetPlatformEnv() string {
 
 	env := os.Getenv("APP_ENV")
 
 	if strings.Contains(strings.ToLower(env), "production") {
-		logEnv = platformLog.ENV_PRODUCTION
+		return platformLog.ENV_PRODUCTION
 	} else if strings.Contains(strings.ToLower(env), "staging") {
-		logEnv = platformLog.ENV_STAGING
+		return platformLog.ENV_STAGING
 	} else {
-		logEnv = platformLog.ENV_DEVELOPMENT
+		return platformLog.ENV_DEVELOPMENT
 	}
+}
 
-	Logger = platformLog.New(logEnv)
+func (pl PlatformLog) CreateLogger() {
+
+	platformEnv := GetPlatformEnv()
+
+	Logger = platformLog.New(platformEnv)
 }
 
 func (pl PlatformLog) WriteLog(accessToken, level, link, method string, duration float64, header map[string]string, request, response map[string]interface{}) (string, error) {
@@ -81,7 +85,7 @@ func (pl PlatformLog) WriteLog(accessToken, level, link, method string, duration
 		// log.Info("Payload body platform:", body) // gommon log
 		errPlatform, ok := errLogger.Errors.(error)
 		if !ok {
-			errPlatform = fmt.Errorf("unspecified error platform log: %s", errLogger.Messages)
+			errPlatform = fmt.Errorf("unspecified error platform log: %s", errLogger.Message)
 		}
 		return payloadBase64, errPlatform
 	}

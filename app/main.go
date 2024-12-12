@@ -9,15 +9,9 @@ import (
 	cmsDelivery "los-kmb-api/domain/cms/delivery/http"
 	cmsRepository "los-kmb-api/domain/cms/repository"
 	cmsUsecase "los-kmb-api/domain/cms/usecase"
-	elaborateDelivery "los-kmb-api/domain/elaborate/delivery/http"
-	elaborateRepository "los-kmb-api/domain/elaborate/repository"
-	elaborateUsecase "los-kmb-api/domain/elaborate/usecase"
 	elaborateLTVDelivery "los-kmb-api/domain/elaborate_ltv/delivery/http"
 	elaborateLTVRepository "los-kmb-api/domain/elaborate_ltv/repository"
 	elaborateLTVUsecase "los-kmb-api/domain/elaborate_ltv/usecase"
-	filteringDelivery "los-kmb-api/domain/filtering/delivery/http"
-	filteringRepository "los-kmb-api/domain/filtering/repository"
-	filteringUsecase "los-kmb-api/domain/filtering/usecase"
 	eventhandlers "los-kmb-api/domain/filtering_new/delivery/event"
 	newKmbFilteringDelivery "los-kmb-api/domain/filtering_new/delivery/http"
 	newKmbFilteringRepository "los-kmb-api/domain/filtering_new/repository"
@@ -26,6 +20,10 @@ import (
 	kmbDelivery "los-kmb-api/domain/kmb/delivery/http"
 	kmbRepository "los-kmb-api/domain/kmb/repository"
 	kmbUsecase "los-kmb-api/domain/kmb/usecase"
+	eventPrincipleHandler "los-kmb-api/domain/principle/delivery/event"
+	principleDelivery "los-kmb-api/domain/principle/delivery/http"
+	principleRepository "los-kmb-api/domain/principle/repository"
+	principleUsecase "los-kmb-api/domain/principle/usecase"
 	toolsDelivery "los-kmb-api/domain/tools/delivery/http"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/shared/authorization"
@@ -47,11 +45,14 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/KB-FMF/los-common-library/loslog"
+	"github.com/KB-FMF/los-common-library/platform/manager"
+
 	"los-kmb-api/shared/common/platformevent"
 
+	"github.com/KB-FMF/los-common-library/response"
 	"github.com/KB-FMF/platform-library/event"
 	"github.com/allegro/bigcache/v3"
-	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/newrelic/go-agent/v3/integrations/nrecho-v4"
@@ -81,6 +82,7 @@ func main() {
 	config.NewConfiguration(env)
 	e.Pre(middleware.RemoveTrailingSlash())
 	e.Use(middleware.RequestID())
+	e.Use(middleware.Secure())
 	e.Debug = config.IsDevelopment
 
 	if config.IsDevelopment {
@@ -114,6 +116,7 @@ func main() {
 	constant.TOPIC_SUBMISSION = os.Getenv("TOPIC_SUBMISSION")
 	constant.TOPIC_SUBMISSION_LOS = os.Getenv("TOPIC_SUBMISSION_LOS")
 	constant.TOPIC_INSERT_CUSTOMER = os.Getenv("TOPIC_INSERT_CUSTOMER")
+	constant.TOPIC_SUBMISSION_PRINCIPLE = os.Getenv("TOPIC_SUBMISSION_PRINCIPLE")
 
 	//Platform Event key
 	constant.KEY_PREFIX_FILTERING = os.Getenv("KEY_PREFIX_FILTERING")
@@ -123,13 +126,7 @@ func main() {
 	constant.KEY_PREFIX_CALLBACK = os.Getenv("KEY_PREFIX_CALLBACK")
 	constant.KEY_PREFIX_CALLBACK_GOLIVE = os.Getenv("KEY_PREFIX_CALLBACK_GOLIVE")
 	constant.KEY_PREFIX_UPDATE_CUSTOMER = os.Getenv("KEY_PREFIX_UPDATE_CUSTOMER")
-
-	var minilosWG *gorm.DB
-
-	minilosKMB, err := database.OpenMinilosKMB()
-	if err != nil {
-		panic(fmt.Sprintf("Failed to open database connection: %s", err))
-	}
+	constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE = os.Getenv("KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE")
 
 	kpLos, err := database.OpenKpLos()
 	if err != nil {
@@ -166,6 +163,10 @@ func main() {
 		log.Fatal(err)
 	}
 
+	e.Use(middleware.BodyDumpWithConfig(middlewares.NewBodyDumpMiddleware(newKMB).BodyDumpConfig()))
+
+	common.SetDB(newKMB)
+
 	var cache *bigcache.BigCache
 	isCacheActive, _ := strconv.ParseBool(config.Env("CACHE_ACTIVE"))
 	if isCacheActive {
@@ -189,13 +190,13 @@ func main() {
 
 	config.CreateCustomLogFile(constant.LOG_FILTERING_LOG)
 	config.CreateCustomLogFile(constant.NEW_KMB_LOG)
+	config.CreateCustomLogFile(constant.DILEN_KMB_LOG)
 
 	utils.NewCache(cache, kpLos, config.IsDevelopment)
 
 	jsonResponse := json.NewResponse()
 	authRepo := authRepository.NewRepository(newKMB)
 	authorization := authorization.NewAuth(authRepo)
-	apiGroup := e.Group("/api/v2/kmb")
 	apiGroupv3 := e.Group("/api/v3/kmb")
 	httpClient := httpclient.NewHttpClient()
 
@@ -206,20 +207,26 @@ func main() {
 		platformLog.CreateLogger()
 	}
 
-	producer := platformevent.NewPlatformEvent()
+	// init producer topic submission
+	producerSubmission, err := config.ProducerEvent(constant.TOPIC_SUBMISSION, 3)
+	if err != nil {
+		log.Fatalf("Failed Init Producer event %s with Error : %s", constant.TOPIC_SUBMISSION, err.Error())
+	}
+
+	// init producer topic submission-los
+	producerSubmissionLOS, err := config.ProducerEvent(constant.TOPIC_SUBMISSION_LOS, 3)
+	if err != nil {
+		log.Fatalf("Failed Init Producer event %s with Error : %s", constant.TOPIC_SUBMISSION_LOS, err.Error())
+	}
+
+	// init producer topic insert-customer
+	producerInsertCustomer, err := config.ProducerEvent(constant.TOPIC_INSERT_CUSTOMER, 3)
+	if err != nil {
+		log.Fatalf("Failed Init Producer event %s with Error : %s", constant.TOPIC_INSERT_CUSTOMER, err.Error())
+	}
+
+	producer := platformevent.NewPlatformEvent(producerSubmission, producerSubmissionLOS, producerInsertCustomer)
 	platformCache := platformcache.NewPlatformCache()
-
-	// define kmb filtering domain
-	kmbFilteringRepo := filteringRepository.NewRepository(minilosKMB, kpLos, kpLosLogs)
-	kmbElaborateRepo := elaborateRepository.NewRepository(minilosKMB, kpLos)
-	kmbFilteringUsecase := filteringUsecase.NewUsecase(kmbFilteringRepo, kmbElaborateRepo, httpClient)
-	kmbFilteringMultiCase, kmbFilteringCase := filteringUsecase.NewMultiUsecase(kmbFilteringRepo, httpClient, kmbFilteringUsecase)
-	filteringDelivery.FilteringHandler(apiGroup, kmbFilteringMultiCase, kmbFilteringCase, kmbFilteringRepo, jsonResponse, accessToken)
-
-	// define kmb elaborate domain
-	kmbElaborateUsecase := elaborateUsecase.NewUsecase(kmbElaborateRepo, httpClient)
-	kmbElaborateMultiCase, kmbElaborateCase := elaborateUsecase.NewMultiUsecase(kmbElaborateRepo, httpClient, kmbElaborateUsecase)
-	elaborateDelivery.ElaborateHandler(apiGroup, kmbElaborateMultiCase, kmbElaborateCase, kmbElaborateRepo, jsonResponse, accessToken)
 
 	// define new kmb filtering domain
 	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs, newKMB)
@@ -239,11 +246,35 @@ func main() {
 	cmsDelivery.CMSHandler(apiGroupv3, cmsUsecases, cmsRepositories, jsonResponse, producer, accessToken)
 
 	// define new kmb journey
-	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, core, staging, minilosWG, minilosKMB, newKMB, scorePro)
+	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, core, staging, newKMB, scorePro)
 	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
 	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
 	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, authorization, jsonResponse, accessToken, producer)
+
+	managers := manager.New(platformlog.GetPlatformEnv(), os.Getenv("PLATFORM_SECRET_KEY"), os.Getenv("PLATFORM_AUTH_BASE_URL")+"/v1/auth/login")
+
+	libLog := loslog.NewConfig(
+		"Orchestrator-kmb",
+		managers,
+		loslog.WithHookPlatform(true),
+	)
+
+	defer func() {
+		_ = libLog.Sync()
+	}()
+
+	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+	// libTrace := tracer.Initialize(os.Getenv("APP_NAME"), tracer.IsEnable(config.IsDebug), tracer.LicenseKey(os.Getenv("NEWRELIC_CONFIG_LICENSE")))
+
+	// losLog
+	logMiddleware := loslog.New(libLog)
+	e.Use(logMiddleware.Log)
+
+	principleRepo := principleRepository.NewRepository(newKMB, kpLos, scorePro, confins)
+	principleCase := principleUsecase.NewUsecase(principleRepo, httpClient, producer)
+	principleMultiCase := principleUsecase.NewMultiUsecase(principleRepo, httpClient, producer, principleCase)
+	principleDelivery.Handler(apiGroupv3, principleMultiCase, principleCase, principleRepo, libResponse, accessToken)
 
 	toolsDelivery.ToolsHandler(apiGroupv3, jsonResponse, accessToken, producer)
 
@@ -293,6 +324,27 @@ func main() {
 		panic(err)
 	}
 
+	consumerPrincipleRouter := platformevent.NewConsumerRouter(constant.TOPIC_SUBMISSION_PRINCIPLE, os.Getenv("LOS_SUBMISSION_PRINCIPLE"), auth)
+
+	consumerPrincipleRouter.Use(func(next event.ConsumerProcessor) event.ConsumerProcessor {
+		return func(ctx context.Context, event event.Event) error {
+			startTime := utils.GenerateTimeInMilisecond()
+			reqID := utils.GenerateUUID()
+
+			ctx = context.WithValue(ctx, constant.CTX_KEY_REQUEST_TIME, startTime)
+			ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
+			ctx = context.WithValue(ctx, constant.CTX_KEY_IS_CONSUMER, true)
+
+			return next(ctx, event)
+		}
+	})
+
+	eventPrincipleHandler.NewServicePrinciple(consumerPrincipleRouter, principleRepo, principleCase, validator, producer, jsonResponse)
+
+	if err := consumerPrincipleRouter.StartConsumeWithoutTimestamp(); err != nil {
+		panic(err)
+	}
+
 	// Setup Server
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%s", os.Getenv("APP_PORT")),
@@ -315,6 +367,29 @@ func main() {
 		fmt.Println("========== Shutdown signal received ==========")
 
 		if err := consumerRouter.StopConsume(); err != nil {
+			panic(err)
+		}
+
+		if err := consumerJourneyRouter.StopConsume(); err != nil {
+			panic(err)
+		}
+
+		if err := consumerPrincipleRouter.StopConsume(); err != nil {
+			panic(err)
+		}
+
+		// close producer topic submission
+		if err := producerSubmission.CloseProducer(); err != nil {
+			panic(err)
+		}
+
+		// close producer topic submission-los
+		if err := producerSubmissionLOS.CloseProducer(); err != nil {
+			panic(err)
+		}
+
+		// close producer topic insert-customer
+		if err := producerInsertCustomer.CloseProducer(); err != nil {
 			panic(err)
 		}
 
