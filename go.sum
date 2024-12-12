@@ -9,8 +9,9 @@ github.com/DATA-DOG/go-sqlmock v1.5.2 h1:OcvFkGmslmlZibjAjaHm3L//6LiuBgolP7Oputl
 github.com/DATA-DOG/go-sqlmock v1.5.2/go.mod h1:88MAG/4G7SMwSE3CeA0ZKzrT5CiOU3OJ+JlNzwDqpNU=
 github.com/KB-FMF/los-common-library v1.0.8-rc h1:g3vsY/eaJBQMlwJ51nrCFbt4a97Q0mnHme3cuvgoEPw=
 github.com/KB-FMF/los-common-library v1.0.8-rc/go.mod h1:PbbFXZRs11BItDJ+nnA9Giz/fBx2wFnD7/YKTNaM3uU=
-github.com/KB-FMF/platform-library v1.0.20 h1:PPEQfNbG+1a1WvKH7wwdXbn6RUlhD75msAYCpjDZD9g=
 github.com/KB-FMF/platform-library v1.0.20/go.mod h1:UuA86SioNq0yXtWMydqu+3LSWAheonMrtsbJvn4tZBA=
+github.com/KB-FMF/platform-library v1.0.22 h1:p4jrjib/urj9CsnNIx6qCSbA54c5hjYIy8KI3IvFEwo=
+github.com/KB-FMF/platform-library v1.0.22/go.mod h1:10nA7Sryczpx6MJ2+g1ox/46smRuD3nVrueHgsva18o=
 github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc=
 github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6XgeJcm8brE=
 github.com/PuerkitoBio/goquery v1.5.1/go.mod h1:GsLWisAFVj4WgDibEWF4pvYnkVQBpKBKeU+7zCJoLcc=
@@ -149,6 +150,7 @@ github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 h1:EGx4pi6eqNxGaHF6qqu48+N2wcFQ5qg5FXgOdqsJ5d8=
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
 github.com/grpc-ecosystem/grpc-gateway v1.16.0/go.mod h1:BDjrQk3hbvj6Nolgz8mAMFbcEtjT1g+wF4CSlocrBnw=
+github.com/h2non/filetype v1.1.3/go.mod h1:319b3zT68BvV+WRj7cwy856M2ehB3HqNOt6sy1HndBY=
 github.com/hamba/avro v1.5.6/go.mod h1:3vNT0RLXXpFm2Tb/5KC71ZRJlOroggq1Rcitb6k4Fr8=
 github.com/hashicorp/errwrap v1.0.0 h1:hLrqtEDnRye3+sgx6z4qVLNuviH3MR5aQ0ykNJa/UYA=
 github.com/hashicorp/errwrap v1.0.0/go.mod h1:YH+1FKiLXxHSkmPseP+kNlulaMuP3n2brvKWEqk/Jc4=
