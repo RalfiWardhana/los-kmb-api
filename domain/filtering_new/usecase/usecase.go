@@ -78,7 +78,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	requestID := ctx.Value(echo.HeaderXRequestID).(string)
 
-	entityFiltering := entity.FilteringKMB{ProspectID: req.ProspectID, RequestID: requestID, BranchID: req.BranchID, BpkbName: req.BPKBName}
+	entityFiltering := entity.FilteringKMB{ProspectID: req.ProspectID, RequestID: requestID, BranchID: req.BranchID, BpkbName: req.BPKBName, IDNumber: req.IDNumber}
 
 	customer = append(customer, request.SpouseDupcheck{IDNumber: req.IDNumber, LegalName: req.LegalName, BirthDate: req.BirthDate, MotherName: req.MotherName})
 
