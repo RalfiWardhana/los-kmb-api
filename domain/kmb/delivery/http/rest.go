@@ -128,7 +128,7 @@ func (c *handlerKMB) LockSystem(ctx echo.Context) (err error) {
 		return ctxJson
 	}
 
-	ctxJson, resp = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Lock System - Success", req, data)
+	ctxJson, resp = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Lock System", req, data)
 	return ctxJson
 }
 
