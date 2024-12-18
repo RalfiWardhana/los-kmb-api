@@ -688,7 +688,7 @@ type AgentNE struct {
 }
 
 type LockSystem struct {
-	IDNumber string `json:"id_number" validate:"required,len=16,number"`
+	IDNumber string `json:"id_number" validate:"required,id_number" example:"ENCRYPTED NIK"`
 }
 
 type Recalculate struct {

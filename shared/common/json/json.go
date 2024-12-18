@@ -669,3 +669,138 @@ func (c *response) ServerSideErrorV3(ctx echo.Context, accessToken, logFile, mes
 
 	return ctx.JSON(statusCode, apiResponse), apiResponse
 }
+
+func (c *response) ErrorStandard(ctx echo.Context, accessToken, logFile, code string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponseV2) {
+	var statusCode int
+
+	handleError := strings.Split(err.Error(), " - ")
+	message := err.Error()
+
+	switch handleError[0] {
+	case constant.ERROR_UPSTREAM:
+		statusCode = http.StatusBadGateway
+	case constant.ERROR_UPSTREAM_TIMEOUT:
+		statusCode = http.StatusGatewayTimeout
+	case constant.ERROR_SERVICE_UNAVAILABLE:
+		statusCode = http.StatusServiceUnavailable
+	case constant.ERROR_BAD_REQUEST:
+		statusCode = http.StatusBadRequest
+	case constant.ERROR_DATA_CONFLICT:
+		statusCode = http.StatusConflict
+	case constant.ERROR_UNAUTHORIZED:
+		statusCode = http.StatusUnauthorized
+	case constant.ERROR_INACTIVE_CREDENTIAL:
+		statusCode = http.StatusUnauthorized
+	default:
+		statusCode = http.StatusServiceUnavailable
+	}
+
+	code = fmt.Sprintf("%s-%d", code, statusCode)
+
+	apiResponse = models.ApiResponseV2{
+		Code:       code,
+		Message:    message,
+		Errors:     nil,
+		Data:       nil,
+		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Get(echo.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx.Request().Context(), accessToken, common.CentralizeLogParameter{
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_INCOMING_REQUEST,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_ERROR,
+		Request:    req,
+		Response:   apiResponse,
+	})
+
+	return ctx.JSON(statusCode, apiResponse), apiResponse
+}
+
+func (c *response) ErrorBindStandard(ctx echo.Context, accessToken, logFile, code string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponseV2) {
+	errors := handleUnmarshalError(err)
+
+	apiResponse = models.ApiResponseV2{
+		Code:       fmt.Sprintf("%s-%d", code, http.StatusBadRequest),
+		Message:    "the request contains invalid or missing parameters",
+		Errors:     errors,
+		Data:       nil,
+		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Get(echo.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx.Request().Context(), accessToken, common.CentralizeLogParameter{
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_INCOMING_REQUEST,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_ERROR,
+		Response:   apiResponse,
+	})
+	return ctx.JSON(http.StatusBadRequest, apiResponse), apiResponse
+}
+
+func (c *response) ErrorValidationStandard(ctx echo.Context, accessToken, logFile, code string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponseV2) {
+	var errors = make([]models.ErrorValidation, len(err.(validator.ValidationErrors)))
+
+	for k, v := range err.(validator.ValidationErrors) {
+		field := strcase.ToSnake(v.Field())
+
+		errors[k] = models.ErrorValidation{
+			Field:   field,
+			Message: formatMessage(v),
+		}
+
+	}
+	apiResponse = models.ApiResponseV2{
+		Code:       fmt.Sprintf("%s-%d", code, http.StatusBadRequest),
+		Message:    "the request contains invalid or missing parameters",
+		Errors:     errors,
+		Data:       nil,
+		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Get(echo.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx.Request().Context(), accessToken, common.CentralizeLogParameter{
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_INCOMING_REQUEST,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_ERROR,
+		Request:    req,
+		Response:   apiResponse,
+	})
+
+	return ctx.JSON(http.StatusBadRequest, apiResponse), apiResponse
+}
+
+func (c *response) SuccessStandard(ctx echo.Context, accessToken, logFile, code string, req, data interface{}) (ctxJson error, apiResponse models.ApiResponseV2) {
+
+	//create response
+	apiResponse = models.ApiResponseV2{
+		Code:       fmt.Sprintf("%s-%d", code, http.StatusOK),
+		Message:    "ok",
+		Errors:     nil,
+		Data:       data,
+		ServerTime: utils.GenerateTimeNow(),
+	}
+	requestID, ok := ctx.Get(echo.HeaderXRequestID).(string)
+	if ok {
+		apiResponse.RequestID = requestID
+	}
+
+	_ = common.CentralizeLog(ctx.Request().Context(), accessToken, common.CentralizeLogParameter{
+		LogFile:    logFile,
+		MsgLogFile: constant.MSG_INCOMING_REQUEST,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_INFO,
+		Request:    req,
+		Response:   apiResponse,
+	})
+
+	return ctx.JSON(http.StatusOK, apiResponse), apiResponse
+}

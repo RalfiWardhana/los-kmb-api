@@ -25,4 +25,9 @@ type JSON interface {
 	BadRequestErrorBindV3(ctx echo.Context, accessToken, logFile, message string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponse)
 	BadRequestErrorValidationV3(ctx echo.Context, accessToken, logFile, message string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponse)
 	ServerSideErrorV3(ctx echo.Context, accessToken, logFile, message string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponse)
+
+	ErrorStandard(ctx echo.Context, accessToken, logFile, code string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponseV2)
+	ErrorBindStandard(ctx echo.Context, accessToken, logFile, code string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponseV2)
+	ErrorValidationStandard(ctx echo.Context, accessToken, logFile, code string, req interface{}, err error) (ctxJson error, apiResponse models.ApiResponseV2)
+	SuccessStandard(ctx echo.Context, accessToken, logFile, code string, req, data interface{}) (ctxJson error, apiResponse models.ApiResponseV2)
 }

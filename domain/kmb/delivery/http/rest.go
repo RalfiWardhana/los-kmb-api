@@ -13,10 +13,8 @@ import (
 	"los-kmb-api/shared/common/platformlog"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
-	"net/http"
 	"time"
 
-	"github.com/KB-FMF/los-common-library/response"
 	"github.com/KB-FMF/platform-library/auth"
 
 	"github.com/labstack/echo/v4"
@@ -28,18 +26,16 @@ type handlerKMB struct {
 	repository    interfaces.Repository
 	authorization authorization.Authorization
 	Json          common.JSON
-	responses     response.Response
 	producer      platformevent.PlatformEventInterface
 }
 
-func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, authorization authorization.Authorization, json common.JSON, responses response.Response, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEventInterface) {
+func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, authorization authorization.Authorization, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEventInterface) {
 	handler := handlerKMB{
 		metrics:       metrics,
 		usecase:       usecase,
 		repository:    repository,
 		authorization: authorization,
 		Json:          json,
-		responses:     responses,
 		producer:      producer,
 	}
 	kmbroute.POST("/produce/journey", handler.ProduceJourney, middlewares.AccessMiddleware())
@@ -105,51 +101,43 @@ func (c *handlerKMB) ProduceJourneyAfterPrescreening(ctx echo.Context) (err erro
 func (c *handlerKMB) LockSystem(ctx echo.Context) (err error) {
 	var (
 		req     request.LockSystem
-		resp    interface{}
 		ctxJson error
 	)
 
 	auth := auth.New(platformlog.GetPlatformEnv())
 	_, errAuth := auth.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
-	// panic(fmt.Errorf("msg: %v, code: %v", errAuth.ErrorMessage(), errAuth.GetErrorCode()))
 	if errAuth != nil {
 		if errAuth.GetErrorCode() == "401" {
-			err = fmt.Errorf("unauthorized - %v", errAuth.ErrorMessage())
-			return c.responses.Error(ctx, fmt.Sprintf("KMB-%s", errAuth.GetErrorCode()), err, response.WithHttpCode(http.StatusUnauthorized), response.WithMessage(errAuth.ErrorMessage()))
+			err = fmt.Errorf("unauthorized - Invalid token")
+			ctxJson, _ = c.Json.ErrorStandard(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS-LST", req, err)
+			return ctxJson
 		} else {
-			err = fmt.Errorf("server error - %v", errAuth.ErrorMessage())
-			return c.responses.Error(ctx, fmt.Sprintf("KMB-%s", errAuth.GetErrorCode()), err)
+			err = fmt.Errorf("unauthorized - %v", errAuth.ErrorMessage())
+			ctxJson, _ = c.Json.ErrorStandard(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS-LST", req, err)
+			return ctxJson
 		}
 	}
 
-	// Save Log Orchestrator
-	defer func() {
-		go c.repository.SaveLogOrchestrator(ctx.Request().Header, req, resp, "/api/v3/kmb/lock-system", constant.METHOD_POST, req.IDNumber, ctx.Get(constant.HeaderXRequestID).(string))
-	}()
-
-	if err != nil {
-		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Lock System", req, err)
-		return ctxJson
-	}
-
 	if err := ctx.Bind(&req); err != nil {
-		ctxJson, resp = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Lock System", req, err)
+		ctxJson, _ = c.Json.ErrorBindStandard(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS-LST", req, err)
 		return ctxJson
 	}
 
 	if err := ctx.Validate(&req); err != nil {
-		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Lock System", req, err)
+		ctxJson, _ = c.Json.ErrorValidationStandard(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS-LST", req, err)
 		return ctxJson
 	}
+
+	req.IDNumber, _ = utils.PlatformDecryptText(req.IDNumber)
 
 	data, err := c.usecase.LockSystem(ctx.Request().Context(), req.IDNumber)
 
 	if err != nil {
-		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Lock System", req, err)
+		ctxJson, _ = c.Json.ErrorStandard(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS-LST", req, err)
 		return ctxJson
 	}
 
-	ctxJson, resp = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB Lock System", req, data)
+	ctxJson, _ = c.Json.SuccessStandard(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS-LST", req, data)
 	return ctxJson
 }
 

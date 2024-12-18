@@ -200,25 +200,6 @@ func main() {
 	apiGroupv3 := e.Group("/api/v3/kmb")
 	httpClient := httpclient.NewHttpClient()
 
-	managers := manager.New(platformlog.GetPlatformEnv(), os.Getenv("PLATFORM_SECRET_KEY"), os.Getenv("PLATFORM_AUTH_BASE_URL")+"/v1/auth/login")
-
-	libLog := loslog.NewConfig(
-		"Orchestrator-kmb",
-		managers,
-		loslog.WithHookPlatform(true),
-	)
-
-	defer func() {
-		_ = libLog.Sync()
-	}()
-
-	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
-	// libTrace := tracer.Initialize(os.Getenv("APP_NAME"), tracer.IsEnable(config.IsDebug), tracer.LicenseKey(os.Getenv("NEWRELIC_CONFIG_LICENSE")))
-
-	// losLog
-	logMiddleware := loslog.New(libLog)
-	e.Use(logMiddleware.Log)
-
 	useLogPlatform, _ := strconv.ParseBool(os.Getenv("USE_LOG_PLATFORM"))
 	if useLogPlatform {
 		platformLog := platformlog.NewPlatformLog()
@@ -251,7 +232,26 @@ func main() {
 	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
 	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
-	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, authorization, jsonResponse, libResponse, accessToken, producer)
+	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, authorization, jsonResponse, accessToken, producer)
+
+	managers := manager.New(platformlog.GetPlatformEnv(), os.Getenv("PLATFORM_SECRET_KEY"), os.Getenv("PLATFORM_AUTH_BASE_URL")+"/v1/auth/login")
+
+	libLog := loslog.NewConfig(
+		"Orchestrator-kmb",
+		managers,
+		loslog.WithHookPlatform(true),
+	)
+
+	defer func() {
+		_ = libLog.Sync()
+	}()
+
+	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+	// libTrace := tracer.Initialize(os.Getenv("APP_NAME"), tracer.IsEnable(config.IsDebug), tracer.LicenseKey(os.Getenv("NEWRELIC_CONFIG_LICENSE")))
+
+	// losLog
+	logMiddleware := loslog.New(libLog)
+	e.Use(logMiddleware.Log)
 
 	principleRepo := principleRepository.NewRepository(newKMB, kpLos, scorePro, confins)
 	principleCase := principleUsecase.NewUsecase(principleRepo, httpClient, producer)
