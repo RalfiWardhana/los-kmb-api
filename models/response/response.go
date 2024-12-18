@@ -5,6 +5,15 @@ import (
 	"time"
 )
 
+type ApiResponseV2 struct {
+	Code       string      `json:"code"`
+	Message    string      `json:"message"`
+	Errors     interface{} `json:"errors"`
+	Data       interface{} `json:"data"`
+	ServerTime string      `json:"server_time"`
+	RequestID  string      `json:"request_id"`
+}
+
 type ApiResponse struct {
 	Message    string      `json:"messages"`
 	Errors     interface{} `json:"errors"`
