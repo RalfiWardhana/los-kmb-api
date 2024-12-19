@@ -79,6 +79,27 @@ func TestElaborateScheme(t *testing.T) {
 				SourceDecision: constant.SOURCE_DECISION_ELABORATE_LTV,
 			},
 		},
+		{
+			name: "ElaborateScheme pass",
+			req: request.Metrics{
+				Transaction: request.Transaction{
+					ProspectID: "TEST001",
+				},
+				Apk: request.Apk{
+					AF:  6545000,
+					OTR: 11900000,
+				},
+			},
+			trxElaborateLtv: entity.MappingElaborateLTV{
+				LTV: 55,
+			},
+			result: response.UsecaseApi{
+				Result:         constant.DECISION_PASS,
+				Code:           constant.STRING_CODE_PASS_ELABORATE,
+				Reason:         constant.REASON_PASS_ELABORATE,
+				SourceDecision: constant.SOURCE_DECISION_ELABORATE_LTV,
+			},
+		},
 	}
 
 	for _, tc := range testcases {
