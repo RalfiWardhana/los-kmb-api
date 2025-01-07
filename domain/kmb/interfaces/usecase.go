@@ -43,4 +43,5 @@ type MultiUsecase interface {
 
 type Metrics interface {
 	MetricsLos(ctx context.Context, req request.Metrics, accessToken string) (data interface{}, err error)
+	PrincipleSubmission(ctx context.Context, req request.Metrics, accessToken string) (data interface{}, err error)
 }

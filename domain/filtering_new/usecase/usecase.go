@@ -14,6 +14,7 @@ import (
 	"los-kmb-api/shared/utils"
 	"os"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -65,6 +66,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		resCMO                    response.EmployeeCMOResponse
 		resFPD                    response.FpdCMOResponse
 		bpkbName                  bool
+		isCmoSpv                  bool
 		clusterCmo                string
 		savedCluster              string
 		useDefaultCluster         bool
@@ -152,7 +154,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		return
 	}
 
-	if resCMO.CMOCategory == "" {
+	if resCMO.EmployeeID == "" {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - CMO_ID " + req.CMOID + " not found on HRIS API")
 		return
 	}
@@ -165,7 +167,11 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		defaultCluster = constant.CLUSTER_B
 	}
 
-	if resCMO.CMOCategory == constant.CMO_BARU {
+	if isSpv, ok := resCMO.IsCmoSpv.(bool); ok {
+		isCmoSpv = isSpv
+	}
+
+	if resCMO.CMOCategory == constant.CMO_BARU && !isCmoSpv {
 		clusterCmo = defaultCluster
 		// set cluster menggunakan Default Cluster selama 3 bulan, terhitung sejak bulan join_date nya
 		useDefaultCluster = true
@@ -198,7 +204,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		}
 	}
 
-	if useDefaultCluster == true {
+	if useDefaultCluster && !isCmoSpv {
 		savedCluster, entityTransactionCMOnoFPD, err = u.usecase.CheckCmoNoFPD(req.ProspectID, req.CMOID, resCMO.CMOCategory, resCMO.JoinDate, clusterCmo, bpkbString)
 		if err != nil {
 			return
@@ -214,6 +220,9 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	entityFiltering.CMOFPD = resFPD.CmoFpd
 	entityFiltering.CMOAccSales = resFPD.CmoAccSales
 	entityFiltering.CMOCluster = clusterCmo
+	if resCMO.CMOCategory == "" {
+		entityFiltering.CMOCategory = nil
+	}
 
 	/* Process Get Cluster based on CMO_ID ends here */
 
@@ -1056,7 +1065,17 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 		parsedTime          time.Time
 		todayDate           time.Time
 		givenDate           time.Time
+		isSpvAsCMO          bool
 	)
+
+	// Use regular expressions to match exact suffixes "MO" or "INH"
+	if matched, _ := regexp.MatchString(`\d+MO$`, employeeID); matched {
+		employeeID = strings.TrimSuffix(employeeID, "MO")
+		isSpvAsCMO = true
+	} else if matched, _ := regexp.MatchString(`\d+INH$`, employeeID); matched {
+		employeeID = strings.TrimSuffix(employeeID, "INH")
+		isSpvAsCMO = true
+	}
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
@@ -1088,27 +1107,70 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 	if err == nil && getDataEmployee.StatusCode() == 200 {
 		json.Unmarshal([]byte(jsoniter.Get(getDataEmployee.Body()).ToString()), &respGetEmployeeData)
 
+		employeeResign := false
+		for _, emp := range respGetEmployeeData.Data {
+			if emp.IsResign {
+				employeeResign = true
+			}
+		}
+
 		isCmoActive := false
-		if len(respGetEmployeeData.Data) > 0 && respGetEmployeeData.Data[0].PositionGroupCode == "AO" {
-			isCmoActive = true
+		if isSpvAsCMO {
+			if len(respGetEmployeeData.Data) > 0 && (respGetEmployeeData.Data[0].PositionGroupCode == "AOSPV") {
+				isCmoActive = true
+			}
+		} else {
+			if len(respGetEmployeeData.Data) > 0 && (respGetEmployeeData.Data[0].PositionGroupCode == "AO") {
+				isCmoActive = true
+			}
 		}
 
 		var lastIndex int = -1
-		// Cek dulu apakah saat ini employee tersebut adalah berposisi sebagai "CMO"
+		// Cek dulu apakah saat ini employee tersebut adalah berposisi sebagai "CMO" atau "SPV as CMO"
 		if isCmoActive {
-			// Mencari index terakhir yang mengandung position_group_code "AO"
-			for i, emp := range respGetEmployeeData.Data {
-				if emp.PositionGroupCode == "AO" {
-					lastIndex = i
+			// Mencari index terakhir yang mengandung position_group_code "AO" atau "AOSPV"
+			if isSpvAsCMO {
+				for i, emp := range respGetEmployeeData.Data {
+					if emp.PositionGroupCode == "AOSPV" {
+						lastIndex = i
+					}
+				}
+			} else {
+				for i, emp := range respGetEmployeeData.Data {
+					if emp.PositionGroupCode == "AO" {
+						lastIndex = i
+					}
 				}
 			}
 		}
 
-		if lastIndex == -1 {
-			// Jika tidak ada data dengan position_group_code "AO"
+		if lastIndex == -1 || employeeResign {
+			// Jika tidak ada data dengan position_group_code "AO" atau "AOSPV"
 			data = response.EmployeeCMOResponse{}
 		} else {
 			dataEmployee = respGetEmployeeData.Data[lastIndex]
+			if isSpvAsCMO {
+				parsedTime, err = time.Parse("2006-01-02T15:04:05", dataEmployee.RealCareerDate)
+				if err != nil {
+					err = errors.New(constant.ERROR_UPSTREAM + " - Error Parse RealCareerDate")
+					return
+				}
+
+				dataEmployee.RealCareerDate = parsedTime.Format("2006-01-02")
+				data = response.EmployeeCMOResponse{
+					EmployeeID:         dataEmployee.EmployeeID,
+					EmployeeName:       dataEmployee.EmployeeName,
+					EmployeeIDWithName: dataEmployee.EmployeeID + " - " + dataEmployee.EmployeeName,
+					JoinDate:           dataEmployee.RealCareerDate,
+					PositionGroupCode:  dataEmployee.PositionGroupCode,
+					PositionGroupName:  dataEmployee.PositionGroupName,
+					CMOCategory:        "",
+					IsCmoSpv:           isSpvAsCMO,
+				}
+
+				return
+			}
+
 			if dataEmployee.RealCareerDate == "" {
 				err = errors.New(constant.ERROR_UPSTREAM + " - RealCareerDate Empty")
 				return
@@ -1158,6 +1220,7 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string, accessT
 				PositionGroupCode:  dataEmployee.PositionGroupCode,
 				PositionGroupName:  dataEmployee.PositionGroupName,
 				CMOCategory:        cmoCategory,
+				IsCmoSpv:           isSpvAsCMO,
 			}
 		}
 	} else {

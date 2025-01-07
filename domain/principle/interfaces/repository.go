@@ -1,0 +1,51 @@
+package interfaces
+
+import "los-kmb-api/models/entity"
+
+type Repository interface {
+	GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig, err error)
+	GetMinimalIncomePMK(branchID string, statusKonsumen string) (responseIncomePMK entity.MappingIncomePMK, err error)
+	GetDraftPrinciple(prospectID string) (data entity.DraftPrinciple, err error)
+	MasterMappingFpdCluster(FpdValue float64) (data entity.MasterMappingFpdCluster, err error)
+	MasterMappingCluster(req entity.MasterMappingCluster) (data entity.MasterMappingCluster, err error)
+	SaveFiltering(data entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, dataCMOnoFPD entity.TrxCmoNoFPD) (err error)
+	GetBannedPMKDSR(idNumber string) (data entity.TrxBannedPMKDSR, err error)
+	GetEncB64(myString string) (encryptedString entity.EncryptedString, err error)
+	GetRejection(idNumber string) (data entity.TrxReject, err error)
+	GetMappingDukcapilVD(statusVD, customerStatus, customerSegment string, isValid bool) (resultDukcapil entity.MappingResultDukcapilVD, err error)
+	GetMappingDukcapil(statusVD, statusFR, customerStatus, customerSegment string) (resultDukcapil entity.MappingResultDukcapil, err error)
+	CheckCMONoFPD(cmoID string, bpkbName string) (data entity.TrxCmoNoFPD, err error)
+	SavePrincipleStepOne(data entity.TrxPrincipleStepOne) (err error)
+	GetPrincipleStepOne(prospectID string) (data entity.TrxPrincipleStepOne, err error)
+	UpdatePrincipleStepOne(prospectID string, data entity.TrxPrincipleStepOne) (err error)
+	GetTrxPrincipleStatus(nik string) (data entity.TrxPrincipleStatus, err error)
+	SavePrincipleStepTwo(data entity.TrxPrincipleStepTwo) (err error)
+	GetPrincipleStepTwo(prospectID string) (data entity.TrxPrincipleStepTwo, err error)
+	UpdatePrincipleStepTwo(prospectID string, data entity.TrxPrincipleStepTwo) (err error)
+	GetFilteringResult(prospectID string) (filtering entity.FilteringKMB, err error)
+	GetMappingElaborateLTV(resultPefindo, cluster string) (data []entity.MappingElaborateLTV, err error)
+	SaveTrxElaborateLTV(data entity.TrxElaborateLTV) (err error)
+	GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNameType, tenor int, resultPefindo string, af float64) (data entity.MappingVehicleAge, err error)
+	GetScoreGenerator(zipCode string) (score entity.ScoreGenerator, err error)
+	GetScoreGeneratorROAO() (score entity.ScoreGenerator, err error)
+	GetTrxDetailBIro(prospectID string) (trxDetailBiro []entity.TrxDetailBiro, err error)
+	GetActiveLoanTypeLast6M(customerID string) (score entity.GetActiveLoanTypeLast6M, err error)
+	GetActiveLoanTypeLast24M(customerID string) (score entity.GetActiveLoanTypeLast24M, err error)
+	GetMoblast(customerID string) (score entity.GetMoblast, err error)
+	SavePrincipleStepThree(data entity.TrxPrincipleStepThree) (err error)
+	GetPrincipleStepThree(prospectID string) (data entity.TrxPrincipleStepThree, err error)
+	SavePrincipleEmergencyContact(data entity.TrxPrincipleEmergencyContact, idNumber string) (err error)
+	GetPrincipleEmergencyContact(prospectID string) (data entity.TrxPrincipleEmergencyContact, err error)
+	SaveToWorker(data []entity.TrxWorker) (err error)
+	GetTrxWorker(prospectID, category string) (data []entity.TrxWorker, err error)
+	GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error)
+	SavePrincipleMarketingProgram(data entity.TrxPrincipleMarketingProgram) (err error)
+	GetPrincipleMarketingProgram(prospectID string) (data entity.TrxPrincipleMarketingProgram, err error)
+	ScanOrderPending() (data []entity.AutoCancel, err error)
+	UpdateToCancel(prospectID string) (err error)
+	UpdateTrxPrincipleStatus(prospectID string, decision string, step int) (err error)
+	ExceedErrorStepOne(kpmId int) int
+	ExceedErrorStepTwo(prospectId string) int
+	ExceedErrorStepThree(prospectId string) int
+	GetTrxStatus(prospectID string) (status entity.TrxStatus, err error)
+}
