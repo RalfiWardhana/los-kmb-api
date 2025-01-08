@@ -18,9 +18,98 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
+
+func TestCheckMobilePhoneFMF(t *testing.T) {
+	os.Setenv("HRIS_LIST_EMPLOYEE", "http://localhost/hris-list-employee")
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	accessToken := "token"
+	hrisAccessToken := "token"
+	testcases := []struct {
+		name         string
+		listEmployee []response.HrisListEmployee
+		reqs         request.DupcheckApi
+		httpcode     int
+		httpbody     string
+		httperr      error
+		result       response.UsecaseApi
+		errResult    error
+	}{
+		{
+			name: "TestCheckMobilePhoneFMF EngineAPI HRIS_LIST_EMPLOYEE error",
+			reqs: request.DupcheckApi{
+				ProspectID:  "SAL-1234567",
+				MobilePhone: "081234567",
+			},
+			httpcode:  500,
+			httperr:   errors.New(constant.ERROR_UPSTREAM + " - Call API HRIS List Employee Error"),
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - Call API HRIS List Employee Error"),
+		},
+		{
+			name: "TestCheckMobilePhoneFMF reject",
+			reqs: request.DupcheckApi{
+				ProspectID:  "SAL-1234567",
+				MobilePhone: "08161970587",
+			},
+			httpbody: `{"data":[{"employee_id":"65251","name":"HERY SUSANTO DERMAWAN","name_with_employee_id":"65251 - HERY SUSANTO DERMAWAN","join_date":"2017-01-01T00:00:00","resign_date":null,"personal_email":"","corporate_email":"herysd@finansia.com","id_number":"3173063101700002","phone_number":"08161970587","employee_status":"Permanent","division_code":"DIV02","division_name":"BOD","department_code":"H02","department_name":"BOD","sub_department_group_code":"999","sub_department_group_name":"HEAD OFFICE","sub_department_code":"H0201","sub_department_name":"BOD","pos_code":null,"pos_name":null,"section_code":"90002","section_name":"BOD","position_group_code":"10354","position_group_name":"BOD","position_code":"10494","position_name":"DEPUTY CHIEF OPERATING OFFICER","spv_id":"53507","is_resign":false}]}`,
+			httpcode: 200,
+			result: response.UsecaseApi{
+				SourceDecision: constant.SOURCE_DECISION_NOHP,
+				Code:           constant.CODE_NOHP,
+				Result:         constant.DECISION_REJECT,
+				Reason:         constant.REASON_REJECT_NOHP,
+			},
+		},
+		{
+			name: "TestCheckMobilePhoneFMF pass",
+			reqs: request.DupcheckApi{
+				ProspectID:  "SAL-1234567",
+				MobilePhone: "081234567",
+			},
+			httpbody: `{"data":[{"employee_id":"65251","name":"HERY SUSANTO DERMAWAN","name_with_employee_id":"65251 - HERY SUSANTO DERMAWAN","join_date":"2017-01-01T00:00:00","resign_date":null,"personal_email":"","corporate_email":"herysd@finansia.com","id_number":"3173063101700002","phone_number":"08161970587","employee_status":"Permanent","division_code":"DIV02","division_name":"BOD","department_code":"H02","department_name":"BOD","sub_department_group_code":"999","sub_department_group_name":"HEAD OFFICE","sub_department_code":"H0201","sub_department_name":"BOD","pos_code":null,"pos_name":null,"section_code":"90002","section_name":"BOD","position_group_code":"10354","position_group_name":"BOD","position_code":"10494","position_name":"DEPUTY CHIEF OPERATING OFFICER","spv_id":"53507","is_resign":false}]}`,
+			httpcode: 200,
+			result: response.UsecaseApi{
+				SourceDecision: constant.SOURCE_DECISION_NOHP,
+				Code:           constant.CODE_NOHP,
+				Result:         constant.DECISION_PASS,
+			},
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			rst := resty.New()
+			httpmock.ActivateNonDefault(rst.GetClient())
+			defer httpmock.DeactivateAndReset()
+
+			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("HRIS_LIST_EMPLOYEE"), httpmock.NewStringResponder(tc.httpcode, tc.httpbody))
+			resp, _ := rst.R().Post(os.Getenv("HRIS_LIST_EMPLOYEE"))
+
+			ctx := context.Background()
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("HRIS_LIST_EMPLOYEE"), mock.Anything, mock.Anything, constant.METHOD_POST, false, 0, timeout, "", accessToken).Return(resp, tc.httperr).Once()
+
+			if tc.httpbody != "" {
+				json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &tc.listEmployee)
+				info, _ := json.Marshal(tc.listEmployee)
+				tc.result.Info = string(info)
+			}
+
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			result, err := usecase.CheckMobilePhoneFMF(ctx, tc.reqs, accessToken, hrisAccessToken)
+
+			require.Equal(t, tc.result, result)
+			require.Equal(t, tc.errResult, err)
+		})
+	}
+
+}
 
 func TestCheckBannedPMKDSR(t *testing.T) {
 	testcases := []struct {
