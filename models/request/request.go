@@ -1309,19 +1309,17 @@ type PrincipleUpdateStatus struct {
 }
 
 type GetMaxLoanAmount struct {
-	ProspectID         string  `json:"prospect_id" validate:"required,max=20,htmlValidation" example:"SAL-1140024080800004"`
-	BranchID           string  `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
-	IDNumber           string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
-	BirthDate          string  `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
-	SurgateMotherName  string  `json:"surgate_mother_name" validate:"required,max=50,allowcharsname" example:"IBU"`
-	LegalName          string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
-	MobilePhone        string  `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"085880529100"`
-	PefindoResult      string  `json:"pefindo_result" validate:"required,result_pefindo" example:"PASS"`
-	BakiDebet          float64 `json:"baki_debet" validate:"gte=0" example:"5000000"`
-	BPKBNameType       string  `json:"bpkb_name_type" validate:"required,bpkbname"`
-	ManufactureYear    string  `json:"manufacture_year" validate:"required,len=4,number" example:"2020"`
-	AssetCode          string  `json:"asset_code" validate:"required,max=200,htmlValidation" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
-	AssetUsageTypeCode string  `json:"asset_usage_type_code" validate:"required,oneof=C N S,htmlValidation" example:"C"`
+	ProspectID         string `json:"prospect_id" validate:"required,max=20,htmlValidation" example:"SAL-1140024080800004"`
+	BranchID           string `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
+	IDNumber           string `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
+	BirthDate          string `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
+	SurgateMotherName  string `json:"surgate_mother_name" validate:"required,max=50,allowcharsname" example:"IBU"`
+	LegalName          string `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
+	MobilePhone        string `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"085880529100"`
+	BPKBNameType       string `json:"bpkb_name_type" validate:"required,bpkbname"`
+	ManufactureYear    string `json:"manufacture_year" validate:"required,len=4,number" example:"2020"`
+	AssetCode          string `json:"asset_code" validate:"required,max=200,htmlValidation" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
+	AssetUsageTypeCode string `json:"asset_usage_type_code" validate:"required,oneof=C N S,htmlValidation" example:"C"`
 }
 
 type GetAvailableTenor struct {
@@ -1332,8 +1330,6 @@ type GetAvailableTenor struct {
 	SurgateMotherName  string  `json:"surgate_mother_name" validate:"required,max=50,allowcharsname" example:"IBU"`
 	LegalName          string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
 	MobilePhone        string  `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"085880529100"`
-	PefindoResult      string  `json:"pefindo_result" validate:"required,result_pefindo" example:"PASS"`
-	BakiDebet          float64 `json:"baki_debet" validate:"gte=0" example:"5000000"`
 	BPKBNameType       string  `json:"bpkb_name_type" validate:"required,bpkbname"`
 	ManufactureYear    string  `json:"manufacture_year" validate:"required,len=4,number" example:"2020"`
 	AssetCode          string  `json:"asset_code" validate:"required,max=200,htmlValidation" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`

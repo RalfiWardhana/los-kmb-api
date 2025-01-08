@@ -10,6 +10,7 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -17,6 +18,22 @@ import (
 )
 
 func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvailableTenor, accessToken string) (data []response.GetAvailableTenorData, err error) {
+
+	var resultPefindo string
+	var bakiDebet float64
+
+	config, err := u.repository.GetConfig(constant.GROUP_2WILEN, "KMB-OFF", constant.KEY_PPID_SIMULASI)
+	if err != nil {
+		return
+	}
+
+	re := regexp.MustCompile(config.Value)
+	isSimulasi := re.MatchString(req.ProspectID)
+
+	if isSimulasi {
+		resultPefindo = constant.DECISION_PASS
+		bakiDebet = 0
+	}
 
 	// get data customer
 	dataCustomer, err := u.usecase.DupcheckIntegrator(ctx, req.ProspectID, req.IDNumber, req.LegalName, req.BirthDate, req.SurgateMotherName, accessToken)
@@ -210,7 +227,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 		}
 
 		var mappingElaborateLTV []entity.MappingElaborateLTV
-		mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(req.PefindoResult, clusterCMO)
+		mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, clusterCMO)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
 			return
@@ -233,7 +250,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 				}
 			}
 
-			ltv, err := u.usecase.GetLTV(mappingElaborateLTV, req.PefindoResult, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, req.BakiDebet)
+			ltv, err := u.usecase.GetLTV(mappingElaborateLTV, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet)
 			if err != nil {
 				return data, err
 			}
