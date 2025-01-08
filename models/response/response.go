@@ -1076,7 +1076,11 @@ type MarsevFilterProgramData struct {
 	ProductID                  string      `json:"product_id"`
 	ProductOfferingID          string      `json:"product_offering_id"`
 	ProductOfferingDescription string      `json:"product_offering_description"`
-	Tenors                     interface{} `json:"tenors"`
+	Tenors                     []TenorInfo `json:"tenors"`
+}
+
+type TenorInfo struct {
+	Tenor int `json:"tenor"`
 }
 
 type MarsevCalculateInstallmentResponse struct {
@@ -1266,4 +1270,13 @@ type AssetList struct {
 		IsElectric          bool   `json:"is_electric"`
 		Model               string `json:"model"`
 	} `json:"records"`
+}
+
+type GetMaxLoanAmountData struct {
+	MaxLoanAmount float64 `json:"max_loan_amount"`
+}
+
+type GetAvailableTenorData struct {
+	Tenor             int     `json:"tenor"`
+	InstallmentAmount float64 `json:"installment_amount"`
 }

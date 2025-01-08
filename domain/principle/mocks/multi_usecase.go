@@ -17,6 +17,64 @@ type MultiUsecase struct {
 	mock.Mock
 }
 
+// GetAvailableTenor provides a mock function with given fields: ctx, req, accessToken
+func (_m *MultiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvailableTenor, accessToken string) ([]response.GetAvailableTenorData, error) {
+	ret := _m.Called(ctx, req, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAvailableTenor")
+	}
+
+	var r0 []response.GetAvailableTenorData
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.GetAvailableTenor, string) ([]response.GetAvailableTenorData, error)); ok {
+		return rf(ctx, req, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.GetAvailableTenor, string) []response.GetAvailableTenorData); ok {
+		r0 = rf(ctx, req, accessToken)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]response.GetAvailableTenorData)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.GetAvailableTenor, string) error); ok {
+		r1 = rf(ctx, req, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMaxLoanAmout provides a mock function with given fields: ctx, req, accessToken
+func (_m *MultiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoanAmount, accessToken string) (response.GetMaxLoanAmountData, error) {
+	ret := _m.Called(ctx, req, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMaxLoanAmout")
+	}
+
+	var r0 response.GetMaxLoanAmountData
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.GetMaxLoanAmount, string) (response.GetMaxLoanAmountData, error)); ok {
+		return rf(ctx, req, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.GetMaxLoanAmount, string) response.GetMaxLoanAmountData); ok {
+		r0 = rf(ctx, req, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.GetMaxLoanAmountData)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.GetMaxLoanAmount, string) error); ok {
+		r1 = rf(ctx, req, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // PrincipleEmergencyContact provides a mock function with given fields: ctx, req, accessToken
 func (_m *MultiUsecase) PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (response.UsecaseApi, error) {
 	ret := _m.Called(ctx, req, accessToken)

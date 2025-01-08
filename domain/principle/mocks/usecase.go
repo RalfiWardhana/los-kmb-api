@@ -500,6 +500,34 @@ func (_m *Usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType str
 	return r0, r1
 }
 
+// GetLTV provides a mock function with given fields: mappingElaborateLTV, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet
+func (_m *Usecase) GetLTV(mappingElaborateLTV []entity.MappingElaborateLTV, resultPefindo string, bpkbName string, manufactureYear string, tenor int, bakiDebet float64) (int, error) {
+	ret := _m.Called(mappingElaborateLTV, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLTV")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func([]entity.MappingElaborateLTV, string, string, string, int, float64) (int, error)); ok {
+		return rf(mappingElaborateLTV, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+	}
+	if rf, ok := ret.Get(0).(func([]entity.MappingElaborateLTV, string, string, string, int, float64) int); ok {
+		r0 = rf(mappingElaborateLTV, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func([]entity.MappingElaborateLTV, string, string, string, int, float64) error); ok {
+		r1 = rf(mappingElaborateLTV, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Ktp provides a mock function with given fields: ctx, r, reqMetricsEkyc, accessToken
 func (_m *Usecase) Ktp(ctx context.Context, r request.PrinciplePemohon, reqMetricsEkyc request.MetricsEkyc, accessToken string) (response.Ekyc, error) {
 	ret := _m.Called(ctx, r, reqMetricsEkyc, accessToken)
@@ -528,6 +556,90 @@ func (_m *Usecase) Ktp(ctx context.Context, r request.PrinciplePemohon, reqMetri
 	return r0, r1
 }
 
+// MDMGetAssetYear provides a mock function with given fields: ctx, branchID, assetCode, search, prospectID, accessToken
+func (_m *Usecase) MDMGetAssetYear(ctx context.Context, branchID string, assetCode string, search string, prospectID string, accessToken string) (response.AssetYearList, error) {
+	ret := _m.Called(ctx, branchID, assetCode, search, prospectID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MDMGetAssetYear")
+	}
+
+	var r0 response.AssetYearList
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) (response.AssetYearList, error)); ok {
+		return rf(ctx, branchID, assetCode, search, prospectID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) response.AssetYearList); ok {
+		r0 = rf(ctx, branchID, assetCode, search, prospectID, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.AssetYearList)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string, string) error); ok {
+		r1 = rf(ctx, branchID, assetCode, search, prospectID, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MDMGetMappingLicensePlate provides a mock function with given fields: ctx, licensePlate, prospectID, accessToken
+func (_m *Usecase) MDMGetMappingLicensePlate(ctx context.Context, licensePlate string, prospectID string, accessToken string) (response.MDMMasterMappingLicensePlateResponse, error) {
+	ret := _m.Called(ctx, licensePlate, prospectID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MDMGetMappingLicensePlate")
+	}
+
+	var r0 response.MDMMasterMappingLicensePlateResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (response.MDMMasterMappingLicensePlateResponse, error)); ok {
+		return rf(ctx, licensePlate, prospectID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) response.MDMMasterMappingLicensePlateResponse); ok {
+		r0 = rf(ctx, licensePlate, prospectID, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.MDMMasterMappingLicensePlateResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, licensePlate, prospectID, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MDMGetMasterAsset provides a mock function with given fields: ctx, branchID, search, prospectID, accessToken
+func (_m *Usecase) MDMGetMasterAsset(ctx context.Context, branchID string, search string, prospectID string, accessToken string) (response.AssetList, error) {
+	ret := _m.Called(ctx, branchID, search, prospectID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MDMGetMasterAsset")
+	}
+
+	var r0 response.AssetList
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) (response.AssetList, error)); ok {
+		return rf(ctx, branchID, search, prospectID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) response.AssetList); ok {
+		r0 = rf(ctx, branchID, search, prospectID, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.AssetList)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string) error); ok {
+		r1 = rf(ctx, branchID, search, prospectID, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // MDMGetMasterMappingBranchEmployee provides a mock function with given fields: ctx, prospectID, branchID, accessToken
 func (_m *Usecase) MDMGetMasterMappingBranchEmployee(ctx context.Context, prospectID string, branchID string, accessToken string) (response.MDMMasterMappingBranchEmployeeResponse, error) {
 	ret := _m.Called(ctx, prospectID, branchID, accessToken)
@@ -549,6 +661,90 @@ func (_m *Usecase) MDMGetMasterMappingBranchEmployee(ctx context.Context, prospe
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
 		r1 = rf(ctx, prospectID, branchID, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MarsevCalculateInstallment provides a mock function with given fields: ctx, req, prospectID, accessToken
+func (_m *Usecase) MarsevCalculateInstallment(ctx context.Context, req request.ReqMarsevCalculateInstallment, prospectID string, accessToken string) (response.MarsevCalculateInstallmentResponse, error) {
+	ret := _m.Called(ctx, req, prospectID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MarsevCalculateInstallment")
+	}
+
+	var r0 response.MarsevCalculateInstallmentResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqMarsevCalculateInstallment, string, string) (response.MarsevCalculateInstallmentResponse, error)); ok {
+		return rf(ctx, req, prospectID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqMarsevCalculateInstallment, string, string) response.MarsevCalculateInstallmentResponse); ok {
+		r0 = rf(ctx, req, prospectID, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.MarsevCalculateInstallmentResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqMarsevCalculateInstallment, string, string) error); ok {
+		r1 = rf(ctx, req, prospectID, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MarsevGetLoanAmount provides a mock function with given fields: ctx, req, prospectID, accessToken
+func (_m *Usecase) MarsevGetLoanAmount(ctx context.Context, req request.ReqMarsevLoanAmount, prospectID string, accessToken string) (response.MarsevLoanAmountResponse, error) {
+	ret := _m.Called(ctx, req, prospectID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MarsevGetLoanAmount")
+	}
+
+	var r0 response.MarsevLoanAmountResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqMarsevLoanAmount, string, string) (response.MarsevLoanAmountResponse, error)); ok {
+		return rf(ctx, req, prospectID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqMarsevLoanAmount, string, string) response.MarsevLoanAmountResponse); ok {
+		r0 = rf(ctx, req, prospectID, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.MarsevLoanAmountResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqMarsevLoanAmount, string, string) error); ok {
+		r1 = rf(ctx, req, prospectID, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MarsevGetMarketingProgram provides a mock function with given fields: ctx, req, prospectID, accessToken
+func (_m *Usecase) MarsevGetMarketingProgram(ctx context.Context, req request.ReqMarsevFilterProgram, prospectID string, accessToken string) (response.MarsevFilterProgramResponse, error) {
+	ret := _m.Called(ctx, req, prospectID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MarsevGetMarketingProgram")
+	}
+
+	var r0 response.MarsevFilterProgramResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqMarsevFilterProgram, string, string) (response.MarsevFilterProgramResponse, error)); ok {
+		return rf(ctx, req, prospectID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqMarsevFilterProgram, string, string) response.MarsevFilterProgramResponse); ok {
+		r0 = rf(ctx, req, prospectID, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.MarsevFilterProgramResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqMarsevFilterProgram, string, string) error); ok {
+		r1 = rf(ctx, req, prospectID, accessToken)
 	} else {
 		r1 = ret.Error(1)
 	}

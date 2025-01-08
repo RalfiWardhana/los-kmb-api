@@ -334,8 +334,9 @@ func checkResultPefindo(fl validator.FieldLevel) (validator bool) {
 
 	pass := constant.DECISION_PASS
 	reject := constant.DECISION_REJECT
+	noHit := constant.DECISION_PBK_NO_HIT
 
-	if pass == fl.Field().String() || reject == fl.Field().String() {
+	if pass == fl.Field().String() || reject == fl.Field().String() || noHit == fl.Field().String() {
 		validator = true
 	} else {
 		validator = false
