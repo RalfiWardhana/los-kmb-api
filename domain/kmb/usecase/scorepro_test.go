@@ -525,12 +525,12 @@ func TestScorepro(t *testing.T) {
 			},
 			spDupcheck: response.SpDupcheckMap{
 				StatusKonsumen:                   constant.STATUS_KONSUMEN_RO,
+				RRDDate:                          sevenMonthsAgo,
 				CustomerID:                       "123456",
 				InstallmentTopup:                 0,
 				MaxOverdueDaysforActiveAgreement: 31,
 			},
 			filtering: entity.FilteringKMB{
-				RrdDate:   sevenMonthsAgo,
 				CreatedAt: currentTime,
 			},
 			customerSegment: constant.RO_AO_PRIME,
@@ -580,12 +580,12 @@ func TestScorepro(t *testing.T) {
 			},
 			spDupcheck: response.SpDupcheckMap{
 				StatusKonsumen:                   constant.STATUS_KONSUMEN_RO,
+				RRDDate:                          nil,
 				CustomerID:                       "123456",
 				InstallmentTopup:                 0,
 				MaxOverdueDaysforActiveAgreement: 31,
 			},
 			filtering: entity.FilteringKMB{
-				RrdDate:   nil,
 				CreatedAt: currentTime,
 			},
 			customerSegment: constant.RO_AO_PRIME,

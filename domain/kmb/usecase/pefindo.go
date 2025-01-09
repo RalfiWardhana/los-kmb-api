@@ -32,14 +32,20 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 
 	// INTERCEPT PERBAIKAN FLOW RO PRIME/PRIORITY (NON-TOPUP) | CHECK EXPIRED_CONTRACT
 	if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_RO && spDupcheck.InstallmentTopup <= 0 && (customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY) {
-		if filtering.RrdDate == nil {
+		if spDupcheck.RRDDate == nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
 			return
 		}
 
-		RrdDateTime, ok := filtering.RrdDate.(time.Time)
-		if !ok {
-			err = errors.New(constant.ERROR_UPSTREAM + " - RrdDate is not of type time.Time")
+		var RrdDateTime time.Time
+		if rrdDateStr, ok := spDupcheck.RRDDate.(string); ok {
+			RrdDateTime, err = time.Parse(time.RFC3339, rrdDateStr)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Invalid RrdDate format")
+				return
+			}
+		} else if RrdDateTime, ok = spDupcheck.RRDDate.(time.Time); !ok {
+			err = errors.New(constant.ERROR_UPSTREAM + " - RrdDate must be string or time.Time")
 			return
 		}
 
