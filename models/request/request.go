@@ -116,6 +116,7 @@ type DupcheckApi struct {
 	LegalName             string              `json:"legal_name" validate:"required,allowcharsname"`
 	MotherName            string              `json:"surgate_mother_name" validate:"required,allowcharsname"`
 	Spouse                *DupcheckApiSpouse  `json:"spouse" validate:"omitempty"`
+	MobilePhone           string              `json:"mobile_phone" validate:"min=9,max=14" example:"085689XXX01"`
 	EngineNo              string              `json:"no_engine" validate:"required"`
 	RangkaNo              string              `json:"no_rangka" validate:"required"`
 	ManufactureYear       string              `json:"manufacture_year" validate:"required,len=4,number"`
@@ -684,6 +685,10 @@ type AgentNE struct {
 	CmoName   string `json:"cmo_name" validate:"required" example:"SETO MULYA"`
 	CmoNik    string `json:"cmo_nik" validate:"required" example:"93510"`
 	RecomDate string `json:"recom_date" validate:"required" example:"2021-07-15"`
+}
+
+type LockSystem struct {
+	IDNumber string `json:"id_number" validate:"required,id_number" example:"ENCRYPTED NIK"`
 }
 
 type Recalculate struct {

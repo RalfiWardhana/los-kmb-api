@@ -5,6 +5,15 @@ import (
 	"time"
 )
 
+type ApiResponseV2 struct {
+	Code       string      `json:"code"`
+	Message    string      `json:"message"`
+	Errors     interface{} `json:"errors"`
+	Data       interface{} `json:"data"`
+	ServerTime string      `json:"server_time"`
+	RequestID  string      `json:"request_id"`
+}
+
 type ApiResponse struct {
 	Message    string      `json:"messages"`
 	Errors     interface{} `json:"errors"`
@@ -457,6 +466,12 @@ type LowIncome struct {
 	Range         string  `json:"range"`
 }
 
+type LockSystem struct {
+	IsBanned  bool   `json:"is_banned"`
+	Reason    string `json:"reason"`
+	UnbanDate string `json:"unban_date"`
+}
+
 type DupcheckConfig struct {
 	Data DataDupcheckConfig `json:"data"`
 }
@@ -476,6 +491,20 @@ type DataDupcheckConfig struct {
 		Priority float64 `json:"priority"`
 		Regular  float64 `json:"regular"`
 	} `json:"minimum_pencairan_ro_top_up"`
+}
+
+type LockSystemConfig struct {
+	Data DataLockSystemConfig `json:"data"`
+}
+
+type DataLockSystemConfig struct {
+	LockRejectAttempt int    `json:"lock_reject_attempt"`
+	LockRejectBan     int    `json:"lock_reject_ban"`
+	LockRejectCheck   int    `json:"lock_reject_check"`
+	LockCancelAttempt int    `json:"lock_cancel_attempt"`
+	LockCancelBan     int    `json:"lock_cancel_ban"`
+	LockCancelCheck   int    `json:"lock_cancel_check"`
+	LockStartDate     string `json:"lock_start_date"`
 }
 
 type LatestPaidInstallment struct {
@@ -939,6 +968,12 @@ type GetEmployeeByID struct {
 	Error   interface{}             `json:"error"`
 	Message string                  `json:"message"`
 	Data    []EmployeeCareerHistory `json:"data"`
+}
+
+type HrisListEmployee struct {
+	EmployeeID  string      `json:"employee_id"`
+	IDNumber    interface{} `json:"id_number"`
+	PhoneNumber interface{} `json:"phone_number"`
 }
 
 type FpdCMOResponse struct {

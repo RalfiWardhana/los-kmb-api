@@ -3051,7 +3051,7 @@ func TestGetHistoryProcess(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
 		CASE
 			WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING'
-			WHEN td.source_decision IN ('TNR','PRJ','NIK','NKA','BLK','PMK') THEN 'DUPLICATION CHECKING'
+			WHEN td.source_decision IN ('TNR','PRJ','NIK','NKA','BLK','PMK','NHP') THEN 'DUPLICATION CHECKING'
 			WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING'
 			WHEN td.source_decision = 'DCP'
 			OR td.source_decision = 'ARI'
@@ -3100,7 +3100,7 @@ func TestGetHistoryProcess(t *testing.T) {
 			trx_details td WITH (nolock)
 			LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
 		WHERE td.ProspectID = ? AND (td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC','DEV') OR 
-		(td.source_decision IN('TNR','PRJ','NIK','NKA','BLK','PMK','LTV') AND td.decision = 'REJ'))
+		(td.source_decision IN('TNR','PRJ','NIK','NKA','BLK','PMK','LTV','NHP') AND td.decision = 'REJ'))
 		AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
 			WillReturnRows(sqlmock.NewRows([]string{"source_decision", "decision", "reason", "created_at"}).
 				AddRow("PRE SCREENING", "PASS", "Dokumen Sesuai", ""))
@@ -3129,7 +3129,7 @@ func TestGetHistoryProcess(t *testing.T) {
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
 		CASE
 			WHEN td.source_decision = 'PSI' THEN 'PRE SCREENING'
-			WHEN td.source_decision IN ('TNR','PRJ','NIK','NKA','BLK','PMK') THEN 'DUPLICATION CHECKING'
+			WHEN td.source_decision IN ('TNR','PRJ','NIK','NKA','BLK','PMK','NHP') THEN 'DUPLICATION CHECKING'
 			WHEN td.source_decision = 'DCK' THEN 'DUPLICATION CHECKING'
 			WHEN td.source_decision = 'DCP'
 			OR td.source_decision = 'ARI'
@@ -3178,7 +3178,7 @@ func TestGetHistoryProcess(t *testing.T) {
 			trx_details td WITH (nolock)
 			LEFT JOIN app_rules ap ON ap.rule_code = td.rule_code
 		WHERE td.ProspectID = ? AND (td.source_decision IN('PSI','DCK','DCP','ARI','KTP','PBK','SCP','DSR','CRA','CBM','DRM','GMO','COM','GMC','UCC','NRC','DEV') OR 
-		(td.source_decision IN('TNR','PRJ','NIK','NKA','BLK','PMK','LTV') AND td.decision = 'REJ'))
+		(td.source_decision IN('TNR','PRJ','NIK','NKA','BLK','PMK','LTV','NHP') AND td.decision = 'REJ'))
 		AND td.decision <> 'CTG' AND td.activity <> 'UNPR' ORDER BY td.created_at ASC`)).WithArgs(prospectID).
 			WillReturnError(gorm.ErrRecordNotFound)
 		mock.ExpectCommit()

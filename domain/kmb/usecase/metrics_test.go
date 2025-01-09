@@ -1506,7 +1506,7 @@ func TestMetrics(t *testing.T) {
 			mockUsecase.On("Prescreening", ctx, tc.reqMetrics, tc.filtering, "token").Return(tc.trxPrescreening, tc.trxFMF, tc.trxPrescreeningDetail, tc.errPrescreening)
 			mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.trxTenor, tc.errRejectTenor36)
 			mockRepository.On("GetConfig", "dupcheck", "KMB-OFF", "dupcheck_kmb_config").Return(tc.config, tc.errGetConfig)
-			mockMultiUsecase.On("Dupcheck", ctx, mock.Anything, true, "token", tc.configValue).Return(tc.dupcheckData, tc.customerStatus, tc.metricsDupcheck, tc.trxFMFDupcheck, tc.trxDetailDupcheck, tc.errDupcheck)
+			mockMultiUsecase.On("Dupcheck", ctx, mock.Anything, true, "token", "token", tc.configValue).Return(tc.dupcheckData, tc.customerStatus, tc.metricsDupcheck, tc.trxFMFDupcheck, tc.trxDetailDupcheck, tc.errDupcheck)
 
 			rst := resty.New()
 			httpmock.ActivateNonDefault(rst.GetClient())
@@ -1520,7 +1520,7 @@ func TestMetrics(t *testing.T) {
 			}
 
 			metrics := NewMetrics(mockRepository, mockHttpClient, mockUsecase, mockMultiUsecase)
-			result, err := metrics.MetricsLos(ctx, tc.reqMetrics, "token")
+			result, err := metrics.MetricsLos(ctx, tc.reqMetrics, "token", "token")
 			require.Equal(t, tc.resultMetrics, result)
 			require.Equal(t, tc.err, err)
 		})

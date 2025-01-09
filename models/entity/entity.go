@@ -709,6 +709,18 @@ func (c *TrxBannedPMKDSR) TableName() string {
 	return "trx_banned_pmk_dsr"
 }
 
+type TrxLockSystem struct {
+	ProspectID string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	IDNumber   string    `gorm:"type:varchar(40);column:IDNumber"`
+	Reason     string    `gorm:"type:varchar(250);column:reason"`
+	CreatedAt  time.Time `gorm:"column:created_at"`
+	UnbanDate  time.Time `gorm:"column:unban_date"`
+}
+
+func (c *TrxLockSystem) TableName() string {
+	return "trx_lock_system"
+}
+
 type TrxBannedChassisNumber struct {
 	ProspectID string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
 	ChassisNo  string    `gorm:"type:varchar(30);column:chassis_number"`
@@ -839,6 +851,7 @@ type FilteringKMB struct {
 	MaxOverdueKORules               interface{} `gorm:"column:max_overdue_ko_rules" json:"max_overdue_ko_rules"`
 	MaxOverdueLast12MonthsKORules   interface{} `gorm:"column:max_overdue_last12months_ko_rules" json:"max_overdue_last12months_ko_rules"`
 	RrdDate                         interface{} `gorm:"column:rrd_date" json:"rrd_date"`
+	IDNumber                        string      `gorm:"column:id_number;type:varchar(100)" json:"id_number"`
 	CreatedAt                       time.Time   `gorm:"column:created_at" json:"created_at"`
 }
 

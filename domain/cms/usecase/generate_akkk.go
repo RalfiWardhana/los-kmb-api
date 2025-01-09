@@ -23,7 +23,7 @@ func (u usecase) GenerateFormAKKK(ctx context.Context, req request.RequestGenera
 	}
 
 	if trxStatus.Activity != constant.ACTIVITY_STOP {
-		err = errors.New(constant.ERROR_BAD_REQUEST + " - GenerateFormAKKK GetTrxStatus Status Pengajuan Pelum Selesai")
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - GenerateFormAKKK GetTrxStatus Status Pengajuan Belum Selesai")
 		return
 	}
 

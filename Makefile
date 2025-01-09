@@ -3,6 +3,9 @@ swagger:
 test:
 	@go test -coverprofile="unit_test/coverage.out" "./domain/..."
 	@go tool cover -func="unit_test/coverage.out"
+test_kmb:
+	@go test -coverprofile="unit_test/coverage.out" "./domain/cms/..." "./domain/elaborate_ltv/..." "./domain/filtering_new/..." "./domain/kmb/..."
+	@go tool cover -func="unit_test/coverage.out"
 coverage:
 	@go tool cover -html="unit_test/coverage.out"
 run:

@@ -1351,6 +1351,100 @@ func (r repoHandler) GetBannedPMKDSR(idNumber string) (data entity.TrxBannedPMKD
 	return
 }
 
+func (r repoHandler) GetTrxReject(idNumber string, config response.LockSystemConfig) (data []entity.TrxLockSystem, err error) {
+
+	qRangeJourney := fmt.Sprintf(`DECLARE @date_range DATE = (SELECT TOP 1 CAST(DATEADD(DAY, -%d, ts.created_at) as DATE) as date_range
+			FROM trx_status ts with (nolock) 
+			LEFT JOIN trx_customer_personal tcp with (nolock) ON ts.ProspectID = tcp.ProspectID
+			WHERE ts.decision = 'REJ' 
+			AND tcp.IDNumber = '%s'
+			ORDER BY ts.created_at DESC)`, config.Data.LockRejectCheck, idNumber)
+
+	qRangeFiltering := fmt.Sprintf(`DECLARE @date_range_f DATE = (SELECT TOP 1 CAST(DATEADD(DAY, -%d, tf.created_at) as DATE) as date_range_f
+			FROM trx_filtering tf with (nolock) 
+			WHERE tf.next_process = 0 
+			AND tf.id_number = '%s'
+			ORDER BY tf.created_at DESC)`, config.Data.LockRejectCheck, idNumber)
+
+	qRejectJourney := fmt.Sprintf(`SELECT TOP %d CAST(DATEADD(DAY, %d, ts.created_at) as DATE) as unban_date, 
+			ts.created_at, ts.ProspectID, tcp.IDNumber, ts.decision, ts.reason
+			FROM trx_status ts with (nolock) 
+			LEFT JOIN trx_customer_personal tcp with (nolock) ON ts.ProspectID = tcp.ProspectID
+			WHERE ts.decision = 'REJ' 
+			AND tcp.IDNumber = '%s'
+			AND ts.created_at >= '%s'
+			AND CAST(ts.created_at as DATE) >= @date_range AND @date_range <= CAST(ts.created_at as DATE) 
+			AND CAST(ts.created_at as DATE) >= CAST(DATEADD(DAY, -%d, GETDATE()) as DATE)`, config.Data.LockRejectAttempt, config.Data.LockRejectBan+1, idNumber, config.Data.LockStartDate, config.Data.LockRejectBan)
+
+	qRejectFiltering := fmt.Sprintf(`SELECT TOP %d CAST(DATEADD(DAY, %d, tf.created_at) as DATE) as unban_date,
+			tf.created_at, tf.prospect_id as ProspectID, tf.id_number as IDNumber, 
+			CASE 
+				when tf.next_process = 0 then 'REJ'
+			END decision, tf.reason
+			FROM trx_filtering tf with (nolock)
+			WHERE tf.next_process = 0 
+			AND tf.id_number = '%s'
+			AND tf.created_at >= '%s'
+			AND CAST(tf.created_at as DATE) >= @date_range_f AND @date_range_f <= CAST(tf.created_at as DATE) 
+			AND CAST(tf.created_at as DATE) >= CAST(DATEADD(DAY, -%d, GETDATE()) as DATE)`, config.Data.LockRejectAttempt, config.Data.LockRejectBan+1, idNumber, config.Data.LockStartDate, config.Data.LockRejectBan)
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`%s %s %s UNION ALL %s ORDER BY created_at DESC`, qRangeJourney, qRangeFiltering, qRejectJourney, qRejectFiltering)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetTrxCancel(idNumber string, config response.LockSystemConfig) (data []entity.TrxLockSystem, err error) {
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`DECLARE @date_range DATE = (SELECT TOP 1 CAST(DATEADD(DAY, -%d, ts.created_at) as DATE) as date_range
+			FROM trx_status ts with (nolock) 
+			LEFT JOIN trx_customer_personal tcp with (nolock) ON ts.ProspectID = tcp.ProspectID
+			WHERE ts.decision = 'CAN' 
+			AND tcp.IDNumber = '%s'
+			ORDER BY ts.created_at DESC)
+			SELECT TOP %d CAST(DATEADD(DAY, %d, ts.created_at) as DATE) as unban_date, 
+			ts.created_at, ts.ProspectID, tcp.IDNumber, ts.decision, ts.reason
+			FROM trx_status ts with (nolock) 
+			LEFT JOIN trx_customer_personal tcp with (nolock) ON ts.ProspectID = tcp.ProspectID
+			WHERE ts.decision = 'CAN' 
+			AND tcp.IDNumber = '%s'
+			AND ts.created_at >= '%s'
+			AND CAST(ts.created_at as DATE) >= @date_range AND @date_range <= CAST(ts.created_at as DATE) 
+			AND CAST(ts.created_at as DATE) >= CAST(DATEADD(DAY, -%d, GETDATE()) as DATE)
+			ORDER BY ts.created_at DESC`, config.Data.LockCancelCheck, idNumber, config.Data.LockCancelAttempt, config.Data.LockCancelBan+1, idNumber, config.Data.LockStartDate, config.Data.LockCancelBan)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) SaveTrxLockSystem(trxLockSystem entity.TrxLockSystem) (err error) {
+
+	if err = r.newKmbDB.Model(&entity.TrxLockSystem{}).Create(&trxLockSystem).Error; err != nil {
+		return
+	}
+	return
+}
+
+func (r repoHandler) GetTrxLockSystem(idNumber string) (data entity.TrxLockSystem, err error) {
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT * FROM trx_lock_system tls 
+			WHERE IDNumber = '%s' AND unban_date > CAST(GETDATE() as DATE)`, idNumber)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+	return
+}
+
 func (r repoHandler) GetCurrentTrxWithReject(idNumber string) (data entity.TrxReject, err error) {
 
 	currentDate := time.Now().Format(constant.FORMAT_DATE)

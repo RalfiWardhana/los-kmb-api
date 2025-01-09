@@ -382,6 +382,10 @@ const (
 	ERROR_NOT_FOUND       = "data_not_found"
 	ERROR_ROWS_AFFECTED   = "RowsAffected 0"
 
+	//LOCK SYSTEM
+	PERNAH_REJECT = "Pernah Reject"
+	PERNAH_CANCEL = "Pernah Cancel"
+
 	//PRE SCREENING
 	QUICK_APPROVE      = false
 	LIMIT_PRESCREENING = 0
@@ -532,6 +536,11 @@ const (
 	REASON_REJECTION_FRAUD_POTENTIAL = "NokaNosin sudah terdaftar di KBFMF - Agreement Aktif a.n Pasangan"
 	REASON_AGREEMENT_NOT_FOUND       = "NokaNosin tidak terdaftar di KBFMF"
 	SOURCE_DECISION_NOKANOSIN        = "NKA"
+
+	// MOBILEPHONE FMF
+	SOURCE_DECISION_NOHP = "NHP"
+	REASON_REJECT_NOHP   = "Nomor Terdaftar di KB FMF - Bukan a.n Konsumen"
+	CODE_NOHP            = "251"
 
 	//FACE COMPARE
 	RESULT_COMPARE                    = true
