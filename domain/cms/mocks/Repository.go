@@ -368,6 +368,71 @@ func (_m *Repository) GetInquiryCa(req request.ReqInquiryCa, pagination interfac
 	return r0, r1, r2
 }
 
+// GetInquiryListOrder provides a mock function with given fields: req, pagination
+func (_m *Repository) GetInquiryListOrder(req request.ReqInquiryListOrder, pagination interface{}) ([]entity.InquiryDataListOrder, int, error) {
+	ret := _m.Called(req, pagination)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetInquiryListOrder")
+	}
+
+	var r0 []entity.InquiryDataListOrder
+	var r1 int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(request.ReqInquiryListOrder, interface{}) ([]entity.InquiryDataListOrder, int, error)); ok {
+		return rf(req, pagination)
+	}
+	if rf, ok := ret.Get(0).(func(request.ReqInquiryListOrder, interface{}) []entity.InquiryDataListOrder); ok {
+		r0 = rf(req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.InquiryDataListOrder)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(request.ReqInquiryListOrder, interface{}) int); ok {
+		r1 = rf(req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	if rf, ok := ret.Get(2).(func(request.ReqInquiryListOrder, interface{}) error); ok {
+		r2 = rf(req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// GetInquiryListOrderDetail provides a mock function with given fields: prospectID
+func (_m *Repository) GetInquiryListOrderDetail(prospectID string) (entity.InquiryDataListOrder, error) {
+	ret := _m.Called(prospectID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetInquiryListOrderDetail")
+	}
+
+	var r0 entity.InquiryDataListOrder
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (entity.InquiryDataListOrder, error)); ok {
+		return rf(prospectID)
+	}
+	if rf, ok := ret.Get(0).(func(string) entity.InquiryDataListOrder); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.InquiryDataListOrder)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetInquiryMappingCluster provides a mock function with given fields: req, pagination
 func (_m *Repository) GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) ([]entity.InquiryMappingCluster, int, error) {
 	ret := _m.Called(req, pagination)

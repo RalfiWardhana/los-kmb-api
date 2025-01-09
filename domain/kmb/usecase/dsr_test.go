@@ -626,12 +626,12 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
+				RRDDate:        sixMonthsAgo,
 				Dsr:            30,
 				CustomerID:     "123456",
 				ConfigMaxDSR:   35,
 			},
 			filtering: entity.FilteringKMB{
-				RrdDate:   sixMonthsAgo,
 				CreatedAt: currentTime,
 			},
 			result: response.UsecaseApi{
@@ -668,6 +668,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen:                   constant.STATUS_KONSUMEN_RO,
+				RRDDate:                          sevenMonthsAgo,
 				Dsr:                              30,
 				InstallmentTopup:                 0,
 				MaxOverdueDaysforActiveAgreement: 31,
@@ -675,7 +676,6 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				ConfigMaxDSR:                     35,
 			},
 			filtering: entity.FilteringKMB{
-				RrdDate:   sevenMonthsAgo,
 				CreatedAt: currentTime,
 			},
 			result: response.UsecaseApi{
@@ -714,6 +714,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen:                   constant.STATUS_KONSUMEN_RO,
+				RRDDate:                          nil,
 				Dsr:                              30,
 				InstallmentTopup:                 0,
 				MaxOverdueDaysforActiveAgreement: 31,
@@ -721,7 +722,6 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				ConfigMaxDSR:                     35,
 			},
 			filtering: entity.FilteringKMB{
-				RrdDate:   nil,
 				CreatedAt: currentTime,
 			},
 			trxFMF: response.TrxFMF{
@@ -750,11 +750,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
 			},
-			filtering: entity.FilteringKMB{
-				RrdDate: sixMonthsAgo,
-			},
+			filtering: entity.FilteringKMB{},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
+				RRDDate:        sixMonthsAgo,
 				Dsr:            30,
 				CustomerID:     "123456",
 				ConfigMaxDSR:   35,
@@ -791,11 +790,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
 			},
-			filtering: entity.FilteringKMB{
-				RrdDate: sixMonthsAgo,
-			},
+			filtering: entity.FilteringKMB{},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
+				RRDDate:        sixMonthsAgo,
 				Dsr:            30,
 				CustomerID:     "123456",
 				ConfigMaxDSR:   35,
@@ -1003,11 +1001,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
 			},
-			filtering: entity.FilteringKMB{
-				RrdDate: sixMonthsAgo,
-			},
+			filtering: entity.FilteringKMB{},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
+				RRDDate:        sixMonthsAgo,
 				Dsr:            30,
 				CustomerID:     "123456",
 				ConfigMaxDSR:   35,
@@ -1038,11 +1035,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
 			},
-			filtering: entity.FilteringKMB{
-				RrdDate: sixMonthsAgo,
-			},
+			filtering: entity.FilteringKMB{},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
+				RRDDate:        sixMonthsAgo,
 				Dsr:            30,
 				CustomerID:     "123456",
 				ConfigMaxDSR:   35,
@@ -1072,11 +1068,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				Key:   "parameterize",
 				Value: `{"data":{"vehicle_age":17,"max_ovd":60,"max_dsr":35,"minimum_pencairan_ro_top_up":5000000}}`,
 			},
-			filtering: entity.FilteringKMB{
-				RrdDate: sixMonthsAgo,
-			},
+			filtering: entity.FilteringKMB{},
 			SpDupcheckMap: response.SpDupcheckMap{
 				StatusKonsumen: constant.STATUS_KONSUMEN_RO,
+				RRDDate:        sixMonthsAgo,
 				Dsr:            30,
 				CustomerID:     "123456",
 				ConfigMaxDSR:   35,

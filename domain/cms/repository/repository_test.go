@@ -11865,6 +11865,347 @@ func TestProcessResetAllQuotaDeviasi(t *testing.T) {
 	})
 }
 
+func TestGetInquiryListOrder(t *testing.T) {
+	exampleOrderAt := time.Date(2024, time.November, 3, 14, 30, 0, 0, time.UTC)
+	exampleDecisionAt := time.Date(2024, time.November, 3, 15, 30, 0, 0, time.UTC)
+	exampleBirthDate := time.Date(1992, time.August, 28, 13, 10, 0, 0, time.UTC)
+
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	expectedData := []entity.InquiryDataListOrder{
+		{
+			OrderAt:     exampleOrderAt,
+			BranchName:  "BEKASI",
+			ProspectID:  "SAL-1140002411209992",
+			LegalName:   "THOM HAYE",
+			IDNumber:    "357810280892999",
+			BirthDate:   exampleBirthDate,
+			Profession:  "Karyawan Swasta",
+			JobType:     "Engineering",
+			JobPosition: "Staff",
+			IsHighRisk:  true,
+			Pernyataan1: false,
+			Pernyataan2: false,
+			Pernyataan3: false,
+			Pernyataan4: false,
+			Pernyataan5: false,
+			Pernyataan6: "Lorem Ipsum Dolor Sit a Jamet",
+			UrlFormAkkk: "https://dev-platform-media.kbfinansia.com/media/reference/140000/SAL-1140002411209992/formAKKK_SAL-1140002411209992.pdf",
+			Decision:    "APR",
+			DecisionBy:  "CA KMB BEKASI",
+			DecisionAt:  exampleDecisionAt,
+		},
+	}
+
+	rawQueryDtStart := `SELECT 
+							tm.created_at AS OrderAt,
+							b.BranchName,
+							tm.ProspectID, 
+							scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+							scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+							tcp.BirthDate,
+							prf.[value] AS Profession,
+							jt.[value] AS JobType,
+							jp.[value] AS JobPosition,
+							edd.is_highrisk AS IsHighRisk,
+							edd.pernyataan_1 AS Pernyataan1,
+							edd.pernyataan_2 AS Pernyataan2,
+							edd.pernyataan_3 AS Pernyataan3,
+							edd.pernyataan_4 AS Pernyataan4,
+							edd.pernyataan_5 AS Pernyataan5,
+							edd.pernyataan_6 AS Pernyataan6,
+							tak.UrlFormAkkk,
+							sts.decision AS Decision,
+							sts.source_decision AS SourceDecision,
+							sts.rule_code AS RuleCode,
+							sts.reason AS Reason,
+							tcd.decision_by AS DecisionBy,
+							edd.created_at AS DecisionAt
+						FROM 
+						trx_master AS tm WITH (nolock)
+						JOIN confins_branch AS b WITH (nolock) ON (tm.BranchID = b.BranchID)
+						JOIN trx_status AS sts WITH (nolock) ON (tm.ProspectID = sts.ProspectID)
+						JOIN trx_customer_personal AS tcp WITH (nolock) ON (tm.ProspectID = tcp.ProspectID)
+						JOIN trx_customer_employment AS emp WITH (nolock) ON (tm.ProspectID = emp.ProspectID)
+						LEFT JOIN trx_ca_decision AS tcd WITH (nolock) ON (tm.ProspectID = tcd.ProspectID) 
+						LEFT JOIN trx_edd AS edd WITH (nolock) ON (tm.ProspectID = edd.ProspectID)
+						LEFT JOIN trx_akkk AS tak WITH (nolock) ON (tm.ProspectID = tak.ProspectID)
+						LEFT JOIN (
+							SELECT [key], value
+							FROM app_config ap WITH (nolock)
+							WHERE group_name = 'ProfessionID'
+						) AS prf ON (emp.ProfessionID = prf.[key])
+						LEFT JOIN (
+							SELECT [key], value
+							FROM app_config ap WITH (nolock)
+							WHERE group_name = 'JobType'
+						) AS jt ON (emp.JobType = jt.[key])
+						LEFT JOIN (
+							SELECT [key], value
+							FROM app_config ap WITH (nolock)
+							WHERE group_name = 'JobPosition'
+						) AS jp ON (emp.JobPosition = jp.[key])`
+
+	rawQueryDtEnd := `ORDER BY tm.created_at DESC OFFSET 0 ROWS FETCH FIRST 10 ROWS ONLY`
+
+	rawQueryCountStart := `SELECT
+								COUNT(*) AS totalRow
+							FROM (
+								` + rawQueryDtStart
+
+	rawQueryCountEnd := `) AS y`
+
+	t.Run("success with search date range", func(t *testing.T) {
+		req := request.ReqInquiryListOrder{
+			OrderDateStart: "2024-11-01",
+			OrderDateEnd:   "2024-11-30",
+		}
+
+		rawQueryWhere := `WHERE tm.created_at BETWEEN '2024-11-01T00:00:00Z' AND '2024-11-30T23:59:59Z'`
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`%s %s %s`, rawQueryCountStart, rawQueryWhere, rawQueryCountEnd))).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`%s %s %s`, rawQueryDtStart, rawQueryWhere, rawQueryDtEnd))).
+			WillReturnRows(sqlmock.NewRows([]string{"OrderAt", "BranchName", "ProspectID", "LegalName", "IDNumber", "BirthDate", "Profession", "JobType", "JobPosition", "IsHighRisk", "Pernyataan1", "Pernyataan2", "Pernyataan3", "Pernyataan4", "Pernyataan5", "Pernyataan6", "UrlFormAkkk", "Decision", "DecisionBy", "DecisionAt"}).AddRow(exampleOrderAt, "BEKASI", "SAL-1140002411209992", "THOM HAYE", "357810280892999", exampleBirthDate, "Karyawan Swasta", "Engineering", "Staff", true, false, false, false, false, false, "Lorem Ipsum Dolor Sit a Jamet", "https://dev-platform-media.kbfinansia.com/media/reference/140000/SAL-1140002411209992/formAKKK_SAL-1140002411209992.pdf", "APR", "CA KMB BEKASI", exampleDecisionAt))
+
+		mock.ExpectCommit()
+
+		data, _, err := repo.GetInquiryListOrder(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success with filter input text and option box filled", func(t *testing.T) {
+		req := request.ReqInquiryListOrder{
+			BranchID:   "400",
+			Decision:   "APR",
+			IsHighRisk: "1",
+			ProspectID: "SAL-1140002411209992",
+			IDNumber:   "357810280892999",
+			LegalName:  "THOM HAYE",
+		}
+
+		rawQueryWhere := `WHERE tm.BranchID = '400' AND sts.decision = 'APR' AND edd.is_highrisk = 1 AND tm.ProspectID = 'SAL-1140002411209992' AND tcp.IDNumber = '357810280892999' AND tcp.LegalName = 'THOM HAYE'`
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','357810280892999') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("357810280892999"))
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','THOM HAYE') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("THOM HAYE"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`%s %s %s`, rawQueryCountStart, rawQueryWhere, rawQueryCountEnd))).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`%s %s %s`, rawQueryDtStart, rawQueryWhere, rawQueryDtEnd))).
+			WillReturnRows(sqlmock.NewRows([]string{"OrderAt", "BranchName", "ProspectID", "LegalName", "IDNumber", "BirthDate", "Profession", "JobType", "JobPosition", "IsHighRisk", "Pernyataan1", "Pernyataan2", "Pernyataan3", "Pernyataan4", "Pernyataan5", "Pernyataan6", "UrlFormAkkk", "Decision", "DecisionBy", "DecisionAt"}).AddRow(exampleOrderAt, "BEKASI", "SAL-1140002411209992", "THOM HAYE", "357810280892999", exampleBirthDate, "Karyawan Swasta", "Engineering", "Staff", true, false, false, false, false, false, "Lorem Ipsum Dolor Sit a Jamet", "https://dev-platform-media.kbfinansia.com/media/reference/140000/SAL-1140002411209992/formAKKK_SAL-1140002411209992.pdf", "APR", "CA KMB BEKASI", exampleDecisionAt))
+
+		mock.ExpectCommit()
+
+		data, _, err := repo.GetInquiryListOrder(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+		req := request.ReqInquiryListOrder{
+			BranchID:   "400",
+			Decision:   "APR",
+			IsHighRisk: "1",
+			ProspectID: "SAL-1140002411209992",
+			IDNumber:   "357810280892999",
+			LegalName:  "THOM HAYE",
+		}
+
+		rawQueryWhere := `WHERE tm.BranchID = '400' AND sts.decision = 'APR' AND edd.is_highrisk = 1 AND tm.ProspectID = 'SAL-1140002411209992' AND tcp.IDNumber = '357810280892999' AND tcp.LegalName = 'THOM HAYE'`
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','357810280892999') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("357810280892999"))
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','THOM HAYE') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("THOM HAYE"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`%s %s %s`, rawQueryCountStart, rawQueryWhere, rawQueryCountEnd))).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("0"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`%s %s %s`, rawQueryDtStart, rawQueryWhere, rawQueryDtEnd))).
+			WillReturnRows(sqlmock.NewRows([]string{"OrderAt", "BranchName", "ProspectID", "LegalName", "IDNumber", "BirthDate", "Profession", "JobType", "JobPosition", "IsHighRisk", "Pernyataan1", "Pernyataan2", "Pernyataan3", "Pernyataan4", "Pernyataan5", "Pernyataan6", "UrlFormAkkk", "Decision", "DecisionBy", "DecisionAt"}))
+
+		mock.ExpectCommit()
+
+		_, _, err := repo.GetInquiryListOrder(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		expectedErr := fmt.Errorf(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestGetInquiryListOrderDetail(t *testing.T) {
+	exampleOrderAt := time.Date(2024, time.November, 3, 14, 30, 0, 0, time.UTC)
+	exampleDecisionAt := time.Date(2024, time.November, 3, 15, 30, 0, 0, time.UTC)
+	exampleBirthDate := time.Date(1992, time.August, 28, 13, 10, 0, 0, time.UTC)
+
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	expectedData := entity.InquiryDataListOrder{
+		OrderAt:     exampleOrderAt,
+		BranchName:  "BEKASI",
+		ProspectID:  "SAL-1140002411209992",
+		LegalName:   "THOM HAYE",
+		IDNumber:    "357810280892999",
+		BirthDate:   exampleBirthDate,
+		Profession:  "Karyawan Swasta",
+		JobType:     "Engineering",
+		JobPosition: "Staff",
+		IsHighRisk:  true,
+		Pernyataan1: false,
+		Pernyataan2: false,
+		Pernyataan3: false,
+		Pernyataan4: false,
+		Pernyataan5: false,
+		Pernyataan6: "Lorem Ipsum Dolor Sit a Jamet",
+		UrlFormAkkk: "https://dev-platform-media.kbfinansia.com/media/reference/140000/SAL-1140002411209992/formAKKK_SAL-1140002411209992.pdf",
+		Decision:    "APR",
+		DecisionBy:  "CA KMB BEKASI",
+		DecisionAt:  exampleDecisionAt,
+	}
+
+	rawQuery := `SELECT 
+					tm.created_at AS OrderAt,
+					b.BranchName,
+					tm.ProspectID, 
+					scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+					scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+					tcp.BirthDate,
+					prf.[value] AS Profession,
+					jt.[value] AS JobType,
+					jp.[value] AS JobPosition,
+					edd.is_highrisk AS IsHighRisk,
+					edd.pernyataan_1 AS Pernyataan1,
+					edd.pernyataan_2 AS Pernyataan2,
+					edd.pernyataan_3 AS Pernyataan3,
+					edd.pernyataan_4 AS Pernyataan4,
+					edd.pernyataan_5 AS Pernyataan5,
+					edd.pernyataan_6 AS Pernyataan6,
+					tak.UrlFormAkkk,
+					sts.decision AS Decision,
+					sts.source_decision AS SourceDecision,
+					sts.rule_code AS RuleCode,
+					sts.reason AS Reason,
+					tcd.decision_by AS DecisionBy,
+					edd.created_at AS DecisionAt
+				FROM 
+				trx_master AS tm WITH (nolock)
+				JOIN confins_branch AS b WITH (nolock) ON (tm.BranchID = b.BranchID)
+				JOIN trx_status AS sts WITH (nolock) ON (tm.ProspectID = sts.ProspectID)
+				JOIN trx_customer_personal AS tcp WITH (nolock) ON (tm.ProspectID = tcp.ProspectID)
+				JOIN trx_customer_employment AS emp WITH (nolock) ON (tm.ProspectID = emp.ProspectID)
+				LEFT JOIN trx_ca_decision AS tcd WITH (nolock) ON (tm.ProspectID = tcd.ProspectID) 
+				LEFT JOIN trx_edd AS edd WITH (nolock) ON (tm.ProspectID = edd.ProspectID)
+				LEFT JOIN trx_akkk AS tak WITH (nolock) ON (tm.ProspectID = tak.ProspectID)
+				LEFT JOIN (
+					SELECT [key], value
+					FROM app_config ap WITH (nolock)
+					WHERE group_name = 'ProfessionID'
+				) AS prf ON (emp.ProfessionID = prf.[key])
+				LEFT JOIN (
+					SELECT [key], value
+					FROM app_config ap WITH (nolock)
+					WHERE group_name = 'JobType'
+				) AS jt ON (emp.JobType = jt.[key])
+				LEFT JOIN (
+					SELECT [key], value
+					FROM app_config ap WITH (nolock)
+					WHERE group_name = 'JobPosition'
+				) AS jp ON (emp.JobPosition = jp.[key])
+				WHERE tm.ProspectID = ?`
+
+	t.Run("success with param prospectid", func(t *testing.T) {
+		ProspectID := "SAL-1140002411209992"
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(rawQuery)).
+			WithArgs(ProspectID).
+			WillReturnRows(sqlmock.NewRows([]string{"OrderAt", "BranchName", "ProspectID", "LegalName", "IDNumber", "BirthDate", "Profession", "JobType", "JobPosition", "IsHighRisk", "Pernyataan1", "Pernyataan2", "Pernyataan3", "Pernyataan4", "Pernyataan5", "Pernyataan6", "UrlFormAkkk", "Decision", "DecisionBy", "DecisionAt"}).
+				AddRow(exampleOrderAt, "BEKASI", ProspectID, "THOM HAYE", "357810280892999", exampleBirthDate, "Karyawan Swasta", "Engineering", "Staff", true, false, false, false, false, false, "Lorem Ipsum Dolor Sit a Jamet", "https://dev-platform-media.kbfinansia.com/media/reference/140000/SAL-1140002411209992/formAKKK_SAL-1140002411209992.pdf", "APR", "CA KMB BEKASI", exampleDecisionAt))
+
+		mock.ExpectCommit()
+
+		data, err := repo.GetInquiryListOrderDetail(ProspectID)
+
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+		ProspectID := "SAL-1140002411209992"
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(rawQuery)).
+			WithArgs(ProspectID).
+			WillReturnRows(sqlmock.NewRows([]string{"OrderAt", "BranchName", "ProspectID", "LegalName", "IDNumber", "BirthDate", "Profession", "JobType", "JobPosition", "IsHighRisk", "Pernyataan1", "Pernyataan2", "Pernyataan3", "Pernyataan4", "Pernyataan5", "Pernyataan6", "UrlFormAkkk", "Decision", "DecisionBy", "DecisionAt"}))
+
+		mock.ExpectCommit()
+
+		_, err := repo.GetInquiryListOrderDetail(ProspectID)
+
+		expectedErr := fmt.Errorf(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
 func TestGetMappingCluster(t *testing.T) {
 	// Setup mock database connection
 	os.Setenv("DEFAULT_TIMEOUT_10S", "10")

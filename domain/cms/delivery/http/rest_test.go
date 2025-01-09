@@ -2118,6 +2118,313 @@ func TestQuotaDeviasiResetAll(t *testing.T) {
 	})
 }
 
+func TestListOrderInquiry(t *testing.T) {
+	mockUsecase := new(mocks.Usecase)
+	mockJson := new(mocksJson.JSON)
+
+	handler := &handlerCMS{
+		usecase: mockUsecase,
+		Json:    mockJson,
+	}
+
+	t.Run("success inquiry with data", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		reqURL := "/api/v3/kmb/cms/list-order/inquiry?order_date_start=2024-11-01&order_date_end=2024-11-30"
+		req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		mockData := []entity.InquiryDataListOrder{}
+		mockUsecase.On("GetInquiryListOrder", mock.Anything, mock.Anything, mock.Anything).Return(mockData, 10, nil).Once()
+
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.ListOrderInquiry(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	})
+
+	t.Run("success inquiry with no data", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		reqURL := "/api/v3/kmb/cms/list-order/inquiry?order_date_start=2024-11-01&order_date_end=2024-11-30"
+		req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		mockUsecase.On("GetInquiryListOrder", mock.Anything, mock.Anything, mock.Anything).Return(nil, 0, errors.New(constant.RECORD_NOT_FOUND)).Once()
+
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.ListOrderInquiry(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	})
+
+	t.Run("error binding request", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/list-order/inquiry?order_date_start=2024-11-01&order_date_end=2024-11-30", strings.NewReader("error"))
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		err := handler.ListOrderInquiry(ctx)
+		assert.Nil(t, err)
+		mockJson.AssertCalled(t, "InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	})
+
+	t.Run("error validating request", func(t *testing.T) {
+		e := echo.New()
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/list-order/inquiry?order_date_start=2024-11-01&order_date_end=2024-11-30", nil)
+		rec := httptest.NewRecorder()
+		ctx := e.NewContext(req, rec)
+
+		// Mock the JSON response for validation error
+		mockJson.On("BadRequestErrorValidationV2", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{})
+
+		err := handler.ListOrderInquiry(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "BadRequestErrorValidationV2", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+		mockUsecase.AssertNotCalled(t, "GetInquiryListOrder")
+	})
+
+	t.Run("server-side error", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		reqURL := "/api/v3/kmb/cms/list-order/inquiry?order_date_start=2024-11-01&order_date_end=2024-11-30"
+		req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		testError := errors.New("internal server error")
+		mockUsecase.On("GetInquiryListOrder", mock.Anything, mock.Anything, mock.Anything).Return(nil, 0, testError).Once()
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, testError).Return(nil).Once()
+
+		err := handler.ListOrderInquiry(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, testError)
+	})
+
+	t.Run("error caused empty date range", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		reqURL := "/api/v3/kmb/cms/list-order/inquiry"
+		req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		testError := errors.New(constant.ERROR_BAD_REQUEST + " - OrderDateStart or OrderDateEnd does not allowed to be empty")
+		mockUsecase.On("GetInquiryListOrder", mock.Anything, mock.Anything, mock.Anything).Return(nil, 0, testError).Once()
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, testError).Return(nil).Once()
+
+		err := handler.ListOrderInquiry(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, testError)
+		mockUsecase.AssertNotCalled(t, "GetInquiryListOrder")
+	})
+
+	t.Run("error caused invalid start date format", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		reqURL := "/api/v3/kmb/cms/list-order/inquiry?order_date_start=02-11-2024&order_date_end=2024-11-30"
+		req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		testError := errors.New(constant.ERROR_BAD_REQUEST + " - Start date format invalid")
+		mockUsecase.On("GetInquiryListOrder", mock.Anything, mock.Anything, mock.Anything).Return(nil, 0, testError).Once()
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, testError).Return(nil).Once()
+
+		err := handler.ListOrderInquiry(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, testError)
+		mockUsecase.AssertNotCalled(t, "GetInquiryListOrder")
+	})
+
+	t.Run("error caused invalid end date format", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		reqURL := "/api/v3/kmb/cms/list-order/inquiry?order_date_start=2024-11-02&order_date_end=30-11-2024"
+		req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		testError := errors.New(constant.ERROR_BAD_REQUEST + " - End date format invalid")
+		mockUsecase.On("GetInquiryListOrder", mock.Anything, mock.Anything, mock.Anything).Return(nil, 0, testError).Once()
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, testError).Return(nil).Once()
+
+		err := handler.ListOrderInquiry(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, testError)
+		mockUsecase.AssertNotCalled(t, "GetInquiryListOrder")
+	})
+
+	t.Run("error caused startDate higher than endDate", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		reqURL := "/api/v3/kmb/cms/list-order/inquiry?order_date_start=2024-11-02&order_date_end=2024-11-01"
+		req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		testError := errors.New(constant.ERROR_BAD_REQUEST + " - Start date must be before End date")
+		mockUsecase.On("GetInquiryListOrder", mock.Anything, mock.Anything, mock.Anything).Return(nil, 0, testError).Once()
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, testError).Return(nil).Once()
+
+		err := handler.ListOrderInquiry(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, testError)
+		mockUsecase.AssertNotCalled(t, "GetInquiryListOrder")
+	})
+
+	t.Run("error caused date range exceed 30 days", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		reqURL := "/api/v3/kmb/cms/list-order/inquiry?order_date_start=2024-10-01&order_date_end=2024-10-31"
+		req := httptest.NewRequest(http.MethodGet, reqURL, nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+
+		ctx := e.NewContext(req, rec)
+
+		testError := errors.New(constant.ERROR_BAD_REQUEST + " - Date range must not exceed 30 days")
+		mockUsecase.On("GetInquiryListOrder", mock.Anything, mock.Anything, mock.Anything).Return(nil, 0, testError).Once()
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, testError).Return(nil).Once()
+
+		err := handler.ListOrderInquiry(ctx)
+
+		assert.NoError(t, err)
+		mockJson.AssertCalled(t, "ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, testError)
+		mockUsecase.AssertNotCalled(t, "GetInquiryListOrder")
+	})
+}
+
+func TestListOrderDetail(t *testing.T) {
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	mockJson := new(mocksJson.JSON)
+
+	handler := &handlerCMS{
+		usecase:    mockUsecase,
+		repository: mockRepository,
+		Json:       mockJson,
+	}
+
+	t.Run("success_get_data_order", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/list-order/", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.SetPath("/inquiry/:prospect_id")
+		c.SetParamNames("prospect_id")
+		c.SetParamValues("abc123")
+
+		mockUsecase.On("GetInquiryListOrderDetail", mock.Anything, mock.Anything).Return(entity.InquiryDataListOrder{}, nil).Once()
+
+		mockJson.On("BadRequestErrorBindV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		mockJson.On("SuccessV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		// Call the handler
+		err := handler.ListOrderDetail(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
+	t.Run("error_bad_request_get_data_order", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/list-order/inquiry/prospect_id", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockUsecase.On("GetInquiryListOrderDetail", mock.Anything).Return(entity.InquiryDataListOrder{}, 0, nil).Once()
+
+		mockJson.On("BadRequestErrorBindV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
+
+		// Call the handler
+		err := handler.ListOrderDetail(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+
+	t.Run("error_server_side_get_data_order", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		// Create a request and recorder for testing
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/list-order/", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.SetPath("/inquiry/:prospect_id")
+		c.SetParamNames("prospect_id")
+		c.SetParamValues("abc123")
+
+		testError := errors.New("internal server error")
+		mockUsecase.On("GetInquiryListOrderDetail", mock.Anything, mock.Anything).Return(entity.InquiryDataListOrder{}, testError).Once()
+
+		mockJson.On("ServerSideErrorV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, testError).Return(nil, response.ApiResponse{}).Once()
+
+		// Call the handler
+		err := handler.ListOrderDetail(c)
+		if err != nil {
+			t.Errorf("error '%s' was not expected, but got: ", err)
+		}
+	})
+}
+
 func TestMappingClusterInquiry(t *testing.T) {
 	mockUsecase := new(mocks.Usecase)
 	mockRepository := new(mocks.Repository)

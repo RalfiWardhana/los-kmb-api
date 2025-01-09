@@ -3860,6 +3860,226 @@ func (r repoHandler) ProcessResetAllQuotaDeviasi(updatedBy string) (err error) {
 	return
 }
 
+func (r repoHandler) GetInquiryListOrder(req request.ReqInquiryListOrder, pagination interface{}) (data []entity.InquiryDataListOrder, rowTotal int, err error) {
+
+	var (
+		filterBuilder  strings.Builder
+		conditions     []string
+		filterPaginate string
+		x              sql.TxOptions
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if req.BranchID != "" && req.BranchID != "999" {
+		conditions = append(conditions, fmt.Sprintf("tm.BranchID = '%s'", req.BranchID))
+	}
+
+	if req.Decision != "" && req.Decision != "ALL" {
+		conditions = append(conditions, fmt.Sprintf("sts.decision = '%s'", req.Decision))
+	}
+
+	if req.IsHighRisk != "" && req.IsHighRisk != "ALL" {
+		conditions = append(conditions, fmt.Sprintf("edd.is_highrisk = %s", req.IsHighRisk))
+	}
+
+	if req.ProspectID != "" || req.IDNumber != "" || req.LegalName != "" {
+		if req.ProspectID != "" {
+			conditions = append(conditions, fmt.Sprintf("tm.ProspectID = '%s'", req.ProspectID))
+		}
+
+		if req.IDNumber != "" {
+			encrypted, _ := r.EncryptString(req.IDNumber)
+			conditions = append(conditions, fmt.Sprintf("tcp.IDNumber = '%s'", encrypted.Encrypt))
+		}
+
+		if req.LegalName != "" {
+			encrypted, _ := r.EncryptString(req.LegalName)
+			conditions = append(conditions, fmt.Sprintf("tcp.LegalName = '%s'", encrypted.Encrypt))
+		}
+	} else {
+		startDate, _ := time.Parse("2006-01-02", req.OrderDateStart)
+		endDate, _ := time.Parse("2006-01-02", req.OrderDateEnd)
+
+		startDate = startDate.Add(time.Hour * 0).Add(time.Minute * 0).Add(time.Second * 0)
+		endDate = endDate.Add(time.Hour * 23).Add(time.Minute * 59).Add(time.Second * 59)
+
+		startDateFormatted := startDate.Format(time.RFC3339)
+		endDateFormatted := endDate.Format(time.RFC3339)
+
+		conditions = append(conditions, fmt.Sprintf("tm.created_at BETWEEN '%s' AND '%s'", startDateFormatted, endDateFormatted))
+	}
+
+	if len(conditions) > 0 {
+		filterBuilder.WriteString("WHERE ")
+		filterBuilder.WriteString(strings.Join(conditions, " AND "))
+	}
+
+	filter := filterBuilder.String()
+
+	rawQuery := `SELECT 
+					tm.created_at AS OrderAt,
+					b.BranchName,
+					tm.ProspectID, 
+					scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+					scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+					tcp.BirthDate,
+					prf.[value] AS Profession,
+					jt.[value] AS JobType,
+					jp.[value] AS JobPosition,
+					edd.is_highrisk AS IsHighRisk,
+					edd.pernyataan_1 AS Pernyataan1,
+					edd.pernyataan_2 AS Pernyataan2,
+					edd.pernyataan_3 AS Pernyataan3,
+					edd.pernyataan_4 AS Pernyataan4,
+					edd.pernyataan_5 AS Pernyataan5,
+					edd.pernyataan_6 AS Pernyataan6,
+					tak.UrlFormAkkk,
+					sts.decision AS Decision,
+					sts.source_decision AS SourceDecision,
+					sts.rule_code AS RuleCode,
+					sts.reason AS Reason,
+					tcd.decision_by AS DecisionBy,
+					edd.created_at AS DecisionAt
+				FROM 
+				trx_master AS tm WITH (nolock)
+				JOIN confins_branch AS b WITH (nolock) ON (tm.BranchID = b.BranchID)
+				JOIN trx_status AS sts WITH (nolock) ON (tm.ProspectID = sts.ProspectID)
+				JOIN trx_customer_personal AS tcp WITH (nolock) ON (tm.ProspectID = tcp.ProspectID)
+				JOIN trx_customer_employment AS emp WITH (nolock) ON (tm.ProspectID = emp.ProspectID)
+				LEFT JOIN trx_ca_decision AS tcd WITH (nolock) ON (tm.ProspectID = tcd.ProspectID) 
+				LEFT JOIN trx_edd AS edd WITH (nolock) ON (tm.ProspectID = edd.ProspectID)
+				LEFT JOIN trx_akkk AS tak WITH (nolock) ON (tm.ProspectID = tak.ProspectID)
+				LEFT JOIN (
+					SELECT [key], value
+					FROM app_config ap WITH (nolock)
+					WHERE group_name = 'ProfessionID'
+				) AS prf ON (emp.ProfessionID = prf.[key])
+				LEFT JOIN (
+					SELECT [key], value
+					FROM app_config ap WITH (nolock)
+					WHERE group_name = 'JobType'
+				) AS jt ON (emp.JobType = jt.[key])
+				LEFT JOIN (
+					SELECT [key], value
+					FROM app_config ap WITH (nolock)
+					WHERE group_name = 'JobPosition'
+				) AS jp ON (emp.JobPosition = jp.[key])`
+
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT
+				COUNT(*) AS totalRow
+			FROM (
+				%s %s
+			) AS y`, rawQuery, filter)).Scan(&row).Error; err != nil {
+			return
+		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
+	}
+
+	if err = r.NewKmb.Raw(fmt.Sprintf(`%s %s ORDER BY tm.created_at DESC %s`, rawQuery, filter, filterPaginate)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	if len(data) == 0 {
+		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
+
+	return
+}
+
+func (r repoHandler) GetInquiryListOrderDetail(prospectID string) (data entity.InquiryDataListOrder, err error) {
+
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	rawQuery := `SELECT 
+					tm.created_at AS OrderAt,
+					b.BranchName,
+					tm.ProspectID, 
+					scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+					scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+					tcp.BirthDate,
+					prf.[value] AS Profession,
+					jt.[value] AS JobType,
+					jp.[value] AS JobPosition,
+					edd.is_highrisk AS IsHighRisk,
+					edd.pernyataan_1 AS Pernyataan1,
+					edd.pernyataan_2 AS Pernyataan2,
+					edd.pernyataan_3 AS Pernyataan3,
+					edd.pernyataan_4 AS Pernyataan4,
+					edd.pernyataan_5 AS Pernyataan5,
+					edd.pernyataan_6 AS Pernyataan6,
+					tak.UrlFormAkkk,
+					sts.decision AS Decision,
+					sts.source_decision AS SourceDecision,
+					sts.rule_code AS RuleCode,
+					sts.reason AS Reason,
+					tcd.decision_by AS DecisionBy,
+					edd.created_at AS DecisionAt
+				FROM 
+				trx_master AS tm WITH (nolock)
+				JOIN confins_branch AS b WITH (nolock) ON (tm.BranchID = b.BranchID)
+				JOIN trx_status AS sts WITH (nolock) ON (tm.ProspectID = sts.ProspectID)
+				JOIN trx_customer_personal AS tcp WITH (nolock) ON (tm.ProspectID = tcp.ProspectID)
+				JOIN trx_customer_employment AS emp WITH (nolock) ON (tm.ProspectID = emp.ProspectID)
+				LEFT JOIN trx_ca_decision AS tcd WITH (nolock) ON (tm.ProspectID = tcd.ProspectID) 
+				LEFT JOIN trx_edd AS edd WITH (nolock) ON (tm.ProspectID = edd.ProspectID)
+				LEFT JOIN trx_akkk AS tak WITH (nolock) ON (tm.ProspectID = tak.ProspectID)
+				LEFT JOIN (
+					SELECT [key], value
+					FROM app_config ap WITH (nolock)
+					WHERE group_name = 'ProfessionID'
+				) AS prf ON (emp.ProfessionID = prf.[key])
+				LEFT JOIN (
+					SELECT [key], value
+					FROM app_config ap WITH (nolock)
+					WHERE group_name = 'JobType'
+				) AS jt ON (emp.JobType = jt.[key])
+				LEFT JOIN (
+					SELECT [key], value
+					FROM app_config ap WITH (nolock)
+					WHERE group_name = 'JobPosition'
+				) AS jp ON (emp.JobPosition = jp.[key])
+				WHERE tm.ProspectID = ?`
+
+	if err = r.NewKmb.Raw(rawQuery, prospectID).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) GetMappingCluster() (data []entity.MasterMappingCluster, err error) {
 	var x sql.TxOptions
 

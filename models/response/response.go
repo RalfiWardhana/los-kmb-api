@@ -353,6 +353,7 @@ type SpDupcheckMap struct {
 	Dsr                              float64     `json:"dsr"`
 	InstallmentTopup                 float64     `json:"installment_topup"`
 	StatusKonsumen                   string      `json:"status_konsumen"`
+	RRDDate                          interface{} `json:"rrd_date"`
 	DetailsDSR                       interface{} `json:"details_dsr"`
 	ConfigMaxDSR                     float64     `json:"config_max_dsr"`
 	Cluster                          interface{} `json:"cluster"`

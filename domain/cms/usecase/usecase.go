@@ -2471,6 +2471,34 @@ func (u usecase) ResetAllQuotaDeviasi(ctx context.Context, req request.ReqResetA
 	return
 }
 
+func (u usecase) GetInquiryListOrder(ctx context.Context, req request.ReqInquiryListOrder, pagination interface{}) (data []entity.InquiryDataListOrder, rowTotal int, err error) {
+
+	result, rowTotal, err := u.repository.GetInquiryListOrder(req, pagination)
+
+	if err != nil {
+		return
+	}
+
+	data = result
+
+	return
+}
+
+func (u usecase) GetInquiryListOrderDetail(ctx context.Context, prospectID string) (data entity.InquiryDataListOrder, err error) {
+
+	data, err = u.repository.GetInquiryListOrderDetail(prospectID)
+	if err != nil {
+		if err.Error() == constant.RECORD_NOT_FOUND {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - " + err.Error())
+		} else {
+			err = errors.New(constant.ERROR_UPSTREAM + " - " + err.Error())
+		}
+		return
+	}
+
+	return
+}
+
 func (u usecase) GetInquiryMappingCluster(req request.ReqListMappingCluster, pagination interface{}) (data []entity.InquiryMappingCluster, rowTotal int, err error) {
 
 	data, rowTotal, err = u.repository.GetInquiryMappingCluster(req, pagination)
