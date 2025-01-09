@@ -22,13 +22,15 @@ import (
 func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, married bool, accessToken string, configValue response.DupcheckConfig) (mapping response.SpDupcheckMap, status string, data response.UsecaseApi, trxFMF response.TrxFMF, trxDetail []entity.TrxDetail, err error) {
 
 	var (
-		customer        []request.SpouseDupcheck
-		blackList       response.UsecaseApi
-		sp              response.SpDupCekCustomerByID
-		dataCustomer    []response.SpDupCekCustomerByID
-		spMap           response.SpDupcheckMap
-		customerType    string
-		isPrimePriority bool
+		customer                    []request.SpouseDupcheck
+		blackList                   response.UsecaseApi
+		sp                          response.SpDupCekCustomerByID
+		dataCustomer                []response.SpDupCekCustomerByID
+		spMap                       response.SpDupcheckMap
+		customerType                string
+		isPrimePriority             bool
+		resultNegativeCustomerCheck response.UsecaseApi
+		negativeCustomer            response.NegativeCustomer
 	)
 
 	// Check Banned Chassis Number
@@ -122,11 +124,49 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		}
 	}
 
-	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: blackList.Code, SourceDecision: constant.SOURCE_DECISION_BLACKLIST, Reason: blackList.Reason, NextStep: constant.SOURCE_DECISION_PMK})
-
 	//Set Data customerType and spouseType -- Blacklist. Warning, Or Clean --
 	mapping.CustomerType = spMap.CustomerType
 	mapping.SpouseType = spMap.SpouseType
+
+	resultNegativeCustomerCheck, negativeCustomer, err = u.usecase.NegativeCustomerCheck(ctx, req, accessToken)
+
+	if err != nil {
+		return
+	}
+
+	trxFMF.TrxEDD.ProspectID = req.ProspectID
+	if negativeCustomer.Decision == "YES" || negativeCustomer.IsHighrisk == 1 {
+		trxFMF.TrxEDD.IsHighrisk = true
+	}
+
+	if resultNegativeCustomerCheck.Result == constant.DECISION_REJECT {
+		data = resultNegativeCustomerCheck
+		mapping.CustomerType = spMap.CustomerType
+		mapping.SpouseType = spMap.SpouseType
+		mapping.Reason = data.Reason
+		mapping.NegativeCustomer = negativeCustomer
+		return
+	}
+
+	// trx_details for metrix blacklist or apu ppt
+	trxBlacklist := entity.TrxDetail{
+		ProspectID:     req.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_PROCESS,
+		Decision:       constant.DB_DECISION_PASS,
+		RuleCode:       blackList.Code,
+		SourceDecision: constant.SOURCE_DECISION_BLACKLIST,
+		Reason:         blackList.Reason,
+		NextStep:       constant.SOURCE_DECISION_PMK,
+		Info:           resultNegativeCustomerCheck.Info,
+	}
+
+	if negativeCustomer.Decision == "YES" {
+		trxBlacklist.RuleCode = resultNegativeCustomerCheck.Code
+		trxBlacklist.Reason = resultNegativeCustomerCheck.Reason
+	}
+
+	trxDetail = append(trxDetail, trxBlacklist)
 
 	//Check vehicle age
 	ageVehicle, err := u.usecase.VehicleCheck(req.ManufactureYear, req.CMOCluster, req.BPKBName, req.Tenor, configValue, req.Filtering, req.AF)
@@ -408,7 +448,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		checkConfins := response.UsecaseApi{
 			Result:         constant.DECISION_PASS,
 			Code:           constant.CODE_PASS_MAX_OVD_CONFINS,
-			Reason:         fmt.Sprintf("%s", reasonCustomer),
+			Reason:         reasonCustomer,
 			StatusKonsumen: customerKMB,
 			SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
 		}
@@ -711,6 +751,81 @@ func (u usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerB
 	}
 
 	data = response.UsecaseApi{StatusKonsumen: data.StatusKonsumen, Code: constant.CODE_NON_BLACKLIST_ALL, Reason: constant.REASON_NON_BLACKLIST, Result: constant.DECISION_PASS}
+
+	return
+}
+
+func (u usecase) NegativeCustomerCheck(ctx context.Context, reqs request.DupcheckApi, accessToken string) (data response.UsecaseApi, negativeCustomer response.NegativeCustomer, err error) {
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	header := map[string]string{
+		"Authorization": accessToken,
+	}
+
+	req, _ := json.Marshal(request.NegativeCustomer{
+		ProspectID:        reqs.ProspectID,
+		IDNumber:          reqs.IDNumber,
+		LegalName:         reqs.LegalName,
+		BirthDate:         reqs.BirthDate,
+		SurgateMotherName: reqs.MotherName,
+		ProfessionID:      reqs.ProfessionID,
+		JobType:           reqs.JobType,
+		JobPosition:       reqs.JobPosition,
+	})
+
+	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("API_NEGATIVE_CUSTOMER"), req, header, constant.METHOD_POST, true, 6, timeout, reqs.ProspectID, accessToken)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call API Negative Customer Error")
+		return
+	}
+
+	json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &negativeCustomer)
+
+	if negativeCustomer != (response.NegativeCustomer{}) {
+		if negativeCustomer.BadType == "" {
+			negativeCustomer.BadType = "0"
+		}
+
+		resultNegativeCustomer, errRepo := u.repository.GetMappingNegativeCustomer(negativeCustomer)
+
+		if errRepo != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - GetMappingNegativeCustomer Error - " + errRepo.Error())
+			return
+		}
+
+		negativeCustomer.Result = resultNegativeCustomer.Reason
+		negativeCustomer.Decision = resultNegativeCustomer.Decision
+
+		if resultNegativeCustomer.Decision == constant.DECISION_REJECT {
+
+			data = response.UsecaseApi{
+				Code:   constant.CODE_NEGATIVE_CUSTOMER,
+				Reason: resultNegativeCustomer.Reason,
+				Result: constant.DECISION_REJECT,
+			}
+
+		} else {
+
+			data = response.UsecaseApi{
+				Code:   constant.CODE_NEGATIVE_CUSTOMER,
+				Reason: constant.REASON_NON_BLACKLIST,
+				Result: constant.DECISION_PASS,
+			}
+
+		}
+
+	} else {
+		data = response.UsecaseApi{
+			Code:   constant.CODE_NEGATIVE_CUSTOMER,
+			Reason: constant.REASON_NON_BLACKLIST,
+			Result: constant.DECISION_PASS,
+		}
+	}
+
+	info, _ := json.Marshal(negativeCustomer)
+	data.Info = string(info)
+	data.SourceDecision = constant.SOURCE_DECISION_BLACKLIST
 
 	return
 }

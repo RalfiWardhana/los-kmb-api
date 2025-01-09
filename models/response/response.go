@@ -349,6 +349,7 @@ type SpDupcheckMap struct {
 	ConfigMaxDSR                     float64     `json:"config_max_dsr"`
 	Cluster                          interface{} `json:"cluster"`
 	AgreementSettledExist            bool        `json:"agreement_settled_exist"`
+	NegativeCustomer                 interface{} `json:"negative_customer"`
 }
 
 type SpDupCekCustomerByID struct {
@@ -439,6 +440,15 @@ type UsecaseApi struct {
 	SourceDecision string      `json:"source_decision,omitempty"`
 	Info           interface{} `json:"info,omitempty"`
 	IsDeviasi      bool        `json:"-"`
+}
+
+type NegativeCustomer struct {
+	IsActive    int    `json:"is_active"`
+	IsBlacklist int    `json:"is_blacklist"`
+	IsHighrisk  int    `json:"is_highrisk"`
+	BadType     string `json:"bad_type"`
+	Result      string `json:"result"`
+	Decision    string `json:"decision"`
 }
 
 type LowIncome struct {
@@ -553,6 +563,7 @@ type TrxFMF struct {
 	EkycSimiliarity         interface{} `json:"ekyc_similiarity"`
 	EkycReason              interface{} `json:"ekyc_reason"`
 	TrxDeviasi              entity.TrxDeviasi
+	TrxEDD                  entity.TrxEDD
 }
 
 type RoaoAkkk struct {

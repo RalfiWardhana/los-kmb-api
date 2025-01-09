@@ -3397,7 +3397,13 @@ func TestGetInquiryCa(t *testing.T) {
 				x.note,
 				x.created_at,
 				x.created_by,
-				x.decision_by
+				x.decision_by,
+				x.pernyataan_1,
+				x.pernyataan_2,
+				x.pernyataan_3,
+				x.pernyataan_4,
+				x.pernyataan_5,
+				x.pernyataan_6
 			FROM
 				trx_draft_ca_decision x WITH (nolock)
 			WHERE
@@ -3509,6 +3515,12 @@ func TestGetInquiryCa(t *testing.T) {
 		tdd.created_at AS draft_created_at,
 		tdd.created_by AS draft_created_by,
 		tdd.decision_by AS draft_decision_by,
+		tdd.pernyataan_1 AS draft_pernyataan_1,
+		tdd.pernyataan_2 AS draft_pernyataan_2,
+		tdd.pernyataan_3 AS draft_pernyataan_3,
+		tdd.pernyataan_4 AS draft_pernyataan_4,
+		tdd.pernyataan_5 AS draft_pernyataan_5,
+		tdd.pernyataan_6 AS draft_pernyataan_6,
 
 		tcp.CustomerID,
 		tcp.CustomerStatus,
@@ -3626,7 +3638,18 @@ func TestGetInquiryCa(t *testing.T) {
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -3640,6 +3663,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN
@@ -3895,7 +3919,13 @@ func TestGetInquiryCa(t *testing.T) {
 				x.note,
 				x.created_at,
 				x.created_by,
-				x.decision_by
+				x.decision_by,
+				x.pernyataan_1,
+				x.pernyataan_2,
+				x.pernyataan_3,
+				x.pernyataan_4,
+				x.pernyataan_5,
+				x.pernyataan_6
 			FROM
 				trx_draft_ca_decision x WITH (nolock)
 			WHERE
@@ -4007,6 +4037,12 @@ func TestGetInquiryCa(t *testing.T) {
 		tdd.created_at AS draft_created_at,
 		tdd.created_by AS draft_created_by,
 		tdd.decision_by AS draft_decision_by,
+		tdd.pernyataan_1 AS draft_pernyataan_1,
+		tdd.pernyataan_2 AS draft_pernyataan_2,
+		tdd.pernyataan_3 AS draft_pernyataan_3,
+		tdd.pernyataan_4 AS draft_pernyataan_4,
+		tdd.pernyataan_5 AS draft_pernyataan_5,
+		tdd.pernyataan_6 AS draft_pernyataan_6,
 
 		tcp.CustomerID,
 		tcp.CustomerStatus,
@@ -4124,7 +4160,18 @@ func TestGetInquiryCa(t *testing.T) {
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -4138,6 +4185,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN
@@ -4393,7 +4441,13 @@ func TestGetInquiryCa(t *testing.T) {
 				x.note,
 				x.created_at,
 				x.created_by,
-				x.decision_by
+				x.decision_by,
+				x.pernyataan_1,
+				x.pernyataan_2,
+				x.pernyataan_3,
+				x.pernyataan_4,
+				x.pernyataan_5,
+				x.pernyataan_6
 			FROM
 				trx_draft_ca_decision x WITH (nolock)
 			WHERE
@@ -4505,6 +4559,12 @@ func TestGetInquiryCa(t *testing.T) {
 		tdd.created_at AS draft_created_at,
 		tdd.created_by AS draft_created_by,
 		tdd.decision_by AS draft_decision_by,
+		tdd.pernyataan_1 AS draft_pernyataan_1,
+		tdd.pernyataan_2 AS draft_pernyataan_2,
+		tdd.pernyataan_3 AS draft_pernyataan_3,
+		tdd.pernyataan_4 AS draft_pernyataan_4,
+		tdd.pernyataan_5 AS draft_pernyataan_5,
+		tdd.pernyataan_6 AS draft_pernyataan_6,
 
 		tcp.CustomerID,
 		tcp.CustomerStatus,
@@ -4622,7 +4682,18 @@ func TestGetInquiryCa(t *testing.T) {
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -4636,6 +4707,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN
@@ -4902,7 +4974,13 @@ func TestGetInquiryCa(t *testing.T) {
 				x.note,
 				x.created_at,
 				x.created_by,
-				x.decision_by
+				x.decision_by,
+				x.pernyataan_1,
+				x.pernyataan_2,
+				x.pernyataan_3,
+				x.pernyataan_4,
+				x.pernyataan_5,
+				x.pernyataan_6
 			FROM
 				trx_draft_ca_decision x WITH (nolock)
 			WHERE
@@ -5014,6 +5092,12 @@ func TestGetInquiryCa(t *testing.T) {
 				tdd.created_at AS draft_created_at,
 				tdd.created_by AS draft_created_by,
 				tdd.decision_by AS draft_decision_by,
+				tdd.pernyataan_1 AS draft_pernyataan_1,
+				tdd.pernyataan_2 AS draft_pernyataan_2,
+				tdd.pernyataan_3 AS draft_pernyataan_3,
+				tdd.pernyataan_4 AS draft_pernyataan_4,
+				tdd.pernyataan_5 AS draft_pernyataan_5,
+				tdd.pernyataan_6 AS draft_pernyataan_6,
 
 				tcp.CustomerID,
 				tcp.CustomerStatus,
@@ -5131,7 +5215,18 @@ func TestGetInquiryCa(t *testing.T) {
 				tde.deviasi_id,
 				mkd.deskripsi AS deviasi_description,
 				'REJECT' AS deviasi_decision,
-				tde.reason AS deviasi_reason
+				tde.reason AS deviasi_reason,
+				CASE
+				WHEN ted.ProspectID IS NOT NULL THEN 1
+				ELSE 0
+				END AS is_edd,
+				ted.is_highrisk,
+				ted.pernyataan_1,
+				ted.pernyataan_2,
+				ted.pernyataan_3,
+				ted.pernyataan_4,
+				ted.pernyataan_5,
+				ted.pernyataan_6
 			FROM
 				trx_master tm WITH (nolock)
 				INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -5145,6 +5240,7 @@ func TestGetInquiryCa(t *testing.T) {
 				LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 				LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 				LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+				LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 				LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 				LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 				LEFT JOIN
@@ -5411,7 +5507,13 @@ func TestGetInquiryCa(t *testing.T) {
 				x.note,
 				x.created_at,
 				x.created_by,
-				x.decision_by
+				x.decision_by,
+				x.pernyataan_1,
+				x.pernyataan_2,
+				x.pernyataan_3,
+				x.pernyataan_4,
+				x.pernyataan_5,
+				x.pernyataan_6
 			FROM
 				trx_draft_ca_decision x WITH (nolock)
 			WHERE
@@ -5523,6 +5625,12 @@ func TestGetInquiryCa(t *testing.T) {
 		tdd.created_at AS draft_created_at,
 		tdd.created_by AS draft_created_by,
 		tdd.decision_by AS draft_decision_by,
+		tdd.pernyataan_1 AS draft_pernyataan_1,
+		tdd.pernyataan_2 AS draft_pernyataan_2,
+		tdd.pernyataan_3 AS draft_pernyataan_3,
+		tdd.pernyataan_4 AS draft_pernyataan_4,
+		tdd.pernyataan_5 AS draft_pernyataan_5,
+		tdd.pernyataan_6 AS draft_pernyataan_6,
 
 		tcp.CustomerID,
 		tcp.CustomerStatus,
@@ -5640,7 +5748,18 @@ func TestGetInquiryCa(t *testing.T) {
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -5654,6 +5773,7 @@ func TestGetInquiryCa(t *testing.T) {
 		LEFT JOIN trx_recalculate tr WITH (nolock) ON tm.ProspectID = tr.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN
@@ -5827,8 +5947,8 @@ func TestSaveDraftData(t *testing.T) {
 	t.Run("success update", func(t *testing.T) {
 
 		mock.ExpectBegin()
-		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_draft_ca_decision" SET "ProspectID" = ?, "created_at" = ?, "created_by" = ?, "decision" = ?, "decision_by" = ?, "note" = ?, "slik_result" = ? WHERE (ProspectID = ?)`)).
-			WithArgs(data.ProspectID, sqlmock.AnyArg(), data.CreatedBy, data.Decision, data.DecisionBy, data.Note, data.SlikResult, data.ProspectID).
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_draft_ca_decision" SET "created_at" = ?, "created_by" = ?, "decision" = ?, "decision_by" = ?, "note" = ?, "pernyataan_1" = ?, "pernyataan_2" = ?, "pernyataan_3" = ?, "pernyataan_4" = ?, "pernyataan_5" = ?, "pernyataan_6" = ?, "slik_result" = ? WHERE (ProspectID = ?)`)).
+			WithArgs(sqlmock.AnyArg(), data.CreatedBy, data.Decision, data.DecisionBy, data.Note, data.Pernyataan1, data.Pernyataan2, data.Pernyataan3, data.Pernyataan4, data.Pernyataan5, data.Pernyataan6, data.SlikResult, data.ProspectID).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
 
@@ -5842,12 +5962,12 @@ func TestSaveDraftData(t *testing.T) {
 
 		mock.ExpectBegin()
 
-		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_draft_ca_decision" SET "ProspectID" = ?, "created_at" = ?, "created_by" = ?, "decision" = ?, "decision_by" = ?, "note" = ?, "slik_result" = ? WHERE (ProspectID = ?)`)).
-			WithArgs(data.ProspectID, sqlmock.AnyArg(), data.CreatedBy, data.Decision, data.DecisionBy, data.Note, data.SlikResult, data.ProspectID).
+		mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_draft_ca_decision" SET "created_at" = ?, "created_by" = ?, "decision" = ?, "decision_by" = ?, "note" = ?, "pernyataan_1" = ?, "pernyataan_2" = ?, "pernyataan_3" = ?, "pernyataan_4" = ?, "pernyataan_5" = ?, "pernyataan_6" = ?, "slik_result" = ? WHERE (ProspectID = ?)`)).
+			WithArgs(sqlmock.AnyArg(), data.CreatedBy, data.Decision, data.DecisionBy, data.Note, data.Pernyataan1, data.Pernyataan2, data.Pernyataan3, data.Pernyataan4, data.Pernyataan5, data.Pernyataan6, data.SlikResult, data.ProspectID).
 			WillReturnResult(sqlmock.NewResult(0, 0))
 
-		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_draft_ca_decision" ("ProspectID","decision","slik_result","note","created_at","created_by","decision_by") VALUES (?,?,?,?,?,?,?)`)).
-			WithArgs(data.ProspectID, data.Decision, data.SlikResult, data.Note, sqlmock.AnyArg(), data.CreatedBy, data.DecisionBy).
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_draft_ca_decision" ("ProspectID","decision","slik_result","note","created_at","created_by","decision_by","pernyataan_1","pernyataan_2","pernyataan_3","pernyataan_4","pernyataan_5","pernyataan_6") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
+			WithArgs(data.ProspectID, data.Decision, data.SlikResult, data.Note, sqlmock.AnyArg(), data.CreatedBy, data.DecisionBy, data.Pernyataan1, data.Pernyataan2, data.Pernyataan3, data.Pernyataan4, data.Pernyataan5, data.Pernyataan6).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
 
@@ -5939,7 +6059,7 @@ func TestProcessTransaction(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(1, 1))
 		mock.ExpectCommit()
 
-		err := newDB.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, false)
+		err := newDB.ProcessTransaction(trxCaDecision, trxHistoryApproval, trxStatus, trxDetail, false, entity.TrxEDD{})
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
 		}
@@ -5993,6 +6113,10 @@ func TestProcessReturnOrder(t *testing.T) {
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
 		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "trx_deviasi" WHERE (ProspectID = ?)`)).
+			WithArgs(ppid).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "trx_edd" WHERE (ProspectID = ?)`)).
 			WithArgs(ppid).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
@@ -6246,7 +6370,18 @@ func TestGetInquirySearch(t *testing.T) {
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -6259,6 +6394,7 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN (
@@ -6636,7 +6772,18 @@ func TestGetInquirySearch(t *testing.T) {
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -6649,6 +6796,7 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN (
@@ -7025,7 +7173,18 @@ func TestGetInquirySearch(t *testing.T) {
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -7038,6 +7197,7 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN (
@@ -7404,7 +7564,18 @@ func TestGetInquirySearch(t *testing.T) {
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 	  FROM
 		trx_master tm WITH (nolock)
 		INNER JOIN confins_branch cb WITH (nolock) ON tm.BranchID = cb.BranchID
@@ -7417,6 +7588,7 @@ func TestGetInquirySearch(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		LEFT JOIN (
@@ -8422,7 +8594,18 @@ func TestGetInquiryApproval(t *testing.T) {
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -8436,6 +8619,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		OUTER APPLY (
@@ -8862,7 +9046,18 @@ func TestGetInquiryApproval(t *testing.T) {
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -8876,6 +9071,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		OUTER APPLY (
@@ -9298,7 +9494,18 @@ func TestGetInquiryApproval(t *testing.T) {
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -9312,6 +9519,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		OUTER APPLY (
@@ -9747,7 +9955,18 @@ func TestGetInquiryApproval(t *testing.T) {
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -9761,6 +9980,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		OUTER APPLY (
@@ -10196,7 +10416,18 @@ func TestGetInquiryApproval(t *testing.T) {
 		tde.deviasi_id,
 		mkd.deskripsi AS deviasi_description,
 		'REJECT' AS deviasi_decision,
-		tde.reason AS deviasi_reason
+		tde.reason AS deviasi_reason,
+		CASE
+		  WHEN ted.ProspectID IS NOT NULL THEN 1
+		  ELSE 0
+		END AS is_edd,
+		ted.is_highrisk,
+		ted.pernyataan_1,
+		ted.pernyataan_2,
+		ted.pernyataan_3,
+		ted.pernyataan_4,
+		ted.pernyataan_5,
+		ted.pernyataan_6
 
 	  FROM
 		trx_master tm WITH (nolock)
@@ -10210,6 +10441,7 @@ func TestGetInquiryApproval(t *testing.T) {
 		INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 		LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+		LEFT JOIN trx_edd ted WITH (nolock) ON tm.ProspectID = ted.ProspectID
 		LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
 		LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
 		OUTER APPLY (
@@ -11629,6 +11861,347 @@ func TestProcessResetAllQuotaDeviasi(t *testing.T) {
 
 		if err != nil {
 			t.Errorf("unexpected error: %s", err)
+		}
+	})
+}
+
+func TestGetInquiryListOrder(t *testing.T) {
+	exampleOrderAt := time.Date(2024, time.November, 3, 14, 30, 0, 0, time.UTC)
+	exampleDecisionAt := time.Date(2024, time.November, 3, 15, 30, 0, 0, time.UTC)
+	exampleBirthDate := time.Date(1992, time.August, 28, 13, 10, 0, 0, time.UTC)
+
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	expectedData := []entity.InquiryDataListOrder{
+		{
+			OrderAt:     exampleOrderAt,
+			BranchName:  "BEKASI",
+			ProspectID:  "SAL-1140002411209992",
+			LegalName:   "THOM HAYE",
+			IDNumber:    "357810280892999",
+			BirthDate:   exampleBirthDate,
+			Profession:  "Karyawan Swasta",
+			JobType:     "Engineering",
+			JobPosition: "Staff",
+			IsHighRisk:  true,
+			Pernyataan1: false,
+			Pernyataan2: false,
+			Pernyataan3: false,
+			Pernyataan4: false,
+			Pernyataan5: false,
+			Pernyataan6: "Lorem Ipsum Dolor Sit a Jamet",
+			UrlFormAkkk: "https://dev-platform-media.kbfinansia.com/media/reference/140000/SAL-1140002411209992/formAKKK_SAL-1140002411209992.pdf",
+			Decision:    "APR",
+			DecisionBy:  "CA KMB BEKASI",
+			DecisionAt:  exampleDecisionAt,
+		},
+	}
+
+	rawQueryDtStart := `SELECT 
+							tm.created_at AS OrderAt,
+							b.BranchName,
+							tm.ProspectID, 
+							scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+							scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+							tcp.BirthDate,
+							prf.[value] AS Profession,
+							jt.[value] AS JobType,
+							jp.[value] AS JobPosition,
+							edd.is_highrisk AS IsHighRisk,
+							edd.pernyataan_1 AS Pernyataan1,
+							edd.pernyataan_2 AS Pernyataan2,
+							edd.pernyataan_3 AS Pernyataan3,
+							edd.pernyataan_4 AS Pernyataan4,
+							edd.pernyataan_5 AS Pernyataan5,
+							edd.pernyataan_6 AS Pernyataan6,
+							tak.UrlFormAkkk,
+							sts.decision AS Decision,
+							sts.source_decision AS SourceDecision,
+							sts.rule_code AS RuleCode,
+							sts.reason AS Reason,
+							tcd.decision_by AS DecisionBy,
+							edd.created_at AS DecisionAt
+						FROM 
+						trx_master AS tm WITH (nolock)
+						JOIN confins_branch AS b WITH (nolock) ON (tm.BranchID = b.BranchID)
+						JOIN trx_status AS sts WITH (nolock) ON (tm.ProspectID = sts.ProspectID)
+						JOIN trx_customer_personal AS tcp WITH (nolock) ON (tm.ProspectID = tcp.ProspectID)
+						JOIN trx_customer_employment AS emp WITH (nolock) ON (tm.ProspectID = emp.ProspectID)
+						LEFT JOIN trx_ca_decision AS tcd WITH (nolock) ON (tm.ProspectID = tcd.ProspectID) 
+						LEFT JOIN trx_edd AS edd WITH (nolock) ON (tm.ProspectID = edd.ProspectID)
+						LEFT JOIN trx_akkk AS tak WITH (nolock) ON (tm.ProspectID = tak.ProspectID)
+						LEFT JOIN (
+							SELECT [key], value
+							FROM app_config ap WITH (nolock)
+							WHERE group_name = 'ProfessionID'
+						) AS prf ON (emp.ProfessionID = prf.[key])
+						LEFT JOIN (
+							SELECT [key], value
+							FROM app_config ap WITH (nolock)
+							WHERE group_name = 'JobType'
+						) AS jt ON (emp.JobType = jt.[key])
+						LEFT JOIN (
+							SELECT [key], value
+							FROM app_config ap WITH (nolock)
+							WHERE group_name = 'JobPosition'
+						) AS jp ON (emp.JobPosition = jp.[key])`
+
+	rawQueryDtEnd := `ORDER BY tm.created_at DESC OFFSET 0 ROWS FETCH FIRST 10 ROWS ONLY`
+
+	rawQueryCountStart := `SELECT
+								COUNT(*) AS totalRow
+							FROM (
+								` + rawQueryDtStart
+
+	rawQueryCountEnd := `) AS y`
+
+	t.Run("success with search date range", func(t *testing.T) {
+		req := request.ReqInquiryListOrder{
+			OrderDateStart: "2024-11-01",
+			OrderDateEnd:   "2024-11-30",
+		}
+
+		rawQueryWhere := `WHERE tm.created_at BETWEEN '2024-11-01T00:00:00Z' AND '2024-11-30T23:59:59Z'`
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`%s %s %s`, rawQueryCountStart, rawQueryWhere, rawQueryCountEnd))).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`%s %s %s`, rawQueryDtStart, rawQueryWhere, rawQueryDtEnd))).
+			WillReturnRows(sqlmock.NewRows([]string{"OrderAt", "BranchName", "ProspectID", "LegalName", "IDNumber", "BirthDate", "Profession", "JobType", "JobPosition", "IsHighRisk", "Pernyataan1", "Pernyataan2", "Pernyataan3", "Pernyataan4", "Pernyataan5", "Pernyataan6", "UrlFormAkkk", "Decision", "DecisionBy", "DecisionAt"}).AddRow(exampleOrderAt, "BEKASI", "SAL-1140002411209992", "THOM HAYE", "357810280892999", exampleBirthDate, "Karyawan Swasta", "Engineering", "Staff", true, false, false, false, false, false, "Lorem Ipsum Dolor Sit a Jamet", "https://dev-platform-media.kbfinansia.com/media/reference/140000/SAL-1140002411209992/formAKKK_SAL-1140002411209992.pdf", "APR", "CA KMB BEKASI", exampleDecisionAt))
+
+		mock.ExpectCommit()
+
+		data, _, err := repo.GetInquiryListOrder(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("success with filter input text and option box filled", func(t *testing.T) {
+		req := request.ReqInquiryListOrder{
+			BranchID:   "400",
+			Decision:   "APR",
+			IsHighRisk: "1",
+			ProspectID: "SAL-1140002411209992",
+			IDNumber:   "357810280892999",
+			LegalName:  "THOM HAYE",
+		}
+
+		rawQueryWhere := `WHERE tm.BranchID = '400' AND sts.decision = 'APR' AND edd.is_highrisk = 1 AND tm.ProspectID = 'SAL-1140002411209992' AND tcp.IDNumber = '357810280892999' AND tcp.LegalName = 'THOM HAYE'`
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','357810280892999') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("357810280892999"))
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','THOM HAYE') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("THOM HAYE"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`%s %s %s`, rawQueryCountStart, rawQueryWhere, rawQueryCountEnd))).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("27"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`%s %s %s`, rawQueryDtStart, rawQueryWhere, rawQueryDtEnd))).
+			WillReturnRows(sqlmock.NewRows([]string{"OrderAt", "BranchName", "ProspectID", "LegalName", "IDNumber", "BirthDate", "Profession", "JobType", "JobPosition", "IsHighRisk", "Pernyataan1", "Pernyataan2", "Pernyataan3", "Pernyataan4", "Pernyataan5", "Pernyataan6", "UrlFormAkkk", "Decision", "DecisionBy", "DecisionAt"}).AddRow(exampleOrderAt, "BEKASI", "SAL-1140002411209992", "THOM HAYE", "357810280892999", exampleBirthDate, "Karyawan Swasta", "Engineering", "Staff", true, false, false, false, false, false, "Lorem Ipsum Dolor Sit a Jamet", "https://dev-platform-media.kbfinansia.com/media/reference/140000/SAL-1140002411209992/formAKKK_SAL-1140002411209992.pdf", "APR", "CA KMB BEKASI", exampleDecisionAt))
+
+		mock.ExpectCommit()
+
+		data, _, err := repo.GetInquiryListOrder(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+		req := request.ReqInquiryListOrder{
+			BranchID:   "400",
+			Decision:   "APR",
+			IsHighRisk: "1",
+			ProspectID: "SAL-1140002411209992",
+			IDNumber:   "357810280892999",
+			LegalName:  "THOM HAYE",
+		}
+
+		rawQueryWhere := `WHERE tm.BranchID = '400' AND sts.decision = 'APR' AND edd.is_highrisk = 1 AND tm.ProspectID = 'SAL-1140002411209992' AND tcp.IDNumber = '357810280892999' AND tcp.LegalName = 'THOM HAYE'`
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','357810280892999') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("357810280892999"))
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','THOM HAYE') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("THOM HAYE"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`%s %s %s`, rawQueryCountStart, rawQueryWhere, rawQueryCountEnd))).
+			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).AddRow("0"))
+
+		mock.ExpectQuery(regexp.QuoteMeta(fmt.Sprintf(`%s %s %s`, rawQueryDtStart, rawQueryWhere, rawQueryDtEnd))).
+			WillReturnRows(sqlmock.NewRows([]string{"OrderAt", "BranchName", "ProspectID", "LegalName", "IDNumber", "BirthDate", "Profession", "JobType", "JobPosition", "IsHighRisk", "Pernyataan1", "Pernyataan2", "Pernyataan3", "Pernyataan4", "Pernyataan5", "Pernyataan6", "UrlFormAkkk", "Decision", "DecisionBy", "DecisionAt"}))
+
+		mock.ExpectCommit()
+
+		_, _, err := repo.GetInquiryListOrder(req, request.RequestPagination{Page: 1, Limit: 10})
+
+		expectedErr := fmt.Errorf(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+}
+
+func TestGetInquiryListOrderDetail(t *testing.T) {
+	exampleOrderAt := time.Date(2024, time.November, 3, 14, 30, 0, 0, time.UTC)
+	exampleDecisionAt := time.Date(2024, time.November, 3, 15, 30, 0, 0, time.UTC)
+	exampleBirthDate := time.Date(1992, time.August, 28, 13, 10, 0, 0, time.UTC)
+
+	// Setup mock database connection
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	// Create a repository instance
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB, gormDB)
+
+	expectedData := entity.InquiryDataListOrder{
+		OrderAt:     exampleOrderAt,
+		BranchName:  "BEKASI",
+		ProspectID:  "SAL-1140002411209992",
+		LegalName:   "THOM HAYE",
+		IDNumber:    "357810280892999",
+		BirthDate:   exampleBirthDate,
+		Profession:  "Karyawan Swasta",
+		JobType:     "Engineering",
+		JobPosition: "Staff",
+		IsHighRisk:  true,
+		Pernyataan1: false,
+		Pernyataan2: false,
+		Pernyataan3: false,
+		Pernyataan4: false,
+		Pernyataan5: false,
+		Pernyataan6: "Lorem Ipsum Dolor Sit a Jamet",
+		UrlFormAkkk: "https://dev-platform-media.kbfinansia.com/media/reference/140000/SAL-1140002411209992/formAKKK_SAL-1140002411209992.pdf",
+		Decision:    "APR",
+		DecisionBy:  "CA KMB BEKASI",
+		DecisionAt:  exampleDecisionAt,
+	}
+
+	rawQuery := `SELECT 
+					tm.created_at AS OrderAt,
+					b.BranchName,
+					tm.ProspectID, 
+					scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+					scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+					tcp.BirthDate,
+					prf.[value] AS Profession,
+					jt.[value] AS JobType,
+					jp.[value] AS JobPosition,
+					edd.is_highrisk AS IsHighRisk,
+					edd.pernyataan_1 AS Pernyataan1,
+					edd.pernyataan_2 AS Pernyataan2,
+					edd.pernyataan_3 AS Pernyataan3,
+					edd.pernyataan_4 AS Pernyataan4,
+					edd.pernyataan_5 AS Pernyataan5,
+					edd.pernyataan_6 AS Pernyataan6,
+					tak.UrlFormAkkk,
+					sts.decision AS Decision,
+					sts.source_decision AS SourceDecision,
+					sts.rule_code AS RuleCode,
+					sts.reason AS Reason,
+					tcd.decision_by AS DecisionBy,
+					edd.created_at AS DecisionAt
+				FROM 
+				trx_master AS tm WITH (nolock)
+				JOIN confins_branch AS b WITH (nolock) ON (tm.BranchID = b.BranchID)
+				JOIN trx_status AS sts WITH (nolock) ON (tm.ProspectID = sts.ProspectID)
+				JOIN trx_customer_personal AS tcp WITH (nolock) ON (tm.ProspectID = tcp.ProspectID)
+				JOIN trx_customer_employment AS emp WITH (nolock) ON (tm.ProspectID = emp.ProspectID)
+				LEFT JOIN trx_ca_decision AS tcd WITH (nolock) ON (tm.ProspectID = tcd.ProspectID) 
+				LEFT JOIN trx_edd AS edd WITH (nolock) ON (tm.ProspectID = edd.ProspectID)
+				LEFT JOIN trx_akkk AS tak WITH (nolock) ON (tm.ProspectID = tak.ProspectID)
+				LEFT JOIN (
+					SELECT [key], value
+					FROM app_config ap WITH (nolock)
+					WHERE group_name = 'ProfessionID'
+				) AS prf ON (emp.ProfessionID = prf.[key])
+				LEFT JOIN (
+					SELECT [key], value
+					FROM app_config ap WITH (nolock)
+					WHERE group_name = 'JobType'
+				) AS jt ON (emp.JobType = jt.[key])
+				LEFT JOIN (
+					SELECT [key], value
+					FROM app_config ap WITH (nolock)
+					WHERE group_name = 'JobPosition'
+				) AS jp ON (emp.JobPosition = jp.[key])
+				WHERE tm.ProspectID = ?`
+
+	t.Run("success with param prospectid", func(t *testing.T) {
+		ProspectID := "SAL-1140002411209992"
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(rawQuery)).
+			WithArgs(ProspectID).
+			WillReturnRows(sqlmock.NewRows([]string{"OrderAt", "BranchName", "ProspectID", "LegalName", "IDNumber", "BirthDate", "Profession", "JobType", "JobPosition", "IsHighRisk", "Pernyataan1", "Pernyataan2", "Pernyataan3", "Pernyataan4", "Pernyataan5", "Pernyataan6", "UrlFormAkkk", "Decision", "DecisionBy", "DecisionAt"}).
+				AddRow(exampleOrderAt, "BEKASI", ProspectID, "THOM HAYE", "357810280892999", exampleBirthDate, "Karyawan Swasta", "Engineering", "Staff", true, false, false, false, false, false, "Lorem Ipsum Dolor Sit a Jamet", "https://dev-platform-media.kbfinansia.com/media/reference/140000/SAL-1140002411209992/formAKKK_SAL-1140002411209992.pdf", "APR", "CA KMB BEKASI", exampleDecisionAt))
+
+		mock.ExpectCommit()
+
+		data, err := repo.GetInquiryListOrderDetail(ProspectID)
+
+		if err != nil {
+			t.Fatalf("Expected no error, but got: %v", err)
+		}
+		assert.Equal(t, expectedData, data, "Expected data slice to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
+		}
+	})
+
+	t.Run("record not found", func(t *testing.T) {
+		ProspectID := "SAL-1140002411209992"
+
+		mock.ExpectBegin()
+
+		mock.ExpectQuery(regexp.QuoteMeta(rawQuery)).
+			WithArgs(ProspectID).
+			WillReturnRows(sqlmock.NewRows([]string{"OrderAt", "BranchName", "ProspectID", "LegalName", "IDNumber", "BirthDate", "Profession", "JobType", "JobPosition", "IsHighRisk", "Pernyataan1", "Pernyataan2", "Pernyataan3", "Pernyataan4", "Pernyataan5", "Pernyataan6", "UrlFormAkkk", "Decision", "DecisionBy", "DecisionAt"}))
+
+		mock.ExpectCommit()
+
+		_, err := repo.GetInquiryListOrderDetail(ProspectID)
+
+		expectedErr := fmt.Errorf(constant.RECORD_NOT_FOUND)
+		assert.EqualError(t, err, expectedErr.Error(), "Expected error to match")
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Fatalf("There were unfulfilled expectations: %s", err)
 		}
 	})
 }

@@ -308,6 +308,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		HomeStatus:            reqMetrics.CustomerPersonal.HomeStatus,
 		MonthlyVariableIncome: *reqMetrics.CustomerEmployment.MonthlyVariableIncome,
 		SpouseIncome:          *reqMetrics.CustomerEmployment.SpouseIncome,
+		JobType:               reqMetrics.CustomerEmployment.JobType,
 		JobPosition:           reqMetrics.CustomerEmployment.JobPosition,
 		ProfessionID:          reqMetrics.CustomerEmployment.ProfessionID,
 		EmploymentSinceYear:   reqMetrics.CustomerEmployment.EmploymentSinceYear,
@@ -394,6 +395,7 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	trxFMF.DSRFMF = dupcheckData.Dsr
 	trxFMF.TrxBannedPMKDSR = trxFMFDupcheck.TrxBannedPMKDSR
 	trxFMF.TrxBannedChassisNumber = trxFMFDupcheck.TrxBannedChassisNumber
+	trxFMF.TrxEDD = trxFMFDupcheck.TrxEDD
 
 	// internal record
 	if dupcheckData.CustomerID != nil {
