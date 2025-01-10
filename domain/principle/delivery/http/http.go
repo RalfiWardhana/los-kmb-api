@@ -67,6 +67,8 @@ func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, u
 	principleRoute.POST("/principle-data", handler.GetPrincipleData, middlewares.AccessMiddleware())
 	principleRoute.GET("/auto-cancel", handler.AutoCancel, middlewares.AccessMiddleware())
 	principleRoute.POST("/principle-publish", handler.PrinciplePublish, middlewares.AccessMiddleware())
+	principleRoute.POST("/max-loan-amount", handler.GetMaxLoanAmount, middlewares.AccessMiddleware())
+	principleRoute.POST("/available-tenor", handler.GetAvailableTenor, middlewares.AccessMiddleware())
 }
 
 // KmbPrinciple Tools godoc
@@ -500,5 +502,83 @@ func (c *handler) PrinciplePublish(ctx echo.Context) (err error) {
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), "success publish event principle")
+
+}
+
+// KmbPrinciple Tools godoc
+// @Description KmbPrinciple
+// @Tags KmbPrinciple
+// @Produce json
+// @Param prospectID path string true "Prospect ID"
+// @Param body body request.GetMaxLoanAmount true "Body payload"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/max-loan-amount [post]
+func (c *handler) GetMaxLoanAmount(ctx echo.Context) (err error) {
+
+	var r request.GetMaxLoanAmount
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
+	}
+
+	data, err := c.multiusecase.GetMaxLoanAmout(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
+
+}
+
+// KmbPrinciple Tools godoc
+// @Description KmbPrinciple
+// @Tags KmbPrinciple
+// @Produce json
+// @Param prospectID path string true "Prospect ID"
+// @Param body body request.GetAvailableTenor true "Body payload"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/available-tenor [post]
+func (c *handler) GetAvailableTenor(ctx echo.Context) (err error) {
+
+	var r request.GetAvailableTenor
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
+	}
+
+	data, err := c.multiusecase.GetAvailableTenor(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
 
 }

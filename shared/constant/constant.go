@@ -738,4 +738,8 @@ const (
 
 	MARSEV_SOURCE_APPLICATION_KPM = "KPM"
 	ERROR_MAX_EXCEED              = "max retry exceed"
+
+	//2Wilen
+	GROUP_2WILEN      = "2Wilen"
+	KEY_PPID_SIMULASI = "prefix_prospect_id_simulasi"
 )

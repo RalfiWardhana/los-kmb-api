@@ -38,10 +38,19 @@ type Usecase interface {
 	GetDataPrinciple(ctx context.Context, req request.PrincipleGetData, accessToken string) (data map[string]interface{}, err error)
 	CheckOrderPendingPrinciple(ctx context.Context) (err error)
 	PrinciplePublish(ctx context.Context, req request.PrinciplePublish, accessToken string) (err error)
+	GetLTV(mappingElaborateLTV []entity.MappingElaborateLTV, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64) (ltv int, err error)
+	MarsevGetLoanAmount(ctx context.Context, req request.ReqMarsevLoanAmount, prospectID string, accessToken string) (marsevLoanAmountRes response.MarsevLoanAmountResponse, err error)
+	MarsevGetMarketingProgram(ctx context.Context, req request.ReqMarsevFilterProgram, prospectID string, accessToken string) (marsevFilterProgramRes response.MarsevFilterProgramResponse, err error)
+	MarsevCalculateInstallment(ctx context.Context, req request.ReqMarsevCalculateInstallment, prospectID string, accessToken string) (marsevCalculateInstallmentRes response.MarsevCalculateInstallmentResponse, err error)
+	MDMGetMasterAsset(ctx context.Context, branchID string, search string, prospectID string, accessToken string) (assetList response.AssetList, err error)
+	MDMGetAssetYear(ctx context.Context, branchID string, assetCode string, search string, prospectID string, accessToken string) (assetMP response.AssetYearList, err error)
+	MDMGetMappingLicensePlate(ctx context.Context, licensePlate string, prospectID string, accessToken string) (mdmMasterMappingLicensePlateRes response.MDMMasterMappingLicensePlateResponse, err error)
 }
 
 type MultiUsecase interface {
 	PrinciplePemohon(ctx context.Context, r request.PrinciplePemohon) (data response.UsecaseApi, err error)
 	PrinciplePembiayaan(ctx context.Context, r request.PrinciplePembiayaan, accessToken string) (data response.UsecaseApi, err error)
 	PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (data response.UsecaseApi, err error)
+	GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoanAmount, accessToken string) (data response.GetMaxLoanAmountData, err error)
+	GetAvailableTenor(ctx context.Context, req request.GetAvailableTenor, accessToken string) (data []response.GetAvailableTenorData, err error)
 }
