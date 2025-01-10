@@ -75,6 +75,7 @@ func TestSaveFiltering(t *testing.T) {
 	trxFiltering := entity.FilteringKMB{
 		ProspectID: "TST001",
 		Decision:   "PASS",
+		IDNumber:   "123456",
 	}
 	filtering := structToSlice(trxFiltering)
 	trxDetailBiro := []entity.TrxDetailBiro{
@@ -95,6 +96,7 @@ func TestSaveFiltering(t *testing.T) {
 	}
 	cmoNoFPD := structToSlice(trxCmoNoFPD)
 	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','123456') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("123456"))
 	mock.ExpectExec(`INSERT INTO "trx_filtering" (.*)`).
 		WithArgs(filtering...).
 		WillReturnResult(sqlmock.NewResult(1, 1))

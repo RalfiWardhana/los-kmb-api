@@ -55,7 +55,10 @@ func (r repoHandler) DummyDataPbk(noktp string) (data entity.DummyPBK, err error
 
 func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, dataCMOnoFPD entity.TrxCmoNoFPD) (err error) {
 
-	var x sql.TxOptions
+	var (
+		x         sql.TxOptions
+		encrypted entity.EncryptString
+	)
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
@@ -64,6 +67,11 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
+
+	if err = db.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS encrypt`, data.IDNumber)).Scan(&encrypted).Error; err != nil {
+		return
+	}
+	data.IDNumber = encrypted.Encrypt
 
 	if err = db.Create(&data).Error; err != nil {
 		return

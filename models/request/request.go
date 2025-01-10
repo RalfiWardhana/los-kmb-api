@@ -102,6 +102,7 @@ type DupcheckApi struct {
 	HomeStatus            string              `json:"home_status" validate:"required,max=2"`
 	MonthlyVariableIncome float64             `json:"monthly_variable_income"`
 	SpouseIncome          float64             `json:"spouse_income"`
+	JobType               string              `json:"job_type" validate:"required"`
 	JobPosition           string              `json:"job_position" validate:"required"`
 	ProfessionID          string              `json:"profession_id" validate:"required"`
 	EmploymentSinceYear   string              `json:"employment_since_year" validate:"required,len=4"`
@@ -115,6 +116,7 @@ type DupcheckApi struct {
 	LegalName             string              `json:"legal_name" validate:"required,allowcharsname"`
 	MotherName            string              `json:"surgate_mother_name" validate:"required,allowcharsname"`
 	Spouse                *DupcheckApiSpouse  `json:"spouse" validate:"omitempty"`
+	MobilePhone           string              `json:"mobile_phone" validate:"min=9,max=14" example:"085689XXX01"`
 	EngineNo              string              `json:"no_engine" validate:"required"`
 	RangkaNo              string              `json:"no_rangka" validate:"required"`
 	ManufactureYear       string              `json:"manufacture_year" validate:"required,len=4,number"`
@@ -142,6 +144,17 @@ type SpouseDupcheck struct {
 	LegalName  string `json:"spouse_legal_name" validate:"required,allowcharsname"`
 	BirthDate  string `json:"spouse_birth_date" validate:"required,dateformat"`
 	MotherName string `json:"spouse_surgate_mother_name" validate:"required,allowcharsname"`
+}
+
+type NegativeCustomer struct {
+	ProspectID        string `json:"prospect_id"`
+	IDNumber          string `json:"id_number"`
+	LegalName         string `json:"legal_name"`
+	BirthDate         string `json:"birth_date"`
+	SurgateMotherName string `json:"surgate_mother_name"`
+	ProfessionID      string `json:"profession_id"`
+	JobType           string `json:"job_type_id"`
+	JobPosition       string `json:"job_position_id"`
 }
 
 type DupcheckApiSpouse struct {
@@ -674,6 +687,10 @@ type AgentNE struct {
 	RecomDate string `json:"recom_date" validate:"required" example:"2021-07-15"`
 }
 
+type LockSystem struct {
+	IDNumber string `json:"id_number" validate:"required,id_number" example:"ENCRYPTED NIK"`
+}
+
 type Recalculate struct {
 	ProspectID                   string  `json:"prospect_id" validate:"prospect_id" example:"SAL042600001"`
 	Tenor                        int     `json:"tenor" validate:"required,max=60" example:"36"`
@@ -872,22 +889,33 @@ type ReqInquiryNE struct {
 }
 
 type ReqSaveAsDraft struct {
-	ProspectID string `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
-	Decision   string `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
-	SlikResult string `json:"slik_result" validate:"required,max=30"`
-	Note       string `json:"note" validate:"max=525"`
-	CreatedBy  string `json:"decision_by" validate:"required,max=100"`
-	DecisionBy string `json:"decision_by_name" validate:"required,max=250"`
+	ProspectID string      `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
+	Decision   string      `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
+	SlikResult string      `json:"slik_result" validate:"required,max=30"`
+	Note       string      `json:"note" validate:"max=525"`
+	CreatedBy  string      `json:"decision_by" validate:"required,max=100"`
+	DecisionBy string      `json:"decision_by_name" validate:"required,max=250"`
+	Edd        interface{} `json:"edd"`
+}
+
+type EDD struct {
+	Pernyataan1 interface{} `json:"pernyataan_1"`
+	Pernyataan2 interface{} `json:"pernyataan_2"`
+	Pernyataan3 interface{} `json:"pernyataan_3"`
+	Pernyataan4 interface{} `json:"pernyataan_4"`
+	Pernyataan5 interface{} `json:"pernyataan_5"`
+	Pernyataan6 interface{} `json:"pernyataan_6"`
 }
 
 type ReqSubmitDecision struct {
-	ProspectID   string  `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
-	NTFAkumulasi float64 `json:"ntf_akumulasi" validate:"required,max=9999999999999"`
-	Decision     string  `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
-	SlikResult   string  `json:"slik_result" validate:"required,max=30"`
-	Note         string  `json:"note" validate:"max=525"`
-	CreatedBy    string  `json:"decision_by" validate:"required,max=100"`
-	DecisionBy   string  `json:"decision_by_name" validate:"required,max=250"`
+	ProspectID   string      `json:"prospect_id" validate:"required,max=20" example:"TEST-DEV"`
+	NTFAkumulasi float64     `json:"ntf_akumulasi" validate:"required,max=9999999999999"`
+	Decision     string      `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
+	SlikResult   string      `json:"slik_result" validate:"required,max=30"`
+	Note         string      `json:"note" validate:"max=525"`
+	CreatedBy    string      `json:"decision_by" validate:"required,max=100"`
+	DecisionBy   string      `json:"decision_by_name" validate:"required,max=250"`
+	Edd          interface{} `json:"edd"`
 }
 
 type ReqSubmitApproval struct {
@@ -970,6 +998,17 @@ type ReqResetQuotaDeviasiBranch struct {
 
 type ReqResetAllQuotaDeviasi struct {
 	UpdatedByName string `json:"updated_by_name" validate:"required,max=200" example:"MUHAMMAD RONALD"`
+}
+
+type ReqInquiryListOrder struct {
+	OrderDateStart string `json:"order_date_start" example:"2025-01-01"`
+	OrderDateEnd   string `json:"order_date_end" example:"2025-01-30"`
+	BranchID       string `json:"branch_id" validate:"max=3"`
+	Decision       string `json:"decision" validate:"max=3" example:"APR,REJ,CAN,CPR"`
+	IsHighRisk     string `json:"is_highrisk"`
+	ProspectID     string `json:"prospect_id" validate:"max=20"`
+	IDNumber       string `json:"id_number" validate:"max=16" example:"357810XXXXXX0003"`
+	LegalName      string `json:"legal_name" validate:"max=200"`
 }
 
 type ReqListMappingCluster struct {

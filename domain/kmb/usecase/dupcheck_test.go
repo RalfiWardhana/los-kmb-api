@@ -18,9 +18,98 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
+
+func TestCheckMobilePhoneFMF(t *testing.T) {
+	os.Setenv("HRIS_LIST_EMPLOYEE", "http://localhost/hris-list-employee")
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	accessToken := "token"
+	hrisAccessToken := "token"
+	testcases := []struct {
+		name         string
+		listEmployee []response.HrisListEmployee
+		reqs         request.DupcheckApi
+		httpcode     int
+		httpbody     string
+		httperr      error
+		result       response.UsecaseApi
+		errResult    error
+	}{
+		{
+			name: "TestCheckMobilePhoneFMF EngineAPI HRIS_LIST_EMPLOYEE error",
+			reqs: request.DupcheckApi{
+				ProspectID:  "SAL-1234567",
+				MobilePhone: "081234567",
+			},
+			httpcode:  500,
+			httperr:   errors.New(constant.ERROR_UPSTREAM + " - Call API HRIS List Employee Error"),
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - Call API HRIS List Employee Error"),
+		},
+		{
+			name: "TestCheckMobilePhoneFMF reject",
+			reqs: request.DupcheckApi{
+				ProspectID:  "SAL-1234567",
+				MobilePhone: "08161970587",
+			},
+			httpbody: `{"data":[{"employee_id":"65251","name":"HERY SUSANTO DERMAWAN","name_with_employee_id":"65251 - HERY SUSANTO DERMAWAN","join_date":"2017-01-01T00:00:00","resign_date":null,"personal_email":"","corporate_email":"herysd@finansia.com","id_number":"3173063101700002","phone_number":"08161970587","employee_status":"Permanent","division_code":"DIV02","division_name":"BOD","department_code":"H02","department_name":"BOD","sub_department_group_code":"999","sub_department_group_name":"HEAD OFFICE","sub_department_code":"H0201","sub_department_name":"BOD","pos_code":null,"pos_name":null,"section_code":"90002","section_name":"BOD","position_group_code":"10354","position_group_name":"BOD","position_code":"10494","position_name":"DEPUTY CHIEF OPERATING OFFICER","spv_id":"53507","is_resign":false}]}`,
+			httpcode: 200,
+			result: response.UsecaseApi{
+				SourceDecision: constant.SOURCE_DECISION_NOHP,
+				Code:           constant.CODE_NOHP,
+				Result:         constant.DECISION_REJECT,
+				Reason:         constant.REASON_REJECT_NOHP,
+			},
+		},
+		{
+			name: "TestCheckMobilePhoneFMF pass",
+			reqs: request.DupcheckApi{
+				ProspectID:  "SAL-1234567",
+				MobilePhone: "081234567",
+			},
+			httpbody: `{"data":[{"employee_id":"65251","name":"HERY SUSANTO DERMAWAN","name_with_employee_id":"65251 - HERY SUSANTO DERMAWAN","join_date":"2017-01-01T00:00:00","resign_date":null,"personal_email":"","corporate_email":"herysd@finansia.com","id_number":"3173063101700002","phone_number":"08161970587","employee_status":"Permanent","division_code":"DIV02","division_name":"BOD","department_code":"H02","department_name":"BOD","sub_department_group_code":"999","sub_department_group_name":"HEAD OFFICE","sub_department_code":"H0201","sub_department_name":"BOD","pos_code":null,"pos_name":null,"section_code":"90002","section_name":"BOD","position_group_code":"10354","position_group_name":"BOD","position_code":"10494","position_name":"DEPUTY CHIEF OPERATING OFFICER","spv_id":"53507","is_resign":false}]}`,
+			httpcode: 200,
+			result: response.UsecaseApi{
+				SourceDecision: constant.SOURCE_DECISION_NOHP,
+				Code:           constant.CODE_NOHP,
+				Result:         constant.DECISION_PASS,
+			},
+		},
+	}
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			rst := resty.New()
+			httpmock.ActivateNonDefault(rst.GetClient())
+			defer httpmock.DeactivateAndReset()
+
+			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("HRIS_LIST_EMPLOYEE"), httpmock.NewStringResponder(tc.httpcode, tc.httpbody))
+			resp, _ := rst.R().Post(os.Getenv("HRIS_LIST_EMPLOYEE"))
+
+			ctx := context.Background()
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("HRIS_LIST_EMPLOYEE"), mock.Anything, mock.Anything, constant.METHOD_POST, false, 0, timeout, "", accessToken).Return(resp, tc.httperr).Once()
+
+			if tc.httpbody != "" {
+				json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &tc.listEmployee)
+				info, _ := json.Marshal(tc.listEmployee)
+				tc.result.Info = string(info)
+			}
+
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			result, err := usecase.CheckMobilePhoneFMF(ctx, tc.reqs, accessToken, hrisAccessToken)
+
+			require.Equal(t, tc.result, result)
+			require.Equal(t, tc.errResult, err)
+		})
+	}
+
+}
 
 func TestCheckBannedPMKDSR(t *testing.T) {
 	testcases := []struct {
@@ -600,6 +689,211 @@ func TestBlacklistCheck(t *testing.T) {
 			require.Equal(t, test.expected.StatusKonsumen, result.StatusKonsumen)
 			require.Equal(t, test.expected.Reason, result.Reason)
 			require.Equal(t, test.customerType, customerType)
+		})
+	}
+
+}
+
+func TestNegativeCustomerCheck(t *testing.T) {
+	// always set the valid url
+	os.Setenv("API_NEGATIVE_CUSTOMER", "http://localhost/")
+	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	accessToken := "token"
+	header := map[string]string{
+		"Authorization": accessToken,
+	}
+
+	testcases := []struct {
+		name                    string
+		respBody                string
+		result                  response.UsecaseApi
+		respNegativeCustomer    response.NegativeCustomer
+		negativeCustomer        response.NegativeCustomer
+		errResp                 error
+		errResult               error
+		mappingNegativeCustomer entity.MappingNegativeCustomer
+		errRepo                 error
+		req                     request.DupcheckApi
+	}{
+		{
+			name: "NegativeCustomerCheck error EngineAPI",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+			},
+			errResp:   errors.New("Get Error"),
+			errResult: errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call API Negative Customer Error"),
+		},
+		{
+			name: "NegativeCustomerCheck GetMappingNegativeCustomer error",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+			},
+			respBody: `{
+				"code": "OK",
+				"message": "operasi berhasil dieksekusi.",
+				"data": {
+					"is_active":1,
+					"is_blacklist":1,
+					"is_highrisk":1,
+					"bad_type":"B",
+					"result":"BLACKLIST APU-PPT"
+				},
+				"errors": null,
+				"request_id": "c240772b-5f78-489b-bdb4-6ed796dadaf6",
+				"timestamp": "2023-03-26 21:29:07"
+			}`,
+			errRepo: errors.New("Get Error"),
+			negativeCustomer: response.NegativeCustomer{
+				IsActive:    1,
+				IsBlacklist: 1,
+				IsHighrisk:  1,
+				BadType:     "B",
+				Result:      "BLACKLIST APU-PPT",
+				Decision:    "",
+			},
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - GetMappingNegativeCustomer Error - Get Error"),
+		},
+		{
+			name: "NegativeCustomerCheck reject",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+			},
+			respBody: `{
+				"code": "OK",
+				"message": "operasi berhasil dieksekusi.",
+				"data": {
+					"is_active":1,
+					"is_blacklist":1,
+					"is_highrisk":1,
+					"bad_type":"B",
+					"result":"BLACKLIST APU-PPT"
+				},
+				"errors": null,
+				"request_id": "c240772b-5f78-489b-bdb4-6ed796dadaf6",
+				"timestamp": "2023-03-26 21:29:07"
+			}`,
+			mappingNegativeCustomer: entity.MappingNegativeCustomer{
+				Decision: constant.DECISION_REJECT,
+				Reason:   "BLACKLIST APU-PPT",
+			},
+			negativeCustomer: response.NegativeCustomer{
+				IsActive:    1,
+				IsBlacklist: 1,
+				IsHighrisk:  1,
+				BadType:     "B",
+				Result:      "BLACKLIST APU-PPT",
+				Decision:    "REJECT",
+			},
+			result: response.UsecaseApi{
+				Code:           constant.CODE_NEGATIVE_CUSTOMER,
+				Reason:         "BLACKLIST APU-PPT",
+				Result:         constant.DECISION_REJECT,
+				SourceDecision: constant.SOURCE_DECISION_BLACKLIST,
+				Info:           "{\"is_active\":1,\"is_blacklist\":1,\"is_highrisk\":1,\"bad_type\":\"B\",\"result\":\"BLACKLIST APU-PPT\",\"decision\":\"REJECT\"}",
+			},
+		},
+		{
+			name: "NegativeCustomerCheck pass",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+			},
+			respBody: `{
+				"code": "OK",
+				"message": "operasi berhasil dieksekusi.",
+				"data": {
+					"is_active":1,
+					"is_blacklist":0,
+					"is_highrisk":1,
+					"bad_type":"",
+					"result":"HIGHRISK APU-PPT"
+				},
+				"errors": null,
+				"request_id": "c240772b-5f78-489b-bdb4-6ed796dadaf6",
+				"timestamp": "2023-03-26 21:29:07"
+			}`,
+			mappingNegativeCustomer: entity.MappingNegativeCustomer{
+				Decision: "YES",
+				Reason:   "HIGHRISK APU-PPT",
+			},
+			negativeCustomer: response.NegativeCustomer{
+				IsActive:    1,
+				IsBlacklist: 0,
+				IsHighrisk:  1,
+				BadType:     "0",
+				Result:      "HIGHRISK APU-PPT",
+				Decision:    "YES",
+			},
+			result: response.UsecaseApi{
+				Code:           constant.CODE_NEGATIVE_CUSTOMER,
+				Reason:         constant.REASON_NON_BLACKLIST,
+				Result:         constant.DECISION_PASS,
+				SourceDecision: constant.SOURCE_DECISION_BLACKLIST,
+				Info:           "{\"is_active\":1,\"is_blacklist\":0,\"is_highrisk\":1,\"bad_type\":\"0\",\"result\":\"HIGHRISK APU-PPT\",\"decision\":\"YES\"}",
+			},
+		},
+		{
+			name: "NegativeCustomerCheck pass no data",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+			},
+			respBody: `{
+				"code": "OK",
+				"message": "operasi berhasil dieksekusi.",
+				"data": {
+					"is_active":0,
+					"is_blacklist":0,
+					"is_highrisk":0,
+					"bad_type":"",
+					"result":""
+				},
+				"errors": null,
+				"request_id": "c240772b-5f78-489b-bdb4-6ed796dadaf6",
+				"timestamp": "2023-03-26 21:29:07"
+			}`,
+			result: response.UsecaseApi{
+				Code:           constant.CODE_NEGATIVE_CUSTOMER,
+				Reason:         constant.REASON_NON_BLACKLIST,
+				Result:         constant.DECISION_PASS,
+				SourceDecision: constant.SOURCE_DECISION_BLACKLIST,
+				Info:           "{\"is_active\":0,\"is_blacklist\":0,\"is_highrisk\":0,\"bad_type\":\"\",\"result\":\"\",\"decision\":\"\"}",
+			},
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			req, _ := json.Marshal(request.NegativeCustomer{
+				ProspectID:        tc.req.ProspectID,
+				IDNumber:          tc.req.IDNumber,
+				LegalName:         tc.req.LegalName,
+				BirthDate:         tc.req.BirthDate,
+				SurgateMotherName: tc.req.MotherName,
+				ProfessionID:      tc.req.ProfessionID,
+				JobType:           tc.req.JobType,
+				JobPosition:       tc.req.JobPosition,
+			})
+
+			rst := resty.New()
+			httpmock.ActivateNonDefault(rst.GetClient())
+			defer httpmock.DeactivateAndReset()
+
+			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("API_NEGATIVE_CUSTOMER"), httpmock.NewStringResponder(200, tc.respBody))
+			resp, _ := rst.R().Post(os.Getenv("API_NEGATIVE_CUSTOMER"))
+
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("API_NEGATIVE_CUSTOMER"), req, header, constant.METHOD_POST, true, 6, timeout, tc.req.ProspectID, accessToken).Return(resp, tc.errResp).Once()
+			mockRepository.On("GetMappingNegativeCustomer", mock.Anything).Return(tc.mappingNegativeCustomer, tc.errRepo)
+
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			result, negativeCustomer, err := usecase.NegativeCustomerCheck(ctx, tc.req, accessToken)
+			require.Equal(t, tc.result, result)
+			require.Equal(t, tc.negativeCustomer, negativeCustomer)
+			require.Equal(t, tc.errResult, err)
 		})
 	}
 
