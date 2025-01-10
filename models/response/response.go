@@ -1318,6 +1318,13 @@ type AssetList struct {
 	} `json:"records"`
 }
 
+type Step2Wilen struct {
+	ProspectID string `json:"prospect_id"`
+	ColorCode  string `json:"color_code"`
+	Status     string `json:"status"`
+	UpdatedAt  string `json:"updated_at"`
+}
+
 type GetMaxLoanAmountData struct {
 	MaxLoanAmount float64 `json:"max_loan_amount"`
 }

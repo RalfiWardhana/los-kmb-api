@@ -1347,6 +1347,10 @@ type PrincipleUpdateStatus struct {
 	OrderStatus string `json:"order_status"`
 }
 
+type CheckStep2Wilen struct {
+	IDNumber string `json:"id_number" validate:"required,id_number" example:"ENCRYPTED NIK"`
+}
+
 type GetMaxLoanAmount struct {
 	ProspectID         string `json:"prospect_id" validate:"required,max=20,htmlValidation" example:"SAL-1140024080800004"`
 	BranchID           string `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
