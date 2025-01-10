@@ -67,6 +67,8 @@ func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, u
 	principleRoute.POST("/principle-data", handler.GetPrincipleData, middlewares.AccessMiddleware())
 	principleRoute.GET("/auto-cancel", handler.AutoCancel, middlewares.AccessMiddleware())
 	principleRoute.POST("/principle-publish", handler.PrinciplePublish, middlewares.AccessMiddleware())
+
+	principleRoute.POST("/step-2wilen", handler.Step2Wilen, middlewares.AccessMiddleware())
 	principleRoute.POST("/max-loan-amount", handler.GetMaxLoanAmount, middlewares.AccessMiddleware())
 	principleRoute.POST("/available-tenor", handler.GetAvailableTenor, middlewares.AccessMiddleware())
 	principleRoute.POST("/submission-2wilen", handler.Submission2Wilen, middlewares.AccessMiddleware())
@@ -510,7 +512,55 @@ func (c *handler) PrinciplePublish(ctx echo.Context) (err error) {
 // @Description KmbPrinciple
 // @Tags KmbPrinciple
 // @Produce json
-// @Param prospectID path string true "Prospect ID"
+// @Param body body request.GetAvailableTenor true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=response.StepPrinciple}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/step-2wilen [post]
+func (c *handler) Step2Wilen(ctx echo.Context) (err error) {
+
+	var r request.CheckStep2Wilen
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
+	}
+
+	r.IDNumber, _ = utils.PlatformDecryptText(r.IDNumber)
+
+	data, err := c.usecase.Step2Wilen(r.IDNumber)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
+	}
+
+	if data.Status == "" {
+		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), nil)
+	}
+
+	if data.Status == constant.REASON_PROSES_SURVEY {
+		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "002"), data, response.WithMessage("Kamu masih memiliki pengajuan lain yang sedang diproses"))
+
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
+
+}
+
+// KmbPrinciple Tools godoc
+// @Description KmbPrinciple
+// @Tags KmbPrinciple
+// @Produce json
 // @Param body body request.GetMaxLoanAmount true "Body payload"
 // @Success 200 {object} response.ApiResponse{}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
@@ -549,7 +599,6 @@ func (c *handler) GetMaxLoanAmount(ctx echo.Context) (err error) {
 // @Description KmbPrinciple
 // @Tags KmbPrinciple
 // @Produce json
-// @Param prospectID path string true "Prospect ID"
 // @Param body body request.GetAvailableTenor true "Body payload"
 // @Success 200 {object} response.ApiResponse{}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}

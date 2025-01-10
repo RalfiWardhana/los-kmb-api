@@ -183,7 +183,7 @@ func (h handlers) KMBIndex(ctx context.Context, event event.Event) (err error) {
 		}
 	}
 
-	resp, err = h.metrics.MetricsLos(ctx, req, middlewares.UserInfoData.AccessToken)
+	resp, err = h.metrics.MetricsLos(ctx, req, middlewares.UserInfoData.AccessToken, middlewares.HrisApiData.Token)
 	if err != nil {
 		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)
 
@@ -348,7 +348,7 @@ func (h handlers) KMBAfterPrescreening(ctx context.Context, event event.Event) (
 		}
 	}
 
-	resp, err = h.metrics.MetricsLos(ctx, req, middlewares.UserInfoData.AccessToken)
+	resp, err = h.metrics.MetricsLos(ctx, req, middlewares.UserInfoData.AccessToken, middlewares.HrisApiData.Token)
 	if err != nil {
 
 		resp = h.Json.EventServiceError(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", reqEncrypted, err)

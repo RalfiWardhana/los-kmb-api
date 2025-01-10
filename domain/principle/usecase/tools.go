@@ -97,3 +97,8 @@ func (u usecase) PrinciplePublish(ctx context.Context, req request.PrinciplePubl
 		AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
 	}), 0)
 }
+
+func (u usecase) Step2Wilen(idNumber string) (step response.Step2Wilen, err error) {
+
+	return
+}

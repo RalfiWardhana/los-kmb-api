@@ -39,6 +39,8 @@ type Usecase interface {
 	CheckOrderPendingPrinciple(ctx context.Context) (err error)
 	PrinciplePublish(ctx context.Context, req request.PrinciplePublish, accessToken string) (err error)
 
+	Step2Wilen(idNumber string) (step response.Step2Wilen, err error)
+
 	GetLTV(mappingElaborateLTV []entity.MappingElaborateLTV, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64) (ltv int, err error)
 	MarsevGetLoanAmount(ctx context.Context, req request.ReqMarsevLoanAmount, prospectID string, accessToken string) (marsevLoanAmountRes response.MarsevLoanAmountResponse, err error)
 	MarsevGetMarketingProgram(ctx context.Context, req request.ReqMarsevFilterProgram, prospectID string, accessToken string) (marsevFilterProgramRes response.MarsevFilterProgramResponse, err error)
