@@ -130,6 +130,69 @@ func (_m *Usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustome
 	return r0, r1
 }
 
+// CheckAgreementChassisNumber provides a mock function with given fields: ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken
+func (_m *Usecase) CheckAgreementChassisNumber(ctx context.Context, prospectID string, chassisNumber string, idNumber string, spouseIDNumber string, accessToken string) (response.AgreementChassisNumber, response.UsecaseApi, error) {
+	ret := _m.Called(ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CheckAgreementChassisNumber")
+	}
+
+	var r0 response.AgreementChassisNumber
+	var r1 response.UsecaseApi
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) (response.AgreementChassisNumber, response.UsecaseApi, error)); ok {
+		return rf(ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) response.AgreementChassisNumber); ok {
+		r0 = rf(ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.AgreementChassisNumber)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string, string) response.UsecaseApi); ok {
+		r1 = rf(ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken)
+	} else {
+		r1 = ret.Get(1).(response.UsecaseApi)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, string, string, string, string, string) error); ok {
+		r2 = rf(ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// CheckBannedChassisNumber provides a mock function with given fields: chassisNumber
+func (_m *Usecase) CheckBannedChassisNumber(chassisNumber string) (response.UsecaseApi, error) {
+	ret := _m.Called(chassisNumber)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CheckBannedChassisNumber")
+	}
+
+	var r0 response.UsecaseApi
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (response.UsecaseApi, error)); ok {
+		return rf(chassisNumber)
+	}
+	if rf, ok := ret.Get(0).(func(string) response.UsecaseApi); ok {
+		r0 = rf(chassisNumber)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(chassisNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CheckCmoNoFPD provides a mock function with given fields: prospectID, cmoID, cmoCategory, cmoJoinDate, defaultCluster, bpkbName
 func (_m *Usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory string, cmoJoinDate string, defaultCluster string, bpkbName string) (string, entity.TrxCmoNoFPD, error) {
 	ret := _m.Called(prospectID, cmoID, cmoCategory, cmoJoinDate, defaultCluster, bpkbName)

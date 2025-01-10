@@ -811,3 +811,17 @@ func (r repoHandler) GetTrxStatus(prospectID string) (status entity.TrxStatus, e
 
 	return
 }
+
+func (r repoHandler) GetBannedChassisNumber(chassisNumber string) (data entity.TrxBannedChassisNumber, err error) {
+
+	date := time.Now().AddDate(0, 0, -30).Format(constant.FORMAT_DATE)
+
+	if err = r.newKmb.Raw(fmt.Sprintf(`SELECT * FROM trx_banned_chassis_number WITH (nolock) WHERE chassis_number = '%s' AND CAST(created_at as DATE) >= '%s'`, chassisNumber, date)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}

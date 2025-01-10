@@ -2854,3 +2854,96 @@ type TrxPrincipleError struct {
 func (c *TrxPrincipleError) TableName() string {
 	return "trx_principle_error"
 }
+
+type TrxKPM struct {
+	ProspectID              string      `gorm:"column:ProspectID;;type:varchar(20)"`
+	IDNumber                string      `gorm:"column:IDNumber;type:varchar(16)"`
+	LegalName               string      `gorm:"column:LegalName;type:varchar(100);"`
+	MobilePhone             string      `gorm:"column:MobilePhone;type:varchar(20);"`
+	BirthPlace              string      `gorm:"column:BirthPlace;type:varchar(100);"`
+	BirthDate               time.Time   `gorm:"column:BirthDate"`
+	SurgateMotherName       string      `gorm:"column:SurgateMotherName;type:varchar(100);"`
+	Gender                  string      `gorm:"column:Gender;type:varchar(10);"`
+	Email                   string      `gorm:"column:Email;type:varchar(100);"`
+	ResidenceAddress        string      `gorm:"column:ResidenceAddress;type:varchar(100);"`
+	ResidenceRT             string      `gorm:"column:ResidenceRT;type:varchar(3)"`
+	ResidenceRW             string      `gorm:"column:ResidenceRW;type:varchar(3)"`
+	ResidenceProvince       string      `gorm:"column:ResidenceProvince;type:varchar(50)"`
+	ResidenceCity           string      `gorm:"column:ResidenceCity;type:varchar(30)"`
+	ResidenceKecamatan      string      `gorm:"column:ResidenceKecamatan;type:varchar(30)"`
+	ResidenceKelurahan      string      `gorm:"column:ResidenceKelurahan;type:varchar(30)"`
+	ResidenceZipCode        string      `gorm:"column:ResidenceZipCode;type:varchar(5)"`
+	BranchID                string      `gorm:"column:BranchID;type:varchar(10)"`
+	AssetCode               string      `gorm:"column:AssetCode;type:varchar(200)"`
+	ManufactureYear         string      `gorm:"column:ManufactureYear;type:varchar(4)"`
+	LicensePlate            string      `gorm:"column:LicensePlate;type:varchar(50)"`
+	AssetUsageTypeCode      string      `gorm:"column:AssetUsageTypeCode;type:varchar(2)"`
+	BPKBName                string      `gorm:"column:BPKBName;type:varchar(2)"`
+	LoanAmount              float64     `gorm:"column:LoanAmount"`
+	Tenor                   int         `gorm:"column:Tenor"`
+	InstallmentAmount       float64     `gorm:"column:InstallmentAmount"`
+	NumOfDependence         int         `gorm:"column:NumOfDependence"`
+	MaritalStatus           string      `gorm:"column:MaritalStatus;type:varchar(10);"`
+	SpouseIDNumber          interface{} `gorm:"column:SpouseIDNumber;type:varchar(16)"`
+	SpouseLegalName         interface{} `gorm:"column:SpouseLegalName;type:varchar(100);"`
+	SpouseBirthDate         interface{} `gorm:"column:SpouseBirthDate"`
+	SpouseBirthPlace        interface{} `gorm:"column:SpouseBirthPlace;type:varchar(100);"`
+	SpouseSurgateMotherName interface{} `gorm:"column:SpouseSurgateMotherName;type:varchar(100);"`
+	SpouseMobilePhone       interface{} `gorm:"column:SpouseMobilePhone;type:varchar(20);"`
+	Education               string      `gorm:"column:Education;type:varchar(50);"`
+	ProfessionID            string      `gorm:"column:ProfessionID;type:varchar(10);"`
+	CompanyName             string      `gorm:"column:CompanyName;type:varchar(50);"`
+	EmploymentSinceMonth    int         `gorm:"column:EmploymentSinceMonth;type:varchar(2);"`
+	EmploymentSinceYear     int         `gorm:"column:EmploymentSinceYear;type:varchar(4);"`
+	MonthlyFixedIncome      float64     `gorm:"column:MonthlyFixedIncome"`
+	SpouseIncome            interface{} `gorm:"column:SpouseIncome"`
+	NoChassis               string      `gorm:"column:ChassisNumber;type:varchar(30)"`
+	HomeStatus              string      `gorm:"column:HomeStatus;type:varchar(2)"`
+	StaySinceYear           int         `gorm:"column:StaySinceYear;type:varchar(4)"`
+	StaySinceMonth          int         `gorm:"column:StaySinceMonth;type:varchar(2)"`
+	KtpPhoto                interface{} `gorm:"column:KtpPhoto;type:varchar(250);"`
+	SelfiePhoto             interface{} `gorm:"column:SelfiePhoto;type:varchar(250);"`
+	CheckNokaNosinResult    interface{} `gorm:"column:CheckNokaNosinResult;type:varchar(50);"`
+	CheckNokaNosinCode      interface{} `gorm:"column:CheckNokaNosinCode;type:varchar(50);"`
+	CheckNokaNosinReason    interface{} `gorm:"column:CheckNokaNosinReason;type:varchar(200);"`
+	CheckBlacklistResult    interface{} `gorm:"column:CheckBlacklistResult;type:varchar(50);"`
+	CheckBlacklistCode      interface{} `gorm:"column:CheckBlacklistCode;type:varchar(50);"`
+	CheckBlacklistReason    interface{} `gorm:"column:CheckBlacklistReason;type:varchar(200);"`
+	CheckPMKResult          interface{} `gorm:"column:CheckPMKResult;type:varchar(50);"`
+	CheckPMKCode            interface{} `gorm:"column:CheckPMKCode;type:varchar(50);"`
+	CheckPMKReason          interface{} `gorm:"column:CheckPMKReason;type:varchar(200);"`
+	CheckEkycResult         interface{} `gorm:"column:CheckEkycResult;type:varchar(50);"`
+	CheckEkycCode           interface{} `gorm:"column:CheckEkycCode;type:varchar(50);"`
+	CheckEkycReason         interface{} `gorm:"column:CheckEkycReason;type:varchar(200);"`
+	CheckEkycSource         interface{} `gorm:"column:CheckEkycSource;type:varchar(5);"`
+	CheckEkycInfo           interface{} `gorm:"column:CheckEkycInfo;type:text;"`
+	CheckEkycSimiliarity    interface{} `gorm:"column:CheckEkycSimiliarity;type:float;"`
+	FilteringResult         interface{} `gorm:"column:FilteringResult;type:varchar(50);"`
+	FilteringCode           interface{} `gorm:"column:FilteringCode;type:varchar(50);"`
+	FilteringReason         interface{} `gorm:"column:FilteringReason;type:varchar(200);"`
+	CheckVehicleResult      interface{} `gorm:"column:CheckVehicleResult;type:varchar(50);"`
+	CheckVehicleCode        interface{} `gorm:"column:CheckVehicleCode;type:varchar(50);"`
+	CheckVehicleReason      interface{} `gorm:"column:CheckVehicleReason;type:varchar(200);"`
+	CheckVehicleInfo        interface{} `gorm:"column:CheckVehicleInfo;type:text;"`
+	ScoreProResult          interface{} `gorm:"column:ScoreProResult;type:varchar(50);"`
+	ScoreProCode            interface{} `gorm:"column:ScoreProCode;type:varchar(50);"`
+	ScoreProReason          interface{} `gorm:"column:ScoreProReason;type:varchar(200);"`
+	ScoreProInfo            interface{} `gorm:"column:ScoreProInfo;type:text;"`
+	ScoreProScoreResult     interface{} `gorm:"column:ScoreProScoreResult;type:varchar(20);"`
+	CheckDSRResult          interface{} `gorm:"column:CheckDSRResult;type:varchar(50);"`
+	CheckDSRCode            interface{} `gorm:"column:CheckDSRCode;type:varchar(50);"`
+	CheckDSRReason          interface{} `gorm:"column:CheckDSRReason;type:varchar(200);"`
+	CheckDSRFMFPBKResult    interface{} `gorm:"column:CheckDSRFMFPBKResult;type:varchar(50);"`
+	CheckDSRFMFPBKCode      interface{} `gorm:"column:CheckDSRFMFPBKCode;type:varchar(50);"`
+	CheckDSRFMFPBKReason    interface{} `gorm:"column:CheckDSRFMFPBKReason;type:varchar(200);"`
+	CheckDSRFMFPBKInfo      interface{} `gorm:"column:CheckDSRFMFPBKInfo;type:text;"`
+	DupcheckData            string      `gorm:"column:DupcheckData;type:text"`
+	Decision                string      `gorm:"column:Decision;type:varchar(20)"`
+	Reason                  string      `gorm:"column:Reason;type:varchar(255)"`
+	RuleCode                string      `gorm:"column:RuleCode;type:varchar(10);"`
+	CreatedAt               time.Time   `gorm:"column:created_at"`
+}
+
+func (c *TrxKPM) TableName() string {
+	return "trx_kpm"
+}

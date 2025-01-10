@@ -48,4 +48,5 @@ type Repository interface {
 	ExceedErrorStepTwo(prospectId string) int
 	ExceedErrorStepThree(prospectId string) int
 	GetTrxStatus(prospectID string) (status entity.TrxStatus, err error)
+	GetBannedChassisNumber(chassisNumber string) (data entity.TrxBannedChassisNumber, err error)
 }

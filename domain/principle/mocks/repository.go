@@ -151,6 +151,34 @@ func (_m *Repository) GetActiveLoanTypeLast6M(customerID string) (entity.GetActi
 	return r0, r1
 }
 
+// GetBannedChassisNumber provides a mock function with given fields: chassisNumber
+func (_m *Repository) GetBannedChassisNumber(chassisNumber string) (entity.TrxBannedChassisNumber, error) {
+	ret := _m.Called(chassisNumber)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBannedChassisNumber")
+	}
+
+	var r0 entity.TrxBannedChassisNumber
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (entity.TrxBannedChassisNumber, error)); ok {
+		return rf(chassisNumber)
+	}
+	if rf, ok := ret.Get(0).(func(string) entity.TrxBannedChassisNumber); ok {
+		r0 = rf(chassisNumber)
+	} else {
+		r0 = ret.Get(0).(entity.TrxBannedChassisNumber)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(chassisNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetBannedPMKDSR provides a mock function with given fields: idNumber
 func (_m *Repository) GetBannedPMKDSR(idNumber string) (entity.TrxBannedPMKDSR, error) {
 	ret := _m.Called(idNumber)

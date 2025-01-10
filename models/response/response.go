@@ -1280,3 +1280,10 @@ type GetAvailableTenorData struct {
 	Tenor             int     `json:"tenor"`
 	InstallmentAmount float64 `json:"installment_amount"`
 }
+
+type Submission2Wilen struct {
+	Code            string  `json:"code"`
+	Result          string  `json:"result"`
+	Reason          string  `json:"reason"`
+	ReadjustContext *string `json:"readjust_context"`
+}

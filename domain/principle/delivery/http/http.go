@@ -69,6 +69,7 @@ func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, u
 	principleRoute.POST("/principle-publish", handler.PrinciplePublish, middlewares.AccessMiddleware())
 	principleRoute.POST("/max-loan-amount", handler.GetMaxLoanAmount, middlewares.AccessMiddleware())
 	principleRoute.POST("/available-tenor", handler.GetAvailableTenor, middlewares.AccessMiddleware())
+	principleRoute.POST("/submission-2wilen", handler.Submission2Wilen, middlewares.AccessMiddleware())
 }
 
 // KmbPrinciple Tools godoc
@@ -571,6 +572,45 @@ func (c *handler) GetAvailableTenor(ctx echo.Context) (err error) {
 	}
 
 	data, err := c.multiusecase.GetAvailableTenor(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
+
+}
+
+// KmbPrinciple Tools godoc
+// @Description KmbPrinciple
+// @Tags KmbPrinciple
+// @Produce json
+// @Param prospectID path string true "Prospect ID"
+// @Param body body request.Submission2Wilen true "Body payload"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/submission-2wilen [post]
+func (c *handler) Submission2Wilen(ctx echo.Context) (err error) {
+
+	var r request.Submission2Wilen
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
+	}
+
+	data, err := c.multiusecase.Submission2Wilen(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
 

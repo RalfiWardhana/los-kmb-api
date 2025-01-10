@@ -740,6 +740,15 @@ const (
 	ERROR_MAX_EXCEED              = "max retry exceed"
 
 	//2Wilen
-	GROUP_2WILEN      = "2Wilen"
-	KEY_PPID_SIMULASI = "prefix_prospect_id_simulasi"
+	GROUP_2WILEN                        = "2Wilen"
+	KEY_PPID_SIMULASI                   = "prefix_prospect_id_simulasi"
+	DECISION_KPM_APPROVE                = "KPM-APPROVED"
+	DECISION_KPM_REJECT                 = "KPM-REJECTED"
+	DECISION_KPM_READJUST               = "KPM-READJUST"
+	READJUST_LOAN_AMOUNT_CODE_2WILEN    = "2201"
+	READJUST_LOAN_AMOUNT_REASON_2WILEN  = "Nilai Pinjaman Lebih Dari Maksimal Pinjaman"
+	READJUST_LOAN_AMOUNT_CONTEXT_2WILEN = "loan_amount"
+	READJUST_TENOR_CODE_2WILEN          = "2202"
+	READJUST_TENOR_REASON_2WILEN        = "Nilai Installment Tenor Tidak Ditemukan"
+	READJUST_TENOR_CONTEXT_2WILEN       = "tenor"
 )
