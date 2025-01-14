@@ -130,6 +130,69 @@ func (_m *Usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustome
 	return r0, r1
 }
 
+// CheckAgreementChassisNumber provides a mock function with given fields: ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken
+func (_m *Usecase) CheckAgreementChassisNumber(ctx context.Context, prospectID string, chassisNumber string, idNumber string, spouseIDNumber string, accessToken string) (response.AgreementChassisNumber, response.UsecaseApi, error) {
+	ret := _m.Called(ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CheckAgreementChassisNumber")
+	}
+
+	var r0 response.AgreementChassisNumber
+	var r1 response.UsecaseApi
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) (response.AgreementChassisNumber, response.UsecaseApi, error)); ok {
+		return rf(ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) response.AgreementChassisNumber); ok {
+		r0 = rf(ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.AgreementChassisNumber)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string, string) response.UsecaseApi); ok {
+		r1 = rf(ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken)
+	} else {
+		r1 = ret.Get(1).(response.UsecaseApi)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, string, string, string, string, string) error); ok {
+		r2 = rf(ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// CheckBannedChassisNumber provides a mock function with given fields: chassisNumber
+func (_m *Usecase) CheckBannedChassisNumber(chassisNumber string) (response.UsecaseApi, error) {
+	ret := _m.Called(chassisNumber)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CheckBannedChassisNumber")
+	}
+
+	var r0 response.UsecaseApi
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (response.UsecaseApi, error)); ok {
+		return rf(chassisNumber)
+	}
+	if rf, ok := ret.Get(0).(func(string) response.UsecaseApi); ok {
+		r0 = rf(chassisNumber)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(chassisNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CheckCmoNoFPD provides a mock function with given fields: prospectID, cmoID, cmoCategory, cmoJoinDate, defaultCluster, bpkbName
 func (_m *Usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory string, cmoJoinDate string, defaultCluster string, bpkbName string) (string, entity.TrxCmoNoFPD, error) {
 	ret := _m.Called(prospectID, cmoID, cmoCategory, cmoJoinDate, defaultCluster, bpkbName)
@@ -752,6 +815,41 @@ func (_m *Usecase) MarsevGetMarketingProgram(ctx context.Context, req request.Re
 	return r0, r1
 }
 
+// NegativeCustomerCheck provides a mock function with given fields: ctx, reqs, accessToken
+func (_m *Usecase) NegativeCustomerCheck(ctx context.Context, reqs request.DupcheckApi, accessToken string) (response.UsecaseApi, response.NegativeCustomer, error) {
+	ret := _m.Called(ctx, reqs, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for NegativeCustomerCheck")
+	}
+
+	var r0 response.UsecaseApi
+	var r1 response.NegativeCustomer
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, string) (response.UsecaseApi, response.NegativeCustomer, error)); ok {
+		return rf(ctx, reqs, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, string) response.UsecaseApi); ok {
+		r0 = rf(ctx, reqs, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.DupcheckApi, string) response.NegativeCustomer); ok {
+		r1 = rf(ctx, reqs, accessToken)
+	} else {
+		r1 = ret.Get(1).(response.NegativeCustomer)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, request.DupcheckApi, string) error); ok {
+		r2 = rf(ctx, reqs, accessToken)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // Pefindo provides a mock function with given fields: ctx, r, customerStatus, clusterCMO, bpkbName
 func (_m *Usecase) Pefindo(ctx context.Context, r request.Pefindo, customerStatus string, clusterCMO string, bpkbName string) (response.Filtering, response.PefindoResult, []entity.TrxDetailBiro, error) {
 	ret := _m.Called(ctx, r, customerStatus, clusterCMO, bpkbName)
@@ -1027,6 +1125,34 @@ func (_m *Usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan
 	}
 
 	return r0, r1, r2, r3
+}
+
+// Step2Wilen provides a mock function with given fields: idNumber
+func (_m *Usecase) Step2Wilen(idNumber string) (response.Step2Wilen, error) {
+	ret := _m.Called(idNumber)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Step2Wilen")
+	}
+
+	var r0 response.Step2Wilen
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (response.Step2Wilen, error)); ok {
+		return rf(idNumber)
+	}
+	if rf, ok := ret.Get(0).(func(string) response.Step2Wilen); ok {
+		r0 = rf(idNumber)
+	} else {
+		r0 = ret.Get(0).(response.Step2Wilen)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(idNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // TotalDsrFmfPbk provides a mock function with given fields: ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering

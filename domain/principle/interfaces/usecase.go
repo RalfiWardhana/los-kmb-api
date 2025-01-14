@@ -47,6 +47,9 @@ type Usecase interface {
 	MDMGetMasterAsset(ctx context.Context, branchID string, search string, prospectID string, accessToken string) (assetList response.AssetList, err error)
 	MDMGetAssetYear(ctx context.Context, branchID string, assetCode string, search string, prospectID string, accessToken string) (assetMP response.AssetYearList, err error)
 	MDMGetMappingLicensePlate(ctx context.Context, licensePlate string, prospectID string, accessToken string) (mdmMasterMappingLicensePlateRes response.MDMMasterMappingLicensePlateResponse, err error)
+	CheckBannedChassisNumber(chassisNumber string) (data response.UsecaseApi, err error)
+	CheckAgreementChassisNumber(ctx context.Context, prospectID, chassisNumber, idNumber, spouseIDNumber string, accessToken string) (responseAgreementChassisNumber response.AgreementChassisNumber, data response.UsecaseApi, err error)
+	NegativeCustomerCheck(ctx context.Context, reqs request.DupcheckApi, accessToken string) (data response.UsecaseApi, negativeCustomer response.NegativeCustomer, err error)
 }
 
 type MultiUsecase interface {
@@ -55,4 +58,5 @@ type MultiUsecase interface {
 	PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (data response.UsecaseApi, err error)
 	GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoanAmount, accessToken string) (data response.GetMaxLoanAmountData, err error)
 	GetAvailableTenor(ctx context.Context, req request.GetAvailableTenor, accessToken string) (data []response.GetAvailableTenorData, err error)
+	Submission2Wilen(ctx context.Context, req request.Submission2Wilen, accessToken string) (resp response.Submission2Wilen, err error)
 }

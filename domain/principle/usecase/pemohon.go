@@ -611,6 +611,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	}
 
 	dupcheckData.StatusKonsumen = mainCustomer.CustomerStatusKMB
+	dupcheckData.RRDDate = mainCustomer.RRDDate
 
 	if mainCustomer.MaxOverdueDaysROAO != nil {
 		dupcheckData.MaxOverdueDaysROAO = *mainCustomer.MaxOverdueDaysROAO

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"los-kmb-api/domain/principle/interfaces"
 	"los-kmb-api/models/entity"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"os"
 	"strconv"
@@ -810,4 +811,101 @@ func (r repoHandler) GetTrxStatus(prospectID string) (status entity.TrxStatus, e
 	}
 
 	return
+}
+
+func (r repoHandler) GetBannedChassisNumber(chassisNumber string) (data entity.TrxBannedChassisNumber, err error) {
+
+	date := time.Now().AddDate(0, 0, -30).Format(constant.FORMAT_DATE)
+
+	if err = r.newKmb.Raw(fmt.Sprintf(`SELECT * FROM trx_banned_chassis_number WITH (nolock) WHERE chassis_number = '%s' AND CAST(created_at as DATE) >= '%s'`, chassisNumber, date)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetMappingNegativeCustomer(req response.NegativeCustomer) (data entity.MappingNegativeCustomer, err error) {
+
+	query := `SELECT TOP 1 * FROM m_mapping_negative_customer WHERE is_active = ? AND bad_type = ? AND is_blacklist = ? AND is_highrisk = ?`
+
+	if err = r.newKmb.Raw(query, req.IsActive, req.BadType, req.IsBlacklist, req.IsHighrisk).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+	}
+	return
+}
+
+func (r repoHandler) SaveTrxKPM(data entity.TrxKPM) (err error) {
+
+	return r.newKmb.Transaction(func(tx *gorm.DB) error {
+
+		var encrypted entity.Encrypted
+		if err := tx.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS LegalName, SCP.dbo.ENC_B64('SEC','%s') AS SurgateMotherName, SCP.dbo.ENC_B64('SEC','%s') AS MobilePhone, 
+			SCP.dbo.ENC_B64('SEC','%s') AS Email, SCP.dbo.ENC_B64('SEC','%s') AS BirthPlace, SCP.dbo.ENC_B64('SEC','%s') AS ResidenceAddress, SCP.dbo.ENC_B64('SEC','%s') AS IDNumber`,
+			data.LegalName, data.SurgateMotherName, data.MobilePhone, data.Email, data.BirthPlace, data.ResidenceAddress, data.IDNumber)).Scan(&encrypted).Error; err != nil {
+			return err
+		}
+
+		data.LegalName = encrypted.LegalName
+		data.SurgateMotherName = encrypted.SurgateMotherName
+		data.MobilePhone = encrypted.MobilePhone
+		data.Email = encrypted.Email
+		data.BirthPlace = encrypted.BirthPlace
+		data.ResidenceAddress = encrypted.ResidenceAddress
+		data.IDNumber = encrypted.IDNumber
+
+		if err := tx.Create(&data).Error; err != nil {
+			return err
+		}
+
+		trxKPMStatus := entity.TrxKPMStatus{
+			ID:         data.ID,
+			ProspectID: data.ProspectID,
+			Decision:   data.Decision,
+			CreatedAt:  time.Now(),
+			UpdatedAt:  time.Now(),
+		}
+
+		if err := tx.Create(&trxKPMStatus).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+}
+
+func (r repoHandler) GetTrxKPM(prospectID string) (data entity.TrxKPM, err error) {
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_kpm WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmb.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) ExceedErrorTrxKPM(prospectId string) int {
+
+	var trxError entity.TrxKPMError
+
+	result := r.newKmb.Raw("SELECT KpmID FROM trx_kpm_error WITH (nolock) WHERE ProspectID = ? AND created_at >= DATEADD (HOUR , -1 , GETDATE())", prospectId).Scan(&trxError)
+
+	return int(result.RowsAffected)
+
+}
+
+func (r repoHandler) GetReadjustCountTrxKPM(prospectId string) int {
+
+	var trxKPM entity.TrxKPM
+
+	result := r.newKmb.Raw("SELECT id FROM trx_kpm WITH (nolock) WHERE ProspectID = ? AND Decision = ?", prospectId, constant.DECISION_KPM_READJUST).Scan(&trxKPM)
+
+	return int(result.RowsAffected)
+
 }

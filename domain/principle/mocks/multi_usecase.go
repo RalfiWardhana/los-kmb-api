@@ -159,6 +159,34 @@ func (_m *MultiUsecase) PrinciplePemohon(ctx context.Context, r request.Principl
 	return r0, r1
 }
 
+// Submission2Wilen provides a mock function with given fields: ctx, req, accessToken
+func (_m *MultiUsecase) Submission2Wilen(ctx context.Context, req request.Submission2Wilen, accessToken string) (response.Submission2Wilen, error) {
+	ret := _m.Called(ctx, req, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Submission2Wilen")
+	}
+
+	var r0 response.Submission2Wilen
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.Submission2Wilen, string) (response.Submission2Wilen, error)); ok {
+		return rf(ctx, req, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.Submission2Wilen, string) response.Submission2Wilen); ok {
+		r0 = rf(ctx, req, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.Submission2Wilen)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.Submission2Wilen, string) error); ok {
+		r1 = rf(ctx, req, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // NewMultiUsecase creates a new instance of MultiUsecase. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewMultiUsecase(t interface {
