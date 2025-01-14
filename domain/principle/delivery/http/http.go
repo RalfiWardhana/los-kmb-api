@@ -548,7 +548,7 @@ func (c *handler) Step2Wilen(ctx echo.Context) (err error) {
 		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), nil)
 	}
 
-	if data.Status == constant.REASON_PROSES_SURVEY {
+	if data.Status == constant.REASON_PROSES_SURVEY || data.Status == constant.REASON_PROSES_READJUST {
 		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "002"), data, response.WithMessage("Kamu masih memiliki pengajuan lain yang sedang diproses"))
 
 	}

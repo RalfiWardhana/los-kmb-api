@@ -865,7 +865,7 @@ func (r repoHandler) SaveTrxKPM(data entity.TrxKPM) (err error) {
 		trxKPMStatus := entity.TrxKPMStatus{
 			ID:         data.ID,
 			ProspectID: data.ProspectID,
-			Decision:   data.Decision,
+			Decision:   constant.DECISION_CREDIT_PROCESS,
 			CreatedAt:  time.Now(),
 			UpdatedAt:  time.Now(),
 		}
@@ -907,5 +907,32 @@ func (r repoHandler) GetReadjustCountTrxKPM(prospectId string) int {
 	result := r.newKmb.Raw("SELECT id FROM trx_kpm WITH (nolock) WHERE ProspectID = ? AND Decision = ?", prospectId, constant.DECISION_KPM_READJUST).Scan(&trxKPM)
 
 	return int(result.RowsAffected)
+
+}
+
+func (r repoHandler) GetTrxKPMStatus(IDNumber string) (data entity.TrxKPMStatus, err error) {
+
+	if err = r.newKmb.Raw(fmt.Sprintf("SELECT TOP 1 tks.* FROM trx_kpm_status tks WITH (nolock) JOIN trx_kpm tk ON tks.id = tk.id WHERE tk.IDNumber = SCP.dbo.ENC_B64('SEC','%s') ORDER BY tk.created_at DESC", IDNumber)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) UpdateTrxKPMStatus(id string, decision string) (err error) {
+
+	return r.newKmb.Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Model(&entity.TrxKPMStatus{}).
+			Where("id = ?", id).
+			Updates(&entity.TrxKPMStatus{
+				Decision:  decision,
+				UpdatedAt: time.Now(),
+			}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 
 }

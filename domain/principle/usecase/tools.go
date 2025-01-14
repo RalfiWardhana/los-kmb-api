@@ -98,7 +98,59 @@ func (u usecase) PrinciplePublish(ctx context.Context, req request.PrinciplePubl
 	}), 0)
 }
 
-func (u usecase) Step2Wilen(idNumber string) (step response.Step2Wilen, err error) {
+func (u usecase) Step2Wilen(idNumber string) (resp response.Step2Wilen, err error) {
+
+	data, err := u.repository.GetTrxKPMStatus(idNumber)
+	if err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return
+		}
+
+		return response.Step2Wilen{}, nil
+	}
+
+	resp.ProspectID = data.ProspectID
+	resp.UpdatedAt = data.UpdatedAt.Format(constant.FORMAT_DATE_TIME)
+
+	switch data.Decision {
+
+	case constant.DECISION_KPM_READJUST:
+
+		resp.ColorCode = "#00FF00"
+		resp.Status = constant.REASON_PROSES_READJUST
+
+	case constant.DECISION_CREDIT_PROCESS:
+
+		trxStatus, err := u.repository.GetTrxStatus(data.ProspectID)
+		if err != nil {
+			if err.Error() != constant.RECORD_NOT_FOUND {
+				return response.Step2Wilen{}, err
+			} else {
+				resp.ColorCode = "#FFCC00"
+				resp.Status = constant.REASON_PROSES_SURVEY
+				return resp, nil
+			}
+		}
+
+		if trxStatus != (entity.TrxStatus{}) {
+			if trxStatus.Activity == constant.ACTIVITY_STOP {
+				switch trxStatus.Decision {
+				case constant.DB_DECISION_CANCEL:
+					_ = u.repository.UpdateTrxKPMStatus(data.ID, constant.DECISION_CANCEL)
+					return response.Step2Wilen{}, err
+				case constant.DB_DECISION_REJECT:
+					_ = u.repository.UpdateTrxKPMStatus(data.ID, constant.DECISION_REJECT)
+					return response.Step2Wilen{}, err
+				case constant.DB_DECISION_APR:
+					_ = u.repository.UpdateTrxKPMStatus(data.ID, constant.DECISION_APPROVE)
+					return response.Step2Wilen{}, err
+				}
+			}
+		}
+
+		resp.ColorCode = "#FFCC00"
+		resp.Status = constant.REASON_PROSES_SURVEY
+	}
 
 	return
 }
