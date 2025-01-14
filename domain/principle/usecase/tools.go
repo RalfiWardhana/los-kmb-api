@@ -117,7 +117,12 @@ func (u usecase) Step2Wilen(idNumber string) (resp response.Step2Wilen, err erro
 	case constant.DECISION_KPM_READJUST:
 
 		resp.ColorCode = "#00FF00"
-		resp.Status = constant.REASON_PROSES_READJUST
+		resp.Status = constant.DECISION_KPM_READJUST
+
+	case constant.STATUS_KPM_WAIT_2WILEN:
+
+		resp.ColorCode = "#00FF00"
+		resp.Status = constant.STATUS_KPM_WAIT_2WILEN
 
 	case constant.DECISION_CREDIT_PROCESS:
 
