@@ -717,7 +717,8 @@ const (
 	REASON_CANCEL         = "PENGAJUAN DIBATALKAN"
 	REASON_CREDIT_PROCESS = "PENGAJUAN DALAM CREDIT PROSES"
 
-	FINANCE_PURPOSE_MODAL_KERJA = "Modal Kerja Fasilitas Modal Usaha"
+	FINANCE_PURPOSE_MODAL_KERJA                   = "Modal Kerja Fasilitas Modal Usaha"
+	FINANCE_PURPOSE_MULTIGUNA_PEMBAYARAN_ANGSURAN = "Multiguna Pembayaran dengan Angsuran"
 
 	PRINCIPLE_STATUS_ASSET_APPROVE   = "ASSET-A"
 	PRINCIPLE_STATUS_ASSET_REJECT    = "ASSET-R"
@@ -762,4 +763,5 @@ const (
 	READJUST_TENOR_REASON_2WILEN        = "Nilai Installment Tenor Tidak Ditemukan"
 	READJUST_TENOR_CONTEXT_2WILEN       = "tenor"
 	REASON_PROSES_READJUST              = "READJUST"
+	STATUS_KPM_WAIT_2WILEN              = "KPM-WAIT"
 )

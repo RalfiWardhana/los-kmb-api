@@ -862,21 +862,29 @@ func (r repoHandler) SaveTrxKPM(data entity.TrxKPM) (err error) {
 			return err
 		}
 
-		trxKPMStatus := entity.TrxKPMStatus{
-			ID:         data.ID,
-			ProspectID: data.ProspectID,
-			Decision:   constant.DECISION_CREDIT_PROCESS,
-			CreatedAt:  time.Now(),
-			UpdatedAt:  time.Now(),
-		}
-
-		if err := tx.Create(&trxKPMStatus).Error; err != nil {
+		if err := tx.Model(&entity.TrxKPMStatus{}).
+			Where("id = ?", data.ID).
+			Updates(&entity.TrxPrincipleStatus{
+				Decision:  data.Decision,
+				UpdatedAt: time.Now(),
+			}).Error; err != nil {
 			return err
 		}
 
 		return nil
 	})
 
+}
+
+func (r repoHandler) SaveTrxKPMStatus(data entity.TrxKPMStatus) (err error) {
+
+	return r.newKmb.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&data).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
 }
 
 func (r repoHandler) GetTrxKPM(prospectID string) (data entity.TrxKPM, err error) {

@@ -1169,6 +1169,24 @@ func (_m *Repository) SaveTrxKPM(data entity.TrxKPM) error {
 	return r0
 }
 
+// SaveTrxKPMStatus provides a mock function with given fields: data
+func (_m *Repository) SaveTrxKPMStatus(data entity.TrxKPMStatus) error {
+	ret := _m.Called(data)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SaveTrxKPMStatus")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(entity.TrxKPMStatus) error); ok {
+		r0 = rf(data)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // ScanOrderPending provides a mock function with given fields:
 func (_m *Repository) ScanOrderPending() ([]entity.AutoCancel, error) {
 	ret := _m.Called()

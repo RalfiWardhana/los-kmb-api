@@ -51,7 +51,6 @@ func (m *bodyDumpMiddleware) BodyDumpConfig() middleware.BodyDumpConfig {
 				trxKPMError       entity.TrxKPMError
 				trxError          entity.TrxPrincipleError
 				trxStepOne        entity.TrxPrincipleStepOne
-				trxKPM            entity.TrxKPM
 				kpmId, step       int
 			)
 			if e.Response().Status != 200 {
@@ -82,8 +81,6 @@ func (m *bodyDumpMiddleware) BodyDumpConfig() middleware.BodyDumpConfig {
 						step = 3
 					}
 				case "/api/v3/kmb/submission-2wilen":
-					m.db.Raw("SELECT TOP 1 KPMID FROM trx_kpm WITH (nolock) WHERE ProspectID = ? ORDER BY created_at DESC", prospectID).Scan(&trxKPM)
-					kpmId = trxKPM.KPMID
 					result := m.db.Raw("SELECT KpmID FROM trx_kpm_error WITH (nolock) WHERE KpmID = ? AND created_at >= DATEADD (HOUR , -1 , GETDATE())", kpmId).Scan(&trxKPMError)
 					if result.RowsAffected < 3 {
 						isSaveTrxKPMError = true

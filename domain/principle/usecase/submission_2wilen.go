@@ -17,11 +17,35 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/jinzhu/gorm"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/labstack/echo/v4"
 )
 
 func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submission2Wilen, accessToken string) (resp response.Submission2Wilen, err error) {
+
+	statusCode := constant.STATUS_KPM_WAIT_2WILEN
+	go u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+		OrderID:       req.ProspectID,
+		KpmID:         req.KPMID,
+		Source:        3,
+		StatusCode:    statusCode,
+		ProductName:   req.AssetCode,
+		BranchCode:    req.BranchID,
+		AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
+	}), 0)
+
+	id := utils.GenerateUUID()
+	err = u.repository.SaveTrxKPMStatus(entity.TrxKPMStatus{
+		ID:         id,
+		ProspectID: req.ProspectID,
+		Decision:   statusCode,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+	})
+	if err != nil {
+		return
+	}
 
 	var (
 		trxKPM            entity.TrxKPM
@@ -37,7 +61,7 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 	}
 
 	trxKPMExist, err := u.repository.GetTrxKPM(req.ProspectID)
-	if err != nil {
+	if err != nil && err != gorm.ErrRecordNotFound {
 		return
 	}
 
@@ -69,7 +93,12 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 			savedDupcheckData, _ := json.Marshal(dupcheckData)
 			savedNegativeCustomerData, _ := json.Marshal(negativeCustomer)
 
-			trxKPM.ID = utils.GenerateUUID()
+			decision := resp.Result
+			if decision == constant.DECISION_KPM_APPROVE {
+				decision = constant.DECISION_CREDIT_PROCESS
+			}
+
+			trxKPM.ID = id
 			trxKPM.ProspectID = req.ProspectID
 			trxKPM.IDNumber = req.IDNumber
 			trxKPM.LegalName = req.LegalName
@@ -128,7 +157,7 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 			trxKPM.AssetCategoryID = req.AssetCategoryID
 			trxKPM.DupcheckData = string(utils.SafeEncoding(savedDupcheckData))
 			trxKPM.NegativeCustomerData = string(utils.SafeEncoding(savedNegativeCustomerData))
-			trxKPM.Decision = resp.Result
+			trxKPM.Decision = decision
 			trxKPM.Reason = resp.Reason
 			trxKPM.RuleCode = resp.Code
 			trxKPM.KPMID = req.KPMID
@@ -145,6 +174,17 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 			if err != nil {
 				return
 			}
+
+			statusCode = constant.PRINCIPLE_STATUS_SUBMIT_SALLY
+			u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+				OrderID:       req.ProspectID,
+				KpmID:         req.KPMID,
+				Source:        3,
+				StatusCode:    statusCode,
+				ProductName:   req.AssetCode,
+				BranchCode:    req.BranchID,
+				AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
+			}), 0)
 		}
 	}()
 
@@ -1409,7 +1449,7 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 
 	payloadSubmitSally.Kop = request.SallySubmit2wPrincipleKop{
 		IsPSA:              isPsa,
-		PurposeOfFinancing: constant.FINANCE_PURPOSE_MODAL_KERJA,
+		PurposeOfFinancing: constant.FINANCE_PURPOSE_MULTIGUNA_PEMBAYARAN_ANGSURAN,
 	}
 
 	licensePlateCode := utils.GetLicensePlateCode(req.LicensePlate)
@@ -1502,12 +1542,12 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 
 	if respSubmitSally.StatusCode() != 200 {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Sally Submit 2W Principle Error")
-		return resp, nil
+		return
 	}
 
 	if respSubmitSally.StatusCode() == 200 {
 		if err = json.Unmarshal([]byte(jsoniter.Get(respSubmitSally.Body()).ToString()), &sallySubmit2wPrincipleRes); err != nil {
-			return resp, nil
+			return
 		}
 	}
 
