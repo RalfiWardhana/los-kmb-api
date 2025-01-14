@@ -71,7 +71,7 @@ func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, u
 	principleRoute.POST("/step-2wilen", handler.Step2Wilen, middlewares.AccessMiddleware())
 	principleRoute.POST("/max-loan-amount", handler.GetMaxLoanAmount, middlewares.AccessMiddleware())
 	principleRoute.POST("/available-tenor", handler.GetAvailableTenor, middlewares.AccessMiddleware())
-	principleRoute.POST("/submission-2wilen", handler.Submission2Wilen, middlewares.AccessMiddleware())
+	principleRoute.POST("/submission-2wilen", handler.Submission2Wilen, middlewares.AccessMiddleware(), limiter)
 }
 
 // KmbPrinciple Tools godoc
@@ -663,9 +663,18 @@ func (c *handler) Submission2Wilen(ctx echo.Context) (err error) {
 
 	if err != nil {
 
+		if err.Error() == constant.ERROR_MAX_EXCEED {
+			return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", "429"), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_EXCEED_RESPONSE_MESSAGE))
+		}
+
+		errorMessage := constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE
+		if err.Error() == constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE {
+			errorMessage = constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE
+		}
+
 		code, err := utils.WrapError(err)
 
-		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
+		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(errorMessage))
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)

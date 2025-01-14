@@ -268,12 +268,25 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 				continue
 			}
 
+			dealer := "NON PSA"
+			if marsevLoanAmountRes.Data.IsPsa {
+				dealer = "PSA"
+			}
+
 			if marsevLoanAmountRes.Data.LoanAmountMaximum >= req.LoanAmount {
 				for _, installmentData := range marsevCalculateInstallmentRes.Data {
 					if installmentData.Tenor == tenorInfo.Tenor {
 						availableTenor := response.GetAvailableTenorData{
 							Tenor:             tenorInfo.Tenor,
+							IsPsa:             installmentData.IsPSA,
+							Dealer:            dealer,
 							InstallmentAmount: installmentData.MonthlyInstallment,
+							AF:                installmentData.AmountOfFinance,
+							AdminFee:          installmentData.AdminFee,
+							DPAmount:          installmentData.DPAmount,
+							NTF:               installmentData.NTF,
+							AssetCategoryID:   categoryId,
+							OTR:               otr,
 						}
 						data = append(data, availableTenor)
 					}

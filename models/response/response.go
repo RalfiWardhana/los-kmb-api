@@ -1318,6 +1318,14 @@ type AssetList struct {
 	} `json:"records"`
 }
 
+type Config2Wilen struct {
+	Data Data2WilenConfig `json:"data"`
+}
+
+type Data2WilenConfig struct {
+	MaxReadjustAttempt int `json:"max_readjust_attempt"`
+}
+
 type Step2Wilen struct {
 	ProspectID string `json:"prospect_id"`
 	ColorCode  string `json:"color_code"`
@@ -1331,7 +1339,15 @@ type GetMaxLoanAmountData struct {
 
 type GetAvailableTenorData struct {
 	Tenor             int     `json:"tenor"`
+	IsPsa             bool    `json:"is_psa"`
+	Dealer            string  `json:"dealer"`
 	InstallmentAmount float64 `json:"installment_amount"`
+	AF                float64 `json:"af"`
+	AdminFee          float64 `json:"admin_fee"`
+	DPAmount          float64 `json:"down_payment_amount"`
+	NTF               float64 `json:"ntf"`
+	AssetCategoryID   string  `json:"asset_category_id"`
+	OTR               float64 `json:"otr"`
 }
 
 type Submission2Wilen struct {

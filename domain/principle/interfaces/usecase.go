@@ -40,7 +40,6 @@ type Usecase interface {
 	PrinciplePublish(ctx context.Context, req request.PrinciplePublish, accessToken string) (err error)
 
 	Step2Wilen(idNumber string) (step response.Step2Wilen, err error)
-
 	GetLTV(mappingElaborateLTV []entity.MappingElaborateLTV, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64) (ltv int, err error)
 	MarsevGetLoanAmount(ctx context.Context, req request.ReqMarsevLoanAmount, prospectID string, accessToken string) (marsevLoanAmountRes response.MarsevLoanAmountResponse, err error)
 	MarsevGetMarketingProgram(ctx context.Context, req request.ReqMarsevFilterProgram, prospectID string, accessToken string) (marsevFilterProgramRes response.MarsevFilterProgramResponse, err error)
@@ -50,6 +49,7 @@ type Usecase interface {
 	MDMGetMappingLicensePlate(ctx context.Context, licensePlate string, prospectID string, accessToken string) (mdmMasterMappingLicensePlateRes response.MDMMasterMappingLicensePlateResponse, err error)
 	CheckBannedChassisNumber(chassisNumber string) (data response.UsecaseApi, err error)
 	CheckAgreementChassisNumber(ctx context.Context, prospectID, chassisNumber, idNumber, spouseIDNumber string, accessToken string) (responseAgreementChassisNumber response.AgreementChassisNumber, data response.UsecaseApi, err error)
+	NegativeCustomerCheck(ctx context.Context, reqs request.DupcheckApi, accessToken string) (data response.UsecaseApi, negativeCustomer response.NegativeCustomer, err error)
 }
 
 type MultiUsecase interface {
