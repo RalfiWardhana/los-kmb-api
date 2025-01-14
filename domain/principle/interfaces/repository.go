@@ -57,4 +57,6 @@ type Repository interface {
 	ExceedErrorTrxKPM(prospectId string) int
 	GetTrxKPM(prospectID string) (data entity.TrxKPM, err error)
 	GetReadjustCountTrxKPM(prospectId string) int
+	GetTrxKPMStatus(IDNumber string) (data entity.TrxKPMStatus, err error)
+	UpdateTrxKPMStatus(id string, decision string) (err error)
 }
