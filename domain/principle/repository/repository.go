@@ -936,3 +936,14 @@ func (r repoHandler) UpdateTrxKPMStatus(id string, decision string) (err error) 
 	})
 
 }
+
+func (r repoHandler) GetTrxKPMStatusHistory(prospectId string) (data []entity.TrxKPMStatusHistory, err error) {
+
+	query := fmt.Sprintf("SELECT * FROM trx_kpm_status WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC", prospectId)
+
+	if err = r.newKmb.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}

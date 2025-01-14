@@ -591,6 +591,36 @@ func (_m *Usecase) GetLTV(mappingElaborateLTV []entity.MappingElaborateLTV, resu
 	return r0, r1
 }
 
+// History2Wilen provides a mock function with given fields: prospectID
+func (_m *Usecase) History2Wilen(prospectID string) ([]response.History2Wilen, error) {
+	ret := _m.Called(prospectID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for History2Wilen")
+	}
+
+	var r0 []response.History2Wilen
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) ([]response.History2Wilen, error)); ok {
+		return rf(prospectID)
+	}
+	if rf, ok := ret.Get(0).(func(string) []response.History2Wilen); ok {
+		r0 = rf(prospectID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]response.History2Wilen)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Ktp provides a mock function with given fields: ctx, r, reqMetricsEkyc, accessToken
 func (_m *Usecase) Ktp(ctx context.Context, r request.PrinciplePemohon, reqMetricsEkyc request.MetricsEkyc, accessToken string) (response.Ekyc, error) {
 	ret := _m.Called(ctx, r, reqMetricsEkyc, accessToken)

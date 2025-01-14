@@ -3097,3 +3097,10 @@ type TrxKPMError struct {
 func (c *TrxKPMError) TableName() string {
 	return "trx_kpm_error"
 }
+
+type TrxKPMStatusHistory struct {
+	ID         string    `gorm:"column:id;type:varchar(50)"`
+	ProspectID string    `gorm:"column:ProspectID;type:varchar(20)"`
+	Decision   string    `gorm:"column:Decision;type:varchar(20);"`
+	CreatedAt  time.Time `gorm:"column:created_at"`
+}

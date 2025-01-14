@@ -152,6 +152,63 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v3/kmb/2wilen/history": {
+            "post": {
+                "description": "KMB 2Wilen",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "KMB 2Wilen"
+                ],
+                "parameters": [
+                    {
+                        "description": "Body payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.History2Wilen"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/usecase.SuccessResponse2Wilen"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/response.History2Wilen"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/usecase.ErrorValidationResponse2Wilen"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/usecase.ErrorResponse2Wilen"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v3/kmb/auto-cancel": {
             "get": {
                 "description": "KmbPrinciple",
@@ -5481,6 +5538,19 @@ const docTemplate = `{
                 }
             }
         },
+        "request.History2Wilen": {
+            "type": "object",
+            "required": [
+                "prospect_id"
+            ],
+            "properties": {
+                "prospect_id": {
+                    "type": "string",
+                    "maxLength": 20,
+                    "example": "SAL-1140024080800004"
+                }
+            }
+        },
         "request.Item": {
             "type": "object",
             "required": [
@@ -7833,6 +7903,23 @@ const docTemplate = `{
             "properties": {
                 "max_loan_amount": {
                     "type": "number"
+                }
+            }
+        },
+        "response.History2Wilen": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "order_status_name": {
+                    "type": "string"
+                },
+                "prospect_id": {
+                    "type": "string"
                 }
             }
         },

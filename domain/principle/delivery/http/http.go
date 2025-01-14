@@ -72,6 +72,7 @@ func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, u
 	principleRoute.POST("/max-loan-amount", handler.GetMaxLoanAmount, middlewares.AccessMiddleware())
 	principleRoute.POST("/available-tenor", handler.GetAvailableTenor, middlewares.AccessMiddleware())
 	principleRoute.POST("/submission-2wilen", handler.Submission2Wilen, middlewares.AccessMiddleware(), limiter)
+	principleRoute.POST("/2wilen/history", handler.History2Wilen, middlewares.AccessMiddleware())
 }
 
 // KmbPrinciple Tools godoc
@@ -679,4 +680,41 @@ func (c *handler) Submission2Wilen(ctx echo.Context) (err error) {
 
 	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
 
+}
+
+// KMB 2Wilen Tools godoc
+// @Description KMB 2Wilen
+// @Tags KMB 2Wilen
+// @Produce json
+// @Param body body request.History2Wilen true "Body payload"
+// @Success 200 {object} usecase.SuccessResponse2Wilen{data=[]response.History2Wilen}
+// @Failure 400 {object} usecase.ErrorValidationResponse2Wilen{}
+// @Failure 500 {object} usecase.ErrorResponse2Wilen{}
+// @Router /api/v3/kmb/2wilen/history [post]
+func (c *handler) History2Wilen(ctx echo.Context) (err error) {
+
+	var r request.History2Wilen
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
+	}
+
+	data, err := c.usecase.History2Wilen(r.ProspectID)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
 }
