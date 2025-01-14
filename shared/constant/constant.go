@@ -761,5 +761,5 @@ const (
 	READJUST_TENOR_CODE_2WILEN          = "2202"
 	READJUST_TENOR_REASON_2WILEN        = "Nilai Installment Tenor Tidak Ditemukan"
 	READJUST_TENOR_CONTEXT_2WILEN       = "tenor"
-	REASON_PROSES_READJUST              = "READJUST"
+	STATUS_KPM_WAIT_2WILEN              = "KPM-WAIT"
 )
