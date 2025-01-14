@@ -53,6 +53,7 @@ type Repository interface {
 	GetTrxStatus(prospectID string) (status entity.TrxStatus, err error)
 	GetBannedChassisNumber(chassisNumber string) (data entity.TrxBannedChassisNumber, err error)
 	SaveTrxKPM(data entity.TrxKPM) (err error)
+	SaveTrxKPMStatus(data entity.TrxKPMStatus) (err error)
 	GetMappingNegativeCustomer(req response.NegativeCustomer) (data entity.MappingNegativeCustomer, err error)
 	ExceedErrorTrxKPM(prospectId string) int
 	GetTrxKPM(prospectID string) (data entity.TrxKPM, err error)
