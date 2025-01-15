@@ -19,8 +19,10 @@ import (
 
 func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvailableTenor, accessToken string) (data []response.GetAvailableTenorData, err error) {
 
-	var resultPefindo string
-	var bakiDebet float64
+	var (
+		resultPefindo string
+		bakiDebet     float64
+	)
 
 	config, err := u.repository.GetConfig(constant.GROUP_2WILEN, "KMB-OFF", constant.KEY_PPID_SIMULASI)
 	if err != nil {
@@ -33,6 +35,14 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 	if isSimulasi {
 		resultPefindo = constant.DECISION_PASS
 		bakiDebet = 0
+	} else {
+		trxKPM, err := u.repository.GetTrxKPM(req.ProspectID)
+		if err != nil {
+			return data, err
+		}
+
+		resultPefindo = trxKPM.ResultPefindo
+		bakiDebet = trxKPM.BakiDebet
 	}
 
 	// get data customer

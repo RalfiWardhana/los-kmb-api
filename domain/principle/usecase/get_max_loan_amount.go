@@ -21,8 +21,10 @@ import (
 
 func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoanAmount, accessToken string) (data response.GetMaxLoanAmountData, err error) {
 
-	var resultPefindo string
-	var bakiDebet float64
+	var (
+		resultPefindo string
+		bakiDebet     float64
+	)
 
 	config, err := u.repository.GetConfig(constant.GROUP_2WILEN, "KMB-OFF", constant.KEY_PPID_SIMULASI)
 	if err != nil {
@@ -35,6 +37,14 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 	if isSimulasi {
 		resultPefindo = constant.DECISION_PASS
 		bakiDebet = 0
+	} else {
+		trxKPM, err := u.repository.GetTrxKPM(req.ProspectID)
+		if err != nil {
+			return data, err
+		}
+
+		resultPefindo = trxKPM.ResultPefindo
+		bakiDebet = trxKPM.BakiDebet
 	}
 
 	// get data customer
