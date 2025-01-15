@@ -1178,6 +1178,15 @@ definitions:
     - prospect_id
     - surgate_mother_name
     type: object
+  request.History2Wilen:
+    properties:
+      prospect_id:
+        example: SAL-1140024080800004
+        maxLength: 20
+        type: string
+    required:
+    - prospect_id
+    type: object
   request.Item:
     properties:
       asset_code:
@@ -2996,6 +3005,17 @@ definitions:
       max_loan_amount:
         type: number
     type: object
+  response.History2Wilen:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      order_status_name:
+        type: string
+      prospect_id:
+        type: string
+    type: object
   response.InquiryRow:
     properties:
       inquiry: {}
@@ -3227,6 +3247,40 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Filtering
+  /api/v3/kmb/2wilen/history:
+    post:
+      description: KMB 2Wilen
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.History2Wilen'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/usecase.SuccessResponse2Wilen'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/response.History2Wilen'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/usecase.ErrorValidationResponse2Wilen'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/usecase.ErrorResponse2Wilen'
+      tags:
+      - KMB 2Wilen
   /api/v3/kmb/auto-cancel:
     get:
       description: KmbPrinciple

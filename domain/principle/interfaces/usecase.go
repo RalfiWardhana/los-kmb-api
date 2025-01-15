@@ -50,6 +50,7 @@ type Usecase interface {
 	CheckBannedChassisNumber(chassisNumber string) (data response.UsecaseApi, err error)
 	CheckAgreementChassisNumber(ctx context.Context, prospectID, chassisNumber, idNumber, spouseIDNumber string, accessToken string) (responseAgreementChassisNumber response.AgreementChassisNumber, data response.UsecaseApi, err error)
 	NegativeCustomerCheck(ctx context.Context, reqs request.DupcheckApi, accessToken string) (data response.UsecaseApi, negativeCustomer response.NegativeCustomer, err error)
+	History2Wilen(prospectID string) (data []response.History2Wilen, err error)
 }
 
 type MultiUsecase interface {

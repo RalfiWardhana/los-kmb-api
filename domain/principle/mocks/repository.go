@@ -865,6 +865,64 @@ func (_m *Repository) GetTrxKPM(prospectID string) (entity.TrxKPM, error) {
 	return r0, r1
 }
 
+// GetTrxKPMStatus provides a mock function with given fields: IDNumber
+func (_m *Repository) GetTrxKPMStatus(IDNumber string) (entity.TrxKPMStatus, error) {
+	ret := _m.Called(IDNumber)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTrxKPMStatus")
+	}
+
+	var r0 entity.TrxKPMStatus
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (entity.TrxKPMStatus, error)); ok {
+		return rf(IDNumber)
+	}
+	if rf, ok := ret.Get(0).(func(string) entity.TrxKPMStatus); ok {
+		r0 = rf(IDNumber)
+	} else {
+		r0 = ret.Get(0).(entity.TrxKPMStatus)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(IDNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetTrxKPMStatusHistory provides a mock function with given fields: prospectId
+func (_m *Repository) GetTrxKPMStatusHistory(prospectId string) ([]entity.TrxKPMStatusHistory, error) {
+	ret := _m.Called(prospectId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTrxKPMStatusHistory")
+	}
+
+	var r0 []entity.TrxKPMStatusHistory
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) ([]entity.TrxKPMStatusHistory, error)); ok {
+		return rf(prospectId)
+	}
+	if rf, ok := ret.Get(0).(func(string) []entity.TrxKPMStatusHistory); ok {
+		r0 = rf(prospectId)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.TrxKPMStatusHistory)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTrxPrincipleStatus provides a mock function with given fields: nik
 func (_m *Repository) GetTrxPrincipleStatus(nik string) (entity.TrxPrincipleStatus, error) {
 	ret := _m.Called(nik)
@@ -1264,6 +1322,24 @@ func (_m *Repository) UpdateToCancel(prospectID string) error {
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string) error); ok {
 		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateTrxKPMStatus provides a mock function with given fields: id, decision
+func (_m *Repository) UpdateTrxKPMStatus(id string, decision string) error {
+	ret := _m.Called(id, decision)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateTrxKPMStatus")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+		r0 = rf(id, decision)
 	} else {
 		r0 = ret.Error(0)
 	}

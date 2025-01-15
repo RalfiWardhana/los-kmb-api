@@ -1440,3 +1440,7 @@ type Submission2Wilen struct {
 	AssetCategoryID         string  `json:"asset_category_id" validate:"required,max=100" example:"BEBEK"`
 	KPMID                   int     `json:"kpm_id" validate:"required"`
 }
+
+type History2Wilen struct {
+	ProspectID string `json:"prospect_id" validate:"required,max=20,htmlValidation" example:"SAL-1140024080800004"`
+}
