@@ -159,3 +159,21 @@ func (u usecase) Step2Wilen(idNumber string) (resp response.Step2Wilen, err erro
 
 	return
 }
+
+func (u usecase) Publish2Wilen(ctx context.Context, req request.Publish2Wilen, accessToken string) (err error) {
+
+	trxKPM, err := u.repository.GetTrxKPM(req.ProspectID)
+	if err != nil {
+		return
+	}
+
+	return u.producer.PublishEvent(ctx, accessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+		OrderID:       req.ProspectID,
+		KpmID:         trxKPM.KPMID,
+		Source:        3,
+		StatusCode:    req.StatusCode,
+		ProductName:   trxKPM.AssetCode,
+		BranchCode:    trxKPM.BranchID,
+		AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
+	}), 0)
+}

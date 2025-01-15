@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -346,6 +347,82 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			"zip_code":     principleStepFour.ZipCode,
 			"area_phone":   principleStepFour.AreaPhone,
 			"phone":        principleStepFour.Phone,
+		}
+
+		return data, err
+
+	case "Readjust":
+
+		trxKPM, err := u.repository.GetTrxKPM(req.ProspectID)
+		if err != nil {
+			return data, err
+		}
+
+		birthDate := trxKPM.BirthDate.Format(constant.FORMAT_DATE)
+		var spouseBirthDate string
+		if date, ok := trxKPM.SpouseBirthDate.(time.Time); ok {
+			spouseBirthDate = date.Format(constant.FORMAT_DATE)
+		}
+
+		data = map[string]interface{}{
+			"id_number":                  trxKPM.IDNumber,
+			"legal_name":                 trxKPM.LegalName,
+			"mobile_phone":               trxKPM.MobilePhone,
+			"email":                      trxKPM.Email,
+			"birth_place":                trxKPM.BirthPlace,
+			"birth_date":                 birthDate,
+			"surgate_mother_name":        trxKPM.SurgateMotherName,
+			"gender":                     trxKPM.Gender,
+			"residence_address":          trxKPM.ResidenceAddress,
+			"residence_rt":               trxKPM.ResidenceRT,
+			"residence_rw":               trxKPM.ResidenceRW,
+			"residence_province":         trxKPM.ResidenceProvince,
+			"residence_city":             trxKPM.ResidenceCity,
+			"residence_kecamatan":        trxKPM.ResidenceKecamatan,
+			"residence_kelurahan":        trxKPM.ResidenceKelurahan,
+			"residence_zipcode":          trxKPM.ResidenceZipCode,
+			"branch_id":                  trxKPM.BranchID,
+			"asset_code":                 trxKPM.AssetCode,
+			"manufacture_year":           trxKPM.ManufactureYear,
+			"license_plate":              trxKPM.LicensePlate,
+			"asset_usage_type_code":      trxKPM.AssetUsageTypeCode,
+			"bpkb_name_type":             trxKPM.BPKBName,
+			"owner_asset":                trxKPM.OwnerAsset,
+			"loan_amount":                trxKPM.LoanAmount,
+			"tenor":                      trxKPM.Tenor,
+			"installment_amount":         trxKPM.InstallmentAmount,
+			"num_of_dependence":          trxKPM.NumOfDependence,
+			"marital_status":             trxKPM.MaritalStatus,
+			"spouse_id_number":           trxKPM.SpouseIDNumber,
+			"spouse_legal_name":          trxKPM.SpouseLegalName,
+			"spouse_birth_date":          spouseBirthDate,
+			"spouse_birth_place":         trxKPM.SpouseBirthPlace,
+			"spouse_surgate_mother_name": trxKPM.SpouseSurgateMotherName,
+			"spouse_mobile_phone":        trxKPM.SpouseMobilePhone,
+			"education":                  trxKPM.Education,
+			"profession_id":              trxKPM.ProfessionID,
+			"job_type":                   trxKPM.JobType,
+			"job_position":               trxKPM.JobPosition,
+			"employment_since_month":     trxKPM.EmploymentSinceMonth,
+			"employment_since_year":      trxKPM.EmploymentSinceYear,
+			"monthly_fixed_income":       trxKPM.MonthlyFixedIncome,
+			"spouse_income":              trxKPM.SpouseIncome,
+			"chassis_number":             trxKPM.NoChassis,
+			"home_status":                trxKPM.HomeStatus,
+			"stay_since_year":            trxKPM.StaySinceYear,
+			"stay_since_month":           trxKPM.StaySinceMonth,
+			"ktp_photo":                  trxKPM.KtpPhoto,
+			"selfie_photo":               trxKPM.SelfiePhoto,
+			"af":                         trxKPM.AF,
+			"ntf":                        trxKPM.NTF,
+			"otr":                        trxKPM.OTR,
+			"down_payment_amount":        trxKPM.DPAmount,
+			"admin_fee":                  trxKPM.AdminFee,
+			"dealer":                     trxKPM.Dealer,
+			"asset_category_id":          trxKPM.AssetCategoryID,
+			"kpm_id":                     trxKPM.KPMID,
+			"result_pefindo":             trxKPM.ResultPefindo,
+			"baki_debet":                 trxKPM.BakiDebet,
 		}
 
 		return data, err

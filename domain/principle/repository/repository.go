@@ -895,6 +895,24 @@ func (r repoHandler) GetTrxKPM(prospectID string) (data entity.TrxKPM, err error
 		return
 	}
 
+	var decrypted entity.Encrypted
+
+	if err = r.newKmb.Raw(fmt.Sprintf(`SELECT scp.dbo.DEC_B64('SEC', '%s') AS LegalName, scp.dbo.DEC_B64('SEC','%s') AS SurgateMotherName,
+		scp.dbo.DEC_B64('SEC', '%s') AS MobilePhone, scp.dbo.DEC_B64('SEC', '%s') AS Email,
+		scp.dbo.DEC_B64('SEC', '%s') AS BirthPlace, scp.dbo.DEC_B64('SEC','%s') AS ResidenceAddress,
+		scp.dbo.DEC_B64('SEC', '%s') AS IDNumber`, data.LegalName, data.SurgateMotherName, data.MobilePhone,
+		data.Email, data.BirthPlace, data.ResidenceAddress, data.IDNumber)).Scan(&decrypted).Error; err != nil {
+		return
+	}
+
+	data.LegalName = decrypted.LegalName
+	data.SurgateMotherName = decrypted.SurgateMotherName
+	data.MobilePhone = decrypted.MobilePhone
+	data.Email = decrypted.Email
+	data.BirthPlace = decrypted.BirthPlace
+	data.ResidenceAddress = decrypted.ResidenceAddress
+	data.IDNumber = decrypted.IDNumber
+
 	return
 }
 

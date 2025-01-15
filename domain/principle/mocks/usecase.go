@@ -1034,6 +1034,24 @@ func (_m *Usecase) PrincipleStep(idNumber string) (response.StepPrinciple, error
 	return r0, r1
 }
 
+// Publish2Wilen provides a mock function with given fields: ctx, req, accessToken
+func (_m *Usecase) Publish2Wilen(ctx context.Context, req request.Publish2Wilen, accessToken string) error {
+	ret := _m.Called(ctx, req, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Publish2Wilen")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.Publish2Wilen, string) error); ok {
+		r0 = rf(ctx, req, accessToken)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RejectTenor36 provides a mock function with given fields: cluster
 func (_m *Usecase) RejectTenor36(cluster string) (response.UsecaseApi, error) {
 	ret := _m.Called(cluster)

@@ -1444,3 +1444,8 @@ type Submission2Wilen struct {
 type History2Wilen struct {
 	ProspectID string `json:"prospect_id" validate:"required,max=20,htmlValidation" example:"SAL-1140024080800004"`
 }
+
+type Publish2Wilen struct {
+	StatusCode string `json:"status_code" validate:"required"`
+	ProspectID string `json:"prospect_id" validate:"required"`
+}
