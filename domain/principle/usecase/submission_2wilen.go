@@ -1452,6 +1452,10 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		PurposeOfFinancing: constant.FINANCE_PURPOSE_MULTIGUNA_PEMBAYARAN_ANGSURAN,
 	}
 
+	if !isPsa {
+		payloadSubmitSally.Kop.FinancingObject = " "
+	}
+
 	licensePlateCode := utils.GetLicensePlateCode(req.LicensePlate)
 	payloadSubmitSally.ObjekSewa = request.SallySubmit2wPrincipleObjekSewa{
 		AssetUsageID:      "C",
