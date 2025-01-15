@@ -94,8 +94,10 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 			savedNegativeCustomerData, _ := json.Marshal(negativeCustomer)
 
 			decision := resp.Result
+			statusCode = resp.Result
 			if decision == constant.DECISION_KPM_APPROVE {
 				decision = constant.DECISION_CREDIT_PROCESS
+				statusCode = constant.PRINCIPLE_STATUS_SUBMIT_SALLY
 			}
 
 			trxKPM.ID = id
@@ -175,7 +177,6 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 				return
 			}
 
-			statusCode = constant.PRINCIPLE_STATUS_SUBMIT_SALLY
 			u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
 				OrderID:       req.ProspectID,
 				KpmID:         req.KPMID,
