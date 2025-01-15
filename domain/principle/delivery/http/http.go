@@ -73,6 +73,7 @@ func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, u
 	principleRoute.POST("/available-tenor", handler.GetAvailableTenor, middlewares.AccessMiddleware())
 	principleRoute.POST("/submission-2wilen", handler.Submission2Wilen, middlewares.AccessMiddleware(), limiter)
 	principleRoute.POST("/2wilen/history", handler.History2Wilen, middlewares.AccessMiddleware())
+	principleRoute.POST("/publish-2wilen", handler.Publish2Wilen, middlewares.AccessMiddleware())
 }
 
 // KmbPrinciple Tools godoc
@@ -717,4 +718,42 @@ func (c *handler) History2Wilen(ctx echo.Context) (err error) {
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
+}
+
+// KMB 2Wilen Tools godoc
+// @Description KMB 2Wilen
+// @Tags KMB 2Wilen
+// @Produce json
+// @Param body body request.Publish2Wilen true "Body payload"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/publish-2wilen [post]
+func (c *handler) Publish2Wilen(ctx echo.Context) (err error) {
+
+	var r request.Publish2Wilen
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
+	}
+
+	err = c.usecase.Publish2Wilen(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), "success publish event 2wilen")
+
 }
