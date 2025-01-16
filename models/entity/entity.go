@@ -838,6 +838,7 @@ type FilteringKMB struct {
 	Category                        interface{} `gorm:"column:category" json:"category"`
 	MaxOverdueKORules               interface{} `gorm:"column:max_overdue_ko_rules" json:"max_overdue_ko_rules"`
 	MaxOverdueLast12MonthsKORules   interface{} `gorm:"column:max_overdue_last12months_ko_rules" json:"max_overdue_last12months_ko_rules"`
+	NewKoRules                      interface{} `gorm:"column:new_ko_rules" json:"new_ko_rules"`
 	RrdDate                         interface{} `gorm:"column:rrd_date" json:"rrd_date"`
 	CreatedAt                       time.Time   `gorm:"column:created_at" json:"created_at"`
 }
