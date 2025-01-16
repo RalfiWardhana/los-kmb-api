@@ -1275,7 +1275,7 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		return
 	}
 
-	if respInsert.StatusCode() != 200 {
+	if respInsert.StatusCode() != 200 && respInsert.StatusCode() != 400 {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Insert Customer Data Error")
 		return
 	}
@@ -1354,7 +1354,7 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		return
 	}
 
-	if respUpdate.StatusCode() != 200 {
+	if respUpdate.StatusCode() != 200 && respUpdate.StatusCode() != 400 {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Update Customer Transaction Error")
 		return
 	}
