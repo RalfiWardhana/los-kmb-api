@@ -53,6 +53,19 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		return
 	}
 
+	// cek 2wilen order
+	var countTrxKPM int
+	countTrxKPM, err = u.repository.ScanTrxKPM(reqMetrics.Transaction.ProspectID)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Check 2Wilen Order Error")
+		return
+	}
+
+	if countTrxKPM > 0 {
+		resultMetrics, err = u.Submission2Wilen(ctx, reqMetrics, accessToken)
+		return
+	}
+
 	// cek trx_master
 	var trxMaster int
 	trxMaster, err = u.repository.ScanTrxMaster(reqMetrics.Transaction.ProspectID)

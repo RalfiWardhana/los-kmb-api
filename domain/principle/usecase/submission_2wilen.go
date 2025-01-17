@@ -896,7 +896,7 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		return
 	}
 
-	ltv, err := u.usecase.GetLTV(mappingElaborateLTV, resultPefindo, req.BPKBNameType, req.ManufactureYear, req.Tenor, pefindo.TotalBakiDebetNonAgunan)
+	ltv, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, req.Tenor, pefindo.TotalBakiDebetNonAgunan)
 	if err != nil {
 		return
 	}

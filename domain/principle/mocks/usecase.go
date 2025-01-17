@@ -563,9 +563,9 @@ func (_m *Usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType str
 	return r0, r1
 }
 
-// GetLTV provides a mock function with given fields: mappingElaborateLTV, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet
-func (_m *Usecase) GetLTV(mappingElaborateLTV []entity.MappingElaborateLTV, resultPefindo string, bpkbName string, manufactureYear string, tenor int, bakiDebet float64) (int, error) {
-	ret := _m.Called(mappingElaborateLTV, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+// GetLTV provides a mock function with given fields: ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet
+func (_m *Usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID string, resultPefindo string, bpkbName string, manufactureYear string, tenor int, bakiDebet float64) (int, error) {
+	ret := _m.Called(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetLTV")
@@ -573,17 +573,17 @@ func (_m *Usecase) GetLTV(mappingElaborateLTV []entity.MappingElaborateLTV, resu
 
 	var r0 int
 	var r1 error
-	if rf, ok := ret.Get(0).(func([]entity.MappingElaborateLTV, string, string, string, int, float64) (int, error)); ok {
-		return rf(mappingElaborateLTV, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+	if rf, ok := ret.Get(0).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) (int, error)); ok {
+		return rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
 	}
-	if rf, ok := ret.Get(0).(func([]entity.MappingElaborateLTV, string, string, string, int, float64) int); ok {
-		r0 = rf(mappingElaborateLTV, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+	if rf, ok := ret.Get(0).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) int); ok {
+		r0 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func([]entity.MappingElaborateLTV, string, string, string, int, float64) error); ok {
-		r1 = rf(mappingElaborateLTV, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+	if rf, ok := ret.Get(1).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) error); ok {
+		r1 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
 	} else {
 		r1 = ret.Error(1)
 	}

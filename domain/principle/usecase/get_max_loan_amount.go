@@ -17,6 +17,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
+	"github.com/labstack/echo/v4"
 )
 
 func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoanAmount, accessToken string) (data response.GetMaxLoanAmountData, err error) {
@@ -231,7 +232,7 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 				}
 			}
 
-			ltv, err := u.usecase.GetLTV(mappingElaborateLTV, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet)
+			ltv, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet)
 			if err != nil {
 				return data, err
 			}
@@ -260,7 +261,7 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 	return
 }
 
-func (u usecase) GetLTV(mappingElaborateLTV []entity.MappingElaborateLTV, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64) (ltv int, err error) {
+func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64) (ltv int, err error) {
 	var bpkbNameType int
 	if strings.Contains(os.Getenv("NAMA_SAMA"), bpkbName) {
 		bpkbNameType = 1
@@ -284,26 +285,37 @@ func (u usecase) GetLTV(mappingElaborateLTV []entity.MappingElaborateLTV, result
 		ageS = ">12"
 	}
 
+	trxElaborateLTV := entity.TrxElaborateLTV{
+		ProspectID:        prospectID,
+		RequestID:         ctx.Value(echo.HeaderXRequestID).(string),
+		Tenor:             tenor,
+		ManufacturingYear: manufactureYear,
+	}
+
 	for _, m := range mappingElaborateLTV {
 		if tenor >= 36 {
 			//no hit
 			if resultPefindo == constant.DECISION_PBK_NO_HIT && m.TenorStart <= tenor && tenor <= m.TenorEnd && bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
 				ltv = m.LTV
+				trxElaborateLTV.MappingElaborateLTVID = m.ID
 			}
 
 			//pass
 			if resultPefindo == constant.DECISION_PASS && m.TenorStart <= tenor && tenor <= m.TenorEnd && bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
 				ltv = m.LTV
+				trxElaborateLTV.MappingElaborateLTVID = m.ID
 			}
 
 			//reject
 			if resultPefindo == constant.DECISION_REJECT && m.TotalBakiDebetStart <= int(bakiDebet) && int(bakiDebet) <= m.TotalBakiDebetEnd && m.TenorStart <= tenor && tenor <= m.TenorEnd && bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
 				ltv = m.LTV
+				trxElaborateLTV.MappingElaborateLTVID = m.ID
 			}
 		} else {
 			//no hit
 			if resultPefindo == constant.DECISION_PBK_NO_HIT && m.TenorStart <= tenor && tenor <= m.TenorEnd {
 				ltv = m.LTV
+				trxElaborateLTV.MappingElaborateLTVID = m.ID
 			}
 
 			//pass
@@ -311,17 +323,26 @@ func (u usecase) GetLTV(mappingElaborateLTV []entity.MappingElaborateLTV, result
 				if m.BPKBNameType == 1 {
 					if bpkbNameType == m.BPKBNameType {
 						ltv = m.LTV
+						trxElaborateLTV.MappingElaborateLTVID = m.ID
 					}
 				} else {
 					ltv = m.LTV
+					trxElaborateLTV.MappingElaborateLTVID = m.ID
 				}
 			}
 
 			//reject
 			if resultPefindo == constant.DECISION_REJECT && m.TotalBakiDebetStart <= int(bakiDebet) && int(bakiDebet) <= m.TotalBakiDebetEnd && m.TenorStart <= tenor && tenor <= m.TenorEnd {
 				ltv = m.LTV
+				trxElaborateLTV.MappingElaborateLTVID = m.ID
 			}
 		}
+	}
+
+	err = u.repository.SaveTrxElaborateLTV(trxElaborateLTV)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " Save elaborate ltv error")
+		return
 	}
 
 	return
