@@ -2320,3 +2320,50 @@ func (r repoHandler) GetPrincipleEmergencyContact(prospectID string) (data entit
 
 	return
 }
+
+func (r repoHandler) ScanTrxKPM(prospectID string) (count int, err error) {
+
+	var (
+		trxKPM []entity.TrxKPM
+	)
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf("SELECT ProspectID FROM trx_kpm WITH (nolock) WHERE ProspectID = '%s'", prospectID)).Scan(&trxKPM).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	count = len(trxKPM)
+
+	return
+}
+
+func (r repoHandler) GetTrxKPM(prospectID string) (data entity.TrxKPM, err error) {
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_kpm WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmbDB.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	var decrypted entity.Encrypted
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT scp.dbo.DEC_B64('SEC', '%s') AS LegalName, scp.dbo.DEC_B64('SEC','%s') AS SurgateMotherName,
+		scp.dbo.DEC_B64('SEC', '%s') AS MobilePhone, scp.dbo.DEC_B64('SEC', '%s') AS Email,
+		scp.dbo.DEC_B64('SEC', '%s') AS BirthPlace, scp.dbo.DEC_B64('SEC','%s') AS ResidenceAddress,
+		scp.dbo.DEC_B64('SEC', '%s') AS IDNumber`, data.LegalName, data.SurgateMotherName, data.MobilePhone,
+		data.Email, data.BirthPlace, data.ResidenceAddress, data.IDNumber)).Scan(&decrypted).Error; err != nil {
+		return
+	}
+
+	data.LegalName = decrypted.LegalName
+	data.SurgateMotherName = decrypted.SurgateMotherName
+	data.MobilePhone = decrypted.MobilePhone
+	data.Email = decrypted.Email
+	data.BirthPlace = decrypted.BirthPlace
+	data.ResidenceAddress = decrypted.ResidenceAddress
+	data.IDNumber = decrypted.IDNumber
+
+	return
+}

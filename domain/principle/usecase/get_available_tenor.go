@@ -260,7 +260,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 				}
 			}
 
-			ltv, err := u.usecase.GetLTV(mappingElaborateLTV, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet)
+			ltv, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet)
 			if err != nil {
 				return data, err
 			}

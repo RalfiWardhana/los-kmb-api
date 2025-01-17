@@ -1119,6 +1119,34 @@ func (_m *Repository) GetTrxJourney(prospectID string) (entity.TrxJourney, error
 	return r0, r1
 }
 
+// GetTrxKPM provides a mock function with given fields: prospectID
+func (_m *Repository) GetTrxKPM(prospectID string) (entity.TrxKPM, error) {
+	ret := _m.Called(prospectID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTrxKPM")
+	}
+
+	var r0 entity.TrxKPM
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (entity.TrxKPM, error)); ok {
+		return rf(prospectID)
+	}
+	if rf, ok := ret.Get(0).(func(string) entity.TrxKPM); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.TrxKPM)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTrxLockSystem provides a mock function with given fields: idNumber
 func (_m *Repository) GetTrxLockSystem(idNumber string) (entity.TrxLockSystem, error) {
 	ret := _m.Called(idNumber)
@@ -1500,6 +1528,34 @@ func (_m *Repository) ScanKmobOff(query string) (entity.ScanInstallmentAmount, e
 
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(query)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ScanTrxKPM provides a mock function with given fields: prospectID
+func (_m *Repository) ScanTrxKPM(prospectID string) (int, error) {
+	ret := _m.Called(prospectID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ScanTrxKPM")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (int, error)); ok {
+		return rf(prospectID)
+	}
+	if rf, ok := ret.Get(0).(func(string) int); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
 	} else {
 		r1 = ret.Error(1)
 	}
