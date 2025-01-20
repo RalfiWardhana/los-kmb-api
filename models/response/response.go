@@ -1355,6 +1355,7 @@ type Submission2Wilen struct {
 	Result          string  `json:"result"`
 	Reason          string  `json:"reason"`
 	ReadjustContext *string `json:"readjust_context"`
+	ProspectID      string  `json:"prospect_id"`
 }
 
 type History2Wilen struct {

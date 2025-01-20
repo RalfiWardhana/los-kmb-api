@@ -763,4 +763,5 @@ const (
 	READJUST_TENOR_REASON_2WILEN        = "Nilai Installment Tenor Tidak Ditemukan"
 	READJUST_TENOR_CONTEXT_2WILEN       = "tenor"
 	STATUS_KPM_WAIT_2WILEN              = "KPM-WAIT"
+	STATUS_KPM_ERROR_2WILEN             = "KPM-ERROR"
 )

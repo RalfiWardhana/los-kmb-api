@@ -84,6 +84,8 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 
 	defer func() {
 		if err == nil {
+			resp.ProspectID = req.ProspectID
+
 			birthDate, _ := time.Parse(constant.FORMAT_DATE, req.BirthDate)
 			var spouseBirthDate interface{}
 			if req.SpouseBirthDate != "" {
@@ -186,6 +188,8 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 				BranchCode:    req.BranchID,
 				AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
 			}), 0)
+		} else {
+			_ = u.repository.UpdateTrxKPMStatus(id, constant.STATUS_KPM_ERROR_2WILEN)
 		}
 	}()
 
