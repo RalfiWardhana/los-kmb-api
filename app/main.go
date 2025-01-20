@@ -117,6 +117,7 @@ func main() {
 	constant.TOPIC_SUBMISSION_LOS = os.Getenv("TOPIC_SUBMISSION_LOS")
 	constant.TOPIC_INSERT_CUSTOMER = os.Getenv("TOPIC_INSERT_CUSTOMER")
 	constant.TOPIC_SUBMISSION_PRINCIPLE = os.Getenv("TOPIC_SUBMISSION_PRINCIPLE")
+	constant.TOPIC_SUBMISSION_2WILEN = os.Getenv("TOPIC_SUBMISSION_2WILEN")
 
 	//Platform Event key
 	constant.KEY_PREFIX_FILTERING = os.Getenv("KEY_PREFIX_FILTERING")
@@ -127,6 +128,7 @@ func main() {
 	constant.KEY_PREFIX_CALLBACK_GOLIVE = os.Getenv("KEY_PREFIX_CALLBACK_GOLIVE")
 	constant.KEY_PREFIX_UPDATE_CUSTOMER = os.Getenv("KEY_PREFIX_UPDATE_CUSTOMER")
 	constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE = os.Getenv("KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE")
+	constant.KEY_PREFIX_CANCEL_ORDER_2WILEN = os.Getenv("KEY_PREFIX_CANCEL_ORDER_2WILEN")
 
 	kpLos, err := database.OpenKpLos()
 	if err != nil {
@@ -345,6 +347,27 @@ func main() {
 		panic(err)
 	}
 
+	consumer2WilenRouter := platformevent.NewConsumerRouter(constant.TOPIC_SUBMISSION_2WILEN, os.Getenv("LOS_SUBMISSION_PRINCIPLE"), auth)
+
+	consumer2WilenRouter.Use(func(next event.ConsumerProcessor) event.ConsumerProcessor {
+		return func(ctx context.Context, event event.Event) error {
+			startTime := utils.GenerateTimeInMilisecond()
+			reqID := utils.GenerateUUID()
+
+			ctx = context.WithValue(ctx, constant.CTX_KEY_REQUEST_TIME, startTime)
+			ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
+			ctx = context.WithValue(ctx, constant.CTX_KEY_IS_CONSUMER, true)
+
+			return next(ctx, event)
+		}
+	})
+
+	eventPrincipleHandler.NewService2Wilen(consumer2WilenRouter, principleRepo, principleCase, validator, producer, jsonResponse)
+
+	if err := consumer2WilenRouter.StartConsumeWithoutTimestamp(); err != nil {
+		panic(err)
+	}
+
 	// Setup Server
 	srv := &http.Server{
 		Addr:         fmt.Sprintf(":%s", os.Getenv("APP_PORT")),
@@ -375,6 +398,10 @@ func main() {
 		}
 
 		if err := consumerPrincipleRouter.StopConsume(); err != nil {
+			panic(err)
+		}
+
+		if err := consumer2WilenRouter.StopConsume(); err != nil {
 			panic(err)
 		}
 
