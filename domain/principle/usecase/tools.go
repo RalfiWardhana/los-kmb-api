@@ -116,15 +116,20 @@ func (u usecase) Step2Wilen(idNumber string) (resp response.Step2Wilen, err erro
 
 	case constant.DECISION_KPM_READJUST:
 
-		resp.ColorCode = "#00FF00"
+		resp.ColorCode = "#FFCC00"
 		resp.Status = constant.DECISION_KPM_READJUST
 
 	case constant.STATUS_KPM_WAIT_2WILEN:
 
-		resp.ColorCode = "#00FF00"
+		resp.ColorCode = "#FFCC00"
 		resp.Status = constant.STATUS_KPM_WAIT_2WILEN
 
-	case constant.DECISION_CREDIT_PROCESS:
+	case constant.DECISION_KPM_APPROVE:
+
+		resp.ColorCode = "#00FF00"
+		resp.Status = constant.DECISION_KPM_APPROVE
+
+	case constant.STATUS_LOS_PROCESS_2WILEN:
 
 		trxStatus, err := u.repository.GetTrxStatus(data.ProspectID)
 		if err != nil {
@@ -132,7 +137,7 @@ func (u usecase) Step2Wilen(idNumber string) (resp response.Step2Wilen, err erro
 				return response.Step2Wilen{}, err
 			} else {
 				resp.ColorCode = "#FFCC00"
-				resp.Status = constant.REASON_PROSES_SURVEY
+				resp.Status = constant.STATUS_LOS_PROCESS_2WILEN
 				return resp, nil
 			}
 		}
@@ -141,20 +146,20 @@ func (u usecase) Step2Wilen(idNumber string) (resp response.Step2Wilen, err erro
 			if trxStatus.Activity == constant.ACTIVITY_STOP {
 				switch trxStatus.Decision {
 				case constant.DB_DECISION_CANCEL:
-					_ = u.repository.UpdateTrxKPMStatus(data.ID, constant.DECISION_CANCEL)
+					_ = u.repository.UpdateTrxKPMStatus(data.ID, constant.STATUS_LOS_CANCEL_2WILEN)
 					return response.Step2Wilen{}, err
 				case constant.DB_DECISION_REJECT:
-					_ = u.repository.UpdateTrxKPMStatus(data.ID, constant.DECISION_REJECT)
+					_ = u.repository.UpdateTrxKPMStatus(data.ID, constant.STATUS_LOS_REJECTED_2WILEN)
 					return response.Step2Wilen{}, err
 				case constant.DB_DECISION_APR:
-					_ = u.repository.UpdateTrxKPMStatus(data.ID, constant.DECISION_APPROVE)
+					_ = u.repository.UpdateTrxKPMStatus(data.ID, constant.STATUS_LOS_APPROVED_2WILEN)
 					return response.Step2Wilen{}, err
 				}
 			}
 		}
 
 		resp.ColorCode = "#FFCC00"
-		resp.Status = constant.REASON_PROSES_SURVEY
+		resp.Status = constant.STATUS_LOS_PROCESS_2WILEN
 	}
 
 	return

@@ -2367,3 +2367,21 @@ func (r repoHandler) GetTrxKPM(prospectID string) (data entity.TrxKPM, err error
 
 	return
 }
+
+func (r repoHandler) UpdateTrxKPMStatus(id string, decision string) (err error) {
+
+	return r.newKmbDB.Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Model(&entity.TrxKPMStatus{}).
+			Where("id = ?", id).
+			Updates(&entity.TrxKPMStatus{
+				Decision:  decision,
+				UpdatedAt: time.Now(),
+			}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+}

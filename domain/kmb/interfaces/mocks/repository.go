@@ -1703,6 +1703,24 @@ func (_m *Repository) ScanWgOnl(query string) (entity.ScanInstallmentAmount, err
 	return r0, r1
 }
 
+// UpdateTrxKPMStatus provides a mock function with given fields: id, decision
+func (_m *Repository) UpdateTrxKPMStatus(id string, decision string) error {
+	ret := _m.Called(id, decision)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateTrxKPMStatus")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string) error); ok {
+		r0 = rf(id, decision)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // NewRepository creates a new instance of Repository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewRepository(t interface {

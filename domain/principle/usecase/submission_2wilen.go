@@ -97,9 +97,6 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 
 			decision := resp.Result
 			statusCode = resp.Result
-			if decision == constant.DECISION_KPM_APPROVE {
-				decision = constant.DECISION_CREDIT_PROCESS
-			}
 
 			trxKPM.ID = id
 			trxKPM.ProspectID = req.ProspectID
