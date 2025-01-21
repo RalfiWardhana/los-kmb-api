@@ -260,9 +260,13 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 				}
 			}
 
-			ltv, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet)
+			ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet)
 			if err != nil {
 				return data, err
+			}
+
+			if ltv == 0 {
+				continue
 			}
 
 			// get loan amount

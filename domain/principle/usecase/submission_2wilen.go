@@ -896,8 +896,29 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		return
 	}
 
-	ltv, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, req.Tenor, pefindo.TotalBakiDebetNonAgunan)
+	ltv, adjustTenor, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, req.Tenor, pefindo.TotalBakiDebetNonAgunan)
 	if err != nil {
+		return
+	}
+
+	if ltv == 0 {
+		resp.Result = constant.DECISION_KPM_READJUST
+		if readjustCount == (configValue2Wilen.Data.MaxReadjustAttempt - 1) {
+			resp.Result = constant.DECISION_KPM_REJECT
+		}
+
+		if adjustTenor {
+			resp.Code = constant.READJUST_TENOR_CODE_2WILEN
+			resp.Reason = constant.READJUST_TENOR_REASON_2WILEN
+			context := constant.READJUST_TENOR_CONTEXT_2WILEN
+			resp.ReadjustContext = &context
+		} else {
+			resp.Code = constant.READJUST_LOAN_AMOUNT_CODE_2WILEN
+			resp.Reason = constant.READJUST_LOAN_AMOUNT_REASON_2WILEN
+			context := constant.READJUST_LOAN_AMOUNT_CONTEXT_2WILEN
+			resp.ReadjustContext = &context
+		}
+
 		return
 	}
 
