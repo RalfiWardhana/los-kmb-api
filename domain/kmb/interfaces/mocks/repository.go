@@ -1147,6 +1147,34 @@ func (_m *Repository) GetTrxKPM(prospectID string) (entity.TrxKPM, error) {
 	return r0, r1
 }
 
+// GetTrxKPMStatus provides a mock function with given fields: prospectID
+func (_m *Repository) GetTrxKPMStatus(prospectID string) (entity.TrxKPMStatus, error) {
+	ret := _m.Called(prospectID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTrxKPMStatus")
+	}
+
+	var r0 entity.TrxKPMStatus
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (entity.TrxKPMStatus, error)); ok {
+		return rf(prospectID)
+	}
+	if rf, ok := ret.Get(0).(func(string) entity.TrxKPMStatus); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.TrxKPMStatus)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTrxLockSystem provides a mock function with given fields: idNumber
 func (_m *Repository) GetTrxLockSystem(idNumber string) (entity.TrxLockSystem, error) {
 	ret := _m.Called(idNumber)

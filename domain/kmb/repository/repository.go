@@ -2385,3 +2385,12 @@ func (r repoHandler) UpdateTrxKPMStatus(id string, decision string) (err error) 
 	})
 
 }
+
+func (r repoHandler) GetTrxKPMStatus(prospectID string) (data entity.TrxKPMStatus, err error) {
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf("SELECT TOP 1 tks.* FROM trx_kpm_status tks WITH (nolock) WHERE tks.ProspectID = '%s' ORDER BY tks.created_at DESC", prospectID)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}

@@ -62,8 +62,16 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	}
 
 	if countTrxKPM > 0 {
-		resultMetrics, err = u.Submission2Wilen(ctx, reqMetrics, accessToken)
-		return
+		trxKPMStatus, errGetTrxKPMStatus := u.repository.GetTrxKPMStatus(reqMetrics.Transaction.ProspectID)
+		if errGetTrxKPMStatus != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Check 2Wilen Order Status Error")
+			return
+		}
+
+		if trxKPMStatus.Decision == constant.DECISION_KPM_APPROVE {
+			resultMetrics, err = u.Submission2Wilen(ctx, reqMetrics, accessToken)
+			return
+		}
 	}
 
 	// cek trx_master
