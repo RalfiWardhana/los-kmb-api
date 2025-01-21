@@ -614,6 +614,10 @@ func TestSubmission2Wilen(t *testing.T) {
 				}
 			}
 
+			if tc.err == nil {
+				mockRepository.On("UpdateTrxKPMStatus", mock.Anything, mock.Anything).Return(nil)
+			}
+
 			metrics := NewMetrics(mockRepository, mockHttpClient, mockUsecase, mockMultiUsecase)
 			result, err := metrics.Submission2Wilen(ctx, tc.reqMetrics, "token")
 			require.Equal(t, tc.resultMetrics, result)

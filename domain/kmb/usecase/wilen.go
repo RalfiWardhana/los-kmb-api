@@ -40,6 +40,12 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Metrics, acce
 		isModified           bool
 	)
 
+	defer func() {
+		if err == nil {
+			_ = u.repository.UpdateTrxKPMStatus(trxKPM.ID, constant.STATUS_LOS_PROCESS_2WILEN)
+		}
+	}()
+
 	// cek trx_master
 	var trxMaster int
 	trxMaster, err = u.repository.ScanTrxMaster(req.Transaction.ProspectID)
