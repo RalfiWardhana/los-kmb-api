@@ -59,7 +59,7 @@ func (h handlers) PrincipleUpdateStatus(ctx context.Context, event event.Event) 
 		Method:     http.MethodPost,
 		Action:     "CONSUME_EVENT",
 		Type:       "EVENT_PLATFORM_LIBRARY",
-		LogFile:    constant.NEW_KMB_LOG,
+		LogFile:    constant.DILEN_KMB_LOG,
 		MsgLogFile: constant.MSG_CONSUME_DATA_STREAM,
 		LevelLog:   constant.PLATFORM_LOG_LEVEL_INFO,
 		Request:    requestLog,
@@ -72,6 +72,58 @@ func (h handlers) PrincipleUpdateStatus(ctx context.Context, event event.Event) 
 	if principleData != (entity.TrxPrincipleStepOne{}) {
 		if req.OrderStatus == constant.PRINCIPLE_STATUS_CANCEL_SALLY {
 			_ = h.repository.UpdateToCancel(req.ProspectID)
+		}
+	}
+
+	return nil
+}
+
+func NewService2Wilen(app *platformevent.ConsumerRouter, repository interfaces.Repository, usecase interfaces.Usecase, validator *common.Validator, producer platformevent.PlatformEventInterface, json common.JSON) {
+	handler := handlers{
+		usecase:    usecase,
+		repository: repository,
+		validator:  validator,
+		producer:   producer,
+		Json:       json,
+	}
+	app.Handle(constant.KEY_PREFIX_CANCEL_ORDER_2WILEN, handler.CancelOrder2Wilen)
+}
+
+// event cancel order 2wilen
+func (h handlers) CancelOrder2Wilen(ctx context.Context, event event.Event) (err error) {
+	middlewares.GetPlatformAuth()
+	body := event.GetBody()
+
+	var (
+		req    request.PrincipleUpdateStatus
+		trxKPM entity.TrxKPM
+	)
+
+	_ = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(body, &req)
+
+	// Write Success Log
+	requestLog := utils.StructToMap(req)
+	requestLog["topic_key"] = string(event.GetKey())
+	requestLog["topic_name"] = constant.TOPIC_SUBMISSION_2WILEN
+	requestLog["rawBody"] = base64.RawStdEncoding.EncodeToString(body)
+	common.CentralizeLog(ctx, middlewares.UserInfoData.AccessToken, common.CentralizeLogParameter{
+		Link:       os.Getenv("DUMMY_URL_LOGS"),
+		Method:     http.MethodPost,
+		Action:     "CONSUME_EVENT",
+		Type:       "EVENT_PLATFORM_LIBRARY",
+		LogFile:    constant.DILEN_KMB_LOG,
+		MsgLogFile: constant.MSG_CONSUME_DATA_STREAM,
+		LevelLog:   constant.PLATFORM_LOG_LEVEL_INFO,
+		Request:    requestLog,
+		Response: map[string]interface{}{
+			"messages": "success consume data stream",
+		},
+	})
+
+	trxKPM, _ = h.repository.GetTrxKPM(req.ProspectID)
+	if trxKPM != (entity.TrxKPM{}) {
+		if req.OrderStatus == constant.PRINCIPLE_STATUS_CANCEL_SALLY || req.OrderStatus == constant.STATUS_KPM_CANCEL_2WILEN {
+			_ = h.repository.UpdateTrxKPMStatus(trxKPM.ID, constant.DECISION_CANCEL)
 		}
 	}
 
