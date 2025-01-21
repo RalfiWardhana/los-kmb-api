@@ -232,9 +232,13 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 				}
 			}
 
-			ltv, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet)
+			ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet)
 			if err != nil {
 				return data, err
+			}
+
+			if ltv == 0 {
+				continue
 			}
 
 			// get loan amount
@@ -261,7 +265,7 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 	return
 }
 
-func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64) (ltv int, err error) {
+func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64) (ltv int, adjustTenor bool, err error) {
 	var bpkbNameType int
 	if strings.Contains(os.Getenv("NAMA_SAMA"), bpkbName) {
 		bpkbNameType = 1
@@ -335,6 +339,21 @@ func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.Mappin
 			if resultPefindo == constant.DECISION_REJECT && m.TotalBakiDebetStart <= int(bakiDebet) && int(bakiDebet) <= m.TotalBakiDebetEnd && m.TenorStart <= tenor && tenor <= m.TenorEnd {
 				ltv = m.LTV
 				trxElaborateLTV.MappingElaborateLTVID = m.ID
+			}
+		}
+
+		// max tenor
+		if m.TenorEnd >= tenor && m.LTV > 0 {
+			if m.AgeVehicle != "" {
+				if bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
+					adjustTenor = true
+				}
+			} else if m.BPKBNameType == 1 {
+				if bpkbNameType == m.BPKBNameType {
+					adjustTenor = true
+				}
+			} else {
+				adjustTenor = true
 			}
 		}
 	}

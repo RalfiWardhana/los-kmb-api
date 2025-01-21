@@ -564,7 +564,7 @@ func (_m *Usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType str
 }
 
 // GetLTV provides a mock function with given fields: ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet
-func (_m *Usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID string, resultPefindo string, bpkbName string, manufactureYear string, tenor int, bakiDebet float64) (int, error) {
+func (_m *Usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID string, resultPefindo string, bpkbName string, manufactureYear string, tenor int, bakiDebet float64) (int, bool, error) {
 	ret := _m.Called(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
 
 	if len(ret) == 0 {
@@ -572,8 +572,9 @@ func (_m *Usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.Mapp
 	}
 
 	var r0 int
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) (int, error)); ok {
+	var r1 bool
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) (int, bool, error)); ok {
 		return rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) int); ok {
@@ -582,13 +583,19 @@ func (_m *Usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.Mapp
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) bool); ok {
 		r1 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(bool)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) error); ok {
+		r2 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // History2Wilen provides a mock function with given fields: prospectID
