@@ -550,7 +550,7 @@ func (c *handler) Step2Wilen(ctx echo.Context) (err error) {
 		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), nil)
 	}
 
-	if data.Status == constant.REASON_PROSES_SURVEY || data.Status == constant.DECISION_KPM_READJUST || data.Status == constant.STATUS_KPM_WAIT_2WILEN {
+	if data.Status == constant.DECISION_KPM_READJUST || data.Status == constant.STATUS_KPM_WAIT_2WILEN || data.Status == constant.DECISION_KPM_APPROVE || data.Status == constant.STATUS_LOS_PROCESS_2WILEN {
 		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "002"), data, response.WithMessage("Kamu masih memiliki pengajuan lain yang sedang diproses"))
 
 	}
