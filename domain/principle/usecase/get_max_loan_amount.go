@@ -296,6 +296,7 @@ func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.Mappin
 		ManufacturingYear: manufactureYear,
 	}
 
+	maxTenor := 0
 	for _, m := range mappingElaborateLTV {
 		if tenor >= 36 {
 			//no hit
@@ -343,16 +344,19 @@ func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.Mappin
 		}
 
 		// max tenor
-		if m.TenorEnd >= tenor && m.LTV > 0 {
+		if m.TenorEnd >= maxTenor && m.LTV > 0 {
 			if m.AgeVehicle != "" {
 				if bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
+					maxTenor = m.TenorEnd
 					adjustTenor = true
 				}
 			} else if m.BPKBNameType == 1 {
 				if bpkbNameType == m.BPKBNameType {
+					maxTenor = m.TenorEnd
 					adjustTenor = true
 				}
 			} else {
+				maxTenor = m.TenorEnd
 				adjustTenor = true
 			}
 		}
