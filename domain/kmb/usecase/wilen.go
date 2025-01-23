@@ -42,7 +42,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Metrics, acce
 
 	defer func() {
 		if err == nil {
-			_ = u.repository.UpdateTrxKPMStatus(trxKPM.ID, constant.STATUS_LOS_PROCESS_2WILEN)
+			_ = u.repository.UpdateTrxKPMDecision(trxKPM.ID, trxKPM.ProspectID, constant.STATUS_LOS_PROCESS_2WILEN)
 		}
 	}()
 

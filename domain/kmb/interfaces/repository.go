@@ -82,6 +82,6 @@ type Repository interface {
 
 	ScanTrxKPM(prospectID string) (count int, err error)
 	GetTrxKPM(prospectID string) (data entity.TrxKPM, err error)
-	UpdateTrxKPMStatus(id string, decision string) (err error)
 	GetTrxKPMStatus(prospectID string) (data entity.TrxKPMStatus, err error)
+	UpdateTrxKPMDecision(id string, prospectID string, decision string) (err error)
 }

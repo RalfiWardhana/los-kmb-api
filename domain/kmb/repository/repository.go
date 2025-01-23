@@ -2368,24 +2368,6 @@ func (r repoHandler) GetTrxKPM(prospectID string) (data entity.TrxKPM, err error
 	return
 }
 
-func (r repoHandler) UpdateTrxKPMStatus(id string, decision string) (err error) {
-
-	return r.newKmbDB.Transaction(func(tx *gorm.DB) error {
-
-		if err := tx.Model(&entity.TrxKPMStatus{}).
-			Where("id = ?", id).
-			Updates(&entity.TrxKPMStatus{
-				Decision:  decision,
-				UpdatedAt: time.Now(),
-			}).Error; err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-}
-
 func (r repoHandler) GetTrxKPMStatus(prospectID string) (data entity.TrxKPMStatus, err error) {
 
 	if err = r.newKmbDB.Raw(fmt.Sprintf("SELECT TOP 1 tks.* FROM trx_kpm_status tks WITH (nolock) WHERE tks.ProspectID = '%s' ORDER BY tks.created_at DESC", prospectID)).Scan(&data).Error; err != nil {
@@ -2393,4 +2375,34 @@ func (r repoHandler) GetTrxKPMStatus(prospectID string) (data entity.TrxKPMStatu
 	}
 
 	return
+}
+
+func (r repoHandler) UpdateTrxKPMDecision(id string, prospectID string, decision string) (err error) {
+
+	return r.newKmbDB.Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Model(&entity.TrxKPM{}).
+			Where("id = ?", id).
+			Updates(&entity.TrxKPM{
+				Decision:  decision,
+				UpdatedAt: time.Now(),
+			}).Error; err != nil {
+			return err
+		}
+
+		data := entity.TrxKPMStatus{
+			ID:         utils.GenerateUUID(),
+			ProspectID: prospectID,
+			Decision:   decision,
+			CreatedAt:  time.Now(),
+			UpdatedAt:  time.Now(),
+		}
+
+		if err := tx.Create(&data).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
 }

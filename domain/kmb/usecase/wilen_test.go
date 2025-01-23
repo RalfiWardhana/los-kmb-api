@@ -615,7 +615,7 @@ func TestSubmission2Wilen(t *testing.T) {
 			}
 
 			if tc.err == nil {
-				mockRepository.On("UpdateTrxKPMStatus", mock.Anything, mock.Anything).Return(nil)
+				mockRepository.On("UpdateTrxKPMDecision", mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			}
 
 			metrics := NewMetrics(mockRepository, mockHttpClient, mockUsecase, mockMultiUsecase)

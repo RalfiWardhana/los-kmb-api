@@ -123,7 +123,7 @@ func (h handlers) CancelOrder2Wilen(ctx context.Context, event event.Event) (err
 	trxKPM, _ = h.repository.GetTrxKPM(req.ProspectID)
 	if trxKPM != (entity.TrxKPM{}) {
 		if req.OrderStatus == constant.PRINCIPLE_STATUS_CANCEL_SALLY || req.OrderStatus == constant.STATUS_KPM_CANCEL_2WILEN {
-			_ = h.repository.UpdateTrxKPMStatus(trxKPM.ID, constant.DECISION_CANCEL)
+			_ = h.repository.UpdateTrxKPMDecision(trxKPM.ID, trxKPM.ProspectID, constant.STATUS_LOS_CANCEL_2WILEN)
 		}
 	}
 

@@ -9,6 +9,7 @@ import (
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 	"os"
 	"strconv"
 	"time"
@@ -862,15 +863,6 @@ func (r repoHandler) SaveTrxKPM(data entity.TrxKPM) (err error) {
 			return err
 		}
 
-		if err := tx.Model(&entity.TrxKPMStatus{}).
-			Where("id = ?", data.ID).
-			Updates(&entity.TrxPrincipleStatus{
-				Decision:  data.Decision,
-				UpdatedAt: time.Now(),
-			}).Error; err != nil {
-			return err
-		}
-
 		return nil
 	})
 
@@ -945,24 +937,6 @@ func (r repoHandler) GetTrxKPMStatus(IDNumber string) (data entity.TrxKPMStatus,
 	return
 }
 
-func (r repoHandler) UpdateTrxKPMStatus(id string, decision string) (err error) {
-
-	return r.newKmb.Transaction(func(tx *gorm.DB) error {
-
-		if err := tx.Model(&entity.TrxKPMStatus{}).
-			Where("id = ?", id).
-			Updates(&entity.TrxKPMStatus{
-				Decision:  decision,
-				UpdatedAt: time.Now(),
-			}).Error; err != nil {
-			return err
-		}
-
-		return nil
-	})
-
-}
-
 func (r repoHandler) GetTrxKPMStatusHistory(prospectId string) (data []entity.TrxKPMStatusHistory, err error) {
 
 	query := fmt.Sprintf("SELECT * FROM trx_kpm_status WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC", prospectId)
@@ -972,4 +946,34 @@ func (r repoHandler) GetTrxKPMStatusHistory(prospectId string) (data []entity.Tr
 	}
 
 	return
+}
+
+func (r repoHandler) UpdateTrxKPMDecision(id string, prospectID string, decision string) (err error) {
+
+	return r.newKmb.Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Model(&entity.TrxKPM{}).
+			Where("id = ?", id).
+			Updates(&entity.TrxKPM{
+				Decision:  decision,
+				UpdatedAt: time.Now(),
+			}).Error; err != nil {
+			return err
+		}
+
+		data := entity.TrxKPMStatus{
+			ID:         utils.GenerateUUID(),
+			ProspectID: prospectID,
+			Decision:   decision,
+			CreatedAt:  time.Now(),
+			UpdatedAt:  time.Now(),
+		}
+
+		if err := tx.Create(&data).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
 }

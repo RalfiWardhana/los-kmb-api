@@ -1329,17 +1329,17 @@ func (_m *Repository) UpdateToCancel(prospectID string) error {
 	return r0
 }
 
-// UpdateTrxKPMStatus provides a mock function with given fields: id, decision
-func (_m *Repository) UpdateTrxKPMStatus(id string, decision string) error {
-	ret := _m.Called(id, decision)
+// UpdateTrxKPMDecision provides a mock function with given fields: id, prospectID, decision
+func (_m *Repository) UpdateTrxKPMDecision(id string, prospectID string, decision string) error {
+	ret := _m.Called(id, prospectID, decision)
 
 	if len(ret) == 0 {
-		panic("no return value specified for UpdateTrxKPMStatus")
+		panic("no return value specified for UpdateTrxKPMDecision")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(string, string) error); ok {
-		r0 = rf(id, decision)
+	if rf, ok := ret.Get(0).(func(string, string, string) error); ok {
+		r0 = rf(id, prospectID, decision)
 	} else {
 		r0 = ret.Error(0)
 	}

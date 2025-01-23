@@ -59,6 +59,6 @@ type Repository interface {
 	GetTrxKPM(prospectID string) (data entity.TrxKPM, err error)
 	GetReadjustCountTrxKPM(prospectId string) int
 	GetTrxKPMStatus(IDNumber string) (data entity.TrxKPMStatus, err error)
-	UpdateTrxKPMStatus(id string, decision string) (err error)
 	GetTrxKPMStatusHistory(prospectId string) (data []entity.TrxKPMStatusHistory, err error)
+	UpdateTrxKPMDecision(id string, prospectID string, decision string) (err error)
 }

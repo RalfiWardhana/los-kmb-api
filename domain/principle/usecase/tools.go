@@ -146,13 +146,13 @@ func (u usecase) Step2Wilen(idNumber string) (resp response.Step2Wilen, err erro
 			if trxStatus.Activity == constant.ACTIVITY_STOP {
 				switch trxStatus.Decision {
 				case constant.DB_DECISION_CANCEL:
-					_ = u.repository.UpdateTrxKPMStatus(data.ID, constant.STATUS_LOS_CANCEL_2WILEN)
+					_ = u.repository.UpdateTrxKPMDecision(data.ID, data.ProspectID, constant.STATUS_LOS_CANCEL_2WILEN)
 					return response.Step2Wilen{}, err
 				case constant.DB_DECISION_REJECT:
-					_ = u.repository.UpdateTrxKPMStatus(data.ID, constant.STATUS_LOS_REJECTED_2WILEN)
+					_ = u.repository.UpdateTrxKPMDecision(data.ID, data.ProspectID, constant.STATUS_LOS_REJECTED_2WILEN)
 					return response.Step2Wilen{}, err
 				case constant.DB_DECISION_APR:
-					_ = u.repository.UpdateTrxKPMStatus(data.ID, constant.STATUS_LOS_APPROVED_2WILEN)
+					_ = u.repository.UpdateTrxKPMDecision(data.ID, data.ProspectID, constant.STATUS_LOS_APPROVED_2WILEN)
 					return response.Step2Wilen{}, err
 				}
 			}

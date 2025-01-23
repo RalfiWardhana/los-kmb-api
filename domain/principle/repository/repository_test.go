@@ -3680,32 +3680,6 @@ func TestSaveTrxKPM(t *testing.T) {
 			createError:   fmt.Errorf("create error: duplicate key"),
 			expectedError: fmt.Errorf("create error: duplicate key"),
 		},
-		{
-			name: "Status Update Error",
-			inputData: entity.TrxKPM{
-				ID:                "TRX-004",
-				ProspectID:        "PROS-004",
-				LegalName:         "John Doe",
-				SurgateMotherName: "Jane Doe",
-				MobilePhone:       "1234567890",
-				Email:             "john@example.com",
-				BirthPlace:        "New York",
-				ResidenceAddress:  "123 Main St",
-				IDNumber:          "ID123456",
-				Decision:          "APPROVED",
-			},
-			encryptedData: entity.Encrypted{
-				LegalName:         "ENC_JOHN_DOE",
-				SurgateMotherName: "ENC_JANE_DOE",
-				MobilePhone:       "ENC_1234567890",
-				Email:             "ENC_EMAIL",
-				BirthPlace:        "ENC_BIRTHPLACE",
-				ResidenceAddress:  "ENC_ADDRESS",
-				IDNumber:          "ENC_ID123456",
-			},
-			updateError:   fmt.Errorf("failed to update status: record not found"),
-			expectedError: fmt.Errorf("failed to update status: record not found"),
-		},
 	}
 
 	for _, tc := range testCases {
@@ -3738,29 +3712,6 @@ func TestSaveTrxKPM(t *testing.T) {
 				mock.ExpectExec(`INSERT INTO "trx_kpm"`).
 					WillReturnError(tc.createError)
 				mock.ExpectRollback()
-			} else if tc.updateError != nil {
-				mock.ExpectQuery(`SELECT SCP\.dbo\.ENC_B64\('SEC','.*'\) AS LegalName`).
-					WillReturnRows(sqlmock.NewRows([]string{
-						"LegalName", "SurgateMotherName", "MobilePhone",
-						"Email", "BirthPlace", "ResidenceAddress", "IDNumber",
-					}).AddRow(
-						tc.encryptedData.LegalName,
-						tc.encryptedData.SurgateMotherName,
-						tc.encryptedData.MobilePhone,
-						tc.encryptedData.Email,
-						tc.encryptedData.BirthPlace,
-						tc.encryptedData.ResidenceAddress,
-						tc.encryptedData.IDNumber,
-					))
-
-				mock.ExpectExec(`INSERT INTO "trx_kpm"`).
-					WillReturnResult(sqlmock.NewResult(1, 1))
-
-				mock.ExpectExec(`UPDATE "trx_kpm_status"`).
-					WithArgs(tc.inputData.Decision, sqlmock.AnyArg(), tc.inputData.ID).
-					WillReturnError(tc.updateError)
-
-				mock.ExpectRollback()
 			} else {
 				mock.ExpectQuery(`SELECT SCP\.dbo\.ENC_B64\('SEC','.*'\) AS LegalName`).
 					WillReturnRows(sqlmock.NewRows([]string{
@@ -3777,10 +3728,6 @@ func TestSaveTrxKPM(t *testing.T) {
 					))
 
 				mock.ExpectExec(`INSERT INTO "trx_kpm"`).
-					WillReturnResult(sqlmock.NewResult(1, 1))
-
-				mock.ExpectExec(`UPDATE "trx_kpm_status"`).
-					WithArgs(tc.inputData.Decision, sqlmock.AnyArg(), tc.inputData.ID).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 
 				mock.ExpectCommit()
@@ -4134,72 +4081,6 @@ func TestGetReadjustCountTrxKPM(t *testing.T) {
 
 			result := repo.GetReadjustCountTrxKPM(tc.prospectID)
 			assert.Equal(t, tc.expectedCount, result)
-		})
-	}
-}
-
-func TestUpdateTrxKPMStatus(t *testing.T) {
-	sqlDB, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("error creating mock db: %v", err)
-	}
-	defer sqlDB.Close()
-
-	gormDB, err := gorm.Open("sqlite3", sqlDB)
-	if err != nil {
-		t.Fatalf("error opening gorm db: %v", err)
-	}
-	gormDB.LogMode(true)
-
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
-
-	testCases := []struct {
-		name          string
-		id            string
-		decision      string
-		mockError     error
-		expectedError error
-	}{
-		{
-			name:          "Success Case",
-			id:            "STATUS-001",
-			decision:      "APPROVED",
-			mockError:     nil,
-			expectedError: nil,
-		},
-		{
-			name:          "Update Error",
-			id:            "STATUS-002",
-			decision:      "REJECTED",
-			mockError:     fmt.Errorf("update failed"),
-			expectedError: fmt.Errorf("update failed"),
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			mock.ExpectBegin()
-
-			if tc.mockError != nil {
-				mock.ExpectExec(`UPDATE "trx_kpm_status"`).
-					WithArgs(tc.decision, sqlmock.AnyArg(), tc.id).
-					WillReturnError(tc.mockError)
-				mock.ExpectRollback()
-			} else {
-				mock.ExpectExec(`UPDATE "trx_kpm_status"`).
-					WithArgs(tc.decision, sqlmock.AnyArg(), tc.id).
-					WillReturnResult(sqlmock.NewResult(1, 1))
-				mock.ExpectCommit()
-			}
-
-			err := repo.UpdateTrxKPMStatus(tc.id, tc.decision)
-
-			if tc.expectedError != nil {
-				assert.Error(t, err)
-				assert.Equal(t, tc.expectedError.Error(), err.Error())
-			} else {
-				assert.NoError(t, err)
-			}
 		})
 	}
 }
