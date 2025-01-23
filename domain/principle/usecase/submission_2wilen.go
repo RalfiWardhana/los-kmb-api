@@ -178,14 +178,15 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 			statusCode = constant.STATUS_KPM_ERROR_2WILEN
 		}
 
-		err = u.repository.SaveTrxKPMStatus(entity.TrxKPMStatus{
+		errSave := u.repository.SaveTrxKPMStatus(entity.TrxKPMStatus{
 			ID:         utils.GenerateUUID(),
 			ProspectID: req.ProspectID,
 			Decision:   statusCode,
 			CreatedAt:  time.Now(),
 			UpdatedAt:  time.Now(),
 		})
-		if err != nil {
+		if errSave != nil {
+			err = errSave
 			return
 		}
 
