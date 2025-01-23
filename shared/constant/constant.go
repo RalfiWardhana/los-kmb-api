@@ -653,6 +653,27 @@ const (
 	CUSTOMER                                         = "CUSTOMER"
 	SPOUSE                                           = "SPOUSE"
 
+	// REASON NEW KO RULES
+	REJECT_LUNAS_DISKON      = "lunas_diskon"
+	CODE_REJECT_LUNAS_DISKON = "9431"
+	REASON_LUNAS_DISKON      = "Memiliki Fasilitas Lunas Diskon PBK"
+
+	REJECT_FASILITAS_DIALIHKAN_DIJUAL      = "fasilitas_dialihkan_dijual"
+	CODE_REJECT_FASILITAS_DIALIHKAN_DIJUAL = "9432"
+	REASON_FASILITAS_DIALIHKAN_DIJUAL      = "Memiliki Fasilitas dialihkan/dijual PBK"
+
+	REJECT_HAPUS_TAGIH      = "hapus_tagih"
+	CODE_REJECT_HAPUS_TAGIH = "9433"
+	REASON_HAPUS_TAGIH      = "Memiliki Fasilitas Hapus tagih PBK"
+
+	REJECT_REPOSSES      = "repossess"
+	CODE_REJECT_REPOSSES = "9434"
+	REASON_REPOSSES      = "Memiliki Fasilitas Repository PBK"
+
+	REJECT_RESTRUCTURE      = "restructure"
+	CODE_REJECT_RESTRUCTURE = "9435"
+	REASON_RESTRUCTURE      = "Memiliki Fasilitas Restructure PBK"
+
 	// SCOREPRO
 	SOURCE_DECISION_SCOREPRO         = "SCP"
 	JOURNEY_SCOREPRO                 = "SCP1"
