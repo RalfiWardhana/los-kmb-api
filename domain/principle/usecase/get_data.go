@@ -364,6 +364,40 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			spouseBirthDate = date.Format(constant.FORMAT_DATE)
 		}
 
+		var assetList response.AssetList
+		timeOut, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+		payloadAsset, _ := json.Marshal(map[string]interface{}{
+			"branch_id": trxKPM.BranchID,
+			"lob_id":    11,
+			"page_size": 10,
+			"search":    trxKPM.AssetCode,
+		})
+
+		resp, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("MDM_ASSET_URL"), payloadAsset, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, req.ProspectID, accessToken)
+
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call Asset MDM Timeout")
+			return data, err
+		}
+
+		if resp.StatusCode() != 200 {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call Asset MDM Error")
+			return data, err
+		}
+
+		json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &assetList)
+
+		if len(assetList.Records) == 0 {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call Asset MDM Error")
+			return data, err
+		}
+
+		var assetDisplay string
+		if len(assetList.Records) > 0 {
+			assetDisplay = assetList.Records[0].AssetDisplay
+		}
+
 		data = map[string]interface{}{
 			"id_number":                  trxKPM.IDNumber,
 			"legal_name":                 trxKPM.LegalName,
@@ -383,6 +417,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			"residence_zipcode":          trxKPM.ResidenceZipCode,
 			"branch_id":                  trxKPM.BranchID,
 			"asset_code":                 trxKPM.AssetCode,
+			"asset_display":              assetDisplay,
 			"manufacture_year":           trxKPM.ManufactureYear,
 			"license_plate":              trxKPM.LicensePlate,
 			"asset_usage_type_code":      trxKPM.AssetUsageTypeCode,

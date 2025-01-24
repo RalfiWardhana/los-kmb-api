@@ -49,10 +49,14 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 
 	var (
 		trxKPM            entity.TrxKPM
+		trxKPMStatus      entity.TrxKPMStatus
 		dupcheckData      response.SpDupcheckMap
 		negativeCustomer  response.NegativeCustomer
 		configValue2Wilen response.Config2Wilen
 	)
+
+	trxKPMStatus.ID = utils.GenerateUUID()
+	trxKPMStatus.ProspectID = req.ProspectID
 
 	errorCount := u.repository.ExceedErrorTrxKPM(req.ProspectID)
 	if errorCount >= 3 {
@@ -83,108 +87,106 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 	}
 
 	defer func() {
+		birthDate, _ := time.Parse(constant.FORMAT_DATE, req.BirthDate)
+		var spouseBirthDate interface{}
+		if req.SpouseBirthDate != "" {
+			spouseBirthDate, _ = time.Parse(constant.FORMAT_DATE, req.SpouseBirthDate)
+		}
+
+		savedDupcheckData, _ := json.Marshal(dupcheckData)
+		savedNegativeCustomerData, _ := json.Marshal(negativeCustomer)
+
+		trxKPM.ID = id
+		trxKPM.ProspectID = req.ProspectID
+		trxKPM.IDNumber = req.IDNumber
+		trxKPM.LegalName = req.LegalName
+		trxKPM.MobilePhone = req.MobilePhone
+		trxKPM.Email = req.Email
+		trxKPM.BirthPlace = req.BirthPlace
+		trxKPM.BirthDate = birthDate
+		trxKPM.SurgateMotherName = req.SurgateMotherName
+		trxKPM.Gender = req.Gender
+		trxKPM.ResidenceAddress = req.ResidenceAddress
+		trxKPM.ResidenceRT = req.ResidenceRT
+		trxKPM.ResidenceRW = req.ResidenceRW
+		trxKPM.ResidenceProvince = req.ResidenceProvince
+		trxKPM.ResidenceCity = req.ResidenceCity
+		trxKPM.ResidenceKecamatan = req.ResidenceKecamatan
+		trxKPM.ResidenceKelurahan = req.ResidenceKelurahan
+		trxKPM.ResidenceZipCode = req.ResidenceZipCode
+		trxKPM.BranchID = req.BranchID
+		trxKPM.AssetCode = req.AssetCode
+		trxKPM.ManufactureYear = req.ManufactureYear
+		trxKPM.LicensePlate = req.LicensePlate
+		trxKPM.AssetUsageTypeCode = req.AssetUsageTypeCode
+		trxKPM.BPKBName = req.BPKBNameType
+		trxKPM.OwnerAsset = req.OwnerAsset
+		trxKPM.LoanAmount = req.LoanAmount
+		trxKPM.Tenor = req.Tenor
+		trxKPM.InstallmentAmount = req.InstallmentAmount
+		trxKPM.NumOfDependence = req.NumOfDependence
+		trxKPM.MaritalStatus = req.MaritalStatus
+		trxKPM.SpouseIDNumber = utils.CheckEmptyString(req.SpouseIDNumber)
+		trxKPM.SpouseLegalName = utils.CheckEmptyString(req.SpouseLegalName)
+		trxKPM.SpouseBirthDate = spouseBirthDate
+		trxKPM.SpouseBirthPlace = utils.CheckEmptyString(req.SpouseBirthPlace)
+		trxKPM.SpouseSurgateMotherName = utils.CheckEmptyString(req.SpouseSurgateMotherName)
+		trxKPM.SpouseMobilePhone = utils.CheckEmptyString(req.SpouseMobilePhone)
+		trxKPM.Education = req.Education
+		trxKPM.ProfessionID = req.ProfessionID
+		trxKPM.JobType = req.JobType
+		trxKPM.JobPosition = req.JobPosition
+		trxKPM.EmploymentSinceMonth = req.EmploymentSinceMonth
+		trxKPM.EmploymentSinceYear = req.EmploymentSinceYear
+		trxKPM.MonthlyFixedIncome = req.MonthlyFixedIncome
+		trxKPM.SpouseIncome = req.SpouseIncome
+		trxKPM.NoChassis = req.NoChassis
+		trxKPM.HomeStatus = req.HomeStatus
+		trxKPM.StaySinceYear = req.StaySinceYear
+		trxKPM.StaySinceMonth = req.StaySinceMonth
+		trxKPM.SelfiePhoto = utils.CheckEmptyString(req.SelfiePhoto)
+		trxKPM.KtpPhoto = utils.CheckEmptyString(req.KtpPhoto)
+		trxKPM.AF = req.AF
+		trxKPM.NTF = req.NTF
+		trxKPM.OTR = req.OTR
+		trxKPM.DPAmount = req.DPAmount
+		trxKPM.AdminFee = req.AdminFee
+		trxKPM.Dealer = req.Dealer
+		trxKPM.AssetCategoryID = req.AssetCategoryID
+		trxKPM.DupcheckData = string(utils.SafeEncoding(savedDupcheckData))
+		trxKPM.NegativeCustomerData = string(utils.SafeEncoding(savedNegativeCustomerData))
+		trxKPM.KPMID = req.KPMID
+
+		if resp.ReadjustContext != nil {
+			trxKPM.ReadjustContext = *resp.ReadjustContext
+		}
+
 		if err == nil {
 			resp.ProspectID = req.ProspectID
-
-			birthDate, _ := time.Parse(constant.FORMAT_DATE, req.BirthDate)
-			var spouseBirthDate interface{}
-			if req.SpouseBirthDate != "" {
-				spouseBirthDate, _ = time.Parse(constant.FORMAT_DATE, req.SpouseBirthDate)
-			}
-
-			savedDupcheckData, _ := json.Marshal(dupcheckData)
-			savedNegativeCustomerData, _ := json.Marshal(negativeCustomer)
 
 			decision := resp.Result
 			statusCode = resp.Result
 
-			trxKPM.ID = id
-			trxKPM.ProspectID = req.ProspectID
-			trxKPM.IDNumber = req.IDNumber
-			trxKPM.LegalName = req.LegalName
-			trxKPM.MobilePhone = req.MobilePhone
-			trxKPM.Email = req.Email
-			trxKPM.BirthPlace = req.BirthPlace
-			trxKPM.BirthDate = birthDate
-			trxKPM.SurgateMotherName = req.SurgateMotherName
-			trxKPM.Gender = req.Gender
-			trxKPM.ResidenceAddress = req.ResidenceAddress
-			trxKPM.ResidenceRT = req.ResidenceRT
-			trxKPM.ResidenceRW = req.ResidenceRW
-			trxKPM.ResidenceProvince = req.ResidenceProvince
-			trxKPM.ResidenceCity = req.ResidenceCity
-			trxKPM.ResidenceKecamatan = req.ResidenceKecamatan
-			trxKPM.ResidenceKelurahan = req.ResidenceKelurahan
-			trxKPM.ResidenceZipCode = req.ResidenceZipCode
-			trxKPM.BranchID = req.BranchID
-			trxKPM.AssetCode = req.AssetCode
-			trxKPM.ManufactureYear = req.ManufactureYear
-			trxKPM.LicensePlate = req.LicensePlate
-			trxKPM.AssetUsageTypeCode = req.AssetUsageTypeCode
-			trxKPM.BPKBName = req.BPKBNameType
-			trxKPM.OwnerAsset = req.OwnerAsset
-			trxKPM.LoanAmount = req.LoanAmount
-			trxKPM.Tenor = req.Tenor
-			trxKPM.InstallmentAmount = req.InstallmentAmount
-			trxKPM.NumOfDependence = req.NumOfDependence
-			trxKPM.MaritalStatus = req.MaritalStatus
-			trxKPM.SpouseIDNumber = utils.CheckEmptyString(req.SpouseIDNumber)
-			trxKPM.SpouseLegalName = utils.CheckEmptyString(req.SpouseLegalName)
-			trxKPM.SpouseBirthDate = spouseBirthDate
-			trxKPM.SpouseBirthPlace = utils.CheckEmptyString(req.SpouseBirthPlace)
-			trxKPM.SpouseSurgateMotherName = utils.CheckEmptyString(req.SpouseSurgateMotherName)
-			trxKPM.SpouseMobilePhone = utils.CheckEmptyString(req.SpouseMobilePhone)
-			trxKPM.Education = req.Education
-			trxKPM.ProfessionID = req.ProfessionID
-			trxKPM.JobType = req.JobType
-			trxKPM.JobPosition = req.JobPosition
-			trxKPM.EmploymentSinceMonth = req.EmploymentSinceMonth
-			trxKPM.EmploymentSinceYear = req.EmploymentSinceYear
-			trxKPM.MonthlyFixedIncome = req.MonthlyFixedIncome
-			trxKPM.SpouseIncome = req.SpouseIncome
-			trxKPM.NoChassis = req.NoChassis
-			trxKPM.HomeStatus = req.HomeStatus
-			trxKPM.StaySinceYear = req.StaySinceYear
-			trxKPM.StaySinceMonth = req.StaySinceMonth
-			trxKPM.SelfiePhoto = utils.CheckEmptyString(req.SelfiePhoto)
-			trxKPM.KtpPhoto = utils.CheckEmptyString(req.KtpPhoto)
-			trxKPM.AF = req.AF
-			trxKPM.NTF = req.NTF
-			trxKPM.OTR = req.OTR
-			trxKPM.DPAmount = req.DPAmount
-			trxKPM.AdminFee = req.AdminFee
-			trxKPM.Dealer = req.Dealer
-			trxKPM.AssetCategoryID = req.AssetCategoryID
-			trxKPM.DupcheckData = string(utils.SafeEncoding(savedDupcheckData))
-			trxKPM.NegativeCustomerData = string(utils.SafeEncoding(savedNegativeCustomerData))
 			trxKPM.Decision = decision
 			trxKPM.Reason = resp.Reason
 			trxKPM.RuleCode = resp.Code
-			trxKPM.KPMID = req.KPMID
-
-			if resp.ReadjustContext != nil {
-				trxKPM.ReadjustContext = *resp.ReadjustContext
-			}
-
-			now := time.Now()
-			trxKPM.CreatedAt = now
-			trxKPM.UpdatedAt = now
-
-			err = u.repository.SaveTrxKPM(trxKPM)
-			if err != nil {
-				return
-			}
 		} else {
 			statusCode = constant.STATUS_KPM_ERROR_2WILEN
+
+			trxKPM.Decision = statusCode
+			trxKPMStatus.Decision = statusCode
 		}
 
-		errSave := u.repository.SaveTrxKPMStatus(entity.TrxKPMStatus{
-			ID:         utils.GenerateUUID(),
-			ProspectID: req.ProspectID,
-			Decision:   statusCode,
-			CreatedAt:  time.Now(),
-			UpdatedAt:  time.Now(),
-		})
+		trxKPM.CreatedAt = trxKPMStatus.CreatedAt
+		trxKPM.UpdatedAt = trxKPMStatus.UpdatedAt
+
+		errSave := u.repository.SaveTrxKPM(trxKPM)
+		if errSave != nil {
+			err = errSave
+			return
+		}
+
+		errSave = u.repository.SaveTrxKPMStatus(trxKPMStatus)
 		if errSave != nil {
 			err = errSave
 			return
@@ -215,6 +217,10 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		resp.Code = bannedChassisNumber.Code
 		resp.Result = constant.DECISION_KPM_REJECT
 		resp.Reason = bannedChassisNumber.Reason
+
+		trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
+		trxKPMStatus.CreatedAt = time.Now()
+		trxKPMStatus.UpdatedAt = time.Now()
 		return
 	}
 
@@ -232,6 +238,10 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		resp.Code = checkChassisNumber.Code
 		resp.Result = constant.DECISION_KPM_REJECT
 		resp.Reason = checkChassisNumber.Reason
+
+		trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
+		trxKPMStatus.CreatedAt = time.Now()
+		trxKPMStatus.UpdatedAt = time.Now()
 		return
 	}
 
@@ -300,6 +310,10 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 			resp.Result = constant.DECISION_KPM_REJECT
 			resp.Reason = blackList.Reason
 
+			trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
+			trxKPMStatus.CreatedAt = time.Now()
+			trxKPMStatus.UpdatedAt = time.Now()
+
 			return
 		}
 	}
@@ -332,6 +346,10 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		resp.Code = resultNegativeCustomerCheck.Code
 		resp.Result = constant.DECISION_KPM_REJECT
 		resp.Reason = resultNegativeCustomerCheck.Reason
+
+		trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
+		trxKPMStatus.CreatedAt = time.Now()
+		trxKPMStatus.UpdatedAt = time.Now()
 
 		return
 	}
@@ -401,6 +419,10 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		resp.Code = pmk.Code
 		resp.Result = constant.DECISION_KPM_REJECT
 		resp.Reason = pmk.Reason
+
+		trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
+		trxKPMStatus.CreatedAt = time.Now()
+		trxKPMStatus.UpdatedAt = time.Now()
 
 		return
 	}
@@ -737,6 +759,10 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 			resp.Reason = trxKPM.CheckEkycReason.(string)
 		}
 
+		trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
+		trxKPMStatus.CreatedAt = time.Now()
+		trxKPMStatus.UpdatedAt = time.Now()
+
 		return
 	}
 
@@ -755,6 +781,10 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		resp.Result = constant.DECISION_KPM_REJECT
 		resp.Code = filtering.Code.(string)
 		resp.Reason = filtering.Reason
+
+		trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
+		trxKPMStatus.CreatedAt = time.Now()
+		trxKPMStatus.UpdatedAt = time.Now()
 
 		return
 	}
@@ -893,6 +923,10 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		resp.Code = metricsScs.Code
 		resp.Reason = metricsScs.Reason
 
+		trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
+		trxKPMStatus.CreatedAt = time.Now()
+		trxKPMStatus.UpdatedAt = time.Now()
+
 		return
 	}
 
@@ -915,8 +949,17 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 
 	if ltv == 0 {
 		resp.Result = constant.DECISION_KPM_READJUST
+
+		trxKPMStatus.Decision = constant.DECISION_KPM_READJUST
+		trxKPMStatus.CreatedAt = time.Now()
+		trxKPMStatus.UpdatedAt = time.Now()
+
 		if readjustCount == (configValue2Wilen.Data.MaxReadjustAttempt - 1) {
 			resp.Result = constant.DECISION_KPM_REJECT
+
+			trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
+			trxKPMStatus.CreatedAt = time.Now()
+			trxKPMStatus.UpdatedAt = time.Now()
 		}
 
 		if adjustTenor {
@@ -948,8 +991,17 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 
 	if req.LoanAmount > marsevLoanAmountRes.Data.LoanAmountMaximum {
 		resp.Result = constant.DECISION_KPM_READJUST
+
+		trxKPMStatus.Decision = constant.DECISION_KPM_READJUST
+		trxKPMStatus.CreatedAt = time.Now()
+		trxKPMStatus.UpdatedAt = time.Now()
+
 		if readjustCount == (configValue2Wilen.Data.MaxReadjustAttempt - 1) {
 			resp.Result = constant.DECISION_KPM_REJECT
+
+			trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
+			trxKPMStatus.CreatedAt = time.Now()
+			trxKPMStatus.UpdatedAt = time.Now()
 		}
 
 		resp.Code = constant.READJUST_LOAN_AMOUNT_CODE_2WILEN
@@ -1049,8 +1101,17 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 
 	if len(marsevCalculateInstallmentRes.Data) == 0 {
 		resp.Result = constant.DECISION_KPM_READJUST
+
+		trxKPMStatus.Decision = constant.DECISION_KPM_READJUST
+		trxKPMStatus.CreatedAt = time.Now()
+		trxKPMStatus.UpdatedAt = time.Now()
+
 		if readjustCount == (configValue2Wilen.Data.MaxReadjustAttempt - 1) {
 			resp.Result = constant.DECISION_KPM_REJECT
+
+			trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
+			trxKPMStatus.CreatedAt = time.Now()
+			trxKPMStatus.UpdatedAt = time.Now()
 		}
 		resp.Code = constant.READJUST_TENOR_CODE_2WILEN
 		resp.Reason = constant.READJUST_TENOR_REASON_2WILEN
@@ -1130,6 +1191,10 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		resp.Code = dsr.Code
 		resp.Reason = dsr.Reason
 
+		trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
+		trxKPMStatus.CreatedAt = time.Now()
+		trxKPMStatus.UpdatedAt = time.Now()
+
 		return
 	}
 
@@ -1168,6 +1233,10 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		resp.Result = constant.DECISION_KPM_REJECT
 		resp.Code = metricsTotalDsrFmfPbk.Code
 		resp.Reason = metricsTotalDsrFmfPbk.Reason
+
+		trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
+		trxKPMStatus.CreatedAt = time.Now()
+		trxKPMStatus.UpdatedAt = time.Now()
 
 		return
 	}
@@ -1211,8 +1280,16 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 	resp.Code = ageVehicle.Code
 	resp.Reason = ageVehicle.Reason
 
+	trxKPMStatus.Decision = constant.DECISION_KPM_APPROVE
+	trxKPMStatus.CreatedAt = time.Now()
+	trxKPMStatus.UpdatedAt = time.Now()
+
 	if ageVehicle.Result == constant.DECISION_REJECT {
 		resp.Result = constant.DECISION_KPM_REJECT
+
+		trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
+		trxKPMStatus.CreatedAt = time.Now()
+		trxKPMStatus.UpdatedAt = time.Now()
 	}
 
 	// Store Customer Domain
