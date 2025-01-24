@@ -458,6 +458,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			"kpm_id":                     trxKPM.KPMID,
 			"result_pefindo":             trxKPM.ResultPefindo,
 			"baki_debet":                 trxKPM.BakiDebet,
+			"readjust_context":           trxKPM.ReadjustContext,
 		}
 
 		return data, err
