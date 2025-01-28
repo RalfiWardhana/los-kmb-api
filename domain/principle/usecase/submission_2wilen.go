@@ -1239,7 +1239,7 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 	resp.Code = metricsTotalDsrFmfPbk.Code
 	resp.Reason = metricsTotalDsrFmfPbk.Reason
 
-	if dsr.Result == constant.DECISION_REJECT {
+	if metricsTotalDsrFmfPbk.Result == constant.DECISION_REJECT {
 		resp.Result = constant.DECISION_KPM_REJECT
 		resp.Code = metricsTotalDsrFmfPbk.Code
 		resp.Reason = metricsTotalDsrFmfPbk.Reason
