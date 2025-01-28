@@ -669,9 +669,17 @@ func (c *handler) Submission2Wilen(ctx echo.Context) (err error) {
 			return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", "429"), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_EXCEED_RESPONSE_MESSAGE))
 		}
 
+		errorMessages := map[string]string{
+			constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE: constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE,
+			constant.KPM_WAIT_MESSAGE_2WILEN:            constant.KPM_WAIT_MESSAGE_2WILEN,
+			constant.LOS_PROCESS_MESSAGE_2WILEN:         constant.LOS_PROCESS_MESSAGE_2WILEN,
+			constant.LOS_APPROVE_MESSAGE_2WILEN:         constant.LOS_APPROVE_MESSAGE_2WILEN,
+			constant.LOS_CANCEL_MESSAGE_2WILEN:          constant.LOS_CANCEL_MESSAGE_2WILEN,
+		}
+
 		errorMessage := constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE
-		if err.Error() == constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE {
-			errorMessage = constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE
+		if msg, exists := errorMessages[err.Error()]; exists {
+			errorMessage = msg
 		}
 
 		code, err := utils.WrapError(err)

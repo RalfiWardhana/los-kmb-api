@@ -69,8 +69,18 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		return
 	}
 
-	if trxKPMExist.Decision == constant.DECISION_KPM_REJECT {
-		err = errors.New(constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE)
+	decisionMessages := map[string]string{
+		constant.DECISION_KPM_REJECT:        constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE,
+		constant.STATUS_KPM_WAIT_2WILEN:     constant.KPM_WAIT_MESSAGE_2WILEN,
+		constant.DECISION_KPM_APPROVE:       constant.LOS_PROCESS_MESSAGE_2WILEN,
+		constant.STATUS_LOS_PROCESS_2WILEN:  constant.LOS_PROCESS_MESSAGE_2WILEN,
+		constant.STATUS_LOS_APPROVED_2WILEN: constant.LOS_APPROVE_MESSAGE_2WILEN,
+		constant.STATUS_LOS_CANCEL_2WILEN:   constant.LOS_CANCEL_MESSAGE_2WILEN,
+		constant.STATUS_KPM_CANCEL_2WILEN:   constant.LOS_CANCEL_MESSAGE_2WILEN,
+	}
+
+	if message, exists := decisionMessages[trxKPMExist.Decision]; exists {
+		err = errors.New(message)
 		return
 	}
 
