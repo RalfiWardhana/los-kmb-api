@@ -1409,7 +1409,7 @@ type Submission2Wilen struct {
 	LoanAmount              float64 `json:"loan_amount"  validate:"required,max=999999999999" example:"105000000"`
 	Tenor                   int     `json:"tenor" validate:"required,max=60" example:"12"`
 	InstallmentAmount       float64 `json:"installment_amount" validate:"required,max=999999999999" example:"4181333"`
-	NumOfDependence         int     `json:"num_of_dependence" validate:"required,max=50"  example:"1"`
+	NumOfDependence         int     `json:"num_of_dependence" validate:"omitempty,max=50"  example:"1"`
 	MaritalStatus           string  `json:"marital_status" validate:"required,marital"  example:"M"`
 	SpouseIDNumber          string  `json:"spouse_id_number"  validate:"omitempty,number,len=16" example:"3506126712000002"`
 	SpouseLegalName         string  `json:"spouse_legal_name" validate:"omitempty,allowcharsname,max=50" example:"YULINAR NIATI"`
