@@ -4240,7 +4240,7 @@ func TestGetTrxKPMStatus(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			query := fmt.Sprintf("SELECT TOP 1 tks.* FROM trx_kpm_status tks WITH (nolock) JOIN trx_kpm tk ON tks.ProspectID = tk.ProspectID WHERE tk.IDNumber = SCP.dbo.ENC_B64('SEC','%s') ORDER BY tk.created_at DESC", tc.idNumber)
+			query := fmt.Sprintf("SELECT TOP 1 tks.* FROM trx_kpm_status tks WITH (nolock) JOIN trx_kpm tk ON tks.ProspectID = tk.ProspectID WHERE tk.IDNumber = SCP.dbo.ENC_B64('SEC','%s') ORDER BY tks.created_at DESC", tc.idNumber)
 
 			if tc.mockError != nil {
 				mock.ExpectQuery(regexp.QuoteMeta(query)).

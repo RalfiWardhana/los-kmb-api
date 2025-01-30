@@ -930,7 +930,7 @@ func (r repoHandler) GetReadjustCountTrxKPM(prospectId string) int {
 
 func (r repoHandler) GetTrxKPMStatus(IDNumber string) (data entity.TrxKPMStatus, err error) {
 
-	if err = r.newKmb.Raw(fmt.Sprintf("SELECT TOP 1 tks.* FROM trx_kpm_status tks WITH (nolock) JOIN trx_kpm tk ON tks.ProspectID = tk.ProspectID WHERE tk.IDNumber = SCP.dbo.ENC_B64('SEC','%s') ORDER BY tk.created_at DESC", IDNumber)).Scan(&data).Error; err != nil {
+	if err = r.newKmb.Raw(fmt.Sprintf("SELECT TOP 1 tks.* FROM trx_kpm_status tks WITH (nolock) JOIN trx_kpm tk ON tks.ProspectID = tk.ProspectID WHERE tk.IDNumber = SCP.dbo.ENC_B64('SEC','%s') ORDER BY tks.created_at DESC", IDNumber)).Scan(&data).Error; err != nil {
 		return
 	}
 
