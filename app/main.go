@@ -364,7 +364,7 @@ func main() {
 
 	eventPrincipleHandler.NewService2Wilen(consumer2WilenRouter, principleRepo, principleCase, validator, producer, jsonResponse)
 
-	if err := consumer2WilenRouter.StartConsumeWithoutTimestamp(); err != nil {
+	if err := consumer2WilenRouter.StartConsumeProspectIDWithoutTimestamp(); err != nil {
 		panic(err)
 	}
 
