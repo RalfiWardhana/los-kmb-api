@@ -1316,6 +1316,8 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
 	}), 0)
 
+	time.Sleep(2 * time.Second)
+
 	// Store Customer Domain
 	var (
 		customerValidateRes          response.CustomerDomainValidate
