@@ -6,6 +6,9 @@ test:
 test_kmb:
 	@go test -coverprofile="unit_test/coverage.out" "./domain/cms/..." "./domain/elaborate_ltv/..." "./domain/filtering_new/..." "./domain/kmb/..."
 	@go tool cover -func="unit_test/coverage.out"
+test_principle:
+	@go test -coverprofile="unit_test/coverage.out" "./domain/principle/..."
+	@go tool cover -func="unit_test/coverage.out"
 coverage:
 	@go tool cover -html="unit_test/coverage.out"
 run:

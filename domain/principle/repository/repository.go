@@ -256,8 +256,6 @@ func (r repoHandler) GetTrxPrincipleStatus(nik string) (data entity.TrxPrinciple
 		return
 	}
 
-	fmt.Println(data)
-
 	return
 }
 

@@ -686,48 +686,170 @@ func TestSaveFiltering(t *testing.T) {
 
 	gormDB, _ := gorm.Open("sqlite3", sqlDB)
 	gormDB.LogMode(true)
-
-	_ = gormDB
+	gormDB = gormDB.Debug()
 
 	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
-	trxFiltering := entity.FilteringKMB{
-		ProspectID: "TST001",
-		Decision:   "PASS",
-	}
-	filtering := structToSlice(trxFiltering)
-	trxDetailBiro := []entity.TrxDetailBiro{
-		{
-			ProspectID: "TST001",
-		},
-	}
-	detailBiro := structToSlice(trxDetailBiro)
-	trxCmoNoFPD := entity.TrxCmoNoFPD{
-		ProspectID:              "TST001",
-		CMOID:                   "105394",
-		CmoCategory:             "OLD",
-		CmoJoinDate:             "2020-06-12",
-		DefaultCluster:          "Cluster C",
-		DefaultClusterStartDate: "2024-05-14",
-		DefaultClusterEndDate:   "2024-07-31",
-		CreatedAt:               time.Time{},
-	}
-	cmoNoFPD := structToSlice(trxCmoNoFPD)
-	mock.ExpectBegin()
-	mock.ExpectExec(`INSERT INTO "trx_filtering" (.*)`).
-		WithArgs(filtering...).
-		WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectExec(`INSERT INTO "trx_cmo_no_fpd" (.*)`).
-		WithArgs(cmoNoFPD...).
-		WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectExec(`INSERT INTO "trx_detail_biro" (.*)`).
-		WithArgs(detailBiro...).
-		WillReturnResult(sqlmock.NewResult(1, 1))
-	mock.ExpectCommit()
 
-	err := repo.SaveFiltering(trxFiltering, trxDetailBiro, trxCmoNoFPD)
-	if err != nil {
-		t.Errorf("error '%s' was not expected, but got: ", err)
-	}
+	fixedTime := time.Date(2025, 1, 31, 9, 32, 13, 0, time.UTC)
+
+	t.Run("success case - with CMO and biro data", func(t *testing.T) {
+		trxFiltering := entity.FilteringKMB{
+			ProspectID: "TST001",
+			Decision:   "PASS",
+			CreatedAt:  fixedTime,
+		}
+		filtering := structToSlice(trxFiltering)
+
+		trxDetailBiro := []entity.TrxDetailBiro{
+			{
+				ProspectID: "TST001",
+				CreatedAt:  fixedTime,
+			},
+		}
+		detailBiro := structToSlice(trxDetailBiro[0])
+
+		trxCmoNoFPD := entity.TrxCmoNoFPD{
+			ProspectID:              "TST001",
+			CMOID:                   "105394",
+			CmoCategory:             "OLD",
+			CmoJoinDate:             "2020-06-12",
+			DefaultCluster:          "Cluster C",
+			DefaultClusterStartDate: "2024-05-14",
+			DefaultClusterEndDate:   "2024-07-31",
+			CreatedAt:               fixedTime,
+		}
+		cmoNoFPD := structToSlice(trxCmoNoFPD)
+
+		mock.ExpectBegin()
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_filtering"`)).
+			WithArgs(filtering...).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_cmo_no_fpd"`)).
+			WithArgs(cmoNoFPD...).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_detail_biro"`)).
+			WithArgs(detailBiro...).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectCommit()
+
+		err := repo.SaveFiltering(trxFiltering, trxDetailBiro, trxCmoNoFPD)
+		if err != nil {
+			t.Errorf("expected no error, but got: %v", err)
+		}
+	})
+
+	t.Run("success case - without CMO data", func(t *testing.T) {
+		trxFiltering := entity.FilteringKMB{
+			ProspectID: "TST002",
+			Decision:   "PASS",
+			CreatedAt:  fixedTime,
+		}
+		filtering := structToSlice(trxFiltering)
+
+		trxDetailBiro := []entity.TrxDetailBiro{
+			{
+				ProspectID: "TST002",
+				CreatedAt:  fixedTime,
+			},
+		}
+		detailBiro := structToSlice(trxDetailBiro[0])
+
+		mock.ExpectBegin()
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_filtering"`)).
+			WithArgs(filtering...).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_detail_biro"`)).
+			WithArgs(detailBiro...).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectCommit()
+
+		err := repo.SaveFiltering(trxFiltering, trxDetailBiro, entity.TrxCmoNoFPD{})
+		if err != nil {
+			t.Errorf("expected no error, but got: %v", err)
+		}
+	})
+
+	t.Run("error case - CMO creation fails", func(t *testing.T) {
+		trxFiltering := entity.FilteringKMB{
+			ProspectID: "TST004",
+			Decision:   "PASS",
+			CreatedAt:  fixedTime,
+		}
+		filtering := structToSlice(trxFiltering)
+
+		trxCmoNoFPD := entity.TrxCmoNoFPD{
+			ProspectID: "TST004",
+			CMOID:      "105394",
+			CreatedAt:  fixedTime,
+		}
+		cmoNoFPD := structToSlice(trxCmoNoFPD)
+
+		expectedErr := fmt.Errorf("database error")
+
+		mock.ExpectBegin()
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_filtering"`)).
+			WithArgs(filtering...).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_cmo_no_fpd"`)).
+			WithArgs(cmoNoFPD...).
+			WillReturnError(expectedErr)
+		mock.ExpectRollback()
+
+		err := repo.SaveFiltering(trxFiltering, nil, trxCmoNoFPD)
+		if err == nil {
+			t.Error("expected an error but got nil")
+			return
+		}
+
+		if err.Error() != expectedErr.Error() {
+			t.Errorf("expected error: %v, got: %v", expectedErr, err)
+		}
+	})
+
+	t.Run("error case - insert biro data fails", func(t *testing.T) {
+		trxFiltering := entity.FilteringKMB{
+			ProspectID: "TST001",
+			Decision:   "PASS",
+			CreatedAt:  fixedTime,
+		}
+		filtering := structToSlice(trxFiltering)
+
+		trxDetailBiro := []entity.TrxDetailBiro{
+			{
+				ProspectID: "TST001",
+				CreatedAt:  fixedTime,
+			},
+		}
+		detailBiro := structToSlice(trxDetailBiro[0])
+
+		trxCmoNoFPD := entity.TrxCmoNoFPD{
+			ProspectID:              "TST001",
+			CMOID:                   "105394",
+			CmoCategory:             "OLD",
+			CmoJoinDate:             "2020-06-12",
+			DefaultCluster:          "Cluster C",
+			DefaultClusterStartDate: "2024-05-14",
+			DefaultClusterEndDate:   "2024-07-31",
+			CreatedAt:               fixedTime,
+		}
+		cmoNoFPD := structToSlice(trxCmoNoFPD)
+
+		expectedErr := fmt.Errorf("database error")
+
+		mock.ExpectBegin()
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_filtering"`)).
+			WithArgs(filtering...).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_cmo_no_fpd"`)).
+			WithArgs(cmoNoFPD...).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_detail_biro"`)).
+			WithArgs(detailBiro...).
+			WillReturnError(expectedErr)
+		mock.ExpectRollback()
+
+		_ = repo.SaveFiltering(trxFiltering, trxDetailBiro, trxCmoNoFPD)
+	})
 }
 
 func TestGetBannedPMKDSR(t *testing.T) {
@@ -1223,6 +1345,242 @@ func TestGetMappingDukcapil_AOROCustomer(t *testing.T) {
 	}
 }
 
+func TestGetMappingDukcapilVD_NewCustomerQueryError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	statusVD := constant.EKYC_RTO
+	customerStatus := constant.STATUS_KONSUMEN_NEW
+	customerSegment := "segment1"
+	isValid := true
+
+	expectedError := fmt.Errorf("database error")
+
+	query := fmt.Sprintf(`SELECT * FROM kmb_dukcapil_verify_result_v2 WITH (nolock) WHERE result_vd='%s' AND status_konsumen='%s'`, statusVD, customerStatus)
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnError(expectedError)
+
+	result, err := repo.GetMappingDukcapilVD(statusVD, customerStatus, customerSegment, isValid)
+
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	if err.Error() != expectedError.Error() {
+		t.Errorf("expected error '%v', but got '%v'", expectedError, err)
+	}
+
+	if result != (entity.MappingResultDukcapilVD{}) {
+		t.Errorf("expected empty result, but got '%v'", result)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetMappingDukcapilVD_ExistingCustomerQueryError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	statusVD := constant.EKYC_NOT_CHECK
+	customerStatus := "existing"
+	customerSegment := "segment1"
+	isValid := true
+
+	expectedError := fmt.Errorf("database error")
+
+	query := fmt.Sprintf(`SELECT * FROM kmb_dukcapil_verify_result_v2 WITH (nolock) WHERE result_vd='%s' AND status_konsumen='%s' AND kategori_status_konsumen='%s'`, statusVD, customerStatus, customerSegment)
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnError(expectedError)
+
+	result, err := repo.GetMappingDukcapilVD(statusVD, customerStatus, customerSegment, isValid)
+
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	if err.Error() != expectedError.Error() {
+		t.Errorf("expected error '%v', but got '%v'", expectedError, err)
+	}
+
+	if result != (entity.MappingResultDukcapilVD{}) {
+		t.Errorf("expected empty result, but got '%v'", result)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetMappingDukcapilVD_NewCustomerInvalidQueryError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	statusVD := "some_invalid_status"
+	customerStatus := constant.STATUS_KONSUMEN_NEW
+	customerSegment := "segment1"
+	isValid := false
+
+	expectedError := fmt.Errorf("database error")
+
+	query := fmt.Sprintf(`SELECT * FROM kmb_dukcapil_verify_result_v2 WITH (nolock) WHERE status_konsumen='%s' AND is_valid=0`, customerStatus)
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnError(expectedError)
+
+	result, err := repo.GetMappingDukcapilVD(statusVD, customerStatus, customerSegment, isValid)
+
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	if err.Error() != expectedError.Error() {
+		t.Errorf("expected error '%v', but got '%v'", expectedError, err)
+	}
+
+	if result != (entity.MappingResultDukcapilVD{}) {
+		t.Errorf("expected empty result, but got '%v'", result)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetMappingDukcapilVD_ExistingCustomerInvalidQueryError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	statusVD := "some_invalid_status"
+	customerStatus := "existing"
+	customerSegment := "segment1"
+	isValid := false
+
+	expectedError := fmt.Errorf("database error")
+
+	query := fmt.Sprintf(`SELECT * FROM kmb_dukcapil_verify_result_v2 WITH (nolock) WHERE status_konsumen='%s' AND kategori_status_konsumen='%s' AND is_valid=0`, customerStatus, customerSegment)
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnError(expectedError)
+
+	result, err := repo.GetMappingDukcapilVD(statusVD, customerStatus, customerSegment, isValid)
+
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	if err.Error() != expectedError.Error() {
+		t.Errorf("expected error '%v', but got '%v'", expectedError, err)
+	}
+
+	if result != (entity.MappingResultDukcapilVD{}) {
+		t.Errorf("expected empty result, but got '%v'", result)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetMappingDukcapil_NewCustomerQueryError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	statusVD := constant.EKYC_RTO
+	statusFR := "MATCH"
+	customerStatus := constant.STATUS_KONSUMEN_NEW
+	customerSegment := "segment1"
+
+	expectedError := fmt.Errorf("database error")
+
+	query := fmt.Sprintf(`SELECT * FROM kmb_dukcapil_mapping_result_v2 WITH (nolock) WHERE result_vd='%s' AND result_fr='%s' AND status_konsumen='%s'`,
+		statusVD, statusFR, customerStatus)
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnError(expectedError)
+
+	result, err := repo.GetMappingDukcapil(statusVD, statusFR, customerStatus, customerSegment)
+
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	if err.Error() != expectedError.Error() {
+		t.Errorf("expected error '%v', but got '%v'", expectedError, err)
+	}
+
+	if result != (entity.MappingResultDukcapil{}) {
+		t.Errorf("expected empty result, but got '%v'", result)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetMappingDukcapil_ExistingCustomerQueryError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	statusVD := constant.EKYC_RTO
+	statusFR := "MATCH"
+	customerStatus := "existing"
+	customerSegment := "segment1"
+
+	expectedError := fmt.Errorf("database error")
+
+	query := fmt.Sprintf(`SELECT * FROM kmb_dukcapil_mapping_result_v2 WITH (nolock) WHERE result_vd='%s' AND result_fr='%s' AND status_konsumen='%s' AND kategori_status_konsumen='%s'`,
+		statusVD, statusFR, customerStatus, customerSegment)
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnError(expectedError)
+
+	result, err := repo.GetMappingDukcapil(statusVD, statusFR, customerStatus, customerSegment)
+
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	if err.Error() != expectedError.Error() {
+		t.Errorf("expected error '%v', but got '%v'", expectedError, err)
+	}
+
+	if result != (entity.MappingResultDukcapil{}) {
+		t.Errorf("expected empty result, but got '%v'", result)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
 func TestCheckCMONoFPD(t *testing.T) {
 	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
 
@@ -1417,6 +1775,41 @@ func TestGetTrxPrincipleStatus(t *testing.T) {
 	}
 }
 
+func TestGetTrxPrincipleStatus_QueryError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	nik := "1140024080800016"
+	expectedError := fmt.Errorf("database error")
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_status WITH (nolock) WHERE IDNumber = '%s' ORDER BY created_at DESC`, nik)
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnError(expectedError)
+
+	result, err := repo.GetTrxPrincipleStatus(nik)
+
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	if err.Error() != expectedError.Error() {
+		t.Errorf("expected error '%v', but got '%v'", expectedError, err)
+	}
+
+	if result != (entity.TrxPrincipleStatus{}) {
+		t.Errorf("expected empty result, but got '%v'", result)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
 func TestSavePrincipleStepOne(t *testing.T) {
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -1466,6 +1859,137 @@ func TestSavePrincipleStepOne(t *testing.T) {
 	}
 }
 
+func TestSavePrincipleStepOne_StepOneInsertError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	dataStepOne := entity.TrxPrincipleStepOne{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "approved",
+	}
+
+	expectedError := fmt.Errorf("insert step one error")
+
+	mock.ExpectBegin()
+
+	stepOne := structToSlice(dataStepOne)
+	mock.ExpectExec(`INSERT INTO "trx_principle_step_one" (.*)`).
+		WithArgs(stepOne...).
+		WillReturnError(expectedError)
+
+	mock.ExpectRollback()
+
+	err := repo.SavePrincipleStepOne(dataStepOne)
+
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	if err.Error() != expectedError.Error() {
+		t.Errorf("expected error '%v', but got '%v'", expectedError, err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestSavePrincipleStepOne_StatusInsertError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	dataStepOne := entity.TrxPrincipleStepOne{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "approved",
+	}
+
+	dataStatus := entity.TrxPrincipleStatus{
+		ProspectID: dataStepOne.ProspectID,
+		IDNumber:   dataStepOne.IDNumber,
+		Step:       1,
+		Decision:   dataStepOne.Decision,
+		UpdatedAt:  time.Now(),
+	}
+
+	expectedError := fmt.Errorf("insert status error")
+
+	mock.ExpectBegin()
+
+	stepOne := structToSlice(dataStepOne)
+	mock.ExpectExec(`INSERT INTO "trx_principle_step_one" (.*)`).
+		WithArgs(stepOne...).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectExec(`INSERT INTO "trx_principle_status" (.*)`).
+		WithArgs(dataStatus.ProspectID, dataStatus.IDNumber, dataStatus.Step, dataStatus.Decision, sqlmock.AnyArg(), sqlmock.AnyArg()).
+		WillReturnError(expectedError)
+
+	mock.ExpectRollback()
+
+	err := repo.SavePrincipleStepOne(dataStepOne)
+
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	if err.Error() != expectedError.Error() {
+		t.Errorf("expected error '%v', but got '%v'", expectedError, err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestSavePrincipleStepOne_TransactionError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	dataStepOne := entity.TrxPrincipleStepOne{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "approved",
+	}
+
+	expectedError := fmt.Errorf("transaction error")
+
+	mock.ExpectBegin().WillReturnError(expectedError)
+
+	err := repo.SavePrincipleStepOne(dataStepOne)
+
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	if err.Error() != expectedError.Error() {
+		t.Errorf("expected error '%v', but got '%v'", expectedError, err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
 func TestGetPrincipleStepOne(t *testing.T) {
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -1496,6 +2020,41 @@ func TestGetPrincipleStepOne(t *testing.T) {
 
 	if result != response {
 		t.Errorf("expected '%v', but got '%v'", response, result)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetPrincipleStepOne_QueryError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	prospectID := "SAL-1140024080800016"
+	expectedError := fmt.Errorf("database error")
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_one WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+	mock.ExpectQuery(regexp.QuoteMeta(query)).WillReturnError(expectedError)
+
+	result, err := repo.GetPrincipleStepOne(prospectID)
+
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	if err.Error() != expectedError.Error() {
+		t.Errorf("expected error '%v', but got '%v'", expectedError, err)
+	}
+
+	if result != (entity.TrxPrincipleStepOne{}) {
+		t.Errorf("expected empty result, but got '%v'", result)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -1551,6 +2110,134 @@ func TestUpdatePrincipleStepOne(t *testing.T) {
 	}
 }
 
+func TestUpdatePrincipleStepOne_TransactionError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	prospectID := "SAL-1140024080800016"
+	updatedData := entity.TrxPrincipleStepOne{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "approved",
+	}
+
+	expectedError := fmt.Errorf("transaction error")
+	mock.ExpectBegin().WillReturnError(expectedError)
+
+	err := repo.UpdatePrincipleStepOne(prospectID, updatedData)
+
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	if err.Error() != expectedError.Error() {
+		t.Errorf("expected error '%v', but got '%v'", expectedError, err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestUpdatePrincipleStepOne_SelectError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	prospectID := "SAL-1140024080800016"
+	updatedData := entity.TrxPrincipleStepOne{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "approved",
+	}
+
+	expectedError := fmt.Errorf("select error")
+
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "trx_principle_step_one" WHERE (ProspectID = ?) ORDER BY created_at DESC LIMIT 1`)).
+		WithArgs(prospectID).
+		WillReturnError(expectedError)
+	mock.ExpectRollback()
+
+	err := repo.UpdatePrincipleStepOne(prospectID, updatedData)
+
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	if err.Error() != expectedError.Error() {
+		t.Errorf("expected error '%v', but got '%v'", expectedError, err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestUpdatePrincipleStepOne_UpdateError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	existingData := entity.TrxPrincipleStepOne{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "pending",
+		CreatedAt:  time.Now().Add(-time.Hour),
+	}
+
+	updatedData := entity.TrxPrincipleStepOne{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "approved",
+	}
+
+	expectedError := fmt.Errorf("update error")
+
+	mock.ExpectBegin()
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "trx_principle_step_one" WHERE (ProspectID = ?) ORDER BY created_at DESC LIMIT 1`)).
+		WithArgs(existingData.ProspectID).
+		WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "IDNumber", "Decision", "created_at"}).
+			AddRow(existingData.ProspectID, existingData.IDNumber, existingData.Decision, existingData.CreatedAt))
+
+	mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_principle_step_one" SET "Decision" = ?, "IDNumber" = ?, "ProspectID" = ? WHERE (ProspectID = ?)`)).
+		WithArgs(updatedData.Decision, updatedData.IDNumber, updatedData.ProspectID, updatedData.ProspectID).
+		WillReturnError(expectedError)
+
+	mock.ExpectRollback()
+
+	err := repo.UpdatePrincipleStepOne(existingData.ProspectID, updatedData)
+
+	if err == nil {
+		t.Error("expected error but got nil")
+	}
+
+	if err.Error() != expectedError.Error() {
+		t.Errorf("expected error '%v', but got '%v'", expectedError, err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
 func TestSavePrincipleStepTwo(t *testing.T) {
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -1588,6 +2275,96 @@ func TestSavePrincipleStepTwo(t *testing.T) {
 
 	if err != nil {
 		t.Errorf("error '%s' was not expected, but got: %s", err, err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestSavePrincipleStepTwo_CreateError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	fixedTime := time.Date(2024, 10, 7, 9, 48, 22, 0, time.UTC)
+
+	dataStepTwo := entity.TrxPrincipleStepTwo{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "approved",
+		CreatedAt:  fixedTime,
+	}
+
+	mock.ExpectBegin()
+
+	data := structToSliceWithTimeArgs(dataStepTwo)
+	mock.ExpectExec(`INSERT INTO "trx_principle_step_two" (.*)`).
+		WithArgs(data...).
+		WillReturnError(fmt.Errorf("database error"))
+
+	mock.ExpectRollback()
+
+	err := repo.SavePrincipleStepTwo(dataStepTwo)
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+
+	if err.Error() != "database error" {
+		t.Errorf("expected error 'database error', got '%v'", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestSavePrincipleStepTwo_UpdateError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	fixedTime := time.Date(2024, 10, 7, 9, 48, 22, 0, time.UTC)
+
+	dataStepTwo := entity.TrxPrincipleStepTwo{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "approved",
+		CreatedAt:  fixedTime,
+	}
+
+	mock.ExpectBegin()
+
+	data := structToSliceWithTimeArgs(dataStepTwo)
+	mock.ExpectExec(`INSERT INTO "trx_principle_step_two" (.*)`).
+		WithArgs(data...).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectExec(`UPDATE "trx_principle_status" SET "Decision" = \?, "IDNumber" = \?, "ProspectID" = \?, "Step" = \?, "updated_at" = \? WHERE \(ProspectID = \?\)`).
+		WithArgs("approved", "123", "SAL-1140024080800016", 2, sqlmock.AnyArg(), "SAL-1140024080800016").
+		WillReturnError(fmt.Errorf("update error"))
+
+	mock.ExpectRollback()
+
+	err := repo.SavePrincipleStepTwo(dataStepTwo)
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+
+	if err.Error() != "update error" {
+		t.Errorf("expected error 'update error', got '%v'", err)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -1643,6 +2420,97 @@ func TestUpdatePrincipleStepTwo(t *testing.T) {
 	}
 }
 
+func TestUpdatePrincipleStepTwo_RecordNotFound(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	prospectID := "SAL-1140024080800016"
+	updatedData := entity.TrxPrincipleStepTwo{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "approved",
+	}
+
+	mock.ExpectBegin()
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "trx_principle_step_two" WHERE (ProspectID = ?) ORDER BY created_at DESC LIMIT 1`)).
+		WithArgs(prospectID).
+		WillReturnError(gorm.ErrRecordNotFound)
+
+	mock.ExpectRollback()
+
+	err := repo.UpdatePrincipleStepTwo(prospectID, updatedData)
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+
+	if err != gorm.ErrRecordNotFound {
+		t.Errorf("expected error '%v', got '%v'", gorm.ErrRecordNotFound, err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestUpdatePrincipleStepTwo_UpdateError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	existingData := entity.TrxPrincipleStepTwo{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "pending",
+		CreatedAt:  time.Now().Add(-time.Hour),
+	}
+
+	updatedData := entity.TrxPrincipleStepTwo{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "approved",
+	}
+
+	mock.ExpectBegin()
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT * FROM "trx_principle_step_two" WHERE (ProspectID = ?) ORDER BY created_at DESC LIMIT 1`)).
+		WithArgs(existingData.ProspectID).
+		WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "IDNumber", "Decision", "created_at"}).
+			AddRow(existingData.ProspectID, existingData.IDNumber, existingData.Decision, existingData.CreatedAt))
+
+	mock.ExpectExec(regexp.QuoteMeta(`UPDATE "trx_principle_step_two" SET "Decision" = ?, "IDNumber" = ?, "ProspectID" = ? WHERE (ProspectID = ?)`)).
+		WithArgs(updatedData.Decision, updatedData.IDNumber, updatedData.ProspectID, updatedData.ProspectID).
+		WillReturnError(fmt.Errorf("update failed"))
+
+	mock.ExpectRollback()
+
+	err := repo.UpdatePrincipleStepTwo(existingData.ProspectID, updatedData)
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+
+	if err.Error() != "update failed" {
+		t.Errorf("expected error 'update failed', got '%v'", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
 func TestGetPrincipleStepTwo(t *testing.T) {
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -1673,6 +2541,76 @@ func TestGetPrincipleStepTwo(t *testing.T) {
 
 	if result != response {
 		t.Errorf("expected '%v', but got '%v'", response, result)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetPrincipleStepTwo_DatabaseError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	prospectID := "SAL-1140024080800016"
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_two WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WillReturnError(fmt.Errorf("database error"))
+
+	result, err := repo.GetPrincipleStepTwo(prospectID)
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+
+	if err.Error() != "database error" {
+		t.Errorf("expected error 'database error', got '%v'", err)
+	}
+
+	if result != (entity.TrxPrincipleStepTwo{}) {
+		t.Errorf("expected empty result, got %v", result)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetPrincipleStepTwo_NoRows(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	prospectID := "SAL-1140024080800016"
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_two WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "IDNumber"}))
+
+	result, err := repo.GetPrincipleStepTwo(prospectID)
+
+	if err == nil {
+		t.Error("expected error for no rows, got nil")
+	}
+
+	if err != gorm.ErrRecordNotFound {
+		t.Errorf("expected error '%v', got '%v'", gorm.ErrRecordNotFound, err)
+	}
+
+	if result != (entity.TrxPrincipleStepTwo{}) {
+		t.Errorf("expected empty result, got %v", result)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -1797,6 +2735,47 @@ func TestGetMappingElaborateLTV(t *testing.T) {
 	}
 }
 
+func TestGetMappingElaborateLTV_DatabaseError(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	query := `SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE result_pefindo = ? AND cluster = ? `
+
+	resultPefindo := "PASS"
+	cluster := "Cluster A"
+
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(resultPefindo, cluster).
+		WillReturnError(fmt.Errorf("database error"))
+	mock.ExpectCommit()
+
+	result, err := repo.GetMappingElaborateLTV(resultPefindo, cluster)
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+
+	if err.Error() != "database error" {
+		t.Errorf("expected error 'database error', got '%v'", err)
+	}
+
+	if len(result) != 0 {
+		t.Errorf("expected empty result, got %v", result)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
 func TestSaveTrxElaborateLTV(t *testing.T) {
 	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 
@@ -2039,6 +3018,53 @@ func TestGetScoreGenerator(t *testing.T) {
 	}
 }
 
+func TestGetScoreGenerator_DatabaseError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	zipCode := "12345"
+
+	expectedQuery := regexp.QuoteMeta(fmt.Sprintf(`SELECT TOP 1 x.* 
+	FROM
+	(
+		SELECT 
+		a.[key],
+		b.id AS score_generators_id
+		FROM [dbo].[score_models_rules_data] a
+		INNER JOIN score_generators b
+		ON b.id = a.score_generators
+		WHERE (a.[key] = 'first_residence_zipcode_2w_jabo' AND a.[value] = '%s')
+		OR (a.[key] = 'first_residence_zipcode_2w_others' AND a.[value] = '%s')
+	)x`, zipCode, zipCode))
+
+	mock.ExpectQuery(expectedQuery).
+		WillReturnError(fmt.Errorf("database error"))
+
+	result, err := repo.GetScoreGenerator(zipCode)
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+
+	if err.Error() != "database error" {
+		t.Errorf("expected error 'database error', got '%v'", err)
+	}
+
+	if result != (entity.ScoreGenerator{}) {
+		t.Errorf("expected empty result, got %v", result)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
 func TestGetScoreGeneratorROAO(t *testing.T) {
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -2083,6 +3109,50 @@ func TestGetScoreGeneratorROAO(t *testing.T) {
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %v", err)
+	}
+}
+
+func TestGetScoreGeneratorROAO_DatabaseError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	expectedQuery := regexp.QuoteMeta(`SELECT TOP 1 x.* 
+	FROM
+	(
+		SELECT 
+		a.[key],
+		b.id AS score_generators_id
+		FROM [dbo].[score_models_rules_data] a
+		INNER JOIN score_generators b
+		ON b.id = a.score_generators
+		WHERE a.[key] = 'first_residence_zipcode_2w_aoro'
+	)x`)
+
+	mock.ExpectQuery(expectedQuery).
+		WillReturnError(fmt.Errorf("database error"))
+
+	result, err := repo.GetScoreGeneratorROAO()
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+
+	if err.Error() != "database error" {
+		t.Errorf("expected error 'database error', got '%v'", err)
+	}
+
+	if result != (entity.ScoreGenerator{}) {
+		t.Errorf("expected empty result, got %v", result)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
 }
 
@@ -2261,6 +3331,86 @@ func TestGetActiveLoanTypeLast6M(t *testing.T) {
 	}
 }
 
+func TestGetActiveLoanTypeLast6M_Error(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	customerID := "CUSTOMER123"
+
+	expectedQuery := regexp.QuoteMeta(fmt.Sprintf(`SELECT CustomerID, Concat([1],' ',';',' ',[2],' ',';',' ',[3]) AS active_loanType_last6m FROM 
+    ( SELECT * FROM 
+        ( SELECT  CustomerID, PRODUCT, Seq_PRODUCT FROM 
+            ( SELECT DISTINCT CustomerID,PRODUCT, ROW_NUMBER() OVER (PARTITION BY CustomerID Order By PRODUCT DESC) AS Seq_PRODUCT FROM 
+                ( SELECT DISTINCT CustomerID, 
+                        CASE WHEN ContractStatus in ('ICP','PRP','LIV','RRD','ICL','INV') and MOB<=-1 and MOB>=-6 THEN PRODUCT 
+                        END AS 'PRODUCT' 
+                    FROM 
+                    ( SELECT CustomerID,A.ApplicationID,DATEDIFF(MM, GETDATE(), AgingDate) AS 'MOB', CAST(aa.AssetTypeID AS int) AS PRODUCT, ContractStatus FROM                                    
+                        ( SELECT * FROM Agreement a WITH (NOLOCK) WHERE a.CustomerID = '%s'  
+                        )A 
+                        LEFT JOIN 
+                        ( SELECT DISTINCT ApplicationID,AgingDate,EndPastDueDays FROM SBOAging WITH (NOLOCK) 
+                            WHERE ApplicationID IN (SELECT DISTINCT a.ApplicationID  FROM Agreement a WITH (NOLOCK)) AND AgingDate=EOMONTH(AgingDate) 
+                        )B ON A.ApplicationID=B.ApplicationID 
+                        LEFT JOIN AgreementAsset aa WITH (NOLOCK) ON A.ApplicationID = aa.ApplicationID 
+                    )S 
+                )T 
+            )U 
+        ) AS SourceTable PIVOT(AVG(PRODUCT) FOR Seq_PRODUCT IN([1],[2],[3])) AS PivotTable 
+    )V`, customerID))
+
+	testCases := []struct {
+		name          string
+		mockBehavior  func()
+		expectedErr   error
+		expectedScore entity.GetActiveLoanTypeLast6M
+	}{
+		{
+			name: "Database Error",
+			mockBehavior: func() {
+				mock.ExpectQuery(expectedQuery).WillReturnError(fmt.Errorf("database error"))
+			},
+			expectedErr:   fmt.Errorf("database error"),
+			expectedScore: entity.GetActiveLoanTypeLast6M{},
+		},
+		{
+			name: "Record Not Found",
+			mockBehavior: func() {
+				mock.ExpectQuery(expectedQuery).WillReturnError(gorm.ErrRecordNotFound)
+			},
+			expectedErr:   nil,
+			expectedScore: entity.GetActiveLoanTypeLast6M{},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc.mockBehavior()
+
+			result, err := repo.GetActiveLoanTypeLast6M(customerID)
+
+			if tc.expectedErr != nil {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectedErr.Error(), err.Error())
+			} else {
+				assert.NoError(t, err)
+			}
+
+			assert.Equal(t, tc.expectedScore, result)
+		})
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %v", err)
+	}
+}
+
 func TestGetActiveLoanTypeLast24M(t *testing.T) {
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -2303,6 +3453,72 @@ func TestGetActiveLoanTypeLast24M(t *testing.T) {
 	}
 }
 
+func TestGetActiveLoanTypeLast24M_DatabaseError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := repoHandler{
+		confins: gormDB,
+	}
+
+	customerID := "CUSTOMER123"
+
+	expectedQuery := regexp.QuoteMeta(fmt.Sprintf(`SELECT a.AgreementNo, MIN(DATEDIFF(MM, GETDATE(), s.AgingDate)) AS 'MOB' FROM Agreement a WITH (NOLOCK)
+	LEFT JOIN SBOAging s WITH (NOLOCK) ON s.ApplicationId = a.ApplicationID
+	WHERE a.ContractStatus in ('ICP','PRP','LIV','RRD','ICL','INV') 
+	AND DATEDIFF(MM, GETDATE(), s.AgingDate)<=-7 AND DATEDIFF(MM, GETDATE(), s.AgingDate)>=-24
+	AND a.CustomerID = '%s' GROUP BY a.AgreementNo`, customerID))
+
+	dbError := fmt.Errorf("database connection error")
+	mock.ExpectQuery(expectedQuery).WillReturnError(dbError)
+
+	result, err := repo.GetActiveLoanTypeLast24M(customerID)
+
+	assert.Error(t, err)
+	assert.Equal(t, dbError, err)
+	assert.Empty(t, result)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %v", err)
+	}
+}
+
+func TestGetActiveLoanTypeLast24M_RecordNotFound(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := repoHandler{
+		confins: gormDB,
+	}
+
+	customerID := "CUSTOMER123"
+
+	expectedQuery := regexp.QuoteMeta(fmt.Sprintf(`SELECT a.AgreementNo, MIN(DATEDIFF(MM, GETDATE(), s.AgingDate)) AS 'MOB' FROM Agreement a WITH (NOLOCK)
+	LEFT JOIN SBOAging s WITH (NOLOCK) ON s.ApplicationId = a.ApplicationID
+	WHERE a.ContractStatus in ('ICP','PRP','LIV','RRD','ICL','INV') 
+	AND DATEDIFF(MM, GETDATE(), s.AgingDate)<=-7 AND DATEDIFF(MM, GETDATE(), s.AgingDate)>=-24
+	AND a.CustomerID = '%s' GROUP BY a.AgreementNo`, customerID))
+
+	mock.ExpectQuery(expectedQuery).WillReturnError(gorm.ErrRecordNotFound)
+
+	result, err := repo.GetActiveLoanTypeLast24M(customerID)
+
+	assert.NoError(t, err)
+	assert.Empty(t, result)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %v", err)
+	}
+}
+
 func TestGetMoblast(t *testing.T) {
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -2335,6 +3551,66 @@ func TestGetMoblast(t *testing.T) {
 	}
 
 	assert.Equal(t, expectedResult, result)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %v", err)
+	}
+}
+
+func TestGetMoblast_DatabaseError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := repoHandler{
+		confins: gormDB,
+	}
+
+	customerID := "CUSTOMER123"
+
+	expectedQuery := regexp.QuoteMeta(fmt.Sprintf(`SELECT TOP 1 DATEDIFF(MM, GoLiveDate, GETDATE()) AS 'moblast' FROM Agreement a WITH (NOLOCK) 
+	WHERE a.CustomerID = '%s' AND a.GoLiveDate IS NOT NULL ORDER BY a.GoLiveDate DESC`, customerID))
+
+	dbError := fmt.Errorf("database connection error")
+	mock.ExpectQuery(expectedQuery).WillReturnError(dbError)
+
+	result, err := repo.GetMoblast(customerID)
+
+	assert.Error(t, err)
+	assert.Equal(t, dbError, err)
+	assert.Empty(t, result)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %v", err)
+	}
+}
+
+func TestGetMoblast_RecordNotFound(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := repoHandler{
+		confins: gormDB,
+	}
+
+	customerID := "CUSTOMER123"
+
+	expectedQuery := regexp.QuoteMeta(fmt.Sprintf(`SELECT TOP 1 DATEDIFF(MM, GoLiveDate, GETDATE()) AS 'moblast' FROM Agreement a WITH (NOLOCK) 
+	WHERE a.CustomerID = '%s' AND a.GoLiveDate IS NOT NULL ORDER BY a.GoLiveDate DESC`, customerID))
+
+	mock.ExpectQuery(expectedQuery).WillReturnError(gorm.ErrRecordNotFound)
+
+	result, err := repo.GetMoblast(customerID)
+
+	assert.NoError(t, err)
+	assert.Empty(t, result)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %v", err)
@@ -2382,6 +3658,111 @@ func TestSavePrincipleStepThree(t *testing.T) {
 	}
 }
 
+func TestSavePrincipleStepThree_CreateError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	dataStepThree := entity.TrxPrincipleStepThree{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "approved",
+	}
+
+	mock.ExpectBegin()
+
+	// Simulate error during Create operation
+	stepThree := structToSlice(dataStepThree)
+	mock.ExpectExec(`INSERT INTO "trx_principle_step_three" (.*)`).
+		WithArgs(stepThree...).
+		WillReturnError(fmt.Errorf("create operation failed"))
+
+	// Expect rollback due to error
+	mock.ExpectRollback()
+
+	err := repo.SavePrincipleStepThree(dataStepThree)
+
+	// Verify error is returned
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "create operation failed")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestSavePrincipleStepThree_UpdateError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	dataStepThree := entity.TrxPrincipleStepThree{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "approved",
+	}
+
+	mock.ExpectBegin()
+
+	stepThree := structToSlice(dataStepThree)
+	mock.ExpectExec(`INSERT INTO "trx_principle_step_three" (.*)`).
+		WithArgs(stepThree...).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	mock.ExpectExec(`UPDATE "trx_principle_status" SET "Decision" = \?, "IDNumber" = \?, "ProspectID" = \?, "Step" = \?, "updated_at" = \? WHERE \(ProspectID = \?\)`).
+		WithArgs("approved", "123", "SAL-1140024080800016", 3, sqlmock.AnyArg(), "SAL-1140024080800016").
+		WillReturnError(fmt.Errorf("update operation failed"))
+
+	mock.ExpectRollback()
+
+	err := repo.SavePrincipleStepThree(dataStepThree)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "update operation failed")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestSavePrincipleStepThree_TransactionError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	dataStepThree := entity.TrxPrincipleStepThree{
+		ProspectID: "SAL-1140024080800016",
+		IDNumber:   "123",
+		Decision:   "approved",
+	}
+
+	mock.ExpectBegin().WillReturnError(fmt.Errorf("transaction begin failed"))
+
+	err := repo.SavePrincipleStepThree(dataStepThree)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "transaction begin failed")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
 func TestGetPrincipleStepThree(t *testing.T) {
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -2419,13 +3800,41 @@ func TestGetPrincipleStepThree(t *testing.T) {
 	}
 }
 
+func TestGetPrincipleStepThree_DatabaseError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	prospectID := "SAL-1140024080800016"
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_step_three WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	expectedError := fmt.Errorf("database error")
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WillReturnError(expectedError)
+
+	result, err := repo.GetPrincipleStepThree(prospectID)
+
+	assert.Error(t, err)
+	assert.Equal(t, expectedError, err)
+	assert.Empty(t, result)
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
 func TestSavePrincipleEmergencyContact(t *testing.T) {
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
 
 	gormDB, _ := gorm.Open("sqlite3", sqlDB)
 	gormDB.LogMode(true)
-
 	gormDB = gormDB.Debug()
 
 	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
@@ -2474,10 +3883,7 @@ func TestSavePrincipleEmergencyContact(t *testing.T) {
 		mock.ExpectCommit()
 
 		err := repo.SavePrincipleEmergencyContact(data, idNumber)
-
-		if err != nil {
-			t.Errorf("error was not expected while saving new record: %s", err)
-		}
+		assert.NoError(t, err)
 	})
 
 	t.Run("Update Existing Record", func(t *testing.T) {
@@ -2497,25 +3903,114 @@ func TestSavePrincipleEmergencyContact(t *testing.T) {
 		mock.ExpectCommit()
 
 		err := repo.SavePrincipleEmergencyContact(data, idNumber)
-
-		if err != nil {
-			t.Errorf("error was not expected while updating existing record: %s", err)
-		}
+		assert.NoError(t, err)
 	})
 
-	t.Run("Database Error", func(t *testing.T) {
+	t.Run("Error - Create Record Fails", func(t *testing.T) {
 		mock.ExpectBegin()
 		mock.ExpectQuery(`SELECT TOP 1 \* FROM trx_principle_emergency_contact WHERE ProspectID = \?`).
 			WithArgs(data.ProspectID).
-			WillReturnError(fmt.Errorf("database error"))
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		expectedError := fmt.Errorf("failed to create record")
+		mock.ExpectExec(`INSERT INTO "trx_principle_emergency_contact" (.*)`).
+			WithArgs(
+				data.ProspectID, data.Name, data.Relationship, data.MobilePhone,
+				data.Address,
+				data.Rt, data.Rw, data.Kelurahan, data.Kecamatan, data.City,
+				data.Province, data.ZipCode, data.AreaPhone, data.Phone,
+				data.CustomerID, data.KPMID, sqlmock.AnyArg(), sqlmock.AnyArg(),
+			).
+			WillReturnError(expectedError)
 
 		mock.ExpectRollback()
 
 		err := repo.SavePrincipleEmergencyContact(data, idNumber)
+		assert.Error(t, err)
+		assert.Equal(t, expectedError, err)
+	})
 
-		if err == nil {
-			t.Error("error was expected but got nil")
-		}
+	t.Run("Error - Status Update Fails After Create", func(t *testing.T) {
+		mock.ExpectBegin()
+		mock.ExpectQuery(`SELECT TOP 1 \* FROM trx_principle_emergency_contact WHERE ProspectID = \?`).
+			WithArgs(data.ProspectID).
+			WillReturnError(gorm.ErrRecordNotFound)
+
+		mock.ExpectExec(`INSERT INTO "trx_principle_emergency_contact" (.*)`).
+			WithArgs(
+				data.ProspectID, data.Name, data.Relationship, data.MobilePhone,
+				data.Address,
+				data.Rt, data.Rw, data.Kelurahan, data.Kecamatan, data.City,
+				data.Province, data.ZipCode, data.AreaPhone, data.Phone,
+				data.CustomerID, data.KPMID, sqlmock.AnyArg(), sqlmock.AnyArg(),
+			).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		expectedError := fmt.Errorf("failed to update status")
+		mock.ExpectExec(`UPDATE "trx_principle_status" SET (.*) WHERE .*ProspectID = \?`).
+			WithArgs(constant.DECISION_CREDIT_PROCESS, idNumber, data.ProspectID, 4, sqlmock.AnyArg(), data.ProspectID).
+			WillReturnError(expectedError)
+
+		mock.ExpectRollback()
+
+		err := repo.SavePrincipleEmergencyContact(data, idNumber)
+		assert.Error(t, err)
+		assert.Equal(t, expectedError, err)
+	})
+
+	t.Run("Error - Update Record Fails", func(t *testing.T) {
+		mock.ExpectBegin()
+		mock.ExpectQuery(`SELECT TOP 1 \* FROM trx_principle_emergency_contact WHERE ProspectID = \?`).
+			WithArgs(data.ProspectID).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID"}).AddRow(data.ProspectID))
+
+		expectedError := fmt.Errorf("failed to update record")
+		mock.ExpectExec(`UPDATE "trx_principle_emergency_contact" SET "Name" = \?, "ProspectID" = \?, "updated_at" = \?  WHERE \(ProspectID = \?\)`).
+			WithArgs(data.Name, data.ProspectID, sqlmock.AnyArg(), data.ProspectID).
+			WillReturnError(expectedError)
+
+		mock.ExpectRollback()
+
+		err := repo.SavePrincipleEmergencyContact(data, idNumber)
+		assert.Error(t, err)
+		assert.Equal(t, expectedError, err)
+	})
+
+	t.Run("Error - Status Update Fails After Update", func(t *testing.T) {
+		mock.ExpectBegin()
+		mock.ExpectQuery(`SELECT TOP 1 \* FROM trx_principle_emergency_contact WHERE ProspectID = \?`).
+			WithArgs(data.ProspectID).
+			WillReturnRows(sqlmock.NewRows([]string{"ProspectID"}).AddRow(data.ProspectID))
+
+		mock.ExpectExec(`UPDATE "trx_principle_emergency_contact" SET "Name" = \?, "ProspectID" = \?, "updated_at" = \?  WHERE \(ProspectID = \?\)`).
+			WithArgs(data.Name, data.ProspectID, sqlmock.AnyArg(), data.ProspectID).
+			WillReturnResult(sqlmock.NewResult(0, 1))
+
+		expectedError := fmt.Errorf("failed to update status")
+		mock.ExpectExec(`UPDATE "trx_principle_status" SET (.*) WHERE .*ProspectID = \? AND Step = \?`).
+			WithArgs(constant.DECISION_CREDIT_PROCESS, idNumber, sqlmock.AnyArg(), data.ProspectID, 4).
+			WillReturnError(expectedError)
+
+		mock.ExpectRollback()
+
+		err := repo.SavePrincipleEmergencyContact(data, idNumber)
+		assert.Error(t, err)
+		assert.Equal(t, expectedError, err)
+	})
+
+	t.Run("Error - Select Query Returns Non-NotFound Error", func(t *testing.T) {
+		mock.ExpectBegin()
+
+		expectedError := fmt.Errorf("database connection error")
+		mock.ExpectQuery(`SELECT TOP 1 \* FROM trx_principle_emergency_contact WHERE ProspectID = \?`).
+			WithArgs(data.ProspectID).
+			WillReturnError(expectedError)
+
+		mock.ExpectRollback()
+
+		err := repo.SavePrincipleEmergencyContact(data, idNumber)
+		assert.Error(t, err)
+		assert.Equal(t, expectedError, err)
 	})
 
 	if err := mock.ExpectationsWereMet(); err != nil {
@@ -2554,6 +4049,35 @@ func TestGetPrincipleEmergencyContact(t *testing.T) {
 	if result != response {
 		t.Errorf("expected '%v', but got '%v'", response, result)
 	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetPrincipleEmergencyContact_DatabaseError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	prospectID := "SAL-1140024080800016"
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_emergency_contact WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	expectedError := fmt.Errorf("database error")
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WillReturnError(expectedError)
+
+	result, err := repo.GetPrincipleEmergencyContact(prospectID)
+
+	assert.Error(t, err)
+	assert.Equal(t, expectedError, err)
+	assert.Empty(t, result)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
@@ -2611,6 +4135,55 @@ func TestSaveToWorker(t *testing.T) {
 	}
 }
 
+func TestSaveToWorker_DatabaseError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	workers := []entity.TrxWorker{
+		{ProspectID: "SAL-1140024080800016", Activity: "Test"},
+		{ProspectID: "SAL-1140024080800017", Activity: "Test"},
+	}
+
+	mock.ExpectBegin()
+
+	mock.ExpectExec(`INSERT INTO "trx_worker" (.+) VALUES (.+)`).
+		WithArgs(
+			workers[0].ProspectID,
+			workers[0].Activity,
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+			sqlmock.AnyArg(),
+		).
+		WillReturnError(fmt.Errorf("database insert error"))
+
+	mock.ExpectRollback()
+
+	err := repo.SaveToWorker(workers)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "database insert error")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
 func TestGetElaborateLtv(t *testing.T) {
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -2645,6 +4218,38 @@ func TestGetElaborateLtv(t *testing.T) {
 	if result != response {
 		t.Errorf("expected %v, but got %v", response, result)
 	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetElaborateLtv_DatabaseError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	prospectID := "SAL-1140024080800016"
+
+	query := fmt.Sprintf(`SELECT CASE WHEN mmel.ltv IS NULL THEN mmelovd.ltv ELSE mmel.ltv END AS ltv FROM trx_elaborate_ltv tel WITH (nolock) 
+	LEFT JOIN m_mapping_elaborate_ltv mmel WITH (nolock) ON tel.m_mapping_elaborate_ltv_id = mmel.id
+	LEFT JOIN m_mapping_elaborate_ltv_ovd mmelovd WITH (nolock) ON tel.m_mapping_elaborate_ltv_id = mmelovd.id 
+	WHERE tel.prospect_id ='%s'`, prospectID)
+
+	expectedError := fmt.Errorf("database query error")
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WillReturnError(expectedError)
+
+	result, err := repo.GetElaborateLtv(prospectID)
+
+	assert.Error(t, err)
+	assert.Equal(t, expectedError, err)
+	assert.Empty(t, result)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
@@ -2718,6 +4323,71 @@ func TestSavePrincipleMarketingProgram(t *testing.T) {
 	}
 }
 
+func TestSavePrincipleMarketingProgram_DatabaseError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	data := entity.TrxPrincipleMarketingProgram{
+		ProspectID:                 "PMP-1234567890",
+		ProgramID:                  "",
+		ProgramName:                "Sample Marketing Program",
+		ProductOfferingID:          "",
+		ProductOfferingDescription: "",
+		LoanAmount:                 0,
+		LoanAmountMaximum:          0,
+		AdminFee:                   0,
+		ProvisionFee:               0,
+		DPAmount:                   0,
+		FinanceAmount:              0,
+		InstallmentAmount:          0,
+		NTF:                        0,
+		OTR:                        0,
+		Dealer:                     "PSA",
+		AssetCategoryID:            "MATIC",
+	}
+
+	mock.ExpectBegin()
+
+	mock.ExpectExec(`INSERT INTO "trx_principle_marketing_program" (.*)`).
+		WithArgs(
+			data.ProspectID,
+			data.ProgramID,
+			data.ProgramName,
+			data.ProductOfferingID,
+			data.ProductOfferingDescription,
+			data.LoanAmount,
+			data.LoanAmountMaximum,
+			data.AdminFee,
+			data.ProvisionFee,
+			data.DPAmount,
+			data.FinanceAmount,
+			data.InstallmentAmount,
+			data.NTF,
+			data.OTR,
+			data.Dealer,
+			data.AssetCategoryID,
+			sqlmock.AnyArg(),
+		).
+		WillReturnError(fmt.Errorf("database insert error"))
+
+	mock.ExpectRollback()
+
+	err := repo.SavePrincipleMarketingProgram(data)
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "database insert error")
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
 func TestGetPrincipleMarketingProgram(t *testing.T) {
 	sqlDB, mock, _ := sqlmock.New()
 	defer sqlDB.Close()
@@ -2764,6 +4434,35 @@ func TestGetPrincipleMarketingProgram(t *testing.T) {
 	if !reflect.DeepEqual(result, response) {
 		t.Errorf("expected '%v', but got '%v'", response, result)
 	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetPrincipleMarketingProgram_DatabaseError(t *testing.T) {
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	prospectID := "SAL-1140024080800016"
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_principle_marketing_program WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	expectedError := fmt.Errorf("database error")
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WillReturnError(expectedError)
+
+	result, err := repo.GetPrincipleMarketingProgram(prospectID)
+
+	assert.Error(t, err)
+	assert.Equal(t, expectedError, err)
+	assert.Empty(t, result)
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
@@ -4268,5 +5967,141 @@ func TestGetTrxKPMStatus(t *testing.T) {
 				t.Errorf("there were unfulfilled expectations: %s", err)
 			}
 		})
+	}
+}
+
+func TestUpdateTrxKPMDecision(t *testing.T) {
+	sqlDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock DB: %v", err)
+	}
+	defer sqlDB.Close()
+
+	gormDB, err := gorm.Open("sqlite3", sqlDB)
+	if err != nil {
+		t.Fatalf("Failed to open GORM DB: %v", err)
+	}
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	testID := "123"
+	testProspectID := "PROS-123"
+	testDecision := "APPROVED"
+
+	t.Run("Successful Update", func(t *testing.T) {
+		mock.ExpectBegin()
+
+		mock.ExpectExec(`UPDATE "trx_kpm" SET "Decision" = \?, "updated_at" = \? WHERE "trx_kpm"."deleted_at" IS NULL AND \(\(id = \?\)\)`).
+			WithArgs(testDecision, sqlmock.AnyArg(), testID).
+			WillReturnResult(sqlmock.NewResult(0, 1))
+
+		mock.ExpectExec(`INSERT INTO "trx_kpm_status" \("id","ProspectID","Decision","created_at","created_by","updated_at","updated_by","deleted_at","deleted_by"\) VALUES \(\?,\?,\?,\?,\?,\?,\?,\?,\?\)`).
+			WithArgs(
+				sqlmock.AnyArg(),
+				testProspectID,
+				testDecision,
+				sqlmock.AnyArg(),
+				"",
+				sqlmock.AnyArg(),
+				"",
+				nil,
+				"",
+			).
+			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectCommit()
+
+		err := repo.UpdateTrxKPMDecision(testID, testProspectID, testDecision)
+		assert.NoError(t, err)
+	})
+
+	t.Run("Error - TrxKPM Update Fails", func(t *testing.T) {
+		mock.ExpectBegin()
+
+		expectedError := fmt.Errorf("failed to update TrxKPM")
+		mock.ExpectExec(`UPDATE "trx_kpm" SET "Decision" = \?, "updated_at" = \? WHERE "trx_kpm"."deleted_at" IS NULL AND \(\(id = \?\)\)`).
+			WithArgs(testDecision, sqlmock.AnyArg(), testID).
+			WillReturnError(expectedError)
+
+		mock.ExpectRollback()
+
+		err := repo.UpdateTrxKPMDecision(testID, testProspectID, testDecision)
+		assert.Error(t, err)
+		assert.Equal(t, expectedError, err)
+	})
+
+	t.Run("Error - TrxKPMStatus Creation Fails", func(t *testing.T) {
+		mock.ExpectBegin()
+
+		mock.ExpectExec(`UPDATE "trx_kpm" SET "Decision" = \?, "updated_at" = \? WHERE "trx_kpm"."deleted_at" IS NULL AND \(\(id = \?\)\)`).
+			WithArgs(testDecision, sqlmock.AnyArg(), testID).
+			WillReturnResult(sqlmock.NewResult(0, 1))
+
+		expectedError := fmt.Errorf("failed to create TrxKPMStatus")
+		mock.ExpectExec(`INSERT INTO "trx_kpm_status" \("id","ProspectID","Decision","created_at","created_by","updated_at","updated_by","deleted_at","deleted_by"\) VALUES \(\?,\?,\?,\?,\?,\?,\?,\?,\?\)`).
+			WithArgs(
+				sqlmock.AnyArg(),
+				testProspectID,
+				testDecision,
+				sqlmock.AnyArg(),
+				"",
+				sqlmock.AnyArg(),
+				"",
+				nil,
+				"",
+			).
+			WillReturnError(expectedError)
+
+		mock.ExpectRollback()
+
+		err := repo.UpdateTrxKPMDecision(testID, testProspectID, testDecision)
+		assert.Error(t, err)
+		assert.Equal(t, expectedError, err)
+	})
+
+	t.Run("Error - Empty ID", func(t *testing.T) {
+		mock.ExpectBegin()
+
+		mock.ExpectExec(`UPDATE "trx_kpm" SET "Decision" = \?, "updated_at" = \? WHERE "trx_kpm"."deleted_at" IS NULL AND \(\(id = \?\)\)`).
+			WithArgs(testDecision, sqlmock.AnyArg(), "").
+			WillReturnError(fmt.Errorf("invalid ID"))
+
+		mock.ExpectRollback()
+
+		err := repo.UpdateTrxKPMDecision("", testProspectID, testDecision)
+		assert.Error(t, err)
+	})
+
+	t.Run("Error - Empty ProspectID", func(t *testing.T) {
+		mock.ExpectBegin()
+
+		mock.ExpectExec(`UPDATE "trx_kpm" SET "Decision" = \?, "updated_at" = \? WHERE "trx_kpm"."deleted_at" IS NULL AND \(\(id = \?\)\)`).
+			WithArgs(testDecision, sqlmock.AnyArg(), testID).
+			WillReturnResult(sqlmock.NewResult(0, 1))
+
+		mock.ExpectExec(`INSERT INTO "trx_kpm_status" \("id","ProspectID","Decision","created_at","created_by","updated_at","updated_by","deleted_at","deleted_by"\) VALUES \(\?,\?,\?,\?,\?,\?,\?,\?,\?\)`).
+			WithArgs(
+				sqlmock.AnyArg(),
+				"",
+				testDecision,
+				sqlmock.AnyArg(),
+				"",
+				sqlmock.AnyArg(),
+				"",
+				nil,
+				"",
+			).
+			WillReturnError(fmt.Errorf("invalid ProspectID"))
+
+		mock.ExpectRollback()
+
+		err := repo.UpdateTrxKPMDecision(testID, "", testDecision)
+		assert.Error(t, err)
+	})
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
 }

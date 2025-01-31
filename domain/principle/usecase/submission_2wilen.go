@@ -1300,6 +1300,8 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
 		trxKPMStatus.CreatedAt = time.Now()
 		trxKPMStatus.UpdatedAt = time.Now()
+
+		return
 	}
 
 	// Store Customer Domain

@@ -923,3 +923,912 @@ func TestMarketingProgram(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), "PRINCIPLE-")
 	})
 }
+
+func TestGetPrincipleData(t *testing.T) {
+	os.Setenv("APP_PREFIX_NAME", "LOS")
+
+	mockMultiUsecase := new(mocks.MultiUsecase)
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+
+	handler := &handler{
+		multiusecase: mockMultiUsecase,
+		usecase:      mockUsecase,
+		repository:   mockRepository,
+		responses:    libResponse,
+	}
+
+	body := request.PrincipleGetData{
+		Context:        "PRINCIPLE",
+		ProspectID:     "SAL-1140024080800017",
+		FinancePurpose: "Modal Kerja",
+	}
+
+	t.Run("success", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		data, _ := json.Marshal(body)
+
+		reqID := utils.GenerateUUID()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/principle-data", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderXRequestID, reqID)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.Set(constant.HeaderXRequestID, reqID)
+
+		mockResponse := map[string]interface{}{
+			"prospect_id": "SAL-1140024080800017",
+			"status":      "ACTIVE",
+			"data": map[string]interface{}{
+				"customer_info": map[string]interface{}{
+					"id_number":    "3505151204000001",
+					"full_name":    "Test Customer",
+					"birth_date":   "1993-11-12",
+					"birth_place":  "JEMBER",
+					"mobile_phone": "085880529100",
+				},
+			},
+		}
+
+		mockUsecase.On("GetDataPrinciple", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
+
+		_ = handler.GetPrincipleData(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "PRINCIPLE-001")
+
+		mockUsecase.AssertExpectations(t)
+	})
+
+	t.Run("error bind", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/principle-data", strings.NewReader("invalid json"))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.GetPrincipleData(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "PRINCIPLE-799")
+	})
+
+	t.Run("error validate", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		invalidBody := body
+		invalidBody.Context = ""
+		invalidBody.ProspectID = ""
+
+		data, _ := json.Marshal(invalidBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/principle-data", bytes.NewReader(data))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.GetPrincipleData(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "PRINCIPLE-800")
+	})
+
+	t.Run("error usecase", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		data, _ := json.Marshal(body)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/principle-data", bytes.NewReader(data))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockUsecase.On("GetDataPrinciple", mock.Anything, mock.Anything, mock.Anything).Return(map[string]interface{}{}, errors.New("some error")).Once()
+
+		_ = handler.GetPrincipleData(c)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+		assert.Contains(t, rec.Body.String(), "PRINCIPLE-")
+	})
+}
+
+func TestAutoCancel(t *testing.T) {
+	os.Setenv("APP_PREFIX_NAME", "LOS")
+
+	mockMultiUsecase := new(mocks.MultiUsecase)
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+
+	handler := &handler{
+		multiusecase: mockMultiUsecase,
+		usecase:      mockUsecase,
+		repository:   mockRepository,
+		responses:    libResponse,
+	}
+
+	t.Run("success", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		reqID := utils.GenerateUUID()
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/auto-cancel", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderXRequestID, reqID)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.Set(constant.HeaderXRequestID, reqID)
+
+		mockUsecase.On("CheckOrderPendingPrinciple", mock.Anything).Return(nil).Once()
+
+		_ = handler.AutoCancel(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "PRINCIPLE-001")
+		assert.Contains(t, rec.Body.String(), "sukses auto cancel")
+
+		mockUsecase.AssertExpectations(t)
+	})
+
+	t.Run("error usecase", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/auto-cancel", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockUsecase.On("CheckOrderPendingPrinciple", mock.Anything).Return(errors.New("some error")).Once()
+
+		_ = handler.AutoCancel(c)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+		assert.Contains(t, rec.Body.String(), "PRINCIPLE-")
+
+		mockUsecase.AssertExpectations(t)
+	})
+}
+
+func TestPrinciplePublish(t *testing.T) {
+	os.Setenv("APP_PREFIX_NAME", "LOS")
+
+	mockMultiUsecase := new(mocks.MultiUsecase)
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+
+	handler := &handler{
+		multiusecase: mockMultiUsecase,
+		usecase:      mockUsecase,
+		repository:   mockRepository,
+		responses:    libResponse,
+	}
+
+	body := request.PrinciplePublish{
+		StatusCode: "APPROVE",
+		ProspectID: "SAL-1140024080800017",
+	}
+
+	t.Run("success", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		data, _ := json.Marshal(body)
+
+		reqID := utils.GenerateUUID()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/principle-publish", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderXRequestID, reqID)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.Set(constant.HeaderXRequestID, reqID)
+
+		mockUsecase.On("PrinciplePublish", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		_ = handler.PrinciplePublish(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "PRINCIPLE-001")
+		assert.Contains(t, rec.Body.String(), "success publish event principle")
+
+		mockUsecase.AssertExpectations(t)
+	})
+
+	t.Run("error bind", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/principle-publish", strings.NewReader("invalid json"))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.PrinciplePublish(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "PRINCIPLE-799")
+	})
+
+	t.Run("error validate", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		invalidBody := body
+		invalidBody.StatusCode = ""
+		invalidBody.ProspectID = ""
+
+		data, _ := json.Marshal(invalidBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/principle-publish", bytes.NewReader(data))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.PrinciplePublish(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "PRINCIPLE-800")
+	})
+
+	t.Run("error usecase", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		data, _ := json.Marshal(body)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/principle-publish", bytes.NewReader(data))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockUsecase.On("PrinciplePublish", mock.Anything, mock.Anything, mock.Anything).Return(errors.New("some error")).Once()
+
+		_ = handler.PrinciplePublish(c)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+		assert.Contains(t, rec.Body.String(), "PRINCIPLE-")
+
+		mockUsecase.AssertExpectations(t)
+	})
+
+	t.Run("success with different status code", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		differentBody := request.PrinciplePublish{
+			StatusCode: "REJECT",
+			ProspectID: "SAL-1140024080800017",
+		}
+
+		data, _ := json.Marshal(differentBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/principle-publish", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockUsecase.On("PrinciplePublish", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		_ = handler.PrinciplePublish(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "PRINCIPLE-001")
+		assert.Contains(t, rec.Body.String(), "success publish event principle")
+
+		mockUsecase.AssertExpectations(t)
+	})
+}
+
+func TestGetMaxLoanAmount(t *testing.T) {
+	os.Setenv("APP_PREFIX_NAME", "LOS")
+	os.Setenv("NAMA_SAMA", "K,P")
+
+	mockMultiUsecase := new(mocks.MultiUsecase)
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+
+	handler := &handler{
+		multiusecase: mockMultiUsecase,
+		usecase:      mockUsecase,
+		repository:   mockRepository,
+		responses:    libResponse,
+	}
+
+	body := request.GetMaxLoanAmount{
+		ProspectID:         "SAL-1140024080800004",
+		BranchID:           "426",
+		IDNumber:           "3506126712000001",
+		BirthDate:          "1992-09-11",
+		SurgateMotherName:  "IBU",
+		LegalName:          "Arya Danu",
+		MobilePhone:        "085880529100",
+		BPKBNameType:       "K",
+		ManufactureYear:    "2020",
+		AssetCode:          "SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT",
+		AssetUsageTypeCode: "C",
+	}
+
+	t.Run("success", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		data, _ := json.Marshal(body)
+
+		reqID := utils.GenerateUUID()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/max-loan-amount", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderXRequestID, reqID)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.Set(constant.HeaderXRequestID, reqID)
+
+		mockResponse := responses.GetMaxLoanAmountData{
+			MaxLoanAmount: 50000000,
+		}
+
+		mockMultiUsecase.On("GetMaxLoanAmout", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
+
+		_ = handler.GetMaxLoanAmount(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-001")
+
+		mockMultiUsecase.AssertExpectations(t)
+	})
+
+	t.Run("error bind", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/max-loan-amount", strings.NewReader("invalid json"))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.GetMaxLoanAmount(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-799")
+	})
+
+	t.Run("error validate", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		invalidBody := body
+		invalidBody.ProspectID = ""
+		invalidBody.BranchID = ""
+
+		data, _ := json.Marshal(invalidBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/max-loan-amount", bytes.NewReader(data))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.GetMaxLoanAmount(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-800")
+	})
+
+	t.Run("error usecase", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		data, _ := json.Marshal(body)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/max-loan-amount", bytes.NewReader(data))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockMultiUsecase.On("GetMaxLoanAmout", mock.Anything, mock.Anything, mock.Anything).Return(responses.GetMaxLoanAmountData{}, errors.New("some error")).Once()
+
+		_ = handler.GetMaxLoanAmount(c)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-")
+
+		mockMultiUsecase.AssertExpectations(t)
+	})
+
+	t.Run("success with different amount", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		data, _ := json.Marshal(body)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/max-loan-amount", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockResponse := responses.GetMaxLoanAmountData{
+			MaxLoanAmount: 75000000,
+		}
+
+		mockMultiUsecase.On("GetMaxLoanAmout", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
+
+		_ = handler.GetMaxLoanAmount(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-001")
+
+		mockMultiUsecase.AssertExpectations(t)
+	})
+}
+
+func TestGetAvailableTenor(t *testing.T) {
+	os.Setenv("APP_PREFIX_NAME", "LOS")
+	os.Setenv("NAMA_SAMA", "K,P")
+
+	mockMultiUsecase := new(mocks.MultiUsecase)
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+
+	handler := &handler{
+		multiusecase: mockMultiUsecase,
+		usecase:      mockUsecase,
+		repository:   mockRepository,
+		responses:    libResponse,
+	}
+
+	body := request.GetAvailableTenor{
+		ProspectID:         "SAL-1140024080800004",
+		BranchID:           "426",
+		IDNumber:           "3506126712000001",
+		BirthDate:          "1992-09-11",
+		SurgateMotherName:  "IBU",
+		LegalName:          "Arya Danu",
+		MobilePhone:        "085880529100",
+		BPKBNameType:       "K",
+		ManufactureYear:    "2020",
+		AssetCode:          "SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT",
+		AssetUsageTypeCode: "C",
+		LicensePlate:       "B3006TBJ",
+		LoanAmount:         105000000,
+	}
+
+	t.Run("success", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		data, _ := json.Marshal(body)
+
+		reqID := utils.GenerateUUID()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/available-tenor", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderXRequestID, reqID)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.Set(constant.HeaderXRequestID, reqID)
+
+		mockResponse := []responses.GetAvailableTenorData{
+			{
+				Tenor:             12,
+				IsPsa:             false,
+				Dealer:            "NON PSA",
+				InstallmentAmount: 4935000,
+				AF:                106000000,
+				AdminFee:          2000000,
+				DPAmount:          1900000,
+				NTF:               23500000,
+				AssetCategoryID:   "BEBEK",
+				OTR:               5650000,
+			},
+		}
+
+		mockMultiUsecase.On("GetAvailableTenor", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
+
+		_ = handler.GetAvailableTenor(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-001")
+
+		mockMultiUsecase.AssertExpectations(t)
+	})
+
+	t.Run("error bind", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/available-tenor", strings.NewReader("invalid json"))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.GetAvailableTenor(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-799")
+	})
+
+	t.Run("error validate", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		invalidBody := body
+		invalidBody.ProspectID = ""
+		invalidBody.BranchID = ""
+
+		data, _ := json.Marshal(invalidBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/available-tenor", bytes.NewReader(data))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.GetAvailableTenor(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-800")
+	})
+
+	t.Run("error usecase", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		data, _ := json.Marshal(body)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/available-tenor", bytes.NewReader(data))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockMultiUsecase.On("GetAvailableTenor", mock.Anything, mock.Anything, mock.Anything).Return([]responses.GetAvailableTenorData{}, errors.New("some error")).Once()
+
+		_ = handler.GetAvailableTenor(c)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-")
+
+		mockMultiUsecase.AssertExpectations(t)
+	})
+
+	t.Run("success with multiple tenors", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		data, _ := json.Marshal(body)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/available-tenor", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockResponse := []responses.GetAvailableTenorData{
+			{
+				Tenor:             12,
+				IsPsa:             false,
+				Dealer:            "NON PSA",
+				InstallmentAmount: 4935000,
+				AF:                106000000,
+				AdminFee:          2000000,
+				DPAmount:          1900000,
+				NTF:               23500000,
+				AssetCategoryID:   "BEBEK",
+				OTR:               5650000,
+			},
+			{
+				Tenor:             24,
+				IsPsa:             false,
+				Dealer:            "NON PSA",
+				InstallmentAmount: 2935000,
+				AF:                106000000,
+				AdminFee:          2000000,
+				DPAmount:          1900000,
+				NTF:               23500000,
+				AssetCategoryID:   "BEBEK",
+				OTR:               5650000,
+			},
+		}
+
+		mockMultiUsecase.On("GetAvailableTenor", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, nil).Once()
+
+		_ = handler.GetAvailableTenor(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-001")
+
+		mockMultiUsecase.AssertExpectations(t)
+	})
+}
+
+func TestHistory2Wilen(t *testing.T) {
+	os.Setenv("APP_PREFIX_NAME", "LOS")
+	os.Setenv("NAMA_SAMA", "K,P")
+
+	mockMultiUsecase := new(mocks.MultiUsecase)
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+
+	handler := &handler{
+		multiusecase: mockMultiUsecase,
+		usecase:      mockUsecase,
+		repository:   mockRepository,
+		responses:    libResponse,
+	}
+
+	body := request.History2Wilen{
+		ProspectID: "SAL-1140024080800004",
+	}
+
+	t.Run("success", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		data, _ := json.Marshal(body)
+
+		reqID := utils.GenerateUUID()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/2wilen/history", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderXRequestID, reqID)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.Set(constant.HeaderXRequestID, reqID)
+
+		mockResponse := []responses.History2Wilen{
+			{
+				ID:              "1",
+				ProspectID:      "SAL-1140024080800004",
+				OrderStatusName: "PENDING",
+				CreatedAt:       "2024-01-31 10:00:00",
+			},
+		}
+
+		mockUsecase.On("History2Wilen", body.ProspectID).Return(mockResponse, nil).Once()
+
+		_ = handler.History2Wilen(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-001")
+
+		mockUsecase.AssertExpectations(t)
+	})
+
+	t.Run("error bind", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/2wilen/history", strings.NewReader("invalid json"))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.History2Wilen(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-799")
+	})
+
+	t.Run("error validate", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		invalidBody := request.History2Wilen{
+			ProspectID: "",
+		}
+
+		data, _ := json.Marshal(invalidBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/2wilen/history", bytes.NewReader(data))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.History2Wilen(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-800")
+	})
+
+	t.Run("error usecase", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		data, _ := json.Marshal(body)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/2wilen/history", bytes.NewReader(data))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockUsecase.On("History2Wilen", body.ProspectID).Return([]responses.History2Wilen{}, errors.New("some error")).Once()
+
+		_ = handler.History2Wilen(c)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-")
+
+		mockUsecase.AssertExpectations(t)
+	})
+
+	t.Run("success with multiple history records", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		data, _ := json.Marshal(body)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/2wilen/history", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockResponse := []responses.History2Wilen{
+			{
+				ID:              "1",
+				ProspectID:      "SAL-1140024080800004",
+				OrderStatusName: "PENDING",
+				CreatedAt:       "2024-01-31 10:00:00",
+			},
+			{
+				ID:              "2",
+				ProspectID:      "SAL-1140024080800004",
+				OrderStatusName: "APPROVED",
+				CreatedAt:       "2024-01-31 11:00:00",
+			},
+		}
+
+		mockUsecase.On("History2Wilen", body.ProspectID).Return(mockResponse, nil).Once()
+
+		_ = handler.History2Wilen(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-001")
+
+		mockUsecase.AssertExpectations(t)
+	})
+}
+
+func TestPublish2Wilen(t *testing.T) {
+	os.Setenv("APP_PREFIX_NAME", "LOS")
+	os.Setenv("NAMA_SAMA", "K,P")
+
+	mockMultiUsecase := new(mocks.MultiUsecase)
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+
+	handler := &handler{
+		multiusecase: mockMultiUsecase,
+		usecase:      mockUsecase,
+		repository:   mockRepository,
+		responses:    libResponse,
+	}
+
+	body := request.Publish2Wilen{
+		StatusCode: "APPROVE",
+		ProspectID: "SAL-1140024080800017",
+	}
+
+	t.Run("success", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		data, _ := json.Marshal(body)
+
+		reqID := utils.GenerateUUID()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/publish-2wilen", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(echo.HeaderXRequestID, reqID)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		c.Set(constant.HeaderXRequestID, reqID)
+
+		mockUsecase.On("Publish2Wilen", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		_ = handler.Publish2Wilen(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-001")
+		assert.Contains(t, rec.Body.String(), "success publish event 2wilen")
+
+		mockUsecase.AssertExpectations(t)
+	})
+
+	t.Run("error bind", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/publish-2wilen", strings.NewReader("invalid json"))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.Publish2Wilen(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-799")
+	})
+
+	t.Run("error validate", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		invalidBody := request.Publish2Wilen{
+			StatusCode: "",
+			ProspectID: "",
+		}
+
+		data, _ := json.Marshal(invalidBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/publish-2wilen", bytes.NewReader(data))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.Publish2Wilen(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-800")
+	})
+
+	t.Run("error usecase", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		data, _ := json.Marshal(body)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/publish-2wilen", bytes.NewReader(data))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockUsecase.On("Publish2Wilen", mock.Anything, mock.Anything, mock.Anything).
+			Return(errors.New("some error")).Once()
+
+		_ = handler.Publish2Wilen(c)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-")
+
+		mockUsecase.AssertExpectations(t)
+	})
+
+	t.Run("success with different status code", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		differentBody := request.Publish2Wilen{
+			StatusCode: "REJECT",
+			ProspectID: "SAL-1140024080800017",
+		}
+
+		data, _ := json.Marshal(differentBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/publish-2wilen", strings.NewReader(string(data)))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		mockUsecase.On("Publish2Wilen", mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		_ = handler.Publish2Wilen(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-001")
+		assert.Contains(t, rec.Body.String(), "success publish event 2wilen")
+
+		mockUsecase.AssertExpectations(t)
+	})
+}
