@@ -771,6 +771,7 @@ const (
 	STATUS_LOS_REJECTED_2WILEN          = "LOS-REJECTED"
 	STATUS_LOS_PROCESS_2WILEN           = "LOS-PROCESS"
 	STATUS_LOS_APPROVED_2WILEN          = "LOS-APPROVED"
+	STATUS_SALLY_CANCEL_2WILEN          = "SALLY-CANCEL"
 	KPM_WAIT_MESSAGE_2WILEN             = "Pengajuan anda sedang dalam proses analisa kredit"
 	LOS_PROCESS_MESSAGE_2WILEN          = "Pengajuan kamu sedang dalam proses analisa ulang. Harap tunggu informasi selanjutnya."
 	LOS_APPROVE_MESSAGE_2WILEN          = "Pengajuan anda telah disetujui sebelumnya"
