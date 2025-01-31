@@ -202,15 +202,17 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 			return
 		}
 
-		u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
-			OrderID:       req.ProspectID,
-			KpmID:         req.KPMID,
-			Source:        3,
-			StatusCode:    statusCode,
-			ProductName:   req.AssetCode,
-			BranchCode:    req.BranchID,
-			AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
-		}), 0)
+		if statusCode != constant.DECISION_KPM_APPROVE {
+			u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+				OrderID:       req.ProspectID,
+				KpmID:         req.KPMID,
+				Source:        3,
+				StatusCode:    statusCode,
+				ProductName:   req.AssetCode,
+				BranchCode:    req.BranchID,
+				AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
+			}), 0)
+		}
 	}()
 
 	// Check Banned Chassis Number
@@ -1303,6 +1305,16 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 
 		return
 	}
+
+	u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+		OrderID:       req.ProspectID,
+		KpmID:         req.KPMID,
+		Source:        3,
+		StatusCode:    constant.DECISION_KPM_APPROVE,
+		ProductName:   req.AssetCode,
+		BranchCode:    req.BranchID,
+		AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
+	}), 0)
 
 	// Store Customer Domain
 	var (
