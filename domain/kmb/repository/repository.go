@@ -874,8 +874,10 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 			// save data metrics
 			// insert trx edd
 			logInfo = trxFMF.TrxEDD
-			if err := tx.Create(&trxFMF.TrxEDD).Error; err != nil {
-				return err
+			if trxFMF.TrxEDD.ProspectID != "" {
+				if err := tx.Create(&trxFMF.TrxEDD).Error; err != nil {
+					return err
+				}
 			}
 
 			// insert trx deviasi
