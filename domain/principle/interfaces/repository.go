@@ -55,7 +55,7 @@ type Repository interface {
 	SaveTrxKPM(data entity.TrxKPM) (err error)
 	SaveTrxKPMStatus(data entity.TrxKPMStatus) (err error)
 	GetMappingNegativeCustomer(req response.NegativeCustomer) (data entity.MappingNegativeCustomer, err error)
-	ExceedErrorTrxKPM(prospectId string) int
+	ExceedErrorTrxKPM(kpmId int) int
 	GetTrxKPM(prospectID string) (data entity.TrxKPM, err error)
 	GetReadjustCountTrxKPM(prospectId string) int
 	GetTrxKPMStatus(IDNumber string) (data entity.TrxKPMStatus, err error)

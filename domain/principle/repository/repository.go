@@ -906,11 +906,11 @@ func (r repoHandler) GetTrxKPM(prospectID string) (data entity.TrxKPM, err error
 	return
 }
 
-func (r repoHandler) ExceedErrorTrxKPM(prospectId string) int {
+func (r repoHandler) ExceedErrorTrxKPM(kpmId int) int {
 
 	var trxError entity.TrxKPMError
 
-	result := r.newKmb.Raw("SELECT KpmID FROM trx_kpm_error WITH (nolock) WHERE ProspectID = ? AND created_at >= DATEADD (HOUR , -1 , GETDATE())", prospectId).Scan(&trxError)
+	result := r.newKmb.Raw("SELECT KpmID FROM trx_kpm_error WITH (nolock) WHERE KpmID = ? AND created_at >= DATEADD (HOUR , -1 , GETDATE())", kpmId).Scan(&trxError)
 
 	return int(result.RowsAffected)
 

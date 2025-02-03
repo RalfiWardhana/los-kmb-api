@@ -5697,19 +5697,19 @@ func TestExceedErrorTrxKPM(t *testing.T) {
 
 	testCases := []struct {
 		name          string
-		prospectID    string
+		kpmID         int
 		rowsAffected  int64
 		expectedCount int
 	}{
 		{
 			name:          "Records Found",
-			prospectID:    "PROS-001",
+			kpmID:         123,
 			rowsAffected:  2,
 			expectedCount: 2,
 		},
 		{
 			name:          "No Records",
-			prospectID:    "PROS-002",
+			kpmID:         456,
 			rowsAffected:  0,
 			expectedCount: 0,
 		},
@@ -5722,12 +5722,16 @@ func TestExceedErrorTrxKPM(t *testing.T) {
 				rows.AddRow(i)
 			}
 
-			mock.ExpectQuery(`SELECT KpmID FROM trx_kpm_error WITH \(nolock\) WHERE ProspectID = \? AND created_at >= DATEADD \(HOUR , -1 , GETDATE\(\)\)`).
-				WithArgs(tc.prospectID).
+			mock.ExpectQuery(`SELECT KpmID FROM trx_kpm_error WITH \(nolock\) WHERE KpmID = \? AND created_at >= DATEADD \(HOUR , -1 , GETDATE\(\)\)`).
+				WithArgs(tc.kpmID).
 				WillReturnRows(rows)
 
-			result := repo.ExceedErrorTrxKPM(tc.prospectID)
+			result := repo.ExceedErrorTrxKPM(tc.kpmID)
 			assert.Equal(t, tc.expectedCount, result)
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
 		})
 	}
 }

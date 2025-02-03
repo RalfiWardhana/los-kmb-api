@@ -58,7 +58,7 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 	trxKPMStatus.ID = utils.GenerateUUID()
 	trxKPMStatus.ProspectID = req.ProspectID
 
-	errorCount := u.repository.ExceedErrorTrxKPM(req.ProspectID)
+	errorCount := u.repository.ExceedErrorTrxKPM(req.KPMID)
 	if errorCount >= 3 {
 		err = errors.New(constant.ERROR_MAX_EXCEED)
 		return resp, err

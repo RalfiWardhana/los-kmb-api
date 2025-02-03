@@ -97,17 +97,17 @@ func (_m *Repository) ExceedErrorStepTwo(prospectId string) int {
 	return r0
 }
 
-// ExceedErrorTrxKPM provides a mock function with given fields: prospectId
-func (_m *Repository) ExceedErrorTrxKPM(prospectId string) int {
-	ret := _m.Called(prospectId)
+// ExceedErrorTrxKPM provides a mock function with given fields: kpmId
+func (_m *Repository) ExceedErrorTrxKPM(kpmId int) int {
+	ret := _m.Called(kpmId)
 
 	if len(ret) == 0 {
 		panic("no return value specified for ExceedErrorTrxKPM")
 	}
 
 	var r0 int
-	if rf, ok := ret.Get(0).(func(string) int); ok {
-		r0 = rf(prospectId)
+	if rf, ok := ret.Get(0).(func(int) int); ok {
+		r0 = rf(kpmId)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
