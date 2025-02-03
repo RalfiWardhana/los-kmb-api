@@ -45,6 +45,7 @@ func (h handlers) PrincipleUpdateStatus(ctx context.Context, event event.Event) 
 	var (
 		req           request.PrincipleUpdateStatus
 		principleData entity.TrxPrincipleStepOne
+		trxKPM        entity.TrxKPM
 	)
 
 	_ = jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(body, &req)
@@ -72,6 +73,13 @@ func (h handlers) PrincipleUpdateStatus(ctx context.Context, event event.Event) 
 	if principleData != (entity.TrxPrincipleStepOne{}) {
 		if req.OrderStatus == constant.PRINCIPLE_STATUS_CANCEL_SALLY {
 			_ = h.repository.UpdateToCancel(req.ProspectID)
+		}
+	}
+
+	trxKPM, _ = h.repository.GetTrxKPM(req.ProspectID)
+	if trxKPM != (entity.TrxKPM{}) {
+		if req.OrderStatus == constant.PRINCIPLE_STATUS_CANCEL_SALLY && trxKPM.Decision != constant.STATUS_SALLY_CANCEL_2WILEN {
+			_ = h.repository.UpdateTrxKPMDecision(trxKPM.ID, trxKPM.ProspectID, constant.STATUS_SALLY_CANCEL_2WILEN)
 		}
 	}
 
