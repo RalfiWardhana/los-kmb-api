@@ -98,18 +98,15 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 
 	defer func() {
 		birthDate, _ := time.Parse(constant.FORMAT_DATE, req.BirthDate)
-		var spouseBirthDate interface{}
+
 		if req.SpouseBirthDate != "" {
-			spouseBirthDate, _ = time.Parse(constant.FORMAT_DATE, req.SpouseBirthDate)
-		} else {
-			spouseBirthDate = nil
+			spouseBirthDate, _ := time.Parse(constant.FORMAT_DATE, req.SpouseBirthDate)
+			trxKPM.SpouseBirthDate = spouseBirthDate
 		}
 
-		var rentFinishDate interface{}
-		if req.SpouseBirthDate != "" {
-			rentFinishDate, _ = time.Parse(constant.FORMAT_DATE, req.RentFinishDate)
-		} else {
-			rentFinishDate = nil
+		if req.RentFinishDate != "" {
+			rentFinishDate, _ := time.Parse(constant.FORMAT_DATE, req.RentFinishDate)
+			trxKPM.RentFinishDate = rentFinishDate
 		}
 
 		savedDupcheckData, _ := json.Marshal(dupcheckData)
@@ -147,7 +144,6 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		trxKPM.MaritalStatus = req.MaritalStatus
 		trxKPM.SpouseIDNumber = utils.CheckEmptyString(req.SpouseIDNumber)
 		trxKPM.SpouseLegalName = utils.CheckEmptyString(req.SpouseLegalName)
-		trxKPM.SpouseBirthDate = spouseBirthDate
 		trxKPM.SpouseBirthPlace = utils.CheckEmptyString(req.SpouseBirthPlace)
 		trxKPM.SpouseSurgateMotherName = utils.CheckEmptyString(req.SpouseSurgateMotherName)
 		trxKPM.SpouseMobilePhone = utils.CheckEmptyString(req.SpouseMobilePhone)
@@ -175,7 +171,6 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		trxKPM.DupcheckData = string(utils.SafeEncoding(savedDupcheckData))
 		trxKPM.NegativeCustomerData = string(utils.SafeEncoding(savedNegativeCustomerData))
 		trxKPM.KPMID = req.KPMID
-		trxKPM.RentFinishDate = rentFinishDate
 
 		if resp.ReadjustContext != nil {
 			trxKPM.ReadjustContext = *resp.ReadjustContext
