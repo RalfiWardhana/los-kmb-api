@@ -24,29 +24,6 @@ import (
 
 func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submission2Wilen, accessToken string) (resp response.Submission2Wilen, err error) {
 
-	statusCode := constant.STATUS_KPM_WAIT_2WILEN
-	u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
-		OrderID:       req.ProspectID,
-		KpmID:         req.KPMID,
-		Source:        3,
-		StatusCode:    statusCode,
-		ProductName:   req.AssetCode,
-		BranchCode:    req.BranchID,
-		AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
-	}), 0)
-
-	id := utils.GenerateUUID()
-	err = u.repository.SaveTrxKPMStatus(entity.TrxKPMStatus{
-		ID:         id,
-		ProspectID: req.ProspectID,
-		Decision:   statusCode,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
-	})
-	if err != nil {
-		return
-	}
-
 	var (
 		trxKPM            entity.TrxKPM
 		trxKPMStatus      entity.TrxKPMStatus
@@ -94,6 +71,29 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 	if readjustCount >= configValue2Wilen.Data.MaxReadjustAttempt {
 		err = errors.New(constant.ERROR_MAX_EXCEED)
 		return resp, err
+	}
+
+	statusCode := constant.STATUS_KPM_WAIT_2WILEN
+	u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+		OrderID:       req.ProspectID,
+		KpmID:         req.KPMID,
+		Source:        3,
+		StatusCode:    statusCode,
+		ProductName:   req.AssetCode,
+		BranchCode:    req.BranchID,
+		AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
+	}), 0)
+
+	id := utils.GenerateUUID()
+	err = u.repository.SaveTrxKPMStatus(entity.TrxKPMStatus{
+		ID:         id,
+		ProspectID: req.ProspectID,
+		Decision:   statusCode,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+	})
+	if err != nil {
+		return
 	}
 
 	defer func() {
