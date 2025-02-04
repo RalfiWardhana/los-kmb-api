@@ -1439,6 +1439,7 @@ type Submission2Wilen struct {
 	Dealer                  string  `json:"dealer" validate:"omitempty,max=50"`
 	AssetCategoryID         string  `json:"asset_category_id" validate:"required,max=100" example:"BEBEK"`
 	KPMID                   int     `json:"kpm_id" validate:"required"`
+	RentFinishDate          string  `json:"rent_finish_date" validate:"omitempty,dateformat" example:"2021-07-29"`
 }
 
 type History2Wilen struct {

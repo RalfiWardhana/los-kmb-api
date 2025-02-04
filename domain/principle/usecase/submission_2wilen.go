@@ -101,6 +101,15 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		var spouseBirthDate interface{}
 		if req.SpouseBirthDate != "" {
 			spouseBirthDate, _ = time.Parse(constant.FORMAT_DATE, req.SpouseBirthDate)
+		} else {
+			spouseBirthDate = nil
+		}
+
+		var rentFinishDate interface{}
+		if req.SpouseBirthDate != "" {
+			rentFinishDate, _ = time.Parse(constant.FORMAT_DATE, req.RentFinishDate)
+		} else {
+			rentFinishDate = nil
 		}
 
 		savedDupcheckData, _ := json.Marshal(dupcheckData)
@@ -166,6 +175,7 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		trxKPM.DupcheckData = string(utils.SafeEncoding(savedDupcheckData))
 		trxKPM.NegativeCustomerData = string(utils.SafeEncoding(savedNegativeCustomerData))
 		trxKPM.KPMID = req.KPMID
+		trxKPM.RentFinishDate = rentFinishDate
 
 		if resp.ReadjustContext != nil {
 			trxKPM.ReadjustContext = *resp.ReadjustContext
@@ -1428,6 +1438,7 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 
 	// update data customer transaction
 	customerPersonal := map[string]interface{}{
+		"birth_date":              req.BirthDate,
 		"birth_place":             req.BirthPlace,
 		"gender":                  req.Gender,
 		"mobile_phone":            req.MobilePhone,
@@ -1445,6 +1456,7 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		"monthly_fixed_income":    req.MonthlyFixedIncome,
 		"spouse_income":           req.SpouseIncome,
 		"monthly_variable_income": 0,
+		"rent_finish_date":        req.RentFinishDate,
 	}
 
 	paramUpdateCustTransaction := map[string]interface{}{
