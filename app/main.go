@@ -343,7 +343,7 @@ func main() {
 
 	eventPrincipleHandler.NewServicePrinciple(consumerPrincipleRouter, principleRepo, principleCase, validator, producer, jsonResponse)
 
-	if err := consumerPrincipleRouter.StartConsumeWithoutTimestamp(); err != nil {
+	if err := consumerPrincipleRouter.StartConsume(); err != nil {
 		panic(err)
 	}
 
