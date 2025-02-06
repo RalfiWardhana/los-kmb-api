@@ -1452,6 +1452,7 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		"spouse_income":           req.SpouseIncome,
 		"monthly_variable_income": 0,
 		"rent_finish_date":        req.RentFinishDate,
+		"num_of_dependence":       req.NumOfDependence,
 	}
 
 	paramUpdateCustTransaction := map[string]interface{}{
