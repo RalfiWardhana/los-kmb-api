@@ -1352,7 +1352,7 @@ type CheckStep2Wilen struct {
 }
 
 type GetMaxLoanAmount struct {
-	ProspectID         string `json:"prospect_id" validate:"required,max=20,htmlValidation" example:"SAL-1140024080800004"`
+	ProspectID         string `json:"prospect_id" validate:"required,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
 	BranchID           string `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
 	IDNumber           string `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
 	BirthDate          string `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
@@ -1366,7 +1366,7 @@ type GetMaxLoanAmount struct {
 }
 
 type GetAvailableTenor struct {
-	ProspectID         string  `json:"prospect_id" validate:"required,max=20,htmlValidation" example:"SAL-1140024080800004"`
+	ProspectID         string  `json:"prospect_id" validate:"required,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
 	BranchID           string  `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
 	IDNumber           string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
 	BirthDate          string  `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
@@ -1382,7 +1382,7 @@ type GetAvailableTenor struct {
 }
 
 type Submission2Wilen struct {
-	ProspectID              string  `json:"prospect_id" validate:"required,max=20,htmlValidation" example:"SAL-1140024080800004"`
+	ProspectID              string  `json:"prospect_id" validate:"required,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
 	IDNumber                string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
 	LegalName               string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
 	MobilePhone             string  `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"085880529100"`
@@ -1443,7 +1443,7 @@ type Submission2Wilen struct {
 }
 
 type History2Wilen struct {
-	ProspectID string `json:"prospect_id" validate:"required,max=20,htmlValidation" example:"SAL-1140024080800004"`
+	ProspectID string `json:"prospect_id" validate:"required,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
 }
 
 type Publish2Wilen struct {
