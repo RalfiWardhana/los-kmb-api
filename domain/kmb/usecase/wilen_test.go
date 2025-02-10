@@ -387,7 +387,7 @@ func TestSubmission2Wilen(t *testing.T) {
 					NumOfDependence: intPtr(2),
 					HomeStatus:      "OWN",
 					StaySinceYear:   "2020",
-					StaySinceMonth:  "1",
+					StaySinceMonth:  "01",
 					MaritalStatus:   "M",
 				},
 				CustomerSpouse: &request.CustomerSpouse{
