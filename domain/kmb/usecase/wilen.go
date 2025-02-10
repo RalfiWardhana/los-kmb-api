@@ -36,6 +36,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Metrics, acce
 		ntfAmount            float64
 		customerID           string
 		dupcheckData         response.SpDupcheckMap
+		negativeCustomerData response.NegativeCustomer
 		trxKPM               entity.TrxKPM
 		isModified           bool
 	)
@@ -384,6 +385,22 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Metrics, acce
 		return
 	}
 
+	decodedDataNegativeCustomer := utils.SafeDecoding(trxKPM.NegativeCustomerData)
+	err = json.Unmarshal([]byte(decodedDataNegativeCustomer), &negativeCustomerData)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal Negative Customer Data Error")
+		return
+	}
+
+	var trxEDD entity.TrxEDD
+	if negativeCustomerData != (response.NegativeCustomer{}) {
+		trxEDD.ProspectID = req.Transaction.ProspectID
+		if negativeCustomerData.Decision == "YES" || negativeCustomerData.IsHighrisk == 1 {
+			trxEDD.IsHighrisk = true
+		}
+	}
+
+	trxFMF.TrxEDD = trxEDD
 	trxFMF.DupcheckData = dupcheckData
 	trxFMF.CustomerStatus = dupcheckData.StatusKonsumen
 	trxFMF.DSRFMF = dupcheckData.Dsr
