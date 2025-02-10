@@ -444,9 +444,31 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Metrics, acce
 		NextStep:       constant.SOURCE_DECISION_PMK,
 		CreatedBy:      constant.SYSTEM_CREATED,
 		Reason:         trxKPM.CheckBlacklistReason,
+		Info:           trxKPM.CheckNegativeCustomerInfo,
+	}
+
+	if negativeCustomerData.Decision == "YES" {
+		trxDetailBlacklist.RuleCode = trxKPM.CheckNegativeCustomerCode
+		trxDetailBlacklist.Reason = trxKPM.CheckNegativeCustomerReason
 	}
 
 	details = append(details, trxDetailBlacklist)
+
+	// trx detail check mobile phone fmf
+	trxDetailMobilePhoneFMF := entity.TrxDetail{
+		ProspectID:     req.Transaction.ProspectID,
+		StatusProcess:  constant.STATUS_ONPROCESS,
+		Activity:       constant.ACTIVITY_PROCESS,
+		Decision:       constant.DB_DECISION_PASS,
+		RuleCode:       trxKPM.CheckMobilePhoneFMFCode,
+		SourceDecision: constant.SOURCE_DECISION_NOHP,
+		NextStep:       constant.SOURCE_DECISION_PMK,
+		CreatedBy:      constant.SYSTEM_CREATED,
+		Reason:         trxKPM.CheckMobilePhoneFMFReason,
+		Info:           trxKPM.CheckMobilePhoneFMFInfo,
+	}
+
+	details = append(details, trxDetailMobilePhoneFMF)
 
 	// trx detail vehicle check
 	trxDetailVehicleCheck := entity.TrxDetail{

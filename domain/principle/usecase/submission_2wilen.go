@@ -371,6 +371,29 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		return
 	}
 
+	//Check mobilephone fmf
+	checkMobilePhoneFMF, err := u.usecase.CheckMobilePhoneFMF(ctx, req.ProspectID, req.MobilePhone, req.IDNumber, accessToken, middlewares.HrisApiData.Token)
+	if err != nil {
+		return
+	}
+
+	trxKPM.CheckMobilePhoneFMFResult = checkMobilePhoneFMF.Result
+	trxKPM.CheckMobilePhoneFMFCode = checkMobilePhoneFMF.Code
+	trxKPM.CheckMobilePhoneFMFReason = checkMobilePhoneFMF.Reason
+	trxKPM.CheckMobilePhoneFMFInfo = checkMobilePhoneFMF.Info
+
+	if checkMobilePhoneFMF.Result == constant.DECISION_REJECT {
+		resp.Code = checkMobilePhoneFMF.Code
+		resp.Result = constant.DECISION_KPM_REJECT
+		resp.Reason = checkMobilePhoneFMF.Reason
+
+		trxKPMStatus.Decision = constant.DECISION_KPM_REJECT
+		trxKPMStatus.CreatedAt = time.Now()
+		trxKPMStatus.UpdatedAt = time.Now()
+
+		return
+	}
+
 	// Check PMK
 	dupcheckData.CustomerType = spMap.CustomerType
 	dupcheckData.SpouseType = spMap.SpouseType
@@ -1850,6 +1873,56 @@ func (u usecase) NegativeCustomerCheck(ctx context.Context, reqs request.Dupchec
 	info, _ := json.Marshal(negativeCustomer)
 	data.Info = string(info)
 	data.SourceDecision = constant.SOURCE_DECISION_BLACKLIST
+
+	return
+}
+
+func (u usecase) CheckMobilePhoneFMF(ctx context.Context, prospectID, mobilePhone, idNumber, accessToken, hrisAccessToken string) (data response.UsecaseApi, err error) {
+	var (
+		listEmployee []response.HrisListEmployee
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	header := map[string]string{
+		"Authorization": "Bearer " + hrisAccessToken,
+	}
+
+	payload := map[string]interface{}{
+		"prospect_id": prospectID,
+		"limit":       10,
+		"page":        1,
+		"column":      "",
+		"ascending":   true,
+		"query":       "phone_number==" + mobilePhone,
+	}
+
+	param, _ := json.Marshal(payload)
+	getListEmployee, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("HRIS_LIST_EMPLOYEE"), param, header, constant.METHOD_POST, false, 0, timeout, "", accessToken)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call API HRIS List Employee Error")
+		return
+	}
+
+	json.Unmarshal([]byte(jsoniter.Get(getListEmployee.Body(), "data").ToString()), &listEmployee)
+
+	// set default pass
+	data.SourceDecision = constant.SOURCE_DECISION_NOHP
+	data.Code = constant.CODE_NOHP
+	data.Result = constant.DECISION_PASS
+	info, _ := json.Marshal(listEmployee)
+	data.Info = string(info)
+
+	for _, v := range listEmployee {
+		if v.PhoneNumber != nil && v.IDNumber != nil {
+			if v.PhoneNumber.(string) == mobilePhone && v.IDNumber.(string) != idNumber {
+				data.Code = constant.CODE_NOHP
+				data.Result = constant.DECISION_REJECT
+				data.Reason = constant.REASON_REJECT_NOHP
+			}
+		}
+	}
 
 	return
 }

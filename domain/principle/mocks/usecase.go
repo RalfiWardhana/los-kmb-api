@@ -263,6 +263,34 @@ func (_m *Usecase) CheckLatestPaidInstallment(ctx context.Context, prospectID st
 	return r0, r1, r2
 }
 
+// CheckMobilePhoneFMF provides a mock function with given fields: ctx, prospectID, mobilePhone, idNumber, accessToken, hrisAccessToken
+func (_m *Usecase) CheckMobilePhoneFMF(ctx context.Context, prospectID string, mobilePhone string, idNumber string, accessToken string, hrisAccessToken string) (response.UsecaseApi, error) {
+	ret := _m.Called(ctx, prospectID, mobilePhone, idNumber, accessToken, hrisAccessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CheckMobilePhoneFMF")
+	}
+
+	var r0 response.UsecaseApi
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) (response.UsecaseApi, error)); ok {
+		return rf(ctx, prospectID, mobilePhone, idNumber, accessToken, hrisAccessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) response.UsecaseApi); ok {
+		r0 = rf(ctx, prospectID, mobilePhone, idNumber, accessToken, hrisAccessToken)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string, string) error); ok {
+		r1 = rf(ctx, prospectID, mobilePhone, idNumber, accessToken, hrisAccessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CheckNokaNosin provides a mock function with given fields: ctx, r
 func (_m *Usecase) CheckNokaNosin(ctx context.Context, r request.PrincipleAsset) (response.UsecaseApi, error) {
 	ret := _m.Called(ctx, r)

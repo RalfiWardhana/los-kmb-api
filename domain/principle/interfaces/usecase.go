@@ -52,6 +52,7 @@ type Usecase interface {
 	NegativeCustomerCheck(ctx context.Context, reqs request.DupcheckApi, accessToken string) (data response.UsecaseApi, negativeCustomer response.NegativeCustomer, err error)
 	History2Wilen(prospectID string) (data []response.History2Wilen, err error)
 	Publish2Wilen(ctx context.Context, req request.Publish2Wilen, accessToken string) (err error)
+	CheckMobilePhoneFMF(ctx context.Context, prospectID, mobilePhone, idNumber, accessToken, hrisAccessToken string) (data response.UsecaseApi, err error)
 }
 
 type MultiUsecase interface {

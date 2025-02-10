@@ -3022,6 +3022,10 @@ type TrxKPM struct {
 	CheckNegativeCustomerCode   interface{} `gorm:"column:CheckNegativeCustomerCode;type:varchar(50);"`
 	CheckNegativeCustomerReason interface{} `gorm:"column:CheckNegativeCustomerReason;type:varchar(200);"`
 	CheckNegativeCustomerInfo   interface{} `gorm:"column:CheckNegativeCustomerInfo;type:text;"`
+	CheckMobilePhoneFMFResult   interface{} `gorm:"column:CheckMobilePhoneFMFResult;type:varchar(50);"`
+	CheckMobilePhoneFMFCode     interface{} `gorm:"column:CheckMobilePhoneFMFCode;type:varchar(50);"`
+	CheckMobilePhoneFMFReason   interface{} `gorm:"column:CheckMobilePhoneFMFReason;type:varchar(200);"`
+	CheckMobilePhoneFMFInfo     interface{} `gorm:"column:CheckMobilePhoneFMFInfo;type:text;"`
 	CheckBlacklistResult        interface{} `gorm:"column:CheckBlacklistResult;type:varchar(50);"`
 	CheckBlacklistCode          interface{} `gorm:"column:CheckBlacklistCode;type:varchar(50);"`
 	CheckBlacklistReason        interface{} `gorm:"column:CheckBlacklistReason;type:varchar(200);"`
