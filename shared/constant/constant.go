@@ -539,7 +539,7 @@ const (
 
 	// MOBILEPHONE FMF
 	SOURCE_DECISION_NOHP = "NHP"
-	REASON_REJECT_NOHP   = "Nomor Terdaftar di KB FMF - Bukan a.n Konsumen"
+	REASON_REJECT_NOHP   = "Nomor Terdaftar di KB FMF atas nama Karyawan"
 	CODE_NOHP            = "251"
 
 	//FACE COMPARE

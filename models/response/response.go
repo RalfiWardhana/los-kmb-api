@@ -985,6 +985,7 @@ type HrisListEmployee struct {
 	EmployeeID  string      `json:"employee_id"`
 	IDNumber    interface{} `json:"id_number"`
 	PhoneNumber interface{} `json:"phone_number"`
+	IsResign    bool        `json:"is_resign"`
 }
 
 type FpdCMOResponse struct {
