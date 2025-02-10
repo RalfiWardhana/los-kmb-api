@@ -89,7 +89,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Metrics, acce
 	}
 
 	staySinceYear := strconv.Itoa(trxKPM.StaySinceYear)
-	staySinceMonth := strconv.Itoa(trxKPM.StaySinceMonth)
+	staySinceMonth := fmt.Sprintf("%02d", trxKPM.StaySinceMonth)
 
 	bpkbNameTypeKPM := 0
 	if strings.Contains(os.Getenv("NAMA_SAMA"), trxKPM.BPKBName) {
