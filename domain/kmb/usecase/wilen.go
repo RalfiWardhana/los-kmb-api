@@ -393,11 +393,9 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Metrics, acce
 	}
 
 	var trxEDD entity.TrxEDD
-	if negativeCustomerData != (response.NegativeCustomer{}) {
-		trxEDD.ProspectID = req.Transaction.ProspectID
-		if negativeCustomerData.Decision == "YES" || negativeCustomerData.IsHighrisk == 1 {
-			trxEDD.IsHighrisk = true
-		}
+	trxEDD.ProspectID = req.Transaction.ProspectID
+	if negativeCustomerData.Decision == "YES" || negativeCustomerData.IsHighrisk == 1 {
+		trxEDD.IsHighrisk = true
 	}
 
 	trxFMF.TrxEDD = trxEDD
