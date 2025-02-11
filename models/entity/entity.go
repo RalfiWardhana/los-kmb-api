@@ -2982,6 +2982,7 @@ type TrxKPM struct {
 	BPKBName                    string      `gorm:"column:BPKBName;type:varchar(2)"`
 	OwnerAsset                  string      `gorm:"column:OwnerAsset;type:varchar(50)"`
 	LoanAmount                  float64     `gorm:"column:LoanAmount"`
+	MaxLoanAmount               float64     `gorm:"column:MaxLoanAmount"`
 	Tenor                       int         `gorm:"column:Tenor"`
 	InstallmentAmount           float64     `gorm:"column:InstallmentAmount"`
 	NumOfDependence             int         `gorm:"column:NumOfDependence"`

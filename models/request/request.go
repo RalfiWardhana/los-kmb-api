@@ -1407,6 +1407,7 @@ type Submission2Wilen struct {
 	BPKBNameType            string  `json:"bpkb_name_type" validate:"required,bpkbname" example:"K"`
 	OwnerAsset              string  `json:"owner_asset" validate:"required,min=2,max=50,allowcharsname" example:"JONATHAN"`
 	LoanAmount              float64 `json:"loan_amount"  validate:"required,max=999999999999" example:"105000000"`
+	MaxLoanAmount           float64 `json:"max_loan_amount"  validate:"required,max=999999999999" example:"105000000"`
 	Tenor                   int     `json:"tenor" validate:"required,max=60" example:"12"`
 	InstallmentAmount       float64 `json:"installment_amount" validate:"required,max=999999999999" example:"4181333"`
 	NumOfDependence         int     `json:"num_of_dependence" validate:"omitempty,max=50"  example:"1"`

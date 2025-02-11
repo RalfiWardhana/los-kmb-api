@@ -424,6 +424,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			"bpkb_name_type":             trxKPM.BPKBName,
 			"owner_asset":                trxKPM.OwnerAsset,
 			"loan_amount":                trxKPM.LoanAmount,
+			"max_loan_amount":            trxKPM.MaxLoanAmount,
 			"tenor":                      trxKPM.Tenor,
 			"installment_amount":         trxKPM.InstallmentAmount,
 			"num_of_dependence":          trxKPM.NumOfDependence,

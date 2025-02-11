@@ -138,6 +138,7 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 		trxKPM.BPKBName = req.BPKBNameType
 		trxKPM.OwnerAsset = req.OwnerAsset
 		trxKPM.LoanAmount = req.LoanAmount
+		trxKPM.MaxLoanAmount = req.MaxLoanAmount
 		trxKPM.Tenor = req.Tenor
 		trxKPM.InstallmentAmount = req.InstallmentAmount
 		trxKPM.NumOfDependence = req.NumOfDependence
