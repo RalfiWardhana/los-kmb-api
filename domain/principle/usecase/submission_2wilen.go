@@ -1917,7 +1917,14 @@ func (u usecase) CheckMobilePhoneFMF(ctx context.Context, prospectID, mobilePhon
 
 	for _, v := range listEmployee {
 		if v.PhoneNumber != nil && v.IDNumber != nil {
-			if v.PhoneNumber.(string) == mobilePhone && v.IDNumber.(string) != idNumber {
+			/*
+				Requirement :
+				Jika No HP konsumen terdaftar di HRIS, maka cek NIK nya
+					Jika NIK Konsumen dan NIK Employee FMF berbeda, maka cek flagging `is_resign`
+						Jika `is_resign` = true, maka PASS
+						Jika `is_resign` = false, maka REJECT
+			*/
+			if v.PhoneNumber.(string) == mobilePhone && v.IDNumber.(string) != idNumber && !v.IsResign {
 				data.Code = constant.CODE_NOHP
 				data.Result = constant.DECISION_REJECT
 				data.Reason = constant.REASON_REJECT_NOHP
