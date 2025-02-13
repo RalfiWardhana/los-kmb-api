@@ -5,6 +5,15 @@ import (
 	"time"
 )
 
+type ApiResponseV2 struct {
+	Code       string      `json:"code"`
+	Message    string      `json:"message"`
+	Errors     interface{} `json:"errors"`
+	Data       interface{} `json:"data"`
+	ServerTime string      `json:"server_time"`
+	RequestID  string      `json:"request_id"`
+}
+
 type ApiResponse struct {
 	Message    string      `json:"messages"`
 	Errors     interface{} `json:"errors"`
@@ -217,6 +226,15 @@ type LimitAvailable struct {
 	TenorLimit   int   `json:"tenor_limit"`
 }
 
+type ResultNewKoRules struct {
+	CategoryPBK       string `json:"category_pbk"`
+	ContractCode      string `json:"contract_code"`
+	ContractStatus    string `json:"contract_status"`
+	CreditorType      string `json:"creditor_type"`
+	Creditor          string `json:"creditor"`
+	ConditionDate     string `json:"condition_date"`
+	RestructuringDate string `json:"restructuring_date"`
+}
 type ResponsePefindo struct {
 	Code         string                `json:"code"`
 	Status       string                `json:"status"`
@@ -228,46 +246,48 @@ type ResponsePefindo struct {
 }
 
 type PefindoResult struct {
-	SearchID                      string      `json:"search_id"`
-	PefindoID                     string      `json:"pefindo_id"`
-	Score                         string      `json:"score"`
-	MaxOverdue                    interface{} `json:"max_overdue"`
-	MaxOverdueLast12Months        interface{} `json:"max_overdue_last12months"`
-	AngsuranAktifPbk              float64     `json:"angsuran_aktif_pbk"`
-	WoContract                    bool        `json:"wo_contract"`
-	WoAdaAgunan                   bool        `json:"wo_ada_agunan"`
-	TotalBakiDebetNonAgunan       float64     `json:"total_baki_debet_non_agunan"`
-	DetailReport                  string      `json:"detail_report"`
-	Category                      interface{} `json:"category"`
-	MaxOverdueKORules             interface{} `json:"max_overdue_ko_rules"`
-	MaxOverdueLast12MonthsKORules interface{} `json:"max_overdue_last12months_ko_rules"`
+	SearchID                      string           `json:"search_id"`
+	PefindoID                     string           `json:"pefindo_id"`
+	Score                         string           `json:"score"`
+	MaxOverdue                    interface{}      `json:"max_overdue"`
+	MaxOverdueLast12Months        interface{}      `json:"max_overdue_last12months"`
+	AngsuranAktifPbk              float64          `json:"angsuran_aktif_pbk"`
+	WoContract                    bool             `json:"wo_contract"`
+	WoAdaAgunan                   bool             `json:"wo_ada_agunan"`
+	TotalBakiDebetNonAgunan       float64          `json:"total_baki_debet_non_agunan"`
+	DetailReport                  string           `json:"detail_report"`
+	Category                      interface{}      `json:"category"`
+	MaxOverdueKORules             interface{}      `json:"max_overdue_ko_rules"`
+	MaxOverdueLast12MonthsKORules interface{}      `json:"max_overdue_last12months_ko_rules"`
+	NewKoRules                    ResultNewKoRules `json:"new_ko_rules"`
 }
 
 type PefindoResultKonsumen struct {
-	SearchID                               string      `json:"search_id"`
-	PefindoID                              string      `json:"pefindo_id"`
-	Score                                  string      `json:"score"`
-	MaxOverdue                             interface{} `json:"max_overdue"`
-	MaxOverdueLast12Months                 interface{} `json:"max_overdue_last12months"`
-	AngsuranAktifPbk                       float64     `json:"angsuran_aktif_pbk"`
-	WoContract                             int         `json:"wo_contract"`
-	WoAdaAgunan                            int         `json:"wo_ada_agunan"`
-	BakiDebetNonAgunan                     float64     `json:"baki_debet_non_agunan"`
-	DetailReport                           string      `json:"detail_report"`
-	Plafon                                 float64     `json:"plafon"`
-	FasilitasAktif                         int         `json:"fasilitas_aktif"`
-	KualitasKreditTerburuk                 string      `json:"kualitas_kredit_terburuk"`
-	BulanKualitasTerburuk                  string      `json:"bulan_kualitas_terburuk"`
-	BakiDebetKualitasTerburuk              float64     `json:"baki_debet_kualitas_terburuk"`
-	KualitasKreditTerakhir                 string      `json:"kualitas_kredit_terakhir"`
-	BulanKualitasKreditTerakhir            string      `json:"bulan_kualitas_kredit_terakhir"`
-	OverdueLastKORules                     interface{} `json:"overdue_last_ko_rules"`
-	OverdueLast12MonthsKORules             interface{} `json:"overdue_last_12month_ko_rules"`
-	Category                               interface{} `json:"category"`
-	MaxOverdueAgunanKORules                interface{} `json:"max_ovd_agunan_ko_rules"`
-	MaxOverdueAgunanLast12MonthsKORules    interface{} `json:"max_ovd_agunan_last_12month_ko_rules"`
-	MaxOverdueNonAgunanKORules             interface{} `json:"max_ovd_non_agunan_ko_rules"`
-	MaxOverdueNonAgunanLast12MonthsKORules interface{} `json:"max_ovd_non_agunan_last_12month_ko_rules"`
+	SearchID                               string           `json:"search_id"`
+	PefindoID                              string           `json:"pefindo_id"`
+	Score                                  string           `json:"score"`
+	MaxOverdue                             interface{}      `json:"max_overdue"`
+	MaxOverdueLast12Months                 interface{}      `json:"max_overdue_last12months"`
+	AngsuranAktifPbk                       float64          `json:"angsuran_aktif_pbk"`
+	WoContract                             int              `json:"wo_contract"`
+	WoAdaAgunan                            int              `json:"wo_ada_agunan"`
+	BakiDebetNonAgunan                     float64          `json:"baki_debet_non_agunan"`
+	DetailReport                           string           `json:"detail_report"`
+	Plafon                                 float64          `json:"plafon"`
+	FasilitasAktif                         int              `json:"fasilitas_aktif"`
+	KualitasKreditTerburuk                 string           `json:"kualitas_kredit_terburuk"`
+	BulanKualitasTerburuk                  string           `json:"bulan_kualitas_terburuk"`
+	BakiDebetKualitasTerburuk              float64          `json:"baki_debet_kualitas_terburuk"`
+	KualitasKreditTerakhir                 string           `json:"kualitas_kredit_terakhir"`
+	BulanKualitasKreditTerakhir            string           `json:"bulan_kualitas_kredit_terakhir"`
+	OverdueLastKORules                     interface{}      `json:"overdue_last_ko_rules"`
+	OverdueLast12MonthsKORules             interface{}      `json:"overdue_last_12month_ko_rules"`
+	Category                               interface{}      `json:"category"`
+	MaxOverdueAgunanKORules                interface{}      `json:"max_ovd_agunan_ko_rules"`
+	MaxOverdueAgunanLast12MonthsKORules    interface{}      `json:"max_ovd_agunan_last_12month_ko_rules"`
+	MaxOverdueNonAgunanKORules             interface{}      `json:"max_ovd_non_agunan_ko_rules"`
+	MaxOverdueNonAgunanLast12MonthsKORules interface{}      `json:"max_ovd_non_agunan_last_12month_ko_rules"`
+	NewKoRules                             ResultNewKoRules `json:"new_ko_rules"`
 }
 
 type PefindoResultPasangan struct {
@@ -349,6 +369,7 @@ type SpDupcheckMap struct {
 	ConfigMaxDSR                     float64     `json:"config_max_dsr"`
 	Cluster                          interface{} `json:"cluster"`
 	AgreementSettledExist            bool        `json:"agreement_settled_exist"`
+	NegativeCustomer                 interface{} `json:"negative_customer"`
 }
 
 type SpDupCekCustomerByID struct {
@@ -441,10 +462,25 @@ type UsecaseApi struct {
 	IsDeviasi      bool        `json:"-"`
 }
 
+type NegativeCustomer struct {
+	IsActive    int    `json:"is_active"`
+	IsBlacklist int    `json:"is_blacklist"`
+	IsHighrisk  int    `json:"is_highrisk"`
+	BadType     string `json:"bad_type"`
+	Result      string `json:"result"`
+	Decision    string `json:"decision"`
+}
+
 type LowIncome struct {
 	NoApplication string  `json:"no_application"`
 	Income        float64 `json:"income"`
 	Range         string  `json:"range"`
+}
+
+type LockSystem struct {
+	IsBanned  bool   `json:"is_banned"`
+	Reason    string `json:"reason"`
+	UnbanDate string `json:"unban_date"`
 }
 
 type DupcheckConfig struct {
@@ -466,6 +502,20 @@ type DataDupcheckConfig struct {
 		Priority float64 `json:"priority"`
 		Regular  float64 `json:"regular"`
 	} `json:"minimum_pencairan_ro_top_up"`
+}
+
+type LockSystemConfig struct {
+	Data DataLockSystemConfig `json:"data"`
+}
+
+type DataLockSystemConfig struct {
+	LockRejectAttempt int    `json:"lock_reject_attempt"`
+	LockRejectBan     int    `json:"lock_reject_ban"`
+	LockRejectCheck   int    `json:"lock_reject_check"`
+	LockCancelAttempt int    `json:"lock_cancel_attempt"`
+	LockCancelBan     int    `json:"lock_cancel_ban"`
+	LockCancelCheck   int    `json:"lock_cancel_check"`
+	LockStartDate     string `json:"lock_start_date"`
 }
 
 type LatestPaidInstallment struct {
@@ -553,6 +603,7 @@ type TrxFMF struct {
 	EkycSimiliarity         interface{} `json:"ekyc_similiarity"`
 	EkycReason              interface{} `json:"ekyc_reason"`
 	TrxDeviasi              entity.TrxDeviasi
+	TrxEDD                  entity.TrxEDD
 }
 
 type RoaoAkkk struct {
@@ -928,6 +979,13 @@ type GetEmployeeByID struct {
 	Error   interface{}             `json:"error"`
 	Message string                  `json:"message"`
 	Data    []EmployeeCareerHistory `json:"data"`
+}
+
+type HrisListEmployee struct {
+	EmployeeID  string      `json:"employee_id"`
+	IDNumber    interface{} `json:"id_number"`
+	PhoneNumber interface{} `json:"phone_number"`
+	IsResign    bool        `json:"is_resign"`
 }
 
 type FpdCMOResponse struct {

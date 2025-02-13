@@ -120,6 +120,52 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 		maxOverdueLast12Months, _ = utils.GetFloat(filtering.MaxOverdueLast12MonthsKORules)
 		category = getReasonCategoryRoman(filtering.Category)
 
+		// START - NEW KO RULES | CR 2025-01-10
+		if filtering.NewKoRules != nil {
+			var newKoRules response.ResultNewKoRules
+			if newKoRulesStr, ok := filtering.NewKoRules.(string); ok {
+				json.Unmarshal([]byte(newKoRulesStr), &newKoRules)
+			}
+
+			if newKoRules.CategoryPBK != "" {
+				isRejectNewKoRules := false
+				if newKoRules.CategoryPBK == constant.REJECT_LUNAS_DISKON {
+					data.Code = constant.CODE_REJECT_LUNAS_DISKON
+					data.Reason = constant.REASON_LUNAS_DISKON
+					isRejectNewKoRules = true
+				} else if newKoRules.CategoryPBK == constant.REJECT_FASILITAS_DIALIHKAN_DIJUAL {
+					data.Code = constant.CODE_REJECT_FASILITAS_DIALIHKAN_DIJUAL
+					data.Reason = constant.REASON_FASILITAS_DIALIHKAN_DIJUAL
+					isRejectNewKoRules = true
+				} else if newKoRules.CategoryPBK == constant.REJECT_HAPUS_TAGIH {
+					data.Code = constant.CODE_REJECT_HAPUS_TAGIH
+					data.Reason = constant.REASON_HAPUS_TAGIH
+					isRejectNewKoRules = true
+				} else if newKoRules.CategoryPBK == constant.REJECT_REPOSSES {
+					data.Code = constant.CODE_REJECT_REPOSSES
+					data.Reason = constant.REASON_REPOSSES
+					isRejectNewKoRules = true
+				} else if newKoRules.CategoryPBK == constant.REJECT_RESTRUCTURE {
+					data.Code = constant.CODE_REJECT_RESTRUCTURE
+					data.Reason = constant.REASON_RESTRUCTURE
+					isRejectNewKoRules = true
+				}
+
+				if isRejectNewKoRules {
+					if OverrideFlowLikeRegular {
+						data.Reason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + data.Reason
+					}
+
+					data.StatusKonsumen = spDupcheck.StatusKonsumen
+					data.Result = constant.DECISION_REJECT
+					data.SourceDecision = constant.SOURCE_DECISION_BIRO
+
+					return
+				}
+			}
+		}
+		// END - NEW KO RULES | CR 2025-01-10
+
 		if maxOverdueLast12Months > constant.PBK_OVD_LAST_12 {
 			koRulesReason := constant.REJECT_REASON_OVD_PEFINDO
 			if OverrideFlowLikeRegular {

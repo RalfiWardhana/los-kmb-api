@@ -8,6 +8,7 @@ import (
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
+	"math"
 	"os"
 	"strings"
 
@@ -28,7 +29,9 @@ func (u usecase) ElaborateScheme(req request.Metrics) (data response.UsecaseApi,
 
 	ltv := (req.Apk.AF / req.Apk.OTR) * 100
 
-	if ltv > float64(trxElaborateLtv.LTV) {
+	// pendekatan praktis untuk mengatasi kesalahan presisi floating-point
+	const epsilon = 1e-9
+	if ltv > float64(trxElaborateLtv.LTV) && !(math.Abs(ltv-float64(trxElaborateLtv.LTV)) < epsilon) {
 		data = response.UsecaseApi{
 			Result:         constant.DECISION_REJECT,
 			Code:           constant.STRING_CODE_REJECT_NTF_ELABORATE,

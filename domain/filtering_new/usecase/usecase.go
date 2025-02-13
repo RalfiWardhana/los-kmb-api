@@ -78,7 +78,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	requestID := ctx.Value(echo.HeaderXRequestID).(string)
 
-	entityFiltering := entity.FilteringKMB{ProspectID: req.ProspectID, RequestID: requestID, BranchID: req.BranchID, BpkbName: req.BPKBName}
+	entityFiltering := entity.FilteringKMB{ProspectID: req.ProspectID, RequestID: requestID, BranchID: req.BranchID, BpkbName: req.BPKBName, IDNumber: req.IDNumber}
 
 	customer = append(customer, request.SpouseDupcheck{IDNumber: req.IDNumber, LegalName: req.LegalName, BirthDate: req.BirthDate, MotherName: req.MotherName})
 
@@ -330,6 +330,11 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	entityFiltering.Reason = respFiltering.Reason
 
+	if resPefindo.NewKoRules != (response.ResultNewKoRules{}) {
+		jsonNewKoRules, _ := json.Marshal(resPefindo.NewKoRules)
+		entityFiltering.NewKoRules = jsonNewKoRules
+	}
+
 	err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD)
 
 	return
@@ -429,6 +434,108 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 		}
 
 		if checkPefindo.Code == "200" && pefindoResult.Score != constant.PEFINDO_UNSCORE {
+			// START - NEW KO RULES | CR 2025-01-10
+			if pefindoResult.NewKoRules != (response.ResultNewKoRules{}) && pefindoResult.NewKoRules.CategoryPBK != "" {
+				isRejectNewKoRules := false
+				if pefindoResult.NewKoRules.CategoryPBK == constant.REJECT_LUNAS_DISKON {
+					data.Code = constant.CODE_REJECT_LUNAS_DISKON
+					data.Reason = constant.REASON_LUNAS_DISKON
+					isRejectNewKoRules = true
+				} else if pefindoResult.NewKoRules.CategoryPBK == constant.REJECT_FASILITAS_DIALIHKAN_DIJUAL {
+					data.Code = constant.CODE_REJECT_FASILITAS_DIALIHKAN_DIJUAL
+					data.Reason = constant.REASON_FASILITAS_DIALIHKAN_DIJUAL
+					isRejectNewKoRules = true
+				} else if pefindoResult.NewKoRules.CategoryPBK == constant.REJECT_HAPUS_TAGIH {
+					data.Code = constant.CODE_REJECT_HAPUS_TAGIH
+					data.Reason = constant.REASON_HAPUS_TAGIH
+					isRejectNewKoRules = true
+				} else if pefindoResult.NewKoRules.CategoryPBK == constant.REJECT_REPOSSES {
+					data.Code = constant.CODE_REJECT_REPOSSES
+					data.Reason = constant.REASON_REPOSSES
+					isRejectNewKoRules = true
+				} else if pefindoResult.NewKoRules.CategoryPBK == constant.REJECT_RESTRUCTURE {
+					data.Code = constant.CODE_REJECT_RESTRUCTURE
+					data.Reason = constant.REASON_RESTRUCTURE
+					isRejectNewKoRules = true
+				}
+
+				if isRejectNewKoRules {
+					data.CustomerStatus = customerStatus
+					data.Decision = constant.DECISION_REJECT
+					data.NextProcess = false
+
+					if checkPefindo.Konsumen != (response.PefindoResultKonsumen{}) {
+						trxDetailBiroC := entity.TrxDetailBiro{
+							ProspectID:                             reqs.ProspectID,
+							Subject:                                "CUSTOMER",
+							Source:                                 "PBK",
+							BiroID:                                 checkPefindo.Konsumen.PefindoID,
+							Score:                                  checkPefindo.Konsumen.Score,
+							MaxOverdue:                             checkPefindo.Konsumen.MaxOverdue,
+							MaxOverdueLast12months:                 checkPefindo.Konsumen.MaxOverdueLast12Months,
+							InstallmentAmount:                      checkPefindo.Konsumen.AngsuranAktifPbk,
+							WoContract:                             checkPefindo.Konsumen.WoContract,
+							WoWithCollateral:                       checkPefindo.Konsumen.WoAdaAgunan,
+							BakiDebetNonCollateral:                 checkPefindo.Konsumen.BakiDebetNonAgunan,
+							UrlPdfReport:                           checkPefindo.Konsumen.DetailReport,
+							Plafon:                                 checkPefindo.Konsumen.Plafon,
+							FasilitasAktif:                         checkPefindo.Konsumen.FasilitasAktif,
+							KualitasKreditTerburuk:                 checkPefindo.Konsumen.KualitasKreditTerburuk,
+							BulanKualitasTerburuk:                  checkPefindo.Konsumen.BulanKualitasTerburuk,
+							BakiDebetKualitasTerburuk:              checkPefindo.Konsumen.BakiDebetKualitasTerburuk,
+							KualitasKreditTerakhir:                 checkPefindo.Konsumen.KualitasKreditTerakhir,
+							BulanKualitasKreditTerakhir:            checkPefindo.Konsumen.BulanKualitasKreditTerakhir,
+							OverdueLastKORules:                     checkPefindo.Konsumen.OverdueLastKORules,
+							OverdueLast12MonthsKORules:             checkPefindo.Konsumen.OverdueLast12MonthsKORules,
+							Category:                               checkPefindo.Konsumen.Category,
+							MaxOverdueAgunanKORules:                checkPefindo.Konsumen.MaxOverdueAgunanKORules,
+							MaxOverdueAgunanLast12MonthsKORules:    checkPefindo.Konsumen.MaxOverdueAgunanLast12MonthsKORules,
+							MaxOverdueNonAgunanKORules:             checkPefindo.Konsumen.MaxOverdueNonAgunanKORules,
+							MaxOverdueNonAgunanLast12MonthsKORules: checkPefindo.Konsumen.MaxOverdueNonAgunanLast12MonthsKORules,
+						}
+						trxDetailBiro = append(trxDetailBiro, trxDetailBiroC)
+						data.PbkReportCustomer = &checkPefindo.Konsumen.DetailReport
+					}
+					if checkPefindo.Pasangan != (response.PefindoResultPasangan{}) {
+						trxDetailBiroC := entity.TrxDetailBiro{
+							ProspectID:                             reqs.ProspectID,
+							Subject:                                "SPOUSE",
+							Source:                                 "PBK",
+							BiroID:                                 checkPefindo.Pasangan.PefindoID,
+							Score:                                  checkPefindo.Pasangan.Score,
+							MaxOverdue:                             checkPefindo.Pasangan.MaxOverdue,
+							MaxOverdueLast12months:                 checkPefindo.Pasangan.MaxOverdueLast12Months,
+							InstallmentAmount:                      checkPefindo.Pasangan.AngsuranAktifPbk,
+							WoContract:                             checkPefindo.Pasangan.WoContract,
+							WoWithCollateral:                       checkPefindo.Pasangan.WoAdaAgunan,
+							BakiDebetNonCollateral:                 checkPefindo.Pasangan.BakiDebetNonAgunan,
+							UrlPdfReport:                           checkPefindo.Pasangan.DetailReport,
+							Plafon:                                 checkPefindo.Pasangan.Plafon,
+							FasilitasAktif:                         checkPefindo.Pasangan.FasilitasAktif,
+							KualitasKreditTerburuk:                 checkPefindo.Pasangan.KualitasKreditTerburuk,
+							BulanKualitasTerburuk:                  checkPefindo.Pasangan.BulanKualitasTerburuk,
+							BakiDebetKualitasTerburuk:              checkPefindo.Pasangan.BakiDebetKualitasTerburuk,
+							KualitasKreditTerakhir:                 checkPefindo.Pasangan.KualitasKreditTerakhir,
+							BulanKualitasKreditTerakhir:            checkPefindo.Pasangan.BulanKualitasKreditTerakhir,
+							OverdueLastKORules:                     checkPefindo.Pasangan.OverdueLastKORules,
+							OverdueLast12MonthsKORules:             checkPefindo.Pasangan.OverdueLast12MonthsKORules,
+							Category:                               checkPefindo.Pasangan.Category,
+							MaxOverdueAgunanKORules:                checkPefindo.Pasangan.MaxOverdueAgunanKORules,
+							MaxOverdueAgunanLast12MonthsKORules:    checkPefindo.Pasangan.MaxOverdueAgunanLast12MonthsKORules,
+							MaxOverdueNonAgunanKORules:             checkPefindo.Pasangan.MaxOverdueNonAgunanKORules,
+							MaxOverdueNonAgunanLast12MonthsKORules: checkPefindo.Pasangan.MaxOverdueNonAgunanLast12MonthsKORules,
+						}
+						trxDetailBiro = append(trxDetailBiro, trxDetailBiroC)
+						data.PbkReportSpouse = &checkPefindo.Pasangan.DetailReport
+					}
+
+					responsePefindo = pefindoResult
+
+					return
+				}
+			}
+			// END - NEW KO RULES | CR 2025-01-10
+
 			if pefindoResult.Category != nil && getReasonCategoryRoman(pefindoResult.Category) != "" {
 				if !bpkbName {
 					if pefindoResult.MaxOverdueLast12MonthsKORules != nil {

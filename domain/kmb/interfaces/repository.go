@@ -7,6 +7,10 @@ import (
 )
 
 type Repository interface {
+	GetTrxReject(idNumber string, config response.LockSystemConfig) (data []entity.TrxLockSystem, err error)
+	GetTrxCancel(idNumber string, config response.LockSystemConfig) (data []entity.TrxLockSystem, err error)
+	SaveTrxLockSystem(trxLockSystem entity.TrxLockSystem) (err error)
+	GetTrxLockSystem(idNumber string) (data entity.TrxLockSystem, err error)
 	ScanTrxMaster(prospectID string) (countMaster int, err error)
 	ScanTrxPrescreening(prospectID string) (count int, err error)
 	GetFilteringResult(prospectID string) (filtering entity.FilteringKMB, err error)
@@ -33,7 +37,7 @@ type Repository interface {
 	GetActiveLoanTypeLast24M(customerID string) (score entity.GetActiveLoanTypeLast24M, err error)
 	GetMoblast(customerID string) (score entity.GetMoblast, err error)
 	GetMappingDeviasi(prospectID string) (confirmDeviasi entity.ConfirmDeviasi, err error)
-
+	GetMappingNegativeCustomer(req response.NegativeCustomer) (data entity.MappingNegativeCustomer, err error)
 	GetElaborateLtv(prospectID string) (elaborateLTV entity.MappingElaborateLTV, err error)
 	GetMasterBranch(branchID string) (masterBranch entity.MasterBranch, err error)
 	GetMappingElaborateIncome(mappingElaborateIncome entity.MappingElaborateIncome) (result entity.MappingElaborateIncome, err error)
