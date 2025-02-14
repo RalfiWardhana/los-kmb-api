@@ -1015,11 +1015,11 @@ type AgreementData struct {
 	ApplicationID         string    `json:"application_id"`
 	AgreementNo           string    `json:"agreement_no"`
 	LegalName             string    `json:"legal_name"`
-	InstallmentAmount     int       `json:"installment_amount"`
-	DownPayment           int       `json:"down_payment"`
+	InstallmentAmount     float64   `json:"installment_amount"`
+	DownPayment           float64   `json:"down_payment"`
 	Tenor                 int       `json:"tenor"`
 	GoLiveDate            time.Time `json:"go_live_date"`
-	OutstandingPrincipal  int       `json:"outstanding_principal"`
+	OutstandingPrincipal  float64   `json:"outstanding_principal"`
 	ContractStatus        string    `json:"contract_status"`
 	NextInstallmentNumber int       `json:"next_installment_number"`
 	NextInstallmentDate   time.Time `json:"next_installment_date"`
@@ -1031,8 +1031,8 @@ type AgreementData struct {
 	Bpkb                  string    `json:"bpkb"`
 	SerialNo1             string    `json:"serial_no_1"`
 	SerialNo2             string    `json:"serial_no_2"`
-	TotalOtr              int       `json:"total_otr"`
-	DiscountOtr           int       `json:"discount_otr"`
+	TotalOtr              float64   `json:"total_otr"`
+	DiscountOtr           float64   `json:"discount_otr"`
 }
 
 type ConfinsAgreementCustomer struct {
