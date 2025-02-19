@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	_ "github.com/KB-FMF/los-common-library/errors"
 	"github.com/KB-FMF/los-common-library/response"
@@ -661,34 +663,61 @@ func (c *handler) Submission2Wilen(ctx echo.Context) (err error) {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
 	}
 
-	data, err := c.multiusecase.Submission2Wilen(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
+	ctxWithTimeout, cancel := context.WithTimeout(ctx.Request().Context(), 5*time.Minute)
+	defer cancel()
 
-	if err != nil {
+	resultChan := make(chan struct {
+		data interface{}
+		err  error
+	})
 
-		if err.Error() == constant.ERROR_MAX_EXCEED {
-			return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", "429"), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_EXCEED_RESPONSE_MESSAGE))
+	go func() {
+		data, err := c.multiusecase.Submission2Wilen(ctxWithTimeout, r, middlewares.UserInfoData.AccessToken)
+		resultChan <- struct {
+			data interface{}
+			err  error
+		}{data, err}
+	}()
+
+	select {
+	case result := <-resultChan:
+		if result.err != nil {
+			if result.err.Error() == constant.ERROR_MAX_EXCEED {
+				return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", "429"), result.err,
+					response.WithHttpCode(http.StatusInternalServerError),
+					response.WithMessage(constant.PRINCIPLE_ERROR_EXCEED_RESPONSE_MESSAGE))
+			}
+
+			errorMessages := map[string]string{
+				constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE: constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE,
+				constant.KPM_WAIT_MESSAGE_2WILEN:            constant.KPM_WAIT_MESSAGE_2WILEN,
+				constant.LOS_PROCESS_MESSAGE_2WILEN:         constant.LOS_PROCESS_MESSAGE_2WILEN,
+				constant.LOS_APPROVE_MESSAGE_2WILEN:         constant.LOS_APPROVE_MESSAGE_2WILEN,
+				constant.LOS_CANCEL_MESSAGE_2WILEN:          constant.LOS_CANCEL_MESSAGE_2WILEN,
+			}
+
+			errorMessage := constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE
+			if msg, exists := errorMessages[result.err.Error()]; exists {
+				errorMessage = msg
+			}
+
+			code, err := utils.WrapError(result.err)
+
+			return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err,
+				response.WithHttpCode(http.StatusInternalServerError),
+				response.WithMessage(errorMessage))
 		}
 
-		errorMessages := map[string]string{
-			constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE: constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE,
-			constant.KPM_WAIT_MESSAGE_2WILEN:            constant.KPM_WAIT_MESSAGE_2WILEN,
-			constant.LOS_PROCESS_MESSAGE_2WILEN:         constant.LOS_PROCESS_MESSAGE_2WILEN,
-			constant.LOS_APPROVE_MESSAGE_2WILEN:         constant.LOS_APPROVE_MESSAGE_2WILEN,
-			constant.LOS_CANCEL_MESSAGE_2WILEN:          constant.LOS_CANCEL_MESSAGE_2WILEN,
+		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), result.data)
+
+	case <-ctxWithTimeout.Done():
+		if ctxWithTimeout.Err() == context.DeadlineExceeded {
+			return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", "504"), fmt.Errorf("service timeout"),
+				response.WithHttpCode(http.StatusGatewayTimeout),
+				response.WithMessage("Request timeout exceeded"))
 		}
-
-		errorMessage := constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE
-		if msg, exists := errorMessages[err.Error()]; exists {
-			errorMessage = msg
-		}
-
-		code, err := utils.WrapError(err)
-
-		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(errorMessage))
+		return ctxWithTimeout.Err()
 	}
-
-	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
-
 }
 
 // KMB 2Wilen Tools godoc
