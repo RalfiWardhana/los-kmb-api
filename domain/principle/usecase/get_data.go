@@ -26,6 +26,11 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 		principleStepOne, _ := u.repository.GetPrincipleStepOne(req.ProspectID)
 
+		if req.KPMID > 0 && req.KPMID != principleStepOne.KPMID {
+			err = errors.New(constant.INTERNAL_SERVER_ERROR + " - KPM ID does not match")
+			return data, err
+		}
+
 		data = map[string]interface{}{
 			"id_number":            principleStepOne.IDNumber,
 			"id_number_spouse":     principleStepOne.SpouseIDNumber,
@@ -48,7 +53,13 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 	case "Pemohon":
 
+		principleStepOne, _ := u.repository.GetPrincipleStepOne(req.ProspectID)
 		principleStepTwo, _ := u.repository.GetPrincipleStepTwo(req.ProspectID)
+
+		if req.KPMID > 0 && req.KPMID != principleStepOne.KPMID {
+			err = errors.New(constant.INTERNAL_SERVER_ERROR + " - KPM ID does not match")
+			return data, err
+		}
 
 		data = map[string]interface{}{
 			"id_number":                  principleStepTwo.IDNumber,
@@ -155,6 +166,11 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 		}()
 
 		if err := <-errChan; err != nil {
+			return data, err
+		}
+
+		if req.KPMID > 0 && req.KPMID != principleStepOne.KPMID {
+			err = errors.New(constant.INTERNAL_SERVER_ERROR + " - KPM ID does not match")
 			return data, err
 		}
 
@@ -331,7 +347,13 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 	case "Emergency":
 
+		principleStepOne, _ := u.repository.GetPrincipleStepOne(req.ProspectID)
 		principleStepFour, _ := u.repository.GetPrincipleEmergencyContact(req.ProspectID)
+
+		if req.KPMID > 0 && req.KPMID != principleStepOne.KPMID {
+			err = errors.New(constant.INTERNAL_SERVER_ERROR + " - KPM ID does not match")
+			return data, err
+		}
 
 		data = map[string]interface{}{
 			"name":         principleStepFour.Name,
@@ -355,6 +377,11 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 		trxKPM, err := u.repository.GetTrxKPM(req.ProspectID)
 		if err != nil {
+			return data, err
+		}
+
+		if req.KPMID > 0 && req.KPMID != trxKPM.KPMID {
+			err = errors.New(constant.INTERNAL_SERVER_ERROR + " - KPM ID does not match")
 			return data, err
 		}
 
