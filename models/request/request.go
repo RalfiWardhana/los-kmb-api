@@ -1335,6 +1335,7 @@ type PrincipleGetData struct {
 	Context        string `json:"context"  validate:"required"`
 	ProspectID     string `json:"prospect_id" validate:"required"`
 	FinancePurpose string `json:"finance_purpose"`
+	KPMID          int    `json:"kpm_id" validate:"omitempty"`
 }
 
 type PrinciplePublish struct {
