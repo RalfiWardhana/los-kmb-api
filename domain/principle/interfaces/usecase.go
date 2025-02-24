@@ -61,5 +61,8 @@ type MultiUsecase interface {
 	PrincipleEmergencyContact(ctx context.Context, req request.PrincipleEmergencyContact, accessToken string) (data response.UsecaseApi, err error)
 	GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoanAmount, accessToken string) (data response.GetMaxLoanAmountData, err error)
 	GetAvailableTenor(ctx context.Context, req request.GetAvailableTenor, accessToken string) (data []response.GetAvailableTenorData, err error)
+}
+
+type Metrics interface {
 	Submission2Wilen(ctx context.Context, req request.Submission2Wilen, accessToken string) (resp response.Submission2Wilen, err error)
 }

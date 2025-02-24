@@ -276,7 +276,8 @@ func main() {
 	principleRepo := principleRepository.NewRepository(newKMB, kpLos, scorePro, confins)
 	principleCase := principleUsecase.NewUsecase(principleRepo, httpClient, producer)
 	principleMultiCase := principleUsecase.NewMultiUsecase(principleRepo, httpClient, producer, principleCase)
-	principleDelivery.Handler(apiGroupv3, principleMultiCase, principleCase, principleRepo, libResponse, accessToken)
+	principleMetrics := principleUsecase.NewMetrics(principleRepo, httpClient, producer, principleCase, principleMultiCase)
+	principleDelivery.Handler(apiGroupv3, principleMetrics, principleMultiCase, principleCase, principleRepo, libResponse, accessToken)
 
 	toolsDelivery.ToolsHandler(apiGroupv3, jsonResponse, accessToken, producer)
 
