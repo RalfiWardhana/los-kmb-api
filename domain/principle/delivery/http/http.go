@@ -26,14 +26,16 @@ import (
 )
 
 type handler struct {
+	metrics      interfaces.Metrics
 	multiusecase interfaces.MultiUsecase
 	usecase      interfaces.Usecase
 	repository   interfaces.Repository
 	responses    response.Response
 }
 
-func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, responses response.Response, middlewares *middlewares.AccessMiddleware) {
+func Handler(principleRoute *echo.Group, metrics interfaces.Metrics, multiusecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, responses response.Response, middlewares *middlewares.AccessMiddleware) {
 	handler := handler{
+		metrics:      metrics,
 		multiusecase: multiusecase,
 		usecase:      usecase,
 		repository:   repository,
@@ -672,7 +674,7 @@ func (c *handler) Submission2Wilen(ctx echo.Context) (err error) {
 	})
 
 	go func() {
-		data, err := c.multiusecase.Submission2Wilen(ctxWithTimeout, r, middlewares.UserInfoData.AccessToken)
+		data, err := c.metrics.Submission2Wilen(ctxWithTimeout, r, middlewares.UserInfoData.AccessToken)
 		resultChan <- struct {
 			data interface{}
 			err  error

@@ -12,6 +12,7 @@ import (
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -22,7 +23,7 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submission2Wilen, accessToken string) (resp response.Submission2Wilen, err error) {
+func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wilen, accessToken string) (resp response.Submission2Wilen, err error) {
 
 	var (
 		trxKPM            entity.TrxKPM
@@ -71,6 +72,40 @@ func (u multiUsecase) Submission2Wilen(ctx context.Context, req request.Submissi
 	if readjustCount >= configValue2Wilen.Data.MaxReadjustAttempt {
 		err = errors.New(constant.ERROR_MAX_EXCEED)
 		return resp, err
+	}
+
+	prospectIDCheck := req.ProspectID
+	if trxKPM.ProspectID == "" || readjustCount == 0 {
+		reg := regexp.MustCompile(`[A-Za-z]{3}-`)
+		prospectIDCheck = reg.ReplaceAllString(req.ProspectID, "SIM-")
+	}
+
+	availableTenors, err := u.multiUsecase.GetAvailableTenor(ctx, request.GetAvailableTenor{
+		ProspectID:         prospectIDCheck,
+		BranchID:           req.BranchID,
+		IDNumber:           req.IDNumber,
+		BirthDate:          req.BirthDate,
+		SurgateMotherName:  req.SurgateMotherName,
+		LegalName:          req.LegalName,
+		MobilePhone:        req.MobilePhone,
+		BPKBNameType:       req.BPKBNameType,
+		ManufactureYear:    req.ManufactureYear,
+		AssetCode:          req.AssetCode,
+		AssetUsageTypeCode: req.AssetUsageTypeCode,
+		LicensePlate:       req.LicensePlate,
+		LoanAmount:         req.LoanAmount,
+	}, accessToken)
+	if err != nil {
+		return
+	}
+
+	for _, avavailableTenor := range availableTenors {
+		if avavailableTenor.Tenor == req.Tenor {
+			if avavailableTenor.AdminFee != req.AdminFee {
+				err = errors.New(constant.INTERNAL_SERVER_ERROR + " - Admin fee does not match")
+				return
+			}
+		}
 	}
 
 	statusCode := constant.STATUS_KPM_WAIT_2WILEN
