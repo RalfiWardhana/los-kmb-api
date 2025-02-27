@@ -14,6 +14,7 @@ import (
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
 	"mime/multipart"
+	"net/url"
 	"os"
 	"regexp"
 	"strconv"
@@ -2772,6 +2773,63 @@ func (u usecase) GetMappingClusterChangeLog(pagination interface{}) (data []enti
 
 	if err != nil {
 		return
+	}
+
+	return
+}
+
+func (u usecase) GetAgreementByLicensePlate(ctx context.Context, LicensePlate string, accessToken string) (data response.ChassisNumberOfLicensePlateResponse, err error) {
+
+	var (
+		respAgreementLicensePlate response.MDMAgreementByLicensePlateResponse
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	header := map[string]string{
+		"Authorization": accessToken,
+	}
+
+	lobID := constant.ASSET_TYPE_ID_KMB_ONLY
+	encodedLicensePlate := url.QueryEscape(LicensePlate)
+	endpointURL := fmt.Sprintf(os.Getenv("CONFINS_AGREEMENT_LICENSE_PLATE")+"?lob_id=%s&license_plate=%s", lobID, encodedLicensePlate)
+
+	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointURL, nil, header, constant.METHOD_GET, false, 0, timeout, "", accessToken)
+
+	if err != nil {
+		return
+	}
+
+	switch resp.StatusCode() {
+	case 200, 400:
+		// Success cases - 200 and 400 both treated as successful responses, because possibility data not found is using 400 status code
+		json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &respAgreementLicensePlate)
+
+		// Process the response data
+		if respAgreementLicensePlate.Data != nil {
+			// Try to convert the data to a slice of maps
+			if dataSlice, ok := respAgreementLicensePlate.Data.([]interface{}); ok && len(dataSlice) > 0 {
+				// Get the first element and try to extract serial numbers
+				if record, ok := dataSlice[0].(map[string]interface{}); ok {
+					if chassisNumber, exists := record["serial_no_1"]; exists && chassisNumber != nil {
+						data.ChassisNumber = fmt.Sprintf("%v", chassisNumber)
+					}
+					if engineNumber, exists := record["serial_no_2"]; exists && engineNumber != nil {
+						data.EngineNumber = fmt.Sprintf("%v", engineNumber)
+					}
+				}
+			}
+		}
+		// Note: if Data is nil or doesn't contain the expected fields,
+		// ChassisNumber and EngineNumber will remain as their default values (empty strings)
+	case 401:
+		err = errors.New(constant.ERROR_UNAUTHORIZED + " - Get Agreement by LicensePlate Unauthorized")
+	case 408:
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get Agreement by LicensePlate Request Timeout")
+	case 500:
+		err = errors.New(constant.INTERNAL_SERVER_ERROR + " - Get Agreement by LicensePlate Internal Server Error")
+	default:
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Agreement by LicensePlate Error")
 	}
 
 	return

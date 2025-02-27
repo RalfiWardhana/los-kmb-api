@@ -661,6 +661,7 @@ type Item struct {
 type ItemNE struct {
 	AssetCode               string  `json:"asset_code" validate:"required,max=200" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
 	ManufactureYear         string  `json:"manufacture_year" validate:"len=4,number" example:"2020"`
+	LicensePlate            string  `json:"license_plate" validate:"required,max=15" example:"DK 1234 ABC"`
 	NoChassis               string  `json:"chassis_number" validate:"required,max=30" example:"MHKV1AA2JBK107322"`
 	NoEngine                string  `json:"engine_number" validate:"required,max=30" example:"73218JAJK"`
 	Condition               string  `json:"condition" validate:"required,max=10" example:"U"`

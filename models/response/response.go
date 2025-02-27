@@ -1035,6 +1035,11 @@ type AgreementData struct {
 	DiscountOtr           float64   `json:"discount_otr"`
 }
 
+type ChassisNumberOfLicensePlateResponse struct {
+	ChassisNumber string `json:"chassis_number"`
+	EngineNumber  string `json:"engine_number"`
+}
+
 type ConfinsAgreementCustomer struct {
 	Code     string           `json:"code"`
 	Message  string           `json:"message"`
@@ -1187,6 +1192,14 @@ type MarsevCalculateInstallmentData struct {
 	ExternalFreightDetail      string  `json:"external_freight_detail"`
 	IsStampDutyAsLoan          *bool   `json:"is_stamp_duty_as_loan"`
 	StampDutyFee               float64 `json:"stamp_duty_fee"`
+}
+
+type MDMAgreementByLicensePlateResponse struct {
+	Code     string      `json:"code"`
+	Message  string      `json:"message"`
+	Data     interface{} `json:"data"`
+	Errors   interface{} `json:"errors"`
+	Metadata interface{} `json:"metadata,omitempty"`
 }
 
 type MDMMasterMappingLicensePlateResponse struct {
