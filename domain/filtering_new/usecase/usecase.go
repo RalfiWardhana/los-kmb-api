@@ -117,6 +117,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	// Start | Cek NokaNosin pindahan dari "dupcheck besaran"
 	entityFiltering.ChassisNumber = req.ChassisNumber
+	entityFiltering.EngineNumber = req.EngineNumber
 
 	reqDupcheck = request.DupcheckApi{
 		ProspectID: req.ProspectID,

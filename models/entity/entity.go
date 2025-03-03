@@ -875,6 +875,7 @@ type FilteringKMB struct {
 	RrdDate                         interface{} `gorm:"column:rrd_date" json:"rrd_date"`
 	IDNumber                        string      `gorm:"column:id_number;type:varchar(100)" json:"id_number"`
 	ChassisNumber                   string      `gorm:"column:chassis_number;type:varchar(50)" json:"chassis_number"`
+	EngineNumber                    string      `gorm:"column:engine_number;type:varchar(50)" json:"engine_number"`
 	CreatedAt                       time.Time   `gorm:"column:created_at" json:"created_at"`
 }
 
