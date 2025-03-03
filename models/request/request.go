@@ -719,16 +719,17 @@ type RequestGenerateFormAKKK struct {
 }
 
 type Filtering struct {
-	ProspectID string           `json:"prospect_id" validate:"prospect_id" example:"SAL042600001"`
-	BranchID   string           `json:"branch_id" validate:"required,branch_id" example:"426"`
-	IDNumber   string           `json:"id_number" validate:"required,id_number" example:"ENCRYPTED NIK"`
-	LegalName  string           `json:"legal_name" validate:"required,allow_name" example:"ENCRYPTED LEGAL NAME"`
-	BirthDate  string           `json:"birth_date" validate:"required,dateformat" example:"YYYY-MM-DD"`
-	Gender     string           `json:"gender" validate:"required,gender" example:"M"`
-	MotherName string           `json:"surgate_mother_name" validate:"required,allow_name" example:"ENCRYPTED SURGATE MOTHER NAME"`
-	BPKBName   string           `json:"bpkb_name" validate:"required,bpkbname" example:"K"`
-	CMOID      string           `json:"cmo_id" validate:"required,max=20" example:"123456"`
-	Spouse     *FilteringSpouse `json:"spouse" validate:"omitempty"`
+	ProspectID    string           `json:"prospect_id" validate:"prospect_id" example:"SAL042600001"`
+	BranchID      string           `json:"branch_id" validate:"required,branch_id" example:"426"`
+	IDNumber      string           `json:"id_number" validate:"required,id_number" example:"ENCRYPTED NIK"`
+	LegalName     string           `json:"legal_name" validate:"required,allow_name" example:"ENCRYPTED LEGAL NAME"`
+	BirthDate     string           `json:"birth_date" validate:"required,dateformat" example:"YYYY-MM-DD"`
+	Gender        string           `json:"gender" validate:"required,gender" example:"M"`
+	MotherName    string           `json:"surgate_mother_name" validate:"required,allow_name" example:"ENCRYPTED SURGATE MOTHER NAME"`
+	BPKBName      string           `json:"bpkb_name" validate:"required,bpkbname" example:"K"`
+	CMOID         string           `json:"cmo_id" validate:"required,max=20" example:"123456"`
+	ChassisNumber string           `json:"chassis_number" validate:"required,max=50" example:"AWADW4221375G"`
+	Spouse        *FilteringSpouse `json:"spouse" validate:"omitempty"`
 }
 
 type FilteringSpouse struct {

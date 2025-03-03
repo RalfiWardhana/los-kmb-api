@@ -58,6 +58,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		dataCustomer              []response.SpDupCekCustomerByID
 		blackList                 response.UsecaseApi
 		sp                        response.SpDupCekCustomerByID
+		reqDupcheck               request.DupcheckApi
 		isBlacklist               bool
 		resPefindo                response.PefindoResult
 		reqPefindo                request.Pefindo
@@ -113,6 +114,46 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 			return
 		}
 	}
+
+	// Start | Cek NokaNosin pindahan dari "dupcheck besaran"
+	entityFiltering.ChassisNumber = req.ChassisNumber
+
+	reqDupcheck = request.DupcheckApi{
+		ProspectID: req.ProspectID,
+		IDNumber:   req.IDNumber,
+		RangkaNo:   req.ChassisNumber,
+	}
+
+	if req.Spouse != nil {
+		var spouse = request.DupcheckApiSpouse{
+			IDNumber: req.Spouse.IDNumber,
+		}
+
+		reqDupcheck.Spouse = &spouse
+	}
+
+	checkChassisNumber, err := u.usecase.CheckAgreementChassisNumber(ctx, reqDupcheck, accessToken)
+	if err != nil {
+		return
+	}
+
+	if checkChassisNumber.Result == constant.DECISION_REJECT {
+		respFiltering = response.Filtering{
+			ProspectID:  req.ProspectID,
+			Code:        checkChassisNumber.Code,
+			Decision:    checkChassisNumber.Result,
+			Reason:      checkChassisNumber.Reason,
+			NextProcess: false,
+		}
+
+		entityFiltering.Decision = constant.DECISION_REJECT
+		entityFiltering.Reason = checkChassisNumber.Reason
+
+		err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD)
+
+		return
+	}
+	// End | Cek NokaNosin pindahan dari "dupcheck besaran"
 
 	reqPefindo = request.Pefindo{
 		ClientKey:         os.Getenv("CLIENTKEY_CORE_PBK"),
@@ -1539,5 +1580,120 @@ func (u usecase) CheckLatestPaidInstallment(ctx context.Context, prospectID stri
 		return
 	}
 
+	return
+}
+
+func (u usecase) AssetEverCanceledLast30Days(ctx context.Context, ChassisNumber string, accessToken string) (isCanceled bool, err error) {
+	var (
+		sallyResponse response.SallySubmissionResponse
+	)
+
+	endDate := time.Now().Format("2006-01-02")
+	startDate := time.Now().AddDate(0, 0, -30).Format("2006-01-02")
+
+	// order_status_id=20 it means order cancel in Sally
+	endpointURL := fmt.Sprintf(os.Getenv("SALLY_SUBMISSION_ORDER")+"?order_status_id=20&search_by_chassis_number=%s&start_date=%s&end_date=%s", ChassisNumber, startDate, endDate)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	header := map[string]string{
+		"Authorization": accessToken,
+	}
+
+	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointURL, nil, header, constant.METHOD_GET, false, 0, timeout, "", accessToken)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error calling Sally Check Canceled Order: " + err.Error())
+		return
+	}
+
+	if resp.StatusCode() != 200 {
+		err = errors.New(constant.ERROR_UPSTREAM + fmt.Sprintf(" - Sally Check Canceled Order returned status code %d", resp.StatusCode()))
+		return
+	}
+
+	if err = json.Unmarshal(resp.Body(), &sallyResponse); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Failed to parse Sally Check Canceled Order response: " + err.Error())
+		return
+	}
+
+	// Check if Records is not nil and contains data
+	switch records := sallyResponse.Data.Records.(type) {
+	case []interface{}:
+		if len(records) > 0 {
+			isCanceled = true
+		}
+	case interface{}:
+		// Records exists but isn't empty
+		if records != nil {
+			isCanceled = true
+		}
+	}
+
+	/*
+		Code above handle cases where:
+		-> Records is null in the JSON (becomes nil in Go)
+		-> Records is an empty array [] (becomes empty slice in Go)
+		-> Records is an array with data (becomes slice with elements in Go)
+	*/
+
+	return
+}
+
+func (u usecase) CheckAgreementChassisNumber(ctx context.Context, reqs request.DupcheckApi, accessToken string) (data response.UsecaseApi, err error) {
+
+	var (
+		responseAgreementChassisNumber response.AgreementChassisNumber
+		hitChassisNumber               *resty.Response
+	)
+
+	hitChassisNumber, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+reqs.RangkaNo, nil, map[string]string{}, constant.METHOD_GET, true, 6, 60, reqs.ProspectID, accessToken)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Get Agreement of Chassis Number Timeout")
+		return
+	}
+
+	if hitChassisNumber.StatusCode() != 200 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call Get Agreement of Chassis Number Error")
+		return
+	}
+
+	err = json.Unmarshal([]byte(jsoniter.Get(hitChassisNumber.Body(), "data").ToString()), &responseAgreementChassisNumber)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal Get Agreement of Chassis Number Error")
+		return data, err
+	}
+
+	if responseAgreementChassisNumber.IsRegistered && responseAgreementChassisNumber.IsActive && len(responseAgreementChassisNumber.IDNumber) > 0 {
+		listNikKonsumenDanPasangan := make([]string, 0)
+
+		listNikKonsumenDanPasangan = append(listNikKonsumenDanPasangan, reqs.IDNumber)
+		if reqs.Spouse != nil && reqs.Spouse.IDNumber != "" {
+			listNikKonsumenDanPasangan = append(listNikKonsumenDanPasangan, reqs.Spouse.IDNumber)
+		}
+
+		if !utils.Contains(listNikKonsumenDanPasangan, responseAgreementChassisNumber.IDNumber) {
+			data.Code = constant.CODE_REJECT_CHASSIS_NUMBER
+			data.Result = constant.DECISION_REJECT
+			data.Reason = constant.REASON_REJECT_CHASSIS_NUMBER
+		} else {
+			if responseAgreementChassisNumber.IDNumber == reqs.IDNumber {
+				data.Code = constant.CODE_OK_CONSUMEN_MATCH
+				data.Result = constant.DECISION_PASS
+				data.Reason = constant.REASON_OK_CONSUMEN_MATCH
+			} else {
+				data.Code = constant.CODE_REJECTION_FRAUD_POTENTIAL
+				data.Result = constant.DECISION_REJECT
+				data.Reason = constant.REASON_REJECTION_FRAUD_POTENTIAL
+			}
+		}
+	} else {
+		data.Code = constant.CODE_AGREEMENT_NOT_FOUND
+		data.Result = constant.DECISION_PASS
+		data.Reason = constant.REASON_AGREEMENT_NOT_FOUND
+	}
+
+	data.SourceDecision = constant.SOURCE_DECISION_NOKANOSIN
 	return
 }

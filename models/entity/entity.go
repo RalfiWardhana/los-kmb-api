@@ -731,6 +731,27 @@ func (c *TrxBannedChassisNumber) TableName() string {
 	return "trx_banned_chassis_number"
 }
 
+type AssetAgreementData struct {
+	ProspectID              string     `gorm:"column:ProspectID" json:"prospect_id"`
+	ChassisNumber           string     `gorm:"column:chassis_number" json:"chassis_number"`
+	Decision                string     `gorm:"column:decision" json:"decision"`
+	CreatedAt               time.Time  `gorm:"column:created_at" json:"created_at"`
+	IDNumber                string     `gorm:"column:IDNumber" json:"id_number"`
+	LegalName               string     `gorm:"column:LegalName" json:"legal_name"`
+	BirthPlace              string     `gorm:"column:BirthPlace" json:"birth_place"`
+	BirthDate               time.Time  `gorm:"column:BirthDate" json:"birth_date"`
+	SurgateMotherName       string     `gorm:"column:SurgateMotherName" json:"surgate_mother_name"`
+	IDNumberSpouse          *string    `gorm:"column:IDNumber_spouse" json:"id_number_spouse"`
+	LegalNameSpouse         *string    `gorm:"column:LegalName_spouse" json:"legal_name_spouse"`
+	BirthPlaceSpouse        *string    `gorm:"column:BirthPlace_spouse" json:"birth_place_spouse"`
+	BirthDateSpouse         *time.Time `gorm:"column:BirthDate_spouse" json:"birth_date_spouse"`
+	SurgateMotherNameSpouse *string    `gorm:"column:SurgateMotherName_spouse" json:"surgate_mother_name_spouse"`
+}
+
+func (c *AssetAgreementData) TableName() string {
+	return "trx_item"
+}
+
 type TrxReject struct {
 	RejectPMKDSR int `gorm:"column:reject_pmk_dsr"`
 	RejectNIK    int `gorm:"column:reject_nik"`
@@ -853,6 +874,7 @@ type FilteringKMB struct {
 	NewKoRules                      interface{} `gorm:"column:new_ko_rules" json:"new_ko_rules"`
 	RrdDate                         interface{} `gorm:"column:rrd_date" json:"rrd_date"`
 	IDNumber                        string      `gorm:"column:id_number;type:varchar(100)" json:"id_number"`
+	ChassisNumber                   string      `gorm:"column:chassis_number;type:varchar(50)" json:"chassis_number"`
 	CreatedAt                       time.Time   `gorm:"column:created_at" json:"created_at"`
 }
 

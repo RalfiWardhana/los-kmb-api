@@ -518,6 +518,21 @@ type DataLockSystemConfig struct {
 	LockStartDate     string `json:"lock_start_date"`
 }
 
+type SallySubmissionResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    struct {
+		Records     interface{} `json:"records"`
+		MaxPage     int         `json:"max_page"`
+		Total       int         `json:"total"`
+		PageSize    int         `json:"page_size"`
+		CurrentPage int         `json:"current_page"`
+	} `json:"data"`
+	Errors    interface{} `json:"errors"`
+	RequestID string      `json:"request_id"`
+	Timestamp string      `json:"timestamp"`
+}
+
 type LatestPaidInstallment struct {
 	Code      string                    `json:"code"`
 	Message   string                    `json:"message"`
