@@ -690,8 +690,8 @@ type AgentNE struct {
 
 type LockSystem struct {
 	IDNumber      string `json:"id_number" validate:"required,id_number" example:"ENCRYPTED NIK"`
-	ChassisNumber string `json:"chassis_number" validate:"required,max=50" example:"AWADW4221375G"`
-	EngineNumber  string `json:"engine_number" validate:"required,max=50" example:"2AZE205717"`
+	ChassisNumber string `json:"chassis_number" validate:"max=50" example:"AWADW4221375G"`
+	EngineNumber  string `json:"engine_number" validate:"max=50" example:"2AZE205717"`
 }
 
 type Recalculate struct {
@@ -730,8 +730,8 @@ type Filtering struct {
 	MotherName    string           `json:"surgate_mother_name" validate:"required,allow_name" example:"ENCRYPTED SURGATE MOTHER NAME"`
 	BPKBName      string           `json:"bpkb_name" validate:"required,bpkbname" example:"K"`
 	CMOID         string           `json:"cmo_id" validate:"required,max=20" example:"123456"`
-	ChassisNumber string           `json:"chassis_number" validate:"required,max=50" example:"AWADW4221375G"`
-	EngineNumber  string           `json:"engine_number" validate:"required,max=50" example:"2AZE205717"`
+	ChassisNumber string           `json:"chassis_number" validate:"max=50" example:"AWADW4221375G"`
+	EngineNumber  string           `json:"engine_number" validate:"max=50" example:"2AZE205717"`
 	Spouse        *FilteringSpouse `json:"spouse" validate:"omitempty"`
 }
 
