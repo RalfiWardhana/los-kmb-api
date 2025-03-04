@@ -1679,15 +1679,9 @@ func (u usecase) CheckAgreementChassisNumber(ctx context.Context, reqs request.D
 			data.Result = constant.DECISION_REJECT
 			data.Reason = constant.REASON_REJECT_CHASSIS_NUMBER
 		} else {
-			if responseAgreementChassisNumber.IDNumber == reqs.IDNumber {
-				data.Code = constant.CODE_OK_CONSUMEN_MATCH
-				data.Result = constant.DECISION_PASS
-				data.Reason = constant.REASON_OK_CONSUMEN_MATCH
-			} else {
-				data.Code = constant.CODE_REJECTION_FRAUD_POTENTIAL
-				data.Result = constant.DECISION_REJECT
-				data.Reason = constant.REASON_REJECTION_FRAUD_POTENTIAL
-			}
+			data.Code = constant.CODE_OK_CONSUMEN_MATCH
+			data.Result = constant.DECISION_PASS
+			data.Reason = constant.REASON_OK_CONSUMEN_SPOUSE_MATCH
 		}
 	} else {
 		data.Code = constant.CODE_AGREEMENT_NOT_FOUND

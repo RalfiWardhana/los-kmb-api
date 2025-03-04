@@ -6333,7 +6333,7 @@ func TestCheckAgreementChassisNumber(t *testing.T) {
 			},
 		},
 		{
-			name: "CheckAgreementChassisNumber REASON_OK_CONSUMEN_MATCH",
+			name: "CheckAgreementChassisNumber REASON_OK_CONSUMEN_SPOUSE_MATCH",
 			req: request.DupcheckApi{
 				ProspectID: "TEST198091461892",
 				RangkaNo:   "198091461892",
@@ -6347,7 +6347,7 @@ func TestCheckAgreementChassisNumber(t *testing.T) {
 			result: response.UsecaseApi{
 				Code:           constant.CODE_OK_CONSUMEN_MATCH,
 				Result:         constant.DECISION_PASS,
-				Reason:         constant.REASON_OK_CONSUMEN_MATCH,
+				Reason:         constant.REASON_OK_CONSUMEN_SPOUSE_MATCH,
 				SourceDecision: constant.SOURCE_DECISION_NOKANOSIN,
 			},
 		},
@@ -6367,26 +6367,6 @@ func TestCheckAgreementChassisNumber(t *testing.T) {
 				Code:           constant.CODE_REJECT_CHASSIS_NUMBER,
 				Result:         constant.DECISION_REJECT,
 				Reason:         constant.REASON_REJECT_CHASSIS_NUMBER,
-				SourceDecision: constant.SOURCE_DECISION_NOKANOSIN,
-			},
-		},
-		{
-			name: "CheckAgreementChassisNumber REASON_REJECTION_FRAUD_POTENTIAL",
-			req: request.DupcheckApi{
-				ProspectID: "TEST198091461892",
-				RangkaNo:   "198091461892",
-				IDNumber:   "7612379",
-				Spouse:     &request.DupcheckApiSpouse{IDNumber: "161234339"},
-			},
-			code: 200,
-			body: `{"code":"OK","message":"operasi berhasil dieksekusi.","data":
-			{"go_live_date":null,"id_number":"161234339","installment_amount":0,"is_active":true,"is_registered":true,
-			"lc_installment":0,"legal_name":"","outstanding_interest":0,"outstanding_principal":0,"status":""},
-			"errors":null,"request_id":"230e9356-ef14-45bd-a41f-96e98c16b5fb","timestamp":"2023-10-10 11:48:50"}`,
-			result: response.UsecaseApi{
-				Code:           constant.CODE_REJECTION_FRAUD_POTENTIAL,
-				Result:         constant.DECISION_REJECT,
-				Reason:         constant.REASON_REJECTION_FRAUD_POTENTIAL,
 				SourceDecision: constant.SOURCE_DECISION_NOKANOSIN,
 			},
 		},

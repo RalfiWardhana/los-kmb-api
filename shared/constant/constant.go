@@ -534,6 +534,7 @@ const (
 	REASON_REJECT_CHASSIS_NUMBER     = "NokaNosin sudah terdaftar di KBFMF - Bukan a.n Konsumen dan Pasangan"
 	REASON_OK_CONSUMEN_MATCH         = "NokaNosin sudah terdaftar di KBFMF - Agreement Aktif a.n Konsumen"
 	REASON_REJECTION_FRAUD_POTENTIAL = "NokaNosin sudah terdaftar di KBFMF - Agreement Aktif a.n Pasangan"
+	REASON_OK_CONSUMEN_SPOUSE_MATCH  = "NokaNosin sudah terdaftar di KBFMF - Agreement Aktif a.n Konsumen/Pasangan"
 	REASON_AGREEMENT_NOT_FOUND       = "NokaNosin tidak terdaftar di KBFMF"
 	SOURCE_DECISION_NOKANOSIN        = "NKA"
 
