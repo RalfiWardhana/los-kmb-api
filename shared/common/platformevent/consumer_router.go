@@ -76,6 +76,31 @@ func (c *ConsumerRouter) StartConsume() error {
 	return nil
 }
 
+func (c *ConsumerRouter) StartConsumeProspectIDWithoutTimestamp() error {
+	err := c.consumerClient.StartConsume(c.topic, c.consumerGroup, c.auth, func(ctx context.Context, event event.Event) error {
+		key := string(event.GetKey())
+		key = strings.ReplaceAll(key, "\"", "")
+		key = strings.ReplaceAll(key, "\\", "")
+		re := regexp.MustCompile(`^(.+)_[A-Z0-9-]+$`)
+		strSubmatch := re.FindStringSubmatch(key)
+
+		if len(strSubmatch) > 0 {
+			if val, ok := c.routes[strSubmatch[1]]; ok {
+				processorFunc := applyMiddlewares(val, c.middlewares...)
+				go processorFunc(ctx, event)
+			}
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		return fmt.Errorf("consumer process error: %w", err)
+	}
+
+	return nil
+}
+
 func (c *ConsumerRouter) StartConsumeWithoutTimestamp() error {
 	err := c.consumerClient.StartConsume(c.topic, c.consumerGroup, c.auth, func(ctx context.Context, event event.Event) error {
 		key := string(event.GetKey())

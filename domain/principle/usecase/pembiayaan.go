@@ -812,19 +812,19 @@ func (u usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan, 
 
 		// INTERCEPT PERBAIKAN FLOW RO PRIME/PRIORITY (NON-TOPUP) | CHECK EXPIRED_CONTRACT
 		if customerStatus == constant.STATUS_KONSUMEN_RO && (installmentTopUp <= 0 && spDupcheck.MaxOverdueDaysforActiveAgreement != nil && *spDupcheck.MaxOverdueDaysforActiveAgreement > 30) {
-			if filtering.RrdDate == nil {
+			if spDupcheck.RRDDate == nil {
 				err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
 				return
 			}
 
 			var RrdDateTime time.Time
-			if rrdDateStr, ok := filtering.RrdDate.(string); ok {
+			if rrdDateStr, ok := spDupcheck.RRDDate.(string); ok {
 				RrdDateTime, err = time.Parse(time.RFC3339, rrdDateStr)
 				if err != nil {
 					err = errors.New(constant.ERROR_UPSTREAM + " - Invalid RrdDate format")
 					return
 				}
-			} else if RrdDateTime, ok = filtering.RrdDate.(time.Time); !ok {
+			} else if RrdDateTime, ok = spDupcheck.RRDDate.(time.Time); !ok {
 				err = errors.New(constant.ERROR_UPSTREAM + " - RrdDate must be string or time.Time")
 				return
 			}
@@ -1231,19 +1231,19 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 
 	// INTERCEPT PERBAIKAN FLOW RO PRIME/PRIORITY (NON-TOPUP) | CHECK EXPIRED_CONTRACT
 	if (customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY) && (SpDupcheckMap.StatusKonsumen == constant.STATUS_KONSUMEN_RO && SpDupcheckMap.InstallmentTopup <= 0) {
-		if filtering.RrdDate == nil {
+		if SpDupcheckMap.RRDDate == nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
 			return
 		}
 
 		var RrdDateTime time.Time
-		if rrdDateStr, ok := filtering.RrdDate.(string); ok {
+		if rrdDateStr, ok := SpDupcheckMap.RRDDate.(string); ok {
 			RrdDateTime, err = time.Parse(time.RFC3339, rrdDateStr)
 			if err != nil {
 				err = errors.New(constant.ERROR_UPSTREAM + " - Invalid RrdDate format")
 				return
 			}
-		} else if RrdDateTime, ok = filtering.RrdDate.(time.Time); !ok {
+		} else if RrdDateTime, ok = SpDupcheckMap.RRDDate.(time.Time); !ok {
 			err = errors.New(constant.ERROR_UPSTREAM + " - RrdDate must be string or time.Time")
 			return
 		}

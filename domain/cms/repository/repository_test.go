@@ -2664,6 +2664,9 @@ func TestSavePrescreening(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_akkk" ("ProspectID","ScsDate","ScsScore","ScsStatus","CustomerType","SpouseType","AgreementStatus","TotalAgreementAktif","MaxOVDAgreementAktif","LastMaxOVDAgreement","DSRFMF","DSRPBK","TotalDSR","EkycSource","EkycSimiliarity","EkycReason","NumberOfPaidInstallment","OSInstallmentDue","InstallmentAmountFMF","InstallmentAmountSpouseFMF","InstallmentAmountOther","InstallmentAmountOtherSpouse","InstallmentTopup","LatestInstallment","UrlFormAkkk","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
 			WithArgs(trxStatus.ProspectID, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 id, ProspectID FROM trx_kpm WITH (nolock) WHERE ProspectID = ? ORDER BY created_at DESC`)).
+			WithArgs(trxStatus.ProspectID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "ProspectID"}))
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_prescreening" ("ProspectID","decision","reason","created_at","created_by","decision_by") VALUES (?,?,?,?,?,?)`)).
 			WithArgs(trxPrescreening.ProspectID, trxPrescreening.Decision, trxPrescreening.Reason, sqlmock.AnyArg(), trxPrescreening.CreatedBy, trxPrescreening.DecisionBy).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -2691,6 +2694,9 @@ func TestSavePrescreening(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_akkk" ("ProspectID","ScsDate","ScsScore","ScsStatus","CustomerType","SpouseType","AgreementStatus","TotalAgreementAktif","MaxOVDAgreementAktif","LastMaxOVDAgreement","DSRFMF","DSRPBK","TotalDSR","EkycSource","EkycSimiliarity","EkycReason","NumberOfPaidInstallment","OSInstallmentDue","InstallmentAmountFMF","InstallmentAmountSpouseFMF","InstallmentAmountOther","InstallmentAmountOtherSpouse","InstallmentTopup","LatestInstallment","UrlFormAkkk","created_at") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
 			WithArgs(trxStatus.ProspectID, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, sqlmock.AnyArg()).
 			WillReturnResult(sqlmock.NewResult(1, 1))
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 id, ProspectID FROM trx_kpm WITH (nolock) WHERE ProspectID = ? ORDER BY created_at DESC`)).
+			WithArgs(trxStatus.ProspectID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "ProspectID"}))
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_prescreening" ("ProspectID","decision","reason","created_at","created_by","decision_by") VALUES (?,?,?,?,?,?)`)).
 			WithArgs(trxPrescreening.ProspectID, trxPrescreening.Decision, trxPrescreening.Reason, sqlmock.AnyArg(), trxPrescreening.CreatedBy, trxPrescreening.DecisionBy).
 			WillReturnResult(sqlmock.NewResult(1, 1))
@@ -6151,6 +6157,10 @@ func TestProcessReturnOrder(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(`DELETE FROM "trx_akkk"  WHERE (ProspectID = ?)`)).
 			WithArgs(ppid).
 			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 id, ProspectID FROM trx_kpm WITH (nolock) WHERE ProspectID = ? ORDER BY created_at DESC`)).
+			WithArgs(trxStatus.ProspectID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "ProspectID"}))
 		mock.ExpectCommit()
 
 		err := newDB.ProcessReturnOrder(ppid, trxStatus, trxDetail)
@@ -11309,6 +11319,10 @@ func TestSubmitApproval(t *testing.T) {
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_final_approval" ("ProspectID","decision","reason","note","created_at","created_by","decision_by") VALUES (?,?,?,?,?,?,?)`)).
 			WithArgs(trxFinalApproval.ProspectID, trxFinalApproval.Decision, trxFinalApproval.Reason, trxFinalApproval.Note, sqlmock.AnyArg(), trxFinalApproval.CreatedBy, trxFinalApproval.DecisionBy).
 			WillReturnResult(sqlmock.NewResult(1, 1))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 id, ProspectID FROM trx_kpm WITH (nolock) WHERE ProspectID = ? ORDER BY created_at DESC`)).
+			WithArgs(trxStatus.ProspectID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "ProspectID"}))
 
 		mock.ExpectCommit()
 

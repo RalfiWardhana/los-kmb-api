@@ -1,6 +1,9 @@
 package interfaces
 
-import "los-kmb-api/models/entity"
+import (
+	"los-kmb-api/models/entity"
+	"los-kmb-api/models/response"
+)
 
 type Repository interface {
 	GetConfig(groupName string, lob string, key string) (appConfig entity.AppConfig, err error)
@@ -48,4 +51,14 @@ type Repository interface {
 	ExceedErrorStepTwo(prospectId string) int
 	ExceedErrorStepThree(prospectId string) int
 	GetTrxStatus(prospectID string) (status entity.TrxStatus, err error)
+	GetBannedChassisNumber(chassisNumber string) (data entity.TrxBannedChassisNumber, err error)
+	SaveTrxKPM(data entity.TrxKPM) (err error)
+	SaveTrxKPMStatus(data entity.TrxKPMStatus) (err error)
+	GetMappingNegativeCustomer(req response.NegativeCustomer) (data entity.MappingNegativeCustomer, err error)
+	ExceedErrorTrxKPM(kpmId int) int
+	GetTrxKPM(prospectID string) (data entity.TrxKPM, err error)
+	GetReadjustCountTrxKPM(prospectId string) int
+	GetTrxKPMStatus(IDNumber string) (data entity.TrxKPMStatus, err error)
+	GetTrxKPMStatusHistory(prospectId string) (data []entity.TrxKPMStatusHistory, err error)
+	UpdateTrxKPMDecision(id string, prospectID string, decision string) (err error)
 }

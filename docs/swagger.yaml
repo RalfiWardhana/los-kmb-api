@@ -1,5 +1,59 @@
 basePath: /api/v2/pbk
 definitions:
+  entity.InquiryDataListOrder:
+    properties:
+      birth_date:
+        type: string
+      branch_name:
+        type: string
+      decision:
+        type: string
+      decision_at:
+        type: string
+      decision_by:
+        type: string
+      id_number:
+        type: string
+      is_highrisk: {}
+      job_position:
+        type: string
+      job_type:
+        type: string
+      legal_name:
+        type: string
+      order_at:
+        type: string
+      pernyataan_1: {}
+      pernyataan_2: {}
+      pernyataan_3: {}
+      pernyataan_4: {}
+      pernyataan_5: {}
+      pernyataan_6: {}
+      profession:
+        type: string
+      prospect_id:
+        type: string
+      reason:
+        type: string
+      rule_code:
+        type: string
+      source_decision:
+        type: string
+      url_form_akkk:
+        type: string
+    type: object
+  http.Decryption:
+    properties:
+      decrypt:
+        example: hello world
+        type: string
+    type: object
+  http.Encryption:
+    properties:
+      encrypt:
+        example: hello world
+        type: string
+    type: object
   http.RequestEncryption:
     properties:
       decrypt:
@@ -229,6 +283,10 @@ definitions:
       salesman_id:
         example: "81088"
         type: string
+      stamp_duty_fee:
+        example: 250000
+        maximum: 999999999999
+        type: number
       supplier_bank_account_id:
         example: "1"
         type: string
@@ -349,6 +407,14 @@ definitions:
     required:
     - client_key
     - data
+    type: object
+  request.CheckStep2Wilen:
+    properties:
+      id_number:
+        example: ENCRYPTED NIK
+        type: string
+    required:
+    - id_number
     type: object
   request.CreatedBy:
     properties:
@@ -986,6 +1052,141 @@ definitions:
     - spouse_legal_name
     - spouse_surgate_mother_name
     type: object
+  request.GetAvailableTenor:
+    properties:
+      asset_code:
+        example: SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT
+        maxLength: 200
+        type: string
+      asset_usage_type_code:
+        enum:
+        - C
+        - "N"
+        - S
+        example: C
+        type: string
+      birth_date:
+        example: "1992-09-11"
+        type: string
+      bpkb_name_type:
+        type: string
+      branch_id:
+        example: "426"
+        maxLength: 10
+        type: string
+      id_number:
+        example: "3506126712000001"
+        type: string
+      legal_name:
+        example: Arya Danu
+        maxLength: 50
+        type: string
+      license_plate:
+        example: B3006TBJ
+        maxLength: 50
+        type: string
+      loan_amount:
+        example: 105000000
+        maximum: 999999999999
+        type: number
+      manufacture_year:
+        example: "2020"
+        type: string
+      mobile_phone:
+        example: "085880529100"
+        maxLength: 14
+        minLength: 9
+        type: string
+      prospect_id:
+        example: SAL-1140024080800004
+        maxLength: 20
+        type: string
+      surgate_mother_name:
+        example: IBU
+        maxLength: 50
+        type: string
+    required:
+    - asset_code
+    - asset_usage_type_code
+    - birth_date
+    - bpkb_name_type
+    - branch_id
+    - id_number
+    - legal_name
+    - license_plate
+    - loan_amount
+    - manufacture_year
+    - mobile_phone
+    - prospect_id
+    - surgate_mother_name
+    type: object
+  request.GetMaxLoanAmount:
+    properties:
+      asset_code:
+        example: SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT
+        maxLength: 200
+        type: string
+      asset_usage_type_code:
+        enum:
+        - C
+        - "N"
+        - S
+        example: C
+        type: string
+      birth_date:
+        example: "1992-09-11"
+        type: string
+      bpkb_name_type:
+        type: string
+      branch_id:
+        example: "426"
+        maxLength: 10
+        type: string
+      id_number:
+        example: "3506126712000001"
+        type: string
+      legal_name:
+        example: Arya Danu
+        maxLength: 50
+        type: string
+      manufacture_year:
+        example: "2020"
+        type: string
+      mobile_phone:
+        example: "085880529100"
+        maxLength: 14
+        minLength: 9
+        type: string
+      prospect_id:
+        example: SAL-1140024080800004
+        maxLength: 20
+        type: string
+      surgate_mother_name:
+        example: IBU
+        maxLength: 50
+        type: string
+    required:
+    - asset_code
+    - asset_usage_type_code
+    - birth_date
+    - bpkb_name_type
+    - branch_id
+    - id_number
+    - legal_name
+    - manufacture_year
+    - mobile_phone
+    - prospect_id
+    - surgate_mother_name
+    type: object
+  request.History2Wilen:
+    properties:
+      prospect_id:
+        example: SAL-1140024080800004
+        maxLength: 20
+        type: string
+    required:
+    - prospect_id
+    type: object
   request.Item:
     properties:
       asset_code:
@@ -1273,23 +1474,25 @@ definitions:
         type: string
       brand:
         example: HONDA
-        maxLength: 255
+        maxLength: 50
         type: string
       cc:
-        example: "1500"
-        maxLength: 10
-        type: string
+        example: 1500
+        maximum: 9999
+        minimum: 100
+        type: integer
       chassis_number:
         example: MHKV1AA2JBK107322
-        maxLength: 30
+        maxLength: 25
         type: string
       color:
         example: HITAM
-        maxLength: 50
+        maxLength: 30
+        minLength: 4
         type: string
       engine_number:
         example: 73218JAJK
-        maxLength: 30
+        maxLength: 20
         type: string
       home_status:
         example: SD
@@ -1298,16 +1501,19 @@ definitions:
       id_number:
         example: "3506126712000001"
         type: string
+      kpm_id:
+        type: integer
       license_plate:
         example: B3006TBJ
         maxLength: 50
         type: string
       manufacture_year:
-        example: "2020"
-        type: string
+        example: 2020
+        type: integer
       owner_asset:
         example: JONATHAN
         maxLength: 50
+        minLength: 2
         type: string
       prospect_id:
         example: SAL-1140024080800004
@@ -1319,8 +1525,7 @@ definitions:
         type: string
       residence_area_phone:
         example: "021"
-        maxLength: 4
-        minLength: 2
+        maxLength: 5
         type: string
       residence_city:
         example: Jakarta Timur
@@ -1336,7 +1541,8 @@ definitions:
         type: string
       residence_phone:
         example: "86605224"
-        maxLength: 10
+        maxLength: 14
+        minLength: 5
         type: string
       residence_province:
         example: Jakarta
@@ -1387,15 +1593,15 @@ definitions:
     - engine_number
     - home_status
     - id_number
+    - kpm_id
     - license_plate
+    - manufacture_year
     - owner_asset
     - prospect_id
     - residence_address
-    - residence_area_phone
     - residence_city
     - residence_kecamatan
     - residence_kelurahan
-    - residence_phone
     - residence_province
     - residence_rt
     - residence_rw
@@ -1455,7 +1661,7 @@ definitions:
         type: string
       phone:
         example: "567892"
-        maxLength: 10
+        maxLength: 14
         minLength: 5
         type: string
       prospect_id:
@@ -1501,8 +1707,13 @@ definitions:
     properties:
       context:
         type: string
+      finance_purpose:
+        type: string
       prospect_id:
         type: string
+    required:
+    - context
+    - prospect_id
     type: object
   request.PrinciplePembiayaan:
     properties:
@@ -1526,6 +1737,10 @@ definitions:
         maximum: 999999999999
         type: number
       finance_purpose:
+        enum:
+        - Multiguna Pembayaran dengan Angsuran
+        - Modal Kerja Fasilitas Modal Usaha
+        - Multiguna Pembayaran dengan Cara Fasilitas Dana
         example: Multiguna Pembayaran dengan Angsuran
         maxLength: 100
         type: string
@@ -1553,11 +1768,14 @@ definitions:
         example: 36
         maximum: 60
         type: integer
+      tipe_usaha:
+        example: Jasa Kesehatan
+        maxLength: 100
+        type: string
     required:
     - admin_fee
     - af
     - asset_category_id
-    - down_payment_amount
     - finance_purpose
     - installment_amount
     - ntf
@@ -1597,7 +1815,8 @@ definitions:
         type: string
       company_phone:
         example: "86605224"
-        maxLength: 10
+        maxLength: 14
+        minLength: 5
         type: string
       company_phone_area:
         example: "021"
@@ -1691,7 +1910,8 @@ definitions:
         type: string
       legal_phone:
         example: "86605224"
-        maxLength: 10
+        maxLength: 14
+        minLength: 5
         type: string
       legal_phone_area:
         example: "021"
@@ -1748,12 +1968,11 @@ definitions:
         type: string
       spouse_birth_place:
         example: Jakarta
+        maxLength: 100
         type: string
       spouse_full_name:
         example: YULINAR NIATI
-        type: string
-      spouse_gender:
-        example: F
+        maxLength: 50
         type: string
       spouse_id_number:
         example: "3506126712000002"
@@ -1763,12 +1982,16 @@ definitions:
         type: number
       spouse_legal_name:
         example: YULINAR NIATI
+        maxLength: 50
         type: string
       spouse_mobile_phone:
         example: "085880529111"
+        maxLength: 14
+        minLength: 9
         type: string
       spouse_surgate_mother_name:
         example: MAMA
+        maxLength: 100
         type: string
       surgate_mother_name:
         example: IBU
@@ -1817,6 +2040,16 @@ definitions:
     - prospect_id
     - religion
     - surgate_mother_name
+    type: object
+  request.PrinciplePublish:
+    properties:
+      prospect_id:
+        type: string
+      status_code:
+        type: string
+    required:
+    - prospect_id
+    - status_code
     type: object
   request.Recalculate:
     properties:
@@ -1939,6 +2172,34 @@ definitions:
     - multi_branch
     - user_id
     type: object
+  request.ReqInquiryListOrder:
+    properties:
+      branch_id:
+        maxLength: 3
+        type: string
+      decision:
+        example: APR,REJ,CAN,CPR
+        maxLength: 3
+        type: string
+      id_number:
+        example: 357810XXXXXX0003
+        maxLength: 16
+        type: string
+      is_highrisk:
+        type: string
+      legal_name:
+        maxLength: 200
+        type: string
+      order_date_end:
+        example: "2025-01-30"
+        type: string
+      order_date_start:
+        example: "2025-01-01"
+        type: string
+      prospect_id:
+        maxLength: 20
+        type: string
+    type: object
   request.ReqRecalculateOrder:
     properties:
       decision_by:
@@ -1959,6 +2220,28 @@ definitions:
     - decision_by_name
     - dp_amount
     - prospect_id
+    type: object
+  request.ReqResetAllQuotaDeviasi:
+    properties:
+      updated_by_name:
+        example: MUHAMMAD RONALD
+        maxLength: 200
+        type: string
+    required:
+    - updated_by_name
+    type: object
+  request.ReqResetQuotaDeviasiBranch:
+    properties:
+      branch_id:
+        example: "400"
+        type: string
+      updated_by_name:
+        example: MUHAMMAD RONALD
+        maxLength: 200
+        type: string
+    required:
+    - branch_id
+    - updated_by_name
     type: object
   request.ReqReturnOrder:
     properties:
@@ -2014,6 +2297,7 @@ definitions:
       decision_by_name:
         maxLength: 250
         type: string
+      edd: {}
       note:
         maxLength: 525
         type: string
@@ -2107,6 +2391,7 @@ definitions:
       decision_by_name:
         maxLength: 250
         type: string
+      edd: {}
       note:
         maxLength: 525
         type: string
@@ -2127,6 +2412,32 @@ definitions:
     - ntf_akumulasi
     - prospect_id
     - slik_result
+    type: object
+  request.ReqUpdateQuotaDeviasi:
+    properties:
+      branch_id:
+        example: "400"
+        type: string
+      is_active:
+        example: true
+        type: boolean
+      quota_account:
+        example: 65
+        maximum: 999
+        type: integer
+      quota_amount:
+        example: 97500000
+        maximum: 99999999999
+        type: number
+      updated_by_name:
+        example: MUHAMMAD RONALD
+        maxLength: 200
+        type: string
+    required:
+    - branch_id
+    - quota_account
+    - quota_amount
+    - updated_by_name
     type: object
   request.RequestGenerateFormAKKK:
     properties:
@@ -2164,6 +2475,280 @@ definitions:
     - Spouse_IDNumber
     - Spouse_LegalName
     - Spouse_SurgateMotherName
+    type: object
+  request.Submission2Wilen:
+    properties:
+      admin_fee:
+        example: 1500000
+        maximum: 999999999999
+        type: number
+      af:
+        example: 84000000
+        maximum: 999999999999
+        type: number
+      asset_category_id:
+        example: BEBEK
+        maxLength: 100
+        type: string
+      asset_code:
+        example: K-HND.MOTOR.ABSOLUTE REVO
+        maxLength: 200
+        type: string
+      asset_usage_type_code:
+        enum:
+        - C
+        - "N"
+        - S
+        example: C
+        type: string
+      birth_date:
+        example: "1992-09-11"
+        type: string
+      birth_place:
+        example: Jakarta
+        maxLength: 100
+        type: string
+      bpkb_name_type:
+        example: K
+        type: string
+      branch_id:
+        example: "426"
+        maxLength: 10
+        type: string
+      chassis_number:
+        example: MHKV1AA2JBK107322
+        maxLength: 25
+        type: string
+      dealer:
+        maxLength: 50
+        type: string
+      down_payment_amount:
+        example: 22000000
+        maximum: 999999999999
+        type: number
+      education:
+        example: S1
+        maxLength: 10
+        type: string
+      email:
+        example: jonathaxx@gmail.com
+        maxLength: 100
+        type: string
+      employment_since_month:
+        example: 12
+        maximum: 12
+        minimum: 1
+        type: integer
+      employment_since_year:
+        example: 2020
+        type: integer
+      gender:
+        example: M
+        maxLength: 1
+        type: string
+      home_status:
+        example: SD
+        maxLength: 2
+        type: string
+      id_number:
+        example: "3506126712000001"
+        type: string
+      installment_amount:
+        example: 4181333
+        maximum: 999999999999
+        type: number
+      job_position:
+        example: M
+        maxLength: 10
+        type: string
+      job_type:
+        example: "0012"
+        maxLength: 10
+        type: string
+      kpm_id:
+        type: integer
+      ktp_photo:
+        example: https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/ktp_SAL-1140024081400003.jpg
+        maxLength: 250
+        type: string
+      legal_name:
+        example: Arya Danu
+        maxLength: 50
+        type: string
+      license_plate:
+        example: B3006TBJ
+        maxLength: 50
+        type: string
+      loan_amount:
+        example: 105000000
+        maximum: 999999999999
+        type: number
+      manufacture_year:
+        example: "2020"
+        type: string
+      marital_status:
+        example: M
+        type: string
+      mobile_phone:
+        example: "085880529100"
+        maxLength: 14
+        minLength: 9
+        type: string
+      monthly_fixed_income:
+        example: 5000000
+        type: number
+      ntf:
+        example: 150528000
+        maximum: 999999999999
+        type: number
+      num_of_dependence:
+        example: 1
+        maximum: 50
+        type: integer
+      otr:
+        example: 105000000
+        maximum: 999999999999
+        type: number
+      owner_asset:
+        example: JONATHAN
+        maxLength: 50
+        minLength: 2
+        type: string
+      profession_id:
+        example: KRYSW
+        maxLength: 10
+        type: string
+      prospect_id:
+        example: SAL-1140024080800004
+        maxLength: 20
+        type: string
+      residence_address:
+        example: Dermaga Baru
+        maxLength: 100
+        type: string
+      residence_city:
+        example: Jakarta Timur
+        maxLength: 30
+        type: string
+      residence_kecamatan:
+        example: Duren Sawit
+        maxLength: 30
+        type: string
+      residence_kelurahan:
+        example: Klender
+        maxLength: 30
+        type: string
+      residence_province:
+        example: Jakarta
+        maxLength: 50
+        type: string
+      residence_rt:
+        example: "001"
+        maxLength: 3
+        minLength: 1
+        type: string
+      residence_rw:
+        example: "002"
+        maxLength: 3
+        minLength: 1
+        type: string
+      residence_zipcode:
+        example: "13470"
+        maxLength: 5
+        type: string
+      selfie_photo:
+        example: https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/selfie_SAL-1140024081400003.jpg
+        maxLength: 250
+        type: string
+      spouse_birth_date:
+        example: "1992-09-11"
+        type: string
+      spouse_birth_place:
+        example: Jakarta
+        maxLength: 100
+        type: string
+      spouse_id_number:
+        example: "3506126712000002"
+        type: string
+      spouse_income:
+        example: 5000000
+        type: number
+      spouse_legal_name:
+        example: YULINAR NIATI
+        maxLength: 50
+        type: string
+      spouse_mobile_phone:
+        example: "085880529111"
+        maxLength: 14
+        minLength: 9
+        type: string
+      spouse_surgate_mother_name:
+        example: MAMA
+        maxLength: 100
+        type: string
+      stay_since_month:
+        example: 4
+        maximum: 12
+        minimum: 1
+        type: integer
+      stay_since_year:
+        example: 2024
+        type: integer
+      surgate_mother_name:
+        example: IBU
+        maxLength: 50
+        type: string
+      tenor:
+        example: 12
+        maximum: 60
+        type: integer
+    required:
+    - admin_fee
+    - af
+    - asset_category_id
+    - asset_code
+    - asset_usage_type_code
+    - birth_date
+    - birth_place
+    - bpkb_name_type
+    - branch_id
+    - chassis_number
+    - education
+    - email
+    - employment_since_month
+    - employment_since_year
+    - gender
+    - home_status
+    - id_number
+    - installment_amount
+    - job_position
+    - job_type
+    - kpm_id
+    - legal_name
+    - license_plate
+    - loan_amount
+    - manufacture_year
+    - marital_status
+    - mobile_phone
+    - monthly_fixed_income
+    - ntf
+    - num_of_dependence
+    - otr
+    - owner_asset
+    - profession_id
+    - prospect_id
+    - residence_address
+    - residence_city
+    - residence_kecamatan
+    - residence_kelurahan
+    - residence_province
+    - residence_rt
+    - residence_rw
+    - residence_zipcode
+    - stay_since_month
+    - stay_since_year
+    - surgate_mother_name
+    - tenor
     type: object
   request.Surveyor:
     properties:
@@ -2285,6 +2870,8 @@ definitions:
     type: object
   response.ApprovalResponse:
     properties:
+      code:
+        type: string
       decision:
         type: string
       is_final:
@@ -2375,6 +2962,7 @@ definitions:
         type: string
       employee_name:
         type: string
+      is_cmo_spv: {}
       join_date:
         type: string
       position_group_code:
@@ -2387,6 +2975,45 @@ definitions:
       field:
         type: string
       message:
+        type: string
+    type: object
+  response.GetAvailableTenorData:
+    properties:
+      admin_fee:
+        type: number
+      af:
+        type: number
+      asset_category_id:
+        type: string
+      dealer:
+        type: string
+      down_payment_amount:
+        type: number
+      installment_amount:
+        type: number
+      is_psa:
+        type: boolean
+      ntf:
+        type: number
+      otr:
+        type: number
+      tenor:
+        type: integer
+    type: object
+  response.GetMaxLoanAmountData:
+    properties:
+      max_loan_amount:
+        type: number
+    type: object
+  response.History2Wilen:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      order_status_name:
+        type: string
+      prospect_id:
         type: string
     type: object
   response.InquiryRow:
@@ -2422,6 +3049,17 @@ definitions:
       reason:
         type: string
     type: object
+  response.Step2Wilen:
+    properties:
+      color_code:
+        type: string
+      prospect_id:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
   response.StepPrinciple:
     properties:
       color_code:
@@ -2431,6 +3069,17 @@ definitions:
       status:
         type: string
       updated_at:
+        type: string
+    type: object
+  response.Submission2Wilen:
+    properties:
+      code:
+        type: string
+      readjust_context:
+        type: string
+      reason:
+        type: string
+      result:
         type: string
     type: object
   response.UsecaseApi:
@@ -2449,6 +3098,72 @@ definitions:
       source_decision:
         type: string
       status_konsumen:
+        type: string
+    type: object
+  usecase.ErrorResponse2Wilen:
+    properties:
+      code:
+        example: LOS-WLN-999
+        type: string
+      data: {}
+      errors:
+        example: internal server error
+        type: string
+      message:
+        example: Terjadi kesalahan pada sistem, silahkan coba lagi
+        type: string
+      metadata: {}
+      server_time:
+        example: 2024-11-14 14:16:43.619763 +0700 WIB
+        type: string
+      x-request-id:
+        example: 80980b86-6800-49c6-8c6a-d2049c280be0
+        type: string
+    type: object
+  usecase.ErrorValidation2Wilen:
+    properties:
+      message:
+        example: Parameter prospect_id Required field
+        type: string
+      parameter:
+        example: prospect_id
+        type: string
+    type: object
+  usecase.ErrorValidationResponse2Wilen:
+    properties:
+      code:
+        example: LOS-WLN-800
+        type: string
+      data: {}
+      errors:
+        $ref: '#/definitions/usecase.ErrorValidation2Wilen'
+      message:
+        example: validasi data kamu ada yang tidak sesuai, silakan periksa kembali
+        type: string
+      metadata: {}
+      server_time:
+        example: 2024-11-14 14:16:43.619763 +0700 WIB
+        type: string
+      x-request-id:
+        example: 80980b86-6800-49c6-8c6a-d2049c280be0
+        type: string
+    type: object
+  usecase.SuccessResponse2Wilen:
+    properties:
+      code:
+        example: LOS-WLN-001
+        type: string
+      data: {}
+      errors: {}
+      message:
+        example: ok
+        type: string
+      metadata: {}
+      server_time:
+        example: 2024-11-14 14:16:43.619763 +0700 WIB
+        type: string
+      x-request-id:
+        example: 80980b86-6800-49c6-8c6a-d2049c280be0
         type: string
     type: object
 host: localhost:9710
@@ -2532,6 +3247,105 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Filtering
+  /api/v3/kmb/2wilen/history:
+    post:
+      description: KMB 2Wilen
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.History2Wilen'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/usecase.SuccessResponse2Wilen'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/response.History2Wilen'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/usecase.ErrorValidationResponse2Wilen'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/usecase.ErrorResponse2Wilen'
+      tags:
+      - KMB 2Wilen
+  /api/v3/kmb/auto-cancel:
+    get:
+      description: KmbPrinciple
+      parameters:
+      - description: Prospect ID
+        in: path
+        name: prospectID
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - KmbPrinciple
+  /api/v3/kmb/available-tenor:
+    post:
+      description: KMB 2Wilen
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.GetAvailableTenor'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/usecase.SuccessResponse2Wilen'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/response.GetAvailableTenorData'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/usecase.ErrorValidationResponse2Wilen'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/usecase.ErrorResponse2Wilen'
+      tags:
+      - KMB 2Wilen
   /api/v3/kmb/ca/cancel:
     post:
       description: Api CA
@@ -2965,6 +3779,79 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Generate Form AKKK
+  /api/v3/kmb/cms/list-order/inquiry:
+    get:
+      description: API List Order
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqInquiryListOrder'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.InquiryRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - List Order
+  /api/v3/kmb/cms/list-order/inquiry/{prospect_id}:
+    get:
+      description: API List Order
+      parameters:
+      - description: Prospect ID
+        in: path
+        name: prospect_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/entity.InquiryDataListOrder'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - List Order
   /api/v3/kmb/cms/mapping-cluster/branch:
     get:
       description: Api Mapping Cluster
@@ -3375,6 +4262,255 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Prescreening
+  /api/v3/kmb/cms/quota-deviasi/branch:
+    get:
+      description: Api Setting Quota Deviasi
+      parameters:
+      - description: branch_id
+        in: query
+        name: branch_id
+        type: string
+      - description: branch_name
+        in: query
+        name: branch_name
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.InquiryRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Setting Quota Deviasi
+  /api/v3/kmb/cms/quota-deviasi/download:
+    get:
+      description: Api Setting Quota Deviasi
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: application/octet-stream
+          schema:
+            type: file
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Setting Quota Deviasi
+  /api/v3/kmb/cms/quota-deviasi/inquiry:
+    get:
+      description: Api Setting Quota Deviasi
+      parameters:
+      - description: search
+        in: query
+        name: search
+        type: string
+      - description: branch_id
+        in: query
+        name: branch_id
+        type: string
+      - description: is_active
+        in: query
+        name: is_active
+        type: string
+      - description: page
+        in: query
+        name: page
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.InquiryRow'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Setting Quota Deviasi
+  /api/v3/kmb/cms/quota-deviasi/reset:
+    post:
+      description: Api Setting Quota Deviasi
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqResetQuotaDeviasiBranch'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ApiResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Setting Quota Deviasi
+  /api/v3/kmb/cms/quota-deviasi/reset-all:
+    post:
+      description: Api Setting Quota Deviasi
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqResetAllQuotaDeviasi'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ApiResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Setting Quota Deviasi
+  /api/v3/kmb/cms/quota-deviasi/update:
+    post:
+      description: Api Setting Quota Deviasi
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.ReqUpdateQuotaDeviasi'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.ApiResponse'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Setting Quota Deviasi
+  /api/v3/kmb/cms/quota-deviasi/upload:
+    post:
+      description: Api Setting Quota Deviasi
+      parameters:
+      - description: upload file
+        in: formData
+        name: excel_file
+        required: true
+        type: file
+      - description: updated by name
+        in: formData
+        name: updated_by_name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Setting Quota Deviasi
   /api/v3/kmb/cms/save-as-draft:
     post:
       description: Api CA
@@ -3480,6 +4616,45 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - KmbPrinciple
+  /api/v3/kmb/decrypt:
+    post:
+      description: Encrypt Decrypt
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.Decryption'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Tools
   /api/v3/kmb/elaborate:
     post:
       description: ElaborateLTV
@@ -3627,6 +4802,45 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Employee
+  /api/v3/kmb/encrypt:
+    post:
+      description: Encrypt Decrypt
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/http.Encryption'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                data:
+                  additionalProperties:
+                    type: string
+                  type: object
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - Tools
   /api/v3/kmb/encrypt-decrypt:
     post:
       description: Encrypt Decrypt
@@ -3760,6 +4974,38 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - KmbPrinciple
+  /api/v3/kmb/max-loan-amount:
+    post:
+      description: KMB 2Wilen
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.GetMaxLoanAmount'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/usecase.SuccessResponse2Wilen'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.GetMaxLoanAmountData'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/usecase.ErrorValidationResponse2Wilen'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/usecase.ErrorResponse2Wilen'
+      tags:
+      - KMB 2Wilen
   /api/v3/kmb/principle-data:
     post:
       description: KmbPrinciple
@@ -3775,6 +5021,38 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/request.PrincipleGetData'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+        "400":
+          description: Bad Request
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.ApiResponse'
+            - properties:
+                error:
+                  $ref: '#/definitions/response.ErrorValidation'
+              type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.ApiResponse'
+      tags:
+      - KmbPrinciple
+  /api/v3/kmb/principle-publish:
+    post:
+      description: KmbPrinciple
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.PrinciplePublish'
       produces:
       - application/json
       responses:
@@ -3961,6 +5239,38 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - Recalculate
+  /api/v3/kmb/step-2wilen:
+    post:
+      description: KMB 2Wilen
+      parameters:
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.CheckStep2Wilen'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/usecase.SuccessResponse2Wilen'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.Step2Wilen'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/usecase.ErrorValidationResponse2Wilen'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/usecase.ErrorResponse2Wilen'
+      tags:
+      - KMB 2Wilen
   /api/v3/kmb/step-principle/{id_number}:
     get:
       description: KmbPrinciple
@@ -3997,6 +5307,43 @@ paths:
             $ref: '#/definitions/response.ApiResponse'
       tags:
       - KmbPrinciple
+  /api/v3/kmb/submission-2wilen:
+    post:
+      description: KMB 2Wilen
+      parameters:
+      - description: Prospect ID
+        in: path
+        name: prospectID
+        required: true
+        type: string
+      - description: Body payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/request.Submission2Wilen'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/usecase.SuccessResponse2Wilen'
+            - properties:
+                data:
+                  $ref: '#/definitions/response.Submission2Wilen'
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/usecase.ErrorValidationResponse2Wilen'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/usecase.ErrorResponse2Wilen'
+      tags:
+      - KMB 2Wilen
   /api/v3/kmb/verify-asset:
     post:
       description: KmbPrinciple
