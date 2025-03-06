@@ -20,6 +20,8 @@ func TestLockSystem(t *testing.T) {
 	testcases := []struct {
 		name                 string
 		idNumber             string
+		chassisNumber        string
+		engineNumber         string
 		config               entity.AppConfig
 		configValue          response.LockSystemConfig
 		encryptedIDNumber    entity.EncryptedString
@@ -36,8 +38,10 @@ func TestLockSystem(t *testing.T) {
 		err                  error
 	}{
 		{
-			name:     "test lock system GetEncB64 error",
-			idNumber: "1234567",
+			name:          "test lock system GetEncB64 error",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -45,8 +49,10 @@ func TestLockSystem(t *testing.T) {
 			err:          errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetEncB64 Error"),
 		},
 		{
-			name:     "test lock system GetTrxLockSystem error",
-			idNumber: "1234567",
+			name:          "test lock system GetTrxLockSystem error",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -54,8 +60,10 @@ func TestLockSystem(t *testing.T) {
 			err:                 errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetTrxLockSystem Error"),
 		},
 		{
-			name:     "test lock system banned idnumber true",
-			idNumber: "1234567",
+			name:          "test lock system banned idnumber true",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -69,8 +77,10 @@ func TestLockSystem(t *testing.T) {
 			},
 		},
 		{
-			name:     "test lock system GetConfig error",
-			idNumber: "1234567",
+			name:          "test lock system GetConfig error",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -78,8 +88,10 @@ func TestLockSystem(t *testing.T) {
 			err:          errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetConfig Error"),
 		},
 		{
-			name:     "test lock system GetTrxReject error",
-			idNumber: "1234567",
+			name:          "test lock system GetTrxReject error",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -90,8 +102,10 @@ func TestLockSystem(t *testing.T) {
 			err:             errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetTrxReject Error"),
 		},
 		{
-			name:     "test lock system RejectAttempt more than threshold",
-			idNumber: "1234567",
+			name:          "test lock system RejectAttempt more than threshold",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -114,8 +128,10 @@ func TestLockSystem(t *testing.T) {
 			},
 		},
 		{
-			name:     "test lock system RejectAttempt more than threshold SaveTrxLockSystem error",
-			idNumber: "1234567",
+			name:          "test lock system RejectAttempt more than threshold SaveTrxLockSystem error",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -140,8 +156,10 @@ func TestLockSystem(t *testing.T) {
 			err:                  errors.New(constant.ERROR_UPSTREAM + " - LockSystem SaveTrxLockSystem trxReject Error"),
 		},
 		{
-			name:     "test lock system GetTrxCancel error",
-			idNumber: "1234567",
+			name:          "test lock system GetTrxCancel error",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -152,8 +170,10 @@ func TestLockSystem(t *testing.T) {
 			err:             errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetTrxCancel Error"),
 		},
 		{
-			name:     "test lock system CancelAttempt more than threshold",
-			idNumber: "1234567",
+			name:          "test lock system CancelAttempt more than threshold",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -176,8 +196,10 @@ func TestLockSystem(t *testing.T) {
 			},
 		},
 		{
-			name:     "test lock system CancelAttempt more than threshold SaveTrxLockSystem error",
-			idNumber: "1234567",
+			name:          "test lock system CancelAttempt more than threshold SaveTrxLockSystem error",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -202,8 +224,10 @@ func TestLockSystem(t *testing.T) {
 			err:                  errors.New(constant.ERROR_UPSTREAM + " - LockSystem SaveTrxLockSystem trxCancel Error"),
 		},
 		{
-			name:     "test lock system done",
-			idNumber: "1234567",
+			name:          "test lock system done",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -218,7 +242,7 @@ func TestLockSystem(t *testing.T) {
 			mockHttpClient := new(httpclient.MockHttpClient)
 
 			mockRepository.On("GetEncB64", tc.idNumber).Return(tc.encryptedIDNumber, tc.errGetEncB64)
-			mockRepository.On("GetTrxLockSystem", tc.encryptedIDNumber.MyString).Return(tc.trxLockSystem, tc.errGetTrxLockSystem)
+			mockRepository.On("GetTrxLockSystem", tc.encryptedIDNumber.MyString, tc.chassisNumber, tc.engineNumber).Return(tc.trxLockSystem, tc.errGetTrxLockSystem)
 			mockRepository.On("GetConfig", "lock_system", "KMB-OFF", "lock_system_kmb").Return(tc.config, tc.errGetConfig)
 			mockRepository.On("GetTrxReject", tc.encryptedIDNumber.MyString, mock.Anything).Return(tc.trxReject, tc.errGetTrxReject)
 			mockRepository.On("SaveTrxLockSystem", mock.Anything).Return(tc.errSaveTrxLockSystem)
@@ -226,7 +250,7 @@ func TestLockSystem(t *testing.T) {
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
-			result, err := usecase.LockSystem(context.Background(), tc.idNumber)
+			result, err := usecase.LockSystem(context.Background(), tc.idNumber, tc.chassisNumber, tc.engineNumber)
 			require.Equal(t, tc.result, result)
 			require.Equal(t, tc.err, err)
 		})

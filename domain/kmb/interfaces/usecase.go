@@ -8,7 +8,7 @@ import (
 )
 
 type Usecase interface {
-	LockSystem(ctx context.Context, idNumber string) (data response.LockSystem, err error)
+	LockSystem(ctx context.Context, idNumber string, chassisNumber string, engineNumber string) (data response.LockSystem, err error)
 	Prescreening(ctx context.Context, reqs request.Metrics, filtering entity.FilteringKMB, accessToken string) (trxPrescreening entity.TrxPrescreening, trxFMF response.TrxFMF, trxDetail entity.TrxDetail, err error)
 	RejectTenor36(cluster string) (result response.UsecaseApi, err error)
 	CheckBannedPMKDSR(idNumber string) (data response.UsecaseApi, err error)

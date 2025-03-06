@@ -386,6 +386,14 @@ const (
 	PERNAH_REJECT = "Pernah Reject"
 	PERNAH_CANCEL = "Pernah Cancel"
 
+	//LOCK SYSTEM - ASSET CHECK
+	CODE_REJECT_ASSET_CHECK                = "662"
+	REASON_REJECT_ASSET_CHECK              = "Asset pernah diajukan - Bukan a.n Konsumen & Pasangan"
+	CODE_REJECT_ASSET_CHECK_DATA_CHANGED   = "663"
+	REASON_REJECT_ASSET_CHECK_DATA_CHANGED = "Asset pernah diajukan & perubahan data melebihi ketentuan"
+	ASSET_PERNAH_REJECT                    = "Asset Pernah Reject"
+	ASSET_PERNAH_CANCEL                    = "Asset Pernah Cancel"
+
 	//PRE SCREENING
 	QUICK_APPROVE      = false
 	LIMIT_PRESCREENING = 0

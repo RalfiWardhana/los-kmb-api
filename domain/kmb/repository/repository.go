@@ -1435,10 +1435,16 @@ func (r repoHandler) SaveTrxLockSystem(trxLockSystem entity.TrxLockSystem) (err 
 	return
 }
 
-func (r repoHandler) GetTrxLockSystem(idNumber string) (data entity.TrxLockSystem, err error) {
+func (r repoHandler) GetTrxLockSystem(idNumber string, chassisNumber string, engineNumber string) (data entity.TrxLockSystem, err error) {
+	query := "SELECT * FROM trx_lock_system tls WHERE unban_date > CAST(GETDATE() as DATE) AND IDNumber = ?"
+	args := []interface{}{idNumber}
 
-	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT * FROM trx_lock_system tls 
-			WHERE IDNumber = '%s' AND unban_date > CAST(GETDATE() as DATE)`, idNumber)).Scan(&data).Error; err != nil {
+	if chassisNumber != "" && engineNumber != "" {
+		query += " OR ChassisNumber = ? OR EngineNumber = ?"
+		args = append(args, chassisNumber, engineNumber)
+	}
+
+	if err = r.newKmbDB.Raw(query, args...).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
 		}

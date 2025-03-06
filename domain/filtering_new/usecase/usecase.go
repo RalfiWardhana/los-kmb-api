@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
+	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/labstack/echo/v4"
 )
@@ -63,6 +64,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		resPefindo                response.PefindoResult
 		reqPefindo                request.Pefindo
 		trxDetailBiro             []entity.TrxDetailBiro
+		historyCheckAsset         []entity.TrxHistoryCheckingAsset
 		respFilteringPefindo      response.Filtering
 		resCMO                    response.EmployeeCMOResponse
 		resFPD                    response.FpdCMOResponse
@@ -72,6 +74,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		savedCluster              string
 		useDefaultCluster         bool
 		entityTransactionCMOnoFPD entity.TrxCmoNoFPD
+		entityLockingSystem       entity.TrxLockSystem
 		respRrdDate               string
 		monthsDiff                int
 		expiredContractConfig     entity.AppConfig
@@ -79,7 +82,32 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	requestID := ctx.Value(echo.HeaderXRequestID).(string)
 
-	entityFiltering := entity.FilteringKMB{ProspectID: req.ProspectID, RequestID: requestID, BranchID: req.BranchID, BpkbName: req.BPKBName, IDNumber: req.IDNumber}
+	location, _ := time.LoadLocation("Asia/Jakarta")
+	formatBirthDate, _ := time.ParseInLocation("2006-01-02", req.BirthDate, location)
+
+	var spouseBirthDate *time.Time
+	if req.Spouse.BirthDate != "" {
+		formatSpouseBirthDate, _ := time.ParseInLocation("2006-01-02", req.Spouse.BirthDate, location)
+		tempDate := formatSpouseBirthDate
+		spouseBirthDate = &tempDate
+	}
+
+	entityFiltering := entity.FilteringKMB{
+		ProspectID:              req.ProspectID,
+		RequestID:               requestID,
+		BranchID:                req.BranchID,
+		BpkbName:                req.BPKBName,
+		IDNumber:                req.IDNumber,
+		LegalName:               req.LegalName,
+		BirthDate:               formatBirthDate,
+		Gender:                  req.Gender,
+		SurgateMotherName:       req.MotherName,
+		SpouseIDNumber:          &req.Spouse.IDNumber,
+		SpouseLegalName:         &req.Spouse.LegalName,
+		SpouseBirthDate:         spouseBirthDate,
+		SpouseGender:            &req.Spouse.Gender,
+		SpouseSurgateMotherName: &req.Spouse.MotherName,
+	}
 
 	customer = append(customer, request.SpouseDupcheck{IDNumber: req.IDNumber, LegalName: req.LegalName, BirthDate: req.BirthDate, MotherName: req.MotherName})
 
@@ -109,52 +137,208 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 			entityFiltering.Reason = blackList.Reason
 			entityFiltering.IsBlacklist = 1
 
-			err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD)
+			err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
 
 			return
 		}
 	}
 
-	// Start | Cek NokaNosin pindahan dari "dupcheck besaran"
-	entityFiltering.ChassisNumber = req.ChassisNumber
-	entityFiltering.EngineNumber = req.EngineNumber
-
-	reqDupcheck = request.DupcheckApi{
-		ProspectID: req.ProspectID,
-		IDNumber:   req.IDNumber,
-		RangkaNo:   req.ChassisNumber,
-	}
-
-	if req.Spouse != nil {
-		var spouse = request.DupcheckApiSpouse{
-			IDNumber: req.Spouse.IDNumber,
+	// Dikondisikan not-required agar 2Wilen tidak blocking jika data param `ChassisNumber` dan `EngineNumber` kosong
+	// Jika data param `ChassisNumber` atau `EngineNumber` kosong, maka tidak perlu melakukan pengecekan asset
+	if req.ChassisNumber != "" && req.EngineNumber != "" {
+		// Start | Cek Asset Canceled and Rejected Last 30 Days
+		canceledRecord, everCancelled, configLockAssetCancel, err := u.usecase.AssetCanceledLast30Days(ctx, req.ProspectID, req.ChassisNumber, req.EngineNumber, accessToken)
+		if err != nil {
+			return respFiltering, err
 		}
 
-		reqDupcheck.Spouse = &spouse
-	}
-
-	checkChassisNumber, err := u.usecase.CheckAgreementChassisNumber(ctx, reqDupcheck, accessToken)
-	if err != nil {
-		return
-	}
-
-	if checkChassisNumber.Result == constant.DECISION_REJECT {
-		respFiltering = response.Filtering{
-			ProspectID:  req.ProspectID,
-			Code:        checkChassisNumber.Code,
-			Decision:    checkChassisNumber.Result,
-			Reason:      checkChassisNumber.Reason,
-			NextProcess: false,
+		rejectedRecord, everRejected, configLockAssetReject, err := u.usecase.AssetRejectedLast30Days(ctx, req.ChassisNumber, req.EngineNumber, accessToken)
+		if err != nil {
+			return respFiltering, err
 		}
 
-		entityFiltering.Decision = constant.DECISION_REJECT
-		entityFiltering.Reason = checkChassisNumber.Reason
+		entityLockingSystem.ProspectID = req.ProspectID
+		entityLockingSystem.IDNumber = req.IDNumber
+		entityLockingSystem.ChassisNumber = req.ChassisNumber
+		entityLockingSystem.EngineNumber = req.EngineNumber
 
-		err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD)
+		if everCancelled {
+			// Check if current customer's ID doesn't match with the canceled record's IDs
+			isCustomerIDNotMatch := req.IDNumber != canceledRecord.IDNumber
 
-		return
+			// Only check spouse ID if it's not nil (not empty)
+			isSpouseIDNotMatch := true
+			if canceledRecord.IDNumberSpouse != nil {
+				isSpouseIDNotMatch = req.IDNumber != *canceledRecord.IDNumberSpouse
+			}
+
+			// Check if current customer's LegalName doesn't match with the canceled record's Names
+			isCustomerNameNotMatch := req.LegalName != canceledRecord.LegalName
+
+			// Only check spouse name if it's not nil (not empty)
+			isSpouseNameNotMatch := true
+			if canceledRecord.LegalNameSpouse != nil {
+				isSpouseNameNotMatch = req.LegalName != *canceledRecord.LegalNameSpouse
+			}
+
+			if isCustomerIDNotMatch && isSpouseIDNotMatch {
+				// Reject if customerID (customer or spouse) doesn't match at all
+
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(canceledRecord, 1, 1))
+
+				respFiltering = response.Filtering{
+					ProspectID:  req.ProspectID,
+					Code:        constant.CODE_REJECT_ASSET_CHECK,
+					Decision:    constant.DECISION_REJECT,
+					Reason:      constant.REASON_REJECT_ASSET_CHECK,
+					NextProcess: false,
+				}
+
+				entityFiltering.Decision = constant.DECISION_REJECT
+				entityFiltering.Reason = constant.REASON_REJECT_ASSET_CHECK
+
+				entityLockingSystem.Reason = constant.ASSET_PERNAH_CANCEL
+				entityLockingSystem.UnbanDate = time.Now().AddDate(0, 0, configLockAssetCancel.LockAssetBan+1)
+
+				err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
+				return respFiltering, err
+			} else if isCustomerNameNotMatch && isSpouseNameNotMatch && canceledRecord.LatestRetryNumber == 1 {
+				// Reject if customerName (customer or spouse) doesn't match at all and this is canceled record's have been tried once
+
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(canceledRecord, 1, 1))
+
+				respFiltering = response.Filtering{
+					ProspectID:  req.ProspectID,
+					Code:        constant.CODE_REJECT_ASSET_CHECK_DATA_CHANGED,
+					Decision:    constant.DECISION_REJECT,
+					Reason:      constant.REASON_REJECT_ASSET_CHECK_DATA_CHANGED,
+					NextProcess: false,
+				}
+
+				entityFiltering.Decision = constant.DECISION_REJECT
+				entityFiltering.Reason = constant.REASON_REJECT_ASSET_CHECK
+
+				entityLockingSystem.Reason = constant.ASSET_PERNAH_CANCEL
+				entityLockingSystem.UnbanDate = time.Now().AddDate(0, 0, configLockAssetCancel.LockAssetBan+1)
+
+				err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
+				return respFiltering, err
+			} else if isCustomerNameNotMatch && isSpouseNameNotMatch && canceledRecord.LatestRetryNumber == 0 {
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(canceledRecord, 1, 0))
+			} else {
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(canceledRecord, 0, 0))
+			}
+		}
+
+		if everRejected {
+			isMatchWithCustomer := req.IDNumber == rejectedRecord.IDNumber && req.LegalName == rejectedRecord.LegalName
+			isMatchWithPersonalDataCustomer := req.BirthDate == rejectedRecord.BirthDate.Format("2006-01-02") && req.MotherName == rejectedRecord.SurgateMotherName
+
+			isMatchWithSpouse := false
+			isMatchWithPersonalDataSpouse := false
+
+			// Only check spouse match if spouse data exists in the rejected record
+			if rejectedRecord.IDNumberSpouse != nil && rejectedRecord.LegalNameSpouse != nil {
+				isMatchWithSpouse = req.IDNumber == *rejectedRecord.IDNumberSpouse && req.LegalName == *rejectedRecord.LegalNameSpouse
+			}
+
+			// Only check spouse personal data match if spouse data exists in the rejected record
+			if rejectedRecord.BirthDateSpouse != nil && rejectedRecord.SurgateMotherNameSpouse != nil {
+				isMatchWithPersonalDataSpouse = req.Spouse.BirthDate == rejectedRecord.BirthDateSpouse.Format("2006-01-02") && req.Spouse.MotherName == *rejectedRecord.SurgateMotherNameSpouse
+			}
+
+			// If there's no exact match with either customer or spouse, REJECT the application
+			if !isMatchWithCustomer && !isMatchWithSpouse {
+				// Reject if customerID (customer or spouse) doesn't match at all
+
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(rejectedRecord, 1, 1))
+
+				respFiltering = response.Filtering{
+					ProspectID:  req.ProspectID,
+					Code:        constant.CODE_REJECT_ASSET_CHECK,
+					Decision:    constant.DECISION_REJECT,
+					Reason:      constant.REASON_REJECT_ASSET_CHECK,
+					NextProcess: false,
+				}
+
+				entityFiltering.Decision = constant.DECISION_REJECT
+				entityFiltering.Reason = constant.REASON_REJECT_ASSET_CHECK
+
+				entityLockingSystem.Reason = constant.ASSET_PERNAH_REJECT
+				entityLockingSystem.UnbanDate = time.Now().AddDate(0, 0, configLockAssetReject.LockAssetBan+1)
+
+				err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
+				return respFiltering, err
+			} else if !isMatchWithPersonalDataCustomer && !isMatchWithPersonalDataSpouse && rejectedRecord.LatestRetryNumber == 1 {
+				// Reject if customerName (customer or spouse) doesn't match at all and this is rejected record's have been tried once
+
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(rejectedRecord, 1, 1))
+
+				respFiltering = response.Filtering{
+					ProspectID:  req.ProspectID,
+					Code:        constant.CODE_REJECT_ASSET_CHECK_DATA_CHANGED,
+					Decision:    constant.DECISION_REJECT,
+					Reason:      constant.REASON_REJECT_ASSET_CHECK_DATA_CHANGED,
+					NextProcess: false,
+				}
+
+				entityFiltering.Decision = constant.DECISION_REJECT
+				entityFiltering.Reason = constant.REASON_REJECT_ASSET_CHECK
+
+				entityLockingSystem.Reason = constant.ASSET_PERNAH_REJECT
+				entityLockingSystem.UnbanDate = time.Now().AddDate(0, 0, configLockAssetReject.LockAssetBan+1)
+
+				err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
+				return respFiltering, err
+			} else if !isMatchWithPersonalDataCustomer && !isMatchWithPersonalDataSpouse && rejectedRecord.LatestRetryNumber == 0 {
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(rejectedRecord, 1, 0))
+			} else {
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(rejectedRecord, 0, 0))
+			}
+		}
+		// End | Cek Asset Canceled and Rejected Last 30 Days
+
+		// Start | Cek NokaNosin pindahan dari "dupcheck besaran"
+		entityFiltering.ChassisNumber = req.ChassisNumber
+		entityFiltering.EngineNumber = req.EngineNumber
+
+		reqDupcheck = request.DupcheckApi{
+			ProspectID: req.ProspectID,
+			IDNumber:   req.IDNumber,
+			RangkaNo:   req.ChassisNumber,
+		}
+
+		if req.Spouse != nil {
+			var spouse = request.DupcheckApiSpouse{
+				IDNumber: req.Spouse.IDNumber,
+			}
+
+			reqDupcheck.Spouse = &spouse
+		}
+
+		checkChassisNumber, err := u.usecase.CheckAgreementChassisNumber(ctx, reqDupcheck, accessToken)
+		if err != nil {
+			return respFiltering, err
+		}
+
+		if checkChassisNumber.Result == constant.DECISION_REJECT {
+			respFiltering = response.Filtering{
+				ProspectID:  req.ProspectID,
+				Code:        checkChassisNumber.Code,
+				Decision:    checkChassisNumber.Result,
+				Reason:      checkChassisNumber.Reason,
+				NextProcess: false,
+			}
+
+			entityFiltering.Decision = constant.DECISION_REJECT
+			entityFiltering.Reason = checkChassisNumber.Reason
+
+			err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
+
+			return respFiltering, err
+		}
+		// End | Cek NokaNosin pindahan dari "dupcheck besaran"
 	}
-	// End | Cek NokaNosin pindahan dari "dupcheck besaran"
 
 	reqPefindo = request.Pefindo{
 		ClientKey:         os.Getenv("CLIENTKEY_CORE_PBK"),
@@ -377,7 +561,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		entityFiltering.NewKoRules = jsonNewKoRules
 	}
 
-	err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD)
+	err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
 
 	return
 }
@@ -1104,9 +1288,9 @@ func (u usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerB
 	return
 }
 
-func (u usecase) SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, transactionCMOnoFPD entity.TrxCmoNoFPD) (err error) {
+func (u usecase) SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, transactionCMOnoFPD entity.TrxCmoNoFPD, historyCheckAsset []entity.TrxHistoryCheckingAsset, lockingSystem entity.TrxLockSystem) (err error) {
 
-	err = u.repository.SaveFiltering(transaction, trxDetailBiro, transactionCMOnoFPD)
+	err = u.repository.SaveFiltering(transaction, trxDetailBiro, transactionCMOnoFPD, historyCheckAsset, lockingSystem)
 
 	if err != nil {
 
@@ -1584,24 +1768,56 @@ func (u usecase) CheckLatestPaidInstallment(ctx context.Context, prospectID stri
 	return
 }
 
-func (u usecase) AssetEverCanceledLast30Days(ctx context.Context, ChassisNumber string, accessToken string) (isCanceled bool, err error) {
+func (u usecase) AssetCanceledLast30Days(ctx context.Context, prospectID string, ChassisNumber string, EngineNumber string, accessToken string) (oldestRecord response.DataCheckLockAsset, hasRecord bool, appConfigLockSystem response.DataLockSystemConfig, err error) {
 	var (
-		sallyResponse response.SallySubmissionResponse
+		sallyResponse    response.SallySubmissionResponse
+		configData       entity.AppConfig
+		lockSystemConfig response.LockSystemConfig
 	)
 
-	endDate := time.Now().Format("2006-01-02")
-	startDate := time.Now().AddDate(0, 0, -30).Format("2006-01-02")
+	// Get lock system configuration from repository
+	configData, err = u.repository.GetConfig("lock_system", "KMB-OFF", "lock_system_kmb")
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Lock System Config Error")
+		return
+	}
 
-	// order_status_id=20 it means order cancel in Sally
-	endpointURL := fmt.Sprintf(os.Getenv("SALLY_SUBMISSION_ORDER")+"?order_status_id=20&search_by_chassis_number=%s&start_date=%s&end_date=%s", ChassisNumber, startDate, endDate)
+	if err = json.Unmarshal([]byte(configData.Value), &lockSystemConfig); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error Unmarshal Get Lock System Config")
+		return
+	}
 
+	appConfigLockSystem = lockSystemConfig.Data
+
+	// Check from repository if this asset was canceled in the last 30 days
+	// The repository returns a single record and a boolean flag
+	journeyRecord, journeyFound, err := u.repository.GetAssetCancel(ChassisNumber, EngineNumber, lockSystemConfig)
+	if err != nil {
+		return
+	}
+
+	// If we found a record in the repository, initialize with that
+	if journeyFound {
+		oldestRecord = journeyRecord
+		hasRecord = true
+	}
+
+	// Then next process is do API call to Sally
+	endDate := time.Now()
+	startDate := endDate.AddDate(0, 0, -lockSystemConfig.Data.LockAssetCheck)
+
+	startDateStr := startDate.Format("2006-01-02")
+	endDateStr := endDate.Format("2006-01-02")
+
+	// order_status_id=20 it means order CANCEL in Sally
+	endpointURL := fmt.Sprintf(os.Getenv("SALLY_SUBMISSION_ORDER")+"?order_status_id=20&search_by_chassis_number=%s&search_by_machine_number=%s&start_date=%s&end_date=%s&order_by=created_at%20ASC", ChassisNumber, EngineNumber, startDateStr, endDateStr)
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
 	header := map[string]string{
 		"Authorization": accessToken,
 	}
 
-	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointURL, nil, header, constant.METHOD_GET, false, 0, timeout, "", accessToken)
+	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointURL, nil, header, constant.METHOD_GET, true, 2, timeout, prospectID, accessToken)
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Error calling Sally Check Canceled Order: " + err.Error())
@@ -1614,31 +1830,130 @@ func (u usecase) AssetEverCanceledLast30Days(ctx context.Context, ChassisNumber 
 	}
 
 	if err = json.Unmarshal(resp.Body(), &sallyResponse); err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Failed to parse Sally Check Canceled Order response: " + err.Error())
+		err = errors.New(constant.ERROR_UPSTREAM + " - Failed to unmarshal Sally Check Canceled Order response: " + err.Error())
 		return
 	}
 
-	// Check if Records is not nil and contains data
-	switch records := sallyResponse.Data.Records.(type) {
-	case []interface{}:
-		if len(records) > 0 {
-			isCanceled = true
+	// Check if we have Sally API data
+	if len(sallyResponse.Data.Records) > 0 {
+		record := sallyResponse.Data.Records[0]
+		var sallyCreatedAt time.Time
+
+		sallyCreatedAt, err = time.Parse(time.RFC3339, record.CreatedAt)
+		if err != nil {
+			// Use current time if parsing fails
+			sallyCreatedAt = time.Now()
 		}
-	case interface{}:
-		// Records exists but isn't empty
-		if records != nil {
-			isCanceled = true
+
+		// If no record found yet or Sally record is older than our current oldest
+		if !hasRecord || sallyCreatedAt.Before(oldestRecord.CreatedAt) {
+			var birthDate time.Time
+			var spouseBirthDate *time.Time
+
+			birthDate, err = time.Parse("2006-01-02", record.BirthDate)
+			if err != nil {
+				// Use current time if parsing fails
+				birthDate = time.Now()
+			}
+
+			// Handle spouse birth date if available
+			if record.SpouseBirthDate != "" {
+				parsedDate, err := time.Parse("2006-01-02", record.SpouseBirthDate)
+				if err == nil {
+					spouseBirthDate = &parsedDate
+				}
+			}
+
+			// Convert spouse fields to pointers
+			var spouseID, spouseName, spouseMother *string
+			if record.SpouseIDNumber != "" {
+				spouseID = &record.SpouseIDNumber
+			}
+			if record.SpouseFullName != "" {
+				spouseName = &record.SpouseFullName
+			}
+			if record.SpouseSurgateMotherName != "" {
+				spouseMother = &record.SpouseSurgateMotherName
+			}
+
+			// Create DataCheckLockAsset from Sally record
+			oldestRecord = response.DataCheckLockAsset{
+				ProspectID:              record.ProspectID,
+				ChassisNumber:           ChassisNumber,
+				EngineNumber:            EngineNumber,
+				SourceService:           "SALLY",
+				Decision:                "CAN",
+				Reason:                  "",
+				CreatedAt:               sallyCreatedAt,
+				IDNumber:                record.IDNumber,
+				LegalName:               record.FullName,
+				BirthDate:               birthDate,
+				SurgateMotherName:       record.SurgateMotherName,
+				IDNumberSpouse:          spouseID,        // Will be nil if empty
+				LegalNameSpouse:         spouseName,      // Will be nil if empty
+				SurgateMotherNameSpouse: spouseMother,    // Will be nil if empty
+				BirthDateSpouse:         spouseBirthDate, // Will be nil if empty or unparsable
+			}
+			hasRecord = true
 		}
 	}
 
-	/*
-		Code above handle cases where:
-		-> Records is null in the JSON (becomes nil in Go)
-		-> Records is an empty array [] (becomes empty slice in Go)
-		-> Records is an array with data (becomes slice with elements in Go)
-	*/
+	return
+}
+
+func (u usecase) AssetRejectedLast30Days(ctx context.Context, ChassisNumber string, EngineNumber string, accessToken string) (oldestRecord response.DataCheckLockAsset, hasRecord bool, appConfigLockSystem response.DataLockSystemConfig, err error) {
+	var (
+		configData       entity.AppConfig
+		lockSystemConfig response.LockSystemConfig
+	)
+
+	// Get lock system configuration from repository
+	configData, err = u.repository.GetConfig("lock_system", "KMB-OFF", "lock_system_kmb")
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Lock System Config Error")
+		return
+	}
+
+	if err = json.Unmarshal([]byte(configData.Value), &lockSystemConfig); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Error Unmarshal Get Lock System Config")
+		return
+	}
+
+	appConfigLockSystem = lockSystemConfig.Data
+
+	// Check from repository if this asset was rejected in the last 30 days
+	// Simply pass through the values returned by the repository function
+	oldestRecord, hasRecord, err = u.repository.GetAssetReject(ChassisNumber, EngineNumber, lockSystemConfig)
 
 	return
+}
+
+func insertDataHistoryChecking(oldestRecord response.DataCheckLockAsset, isPersonalDataChanged int, isAssetLocking int) entity.TrxHistoryCheckingAsset {
+	if isPersonalDataChanged == 1 {
+		oldestRecord.LatestRetryNumber = oldestRecord.LatestRetryNumber + 1
+	}
+
+	return entity.TrxHistoryCheckingAsset{
+		ID:                      uuid.New().String(),
+		ProspectID:              oldestRecord.ProspectID,
+		NumberOfRetry:           oldestRecord.LatestRetryNumber,
+		FinalDecision:           oldestRecord.Decision,
+		Reason:                  oldestRecord.Reason,
+		SourceService:           oldestRecord.SourceService,
+		SourceDecisionCreatedAt: oldestRecord.CreatedAt,
+		IsDataChanged:           isPersonalDataChanged,
+		IsAssetLocked:           isAssetLocking,
+		ChassisNumber:           oldestRecord.ChassisNumber,
+		EngineNumber:            oldestRecord.EngineNumber,
+		IDNumber:                oldestRecord.IDNumber,
+		LegalName:               oldestRecord.LegalName,
+		BirthDate:               oldestRecord.BirthDate,
+		SurgateMotherName:       oldestRecord.SurgateMotherName,
+		IDNumberSpouse:          oldestRecord.IDNumberSpouse,
+		LegalNameSpouse:         oldestRecord.LegalNameSpouse,
+		SurgateMotherNameSpouse: oldestRecord.SurgateMotherNameSpouse,
+		BirthDateSpouse:         oldestRecord.BirthDateSpouse,
+	}
 }
 
 func (u usecase) CheckAgreementChassisNumber(ctx context.Context, reqs request.DupcheckApi, accessToken string) (data response.UsecaseApi, err error) {

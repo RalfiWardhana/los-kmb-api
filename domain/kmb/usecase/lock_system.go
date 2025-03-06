@@ -9,7 +9,7 @@ import (
 	"los-kmb-api/shared/constant"
 )
 
-func (u usecase) LockSystem(ctx context.Context, idNumber string) (data response.LockSystem, err error) {
+func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber string, engineNumber string) (data response.LockSystem, err error) {
 	var (
 		config            entity.AppConfig
 		configValue       response.LockSystemConfig
@@ -26,7 +26,7 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string) (data response
 	}
 
 	//scan banned IDNumber
-	trxLockSystem, err = u.repository.GetTrxLockSystem(encryptedIDNumber.MyString)
+	trxLockSystem, err = u.repository.GetTrxLockSystem(encryptedIDNumber.MyString, chassisNumber, engineNumber)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetTrxLockSystem Error")
 		return

@@ -452,9 +452,9 @@ func (_m *Usecase) Ktp(ctx context.Context, req request.Metrics, reqMetricsEkyc 
 	return r0, r1
 }
 
-// LockSystem provides a mock function with given fields: ctx, idNumber
-func (_m *Usecase) LockSystem(ctx context.Context, idNumber string) (response.LockSystem, error) {
-	ret := _m.Called(ctx, idNumber)
+// LockSystem provides a mock function with given fields: ctx, idNumber, chassisNumber, engineNumber
+func (_m *Usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber string, engineNumber string) (response.LockSystem, error) {
+	ret := _m.Called(ctx, idNumber, chassisNumber, engineNumber)
 
 	if len(ret) == 0 {
 		panic("no return value specified for LockSystem")
@@ -462,17 +462,17 @@ func (_m *Usecase) LockSystem(ctx context.Context, idNumber string) (response.Lo
 
 	var r0 response.LockSystem
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (response.LockSystem, error)); ok {
-		return rf(ctx, idNumber)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (response.LockSystem, error)); ok {
+		return rf(ctx, idNumber, chassisNumber, engineNumber)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) response.LockSystem); ok {
-		r0 = rf(ctx, idNumber)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) response.LockSystem); ok {
+		r0 = rf(ctx, idNumber, chassisNumber, engineNumber)
 	} else {
 		r0 = ret.Get(0).(response.LockSystem)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, idNumber)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, idNumber, chassisNumber, engineNumber)
 	} else {
 		r1 = ret.Error(1)
 	}

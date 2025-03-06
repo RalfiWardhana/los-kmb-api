@@ -130,7 +130,7 @@ func (c *handlerKMB) LockSystem(ctx echo.Context) (err error) {
 
 	req.IDNumber, _ = utils.PlatformDecryptText(req.IDNumber)
 
-	data, err := c.usecase.LockSystem(ctx.Request().Context(), req.IDNumber)
+	data, err := c.usecase.LockSystem(ctx.Request().Context(), req.IDNumber, req.ChassisNumber, req.EngineNumber)
 
 	if err != nil {
 		ctxJson, _ = c.Json.ErrorStandard(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS-LST", req, err)

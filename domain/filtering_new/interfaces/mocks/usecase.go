@@ -18,32 +18,88 @@ type Usecase struct {
 	mock.Mock
 }
 
-// AssetEverCanceledLast30Days provides a mock function with given fields: ctx, ChassisNumber, accessToken
-func (_m *Usecase) AssetEverCanceledLast30Days(ctx context.Context, ChassisNumber string, accessToken string) (bool, error) {
-	ret := _m.Called(ctx, ChassisNumber, accessToken)
+// AssetCanceledLast30Days provides a mock function with given fields: ctx, prospectID, ChassisNumber, EngineNumber, accessToken
+func (_m *Usecase) AssetCanceledLast30Days(ctx context.Context, prospectID string, ChassisNumber string, EngineNumber string, accessToken string) (response.DataCheckLockAsset, bool, response.DataLockSystemConfig, error) {
+	ret := _m.Called(ctx, prospectID, ChassisNumber, EngineNumber, accessToken)
 
 	if len(ret) == 0 {
-		panic("no return value specified for AssetEverCanceledLast30Days")
+		panic("no return value specified for AssetCanceledLast30Days")
 	}
 
-	var r0 bool
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) (bool, error)); ok {
-		return rf(ctx, ChassisNumber, accessToken)
+	var r0 response.DataCheckLockAsset
+	var r1 bool
+	var r2 response.DataLockSystemConfig
+	var r3 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) (response.DataCheckLockAsset, bool, response.DataLockSystemConfig, error)); ok {
+		return rf(ctx, prospectID, ChassisNumber, EngineNumber, accessToken)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string) bool); ok {
-		r0 = rf(ctx, ChassisNumber, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) response.DataCheckLockAsset); ok {
+		r0 = rf(ctx, prospectID, ChassisNumber, EngineNumber, accessToken)
 	} else {
-		r0 = ret.Get(0).(bool)
+		r0 = ret.Get(0).(response.DataCheckLockAsset)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
-		r1 = rf(ctx, ChassisNumber, accessToken)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string) bool); ok {
+		r1 = rf(ctx, prospectID, ChassisNumber, EngineNumber, accessToken)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(bool)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, string, string, string, string) response.DataLockSystemConfig); ok {
+		r2 = rf(ctx, prospectID, ChassisNumber, EngineNumber, accessToken)
+	} else {
+		r2 = ret.Get(2).(response.DataLockSystemConfig)
+	}
+
+	if rf, ok := ret.Get(3).(func(context.Context, string, string, string, string) error); ok {
+		r3 = rf(ctx, prospectID, ChassisNumber, EngineNumber, accessToken)
+	} else {
+		r3 = ret.Error(3)
+	}
+
+	return r0, r1, r2, r3
+}
+
+// AssetRejectedLast30Days provides a mock function with given fields: ctx, ChassisNumber, EngineNumber, accessToken
+func (_m *Usecase) AssetRejectedLast30Days(ctx context.Context, ChassisNumber string, EngineNumber string, accessToken string) (response.DataCheckLockAsset, bool, response.DataLockSystemConfig, error) {
+	ret := _m.Called(ctx, ChassisNumber, EngineNumber, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AssetRejectedLast30Days")
+	}
+
+	var r0 response.DataCheckLockAsset
+	var r1 bool
+	var r2 response.DataLockSystemConfig
+	var r3 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (response.DataCheckLockAsset, bool, response.DataLockSystemConfig, error)); ok {
+		return rf(ctx, ChassisNumber, EngineNumber, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) response.DataCheckLockAsset); ok {
+		r0 = rf(ctx, ChassisNumber, EngineNumber, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.DataCheckLockAsset)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) bool); ok {
+		r1 = rf(ctx, ChassisNumber, EngineNumber, accessToken)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, string, string, string) response.DataLockSystemConfig); ok {
+		r2 = rf(ctx, ChassisNumber, EngineNumber, accessToken)
+	} else {
+		r2 = ret.Get(2).(response.DataLockSystemConfig)
+	}
+
+	if rf, ok := ret.Get(3).(func(context.Context, string, string, string) error); ok {
+		r3 = rf(ctx, ChassisNumber, EngineNumber, accessToken)
+	} else {
+		r3 = ret.Error(3)
+	}
+
+	return r0, r1, r2, r3
 }
 
 // BlacklistCheck provides a mock function with given fields: index, spDupcheck
@@ -356,17 +412,17 @@ func (_m *Usecase) GetResultFiltering(prospectID string) (response.Filtering, er
 	return r0, r1
 }
 
-// SaveFiltering provides a mock function with given fields: transaction, trxDetailBiro, transactionCMOnoFPD
-func (_m *Usecase) SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, transactionCMOnoFPD entity.TrxCmoNoFPD) error {
-	ret := _m.Called(transaction, trxDetailBiro, transactionCMOnoFPD)
+// SaveFiltering provides a mock function with given fields: transaction, trxDetailBiro, transactionCMOnoFPD, historyCheckAsset, lockingSystem
+func (_m *Usecase) SaveFiltering(transaction entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, transactionCMOnoFPD entity.TrxCmoNoFPD, historyCheckAsset []entity.TrxHistoryCheckingAsset, lockingSystem entity.TrxLockSystem) error {
+	ret := _m.Called(transaction, trxDetailBiro, transactionCMOnoFPD, historyCheckAsset, lockingSystem)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SaveFiltering")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(entity.FilteringKMB, []entity.TrxDetailBiro, entity.TrxCmoNoFPD) error); ok {
-		r0 = rf(transaction, trxDetailBiro, transactionCMOnoFPD)
+	if rf, ok := ret.Get(0).(func(entity.FilteringKMB, []entity.TrxDetailBiro, entity.TrxCmoNoFPD, []entity.TrxHistoryCheckingAsset, entity.TrxLockSystem) error); ok {
+		r0 = rf(transaction, trxDetailBiro, transactionCMOnoFPD, historyCheckAsset, lockingSystem)
 	} else {
 		r0 = ret.Error(0)
 	}

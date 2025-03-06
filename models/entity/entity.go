@@ -710,11 +710,13 @@ func (c *TrxBannedPMKDSR) TableName() string {
 }
 
 type TrxLockSystem struct {
-	ProspectID string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
-	IDNumber   string    `gorm:"type:varchar(40);column:IDNumber"`
-	Reason     string    `gorm:"type:varchar(250);column:reason"`
-	CreatedAt  time.Time `gorm:"column:created_at"`
-	UnbanDate  time.Time `gorm:"column:unban_date"`
+	ProspectID    string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
+	IDNumber      string    `gorm:"type:varchar(40);column:IDNumber"`
+	ChassisNumber string    `gorm:"type:varchar(30);column:ChassisNumber"`
+	EngineNumber  string    `gorm:"type:varchar(30);column:EngineNumber"`
+	Reason        string    `gorm:"type:varchar(250);column:reason"`
+	CreatedAt     time.Time `gorm:"column:created_at"`
+	UnbanDate     time.Time `gorm:"column:unban_date"`
 }
 
 func (c *TrxLockSystem) TableName() string {
@@ -874,6 +876,15 @@ type FilteringKMB struct {
 	NewKoRules                      interface{} `gorm:"column:new_ko_rules" json:"new_ko_rules"`
 	RrdDate                         interface{} `gorm:"column:rrd_date" json:"rrd_date"`
 	IDNumber                        string      `gorm:"column:id_number;type:varchar(100)" json:"id_number"`
+	LegalName                       string      `gorm:"column:legal_name;type:varchar(200)" json:"legal_name"`
+	BirthDate                       time.Time   `gorm:"column:birth_date" json:"birth_date"`
+	Gender                          string      `gorm:"column:gender;type:varchar(10)" json:"gender"`
+	SurgateMotherName               string      `gorm:"column:surgate_mother_name;type:varchar(200)" json:"surgate_mother_name"`
+	SpouseIDNumber                  *string     `gorm:"column:spouse_id_number;type:varchar(200)" json:"spouse_id_number"`
+	SpouseLegalName                 *string     `gorm:"column:spouse_legal_name;type:varchar(200)" json:"spouse_legal_name"`
+	SpouseBirthDate                 *time.Time  `gorm:"column:spouse_birth_date" json:"spouse_birth_date"`
+	SpouseGender                    *string     `gorm:"column:spouse_gender;type:varchar(10)" json:"spouse_gender"`
+	SpouseSurgateMotherName         *string     `gorm:"column:spouse_surgate_mother_name" json:"spouse_surgate_mother_name"`
 	ChassisNumber                   string      `gorm:"column:chassis_number;type:varchar(50)" json:"chassis_number"`
 	EngineNumber                    string      `gorm:"column:engine_number;type:varchar(50)" json:"engine_number"`
 	CreatedAt                       time.Time   `gorm:"column:created_at" json:"created_at"`
@@ -881,6 +892,33 @@ type FilteringKMB struct {
 
 func (c *FilteringKMB) TableName() string {
 	return "trx_filtering"
+}
+
+type TrxHistoryCheckingAsset struct {
+	ID                      string     `gorm:"type:varchar(255);column:Id;primary_key:true" json:"id"`
+	ProspectID              string     `gorm:"type:varchar(20);column:ProspectID" json:"prospect_id"`
+	NumberOfRetry           int        `gorm:"column:NumberOfRetry" json:"number_of_retry"`
+	FinalDecision           string     `gorm:"type:varchar(20);column:FinalDecision" json:"final_decision"`
+	Reason                  string     `gorm:"type:varchar(250);column:Reason" json:"reason"`
+	SourceService           string     `gorm:"type:varchar(5);column:SourceService" json:"source_service"`
+	SourceDecisionCreatedAt time.Time  `gorm:"column:SourceDecisionCreatedAt" json:"source_decision_created_at"`
+	IsDataChanged           int        `gorm:"column:IsDataChanged" json:"is_data_changed"`
+	IsAssetLocked           int        `gorm:"column:IsAssetLocked" json:"is_asset_locked"`
+	ChassisNumber           string     `gorm:"type:varchar(50);column:ChassisNumber" json:"chassis_number"`
+	EngineNumber            string     `gorm:"type:varchar(50);column:EngineNumber" json:"engine_number"`
+	IDNumber                string     `gorm:"type:varchar(200);column:IDNumber" json:"id_number"`
+	IDNumberSpouse          *string    `gorm:"type:varchar(200);column:IDNumber_spouse" json:"id_number_spouse"`
+	LegalName               string     `gorm:"type:varchar(255);column:LegalName" json:"legal_name"`
+	LegalNameSpouse         *string    `gorm:"type:varchar(255);column:LegalName_spouse" json:"legal_name_spouse"`
+	BirthDate               time.Time  `gorm:"column:BirthDate" json:"birth_date"`
+	BirthDateSpouse         *time.Time `gorm:"column:BirthDate_spouse" json:"birth_date_spouse"`
+	SurgateMotherName       string     `gorm:"type:varchar(200);column:SurgateMotherName" json:"surgate_mother_name"`
+	SurgateMotherNameSpouse *string    `gorm:"type:varchar(200);column:SurgateMotherName_spouse" json:"surgate_mother_name_spouse"`
+	CreatedAt               time.Time  `gorm:"column:CreatedAt" json:"created_at"`
+}
+
+func (c *TrxHistoryCheckingAsset) TableName() string {
+	return "trx_history_checking_asset"
 }
 
 type ResultFiltering struct {

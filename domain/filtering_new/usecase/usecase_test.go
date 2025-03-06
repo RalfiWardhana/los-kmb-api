@@ -74,6 +74,8 @@ func TestSaveFiltering(t *testing.T) {
 		transaction         entity.FilteringKMB
 		trxDetailBiro       []entity.TrxDetailBiro
 		transactionCMOnoFPD entity.TrxCmoNoFPD
+		historyCheckAsset   []entity.TrxHistoryCheckingAsset
+		lockingSystem       entity.TrxLockSystem
 		errSave             error
 		errFinal            error
 	}{
@@ -93,11 +95,11 @@ func TestSaveFiltering(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
-			mockRepository.On("SaveFiltering", mock.Anything, mock.Anything, mock.Anything).Return(tc.errSave)
+			mockRepository.On("SaveFiltering", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.errSave)
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
-			err := usecase.SaveFiltering(tc.transaction, tc.trxDetailBiro, tc.transactionCMOnoFPD)
+			err := usecase.SaveFiltering(tc.transaction, tc.trxDetailBiro, tc.transactionCMOnoFPD, tc.historyCheckAsset, tc.lockingSystem)
 			require.Equal(t, tc.errFinal, err)
 		})
 	}
@@ -741,47 +743,6 @@ func TestFiltering(t *testing.T) {
 			err_LatestPaidInstallment:        errors.New(constant.ERROR_BAD_REQUEST + " - Customer RO then CustomerID should not be empty"),
 			errFinal:                         errors.New(constant.ERROR_BAD_REQUEST + " - Customer RO then CustomerID should not be empty"),
 		},
-		{
-			name: "TEST_CheckAgreementChassisNumber_Reject",
-			req: request.Filtering{
-				ProspectID:    "SAL02400020230727001",
-				BPKBName:      "K",
-				BranchID:      "426",
-				IDNumber:      "3275066006789999",
-				LegalName:     "EMI LegalName",
-				BirthDate:     "1971-04-15",
-				Gender:        "M",
-				MotherName:    "HAROEMI MotherName",
-				CMOID:         "105394",
-				ChassisNumber: "MHFZ3CJ2JNJ001234", // Adding chassis number
-			},
-			resEmployee: response.EmployeeCMOResponse{
-				EmployeeID:         "105394",
-				EmployeeName:       "SUSANAH",
-				EmployeeIDWithName: "105394 - SUSANAH",
-				JoinDate:           "2023-07-24",
-				PositionGroupCode:  "AO",
-				PositionGroupName:  "Marketing",
-				CMOCategory:        "OLD",
-			},
-			resBlackList: response.UsecaseApi{
-				Result: constant.DECISION_PASS,
-				Code:   "123",
-			},
-			// Mock a REJECT response from CheckAgreementChassisNumber
-			checkChassisNumber: response.UsecaseApi{
-				Result: constant.DECISION_REJECT,
-				Code:   "CHASSIS_001",
-				Reason: "Chassis number already used in active agreement",
-			},
-			resFinal: response.Filtering{
-				ProspectID:  "SAL02400020230727001",
-				Decision:    constant.DECISION_REJECT,
-				Code:        "CHASSIS_001",
-				Reason:      "Chassis number already used in active agreement",
-				NextProcess: false,
-			},
-		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -789,7 +750,7 @@ func TestFiltering(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
-			mockUsecase.On("SaveFiltering", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			mockUsecase.On("SaveFiltering", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			mockUsecase.On("DupcheckIntegrator", ctx, tc.req.ProspectID, tc.req.IDNumber, tc.req.LegalName, tc.req.BirthDate, tc.req.MotherName, accessToken).Return(tc.spCustomer, tc.errspCustomer).Once()
 			if tc.married {
@@ -799,23 +760,6 @@ func TestFiltering(t *testing.T) {
 			mockUsecase.On("BlacklistCheck", 0, tc.spCustomer).Return(tc.resBlackList, mock.Anything).Once()
 			if tc.married {
 				mockUsecase.On("BlacklistCheck", 1, tc.spSpouse).Return(tc.resBlackList, mock.Anything).Once()
-			}
-
-			if tc.req.ChassisNumber != "" {
-				var reqDupcheck = request.DupcheckApi{
-					ProspectID: tc.req.ProspectID,
-					IDNumber:   tc.req.IDNumber,
-					RangkaNo:   tc.req.ChassisNumber,
-				}
-
-				if tc.req.Spouse != nil {
-					var spouse = request.DupcheckApiSpouse{
-						IDNumber: tc.req.Spouse.IDNumber,
-					}
-					reqDupcheck.Spouse = &spouse
-				}
-
-				mockUsecase.On("CheckAgreementChassisNumber", mock.Anything, reqDupcheck, accessToken).Return(tc.checkChassisNumber, tc.errCheckChassisNumber)
 			}
 
 			mockUsecase.On("FilteringPefindo", ctx, tc.reqPefindo, mock.Anything, mock.Anything, mock.Anything, accessToken).Return(tc.respFilteringPefindo, tc.resPefindo, tc.trxDetailBiro, tc.errpefindo).Once()

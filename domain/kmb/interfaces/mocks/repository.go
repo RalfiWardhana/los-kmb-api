@@ -1119,9 +1119,9 @@ func (_m *Repository) GetTrxJourney(prospectID string) (entity.TrxJourney, error
 	return r0, r1
 }
 
-// GetTrxLockSystem provides a mock function with given fields: idNumber
-func (_m *Repository) GetTrxLockSystem(idNumber string) (entity.TrxLockSystem, error) {
-	ret := _m.Called(idNumber)
+// GetTrxLockSystem provides a mock function with given fields: idNumber, chassisNumber, engineNumber
+func (_m *Repository) GetTrxLockSystem(idNumber string, chassisNumber string, engineNumber string) (entity.TrxLockSystem, error) {
+	ret := _m.Called(idNumber, chassisNumber, engineNumber)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetTrxLockSystem")
@@ -1129,17 +1129,17 @@ func (_m *Repository) GetTrxLockSystem(idNumber string) (entity.TrxLockSystem, e
 
 	var r0 entity.TrxLockSystem
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string) (entity.TrxLockSystem, error)); ok {
-		return rf(idNumber)
+	if rf, ok := ret.Get(0).(func(string, string, string) (entity.TrxLockSystem, error)); ok {
+		return rf(idNumber, chassisNumber, engineNumber)
 	}
-	if rf, ok := ret.Get(0).(func(string) entity.TrxLockSystem); ok {
-		r0 = rf(idNumber)
+	if rf, ok := ret.Get(0).(func(string, string, string) entity.TrxLockSystem); ok {
+		r0 = rf(idNumber, chassisNumber, engineNumber)
 	} else {
 		r0 = ret.Get(0).(entity.TrxLockSystem)
 	}
 
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(idNumber)
+	if rf, ok := ret.Get(1).(func(string, string, string) error); ok {
+		r1 = rf(idNumber, chassisNumber, engineNumber)
 	} else {
 		r1 = ret.Error(1)
 	}
