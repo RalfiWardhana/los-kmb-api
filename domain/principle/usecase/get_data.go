@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -24,6 +25,11 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 	case "Domisili":
 
 		principleStepOne, _ := u.repository.GetPrincipleStepOne(req.ProspectID)
+
+		if req.KPMID > 0 && req.KPMID != principleStepOne.KPMID {
+			err = errors.New(constant.INTERNAL_SERVER_ERROR + " - KPM ID does not match")
+			return data, err
+		}
 
 		data = map[string]interface{}{
 			"id_number":            principleStepOne.IDNumber,
@@ -47,7 +53,13 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 	case "Pemohon":
 
+		principleStepOne, _ := u.repository.GetPrincipleStepOne(req.ProspectID)
 		principleStepTwo, _ := u.repository.GetPrincipleStepTwo(req.ProspectID)
+
+		if req.KPMID > 0 && req.KPMID != principleStepOne.KPMID {
+			err = errors.New(constant.INTERNAL_SERVER_ERROR + " - KPM ID does not match")
+			return data, err
+		}
 
 		data = map[string]interface{}{
 			"id_number":                  principleStepTwo.IDNumber,
@@ -154,6 +166,11 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 		}()
 
 		if err := <-errChan; err != nil {
+			return data, err
+		}
+
+		if req.KPMID > 0 && req.KPMID != principleStepOne.KPMID {
+			err = errors.New(constant.INTERNAL_SERVER_ERROR + " - KPM ID does not match")
 			return data, err
 		}
 
@@ -330,7 +347,13 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 	case "Emergency":
 
+		principleStepOne, _ := u.repository.GetPrincipleStepOne(req.ProspectID)
 		principleStepFour, _ := u.repository.GetPrincipleEmergencyContact(req.ProspectID)
+
+		if req.KPMID > 0 && req.KPMID != principleStepOne.KPMID {
+			err = errors.New(constant.INTERNAL_SERVER_ERROR + " - KPM ID does not match")
+			return data, err
+		}
 
 		data = map[string]interface{}{
 			"name":         principleStepFour.Name,
@@ -346,6 +369,124 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			"zip_code":     principleStepFour.ZipCode,
 			"area_phone":   principleStepFour.AreaPhone,
 			"phone":        principleStepFour.Phone,
+		}
+
+		return data, err
+
+	case "Readjust":
+
+		trxKPM, err := u.repository.GetTrxKPM(req.ProspectID)
+		if err != nil {
+			return data, err
+		}
+
+		if req.KPMID > 0 && req.KPMID != trxKPM.KPMID {
+			err = errors.New(constant.INTERNAL_SERVER_ERROR + " - KPM ID does not match")
+			return data, err
+		}
+
+		birthDate := trxKPM.BirthDate.Format(constant.FORMAT_DATE)
+		var spouseBirthDate string
+		if date, ok := trxKPM.SpouseBirthDate.(time.Time); ok {
+			spouseBirthDate = date.Format(constant.FORMAT_DATE)
+		}
+
+		var assetList response.AssetList
+		timeOut, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+		payloadAsset, _ := json.Marshal(map[string]interface{}{
+			"branch_id": trxKPM.BranchID,
+			"lob_id":    11,
+			"page_size": 10,
+			"search":    trxKPM.AssetCode,
+		})
+
+		resp, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("MDM_ASSET_URL"), payloadAsset, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, req.ProspectID, accessToken)
+
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call Asset MDM Timeout")
+			return data, err
+		}
+
+		if resp.StatusCode() != 200 {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call Asset MDM Error")
+			return data, err
+		}
+
+		json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &assetList)
+
+		if len(assetList.Records) == 0 {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Call Asset MDM Error")
+			return data, err
+		}
+
+		var assetDisplay string
+		if len(assetList.Records) > 0 {
+			assetDisplay = assetList.Records[0].AssetDisplay
+		}
+
+		data = map[string]interface{}{
+			"id_number":                  trxKPM.IDNumber,
+			"legal_name":                 trxKPM.LegalName,
+			"mobile_phone":               trxKPM.MobilePhone,
+			"email":                      trxKPM.Email,
+			"birth_place":                trxKPM.BirthPlace,
+			"birth_date":                 birthDate,
+			"surgate_mother_name":        trxKPM.SurgateMotherName,
+			"gender":                     trxKPM.Gender,
+			"residence_address":          trxKPM.ResidenceAddress,
+			"residence_rt":               trxKPM.ResidenceRT,
+			"residence_rw":               trxKPM.ResidenceRW,
+			"residence_province":         trxKPM.ResidenceProvince,
+			"residence_city":             trxKPM.ResidenceCity,
+			"residence_kecamatan":        trxKPM.ResidenceKecamatan,
+			"residence_kelurahan":        trxKPM.ResidenceKelurahan,
+			"residence_zipcode":          trxKPM.ResidenceZipCode,
+			"branch_id":                  trxKPM.BranchID,
+			"asset_code":                 trxKPM.AssetCode,
+			"asset_display":              assetDisplay,
+			"manufacture_year":           trxKPM.ManufactureYear,
+			"license_plate":              trxKPM.LicensePlate,
+			"asset_usage_type_code":      trxKPM.AssetUsageTypeCode,
+			"bpkb_name_type":             trxKPM.BPKBName,
+			"owner_asset":                trxKPM.OwnerAsset,
+			"loan_amount":                trxKPM.LoanAmount,
+			"max_loan_amount":            trxKPM.MaxLoanAmount,
+			"tenor":                      trxKPM.Tenor,
+			"installment_amount":         trxKPM.InstallmentAmount,
+			"num_of_dependence":          trxKPM.NumOfDependence,
+			"marital_status":             trxKPM.MaritalStatus,
+			"spouse_id_number":           trxKPM.SpouseIDNumber,
+			"spouse_legal_name":          trxKPM.SpouseLegalName,
+			"spouse_birth_date":          spouseBirthDate,
+			"spouse_birth_place":         trxKPM.SpouseBirthPlace,
+			"spouse_surgate_mother_name": trxKPM.SpouseSurgateMotherName,
+			"spouse_mobile_phone":        trxKPM.SpouseMobilePhone,
+			"education":                  trxKPM.Education,
+			"profession_id":              trxKPM.ProfessionID,
+			"job_type":                   trxKPM.JobType,
+			"job_position":               trxKPM.JobPosition,
+			"employment_since_month":     trxKPM.EmploymentSinceMonth,
+			"employment_since_year":      trxKPM.EmploymentSinceYear,
+			"monthly_fixed_income":       trxKPM.MonthlyFixedIncome,
+			"spouse_income":              trxKPM.SpouseIncome,
+			"chassis_number":             trxKPM.NoChassis,
+			"home_status":                trxKPM.HomeStatus,
+			"stay_since_year":            trxKPM.StaySinceYear,
+			"stay_since_month":           trxKPM.StaySinceMonth,
+			"ktp_photo":                  trxKPM.KtpPhoto,
+			"selfie_photo":               trxKPM.SelfiePhoto,
+			"af":                         trxKPM.AF,
+			"ntf":                        trxKPM.NTF,
+			"otr":                        trxKPM.OTR,
+			"down_payment_amount":        trxKPM.DPAmount,
+			"admin_fee":                  trxKPM.AdminFee,
+			"dealer":                     trxKPM.Dealer,
+			"asset_category_id":          trxKPM.AssetCategoryID,
+			"kpm_id":                     trxKPM.KPMID,
+			"result_pefindo":             trxKPM.ResultPefindo,
+			"baki_debet":                 trxKPM.BakiDebet,
+			"readjust_context":           trxKPM.ReadjustContext,
 		}
 
 		return data, err

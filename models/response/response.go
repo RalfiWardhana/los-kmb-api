@@ -1190,7 +1190,11 @@ type MarsevFilterProgramData struct {
 	ProductID                  string      `json:"product_id"`
 	ProductOfferingID          string      `json:"product_offering_id"`
 	ProductOfferingDescription string      `json:"product_offering_description"`
-	Tenors                     interface{} `json:"tenors"`
+	Tenors                     []TenorInfo `json:"tenors"`
+}
+
+type TenorInfo struct {
+	Tenor int `json:"tenor"`
 }
 
 type MarsevCalculateInstallmentResponse struct {
@@ -1388,4 +1392,51 @@ type AssetList struct {
 		IsElectric          bool   `json:"is_electric"`
 		Model               string `json:"model"`
 	} `json:"records"`
+}
+
+type Config2Wilen struct {
+	Data Data2WilenConfig `json:"data"`
+}
+
+type Data2WilenConfig struct {
+	MaxReadjustAttempt int `json:"max_readjust_attempt"`
+}
+
+type Step2Wilen struct {
+	ProspectID string `json:"prospect_id"`
+	ColorCode  string `json:"color_code"`
+	Status     string `json:"status"`
+	UpdatedAt  string `json:"updated_at"`
+}
+
+type GetMaxLoanAmountData struct {
+	MaxLoanAmount float64 `json:"max_loan_amount"`
+}
+
+type GetAvailableTenorData struct {
+	Tenor             int     `json:"tenor"`
+	IsPsa             bool    `json:"is_psa"`
+	Dealer            string  `json:"dealer"`
+	InstallmentAmount float64 `json:"installment_amount"`
+	AF                float64 `json:"af"`
+	AdminFee          float64 `json:"admin_fee"`
+	DPAmount          float64 `json:"down_payment_amount"`
+	NTF               float64 `json:"ntf"`
+	AssetCategoryID   string  `json:"asset_category_id"`
+	OTR               float64 `json:"otr"`
+}
+
+type Submission2Wilen struct {
+	Code            string  `json:"code"`
+	Result          string  `json:"result"`
+	Reason          string  `json:"reason"`
+	ReadjustContext *string `json:"readjust_context"`
+	ProspectID      string  `json:"prospect_id"`
+}
+
+type History2Wilen struct {
+	ID              string `json:"id"`
+	ProspectID      string `json:"prospect_id"`
+	OrderStatusName string `json:"order_status_name"`
+	CreatedAt       string `json:"created_at"`
 }

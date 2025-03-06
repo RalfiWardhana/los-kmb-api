@@ -79,4 +79,9 @@ type Repository interface {
 	GetPrincipleStepTwo(prospectID string) (data entity.TrxPrincipleStepTwo, err error)
 	GetPrincipleStepThree(prospectID string) (data entity.TrxPrincipleStepThree, err error)
 	GetPrincipleEmergencyContact(prospectID string) (data entity.TrxPrincipleEmergencyContact, err error)
+
+	ScanTrxKPM(prospectID string) (count int, err error)
+	GetTrxKPM(prospectID string) (data entity.TrxKPM, err error)
+	GetTrxKPMStatus(prospectID string) (data entity.TrxKPMStatus, err error)
+	UpdateTrxKPMDecision(id string, prospectID string, decision string) (err error)
 }

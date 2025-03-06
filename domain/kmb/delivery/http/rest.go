@@ -1,6 +1,7 @@
 package http
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"los-kmb-api/domain/kmb/interfaces"
@@ -130,15 +131,38 @@ func (c *handlerKMB) LockSystem(ctx echo.Context) (err error) {
 
 	req.IDNumber, _ = utils.PlatformDecryptText(req.IDNumber)
 
-	data, err := c.usecase.LockSystem(ctx.Request().Context(), req.IDNumber, req.ChassisNumber, req.EngineNumber)
+	ctxWithTimeout, cancel := context.WithTimeout(ctx.Request().Context(), 5*time.Minute)
+	defer cancel()
 
-	if err != nil {
-		ctxJson, _ = c.Json.ErrorStandard(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS-LST", req, err)
+	resultChan := make(chan struct {
+		data interface{}
+		err  error
+	})
+
+	go func() {
+		data, err := c.usecase.LockSystem(ctxWithTimeout, req.IDNumber, req.ChassisNumber, req.EngineNumber)
+		resultChan <- struct {
+			data interface{}
+			err  error
+		}{data, err}
+	}()
+
+	select {
+	case result := <-resultChan:
+		if result.err != nil {
+			ctxJson, _ = c.Json.ErrorStandard(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS-LST", req, result.err)
+			return ctxJson
+		}
+		ctxJson, _ = c.Json.SuccessStandard(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS-LST", req, result.data)
 		return ctxJson
+	case <-ctxWithTimeout.Done():
+		if ctxWithTimeout.Err() == context.DeadlineExceeded {
+			err = fmt.Errorf("%s - service timeout", constant.ERROR_UPSTREAM_TIMEOUT)
+			ctxJson, _ = c.Json.ErrorStandard(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS-LST", req, err)
+			return ctxJson
+		}
+		return ctxWithTimeout.Err()
 	}
-
-	ctxJson, _ = c.Json.SuccessStandard(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS-LST", req, data)
-	return ctxJson
 }
 
 // Recalculate

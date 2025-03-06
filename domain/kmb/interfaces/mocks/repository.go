@@ -1119,6 +1119,62 @@ func (_m *Repository) GetTrxJourney(prospectID string) (entity.TrxJourney, error
 	return r0, r1
 }
 
+// GetTrxKPM provides a mock function with given fields: prospectID
+func (_m *Repository) GetTrxKPM(prospectID string) (entity.TrxKPM, error) {
+	ret := _m.Called(prospectID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTrxKPM")
+	}
+
+	var r0 entity.TrxKPM
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (entity.TrxKPM, error)); ok {
+		return rf(prospectID)
+	}
+	if rf, ok := ret.Get(0).(func(string) entity.TrxKPM); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.TrxKPM)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetTrxKPMStatus provides a mock function with given fields: prospectID
+func (_m *Repository) GetTrxKPMStatus(prospectID string) (entity.TrxKPMStatus, error) {
+	ret := _m.Called(prospectID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTrxKPMStatus")
+	}
+
+	var r0 entity.TrxKPMStatus
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (entity.TrxKPMStatus, error)); ok {
+		return rf(prospectID)
+	}
+	if rf, ok := ret.Get(0).(func(string) entity.TrxKPMStatus); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.TrxKPMStatus)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTrxLockSystem provides a mock function with given fields: idNumber, chassisNumber, engineNumber
 func (_m *Repository) GetTrxLockSystem(idNumber string, chassisNumber string, engineNumber string) (entity.TrxLockSystem, error) {
 	ret := _m.Called(idNumber, chassisNumber, engineNumber)
@@ -1507,6 +1563,34 @@ func (_m *Repository) ScanKmobOff(query string) (entity.ScanInstallmentAmount, e
 	return r0, r1
 }
 
+// ScanTrxKPM provides a mock function with given fields: prospectID
+func (_m *Repository) ScanTrxKPM(prospectID string) (int, error) {
+	ret := _m.Called(prospectID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ScanTrxKPM")
+	}
+
+	var r0 int
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (int, error)); ok {
+		return rf(prospectID)
+	}
+	if rf, ok := ret.Get(0).(func(string) int); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // ScanTrxMaster provides a mock function with given fields: prospectID
 func (_m *Repository) ScanTrxMaster(prospectID string) (int, error) {
 	ret := _m.Called(prospectID)
@@ -1645,6 +1729,24 @@ func (_m *Repository) ScanWgOnl(query string) (entity.ScanInstallmentAmount, err
 	}
 
 	return r0, r1
+}
+
+// UpdateTrxKPMDecision provides a mock function with given fields: id, prospectID, decision
+func (_m *Repository) UpdateTrxKPMDecision(id string, prospectID string, decision string) error {
+	ret := _m.Called(id, prospectID, decision)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateTrxKPMDecision")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, string, string) error); ok {
+		r0 = rf(id, prospectID, decision)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // NewRepository creates a new instance of Repository. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

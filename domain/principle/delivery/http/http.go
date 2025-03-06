@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -14,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 
 	_ "github.com/KB-FMF/los-common-library/errors"
 	"github.com/KB-FMF/los-common-library/response"
@@ -24,14 +26,16 @@ import (
 )
 
 type handler struct {
+	metrics      interfaces.Metrics
 	multiusecase interfaces.MultiUsecase
 	usecase      interfaces.Usecase
 	repository   interfaces.Repository
 	responses    response.Response
 }
 
-func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, responses response.Response, middlewares *middlewares.AccessMiddleware) {
+func Handler(principleRoute *echo.Group, metrics interfaces.Metrics, multiusecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, responses response.Response, middlewares *middlewares.AccessMiddleware) {
 	handler := handler{
+		metrics:      metrics,
 		multiusecase: multiusecase,
 		usecase:      usecase,
 		repository:   repository,
@@ -67,6 +71,13 @@ func Handler(principleRoute *echo.Group, multiusecase interfaces.MultiUsecase, u
 	principleRoute.POST("/principle-data", handler.GetPrincipleData, middlewares.AccessMiddleware())
 	principleRoute.GET("/auto-cancel", handler.AutoCancel, middlewares.AccessMiddleware())
 	principleRoute.POST("/principle-publish", handler.PrinciplePublish, middlewares.AccessMiddleware())
+
+	principleRoute.POST("/step-2wilen", handler.Step2Wilen, middlewares.AccessMiddleware())
+	principleRoute.POST("/max-loan-amount", handler.GetMaxLoanAmount, middlewares.AccessMiddleware())
+	principleRoute.POST("/available-tenor", handler.GetAvailableTenor, middlewares.AccessMiddleware())
+	principleRoute.POST("/submission-2wilen", handler.Submission2Wilen, middlewares.AccessMiddleware(), limiter)
+	principleRoute.POST("/2wilen/history", handler.History2Wilen, middlewares.AccessMiddleware())
+	principleRoute.POST("/publish-2wilen", handler.Publish2Wilen, middlewares.AccessMiddleware())
 }
 
 // KmbPrinciple Tools godoc
@@ -500,5 +511,288 @@ func (c *handler) PrinciplePublish(ctx echo.Context) (err error) {
 	}
 
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), "success publish event principle")
+
+}
+
+// KMB 2Wilen Tools godoc
+// @Description KMB 2Wilen
+// @Tags KMB 2Wilen
+// @Produce json
+// @Param body body request.CheckStep2Wilen true "Body payload"
+// @Success 200 {object} usecase.SuccessResponse2Wilen{data=response.Step2Wilen}
+// @Failure 400 {object} usecase.ErrorValidationResponse2Wilen{}
+// @Failure 500 {object} usecase.ErrorResponse2Wilen{}
+// @Router /api/v3/kmb/step-2wilen [post]
+func (c *handler) Step2Wilen(ctx echo.Context) (err error) {
+
+	var r request.CheckStep2Wilen
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
+	}
+
+	r.IDNumber, _ = utils.PlatformDecryptText(r.IDNumber)
+
+	data, err := c.usecase.Step2Wilen(r.IDNumber)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
+	}
+
+	if data.Status == "" {
+		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), nil)
+	}
+
+	if data.Status == constant.DECISION_KPM_READJUST || data.Status == constant.STATUS_KPM_WAIT_2WILEN || data.Status == constant.DECISION_KPM_APPROVE || data.Status == constant.STATUS_LOS_PROCESS_2WILEN {
+		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "002"), data, response.WithMessage("Kamu masih memiliki pengajuan lain yang sedang diproses"))
+
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
+
+}
+
+// KMB 2Wilen Tools godoc
+// @Description KMB 2Wilen
+// @Tags KMB 2Wilen
+// @Produce json
+// @Param body body request.GetMaxLoanAmount true "Body payload"
+// @Success 200 {object} usecase.SuccessResponse2Wilen{data=response.GetMaxLoanAmountData}
+// @Failure 400 {object} usecase.ErrorValidationResponse2Wilen{}
+// @Failure 500 {object} usecase.ErrorResponse2Wilen{}
+// @Router /api/v3/kmb/max-loan-amount [post]
+func (c *handler) GetMaxLoanAmount(ctx echo.Context) (err error) {
+
+	var r request.GetMaxLoanAmount
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
+	}
+
+	data, err := c.multiusecase.GetMaxLoanAmout(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
+
+}
+
+// KMB 2Wilen Tools godoc
+// @Description KMB 2Wilen
+// @Tags KMB 2Wilen
+// @Produce json
+// @Param body body request.GetAvailableTenor true "Body payload"
+// @Success 200 {object} usecase.SuccessResponse2Wilen{data=[]response.GetAvailableTenorData}
+// @Failure 400 {object} usecase.ErrorValidationResponse2Wilen{}
+// @Failure 500 {object} usecase.ErrorResponse2Wilen{}
+// @Router /api/v3/kmb/available-tenor [post]
+func (c *handler) GetAvailableTenor(ctx echo.Context) (err error) {
+
+	var r request.GetAvailableTenor
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
+	}
+
+	data, err := c.multiusecase.GetAvailableTenor(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
+
+}
+
+// KMB 2Wilen Tools godoc
+// @Description KMB 2Wilen
+// @Tags KMB 2Wilen
+// @Produce json
+// @Param prospectID path string true "Prospect ID"
+// @Param body body request.Submission2Wilen true "Body payload"
+// @Success 200 {object} usecase.SuccessResponse2Wilen{data=response.Submission2Wilen}
+// @Failure 400 {object} usecase.ErrorValidationResponse2Wilen{}
+// @Failure 500 {object} usecase.ErrorResponse2Wilen{}
+// @Router /api/v3/kmb/submission-2wilen [post]
+func (c *handler) Submission2Wilen(ctx echo.Context) (err error) {
+
+	var r request.Submission2Wilen
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
+	}
+
+	ctxWithTimeout, cancel := context.WithTimeout(ctx.Request().Context(), 5*time.Minute)
+	defer cancel()
+
+	resultChan := make(chan struct {
+		data interface{}
+		err  error
+	})
+
+	go func() {
+		data, err := c.metrics.Submission2Wilen(ctxWithTimeout, r, middlewares.UserInfoData.AccessToken)
+		resultChan <- struct {
+			data interface{}
+			err  error
+		}{data, err}
+	}()
+
+	select {
+	case result := <-resultChan:
+		if result.err != nil {
+			if result.err.Error() == constant.ERROR_MAX_EXCEED {
+				return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", "429"), result.err,
+					response.WithHttpCode(http.StatusInternalServerError),
+					response.WithMessage(constant.PRINCIPLE_ERROR_EXCEED_RESPONSE_MESSAGE))
+			}
+
+			errorMessages := map[string]string{
+				constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE: constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE,
+				constant.KPM_WAIT_MESSAGE_2WILEN:            constant.KPM_WAIT_MESSAGE_2WILEN,
+				constant.LOS_PROCESS_MESSAGE_2WILEN:         constant.LOS_PROCESS_MESSAGE_2WILEN,
+				constant.LOS_APPROVE_MESSAGE_2WILEN:         constant.LOS_APPROVE_MESSAGE_2WILEN,
+				constant.LOS_CANCEL_MESSAGE_2WILEN:          constant.LOS_CANCEL_MESSAGE_2WILEN,
+			}
+
+			errorMessage := constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE
+			if msg, exists := errorMessages[result.err.Error()]; exists {
+				errorMessage = msg
+			}
+
+			code, err := utils.WrapError(result.err)
+
+			return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err,
+				response.WithHttpCode(http.StatusInternalServerError),
+				response.WithMessage(errorMessage))
+		}
+
+		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), result.data)
+
+	case <-ctxWithTimeout.Done():
+		if ctxWithTimeout.Err() == context.DeadlineExceeded {
+			return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", "504"), fmt.Errorf("service timeout"),
+				response.WithHttpCode(http.StatusGatewayTimeout),
+				response.WithMessage("Request timeout exceeded"))
+		}
+		return ctxWithTimeout.Err()
+	}
+}
+
+// KMB 2Wilen Tools godoc
+// @Description KMB 2Wilen
+// @Tags KMB 2Wilen
+// @Produce json
+// @Param body body request.History2Wilen true "Body payload"
+// @Success 200 {object} usecase.SuccessResponse2Wilen{data=[]response.History2Wilen}
+// @Failure 400 {object} usecase.ErrorValidationResponse2Wilen{}
+// @Failure 500 {object} usecase.ErrorResponse2Wilen{}
+// @Router /api/v3/kmb/2wilen/history [post]
+func (c *handler) History2Wilen(ctx echo.Context) (err error) {
+
+	var r request.History2Wilen
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
+	}
+
+	data, err := c.usecase.History2Wilen(r.ProspectID)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
+}
+
+// KMB 2Wilen Tools godoc
+// @Description KMB 2Wilen
+// @Tags KMB 2Wilen
+// @Produce json
+// @Param body body request.Publish2Wilen true "Body payload"
+// @Success 200 {object} response.ApiResponse{}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/publish-2wilen [post]
+func (c *handler) Publish2Wilen(ctx echo.Context) (err error) {
+
+	var r request.Publish2Wilen
+
+	defer func() {
+		body, _ := json.Marshal(r)
+		ctx.Request().Body = io.NopCloser(bytes.NewBuffer(body))
+	}()
+
+	if err = ctx.Bind(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
+	}
+	if err = ctx.Validate(&r); err != nil {
+		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
+	}
+
+	err = c.usecase.Publish2Wilen(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
+
+	if err != nil {
+
+		code, err := utils.WrapError(err)
+
+		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
+	}
+
+	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), "success publish event 2wilen")
 
 }

@@ -7,6 +7,7 @@ var TOPIC_SUBMISSION string
 var TOPIC_SUBMISSION_LOS string
 var TOPIC_INSERT_CUSTOMER string
 var TOPIC_SUBMISSION_PRINCIPLE string
+var TOPIC_SUBMISSION_2WILEN string
 
 // Event Driven Key
 var KEY_PREFIX_FILTERING string
@@ -17,6 +18,7 @@ var KEY_PREFIX_CALLBACK string
 var KEY_PREFIX_CALLBACK_GOLIVE string
 var KEY_PREFIX_UPDATE_CUSTOMER string
 var KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE string
+var KEY_PREFIX_CANCEL_ORDER_2WILEN string
 
 const (
 	FLAG_LOS                         = "LOS"
@@ -747,7 +749,8 @@ const (
 	REASON_CANCEL         = "PENGAJUAN DIBATALKAN"
 	REASON_CREDIT_PROCESS = "PENGAJUAN DALAM CREDIT PROSES"
 
-	FINANCE_PURPOSE_MODAL_KERJA = "Modal Kerja Fasilitas Modal Usaha"
+	FINANCE_PURPOSE_MODAL_KERJA                   = "Modal Kerja Fasilitas Modal Usaha"
+	FINANCE_PURPOSE_MULTIGUNA_PEMBAYARAN_ANGSURAN = "Multiguna Pembayaran dengan Angsuran"
 
 	PRINCIPLE_STATUS_ASSET_APPROVE   = "ASSET-A"
 	PRINCIPLE_STATUS_ASSET_REJECT    = "ASSET-R"
@@ -778,4 +781,29 @@ const (
 
 	MARSEV_SOURCE_APPLICATION_KPM = "KPM"
 	ERROR_MAX_EXCEED              = "max retry exceed"
+
+	//2Wilen
+	GROUP_2WILEN                        = "2Wilen"
+	KEY_PPID_SIMULASI                   = "prefix_prospect_id_simulasi"
+	DECISION_KPM_APPROVE                = "KPM-APPROVED"
+	DECISION_KPM_REJECT                 = "KPM-REJECTED"
+	DECISION_KPM_READJUST               = "KPM-READJUST"
+	READJUST_LOAN_AMOUNT_CODE_2WILEN    = "2201"
+	READJUST_LOAN_AMOUNT_REASON_2WILEN  = "Nilai Pinjaman Lebih Dari Maksimal Pinjaman"
+	READJUST_LOAN_AMOUNT_CONTEXT_2WILEN = "loan_amount"
+	READJUST_TENOR_CODE_2WILEN          = "2202"
+	READJUST_TENOR_REASON_2WILEN        = "Nilai Installment Tenor Tidak Ditemukan"
+	READJUST_TENOR_CONTEXT_2WILEN       = "tenor"
+	STATUS_KPM_WAIT_2WILEN              = "KPM-WAIT"
+	STATUS_KPM_ERROR_2WILEN             = "KPM-ERROR"
+	STATUS_KPM_CANCEL_2WILEN            = "KPM-CANCEL"
+	STATUS_LOS_CANCEL_2WILEN            = "LOS-CANCEL"
+	STATUS_LOS_REJECTED_2WILEN          = "LOS-REJECTED"
+	STATUS_LOS_PROCESS_2WILEN           = "LOS-PROCESS"
+	STATUS_LOS_APPROVED_2WILEN          = "LOS-APPROVED"
+	STATUS_SALLY_CANCEL_2WILEN          = "SALLY-CANCEL"
+	KPM_WAIT_MESSAGE_2WILEN             = "Pengajuan anda sedang dalam proses analisa kredit"
+	LOS_PROCESS_MESSAGE_2WILEN          = "Pengajuan kamu sedang dalam proses analisa ulang. Harap tunggu informasi selanjutnya."
+	LOS_APPROVE_MESSAGE_2WILEN          = "Pengajuan anda telah disetujui sebelumnya"
+	LOS_CANCEL_MESSAGE_2WILEN           = "Pengajuan anda telah dibatalkan sebelumnya"
 )

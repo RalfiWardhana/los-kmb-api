@@ -21,6 +21,13 @@ import (
 )
 
 type (
+	metrics struct {
+		repository   interfaces.Repository
+		httpclient   httpclient.HttpClient
+		usecase      interfaces.Usecase
+		multiUsecase interfaces.MultiUsecase
+		producer     platformevent.PlatformEventInterface
+	}
 	multiUsecase struct {
 		repository interfaces.Repository
 		httpclient httpclient.HttpClient
@@ -33,6 +40,16 @@ type (
 		producer   platformevent.PlatformEventInterface
 	}
 )
+
+func NewMetrics(repository interfaces.Repository, httpclient httpclient.HttpClient, producer platformevent.PlatformEventInterface, usecase interfaces.Usecase, multiUsecase interfaces.MultiUsecase) interfaces.Metrics {
+	return &metrics{
+		repository:   repository,
+		httpclient:   httpclient,
+		usecase:      usecase,
+		multiUsecase: multiUsecase,
+		producer:     producer,
+	}
+}
 
 func NewMultiUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient, producer platformevent.PlatformEventInterface, usecase interfaces.Usecase) interfaces.MultiUsecase {
 
