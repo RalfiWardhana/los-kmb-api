@@ -292,6 +292,13 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 	}
 
 	if lockingSystem.Reason != "" {
+		var encrypted entity.EncryptString
+		if err = db.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS encrypt`, lockingSystem.IDNumber)).Scan(&encrypted).Error; err != nil {
+			return
+		}
+
+		lockingSystem.IDNumber = encrypted.Encrypt
+
 		if err = db.Create(&lockingSystem).Error; err != nil {
 			return
 		}
@@ -629,10 +636,10 @@ func (r repoHandler) GetAssetReject(chassisNumber string, engineNumber string, l
         FROM trx_filtering AS tf WITH (NOLOCK)
         WHERE (tf.chassis_number = ? OR tf.engine_number = ?)
         AND tf.next_process = 0
-		AND tf.IDNumber IS NOT NULL
-		AND tf.LegalName IS NOT NULL
-		AND tf.SurgateMotherName IS NOT NULL
-		AND tf.BirthDate IS NOT NULL
+		AND tf.id_number IS NOT NULL
+		AND tf.legal_name IS NOT NULL
+		AND tf.surgate_mother_name IS NOT NULL
+		AND tf.birth_date IS NOT NULL
         AND (tf.created_at >= ? AND tf.created_at <= ?)
 
         ORDER BY created_at ASC

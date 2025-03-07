@@ -86,7 +86,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	formatBirthDate, _ := time.ParseInLocation("2006-01-02", req.BirthDate, location)
 
 	var spouseBirthDate *time.Time
-	if req.Spouse.BirthDate != "" {
+	if req.Spouse != nil && req.Spouse.BirthDate != "" {
 		formatSpouseBirthDate, _ := time.ParseInLocation("2006-01-02", req.Spouse.BirthDate, location)
 		tempDate := formatSpouseBirthDate
 		spouseBirthDate = &tempDate
@@ -102,11 +102,20 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		BirthDate:               formatBirthDate,
 		Gender:                  req.Gender,
 		SurgateMotherName:       req.MotherName,
-		SpouseIDNumber:          &req.Spouse.IDNumber,
-		SpouseLegalName:         &req.Spouse.LegalName,
+		SpouseIDNumber:          nil,
+		SpouseLegalName:         nil,
 		SpouseBirthDate:         spouseBirthDate,
-		SpouseGender:            &req.Spouse.Gender,
-		SpouseSurgateMotherName: &req.Spouse.MotherName,
+		SpouseGender:            nil,
+		SpouseSurgateMotherName: nil,
+		ChassisNumber:           req.ChassisNumber,
+		EngineNumber:            req.EngineNumber,
+	}
+
+	if req.Spouse != nil {
+		entityFiltering.SpouseIDNumber = &req.Spouse.IDNumber
+		entityFiltering.SpouseLegalName = &req.Spouse.LegalName
+		entityFiltering.SpouseGender = &req.Spouse.Gender
+		entityFiltering.SpouseSurgateMotherName = &req.Spouse.MotherName
 	}
 
 	customer = append(customer, request.SpouseDupcheck{IDNumber: req.IDNumber, LegalName: req.LegalName, BirthDate: req.BirthDate, MotherName: req.MotherName})
@@ -299,16 +308,13 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		// End | Cek Asset Canceled and Rejected Last 30 Days
 
 		// Start | Cek NokaNosin pindahan dari "dupcheck besaran"
-		entityFiltering.ChassisNumber = req.ChassisNumber
-		entityFiltering.EngineNumber = req.EngineNumber
-
 		reqDupcheck = request.DupcheckApi{
 			ProspectID: req.ProspectID,
 			IDNumber:   req.IDNumber,
 			RangkaNo:   req.ChassisNumber,
 		}
 
-		if req.Spouse != nil {
+		if req.Spouse != nil && req.Spouse.IDNumber != "" {
 			var spouse = request.DupcheckApiSpouse{
 				IDNumber: req.Spouse.IDNumber,
 			}

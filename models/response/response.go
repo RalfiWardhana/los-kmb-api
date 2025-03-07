@@ -509,16 +509,15 @@ type LockSystemConfig struct {
 }
 
 type DataLockSystemConfig struct {
-	LockRejectAttempt     int    `json:"lock_reject_attempt"`
-	LockRejectBan         int    `json:"lock_reject_ban"`
-	LockRejectCheck       int    `json:"lock_reject_check"`
-	LockCancelAttempt     int    `json:"lock_cancel_attempt"`
-	LockCancelBan         int    `json:"lock_cancel_ban"`
-	LockCancelCheck       int    `json:"lock_cancel_check"`
-	LockStartDate         string `json:"lock_start_date"`
-	LockAssetAttemptRetry int    `json:"lock_asset_attempt_retry"`
-	LockAssetBan          int    `json:"lock_asset_ban"`
-	LockAssetCheck        int    `json:"lock_asset_check"`
+	LockRejectAttempt int    `json:"lock_reject_attempt"`
+	LockRejectBan     int    `json:"lock_reject_ban"`
+	LockRejectCheck   int    `json:"lock_reject_check"`
+	LockCancelAttempt int    `json:"lock_cancel_attempt"`
+	LockCancelBan     int    `json:"lock_cancel_ban"`
+	LockCancelCheck   int    `json:"lock_cancel_check"`
+	LockStartDate     string `json:"lock_start_date"`
+	LockAssetBan      int    `json:"lock_asset_ban"`
+	LockAssetCheck    int    `json:"lock_asset_check"`
 }
 
 type DataCheckLockAsset struct {
