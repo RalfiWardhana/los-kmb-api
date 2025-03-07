@@ -393,8 +393,7 @@ func TestFiltering(t *testing.T) {
 					Gender:     "F",
 					MotherName: "ELSA",
 				},
-				CMOID:         "105394",
-				ChassisNumber: "MHFZ3CJ2JNJ001234",
+				CMOID: "105394",
 			},
 			resEmployee: response.EmployeeCMOResponse{
 				EmployeeID:         "105394",
@@ -457,8 +456,7 @@ func TestFiltering(t *testing.T) {
 					Gender:     "F",
 					MotherName: "ELSA",
 				},
-				CMOID:         "105394",
-				ChassisNumber: "MHFZ3CJ2JNJ001234",
+				CMOID: "105394",
 			},
 			resEmployee: response.EmployeeCMOResponse{
 				EmployeeID:         "105394",
@@ -559,8 +557,7 @@ func TestFiltering(t *testing.T) {
 					Gender:     "F",
 					MotherName: "ELSA",
 				},
-				CMOID:         "105394",
-				ChassisNumber: "MHFZ3CJ2JNJ001234",
+				CMOID: "105394",
 			},
 			resEmployee: response.EmployeeCMOResponse{
 				EmployeeID:         "105394",
@@ -662,8 +659,7 @@ func TestFiltering(t *testing.T) {
 					Gender:     "F",
 					MotherName: "ELSA",
 				},
-				CMOID:         "105394",
-				ChassisNumber: "MHFZ3CJ2JNJ001234",
+				CMOID: "105394",
 			},
 			resEmployee: response.EmployeeCMOResponse{
 				EmployeeID:         "105394",

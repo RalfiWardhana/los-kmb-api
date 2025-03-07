@@ -154,14 +154,14 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	// Dikondisikan not-required agar 2Wilen tidak blocking jika data param `ChassisNumber` dan `EngineNumber` kosong
 	// Jika data param `ChassisNumber` atau `EngineNumber` kosong, maka tidak perlu melakukan pengecekan asset
-	if req.ChassisNumber != "" && req.EngineNumber != "" {
+	if req.ChassisNumber != nil && req.EngineNumber != nil && *req.ChassisNumber != "" && *req.EngineNumber != "" {
 		// Start | Cek Asset Canceled and Rejected Last 30 Days
-		canceledRecord, everCancelled, configLockAssetCancel, err := u.usecase.AssetCanceledLast30Days(ctx, req.ProspectID, req.ChassisNumber, req.EngineNumber, accessToken)
+		canceledRecord, everCancelled, configLockAssetCancel, err := u.usecase.AssetCanceledLast30Days(ctx, req.ProspectID, *req.ChassisNumber, *req.EngineNumber, accessToken)
 		if err != nil {
 			return respFiltering, err
 		}
 
-		rejectedRecord, everRejected, configLockAssetReject, err := u.usecase.AssetRejectedLast30Days(ctx, req.ChassisNumber, req.EngineNumber, accessToken)
+		rejectedRecord, everRejected, configLockAssetReject, err := u.usecase.AssetRejectedLast30Days(ctx, *req.ChassisNumber, *req.EngineNumber, accessToken)
 		if err != nil {
 			return respFiltering, err
 		}
@@ -308,10 +308,15 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		// End | Cek Asset Canceled and Rejected Last 30 Days
 
 		// Start | Cek NokaNosin pindahan dari "dupcheck besaran"
+		var chassisNumberStr string
+		if req.ChassisNumber != nil {
+			chassisNumberStr = *req.ChassisNumber
+		}
+
 		reqDupcheck = request.DupcheckApi{
 			ProspectID: req.ProspectID,
 			IDNumber:   req.IDNumber,
-			RangkaNo:   req.ChassisNumber,
+			RangkaNo:   chassisNumberStr,
 		}
 
 		if req.Spouse != nil && req.Spouse.IDNumber != "" {

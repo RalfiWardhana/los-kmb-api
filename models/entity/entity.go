@@ -712,8 +712,8 @@ func (c *TrxBannedPMKDSR) TableName() string {
 type TrxLockSystem struct {
 	ProspectID    string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
 	IDNumber      string    `gorm:"type:varchar(40);column:IDNumber"`
-	ChassisNumber string    `gorm:"type:varchar(30);column:ChassisNumber"`
-	EngineNumber  string    `gorm:"type:varchar(30);column:EngineNumber"`
+	ChassisNumber *string   `gorm:"type:varchar(30);column:ChassisNumber"`
+	EngineNumber  *string   `gorm:"type:varchar(30);column:EngineNumber"`
 	Reason        string    `gorm:"type:varchar(250);column:reason"`
 	CreatedAt     time.Time `gorm:"column:created_at"`
 	UnbanDate     time.Time `gorm:"column:unban_date"`
@@ -885,8 +885,8 @@ type FilteringKMB struct {
 	SpouseBirthDate                 *time.Time  `gorm:"column:spouse_birth_date" json:"spouse_birth_date"`
 	SpouseGender                    *string     `gorm:"column:spouse_gender;type:varchar(10)" json:"spouse_gender"`
 	SpouseSurgateMotherName         *string     `gorm:"column:spouse_surgate_mother_name" json:"spouse_surgate_mother_name"`
-	ChassisNumber                   string      `gorm:"column:chassis_number;type:varchar(50)" json:"chassis_number"`
-	EngineNumber                    string      `gorm:"column:engine_number;type:varchar(50)" json:"engine_number"`
+	ChassisNumber                   *string     `gorm:"column:chassis_number;type:varchar(50)" json:"chassis_number"`
+	EngineNumber                    *string     `gorm:"column:engine_number;type:varchar(50)" json:"engine_number"`
 	CreatedAt                       time.Time   `gorm:"column:created_at" json:"created_at"`
 }
 

@@ -118,11 +118,13 @@ func TestSaveFiltering(t *testing.T) {
 	}
 	historyAsset := structToSlice(historyAssetCheck)
 	var date, _ = time.Parse("2006-01-02", "2025-03-07")
+	chassisNumber := "NOKA123456"
+	engineNumber := "NOMESIN123"
 	lockingSystem := entity.TrxLockSystem{
 		ProspectID:    "SAL011",
 		IDNumber:      "3578102808920088",
-		ChassisNumber: "NOKA123456",
-		EngineNumber:  "NOMESIN123",
+		ChassisNumber: &chassisNumber,
+		EngineNumber:  &engineNumber,
 		Reason:        constant.ASSET_PERNAH_REJECT,
 		CreatedAt:     time.Now(),
 		UnbanDate:     date,
@@ -167,6 +169,8 @@ func TestSaveFiltering(t *testing.T) {
 	mock.ExpectExec(updateRegex).
 		WithArgs(1, historyAssetCheck[0].ChassisNumber, historyAssetCheck[0].EngineNumber).
 		WillReturnResult(sqlmock.NewResult(0, 1)) // No LastInsertId, 1 row affected
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','3578102808920088') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("3578102808920088"))
 
 	mock.ExpectExec(`INSERT INTO "trx_lock_system" (.*)`).
 		WithArgs(lockData...).
