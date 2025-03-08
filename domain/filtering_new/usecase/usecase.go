@@ -171,26 +171,42 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		entityLockingSystem.ChassisNumber = req.ChassisNumber
 		entityLockingSystem.EngineNumber = req.EngineNumber
 
+		var (
+			IDNumberSpouseStr  string
+			LegalNameSpouseStr string
+		)
+
 		if everCancelled {
-			// Check if current customer's ID doesn't match with the canceled record's IDs
-			isCustomerIDNotMatch := req.IDNumber != canceledRecord.IDNumber
 
-			// Only check spouse ID if it's not nil (not empty)
-			isSpouseIDNotMatch := true
+			var (
+				IDNumberCustomerStr  string
+				LegalNameCustomerStr string
+				isIDNumberMatch      bool
+				isLegalNameMatch     bool
+			)
+
+			isIDNumberMatch = true
+			isLegalNameMatch = true
+
 			if canceledRecord.IDNumberSpouse != nil {
-				isSpouseIDNotMatch = req.IDNumber != *canceledRecord.IDNumberSpouse
+				IDNumberSpouseStr = *canceledRecord.IDNumberSpouse
 			}
 
-			// Check if current customer's LegalName doesn't match with the canceled record's Names
-			isCustomerNameNotMatch := req.LegalName != canceledRecord.LegalName
+			IDNumberCustomerStr = canceledRecord.IDNumber
+			if req.IDNumber != IDNumberCustomerStr && req.IDNumber != IDNumberSpouseStr {
+				isIDNumberMatch = false
+			}
 
-			// Only check spouse name if it's not nil (not empty)
-			isSpouseNameNotMatch := true
 			if canceledRecord.LegalNameSpouse != nil {
-				isSpouseNameNotMatch = req.LegalName != *canceledRecord.LegalNameSpouse
+				LegalNameSpouseStr = *canceledRecord.LegalNameSpouse
 			}
 
-			if isCustomerIDNotMatch && isSpouseIDNotMatch {
+			LegalNameCustomerStr = canceledRecord.LegalName
+			if req.LegalName != LegalNameCustomerStr && req.LegalName != LegalNameSpouseStr {
+				isLegalNameMatch = false
+			}
+
+			if !isIDNumberMatch {
 				// Reject if customerID (customer or spouse) doesn't match at all
 
 				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(req.ProspectID, canceledRecord, 1, 1))
@@ -211,7 +227,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 				err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
 				return respFiltering, err
-			} else if isCustomerNameNotMatch && isSpouseNameNotMatch && canceledRecord.LatestRetryNumber == 1 {
+			} else if !isLegalNameMatch && canceledRecord.LatestRetryNumber == 1 {
 				// Reject if customerName (customer or spouse) doesn't match at all and this is canceled record's have been tried once
 
 				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(req.ProspectID, canceledRecord, 1, 1))
@@ -232,7 +248,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 				err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
 				return respFiltering, err
-			} else if isCustomerNameNotMatch && isSpouseNameNotMatch && canceledRecord.LatestRetryNumber == 0 {
+			} else if !isLegalNameMatch && canceledRecord.LatestRetryNumber == 0 {
 				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(req.ProspectID, canceledRecord, 1, 0))
 			} else {
 				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(req.ProspectID, canceledRecord, 0, 0))
@@ -240,20 +256,41 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 		}
 
 		if everRejected {
+			var (
+				BirthDateSpouseStr         string
+				SurgateMotherNameSpouseStr string
+			)
+
+			if rejectedRecord.IDNumberSpouse != nil {
+				IDNumberSpouseStr = *rejectedRecord.IDNumberSpouse
+			}
+
+			if rejectedRecord.LegalNameSpouse != nil {
+				LegalNameSpouseStr = *rejectedRecord.LegalNameSpouse
+			}
+
+			if rejectedRecord.BirthDateSpouse != nil {
+				BirthDateSpouseStr = rejectedRecord.BirthDateSpouse.Format("2006-01-02")
+			}
+
+			if rejectedRecord.SurgateMotherNameSpouse != nil {
+				SurgateMotherNameSpouseStr = *rejectedRecord.SurgateMotherNameSpouse
+			}
+
 			isMatchWithCustomer := req.IDNumber == rejectedRecord.IDNumber && req.LegalName == rejectedRecord.LegalName
 			isMatchWithPersonalDataCustomer := req.BirthDate == rejectedRecord.BirthDate.Format("2006-01-02") && req.MotherName == rejectedRecord.SurgateMotherName
 
 			isMatchWithSpouse := false
 			isMatchWithPersonalDataSpouse := false
 
-			// Only check spouse match if spouse data exists in the rejected record
-			if req.Spouse != nil && rejectedRecord.IDNumberSpouse != nil && rejectedRecord.LegalNameSpouse != nil {
-				isMatchWithSpouse = req.IDNumber == *rejectedRecord.IDNumberSpouse && req.LegalName == *rejectedRecord.LegalNameSpouse
+			// Compare IDNumber && LegalName
+			if req.Spouse != nil && IDNumberSpouseStr != "" && LegalNameSpouseStr != "" {
+				isMatchWithSpouse = req.IDNumber == IDNumberSpouseStr && req.LegalName == LegalNameSpouseStr
 			}
 
-			// Only check spouse personal data match if spouse data exists in the rejected record
-			if req.Spouse != nil && rejectedRecord.BirthDateSpouse != nil && rejectedRecord.SurgateMotherNameSpouse != nil {
-				isMatchWithPersonalDataSpouse = req.Spouse.BirthDate == rejectedRecord.BirthDateSpouse.Format("2006-01-02") && req.Spouse.MotherName == *rejectedRecord.SurgateMotherNameSpouse
+			// Compare BirthDate && SurgateMotherName
+			if req.Spouse != nil && BirthDateSpouseStr != "" && SurgateMotherNameSpouseStr != "" {
+				isMatchWithPersonalDataSpouse = req.BirthDate == BirthDateSpouseStr && req.MotherName == SurgateMotherNameSpouseStr
 			}
 
 			// If there's no exact match with either customer or spouse, REJECT the application
@@ -1890,6 +1927,7 @@ func (u usecase) AssetCanceledLast30Days(ctx context.Context, prospectID string,
 			// Create DataCheckLockAsset from Sally record
 			oldestRecord = response.DataCheckLockAsset{
 				ProspectID:              record.ProspectID,
+				LatestRetryNumber:       journeyRecord.LatestRetryNumber,
 				ChassisNumber:           ChassisNumber,
 				EngineNumber:            EngineNumber,
 				SourceService:           "SALLY",

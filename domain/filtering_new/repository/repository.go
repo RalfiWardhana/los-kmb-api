@@ -507,6 +507,25 @@ func (r *repoHandler) GetConfig(groupName string, lob string, key string) (appCo
 	return appConfig, err
 }
 
+func (r repoHandler) getLatestRetryNumber(db *gorm.DB, chassisNumber, engineNumber, decision string) (int, error) {
+	var maxRetry struct {
+		LatestRetryNumber int `gorm:"column:latest_retry_number"`
+	}
+
+	err := db.Raw(`
+        SELECT COALESCE(MAX(NumberOfRetry), 0) AS latest_retry_number 
+        FROM trx_history_checking_asset WITH (NOLOCK)
+        WHERE (ChassisNumber = ? OR EngineNumber = ?)
+        AND FinalDecision = ? AND IsAssetLocked = 0
+    `, chassisNumber, engineNumber, decision).Scan(&maxRetry).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	return maxRetry.LatestRetryNumber, nil
+}
+
 func (r repoHandler) GetAssetCancel(chassisNumber string, engineNumber string, lockSystemConfig response.LockSystemConfig) (historyData response.DataCheckLockAsset, found bool, err error) {
 	var x sql.TxOptions
 
@@ -547,6 +566,11 @@ func (r repoHandler) GetAssetCancel(chassisNumber string, engineNumber string, l
 	err = db.Raw(query, chassisNumber, engineNumber, startDateStr).Scan(&historyData).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
+			latestRetryNumber, retryErr := r.getLatestRetryNumber(db, chassisNumber, engineNumber, "CAN")
+			if retryErr != nil {
+				return historyData, false, retryErr
+			}
+			historyData.LatestRetryNumber = latestRetryNumber
 			return historyData, false, nil
 		}
 		return historyData, false, err
@@ -556,22 +580,11 @@ func (r repoHandler) GetAssetCancel(chassisNumber string, engineNumber string, l
 
 	// If data was found, get the latest retry number
 	if found {
-		var maxRetry struct {
-			LatestRetryNumber int `gorm:"column:latest_retry_number"`
+		latestRetryNumber, retryErr := r.getLatestRetryNumber(db, historyData.ChassisNumber, historyData.EngineNumber, "CAN")
+		if retryErr != nil {
+			return historyData, false, retryErr
 		}
-
-		// Query to get max retry number for this chassis/engine and decision
-		if err = db.Raw(`
-            SELECT COALESCE(MAX(NumberOfRetry), 0) AS latest_retry_number 
-            FROM trx_history_checking_asset WITH (NOLOCK)
-            WHERE (ChassisNumber = ? OR EngineNumber = ?)
-            AND FinalDecision = ? AND IsAssetLocked = 0
-        `, historyData.ChassisNumber, historyData.EngineNumber, historyData.Decision).Scan(&maxRetry).Error; err != nil {
-			return historyData, false, err
-		}
-
-		// Assign the latest retry number to the response
-		historyData.LatestRetryNumber = maxRetry.LatestRetryNumber
+		historyData.LatestRetryNumber = latestRetryNumber
 	}
 
 	return historyData, found, nil
@@ -663,22 +676,11 @@ func (r repoHandler) GetAssetReject(chassisNumber string, engineNumber string, l
 		historyData = results[0]
 		found = true
 
-		var maxRetry struct {
-			LatestRetryNumber int `gorm:"column:latest_retry_number"`
+		latestRetryNumber, retryErr := r.getLatestRetryNumber(db, historyData.ChassisNumber, historyData.EngineNumber, "REJ")
+		if retryErr != nil {
+			return historyData, false, retryErr
 		}
-
-		// Query to get max retry number for this chassis/engine and decision
-		if err = db.Raw(`
-			SELECT COALESCE(MAX(NumberOfRetry), 0) AS latest_retry_number 
-			FROM trx_history_checking_asset WITH (NOLOCK)
-			WHERE (ChassisNumber = ? OR EngineNumber = ?)
-			AND FinalDecision = ? AND IsAssetLocked = 0
-		`, historyData.ChassisNumber, historyData.EngineNumber, historyData.Decision).Scan(&maxRetry).Error; err != nil {
-			return historyData, false, err
-		}
-
-		// Assign the latest retry number to the response
-		historyData.LatestRetryNumber = maxRetry.LatestRetryNumber
+		historyData.LatestRetryNumber = latestRetryNumber
 	}
 
 	return historyData, found, nil
