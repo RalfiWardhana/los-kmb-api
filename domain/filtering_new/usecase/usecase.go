@@ -193,7 +193,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 			if isCustomerIDNotMatch && isSpouseIDNotMatch {
 				// Reject if customerID (customer or spouse) doesn't match at all
 
-				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(canceledRecord, 1, 1))
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(req.ProspectID, canceledRecord, 1, 1))
 
 				respFiltering = response.Filtering{
 					ProspectID:  req.ProspectID,
@@ -214,7 +214,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 			} else if isCustomerNameNotMatch && isSpouseNameNotMatch && canceledRecord.LatestRetryNumber == 1 {
 				// Reject if customerName (customer or spouse) doesn't match at all and this is canceled record's have been tried once
 
-				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(canceledRecord, 1, 1))
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(req.ProspectID, canceledRecord, 1, 1))
 
 				respFiltering = response.Filtering{
 					ProspectID:  req.ProspectID,
@@ -225,7 +225,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 				}
 
 				entityFiltering.Decision = constant.DECISION_REJECT
-				entityFiltering.Reason = constant.REASON_REJECT_ASSET_CHECK
+				entityFiltering.Reason = constant.REASON_REJECT_ASSET_CHECK_DATA_CHANGED
 
 				entityLockingSystem.Reason = constant.ASSET_PERNAH_CANCEL
 				entityLockingSystem.UnbanDate = time.Now().AddDate(0, 0, configLockAssetCancel.LockAssetBan+1)
@@ -233,9 +233,9 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 				err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
 				return respFiltering, err
 			} else if isCustomerNameNotMatch && isSpouseNameNotMatch && canceledRecord.LatestRetryNumber == 0 {
-				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(canceledRecord, 1, 0))
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(req.ProspectID, canceledRecord, 1, 0))
 			} else {
-				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(canceledRecord, 0, 0))
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(req.ProspectID, canceledRecord, 0, 0))
 			}
 		}
 
@@ -247,12 +247,12 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 			isMatchWithPersonalDataSpouse := false
 
 			// Only check spouse match if spouse data exists in the rejected record
-			if rejectedRecord.IDNumberSpouse != nil && rejectedRecord.LegalNameSpouse != nil {
+			if req.Spouse != nil && rejectedRecord.IDNumberSpouse != nil && rejectedRecord.LegalNameSpouse != nil {
 				isMatchWithSpouse = req.IDNumber == *rejectedRecord.IDNumberSpouse && req.LegalName == *rejectedRecord.LegalNameSpouse
 			}
 
 			// Only check spouse personal data match if spouse data exists in the rejected record
-			if rejectedRecord.BirthDateSpouse != nil && rejectedRecord.SurgateMotherNameSpouse != nil {
+			if req.Spouse != nil && rejectedRecord.BirthDateSpouse != nil && rejectedRecord.SurgateMotherNameSpouse != nil {
 				isMatchWithPersonalDataSpouse = req.Spouse.BirthDate == rejectedRecord.BirthDateSpouse.Format("2006-01-02") && req.Spouse.MotherName == *rejectedRecord.SurgateMotherNameSpouse
 			}
 
@@ -260,7 +260,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 			if !isMatchWithCustomer && !isMatchWithSpouse {
 				// Reject if customerID (customer or spouse) doesn't match at all
 
-				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(rejectedRecord, 1, 1))
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(req.ProspectID, rejectedRecord, 1, 1))
 
 				respFiltering = response.Filtering{
 					ProspectID:  req.ProspectID,
@@ -281,7 +281,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 			} else if !isMatchWithPersonalDataCustomer && !isMatchWithPersonalDataSpouse && rejectedRecord.LatestRetryNumber == 1 {
 				// Reject if customerName (customer or spouse) doesn't match at all and this is rejected record's have been tried once
 
-				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(rejectedRecord, 1, 1))
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(req.ProspectID, rejectedRecord, 1, 1))
 
 				respFiltering = response.Filtering{
 					ProspectID:  req.ProspectID,
@@ -292,7 +292,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 				}
 
 				entityFiltering.Decision = constant.DECISION_REJECT
-				entityFiltering.Reason = constant.REASON_REJECT_ASSET_CHECK
+				entityFiltering.Reason = constant.REASON_REJECT_ASSET_CHECK_DATA_CHANGED
 
 				entityLockingSystem.Reason = constant.ASSET_PERNAH_REJECT
 				entityLockingSystem.UnbanDate = time.Now().AddDate(0, 0, configLockAssetReject.LockAssetBan+1)
@@ -300,9 +300,9 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 				err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
 				return respFiltering, err
 			} else if !isMatchWithPersonalDataCustomer && !isMatchWithPersonalDataSpouse && rejectedRecord.LatestRetryNumber == 0 {
-				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(rejectedRecord, 1, 0))
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(req.ProspectID, rejectedRecord, 1, 0))
 			} else {
-				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(rejectedRecord, 0, 0))
+				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(req.ProspectID, rejectedRecord, 0, 0))
 			}
 		}
 		// End | Cek Asset Canceled and Rejected Last 30 Days
@@ -1939,18 +1939,19 @@ func (u usecase) AssetRejectedLast30Days(ctx context.Context, ChassisNumber stri
 	return
 }
 
-func insertDataHistoryChecking(oldestRecord response.DataCheckLockAsset, isPersonalDataChanged int, isAssetLocking int) entity.TrxHistoryCheckingAsset {
+func insertDataHistoryChecking(prospectID string, oldestRecord response.DataCheckLockAsset, isPersonalDataChanged int, isAssetLocking int) entity.TrxHistoryCheckingAsset {
 	if isPersonalDataChanged == 1 {
 		oldestRecord.LatestRetryNumber = oldestRecord.LatestRetryNumber + 1
 	}
 
 	return entity.TrxHistoryCheckingAsset{
 		ID:                      uuid.New().String(),
-		ProspectID:              oldestRecord.ProspectID,
+		ProspectID:              prospectID,
 		NumberOfRetry:           oldestRecord.LatestRetryNumber,
 		FinalDecision:           oldestRecord.Decision,
 		Reason:                  oldestRecord.Reason,
 		SourceService:           oldestRecord.SourceService,
+		SourceProspectID:        oldestRecord.ProspectID,
 		SourceDecisionCreatedAt: oldestRecord.CreatedAt,
 		IsDataChanged:           isPersonalDataChanged,
 		IsAssetLocked:           isAssetLocking,

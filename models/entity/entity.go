@@ -901,6 +901,7 @@ type TrxHistoryCheckingAsset struct {
 	FinalDecision           string     `gorm:"type:varchar(20);column:FinalDecision" json:"final_decision"`
 	Reason                  string     `gorm:"type:varchar(250);column:Reason" json:"reason"`
 	SourceService           string     `gorm:"type:varchar(5);column:SourceService" json:"source_service"`
+	SourceProspectID        string     `gorm:"type:varchar(20);column:SourceProspectID" json:"source_prospect_id"`
 	SourceDecisionCreatedAt time.Time  `gorm:"column:SourceDecisionCreatedAt" json:"source_decision_created_at"`
 	IsDataChanged           int        `gorm:"column:IsDataChanged" json:"is_data_changed"`
 	IsAssetLocked           int        `gorm:"column:IsAssetLocked" json:"is_asset_locked"`

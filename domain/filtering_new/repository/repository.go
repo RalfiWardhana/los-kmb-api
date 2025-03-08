@@ -518,11 +518,10 @@ func (r repoHandler) GetAssetCancel(chassisNumber string, engineNumber string, l
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	endDate := time.Now()
-	startDate := endDate.AddDate(0, 0, -lockSystemConfig.Data.LockAssetCheck)
+	currentDate := time.Now()
+	startDate := currentDate.AddDate(0, 0, -lockSystemConfig.Data.LockAssetCheck)
 
 	startDateStr := startDate.Format("2006-01-02")
-	endDateStr := endDate.Format("2006-01-02")
 
 	query := `
         SELECT TOP 1
@@ -541,11 +540,11 @@ func (r repoHandler) GetAssetCancel(chassisNumber string, engineNumber string, l
         LEFT JOIN trx_customer_spouse AS tcs ON (tri.ProspectID = tcs.ProspectID)
         WHERE (tri.chassis_number = ? OR tri.engine_number = ?)
         AND ts.decision = 'CAN'
-        AND (ts.created_at >= ? AND ts.created_at <= ?)
+        AND ts.created_at >= ?
         ORDER BY ts.created_at ASC
     `
 
-	err = db.Raw(query, chassisNumber, engineNumber, startDateStr, endDateStr).Scan(&historyData).Error
+	err = db.Raw(query, chassisNumber, engineNumber, startDateStr).Scan(&historyData).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return historyData, false, nil
@@ -590,11 +589,10 @@ func (r repoHandler) GetAssetReject(chassisNumber string, engineNumber string, l
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	endDate := time.Now()
-	startDate := endDate.AddDate(0, 0, -lockSystemConfig.Data.LockAssetCheck)
+	currentDate := time.Now()
+	startDate := currentDate.AddDate(0, 0, -lockSystemConfig.Data.LockAssetCheck)
 
 	startDateStr := startDate.Format("2006-01-02")
-	endDateStr := endDate.Format("2006-01-02")
 
 	query := `
         SELECT TOP 1
@@ -614,7 +612,7 @@ func (r repoHandler) GetAssetReject(chassisNumber string, engineNumber string, l
         LEFT JOIN trx_customer_spouse AS tcs WITH (NOLOCK) ON (tri.ProspectID = tcs.ProspectID)
         WHERE (tri.chassis_number = ? OR tri.engine_number = ?)
         AND ts.decision = 'REJ'
-        AND (ts.created_at >= ? AND ts.created_at <= ?)
+        AND ts.created_at >= ?
 
         UNION ALL
 
@@ -640,14 +638,14 @@ func (r repoHandler) GetAssetReject(chassisNumber string, engineNumber string, l
 		AND tf.legal_name IS NOT NULL
 		AND tf.surgate_mother_name IS NOT NULL
 		AND tf.birth_date IS NOT NULL
-        AND (tf.created_at >= ? AND tf.created_at <= ?)
+        AND tf.created_at >= ?
 
         ORDER BY created_at ASC
     `
 
 	if err = db.Raw(query,
-		chassisNumber, engineNumber, startDateStr, endDateStr, // Parameters for first query
-		chassisNumber, engineNumber, startDateStr, endDateStr). // Parameters for second query
+		chassisNumber, engineNumber, startDateStr, // Parameters for first query
+		chassisNumber, engineNumber, startDateStr). // Parameters for second query
 		Scan(&results).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return historyData, false, nil
