@@ -595,53 +595,59 @@ func (r repoHandler) GetAssetReject(chassisNumber string, engineNumber string, l
 	startDateStr := startDate.Format("2006-01-02")
 
 	query := `
-        SELECT TOP 1
-            tri.ProspectID, tri.chassis_number, tri.engine_number, 'JOURNEY' AS source_service, 
-            ts.decision, ts.reason, ts.created_at,
-            scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-            scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
-            tcp.BirthDate,
-            scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
-            tcs.IDNumber AS IDNumber_spouse,
-            tcs.LegalName AS LegalName_spouse,
-            tcs.BirthDate AS BirthDate_spouse,
-            tcs.SurgateMotherName AS SurgateMotherName_spouse
-        FROM trx_item AS tri WITH (NOLOCK)
-        JOIN trx_status AS ts WITH (NOLOCK) ON (tri.ProspectID = ts.ProspectID)
-        JOIN trx_customer_personal AS tcp WITH (NOLOCK) ON (tri.ProspectID = tcp.ProspectID)
-        LEFT JOIN trx_customer_spouse AS tcs WITH (NOLOCK) ON (tri.ProspectID = tcs.ProspectID)
-        WHERE (tri.chassis_number = ? OR tri.engine_number = ?)
-        AND ts.decision = 'REJ'
-        AND ts.created_at >= ?
+		WITH journey_results AS (
+			SELECT TOP 1
+				tri.ProspectID, tri.chassis_number, tri.engine_number, 'JOURNEY' AS source_service, 
+				ts.decision, ts.reason, ts.created_at,
+				scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+				scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+				tcp.BirthDate,
+				scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+				tcs.IDNumber AS IDNumber_spouse,
+				tcs.LegalName AS LegalName_spouse,
+				tcs.BirthDate AS BirthDate_spouse,
+				tcs.SurgateMotherName AS SurgateMotherName_spouse
+			FROM trx_item AS tri WITH (NOLOCK)
+			JOIN trx_status AS ts WITH (NOLOCK) ON (tri.ProspectID = ts.ProspectID)
+			JOIN trx_customer_personal AS tcp WITH (NOLOCK) ON (tri.ProspectID = tcp.ProspectID)
+			LEFT JOIN trx_customer_spouse AS tcs WITH (NOLOCK) ON (tri.ProspectID = tcs.ProspectID)
+			WHERE (tri.chassis_number = ? OR tri.engine_number = ?)
+			AND ts.decision = 'REJ'
+			AND ts.created_at >= ?
+			ORDER BY ts.created_at ASC
+		),
+		filtering_results AS (
+			SELECT TOP 1
+				tf.prospect_id AS ProspectID, tf.chassis_number, tf.engine_number, 'FILTERING' AS source_service,
+				CASE
+					WHEN tf.next_process = 0 THEN 'REJ'
+					ELSE NULL
+				END AS decision, 
+				tf.reason, tf.created_at,
+				scp.dbo.DEC_B64('SEC', tf.id_number) AS IDNumber,
+				scp.dbo.DEC_B64('SEC', tf.legal_name) AS LegalName,
+				tf.birth_date AS BirthDate,
+				scp.dbo.DEC_B64('SEC', tf.surgate_mother_name) AS SurgateMotherName,
+				scp.dbo.DEC_B64('SEC', tf.spouse_id_number) AS IDNumber_spouse,
+				scp.dbo.DEC_B64('SEC', tf.spouse_legal_name) AS LegalName_spouse,
+				tf.spouse_birth_date AS BirthDate_spouse,
+				scp.dbo.DEC_B64('SEC', tf.spouse_surgate_mother_name) AS SurgateMotherName_spouse
+			FROM trx_filtering AS tf WITH (NOLOCK)
+			WHERE (tf.chassis_number = ? OR tf.engine_number = ?)
+			AND tf.next_process = 0
+			AND tf.id_number IS NOT NULL
+			AND tf.legal_name IS NOT NULL
+			AND tf.surgate_mother_name IS NOT NULL
+			AND tf.birth_date IS NOT NULL
+			AND tf.created_at >= ?
+			ORDER BY tf.created_at ASC
+		)
 
-        UNION ALL
-
-        SELECT TOP 1
-            tf.prospect_id AS ProspectID, tf.chassis_number, tf.engine_number, 'FILTERING' AS source_service,
-            CASE
-                WHEN tf.next_process = 0 THEN 'REJ'
-                ELSE NULL
-            END AS decision, 
-            tf.reason, tf.created_at,
-            scp.dbo.DEC_B64('SEC', tf.id_number) AS IDNumber,
-            scp.dbo.DEC_B64('SEC', tf.legal_name) AS LegalName,
-            tf.birth_date AS BirthDate,
-            scp.dbo.DEC_B64('SEC', tf.surgate_mother_name) AS SurgateMotherName,
-            scp.dbo.DEC_B64('SEC', tf.spouse_id_number) AS IDNumber_spouse,
-            scp.dbo.DEC_B64('SEC', tf.spouse_legal_name) AS LegalName_spouse,
-            tf.spouse_birth_date AS BirthDate_spouse,
-            scp.dbo.DEC_B64('SEC', tf.spouse_surgate_mother_name) AS SurgateMotherName_spouse
-        FROM trx_filtering AS tf WITH (NOLOCK)
-        WHERE (tf.chassis_number = ? OR tf.engine_number = ?)
-        AND tf.next_process = 0
-		AND tf.id_number IS NOT NULL
-		AND tf.legal_name IS NOT NULL
-		AND tf.surgate_mother_name IS NOT NULL
-		AND tf.birth_date IS NOT NULL
-        AND tf.created_at >= ?
-
-        ORDER BY created_at ASC
-    `
+		SELECT * FROM journey_results WITH (NOLOCK)
+		UNION ALL
+		SELECT * FROM filtering_results WITH (NOLOCK)
+		ORDER BY created_at ASC
+	`
 
 	if err = db.Raw(query,
 		chassisNumber, engineNumber, startDateStr, // Parameters for first query
