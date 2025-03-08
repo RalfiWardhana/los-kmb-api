@@ -507,7 +507,7 @@ func (r *repoHandler) GetConfig(groupName string, lob string, key string) (appCo
 	return appConfig, err
 }
 
-func (r repoHandler) getLatestRetryNumber(db *gorm.DB, chassisNumber, engineNumber, decision string) (int, error) {
+func (r repoHandler) getLatestRetryNumber(db *gorm.DB, chassisNumber, engineNumber, decision string, startDate string) (int, error) {
 	var maxRetry struct {
 		LatestRetryNumber int `gorm:"column:latest_retry_number"`
 	}
@@ -516,8 +516,8 @@ func (r repoHandler) getLatestRetryNumber(db *gorm.DB, chassisNumber, engineNumb
         SELECT COALESCE(MAX(NumberOfRetry), 0) AS latest_retry_number 
         FROM trx_history_checking_asset WITH (NOLOCK)
         WHERE (ChassisNumber = ? OR EngineNumber = ?)
-        AND FinalDecision = ? AND IsAssetLocked = 0
-    `, chassisNumber, engineNumber, decision).Scan(&maxRetry).Error
+        AND FinalDecision = ? AND IsAssetLocked = 0 AND CreatedAt >= ?
+    `, chassisNumber, engineNumber, decision, startDate).Scan(&maxRetry).Error
 
 	if err != nil {
 		return 0, err
@@ -566,7 +566,7 @@ func (r repoHandler) GetAssetCancel(chassisNumber string, engineNumber string, l
 	err = db.Raw(query, chassisNumber, engineNumber, startDateStr).Scan(&historyData).Error
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
-			latestRetryNumber, retryErr := r.getLatestRetryNumber(db, chassisNumber, engineNumber, "CAN")
+			latestRetryNumber, retryErr := r.getLatestRetryNumber(db, chassisNumber, engineNumber, "CAN", startDateStr)
 			if retryErr != nil {
 				return historyData, false, retryErr
 			}
@@ -580,7 +580,7 @@ func (r repoHandler) GetAssetCancel(chassisNumber string, engineNumber string, l
 
 	// If data was found, get the latest retry number
 	if found {
-		latestRetryNumber, retryErr := r.getLatestRetryNumber(db, historyData.ChassisNumber, historyData.EngineNumber, "CAN")
+		latestRetryNumber, retryErr := r.getLatestRetryNumber(db, historyData.ChassisNumber, historyData.EngineNumber, "CAN", startDateStr)
 		if retryErr != nil {
 			return historyData, false, retryErr
 		}
@@ -676,7 +676,7 @@ func (r repoHandler) GetAssetReject(chassisNumber string, engineNumber string, l
 		historyData = results[0]
 		found = true
 
-		latestRetryNumber, retryErr := r.getLatestRetryNumber(db, historyData.ChassisNumber, historyData.EngineNumber, "REJ")
+		latestRetryNumber, retryErr := r.getLatestRetryNumber(db, historyData.ChassisNumber, historyData.EngineNumber, "REJ", startDateStr)
 		if retryErr != nil {
 			return historyData, false, retryErr
 		}
