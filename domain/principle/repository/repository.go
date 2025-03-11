@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"los-kmb-api/domain/principle/interfaces"
 	"los-kmb-api/models/entity"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/utils"
 	"os"
 	"strconv"
 	"time"
@@ -253,8 +255,6 @@ func (r repoHandler) GetTrxPrincipleStatus(nik string) (data entity.TrxPrinciple
 	if err = r.newKmb.Raw(fmt.Sprintf("SELECT TOP 1 * FROM trx_principle_status WITH (nolock) WHERE IDNumber = '%s' ORDER BY created_at DESC", nik)).Scan(&data).Error; err != nil {
 		return
 	}
-
-	fmt.Println(data)
 
 	return
 }
@@ -810,4 +810,168 @@ func (r repoHandler) GetTrxStatus(prospectID string) (status entity.TrxStatus, e
 	}
 
 	return
+}
+
+func (r repoHandler) GetBannedChassisNumber(chassisNumber string) (data entity.TrxBannedChassisNumber, err error) {
+
+	date := time.Now().AddDate(0, 0, -30).Format(constant.FORMAT_DATE)
+
+	if err = r.newKmb.Raw(fmt.Sprintf(`SELECT * FROM trx_banned_chassis_number WITH (nolock) WHERE chassis_number = '%s' AND CAST(created_at as DATE) >= '%s'`, chassisNumber, date)).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetMappingNegativeCustomer(req response.NegativeCustomer) (data entity.MappingNegativeCustomer, err error) {
+
+	query := `SELECT TOP 1 * FROM m_mapping_negative_customer WHERE is_active = ? AND bad_type = ? AND is_blacklist = ? AND is_highrisk = ?`
+
+	if err = r.newKmb.Raw(query, req.IsActive, req.BadType, req.IsBlacklist, req.IsHighrisk).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+	}
+	return
+}
+
+func (r repoHandler) SaveTrxKPM(data entity.TrxKPM) (err error) {
+
+	return r.newKmb.Transaction(func(tx *gorm.DB) error {
+
+		var encrypted entity.Encrypted
+		if err := tx.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS LegalName, SCP.dbo.ENC_B64('SEC','%s') AS SurgateMotherName, SCP.dbo.ENC_B64('SEC','%s') AS MobilePhone, 
+			SCP.dbo.ENC_B64('SEC','%s') AS Email, SCP.dbo.ENC_B64('SEC','%s') AS BirthPlace, SCP.dbo.ENC_B64('SEC','%s') AS ResidenceAddress, SCP.dbo.ENC_B64('SEC','%s') AS IDNumber`,
+			data.LegalName, data.SurgateMotherName, data.MobilePhone, data.Email, data.BirthPlace, data.ResidenceAddress, data.IDNumber)).Scan(&encrypted).Error; err != nil {
+			return err
+		}
+
+		data.LegalName = encrypted.LegalName
+		data.SurgateMotherName = encrypted.SurgateMotherName
+		data.MobilePhone = encrypted.MobilePhone
+		data.Email = encrypted.Email
+		data.BirthPlace = encrypted.BirthPlace
+		data.ResidenceAddress = encrypted.ResidenceAddress
+		data.IDNumber = encrypted.IDNumber
+
+		if err := tx.Create(&data).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+}
+
+func (r repoHandler) SaveTrxKPMStatus(data entity.TrxKPMStatus) (err error) {
+
+	return r.newKmb.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&data).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+}
+
+func (r repoHandler) GetTrxKPM(prospectID string) (data entity.TrxKPM, err error) {
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_kpm WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmb.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	var decrypted entity.Encrypted
+
+	if err = r.newKmb.Raw(fmt.Sprintf(`SELECT scp.dbo.DEC_B64('SEC', '%s') AS LegalName, scp.dbo.DEC_B64('SEC','%s') AS SurgateMotherName,
+		scp.dbo.DEC_B64('SEC', '%s') AS MobilePhone, scp.dbo.DEC_B64('SEC', '%s') AS Email,
+		scp.dbo.DEC_B64('SEC', '%s') AS BirthPlace, scp.dbo.DEC_B64('SEC','%s') AS ResidenceAddress,
+		scp.dbo.DEC_B64('SEC', '%s') AS IDNumber`, data.LegalName, data.SurgateMotherName, data.MobilePhone,
+		data.Email, data.BirthPlace, data.ResidenceAddress, data.IDNumber)).Scan(&decrypted).Error; err != nil {
+		return
+	}
+
+	data.LegalName = decrypted.LegalName
+	data.SurgateMotherName = decrypted.SurgateMotherName
+	data.MobilePhone = decrypted.MobilePhone
+	data.Email = decrypted.Email
+	data.BirthPlace = decrypted.BirthPlace
+	data.ResidenceAddress = decrypted.ResidenceAddress
+	data.IDNumber = decrypted.IDNumber
+
+	return
+}
+
+func (r repoHandler) ExceedErrorTrxKPM(kpmId int) int {
+
+	var trxError entity.TrxKPMError
+
+	result := r.newKmb.Raw("SELECT KpmID FROM trx_kpm_error WITH (nolock) WHERE KpmID = ? AND created_at >= DATEADD (HOUR , -1 , GETDATE())", kpmId).Scan(&trxError)
+
+	return int(result.RowsAffected)
+
+}
+
+func (r repoHandler) GetReadjustCountTrxKPM(prospectId string) int {
+
+	var trxKPM entity.TrxKPM
+
+	result := r.newKmb.Raw("SELECT id FROM trx_kpm WITH (nolock) WHERE ProspectID = ? AND Decision = ?", prospectId, constant.DECISION_KPM_READJUST).Scan(&trxKPM)
+
+	return int(result.RowsAffected)
+
+}
+
+func (r repoHandler) GetTrxKPMStatus(IDNumber string) (data entity.TrxKPMStatus, err error) {
+
+	if err = r.newKmb.Raw(fmt.Sprintf("SELECT TOP 1 tks.* FROM trx_kpm_status tks WITH (nolock) JOIN trx_kpm tk ON tks.ProspectID = tk.ProspectID WHERE tk.IDNumber = SCP.dbo.ENC_B64('SEC','%s') ORDER BY tks.created_at DESC", IDNumber)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetTrxKPMStatusHistory(prospectId string) (data []entity.TrxKPMStatusHistory, err error) {
+
+	query := fmt.Sprintf("SELECT * FROM trx_kpm_status WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC", prospectId)
+
+	if err = r.newKmb.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) UpdateTrxKPMDecision(id string, prospectID string, decision string) (err error) {
+
+	return r.newKmb.Transaction(func(tx *gorm.DB) error {
+
+		if err := tx.Model(&entity.TrxKPM{}).
+			Where("id = ?", id).
+			Updates(&entity.TrxKPM{
+				Decision:  decision,
+				UpdatedAt: time.Now(),
+			}).Error; err != nil {
+			return err
+		}
+
+		data := entity.TrxKPMStatus{
+			ID:         utils.GenerateUUID(),
+			ProspectID: prospectID,
+			Decision:   decision,
+			CreatedAt:  time.Now(),
+			UpdatedAt:  time.Now(),
+		}
+
+		if err := tx.Create(&data).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+
 }

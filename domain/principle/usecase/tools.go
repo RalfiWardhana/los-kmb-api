@@ -97,3 +97,88 @@ func (u usecase) PrinciplePublish(ctx context.Context, req request.PrinciplePubl
 		AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
 	}), 0)
 }
+
+func (u usecase) Step2Wilen(idNumber string) (resp response.Step2Wilen, err error) {
+
+	data, err := u.repository.GetTrxKPMStatus(idNumber)
+	if err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return
+		}
+
+		return response.Step2Wilen{}, nil
+	}
+
+	resp.ProspectID = data.ProspectID
+	resp.UpdatedAt = data.UpdatedAt.Format(constant.FORMAT_DATE_TIME)
+
+	switch data.Decision {
+
+	case constant.DECISION_KPM_READJUST:
+
+		resp.ColorCode = "#FFCC00"
+		resp.Status = constant.DECISION_KPM_READJUST
+
+	case constant.STATUS_KPM_WAIT_2WILEN:
+
+		resp.ColorCode = "#FFCC00"
+		resp.Status = constant.STATUS_KPM_WAIT_2WILEN
+
+	case constant.DECISION_KPM_APPROVE:
+
+		resp.ColorCode = "#00FF00"
+		resp.Status = constant.DECISION_KPM_APPROVE
+
+	case constant.STATUS_LOS_PROCESS_2WILEN:
+
+		trxStatus, err := u.repository.GetTrxStatus(data.ProspectID)
+		if err != nil {
+			if err.Error() != constant.RECORD_NOT_FOUND {
+				return response.Step2Wilen{}, err
+			} else {
+				resp.ColorCode = "#FFCC00"
+				resp.Status = constant.STATUS_LOS_PROCESS_2WILEN
+				return resp, nil
+			}
+		}
+
+		if trxStatus != (entity.TrxStatus{}) {
+			if trxStatus.Activity == constant.ACTIVITY_STOP {
+				switch trxStatus.Decision {
+				case constant.DB_DECISION_CANCEL:
+					_ = u.repository.UpdateTrxKPMDecision(data.ID, data.ProspectID, constant.STATUS_LOS_CANCEL_2WILEN)
+					return response.Step2Wilen{}, err
+				case constant.DB_DECISION_REJECT:
+					_ = u.repository.UpdateTrxKPMDecision(data.ID, data.ProspectID, constant.STATUS_LOS_REJECTED_2WILEN)
+					return response.Step2Wilen{}, err
+				case constant.DB_DECISION_APR:
+					_ = u.repository.UpdateTrxKPMDecision(data.ID, data.ProspectID, constant.STATUS_LOS_APPROVED_2WILEN)
+					return response.Step2Wilen{}, err
+				}
+			}
+		}
+
+		resp.ColorCode = "#FFCC00"
+		resp.Status = constant.STATUS_LOS_PROCESS_2WILEN
+	}
+
+	return
+}
+
+func (u usecase) Publish2Wilen(ctx context.Context, req request.Publish2Wilen, accessToken string) (err error) {
+
+	trxKPM, err := u.repository.GetTrxKPM(req.ProspectID)
+	if err != nil {
+		return
+	}
+
+	return u.producer.PublishEvent(ctx, accessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+		OrderID:       req.ProspectID,
+		KpmID:         trxKPM.KPMID,
+		Source:        3,
+		StatusCode:    req.StatusCode,
+		ProductName:   trxKPM.AssetCode,
+		BranchCode:    trxKPM.BranchID,
+		AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
+	}), 0)
+}

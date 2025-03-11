@@ -130,6 +130,69 @@ func (_m *Usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustome
 	return r0, r1
 }
 
+// CheckAgreementChassisNumber provides a mock function with given fields: ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken
+func (_m *Usecase) CheckAgreementChassisNumber(ctx context.Context, prospectID string, chassisNumber string, idNumber string, spouseIDNumber string, accessToken string) (response.AgreementChassisNumber, response.UsecaseApi, error) {
+	ret := _m.Called(ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CheckAgreementChassisNumber")
+	}
+
+	var r0 response.AgreementChassisNumber
+	var r1 response.UsecaseApi
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) (response.AgreementChassisNumber, response.UsecaseApi, error)); ok {
+		return rf(ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) response.AgreementChassisNumber); ok {
+		r0 = rf(ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.AgreementChassisNumber)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string, string) response.UsecaseApi); ok {
+		r1 = rf(ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken)
+	} else {
+		r1 = ret.Get(1).(response.UsecaseApi)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, string, string, string, string, string) error); ok {
+		r2 = rf(ctx, prospectID, chassisNumber, idNumber, spouseIDNumber, accessToken)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// CheckBannedChassisNumber provides a mock function with given fields: chassisNumber
+func (_m *Usecase) CheckBannedChassisNumber(chassisNumber string) (response.UsecaseApi, error) {
+	ret := _m.Called(chassisNumber)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CheckBannedChassisNumber")
+	}
+
+	var r0 response.UsecaseApi
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (response.UsecaseApi, error)); ok {
+		return rf(chassisNumber)
+	}
+	if rf, ok := ret.Get(0).(func(string) response.UsecaseApi); ok {
+		r0 = rf(chassisNumber)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(chassisNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // CheckCmoNoFPD provides a mock function with given fields: prospectID, cmoID, cmoCategory, cmoJoinDate, defaultCluster, bpkbName
 func (_m *Usecase) CheckCmoNoFPD(prospectID string, cmoID string, cmoCategory string, cmoJoinDate string, defaultCluster string, bpkbName string) (string, entity.TrxCmoNoFPD, error) {
 	ret := _m.Called(prospectID, cmoID, cmoCategory, cmoJoinDate, defaultCluster, bpkbName)
@@ -198,6 +261,34 @@ func (_m *Usecase) CheckLatestPaidInstallment(ctx context.Context, prospectID st
 	}
 
 	return r0, r1, r2
+}
+
+// CheckMobilePhoneFMF provides a mock function with given fields: ctx, prospectID, mobilePhone, idNumber, accessToken, hrisAccessToken
+func (_m *Usecase) CheckMobilePhoneFMF(ctx context.Context, prospectID string, mobilePhone string, idNumber string, accessToken string, hrisAccessToken string) (response.UsecaseApi, error) {
+	ret := _m.Called(ctx, prospectID, mobilePhone, idNumber, accessToken, hrisAccessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CheckMobilePhoneFMF")
+	}
+
+	var r0 response.UsecaseApi
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) (response.UsecaseApi, error)); ok {
+		return rf(ctx, prospectID, mobilePhone, idNumber, accessToken, hrisAccessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) response.UsecaseApi); ok {
+		r0 = rf(ctx, prospectID, mobilePhone, idNumber, accessToken, hrisAccessToken)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string, string) error); ok {
+		r1 = rf(ctx, prospectID, mobilePhone, idNumber, accessToken, hrisAccessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // CheckNokaNosin provides a mock function with given fields: ctx, r
@@ -500,6 +591,71 @@ func (_m *Usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType str
 	return r0, r1
 }
 
+// GetLTV provides a mock function with given fields: ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet
+func (_m *Usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID string, resultPefindo string, bpkbName string, manufactureYear string, tenor int, bakiDebet float64) (int, bool, error) {
+	ret := _m.Called(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLTV")
+	}
+
+	var r0 int
+	var r1 bool
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) (int, bool, error)); ok {
+		return rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) int); ok {
+		r0 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+	} else {
+		r0 = ret.Get(0).(int)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) bool); ok {
+		r1 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) error); ok {
+		r2 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// History2Wilen provides a mock function with given fields: prospectID
+func (_m *Usecase) History2Wilen(prospectID string) ([]response.History2Wilen, error) {
+	ret := _m.Called(prospectID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for History2Wilen")
+	}
+
+	var r0 []response.History2Wilen
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) ([]response.History2Wilen, error)); ok {
+		return rf(prospectID)
+	}
+	if rf, ok := ret.Get(0).(func(string) []response.History2Wilen); ok {
+		r0 = rf(prospectID)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]response.History2Wilen)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // Ktp provides a mock function with given fields: ctx, r, reqMetricsEkyc, accessToken
 func (_m *Usecase) Ktp(ctx context.Context, r request.PrinciplePemohon, reqMetricsEkyc request.MetricsEkyc, accessToken string) (response.Ekyc, error) {
 	ret := _m.Called(ctx, r, reqMetricsEkyc, accessToken)
@@ -521,6 +677,90 @@ func (_m *Usecase) Ktp(ctx context.Context, r request.PrinciplePemohon, reqMetri
 
 	if rf, ok := ret.Get(1).(func(context.Context, request.PrinciplePemohon, request.MetricsEkyc, string) error); ok {
 		r1 = rf(ctx, r, reqMetricsEkyc, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MDMGetAssetYear provides a mock function with given fields: ctx, branchID, assetCode, search, prospectID, accessToken
+func (_m *Usecase) MDMGetAssetYear(ctx context.Context, branchID string, assetCode string, search string, prospectID string, accessToken string) (response.AssetYearList, error) {
+	ret := _m.Called(ctx, branchID, assetCode, search, prospectID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MDMGetAssetYear")
+	}
+
+	var r0 response.AssetYearList
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) (response.AssetYearList, error)); ok {
+		return rf(ctx, branchID, assetCode, search, prospectID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string, string) response.AssetYearList); ok {
+		r0 = rf(ctx, branchID, assetCode, search, prospectID, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.AssetYearList)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string, string) error); ok {
+		r1 = rf(ctx, branchID, assetCode, search, prospectID, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MDMGetMappingLicensePlate provides a mock function with given fields: ctx, licensePlate, prospectID, accessToken
+func (_m *Usecase) MDMGetMappingLicensePlate(ctx context.Context, licensePlate string, prospectID string, accessToken string) (response.MDMMasterMappingLicensePlateResponse, error) {
+	ret := _m.Called(ctx, licensePlate, prospectID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MDMGetMappingLicensePlate")
+	}
+
+	var r0 response.MDMMasterMappingLicensePlateResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (response.MDMMasterMappingLicensePlateResponse, error)); ok {
+		return rf(ctx, licensePlate, prospectID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) response.MDMMasterMappingLicensePlateResponse); ok {
+		r0 = rf(ctx, licensePlate, prospectID, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.MDMMasterMappingLicensePlateResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, licensePlate, prospectID, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MDMGetMasterAsset provides a mock function with given fields: ctx, branchID, search, prospectID, accessToken
+func (_m *Usecase) MDMGetMasterAsset(ctx context.Context, branchID string, search string, prospectID string, accessToken string) (response.AssetList, error) {
+	ret := _m.Called(ctx, branchID, search, prospectID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MDMGetMasterAsset")
+	}
+
+	var r0 response.AssetList
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) (response.AssetList, error)); ok {
+		return rf(ctx, branchID, search, prospectID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, string) response.AssetList); ok {
+		r0 = rf(ctx, branchID, search, prospectID, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.AssetList)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string) error); ok {
+		r1 = rf(ctx, branchID, search, prospectID, accessToken)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -554,6 +794,125 @@ func (_m *Usecase) MDMGetMasterMappingBranchEmployee(ctx context.Context, prospe
 	}
 
 	return r0, r1
+}
+
+// MarsevCalculateInstallment provides a mock function with given fields: ctx, req, prospectID, accessToken
+func (_m *Usecase) MarsevCalculateInstallment(ctx context.Context, req request.ReqMarsevCalculateInstallment, prospectID string, accessToken string) (response.MarsevCalculateInstallmentResponse, error) {
+	ret := _m.Called(ctx, req, prospectID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MarsevCalculateInstallment")
+	}
+
+	var r0 response.MarsevCalculateInstallmentResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqMarsevCalculateInstallment, string, string) (response.MarsevCalculateInstallmentResponse, error)); ok {
+		return rf(ctx, req, prospectID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqMarsevCalculateInstallment, string, string) response.MarsevCalculateInstallmentResponse); ok {
+		r0 = rf(ctx, req, prospectID, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.MarsevCalculateInstallmentResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqMarsevCalculateInstallment, string, string) error); ok {
+		r1 = rf(ctx, req, prospectID, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MarsevGetLoanAmount provides a mock function with given fields: ctx, req, prospectID, accessToken
+func (_m *Usecase) MarsevGetLoanAmount(ctx context.Context, req request.ReqMarsevLoanAmount, prospectID string, accessToken string) (response.MarsevLoanAmountResponse, error) {
+	ret := _m.Called(ctx, req, prospectID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MarsevGetLoanAmount")
+	}
+
+	var r0 response.MarsevLoanAmountResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqMarsevLoanAmount, string, string) (response.MarsevLoanAmountResponse, error)); ok {
+		return rf(ctx, req, prospectID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqMarsevLoanAmount, string, string) response.MarsevLoanAmountResponse); ok {
+		r0 = rf(ctx, req, prospectID, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.MarsevLoanAmountResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqMarsevLoanAmount, string, string) error); ok {
+		r1 = rf(ctx, req, prospectID, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MarsevGetMarketingProgram provides a mock function with given fields: ctx, req, prospectID, accessToken
+func (_m *Usecase) MarsevGetMarketingProgram(ctx context.Context, req request.ReqMarsevFilterProgram, prospectID string, accessToken string) (response.MarsevFilterProgramResponse, error) {
+	ret := _m.Called(ctx, req, prospectID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MarsevGetMarketingProgram")
+	}
+
+	var r0 response.MarsevFilterProgramResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqMarsevFilterProgram, string, string) (response.MarsevFilterProgramResponse, error)); ok {
+		return rf(ctx, req, prospectID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqMarsevFilterProgram, string, string) response.MarsevFilterProgramResponse); ok {
+		r0 = rf(ctx, req, prospectID, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.MarsevFilterProgramResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqMarsevFilterProgram, string, string) error); ok {
+		r1 = rf(ctx, req, prospectID, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// NegativeCustomerCheck provides a mock function with given fields: ctx, reqs, accessToken
+func (_m *Usecase) NegativeCustomerCheck(ctx context.Context, reqs request.DupcheckApi, accessToken string) (response.UsecaseApi, response.NegativeCustomer, error) {
+	ret := _m.Called(ctx, reqs, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for NegativeCustomerCheck")
+	}
+
+	var r0 response.UsecaseApi
+	var r1 response.NegativeCustomer
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, string) (response.UsecaseApi, response.NegativeCustomer, error)); ok {
+		return rf(ctx, reqs, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, string) response.UsecaseApi); ok {
+		r0 = rf(ctx, reqs, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.DupcheckApi, string) response.NegativeCustomer); ok {
+		r1 = rf(ctx, reqs, accessToken)
+	} else {
+		r1 = ret.Get(1).(response.NegativeCustomer)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, request.DupcheckApi, string) error); ok {
+		r2 = rf(ctx, reqs, accessToken)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // Pefindo provides a mock function with given fields: ctx, r, customerStatus, clusterCMO, bpkbName
@@ -710,6 +1069,24 @@ func (_m *Usecase) PrincipleStep(idNumber string) (response.StepPrinciple, error
 	return r0, r1
 }
 
+// Publish2Wilen provides a mock function with given fields: ctx, req, accessToken
+func (_m *Usecase) Publish2Wilen(ctx context.Context, req request.Publish2Wilen, accessToken string) error {
+	ret := _m.Called(ctx, req, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Publish2Wilen")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.Publish2Wilen, string) error); ok {
+		r0 = rf(ctx, req, accessToken)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // RejectTenor36 provides a mock function with given fields: cluster
 func (_m *Usecase) RejectTenor36(cluster string) (response.UsecaseApi, error) {
 	ret := _m.Called(cluster)
@@ -831,6 +1208,34 @@ func (_m *Usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan
 	}
 
 	return r0, r1, r2, r3
+}
+
+// Step2Wilen provides a mock function with given fields: idNumber
+func (_m *Usecase) Step2Wilen(idNumber string) (response.Step2Wilen, error) {
+	ret := _m.Called(idNumber)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Step2Wilen")
+	}
+
+	var r0 response.Step2Wilen
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (response.Step2Wilen, error)); ok {
+		return rf(idNumber)
+	}
+	if rf, ok := ret.Get(0).(func(string) response.Step2Wilen); ok {
+		r0 = rf(idNumber)
+	} else {
+		r0 = ret.Get(0).(response.Step2Wilen)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(idNumber)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // TotalDsrFmfPbk provides a mock function with given fields: ctx, totalIncome, newInstallment, totalInstallmentPBK, prospectID, customerSegment, accessToken, SpDupcheckMap, configValue, filtering

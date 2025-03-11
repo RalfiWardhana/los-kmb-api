@@ -75,6 +75,36 @@ func (_m *Metrics) PrincipleSubmission(ctx context.Context, req request.Metrics,
 	return r0, r1
 }
 
+// Submission2Wilen provides a mock function with given fields: ctx, req, accessToken
+func (_m *Metrics) Submission2Wilen(ctx context.Context, req request.Metrics, accessToken string) (interface{}, error) {
+	ret := _m.Called(ctx, req, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for Submission2Wilen")
+	}
+
+	var r0 interface{}
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, string) (interface{}, error)); ok {
+		return rf(ctx, req, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.Metrics, string) interface{}); ok {
+		r0 = rf(ctx, req, accessToken)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(interface{})
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.Metrics, string) error); ok {
+		r1 = rf(ctx, req, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // NewMetrics creates a new instance of Metrics. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewMetrics(t interface {

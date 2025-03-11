@@ -1015,11 +1015,11 @@ type AgreementData struct {
 	ApplicationID         string    `json:"application_id"`
 	AgreementNo           string    `json:"agreement_no"`
 	LegalName             string    `json:"legal_name"`
-	InstallmentAmount     int       `json:"installment_amount"`
-	DownPayment           int       `json:"down_payment"`
+	InstallmentAmount     float64   `json:"installment_amount"`
+	DownPayment           float64   `json:"down_payment"`
 	Tenor                 int       `json:"tenor"`
 	GoLiveDate            time.Time `json:"go_live_date"`
-	OutstandingPrincipal  int       `json:"outstanding_principal"`
+	OutstandingPrincipal  float64   `json:"outstanding_principal"`
 	ContractStatus        string    `json:"contract_status"`
 	NextInstallmentNumber int       `json:"next_installment_number"`
 	NextInstallmentDate   time.Time `json:"next_installment_date"`
@@ -1031,8 +1031,8 @@ type AgreementData struct {
 	Bpkb                  string    `json:"bpkb"`
 	SerialNo1             string    `json:"serial_no_1"`
 	SerialNo2             string    `json:"serial_no_2"`
-	TotalOtr              int       `json:"total_otr"`
-	DiscountOtr           int       `json:"discount_otr"`
+	TotalOtr              float64   `json:"total_otr"`
+	DiscountOtr           float64   `json:"discount_otr"`
 }
 
 type ConfinsAgreementCustomer struct {
@@ -1134,7 +1134,11 @@ type MarsevFilterProgramData struct {
 	ProductID                  string      `json:"product_id"`
 	ProductOfferingID          string      `json:"product_offering_id"`
 	ProductOfferingDescription string      `json:"product_offering_description"`
-	Tenors                     interface{} `json:"tenors"`
+	Tenors                     []TenorInfo `json:"tenors"`
+}
+
+type TenorInfo struct {
+	Tenor int `json:"tenor"`
 }
 
 type MarsevCalculateInstallmentResponse struct {
@@ -1324,4 +1328,51 @@ type AssetList struct {
 		IsElectric          bool   `json:"is_electric"`
 		Model               string `json:"model"`
 	} `json:"records"`
+}
+
+type Config2Wilen struct {
+	Data Data2WilenConfig `json:"data"`
+}
+
+type Data2WilenConfig struct {
+	MaxReadjustAttempt int `json:"max_readjust_attempt"`
+}
+
+type Step2Wilen struct {
+	ProspectID string `json:"prospect_id"`
+	ColorCode  string `json:"color_code"`
+	Status     string `json:"status"`
+	UpdatedAt  string `json:"updated_at"`
+}
+
+type GetMaxLoanAmountData struct {
+	MaxLoanAmount float64 `json:"max_loan_amount"`
+}
+
+type GetAvailableTenorData struct {
+	Tenor             int     `json:"tenor"`
+	IsPsa             bool    `json:"is_psa"`
+	Dealer            string  `json:"dealer"`
+	InstallmentAmount float64 `json:"installment_amount"`
+	AF                float64 `json:"af"`
+	AdminFee          float64 `json:"admin_fee"`
+	DPAmount          float64 `json:"down_payment_amount"`
+	NTF               float64 `json:"ntf"`
+	AssetCategoryID   string  `json:"asset_category_id"`
+	OTR               float64 `json:"otr"`
+}
+
+type Submission2Wilen struct {
+	Code            string  `json:"code"`
+	Result          string  `json:"result"`
+	Reason          string  `json:"reason"`
+	ReadjustContext *string `json:"readjust_context"`
+	ProspectID      string  `json:"prospect_id"`
+}
+
+type History2Wilen struct {
+	ID              string `json:"id"`
+	ProspectID      string `json:"prospect_id"`
+	OrderStatusName string `json:"order_status_name"`
+	CreatedAt       string `json:"created_at"`
 }

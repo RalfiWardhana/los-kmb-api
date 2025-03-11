@@ -872,6 +872,11 @@ func (r repoHandler) SavePrescreening(prescreening entity.TrxPrescreening, detai
 			if err = tx.Create(&trxAkkk).Error; err != nil {
 				return err
 			}
+
+			// check if trx_kpm order
+			if err = updateTrxKPMAndStatus(tx, status.ProspectID, status.Decision); err != nil {
+				return err
+			}
 		}
 
 		// insert trx_prescreening
@@ -2614,6 +2619,11 @@ func (r repoHandler) ProcessTransaction(trxCaDecision entity.TrxCaDecision, trxH
 				ProspectID: trxStatus.ProspectID,
 			}
 			tx.Create(&trxAkkk)
+
+			// check if trx_kpm order
+			if err = updateTrxKPMAndStatus(tx, trxStatus.ProspectID, trxStatus.Decision); err != nil {
+				return err
+			}
 		}
 
 		if isCancel {
@@ -2725,6 +2735,11 @@ func (r repoHandler) ProcessReturnOrder(prospectID string, trxStatus entity.TrxS
 		// delete trx_akkk
 		var akkk entity.TrxAkkk
 		if err := tx.Where("ProspectID = ?", prospectID).Delete(&akkk).Error; err != nil {
+			return err
+		}
+
+		// check if trx_kpm order
+		if err := updateTrxKPMAndStatus(tx, trxStatus.ProspectID, trxStatus.Decision); err != nil {
 			return err
 		}
 
@@ -3513,6 +3528,11 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 					})
 				}
 
+			}
+
+			// check if trx_kpm order
+			if err = updateTrxKPMAndStatus(tx, trxStatus.ProspectID, trxStatus.Decision); err != nil {
+				return err
 			}
 		}
 
@@ -4381,4 +4401,49 @@ func (r repoHandler) EncryptString(data string) (encrypted entity.EncryptString,
 	}
 
 	return
+}
+
+func updateTrxKPMAndStatus(tx *gorm.DB, prospectID, trxStatusDecision string) error {
+
+	var trxKPM entity.TrxKPM
+	if err := tx.Raw(`SELECT TOP 1 id, ProspectID FROM trx_kpm WITH (nolock) WHERE ProspectID = ? ORDER BY created_at DESC`,
+		prospectID).Scan(&trxKPM).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return err
+		}
+	}
+
+	kpmStatusOrder := constant.STATUS_LOS_PROCESS_2WILEN
+	if trxStatusDecision == constant.DB_DECISION_REJECT {
+		kpmStatusOrder = constant.STATUS_LOS_REJECTED_2WILEN
+	} else if trxStatusDecision == constant.DB_DECISION_CANCEL {
+		kpmStatusOrder = constant.STATUS_LOS_CANCEL_2WILEN
+	} else if trxStatusDecision == constant.DB_DECISION_APR {
+		kpmStatusOrder = constant.STATUS_LOS_APPROVED_2WILEN
+	}
+
+	if trxKPM.ID != "" {
+		if err := tx.Model(&entity.TrxKPM{}).
+			Where("id = ?", trxKPM.ID).
+			Updates(&entity.TrxKPM{
+				Decision:  kpmStatusOrder,
+				UpdatedAt: time.Now(),
+			}).Error; err != nil {
+			return err
+		}
+
+		kpmStatus := entity.TrxKPMStatus{
+			ID:         utils.GenerateUUID(),
+			ProspectID: trxKPM.ProspectID,
+			Decision:   kpmStatusOrder,
+			CreatedAt:  time.Now(),
+			UpdatedAt:  time.Now(),
+		}
+
+		if err := tx.Create(&kpmStatus).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

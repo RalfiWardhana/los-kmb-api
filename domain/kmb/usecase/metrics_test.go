@@ -39,6 +39,8 @@ func TestMetrics(t *testing.T) {
 		err                       error
 		trxPrinciple              int
 		errScanTrxPrinciple       error
+		trxKPM                    int
+		errScanTrxKPM             error
 		trxMaster                 int
 		errScanTrxMaster          error
 		countTrx                  int
@@ -82,6 +84,16 @@ func TestMetrics(t *testing.T) {
 			},
 			err:                 errors.New(constant.ERROR_UPSTREAM + " - Check Principle Order Error"),
 			errScanTrxPrinciple: errors.New(constant.ERROR_UPSTREAM + " - Check Principle Order Error"),
+		},
+		{
+			name: "test metrics errScanTrxKPM",
+			reqMetrics: request.Metrics{
+				Transaction: request.Transaction{
+					ProspectID: "TEST1",
+				},
+			},
+			err:           errors.New(constant.ERROR_UPSTREAM + " - Check 2Wilen Order Error"),
+			errScanTrxKPM: errors.New(constant.ERROR_UPSTREAM + " - Check 2Wilen Order Error"),
 		},
 		{
 			name: "test metrics errScanTrxMaster",
@@ -1495,6 +1507,7 @@ func TestMetrics(t *testing.T) {
 			mockMultiUsecase := new(mocks.MultiUsecase)
 
 			mockRepository.On("ScanTrxPrinciple", tc.reqMetrics.Transaction.ProspectID).Return(tc.trxPrinciple, tc.errScanTrxPrinciple)
+			mockRepository.On("ScanTrxKPM", tc.reqMetrics.Transaction.ProspectID).Return(tc.trxKPM, tc.errScanTrxKPM)
 			mockRepository.On("ScanTrxMaster", tc.reqMetrics.Transaction.ProspectID).Return(tc.trxMaster, tc.errScanTrxMaster)
 			mockRepository.On("ScanTrxPrescreening", tc.reqMetrics.Transaction.ProspectID).Return(tc.countTrx, tc.errScanTrxPrescreening)
 			mockRepository.On("GetFilteringResult", tc.reqMetrics.Transaction.ProspectID).Return(tc.filtering, tc.errGetFilteringResult)
