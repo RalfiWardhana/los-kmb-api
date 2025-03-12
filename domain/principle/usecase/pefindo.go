@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/entity"
@@ -36,12 +37,12 @@ func (u usecase) Pefindo(ctx context.Context, r request.Pefindo, customerStatus,
 	resp, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("NEW_KMB_PBK_URL"), param, map[string]string{}, constant.METHOD_POST, false, 0, timeOut, r.ProspectID, middlewares.UserInfoData.AccessToken)
 
 	if err != nil {
-		// err = errors.New(constant.ERROR_UPSTREAM + " - failed get data pefindo")
+		err = errors.New(constant.ERROR_UPSTREAM + " - failed get data pefindo")
 		return
 	}
 
 	if err = json.Unmarshal(resp.Body(), &checkPefindo); err != nil {
-		// err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data pefindo")
+		err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data pefindo")
 		return
 	}
 
@@ -63,7 +64,7 @@ func (u usecase) Pefindo(ctx context.Context, r request.Pefindo, customerStatus,
 
 	mappingCluster, err = u.repository.MasterMappingCluster(mappingCluster)
 	if err != nil {
-		// err = errors.New(constant.ERROR_UPSTREAM + " - Mapping cluster error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - mapping cluster error")
 		return
 	}
 
@@ -79,7 +80,7 @@ func (u usecase) Pefindo(ctx context.Context, r request.Pefindo, customerStatus,
 			setPefindo, _ := json.Marshal(checkPefindo.Result)
 
 			if errs := jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(setPefindo, &pefindoResult); errs != nil {
-				// err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data pefindo")
+				err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data pefindo")
 				return
 			}
 		}

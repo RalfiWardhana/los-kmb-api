@@ -58,6 +58,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 		errMappingElaborateLTV    error
 		getLTVResponse            int
 		adjustTenorResponse       bool
+		isSimulasi                bool
 		errGetLTV                 error
 		marsevLoanAmountRes       response.MarsevLoanAmountResponse
 		errMarsevLoanAmount       error
@@ -1180,13 +1181,12 @@ func TestGetMaxLoanAmount(t *testing.T) {
 					ID: 1,
 				},
 			},
-			errGetLTV:     errors.New("failed to get ltv"),
-			expectedError: errors.New("failed to get ltv"),
+			errGetLTV: errors.New("failed to get ltv"),
 		},
 		{
 			name: "error get ltv 0",
 			request: request.GetMaxLoanAmount{
-				ProspectID:         "SIM-123",
+				ProspectID:         "SAL-123",
 				BranchID:           "123",
 				AssetCode:          "MOT",
 				IDNumber:           "1234567890",
@@ -1740,7 +1740,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 												mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything).Return(tc.mappingElaborateLTV, tc.errMappingElaborateLTV)
 
 												if tc.errMappingElaborateLTV == nil {
-													mockUsecase.On("GetLTV", ctx, tc.mappingElaborateLTV, tc.request.ProspectID, mock.Anything, tc.request.BPKBNameType, tc.request.ManufactureYear, mock.Anything, mock.Anything).Return(tc.getLTVResponse, tc.adjustTenorResponse, tc.errGetLTV)
+													mockUsecase.On("GetLTV", ctx, tc.mappingElaborateLTV, tc.request.ProspectID, mock.Anything, tc.request.BPKBNameType, tc.request.ManufactureYear, mock.Anything, mock.Anything, mock.Anything).Return(tc.getLTVResponse, tc.adjustTenorResponse, tc.errGetLTV)
 
 													if tc.marsevFilterProgramRes.Data[0].Tenors[0].Tenor == 36 {
 														mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.rejectTenorResponse, tc.errRejectTenor)
@@ -2706,7 +2706,7 @@ func TestGetLTV(t *testing.T) {
 				},
 			},
 			errSaveTrx:    errors.New("database error"),
-			expectedError: errors.New(constant.ERROR_UPSTREAM + " Save elaborate ltv error"),
+			expectedError: errors.New(constant.ERROR_UPSTREAM + " - save elaborate ltv error"),
 			shouldSaveTrx: true,
 		},
 		{
@@ -2972,7 +2972,7 @@ func TestGetLTV(t *testing.T) {
 
 			usecase := NewUsecase(mockRepository, nil, nil)
 
-			ltv, adjustTenor, err := usecase.GetLTV(ctx, tc.mappingLTV, tc.prospectID, tc.resultPefindo, tc.bpkbName, tc.manufactureYear, tc.tenor, tc.bakiDebet)
+			ltv, adjustTenor, err := usecase.GetLTV(ctx, tc.mappingLTV, tc.prospectID, tc.resultPefindo, tc.bpkbName, tc.manufactureYear, tc.tenor, tc.bakiDebet, false)
 
 			if tc.expectedError != nil {
 				require.Error(t, err)

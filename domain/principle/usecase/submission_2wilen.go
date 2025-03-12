@@ -1018,7 +1018,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		return
 	}
 
-	ltv, adjustTenor, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, req.Tenor, pefindo.TotalBakiDebetNonAgunan)
+	ltv, adjustTenor, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, req.Tenor, pefindo.TotalBakiDebetNonAgunan, false)
 	if err != nil {
 		return
 	}
