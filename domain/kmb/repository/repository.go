@@ -1440,12 +1440,12 @@ func (r repoHandler) GetTrxLockSystem(idNumber string, chassisNumber string, eng
 	args := []interface{}{idNumber}
 
 	if chassisNumber != "" {
-		query += " OR ChassisNumber = ?"
+		query += " OR chassis_number = ?"
 		args = append(args, chassisNumber)
 	}
 
 	if engineNumber != "" {
-		query += " OR EngineNumber = ?"
+		query += " OR engine_number = ?"
 		args = append(args, engineNumber)
 	}
 
