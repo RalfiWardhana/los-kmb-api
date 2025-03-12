@@ -712,8 +712,8 @@ func (c *TrxBannedPMKDSR) TableName() string {
 type TrxLockSystem struct {
 	ProspectID    string    `gorm:"type:varchar(20);column:ProspectID;primary_key:true"`
 	IDNumber      string    `gorm:"type:varchar(40);column:IDNumber"`
-	ChassisNumber *string   `gorm:"type:varchar(30);column:ChassisNumber"`
-	EngineNumber  *string   `gorm:"type:varchar(30);column:EngineNumber"`
+	ChassisNumber *string   `gorm:"type:varchar(50);column:chassis_number"`
+	EngineNumber  *string   `gorm:"type:varchar(50);column:engine_number"`
 	Reason        string    `gorm:"type:varchar(250);column:reason"`
 	CreatedAt     time.Time `gorm:"column:created_at"`
 	UnbanDate     time.Time `gorm:"column:unban_date"`
@@ -895,7 +895,7 @@ func (c *FilteringKMB) TableName() string {
 }
 
 type TrxHistoryCheckingAsset struct {
-	ID                      string     `gorm:"type:varchar(255);column:Id;primary_key:true" json:"id"`
+	ID                      int        `gorm:"column:Id;primaryKey;autoIncrement:true" json:"id"`
 	ProspectID              string     `gorm:"type:varchar(20);column:ProspectID" json:"prospect_id"`
 	NumberOfRetry           int        `gorm:"column:NumberOfRetry" json:"number_of_retry"`
 	FinalDecision           string     `gorm:"type:varchar(20);column:FinalDecision" json:"final_decision"`
@@ -915,7 +915,10 @@ type TrxHistoryCheckingAsset struct {
 	BirthDateSpouse         *time.Time `gorm:"column:BirthDate_spouse" json:"birth_date_spouse"`
 	SurgateMotherName       string     `gorm:"type:varchar(200);column:SurgateMotherName" json:"surgate_mother_name"`
 	SurgateMotherNameSpouse *string    `gorm:"type:varchar(200);column:SurgateMotherName_spouse" json:"surgate_mother_name_spouse"`
-	CreatedAt               time.Time  `gorm:"column:CreatedAt" json:"created_at"`
+	CreatedAt               time.Time  `gorm:"column:created_at;default:GETDATE()" json:"created_at"`
+	CreatedBy               string     `gorm:"type:varchar(50);column:created_by" json:"created_by"`
+	UpdatedAt               *time.Time `gorm:"column:updated_at" json:"updated_at"`
+	UpdatedBy               string     `gorm:"type:varchar(50);column:updated_by" json:"updated_by"`
 }
 
 func (c *TrxHistoryCheckingAsset) TableName() string {

@@ -20,7 +20,6 @@ import (
 	"time"
 
 	"github.com/go-resty/resty/v2"
-	"github.com/google/uuid"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/labstack/echo/v4"
 )
@@ -1983,7 +1982,6 @@ func insertDataHistoryChecking(prospectID string, oldestRecord response.DataChec
 	}
 
 	return entity.TrxHistoryCheckingAsset{
-		ID:                      uuid.New().String(),
 		ProspectID:              prospectID,
 		NumberOfRetry:           oldestRecord.LatestRetryNumber,
 		FinalDecision:           oldestRecord.Decision,

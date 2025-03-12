@@ -98,7 +98,6 @@ func TestSaveFiltering(t *testing.T) {
 	}
 	historyAssetCheck := []entity.TrxHistoryCheckingAsset{
 		{
-			ID:                      "1",
 			ProspectID:              "SAL001",
 			NumberOfRetry:           1,
 			FinalDecision:           "REJ",
@@ -165,9 +164,9 @@ func TestSaveFiltering(t *testing.T) {
 		WithArgs(historyAsset...).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	updateRegex := regexp.QuoteMeta(`UPDATE "trx_history_checking_asset" SET "IsAssetLocked" = ? WHERE ((ChassisNumber = ? OR EngineNumber = ?) AND IsAssetLocked = 0)`)
+	updateRegex := regexp.QuoteMeta(`UPDATE "trx_history_checking_asset" SET "IsAssetLocked" = ?, "updated_at" = ? WHERE ((ChassisNumber = ? OR EngineNumber = ?) AND IsAssetLocked = 0)`)
 	mock.ExpectExec(updateRegex).
-		WithArgs(1, historyAssetCheck[0].ChassisNumber, historyAssetCheck[0].EngineNumber).
+		WithArgs(1, sqlmock.AnyArg(), historyAssetCheck[0].ChassisNumber, historyAssetCheck[0].EngineNumber).
 		WillReturnResult(sqlmock.NewResult(0, 1)) // No LastInsertId, 1 row affected
 
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','3578102808920088') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("3578102808920088"))

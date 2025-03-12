@@ -282,9 +282,15 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 
 			// Update locked asset status if needed
 			if historyCheckAsset[i].IsAssetLocked == 1 {
+				setUpdate := map[string]interface{}{
+					"IsAssetLocked": 1,
+					"updated_at":    time.Now(),
+				}
+
 				if err = db.Model(&entity.TrxHistoryCheckingAsset{}).
-					Where("(ChassisNumber = ? OR EngineNumber = ?) AND IsAssetLocked = 0", historyCheckAsset[i].ChassisNumber, historyCheckAsset[i].EngineNumber).
-					Update("IsAssetLocked", 1).Error; err != nil {
+					Where("(ChassisNumber = ? OR EngineNumber = ?) AND IsAssetLocked = 0",
+						historyCheckAsset[i].ChassisNumber, historyCheckAsset[i].EngineNumber).
+					Updates(setUpdate).Error; err != nil {
 					return
 				}
 			}
@@ -516,7 +522,7 @@ func (r repoHandler) getLatestRetryNumber(db *gorm.DB, chassisNumber, engineNumb
         SELECT COALESCE(MAX(NumberOfRetry), 0) AS latest_retry_number 
         FROM trx_history_checking_asset WITH (NOLOCK)
         WHERE (ChassisNumber = ? OR EngineNumber = ?)
-        AND FinalDecision = ? AND IsAssetLocked = 0 AND CreatedAt >= ?
+        AND FinalDecision = ? AND IsAssetLocked = 0 AND created_at >= ?
     `, chassisNumber, engineNumber, decision, startDate).Scan(&maxRetry).Error
 
 	if err != nil {
