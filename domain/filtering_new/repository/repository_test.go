@@ -164,7 +164,7 @@ func TestSaveFiltering(t *testing.T) {
 		WithArgs(historyAsset...).
 		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	updateRegex := regexp.QuoteMeta(`UPDATE "trx_history_checking_asset" SET "IsAssetLocked" = ?, "updated_at" = ? WHERE ((ChassisNumber = ? OR EngineNumber = ?) AND IsAssetLocked = 0)`)
+	updateRegex := regexp.QuoteMeta(`UPDATE "trx_history_checking_asset" SET "is_asset_locked" = ?, "updated_at" = ? WHERE ((chassis_number = ? OR engine_number = ?) AND is_asset_locked = 0)`)
 	mock.ExpectExec(updateRegex).
 		WithArgs(1, sqlmock.AnyArg(), historyAssetCheck[0].ChassisNumber, historyAssetCheck[0].EngineNumber).
 		WillReturnResult(sqlmock.NewResult(0, 1)) // No LastInsertId, 1 row affected

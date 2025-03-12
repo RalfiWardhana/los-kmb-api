@@ -126,33 +126,33 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 
 	// Required customer fields
 	toEncrypt = append(toEncrypt, data.IDNumber)
-	fieldMap[pos] = "IDNumber"
+	fieldMap[pos] = "id_number"
 	pos++
 
 	toEncrypt = append(toEncrypt, data.LegalName)
-	fieldMap[pos] = "LegalName"
+	fieldMap[pos] = "legal_name"
 	pos++
 
 	toEncrypt = append(toEncrypt, data.SurgateMotherName)
-	fieldMap[pos] = "SurgateMotherName"
+	fieldMap[pos] = "surgate_mother_name"
 	pos++
 
 	// Optional spouse fields
 	if data.SpouseIDNumber != nil && *data.SpouseIDNumber != "" {
 		toEncrypt = append(toEncrypt, *data.SpouseIDNumber)
-		fieldMap[pos] = "SpouseIDNumber"
+		fieldMap[pos] = "spouse_id_number"
 		pos++
 	}
 
 	if data.SpouseLegalName != nil && *data.SpouseLegalName != "" {
 		toEncrypt = append(toEncrypt, *data.SpouseLegalName)
-		fieldMap[pos] = "SpouseLegalName"
+		fieldMap[pos] = "spouse_legal_name"
 		pos++
 	}
 
 	if data.SpouseSurgateMotherName != nil && *data.SpouseSurgateMotherName != "" {
 		toEncrypt = append(toEncrypt, *data.SpouseSurgateMotherName)
-		fieldMap[pos] = "SpouseSurgateMotherName"
+		fieldMap[pos] = "spouse_surgate_mother_name"
 		pos++
 	}
 
@@ -165,19 +165,19 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 	// Apply encrypted values back to the struct
 	for pos, fieldName := range fieldMap {
 		switch fieldName {
-		case "IDNumber":
+		case "id_number":
 			data.IDNumber = encrypted[pos]
-		case "LegalName":
+		case "legal_name":
 			data.LegalName = encrypted[pos]
-		case "SurgateMotherName":
+		case "surgate_mother_name":
 			data.SurgateMotherName = encrypted[pos]
-		case "SpouseIDNumber":
+		case "spouse_id_number":
 			encryptedVal := encrypted[pos]
 			data.SpouseIDNumber = &encryptedVal
-		case "SpouseLegalName":
+		case "spouse_legal_name":
 			encryptedVal := encrypted[pos]
 			data.SpouseLegalName = &encryptedVal
-		case "SpouseSurgateMotherName":
+		case "spouse_surgate_mother_name":
 			encryptedVal := encrypted[pos]
 			data.SpouseSurgateMotherName = &encryptedVal
 		}
@@ -211,19 +211,19 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 			// Collect all required fields
 			if v.IDNumber != "" {
 				toEncrypt = append(toEncrypt, v.IDNumber)
-				fieldMap[pos] = "IDNumber"
+				fieldMap[pos] = "id_number"
 				pos++
 			}
 
 			if v.LegalName != "" {
 				toEncrypt = append(toEncrypt, v.LegalName)
-				fieldMap[pos] = "LegalName"
+				fieldMap[pos] = "legal_name"
 				pos++
 			}
 
 			if v.SurgateMotherName != "" {
 				toEncrypt = append(toEncrypt, v.SurgateMotherName)
-				fieldMap[pos] = "SurgateMotherName"
+				fieldMap[pos] = "surgate_mother_name"
 				pos++
 			}
 
@@ -256,11 +256,11 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 				// Apply encrypted values back to the struct
 				for pos, fieldName := range fieldMap {
 					switch fieldName {
-					case "IDNumber":
+					case "id_number":
 						historyCheckAsset[i].IDNumber = encrypted[pos]
-					case "LegalName":
+					case "legal_name":
 						historyCheckAsset[i].LegalName = encrypted[pos]
-					case "SurgateMotherName":
+					case "surgate_mother_name":
 						historyCheckAsset[i].SurgateMotherName = encrypted[pos]
 					case "IDNumberSpouse":
 						encryptedVal := encrypted[pos]
@@ -280,15 +280,15 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 				return
 			}
 
-			// Update locked asset status if needed
+			// Update row history checking asset to locked if result of checking asset determine to locking asset
 			if historyCheckAsset[i].IsAssetLocked == 1 {
 				setUpdate := map[string]interface{}{
-					"IsAssetLocked": 1,
-					"updated_at":    time.Now(),
+					"is_asset_locked": 1,
+					"updated_at":      time.Now(),
 				}
 
 				if err = db.Model(&entity.TrxHistoryCheckingAsset{}).
-					Where("(ChassisNumber = ? OR EngineNumber = ?) AND IsAssetLocked = 0",
+					Where("(chassis_number = ? OR engine_number = ?) AND is_asset_locked = 0",
 						historyCheckAsset[i].ChassisNumber, historyCheckAsset[i].EngineNumber).
 					Updates(setUpdate).Error; err != nil {
 					return
@@ -519,10 +519,10 @@ func (r repoHandler) getLatestRetryNumber(db *gorm.DB, chassisNumber, engineNumb
 	}
 
 	err := db.Raw(`
-        SELECT COALESCE(MAX(NumberOfRetry), 0) AS latest_retry_number 
+        SELECT COALESCE(MAX(number_of_retry), 0) AS latest_retry_number 
         FROM trx_history_checking_asset WITH (NOLOCK)
-        WHERE (ChassisNumber = ? OR EngineNumber = ?)
-        AND FinalDecision = ? AND IsAssetLocked = 0 AND created_at >= ?
+        WHERE (chassis_number = ? OR engine_number = ?)
+        AND final_decision = ? AND is_asset_locked = 0 AND created_at >= ?
     `, chassisNumber, engineNumber, decision, startDate).Scan(&maxRetry).Error
 
 	if err != nil {

@@ -895,26 +895,26 @@ func (c *FilteringKMB) TableName() string {
 }
 
 type TrxHistoryCheckingAsset struct {
-	ID                      int        `gorm:"column:Id;primaryKey;autoIncrement:true" json:"id"`
-	ProspectID              string     `gorm:"type:varchar(20);column:ProspectID" json:"prospect_id"`
-	NumberOfRetry           int        `gorm:"column:NumberOfRetry" json:"number_of_retry"`
-	FinalDecision           string     `gorm:"type:varchar(20);column:FinalDecision" json:"final_decision"`
-	Reason                  string     `gorm:"type:varchar(250);column:Reason" json:"reason"`
-	SourceService           string     `gorm:"type:varchar(5);column:SourceService" json:"source_service"`
-	SourceProspectID        string     `gorm:"type:varchar(20);column:SourceProspectID" json:"source_prospect_id"`
-	SourceDecisionCreatedAt time.Time  `gorm:"column:SourceDecisionCreatedAt" json:"source_decision_created_at"`
-	IsDataChanged           int        `gorm:"column:IsDataChanged" json:"is_data_changed"`
-	IsAssetLocked           int        `gorm:"column:IsAssetLocked" json:"is_asset_locked"`
-	ChassisNumber           string     `gorm:"type:varchar(50);column:ChassisNumber" json:"chassis_number"`
-	EngineNumber            string     `gorm:"type:varchar(50);column:EngineNumber" json:"engine_number"`
-	IDNumber                string     `gorm:"type:varchar(200);column:IDNumber" json:"id_number"`
-	IDNumberSpouse          *string    `gorm:"type:varchar(200);column:IDNumber_spouse" json:"id_number_spouse"`
-	LegalName               string     `gorm:"type:varchar(255);column:LegalName" json:"legal_name"`
-	LegalNameSpouse         *string    `gorm:"type:varchar(255);column:LegalName_spouse" json:"legal_name_spouse"`
-	BirthDate               time.Time  `gorm:"column:BirthDate" json:"birth_date"`
-	BirthDateSpouse         *time.Time `gorm:"column:BirthDate_spouse" json:"birth_date_spouse"`
-	SurgateMotherName       string     `gorm:"type:varchar(200);column:SurgateMotherName" json:"surgate_mother_name"`
-	SurgateMotherNameSpouse *string    `gorm:"type:varchar(200);column:SurgateMotherName_spouse" json:"surgate_mother_name_spouse"`
+	ID                      int        `gorm:"column:id;primaryKey;autoIncrement:true" json:"id"`
+	ProspectID              string     `gorm:"type:varchar(20);column:prospect_id" json:"prospect_id"`
+	NumberOfRetry           int        `gorm:"column:number_of_retry" json:"number_of_retry"`
+	FinalDecision           string     `gorm:"type:varchar(20);column:final_decision" json:"final_decision"`
+	Reason                  string     `gorm:"type:varchar(250);column:reason" json:"reason"`
+	SourceService           string     `gorm:"type:varchar(5);column:source_service" json:"source_service"`
+	SourceProspectID        string     `gorm:"type:varchar(20);column:source_prospect_id" json:"source_prospect_id"`
+	SourceDecisionCreatedAt time.Time  `gorm:"column:source_decision_created_at" json:"source_decision_created_at"`
+	IsDataChanged           int        `gorm:"column:is_data_changed" json:"is_data_changed"`
+	IsAssetLocked           int        `gorm:"column:is_asset_locked" json:"is_asset_locked"`
+	ChassisNumber           string     `gorm:"type:varchar(50);column:chassis_number" json:"chassis_number"`
+	EngineNumber            string     `gorm:"type:varchar(50);column:engine_number" json:"engine_number"`
+	IDNumber                string     `gorm:"type:varchar(200);column:id_number" json:"id_number"`
+	IDNumberSpouse          *string    `gorm:"type:varchar(200);column:id_number_spouse" json:"id_number_spouse"`
+	LegalName               string     `gorm:"type:varchar(255);column:legal_name" json:"legal_name"`
+	LegalNameSpouse         *string    `gorm:"type:varchar(255);column:legal_name_spouse" json:"legal_name_spouse"`
+	BirthDate               time.Time  `gorm:"column:birth_date" json:"birth_date"`
+	BirthDateSpouse         *time.Time `gorm:"column:birth_date_spouse" json:"birth_date_spouse"`
+	SurgateMotherName       string     `gorm:"type:varchar(200);column:surgate_mother_name" json:"surgate_mother_name"`
+	SurgateMotherNameSpouse *string    `gorm:"type:varchar(200);column:surgate_mother_name_spouse" json:"surgate_mother_name_spouse"`
 	CreatedAt               time.Time  `gorm:"column:created_at;default:GETDATE()" json:"created_at"`
 	CreatedBy               string     `gorm:"type:varchar(50);column:created_by" json:"created_by"`
 	UpdatedAt               *time.Time `gorm:"column:updated_at" json:"updated_at"`
