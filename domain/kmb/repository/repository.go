@@ -706,6 +706,7 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				NTFTopup:                    trxFMF.NTFTopup,
 				WayOfPayment:                data.Apk.WayOfPayment,
 				StampDutyFee:                data.Apk.StampDutyFee,
+				AgentFee:                    data.Apk.AgentFee,
 			}
 
 			logInfo = apk
