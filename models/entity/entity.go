@@ -647,6 +647,7 @@ type TrxApk struct {
 	NTFTopup                    float64   `gorm:"column:NTFTopup"`
 	WayOfPayment                string    `gorm:"type:varchar(20);column:WayOfPayment"`
 	StampDutyFee                float64   `gorm:"column:stamp_duty_fee"`
+	AgentFee                    float64   `gorm:"column:agent_fee"`
 }
 
 func (c *TrxApk) TableName() string {
