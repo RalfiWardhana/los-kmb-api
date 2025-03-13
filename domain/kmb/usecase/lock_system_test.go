@@ -72,8 +72,29 @@ func TestLockSystem(t *testing.T) {
 				UnbanDate:  date,
 			},
 			result: response.LockSystem{
-				IsBanned:  true,
-				UnbanDate: "2025-01-02",
+				IsBanned:   true,
+				UnbanDate:  "2025-01-02",
+				BannedType: constant.BANNED_TYPE_NIK,
+			},
+		},
+		{
+			name:          "test lock system banned asset true",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
+			encryptedIDNumber: entity.EncryptedString{
+				MyString: "TESTIDNUMBER",
+			},
+			trxLockSystem: entity.TrxLockSystem{
+				ProspectID: "TEST1",
+				Reason:     constant.ASSET_PERNAH_REJECT,
+				UnbanDate:  date,
+			},
+			result: response.LockSystem{
+				IsBanned:   true,
+				Reason:     constant.ASSET_PERNAH_REJECT,
+				UnbanDate:  "2025-01-02",
+				BannedType: constant.BANNED_TYPE_ASSET,
 			},
 		},
 		{
@@ -122,9 +143,10 @@ func TestLockSystem(t *testing.T) {
 				},
 			},
 			result: response.LockSystem{
-				IsBanned:  true,
-				Reason:    constant.PERNAH_REJECT,
-				UnbanDate: "2025-01-02",
+				IsBanned:   true,
+				Reason:     constant.PERNAH_REJECT,
+				UnbanDate:  "2025-01-02",
+				BannedType: constant.BANNED_TYPE_NIK,
 			},
 		},
 		{
@@ -190,9 +212,10 @@ func TestLockSystem(t *testing.T) {
 				},
 			},
 			result: response.LockSystem{
-				IsBanned:  true,
-				Reason:    constant.PERNAH_CANCEL,
-				UnbanDate: "2025-01-02",
+				IsBanned:   true,
+				Reason:     constant.PERNAH_CANCEL,
+				UnbanDate:  "2025-01-02",
+				BannedType: constant.BANNED_TYPE_NIK,
 			},
 		},
 		{
