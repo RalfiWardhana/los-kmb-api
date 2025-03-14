@@ -597,8 +597,8 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	ti.asset_description,
 	ti.manufacture_year,
 	ti.color,
-	chassis_number,
-	engine_number,
+	ti.chassis_number,
+	ti.engine_number,
 	CASE
 		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -1693,8 +1693,8 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -2292,8 +2292,8 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 			WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 			WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -3021,8 +3021,8 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 			WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 			WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
