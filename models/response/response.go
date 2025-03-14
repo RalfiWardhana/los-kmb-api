@@ -478,9 +478,10 @@ type LowIncome struct {
 }
 
 type LockSystem struct {
-	IsBanned  bool   `json:"is_banned"`
-	Reason    string `json:"reason"`
-	UnbanDate string `json:"unban_date"`
+	IsBanned   bool   `json:"is_banned"`
+	Reason     string `json:"reason"`
+	UnbanDate  string `json:"unban_date"`
+	BannedType string `json:"banned_type"`
 }
 
 type DupcheckConfig struct {

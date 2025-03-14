@@ -7,6 +7,7 @@ import (
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
+	"strings"
 )
 
 func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber string, engineNumber string) (data response.LockSystem, err error) {
@@ -18,6 +19,15 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber 
 		trxCancel         []entity.TrxLockSystem
 		trxLockSystem     entity.TrxLockSystem
 	)
+
+	defer func() {
+		if err == nil && data.IsBanned {
+			data.BannedType = constant.BANNED_TYPE_NIK
+			if strings.Contains(strings.ToLower(data.Reason), "asset") {
+				data.BannedType = constant.BANNED_TYPE_ASSET
+			}
+		}
+	}()
 
 	encryptedIDNumber, err = u.repository.GetEncB64(idNumber)
 	if err != nil {
