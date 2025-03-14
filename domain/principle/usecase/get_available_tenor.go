@@ -248,6 +248,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 		var (
 			wg                 sync.WaitGroup
 			availableTenorChan = make(chan response.GetAvailableTenorData, len(marsevFilterProgramRes.Data[0].Tenors))
+			errChan            = make(chan error, len(marsevFilterProgramRes.Data[0].Tenors))
 		)
 
 		for _, tenorInfo := range marsevFilterProgramRes.Data[0].Tenors {
@@ -260,6 +261,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 					if tenorInfo.Tenor == 36 {
 						trxTenor, err = u.usecase.RejectTenor36(clusterCMO)
 						if err != nil {
+							errChan <- err
 							return
 						}
 					} else if tenorInfo.Tenor > 36 {
@@ -272,6 +274,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 
 				ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet, isSimulasi)
 				if err != nil {
+					errChan <- err
 					return
 				}
 
@@ -289,6 +292,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 
 				marsevLoanAmountRes, err := u.usecase.MarsevGetLoanAmount(ctx, payloadMaxLoan, req.ProspectID, accessToken)
 				if err != nil {
+					errChan <- err
 					return
 				}
 
@@ -322,7 +326,12 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 		go func() {
 			wg.Wait()
 			close(availableTenorChan)
+			close(errChan)
 		}()
+
+		if err := <-errChan; err != nil {
+			return []response.GetAvailableTenorData{}, err
+		}
 
 		var availableTenorList []response.GetAvailableTenorData
 		for tenorData := range availableTenorChan {

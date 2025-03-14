@@ -1674,7 +1674,8 @@ func TestGetAvailableTenor(t *testing.T) {
 					ID: 1,
 				},
 			},
-			errGetLTV: errors.New("failed to get ltv"),
+			errGetLTV:     errors.New("failed to get ltv"),
+			expectedError: errors.New("failed to get ltv"),
 		},
 		{
 			name: "error get ltv 0",
@@ -1918,6 +1919,7 @@ func TestGetAvailableTenor(t *testing.T) {
 			},
 			ltvResponse:   80,
 			errLoanAmount: errors.New("failed to get loan amount"),
+			expectedError: errors.New("failed to get loan amount"),
 		},
 		{
 			name: "error reject tenor 36",

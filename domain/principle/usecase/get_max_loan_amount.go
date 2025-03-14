@@ -216,8 +216,11 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 			return
 		}
 
-		var wg sync.WaitGroup
-		loanAmountChan := make(chan float64, len(marsevFilterProgramRes.Data[0].Tenors))
+		var (
+			wg             sync.WaitGroup
+			loanAmountChan = make(chan float64, len(marsevFilterProgramRes.Data[0].Tenors))
+			errChan        = make(chan error, len(marsevFilterProgramRes.Data[0].Tenors))
+		)
 
 		for _, tenorInfo := range marsevFilterProgramRes.Data[0].Tenors {
 			wg.Add(1)
@@ -229,6 +232,7 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 					if tenorInfo.Tenor == 36 {
 						trxTenor, err = u.usecase.RejectTenor36(clusterCMO)
 						if err != nil {
+							errChan <- err
 							return
 						}
 					} else if tenorInfo.Tenor > 36 {
@@ -241,6 +245,7 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 
 				ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet, isSimulasi)
 				if err != nil {
+					errChan <- err
 					return
 				}
 
@@ -258,6 +263,7 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 
 				marsevLoanAmountRes, err := u.usecase.MarsevGetLoanAmount(ctx, payloadMaxLoan, req.ProspectID, accessToken)
 				if err != nil {
+					errChan <- err
 					return
 				}
 
@@ -268,7 +274,12 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 		go func() {
 			wg.Wait()
 			close(loanAmountChan)
+			close(errChan)
 		}()
+
+		if err := <-errChan; err != nil {
+			return response.GetMaxLoanAmountData{}, err
+		}
 
 		for loanAmount := range loanAmountChan {
 			if loanAmount > maxLoanAmount {

@@ -1181,7 +1181,8 @@ func TestGetMaxLoanAmount(t *testing.T) {
 					ID: 1,
 				},
 			},
-			errGetLTV: errors.New("failed to get ltv"),
+			errGetLTV:     errors.New("failed to get ltv"),
+			expectedError: errors.New("failed to get ltv"),
 		},
 		{
 			name: "error get ltv 0",
@@ -1385,6 +1386,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 			},
 			getLTVResponse:      80,
 			errMarsevLoanAmount: errors.New("failed to get loan amount"),
+			expectedError:       errors.New("failed to get loan amount"),
 		},
 		{
 			name: "error reject tenor 36",
