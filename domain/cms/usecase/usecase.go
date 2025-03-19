@@ -169,6 +169,11 @@ func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data inte
 	filtering.LegalName, _ = utils.PlatformEncryptText(req.CustomerPersonal.LegalName)
 	filtering.MotherName, _ = utils.PlatformEncryptText(req.CustomerPersonal.SurgateMotherName)
 
+	chassisNumber := req.Item.NoChassis
+	engineNumber := req.Item.NoEngine
+	filtering.ChassisNumber = &chassisNumber
+	filtering.EngineNumber = &engineNumber
+
 	if req.CustomerSpouse != nil {
 		IDNumber, _ := utils.PlatformEncryptText(req.CustomerSpouse.IDNumber)
 		LegalName, _ := utils.PlatformEncryptText(req.CustomerSpouse.LegalName)
@@ -206,6 +211,14 @@ func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data inte
 		IDNumber, _ := utils.PlatformEncryptText(req.CustomerSpouse.IDNumber)
 		LegalName, _ := utils.PlatformEncryptText(req.CustomerSpouse.LegalName)
 		MotherName, _ := utils.PlatformEncryptText(req.CustomerSpouse.SurgateMotherName)
+
+		filtering.Spouse = &request.FilteringSpouse{
+			IDNumber:   IDNumber,
+			LegalName:  LegalName,
+			MotherName: MotherName,
+			BirthDate:  req.CustomerSpouse.BirthDate,
+			Gender:     req.CustomerSpouse.Gender,
+		}
 
 		spouse := &request.CustomerSpouse{
 			IDNumber:          IDNumber,
