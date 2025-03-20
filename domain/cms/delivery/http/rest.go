@@ -86,10 +86,13 @@ func (c *handlerCMS) PrescreeningInquiry(ctx echo.Context) (err error) {
 	var accessToken = middlewares.UserInfoData.AccessToken
 
 	req := request.ReqInquiryPrescreening{
-		Search:      ctx.QueryParam("search"),
-		UserID:      ctx.QueryParam("user_id"),
-		BranchID:    ctx.QueryParam("branch_id"),
-		MultiBranch: ctx.QueryParam("multi_branch"),
+		SearchBy:     ctx.QueryParam("search_by"),
+		SearchValue:  ctx.QueryParam("search_value"),
+		BranchFilter: ctx.QueryParam("branch_filter"),
+		StatusFilter: ctx.QueryParam("status_filter"),
+		UserID:       ctx.QueryParam("user_id"),
+		BranchID:     ctx.QueryParam("branch_id"),
+		MultiBranch:  ctx.QueryParam("multi_branch"),
 	}
 
 	page, _ := strconv.Atoi(ctx.QueryParam("page"))
@@ -260,11 +263,13 @@ func (c *handlerCMS) CaInquiry(ctx echo.Context) (err error) {
 	var accessToken = middlewares.UserInfoData.AccessToken
 
 	req := request.ReqInquiryCa{
-		Search:      ctx.QueryParam("search"),
-		BranchID:    ctx.QueryParam("branch_id"),
-		MultiBranch: ctx.QueryParam("multi_branch"),
-		Filter:      ctx.QueryParam("filter"),
-		UserID:      ctx.QueryParam("user_id"),
+		SearchBy:     ctx.QueryParam("search_by"),
+		SearchValue:  ctx.QueryParam("search_value"),
+		BranchFilter: ctx.QueryParam("branch_filter"),
+		StatusFilter: ctx.QueryParam("status_filter"),
+		BranchID:     ctx.QueryParam("branch_id"),
+		MultiBranch:  ctx.QueryParam("multi_branch"),
+		UserID:       ctx.QueryParam("user_id"),
 	}
 
 	page, _ := strconv.Atoi(ctx.QueryParam("page"))
@@ -831,12 +836,14 @@ func (c *handlerCMS) ApprovalInquiry(ctx echo.Context) (err error) {
 	var accessToken = middlewares.UserInfoData.AccessToken
 
 	req := request.ReqInquiryApproval{
-		Search:      ctx.QueryParam("search"),
-		BranchID:    ctx.QueryParam("branch_id"),
-		MultiBranch: ctx.QueryParam("multi_branch"),
-		Filter:      ctx.QueryParam("filter"),
-		UserID:      ctx.QueryParam("user_id"),
-		Alias:       ctx.QueryParam("alias"),
+		SearchBy:     ctx.QueryParam("search_by"),
+		SearchValue:  ctx.QueryParam("search_value"),
+		BranchFilter: ctx.QueryParam("branch_filter"),
+		StatusFilter: ctx.QueryParam("status_filter"),
+		BranchID:     ctx.QueryParam("branch_id"),
+		MultiBranch:  ctx.QueryParam("multi_branch"),
+		UserID:       ctx.QueryParam("user_id"),
+		Alias:        ctx.QueryParam("alias"),
 	}
 
 	if err := ctx.Bind(&req); err != nil {

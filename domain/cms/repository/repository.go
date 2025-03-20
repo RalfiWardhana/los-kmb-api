@@ -341,15 +341,68 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 				filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
 			}
 		}
-	} else {
+	} else if req.BranchID != "" && req.BranchFilter == "" {
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
 	}
 
-	if req.Search != "" {
-		encrypted, _ = r.EncryptString(req.Search)
+	if req.BranchFilter != "" {
+		filterBranch = ""
 	}
 
-	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays, "")
+	// Build WHERE clause based on new parameters
+	var whereConditions []string
+
+	// Handle search parameters
+	if req.SearchBy != "" && req.SearchValue != "" {
+		switch req.SearchBy {
+		case "order_id":
+			whereConditions = append(whereConditions, fmt.Sprintf("tm.ProspectID = '%s'", req.SearchValue))
+		case "id_number":
+			encrypted, err = r.EncryptString(req.SearchValue)
+			if err == nil {
+				whereConditions = append(whereConditions, fmt.Sprintf("tcp.IDNumber = '%s'", encrypted.Encrypt))
+			}
+		case "legal_name":
+			encrypted, err = r.EncryptString(req.SearchValue)
+			if err == nil {
+				whereConditions = append(whereConditions, fmt.Sprintf("tcp.LegalName = '%s'", encrypted.Encrypt))
+			}
+		}
+	} else {
+		// If no search parameters, use date range filter as default
+		whereConditions = append(whereConditions, fmt.Sprintf("CAST(tm.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays))
+	}
+
+	// Handle branch filter
+	if req.BranchFilter != "" {
+		whereConditions = append(whereConditions, fmt.Sprintf("tm.BranchID = '%s'", req.BranchFilter))
+	}
+
+	// Handle status filter
+	if req.StatusFilter != "" {
+		switch req.StatusFilter {
+		case "CPR":
+			whereConditions = append(whereConditions, "tps.decision IS NULL")
+		case "APR":
+			whereConditions = append(whereConditions, "tps.decision = 'APR'")
+		case "REJ":
+			whereConditions = append(whereConditions, "tps.decision = 'REJ'")
+		}
+	}
+
+	// Build the complete WHERE clause
+	if len(whereConditions) > 0 {
+		if filterBranch != "" {
+			// If filterBranch already has a WHERE clause, add conditions with AND
+			filter = filterBranch + " AND " + strings.Join(whereConditions, " AND ")
+		} else {
+			// Otherwise, create a new WHERE clause
+			filter = "WHERE " + strings.Join(whereConditions, " AND ")
+		}
+	} else {
+		// If no conditions, just use filterBranch
+		filter = filterBranch
+	}
 
 	if pagination != nil {
 		page, _ := json.Marshal(pagination)
@@ -597,8 +650,8 @@ func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, 
 	ti.asset_description,
 	ti.manufacture_year,
 	ti.color,
-	chassis_number,
-	engine_number,
+	ti.chassis_number,
+	ti.engine_number,
 	CASE
 		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -1376,22 +1429,49 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 				filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
 			}
 		}
-	} else {
+	} else if req.BranchID != "" && req.BranchFilter == "" {
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
 	}
 
-	if req.Search != "" {
-		encrypted, _ = r.EncryptString(req.Search)
+	if req.BranchFilter != "" {
+		filterBranch = ""
 	}
 
-	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays, "")
+	// Build WHERE clause based on new parameters
+	var whereConditions []string
+
+	// Handle search parameters
+	if req.SearchBy != "" && req.SearchValue != "" {
+		switch req.SearchBy {
+		case "order_id":
+			whereConditions = append(whereConditions, fmt.Sprintf("tm.ProspectID = '%s'", req.SearchValue))
+		case "id_number":
+			encrypted, err = r.EncryptString(req.SearchValue)
+			if err == nil {
+				whereConditions = append(whereConditions, fmt.Sprintf("tcp.IDNumber = '%s'", encrypted.Encrypt))
+			}
+		case "legal_name":
+			encrypted, err = r.EncryptString(req.SearchValue)
+			if err == nil {
+				whereConditions = append(whereConditions, fmt.Sprintf("tcp.LegalName = '%s'", encrypted.Encrypt))
+			}
+		}
+	} else {
+		// If no search parameters, use date range filter as default
+		whereConditions = append(whereConditions, fmt.Sprintf("CAST(tm.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays))
+	}
+
+	// Handle branch filter
+	if req.BranchFilter != "" {
+		whereConditions = append(whereConditions, fmt.Sprintf("tm.BranchID = '%s'", req.BranchFilter))
+	}
 
 	// Filter By
-	if req.Filter != "" {
+	if req.StatusFilter != "" {
 		var (
 			activity string
 		)
-		switch req.Filter {
+		switch req.StatusFilter {
 		case constant.DECISION_APPROVE:
 			query = fmt.Sprintf(" AND tst.decision = '%s' AND tst.status_process='%s'", constant.DB_DECISION_APR, constant.STATUS_FINAL)
 
@@ -1411,6 +1491,20 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 				query = fmt.Sprintf(" AND tdd.draft_created_by= '%s' ", req.UserID)
 			}
 		}
+	}
+
+	// Build the complete WHERE clause
+	if len(whereConditions) > 0 {
+		if filterBranch != "" {
+			// If filterBranch already has a WHERE clause, add conditions with AND
+			filter = filterBranch + " AND " + strings.Join(whereConditions, " AND ")
+		} else {
+			// Otherwise, create a new WHERE clause
+			filter = "WHERE " + strings.Join(whereConditions, " AND ")
+		}
+	} else {
+		// If no conditions, just use filterBranch
+		filter = filterBranch
 	}
 
 	filter = filter + query
@@ -1693,8 +1787,8 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -2292,8 +2386,8 @@ func (r repoHandler) GetInquirySearch(req request.ReqSearchInquiry, pagination i
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 			WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 			WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -2829,22 +2923,49 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 				filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
 			}
 		}
-	} else {
+	} else if req.BranchID != "" && req.BranchFilter == "" {
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
 	}
 
-	if req.Search != "" {
-		encrypted, _ = r.EncryptString(req.Search)
+	if req.BranchFilter != "" {
+		filterBranch = ""
 	}
 
-	filter = utils.GenerateFilter(req.Search, encrypted.Encrypt, filterBranch, rangeDays, "")
+	// Build WHERE clause based on new parameters
+	var whereConditions []string
+
+	// Handle search parameters
+	if req.SearchBy != "" && req.SearchValue != "" {
+		switch req.SearchBy {
+		case "order_id":
+			whereConditions = append(whereConditions, fmt.Sprintf("tm.ProspectID = '%s'", req.SearchValue))
+		case "id_number":
+			encrypted, err = r.EncryptString(req.SearchValue)
+			if err == nil {
+				whereConditions = append(whereConditions, fmt.Sprintf("tcp.IDNumber = '%s'", encrypted.Encrypt))
+			}
+		case "legal_name":
+			encrypted, err = r.EncryptString(req.SearchValue)
+			if err == nil {
+				whereConditions = append(whereConditions, fmt.Sprintf("tcp.LegalName = '%s'", encrypted.Encrypt))
+			}
+		}
+	} else {
+		// If no search parameters, use date range filter as default
+		whereConditions = append(whereConditions, fmt.Sprintf("CAST(tm.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays))
+	}
+
+	// Handle branch filter
+	if req.BranchFilter != "" {
+		whereConditions = append(whereConditions, fmt.Sprintf("tm.BranchID = '%s'", req.BranchFilter))
+	}
 
 	// Filter By
-	if req.Filter != "" {
+	if req.StatusFilter != "" {
 		var (
 			activity string
 		)
-		switch req.Filter {
+		switch req.StatusFilter {
 		case constant.DECISION_APPROVE:
 			query = fmt.Sprintf(" AND tst.decision = '%s' AND tst.status_process='%s' AND has.source_decision='%s'", constant.DB_DECISION_APR, constant.STATUS_FINAL, alias)
 
@@ -2861,6 +2982,20 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		}
 	} else {
 		query = fmt.Sprintf(" AND (has.next_step = '%s' OR has.source_decision='%s')", alias, alias)
+	}
+
+	// Build the complete WHERE clause
+	if len(whereConditions) > 0 {
+		if filterBranch != "" {
+			// If filterBranch already has a WHERE clause, add conditions with AND
+			filter = filterBranch + " AND " + strings.Join(whereConditions, " AND ")
+		} else {
+			// Otherwise, create a new WHERE clause
+			filter = "WHERE " + strings.Join(whereConditions, " AND ")
+		}
+	} else {
+		// If no conditions, just use filterBranch
+		filter = filterBranch
 	}
 
 	filter = filter + query
@@ -3021,8 +3156,8 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 			WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 			WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
