@@ -298,50 +298,132 @@ func (r repoHandler) GetSurveyorData(prospectID string) (surveyor []entity.TrxSu
 	return
 }
 
+func (r repoHandler) GetListBranch(req request.ReqListBranch) (regions []string, branches []response.BranchInfo, err error) {
+	if req.IsMultiBranch == 1 {
+		// Logic and Query for multi-branch scenario
+		var regionBranches []struct {
+			RegionName   *string `gorm:"column:region_name"`
+			BranchMember string  `gorm:"column:branch_member"`
+		}
+
+		query := `
+            SELECT DISTINCT region_name, branch_member 
+            FROM region_branch a WITH (nolock)
+            INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+            (   SELECT value 
+                FROM region_user ru WITH (nolock)
+                cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+                WHERE ru.user_id = ? 
+            )
+            AND b.lob_id = '125'
+            UNION ALL
+            SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
+            WHERE mb.user_id = ?
+        `
+
+		if err = r.losDB.Raw(query, req.UserID, req.UserID).Scan(&regionBranches).Error; err != nil {
+			return nil, nil, err
+		}
+
+		if len(regionBranches) > 0 {
+			var multiBranchQuery string
+			var branchDetails []entity.BranchData
+
+			// Check if first row has null RegionName but still have results
+			if regionBranches[0].RegionName == nil {
+				multiBranchQuery = `
+                    SELECT DISTINCT cb.BranchID, cb.BranchName
+                    FROM (
+                        SELECT branches FROM multi_branch mb WITH (nolock) WHERE mb.user_id= ?
+                    ) AS mb
+                    CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(mb.branches, '[', ''), ']', ''), '"', ''), ',') AS s
+                    JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))
+                `
+			} else {
+				for _, rb := range regionBranches {
+					if rb.RegionName != nil {
+						regions = append(regions, *rb.RegionName)
+					}
+				}
+
+				multiBranchQuery = `
+                    SELECT DISTINCT cb.BranchID, cb.BranchName
+                    FROM (
+                        SELECT DISTINCT branch_member FROM region_branch a WITH (nolock)
+                        INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+                        (   
+                            SELECT value 
+                            FROM region_user ru WITH (nolock)
+                            cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+                            WHERE ru.user_id = ? 
+                        )
+                        AND b.lob_id = '125'
+                    ) AS bm
+                    CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
+                    JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))
+                `
+			}
+
+			if err = r.losDB.Raw(multiBranchQuery, req.UserID).Scan(&branchDetails).Error; err != nil {
+				return nil, nil, err
+			}
+
+			// Convert []entity.BranchData to []response.BranchInfo
+			branchesInfo := make([]response.BranchInfo, len(branchDetails))
+			for i, branch := range branchDetails {
+				branchesInfo[i] = response.BranchInfo{
+					BranchID:   branch.BranchID,
+					BranchName: branch.BranchName,
+				}
+			}
+
+			branches = branchesInfo
+		}
+	} else {
+		// For is_multi_branch = 0, use the provided request param `single_branch_id` and `single_branch_name`
+		branches = []response.BranchInfo{
+			{
+				BranchID:   req.SingleBranchID,
+				BranchName: req.SingleBranchName,
+			},
+		}
+	}
+
+	return regions, branches, nil
+}
+
 func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, pagination interface{}) (data []entity.InquiryPrescreening, rowTotal int, err error) {
 
 	var (
 		filter         string
 		filterBranch   string
 		filterPaginate string
-		getRegion      []entity.RegionBranch
 		encrypted      entity.EncryptString
 	)
 
 	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
 
-	if req.MultiBranch == "1" {
-		getRegion, _ = r.GetRegionBranch(req.UserID)
-
-		if len(getRegion) > 0 {
-			extractBranchIDUser := ""
-			userAllRegion := false
-			for _, value := range getRegion {
-				if strings.ToUpper(value.RegionName) == constant.REGION_ALL {
-					userAllRegion = true
-					break
-				} else if value.BranchMember != "" {
-					branch := strings.Trim(strings.ReplaceAll(value.BranchMember, `"`, `'`), "'")
-					replace := strings.ReplaceAll(branch, `[`, ``)
-					branchMember := strings.ReplaceAll(replace, `]`, ``)
-					extractBranchIDUser += branchMember
-					if value != getRegion[len(getRegion)-1] {
-						extractBranchIDUser += ","
-					}
-				}
-			}
-			if userAllRegion {
-				filterBranch += ""
-			} else {
-				filterBranch += "WHERE tm.BranchID IN (" + extractBranchIDUser + ")"
-			}
-		} else {
-			filterBranch += ""
-			if req.BranchID != "999" {
-				filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
-			}
+	if req.MultiBranch == "1" && req.BranchID != "" && req.BranchFilter == "" {
+		var listBranches []response.BranchInfo
+		_, listBranches, err = r.GetListBranch(request.ReqListBranch{
+			UserID:         req.UserID,
+			IsMultiBranch:  1,
+			SingleBranchID: req.BranchID,
+		})
+		if err != nil {
+			return
 		}
-	} else if req.BranchID != "" && req.BranchFilter == "" {
+
+		if len(listBranches) > 0 {
+			var branchIDs []string
+			for _, branch := range listBranches {
+				branchIDs = append(branchIDs, "'"+branch.BranchID+"'")
+			}
+			filterBranch += "WHERE tm.BranchID IN (" + strings.Join(branchIDs, ",") + ")"
+		} else {
+			filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
+		}
+	} else {
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
 	}
 
@@ -1392,44 +1474,32 @@ func (r repoHandler) GetInquiryCa(req request.ReqInquiryCa, pagination interface
 		filterBranch   string
 		filterPaginate string
 		query          string
-		getRegion      []entity.RegionBranch
 		encrypted      entity.EncryptString
 	)
 
 	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
 
-	if req.MultiBranch == "1" {
-		getRegion, _ = r.GetRegionBranch(req.UserID)
-
-		if len(getRegion) > 0 {
-			extractBranchIDUser := ""
-			userAllRegion := false
-			for _, value := range getRegion {
-				if strings.ToUpper(value.RegionName) == constant.REGION_ALL {
-					userAllRegion = true
-					break
-				} else if value.BranchMember != "" {
-					branch := strings.Trim(strings.ReplaceAll(value.BranchMember, `"`, `'`), "'")
-					replace := strings.ReplaceAll(branch, `[`, ``)
-					branchMember := strings.ReplaceAll(replace, `]`, ``)
-					extractBranchIDUser += branchMember
-					if value != getRegion[len(getRegion)-1] {
-						extractBranchIDUser += ","
-					}
-				}
-			}
-			if userAllRegion {
-				filterBranch += ""
-			} else {
-				filterBranch += "WHERE tm.BranchID IN (" + extractBranchIDUser + ")"
-			}
-		} else {
-			filterBranch += ""
-			if req.BranchID != "999" {
-				filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
-			}
+	if req.MultiBranch == "1" && req.BranchID != "" && req.BranchFilter == "" {
+		var listBranches []response.BranchInfo
+		_, listBranches, err = r.GetListBranch(request.ReqListBranch{
+			UserID:         req.UserID,
+			IsMultiBranch:  1,
+			SingleBranchID: req.BranchID,
+		})
+		if err != nil {
+			return
 		}
-	} else if req.BranchID != "" && req.BranchFilter == "" {
+
+		if len(listBranches) > 0 {
+			var branchIDs []string
+			for _, branch := range listBranches {
+				branchIDs = append(branchIDs, "'"+branch.BranchID+"'")
+			}
+			filterBranch += "WHERE tm.BranchID IN (" + strings.Join(branchIDs, ",") + ")"
+		} else {
+			filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
+		}
+	} else {
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
 	}
 
@@ -2884,7 +2954,6 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 		filterPaginate string
 		query          string
 		alias          string
-		getRegion      []entity.RegionBranch
 		encrypted      entity.EncryptString
 	)
 
@@ -2892,38 +2961,27 @@ func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, paginati
 
 	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
 
-	if req.MultiBranch == "1" {
-		getRegion, _ = r.GetRegionBranch(req.UserID)
-
-		if len(getRegion) > 0 {
-			extractBranchIDUser := ""
-			userAllRegion := false
-			for _, value := range getRegion {
-				if strings.ToUpper(value.RegionName) == constant.REGION_ALL {
-					userAllRegion = true
-					break
-				} else if value.BranchMember != "" {
-					branch := strings.Trim(strings.ReplaceAll(value.BranchMember, `"`, `'`), "'")
-					replace := strings.ReplaceAll(branch, `[`, ``)
-					branchMember := strings.ReplaceAll(replace, `]`, ``)
-					extractBranchIDUser += branchMember
-					if value != getRegion[len(getRegion)-1] {
-						extractBranchIDUser += ","
-					}
-				}
-			}
-			if userAllRegion {
-				filterBranch += ""
-			} else {
-				filterBranch += "WHERE tm.BranchID IN (" + extractBranchIDUser + ")"
-			}
-		} else {
-			filterBranch += ""
-			if req.BranchID != "999" {
-				filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
-			}
+	if req.MultiBranch == "1" && req.BranchID != "" && req.BranchFilter == "" {
+		var listBranches []response.BranchInfo
+		_, listBranches, err = r.GetListBranch(request.ReqListBranch{
+			UserID:         req.UserID,
+			IsMultiBranch:  1,
+			SingleBranchID: req.BranchID,
+		})
+		if err != nil {
+			return
 		}
-	} else if req.BranchID != "" && req.BranchFilter == "" {
+
+		if len(listBranches) > 0 {
+			var branchIDs []string
+			for _, branch := range listBranches {
+				branchIDs = append(branchIDs, "'"+branch.BranchID+"'")
+			}
+			filterBranch += "WHERE tm.BranchID IN (" + strings.Join(branchIDs, ",") + ")"
+		} else {
+			filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
+		}
+	} else {
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
 	}
 

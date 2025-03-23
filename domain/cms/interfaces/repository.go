@@ -50,6 +50,7 @@ type Repository interface {
 	BatchUpdateMappingCluster(data []entity.MasterMappingCluster, history entity.HistoryConfigChanges) (err error)
 	GetMappingClusterBranch(req request.ReqListMappingClusterBranch) (data []entity.ConfinsBranch, err error)
 	GetMappingClusterChangeLog(pagination interface{}) (data []entity.MappingClusterChangeLog, rowTotal int, err error)
+	GetListBranch(req request.ReqListBranch) (regions []string, branches []response.BranchInfo, err error)
 	SaveWorker(trxworker entity.TrxWorker) (err error)
 	SaveUrlFormAKKK(prospectID, urlFormAKKK string) (err error)
 }

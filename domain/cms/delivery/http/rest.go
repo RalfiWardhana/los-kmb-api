@@ -50,6 +50,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.GET("/cms/approval/inquiry", handler.ApprovalInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/approval/reason", handler.ApprovalReason, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/approval/submit-approval", handler.SubmitApproval, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/get-list-branch", handler.GetListBranch, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/form-akkk", handler.GenerateFormAKKK, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ne/submit", handler.SubmitNE, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/ne/inquiry", handler.NEInquiry, middlewares.AccessMiddleware())
@@ -68,6 +69,53 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.POST("/cms/quota-deviasi/reset", handler.QuotaDeviasiResetBranch, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/list-order/inquiry", handler.ListOrderInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/list-order/inquiry/:prospect_id", handler.ListOrderDetail, middlewares.AccessMiddleware())
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Get List Branch
+// @Tags Branch
+// @Produce json
+// @Param user_id query string true "User ID"
+// @Param is_multi_branch query int true "Is Multi Branch (1 = yes, 0 = no)"
+// @Param single_branch_id query string true "Single Branch ID"
+// @Param single_branch_name query string true "Single Branch Name"
+// @Param role_type query int true "Role Type"
+// @Param role_alias query string true "Role Alias"
+// @Success 200 {object} response.ApiResponse{data=response.ListBranchResponse}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/get-list-branch [get]
+func (c *handlerCMS) GetListBranch(ctx echo.Context) (err error) {
+	var accessToken = middlewares.UserInfoData.AccessToken
+
+	req := request.ReqListBranch{
+		UserID:           ctx.QueryParam("user_id"),
+		SingleBranchID:   ctx.QueryParam("single_branch_id"),
+		SingleBranchName: ctx.QueryParam("single_branch_name"),
+		RoleAlias:        ctx.QueryParam("role_alias"),
+	}
+
+	isMultiBranch, _ := strconv.Atoi(ctx.QueryParam("is_multi_branch"))
+	req.IsMultiBranch = isMultiBranch
+
+	roleType, _ := strconv.Atoi(ctx.QueryParam("role_type"))
+	req.RoleType = roleType
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get List Branch", err)
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get List Branch", req, err)
+	}
+
+	data, err := c.usecase.GetListBranch(ctx.Request().Context(), req)
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get List Branch", req, err)
+	}
+
+	return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get List Branch", req, data)
 }
 
 // CMS NEW KMB Tools godoc

@@ -17,6 +17,7 @@ type Usecase interface {
 	SubmitDecision(ctx context.Context, req request.ReqSubmitDecision) (data response.CAResponse, err error)
 	GetSearchInquiry(ctx context.Context, req request.ReqSearchInquiry, pagination interface{}) (data []entity.InquiryDataSearch, rowTotal int, err error)
 	GetAkkk(prospectID string) (data entity.Akkk, err error)
+	GetListBranch(ctx context.Context, req request.ReqListBranch) (data response.ListBranchResponse, err error)
 	SubmitNE(ctx context.Context, req request.MetricsNE) (data interface{}, err error)
 	GetInquiryNE(ctx context.Context, req request.ReqInquiryNE, pagination interface{}) (data []entity.InquiryDataNE, rowTotal int, err error)
 	GetInquiryNEDetail(ctx context.Context, prospectID string) (data request.MetricsNE, err error)

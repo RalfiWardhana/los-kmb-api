@@ -153,6 +153,23 @@ func (u usecase) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 	return
 }
 
+func (u usecase) GetListBranch(ctx context.Context, req request.ReqListBranch) (data response.ListBranchResponse, err error) {
+	regions, branches, err := u.repository.GetListBranch(req)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - " + err.Error())
+		return
+	}
+
+	data = response.ListBranchResponse{
+		RegisteredOnRegion: regions,
+		RegisteredOnBranch: branches,
+		RoleType:           req.RoleType,
+		RoleAlias:          req.RoleAlias,
+	}
+
+	return
+}
+
 func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data interface{}, err error) {
 
 	filtering := request.Filtering{

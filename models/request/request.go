@@ -849,6 +849,15 @@ type RequestPagination struct {
 	Limit int `json:"limit"`
 }
 
+type ReqListBranch struct {
+	UserID           string `json:"user_id" query:"user_id" validate:"required"`
+	IsMultiBranch    int    `json:"is_multi_branch" query:"is_multi_branch"`
+	SingleBranchID   string `json:"single_branch_id" query:"single_branch_id" validate:"required"`
+	SingleBranchName string `json:"single_branch_name" query:"single_branch_name" validate:"required"`
+	RoleType         int    `json:"role_type" query:"role_type" validate:"required"`
+	RoleAlias        string `json:"role_alias" query:"role_alias" validate:"required"`
+}
+
 type ReqInquiryPrescreening struct {
 	SearchBy     string `json:"search_by"`
 	SearchValue  string `json:"search_value"`

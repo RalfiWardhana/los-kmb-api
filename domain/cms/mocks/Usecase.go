@@ -565,6 +565,34 @@ func (_m *Usecase) GetInquiryQuotaDeviasi(req request.ReqListQuotaDeviasi, pagin
 	return r0, r1, r2
 }
 
+// GetListBranch provides a mock function with given fields: ctx, req
+func (_m *Usecase) GetListBranch(ctx context.Context, req request.ReqListBranch) (response.ListBranchResponse, error) {
+	ret := _m.Called(ctx, req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetListBranch")
+	}
+
+	var r0 response.ListBranchResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqListBranch) (response.ListBranchResponse, error)); ok {
+		return rf(ctx, req)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqListBranch) response.ListBranchResponse); ok {
+		r0 = rf(ctx, req)
+	} else {
+		r0 = ret.Get(0).(response.ListBranchResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqListBranch) error); ok {
+		r1 = rf(ctx, req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetMappingClusterBranch provides a mock function with given fields: req
 func (_m *Usecase) GetMappingClusterBranch(req request.ReqListMappingClusterBranch) ([]entity.ConfinsBranch, error) {
 	ret := _m.Called(req)

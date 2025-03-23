@@ -732,6 +732,45 @@ func (_m *Repository) GetLimitApprovalDeviasi(prospectID string) (entity.Mapping
 	return r0, r1
 }
 
+// GetListBranch provides a mock function with given fields: req
+func (_m *Repository) GetListBranch(req request.ReqListBranch) ([]string, []response.BranchInfo, error) {
+	ret := _m.Called(req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetListBranch")
+	}
+
+	var r0 []string
+	var r1 []response.BranchInfo
+	var r2 error
+	if rf, ok := ret.Get(0).(func(request.ReqListBranch) ([]string, []response.BranchInfo, error)); ok {
+		return rf(req)
+	}
+	if rf, ok := ret.Get(0).(func(request.ReqListBranch) []string); ok {
+		r0 = rf(req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(request.ReqListBranch) []response.BranchInfo); ok {
+		r1 = rf(req)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]response.BranchInfo)
+		}
+	}
+
+	if rf, ok := ret.Get(2).(func(request.ReqListBranch) error); ok {
+		r2 = rf(req)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // GetMappingCluster provides a mock function with given fields:
 func (_m *Repository) GetMappingCluster() ([]entity.MasterMappingCluster, error) {
 	ret := _m.Called()

@@ -872,6 +872,18 @@ type ResponseGenerateFormAKKK struct {
 	Path     string `json:"path"`
 }
 
+type BranchInfo struct {
+	BranchID   string `json:"branch_id"`
+	BranchName string `json:"branch_name"`
+}
+
+type ListBranchResponse struct {
+	RegisteredOnRegion []string     `json:"registered_on_region"`
+	RegisteredOnBranch []BranchInfo `json:"registered_on_branch"`
+	RoleType           int          `json:"role_type"`
+	RoleAlias          string       `json:"role_alias"`
+}
+
 type InquiryRow struct {
 	Inquiry        interface{} `json:"inquiry"`
 	RecordFiltered int         `json:"recordsFiltered"`
