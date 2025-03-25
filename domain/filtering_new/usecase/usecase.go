@@ -222,7 +222,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 				entityFiltering.Reason = constant.REASON_REJECT_ASSET_CHECK
 
 				entityLockingSystem.Reason = constant.ASSET_PERNAH_CANCEL
-				entityLockingSystem.UnbanDate = time.Now().AddDate(0, 0, configLockAssetCancel.LockAssetBan+1)
+				entityLockingSystem.UnbanDate = time.Now().AddDate(0, 0, configLockAssetCancel.LockAssetBan)
 
 				err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
 				return respFiltering, err
@@ -243,7 +243,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 				entityFiltering.Reason = constant.REASON_REJECT_ASSET_CHECK_DATA_CHANGED
 
 				entityLockingSystem.Reason = constant.ASSET_PERNAH_CANCEL
-				entityLockingSystem.UnbanDate = time.Now().AddDate(0, 0, configLockAssetCancel.LockAssetBan+1)
+				entityLockingSystem.UnbanDate = time.Now().AddDate(0, 0, configLockAssetCancel.LockAssetBan)
 
 				err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
 				return respFiltering, err
@@ -310,7 +310,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 				entityFiltering.Reason = constant.REASON_REJECT_ASSET_CHECK
 
 				entityLockingSystem.Reason = constant.ASSET_PERNAH_REJECT
-				entityLockingSystem.UnbanDate = time.Now().AddDate(0, 0, configLockAssetReject.LockAssetBan+1)
+				entityLockingSystem.UnbanDate = time.Now().AddDate(0, 0, configLockAssetReject.LockAssetBan)
 
 				err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
 				return respFiltering, err
@@ -331,7 +331,7 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 				entityFiltering.Reason = constant.REASON_REJECT_ASSET_CHECK_DATA_CHANGED
 
 				entityLockingSystem.Reason = constant.ASSET_PERNAH_REJECT
-				entityLockingSystem.UnbanDate = time.Now().AddDate(0, 0, configLockAssetReject.LockAssetBan+1)
+				entityLockingSystem.UnbanDate = time.Now().AddDate(0, 0, configLockAssetReject.LockAssetBan)
 
 				err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
 				return respFiltering, err
