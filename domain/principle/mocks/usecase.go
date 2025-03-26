@@ -591,9 +591,9 @@ func (_m *Usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType str
 	return r0, r1
 }
 
-// GetLTV provides a mock function with given fields: ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet
-func (_m *Usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID string, resultPefindo string, bpkbName string, manufactureYear string, tenor int, bakiDebet float64) (int, bool, error) {
-	ret := _m.Called(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+// GetLTV provides a mock function with given fields: ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi
+func (_m *Usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID string, resultPefindo string, bpkbName string, manufactureYear string, tenor int, bakiDebet float64, isSimulasi bool) (int, bool, error) {
+	ret := _m.Called(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetLTV")
@@ -602,23 +602,23 @@ func (_m *Usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.Mapp
 	var r0 int
 	var r1 bool
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) (int, bool, error)); ok {
-		return rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+	if rf, ok := ret.Get(0).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64, bool) (int, bool, error)); ok {
+		return rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) int); ok {
-		r0 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+	if rf, ok := ret.Get(0).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64, bool) int); ok {
+		r0 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) bool); ok {
-		r1 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+	if rf, ok := ret.Get(1).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64, bool) bool); ok {
+		r1 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64) error); ok {
-		r2 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet)
+	if rf, ok := ret.Get(2).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64, bool) error); ok {
+		r2 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi)
 	} else {
 		r2 = ret.Error(2)
 	}

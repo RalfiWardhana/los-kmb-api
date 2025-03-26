@@ -11,8 +11,10 @@ import (
 	"los-kmb-api/shared/utils"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
+	"sync"
 
 	jsoniter "github.com/json-iterator/go"
 )
@@ -243,70 +245,104 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 			return
 		}
 
+		var (
+			wg                 sync.WaitGroup
+			availableTenorChan = make(chan response.GetAvailableTenorData, len(marsevFilterProgramRes.Data[0].Tenors))
+			errChan            = make(chan error, len(marsevFilterProgramRes.Data[0].Tenors))
+		)
+
 		for _, tenorInfo := range marsevFilterProgramRes.Data[0].Tenors {
+			wg.Add(1)
+			go func(tenorInfo response.TenorInfo) {
+				defer wg.Done()
 
-			if tenorInfo.Tenor >= 36 {
-				var trxTenor response.UsecaseApi
-				if tenorInfo.Tenor == 36 {
-					trxTenor, err = u.usecase.RejectTenor36(clusterCMO)
-					if err != nil {
-						continue
-					}
-				} else if tenorInfo.Tenor > 36 {
-					continue
-				}
-				if trxTenor.Result == constant.DECISION_REJECT {
-					continue
-				}
-			}
-
-			ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet)
-			if err != nil {
-				return data, err
-			}
-
-			if ltv == 0 {
-				continue
-			}
-
-			// get loan amount
-			payloadMaxLoan := request.ReqMarsevLoanAmount{
-				BranchID:      req.BranchID,
-				OTR:           otr,
-				MaxLTV:        ltv,
-				IsRecalculate: false,
-			}
-
-			marsevLoanAmountRes, err := u.usecase.MarsevGetLoanAmount(ctx, payloadMaxLoan, req.ProspectID, accessToken)
-			if err != nil {
-				continue
-			}
-
-			dealer := "NON PSA"
-			if marsevLoanAmountRes.Data.IsPsa {
-				dealer = "PSA"
-			}
-
-			if marsevLoanAmountRes.Data.LoanAmountMaximum >= req.LoanAmount {
-				for _, installmentData := range marsevCalculateInstallmentRes.Data {
-					if installmentData.Tenor == tenorInfo.Tenor {
-						availableTenor := response.GetAvailableTenorData{
-							Tenor:             tenorInfo.Tenor,
-							IsPsa:             installmentData.IsPSA,
-							Dealer:            dealer,
-							InstallmentAmount: installmentData.MonthlyInstallment,
-							AF:                installmentData.AmountOfFinance,
-							AdminFee:          installmentData.AdminFee,
-							DPAmount:          installmentData.DPAmount,
-							NTF:               installmentData.NTF,
-							AssetCategoryID:   categoryId,
-							OTR:               otr,
+				if tenorInfo.Tenor >= 36 {
+					var trxTenor response.UsecaseApi
+					if tenorInfo.Tenor == 36 {
+						trxTenor, err = u.usecase.RejectTenor36(clusterCMO)
+						if err != nil {
+							errChan <- err
+							return
 						}
-						data = append(data, availableTenor)
+					} else if tenorInfo.Tenor > 36 {
+						return
+					}
+					if trxTenor.Result == constant.DECISION_REJECT {
+						return
 					}
 				}
-			}
+
+				ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet, isSimulasi)
+				if err != nil {
+					errChan <- err
+					return
+				}
+
+				if ltv == 0 {
+					return
+				}
+
+				// Get loan amount
+				payloadMaxLoan := request.ReqMarsevLoanAmount{
+					BranchID:      req.BranchID,
+					OTR:           otr,
+					MaxLTV:        ltv,
+					IsRecalculate: false,
+				}
+
+				marsevLoanAmountRes, err := u.usecase.MarsevGetLoanAmount(ctx, payloadMaxLoan, req.ProspectID, accessToken)
+				if err != nil {
+					errChan <- err
+					return
+				}
+
+				dealer := "NON PSA"
+				if marsevLoanAmountRes.Data.IsPsa {
+					dealer = "PSA"
+				}
+
+				if marsevLoanAmountRes.Data.LoanAmountMaximum >= req.LoanAmount {
+					for _, installmentData := range marsevCalculateInstallmentRes.Data {
+						if installmentData.Tenor == tenorInfo.Tenor {
+							availableTenor := response.GetAvailableTenorData{
+								Tenor:             tenorInfo.Tenor,
+								IsPsa:             installmentData.IsPSA,
+								Dealer:            dealer,
+								InstallmentAmount: installmentData.MonthlyInstallment,
+								AF:                installmentData.AmountOfFinance,
+								AdminFee:          installmentData.AdminFee,
+								DPAmount:          installmentData.DPAmount,
+								NTF:               installmentData.NTF,
+								AssetCategoryID:   categoryId,
+								OTR:               otr,
+							}
+							availableTenorChan <- availableTenor
+						}
+					}
+				}
+			}(tenorInfo)
 		}
+
+		go func() {
+			wg.Wait()
+			close(availableTenorChan)
+			close(errChan)
+		}()
+
+		if err := <-errChan; err != nil {
+			return []response.GetAvailableTenorData{}, err
+		}
+
+		var availableTenorList []response.GetAvailableTenorData
+		for tenorData := range availableTenorChan {
+			availableTenorList = append(availableTenorList, tenorData)
+		}
+
+		sort.Slice(availableTenorList, func(i, j int) bool {
+			return availableTenorList[i].Tenor < availableTenorList[j].Tenor
+		})
+
+		data = append(data, availableTenorList...)
 	}
 
 	return

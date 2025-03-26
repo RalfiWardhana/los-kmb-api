@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -215,47 +216,74 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 			return
 		}
 
+		var (
+			wg             sync.WaitGroup
+			loanAmountChan = make(chan float64, len(marsevFilterProgramRes.Data[0].Tenors))
+			errChan        = make(chan error, len(marsevFilterProgramRes.Data[0].Tenors))
+		)
+
 		for _, tenorInfo := range marsevFilterProgramRes.Data[0].Tenors {
+			wg.Add(1)
+			go func(tenorInfo response.TenorInfo) {
+				defer wg.Done()
 
-			if tenorInfo.Tenor >= 36 {
-				var trxTenor response.UsecaseApi
-				if tenorInfo.Tenor == 36 {
-					trxTenor, err = u.usecase.RejectTenor36(clusterCMO)
-					if err != nil {
-						continue
+				if tenorInfo.Tenor >= 36 {
+					var trxTenor response.UsecaseApi
+					if tenorInfo.Tenor == 36 {
+						trxTenor, err = u.usecase.RejectTenor36(clusterCMO)
+						if err != nil {
+							errChan <- err
+							return
+						}
+					} else if tenorInfo.Tenor > 36 {
+						return
 					}
-				} else if tenorInfo.Tenor > 36 {
-					continue
+					if trxTenor.Result == constant.DECISION_REJECT {
+						return
+					}
 				}
-				if trxTenor.Result == constant.DECISION_REJECT {
-					continue
+
+				ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet, isSimulasi)
+				if err != nil {
+					errChan <- err
+					return
 				}
-			}
 
-			ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet)
-			if err != nil {
-				return data, err
-			}
+				if ltv == 0 {
+					return
+				}
 
-			if ltv == 0 {
-				continue
-			}
+				// get loan amount
+				payloadMaxLoan := request.ReqMarsevLoanAmount{
+					BranchID:      req.BranchID,
+					OTR:           otr,
+					MaxLTV:        ltv,
+					IsRecalculate: false,
+				}
 
-			// get loan amount
-			payloadMaxLoan := request.ReqMarsevLoanAmount{
-				BranchID:      req.BranchID,
-				OTR:           otr,
-				MaxLTV:        ltv,
-				IsRecalculate: false,
-			}
+				marsevLoanAmountRes, err := u.usecase.MarsevGetLoanAmount(ctx, payloadMaxLoan, req.ProspectID, accessToken)
+				if err != nil {
+					errChan <- err
+					return
+				}
 
-			marsevLoanAmountRes, err := u.usecase.MarsevGetLoanAmount(ctx, payloadMaxLoan, req.ProspectID, accessToken)
-			if err != nil {
-				continue
-			}
+				loanAmountChan <- marsevLoanAmountRes.Data.LoanAmountMaximum
+			}(tenorInfo)
+		}
 
-			if maxLoanAmount < marsevLoanAmountRes.Data.LoanAmountMaximum {
-				maxLoanAmount = marsevLoanAmountRes.Data.LoanAmountMaximum
+		go func() {
+			wg.Wait()
+			close(loanAmountChan)
+			close(errChan)
+		}()
+
+		if err := <-errChan; err != nil {
+			return response.GetMaxLoanAmountData{}, err
+		}
+
+		for loanAmount := range loanAmountChan {
+			if loanAmount > maxLoanAmount {
+				maxLoanAmount = loanAmount
 			}
 		}
 	}
@@ -265,7 +293,7 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 	return
 }
 
-func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64) (ltv int, adjustTenor bool, err error) {
+func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64, isSimulasi bool) (ltv int, adjustTenor bool, err error) {
 	var bpkbNameType int
 	if strings.Contains(os.Getenv("NAMA_SAMA"), bpkbName) {
 		bpkbNameType = 1
@@ -364,7 +392,7 @@ func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.Mappin
 
 	err = u.repository.SaveTrxElaborateLTV(trxElaborateLTV)
 	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " Save elaborate ltv error")
+		err = errors.New(constant.ERROR_UPSTREAM + " - save elaborate ltv error")
 		return
 	}
 

@@ -1919,6 +1919,7 @@ func TestGetAvailableTenor(t *testing.T) {
 			},
 			ltvResponse:   80,
 			errLoanAmount: errors.New("failed to get loan amount"),
+			expectedError: errors.New("failed to get loan amount"),
 		},
 		{
 			name: "error reject tenor 36",
@@ -2330,7 +2331,7 @@ func TestGetAvailableTenor(t *testing.T) {
 												mockUsecase.On("MarsevCalculateInstallment", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.calculationResponse, tc.errCalculation)
 												mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything).Return(tc.mappingLTV, tc.errMappingLTV)
 												mockUsecase.On("MarsevGetLoanAmount", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.loanAmountResponse, tc.errLoanAmount)
-												mockUsecase.On("GetLTV", ctx, tc.mappingLTV, tc.request.ProspectID, "PASS", tc.request.BPKBNameType, tc.request.ManufactureYear, mock.AnythingOfType("int"), float64(0)).Return(tc.ltvResponse, tc.adjustTenorResponse, tc.errGetLTV)
+												mockUsecase.On("GetLTV", ctx, tc.mappingLTV, tc.request.ProspectID, "PASS", tc.request.BPKBNameType, tc.request.ManufactureYear, mock.AnythingOfType("int"), float64(0), mock.Anything).Return(tc.ltvResponse, tc.adjustTenorResponse, tc.errGetLTV)
 
 												if tc.marsevResponse.Data[0].Tenors[0].Tenor == 36 {
 													mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.rejectTenorResponse, tc.errRejectTenor)
