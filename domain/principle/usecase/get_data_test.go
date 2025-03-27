@@ -186,6 +186,7 @@ func TestGetDataPrinciple(t *testing.T) {
 		ResultPefindo:           "PASS",
 		BakiDebet:               0,
 		ReadjustContext:         "tenor",
+		ReferralCode:            "TQ72AJ",
 	}
 
 	testcases := []struct {
@@ -864,6 +865,8 @@ func TestGetDataPrinciple(t *testing.T) {
 				"result_pefindo":             sampleTrxKPM.ResultPefindo,
 				"baki_debet":                 sampleTrxKPM.BakiDebet,
 				"readjust_context":           sampleTrxKPM.ReadjustContext,
+				"rent_finish_date":           sampleTrxKPM.RentFinishDate,
+				"referral_code":              sampleTrxKPM.ReferralCode,
 			},
 		},
 		{

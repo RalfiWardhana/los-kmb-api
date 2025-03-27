@@ -62,61 +62,17 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		return
 	}
 
-	config, err := u.repository.GetConfig("2Wilen", "KMB-OFF", "2wilen_config")
-	if err != nil {
-		return
-	}
-	json.Unmarshal([]byte(config.Value), &configValue2Wilen)
-
-	readjustCount := u.repository.GetReadjustCountTrxKPM(req.ProspectID)
-	if readjustCount >= configValue2Wilen.Data.MaxReadjustAttempt {
-		err = errors.New(constant.ERROR_MAX_EXCEED)
-		return resp, err
-	}
-
-	prospectIDCheck := req.ProspectID
-	if trxKPM.ProspectID == "" || readjustCount == 0 {
-		reg := regexp.MustCompile(`[A-Za-z]{3}-`)
-		prospectIDCheck = reg.ReplaceAllString(req.ProspectID, "SIM-")
-	}
-
-	availableTenors, err := u.multiUsecase.GetAvailableTenor(ctx, request.GetAvailableTenor{
-		ProspectID:         prospectIDCheck,
-		BranchID:           req.BranchID,
-		IDNumber:           req.IDNumber,
-		BirthDate:          req.BirthDate,
-		SurgateMotherName:  req.SurgateMotherName,
-		LegalName:          req.LegalName,
-		MobilePhone:        req.MobilePhone,
-		BPKBNameType:       req.BPKBNameType,
-		ManufactureYear:    req.ManufactureYear,
-		AssetCode:          req.AssetCode,
-		AssetUsageTypeCode: req.AssetUsageTypeCode,
-		LicensePlate:       req.LicensePlate,
-		LoanAmount:         req.LoanAmount,
-	}, accessToken)
-	if err != nil {
-		return
-	}
-
-	for _, avavailableTenor := range availableTenors {
-		if avavailableTenor.Tenor == req.Tenor {
-			if avavailableTenor.AdminFee != req.AdminFee {
-				err = errors.New(constant.INTERNAL_SERVER_ERROR + " - Admin fee does not match")
-				return
-			}
-		}
-	}
-
 	statusCode := constant.STATUS_KPM_WAIT_2WILEN
 	u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
-		OrderID:       req.ProspectID,
-		KpmID:         req.KPMID,
-		Source:        3,
-		StatusCode:    statusCode,
-		ProductName:   req.AssetCode,
-		BranchCode:    req.BranchID,
-		AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
+		OrderID:                    req.ProspectID,
+		KpmID:                      req.KPMID,
+		Source:                     3,
+		StatusCode:                 statusCode,
+		ProductName:                req.AssetCode,
+		BranchCode:                 req.BranchID,
+		AssetTypeCode:              constant.KPM_ASSET_TYPE_CODE_MOTOR,
+		ReferralCode:               req.ReferralCode,
+		Is2wPrincipleApprovalOrder: true,
 	}), 0)
 
 	id := utils.GenerateUUID()
@@ -207,6 +163,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		trxKPM.DupcheckData = string(utils.SafeEncoding(savedDupcheckData))
 		trxKPM.NegativeCustomerData = string(utils.SafeEncoding(savedNegativeCustomerData))
 		trxKPM.KPMID = req.KPMID
+		trxKPM.ReferralCode = req.ReferralCode
 
 		if resp.ReadjustContext != nil {
 			trxKPM.ReadjustContext = *resp.ReadjustContext
@@ -245,16 +202,64 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 
 		if statusCode != constant.DECISION_KPM_APPROVE {
 			u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
-				OrderID:       req.ProspectID,
-				KpmID:         req.KPMID,
-				Source:        3,
-				StatusCode:    statusCode,
-				ProductName:   req.AssetCode,
-				BranchCode:    req.BranchID,
-				AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
+				OrderID:                    req.ProspectID,
+				KpmID:                      req.KPMID,
+				Source:                     3,
+				StatusCode:                 statusCode,
+				ProductName:                req.AssetCode,
+				BranchCode:                 req.BranchID,
+				AssetTypeCode:              constant.KPM_ASSET_TYPE_CODE_MOTOR,
+				ReferralCode:               req.ReferralCode,
+				Is2wPrincipleApprovalOrder: true,
 			}), 0)
 		}
 	}()
+
+	config, err := u.repository.GetConfig("2Wilen", "KMB-OFF", "2wilen_config")
+	if err != nil {
+		return
+	}
+	json.Unmarshal([]byte(config.Value), &configValue2Wilen)
+
+	readjustCount := u.repository.GetReadjustCountTrxKPM(req.ProspectID)
+	if readjustCount >= configValue2Wilen.Data.MaxReadjustAttempt {
+		err = errors.New(constant.ERROR_MAX_EXCEED)
+		return resp, err
+	}
+
+	prospectIDCheck := req.ProspectID
+	if trxKPM.ProspectID == "" || readjustCount == 0 {
+		reg := regexp.MustCompile(`[A-Za-z]{3}-`)
+		prospectIDCheck = reg.ReplaceAllString(req.ProspectID, "SIM-")
+	}
+
+	availableTenors, err := u.multiUsecase.GetAvailableTenor(ctx, request.GetAvailableTenor{
+		ProspectID:         prospectIDCheck,
+		BranchID:           req.BranchID,
+		IDNumber:           req.IDNumber,
+		BirthDate:          req.BirthDate,
+		SurgateMotherName:  req.SurgateMotherName,
+		LegalName:          req.LegalName,
+		MobilePhone:        req.MobilePhone,
+		BPKBNameType:       req.BPKBNameType,
+		ManufactureYear:    req.ManufactureYear,
+		AssetCode:          req.AssetCode,
+		AssetUsageTypeCode: req.AssetUsageTypeCode,
+		LicensePlate:       req.LicensePlate,
+		LoanAmount:         req.LoanAmount,
+	}, accessToken)
+	if err != nil {
+		return
+	}
+
+	for _, avavailableTenor := range availableTenors {
+		if avavailableTenor.Tenor == req.Tenor {
+			if avavailableTenor.AdminFee != req.AdminFee {
+				err = errors.New(constant.INTERNAL_SERVER_ERROR + " - Admin fee does not match")
+				return
+			}
+		}
+	}
 
 	// Check Banned Chassis Number
 	bannedChassisNumber, err := u.usecase.CheckBannedChassisNumber(req.NoChassis)
@@ -1371,13 +1376,15 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	}
 
 	u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
-		OrderID:       req.ProspectID,
-		KpmID:         req.KPMID,
-		Source:        3,
-		StatusCode:    constant.DECISION_KPM_APPROVE,
-		ProductName:   req.AssetCode,
-		BranchCode:    req.BranchID,
-		AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
+		OrderID:                    req.ProspectID,
+		KpmID:                      req.KPMID,
+		Source:                     3,
+		StatusCode:                 constant.DECISION_KPM_APPROVE,
+		ProductName:                req.AssetCode,
+		BranchCode:                 req.BranchID,
+		AssetTypeCode:              constant.KPM_ASSET_TYPE_CODE_MOTOR,
+		ReferralCode:               req.ReferralCode,
+		Is2wPrincipleApprovalOrder: true,
 	}), 0)
 
 	time.Sleep(2 * time.Second)

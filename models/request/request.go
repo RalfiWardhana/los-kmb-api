@@ -1321,14 +1321,16 @@ type SallySubmit2wPrincipleFiltering struct {
 }
 
 type Update2wPrincipleTransaction struct {
-	OrderID       string `json:"order_id"`
-	KpmID         int    `json:"kpm_id"`
-	Source        int    `json:"source"`
-	StatusCode    string `json:"status_code"`
-	ProductName   string `json:"product_name"`
-	Amount        int    `json:"amount"`
-	AssetTypeCode string `json:"asset_type_code"`
-	BranchCode    string `json:"branch_code"`
+	OrderID                    string `json:"order_id"`
+	KpmID                      int    `json:"kpm_id"`
+	Source                     int    `json:"source"`
+	StatusCode                 string `json:"status_code"`
+	ProductName                string `json:"product_name"`
+	Amount                     int    `json:"amount"`
+	AssetTypeCode              string `json:"asset_type_code"`
+	BranchCode                 string `json:"branch_code"`
+	ReferralCode               string `json:"referral_code"`
+	Is2wPrincipleApprovalOrder bool   `json:"is_2w_principle_approval_order"`
 }
 
 type PrincipleGetData struct {
@@ -1442,6 +1444,7 @@ type Submission2Wilen struct {
 	AssetCategoryID         string  `json:"asset_category_id" validate:"required,max=100" example:"BEBEK"`
 	KPMID                   int     `json:"kpm_id" validate:"required"`
 	RentFinishDate          string  `json:"rent_finish_date" validate:"omitempty,dateformat" example:"2021-07-29"`
+	ReferralCode            string  `json:"referral_code" validate:"omitempty,max=20,htmlValidation" example:"TQ72AJ"`
 }
 
 type History2Wilen struct {

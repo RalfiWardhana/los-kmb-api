@@ -172,13 +172,20 @@ func (u usecase) Publish2Wilen(ctx context.Context, req request.Publish2Wilen, a
 		return
 	}
 
+	var referralCode string
+	if code, ok := trxKPM.ReferralCode.(string); ok {
+		referralCode = code
+	}
+
 	return u.producer.PublishEvent(ctx, accessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
-		OrderID:       req.ProspectID,
-		KpmID:         trxKPM.KPMID,
-		Source:        3,
-		StatusCode:    req.StatusCode,
-		ProductName:   trxKPM.AssetCode,
-		BranchCode:    trxKPM.BranchID,
-		AssetTypeCode: constant.KPM_ASSET_TYPE_CODE_MOTOR,
+		OrderID:                    req.ProspectID,
+		KpmID:                      trxKPM.KPMID,
+		Source:                     3,
+		StatusCode:                 req.StatusCode,
+		ProductName:                trxKPM.AssetCode,
+		BranchCode:                 trxKPM.BranchID,
+		AssetTypeCode:              constant.KPM_ASSET_TYPE_CODE_MOTOR,
+		ReferralCode:               referralCode,
+		Is2wPrincipleApprovalOrder: true,
 	}), 0)
 }
