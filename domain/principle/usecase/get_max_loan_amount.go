@@ -390,10 +390,12 @@ func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.Mappin
 		}
 	}
 
-	err = u.repository.SaveTrxElaborateLTV(trxElaborateLTV)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - save elaborate ltv error")
-		return
+	if !isSimulasi {
+		err = u.repository.SaveTrxElaborateLTV(trxElaborateLTV)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - save elaborate ltv error")
+			return
+		}
 	}
 
 	return
