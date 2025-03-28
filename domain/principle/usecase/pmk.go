@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/response"
@@ -25,7 +26,10 @@ func (u usecase) CheckPMK(branchID, customerKMB string, income float64, homeStat
 
 	var configData entity.ConfigPMK
 
-	json.Unmarshal([]byte(config.Value), &configData)
+	if err = json.Unmarshal([]byte(config.Value), &configData); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config pmk")
+		return
+	}
 
 	minimalIncome, err := u.repository.GetMinimalIncomePMK(branchID, customerKMB)
 	if err != nil {

@@ -241,7 +241,10 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			return data, err
 		}
 
-		json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &assetList)
+		if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &assetList); err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data asset list")
+			return data, err
+		}
 
 		if len(assetList.Records) == 0 {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Call Asset MDM Error")
@@ -413,7 +416,10 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			return data, err
 		}
 
-		json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &assetList)
+		if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &assetList); err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data asset list")
+			return data, err
+		}
 
 		if len(assetList.Records) == 0 {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Call Asset MDM Error")

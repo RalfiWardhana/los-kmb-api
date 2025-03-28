@@ -513,7 +513,10 @@ func (u usecase) RejectTenor36(cluster string) (result response.UsecaseApi, err 
 		return
 	}
 
-	json.Unmarshal([]byte(config.Value), &configValue)
+	if err = json.Unmarshal([]byte(config.Value), &configValue); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config tenor36")
+		return
+	}
 
 	for _, v := range configValue["data"] {
 		if v == cluster {
@@ -766,7 +769,10 @@ func (u usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan, 
 
 	} else {
 
-		json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &responseScs)
+		if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &responseScs); err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response scorepro")
+			return
+		}
 
 	}
 
@@ -844,7 +850,10 @@ func (u usecase) Scorepro(ctx context.Context, req request.PrinciplePembiayaan, 
 			}
 
 			var configValueExpContract response.ExpiredContractConfig
-			json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+			if err = json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract); err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config expired contract")
+				return
+			}
 
 			if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
 				// Jalur mirip seperti customer segment "REGULAR"
@@ -1041,7 +1050,10 @@ func (u usecase) DsrCheck(ctx context.Context, req request.PrinciplePembiayaan, 
 			return
 		}
 
-		json.Unmarshal([]byte(jsoniter.Get(installmentLOS.Body(), "data").ToString()), &instOther)
+		if err = json.Unmarshal([]byte(jsoniter.Get(installmentLOS.Body(), "data").ToString()), &instOther); err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response installment pending")
+			return
+		}
 
 		if i == 0 {
 			installmentOther = instOther.InstallmentAmountKmbOff + instOther.InstallmentAmountKmobOff + instOther.InstallmentAmountNewKmb + instOther.InstallmentAmountUC + instOther.InstallmentAmountWgOff + instOther.InstallmentAmountWgOnl
@@ -1263,7 +1275,10 @@ func (u usecase) TotalDsrFmfPbk(ctx context.Context, totalIncome, newInstallment
 		}
 
 		var configValueExpContract response.ExpiredContractConfig
-		json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+		if err = json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract); err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config expired contract")
+			return
+		}
 
 		if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
 			// Jalur mirip seperti customer segment "REGULAR"

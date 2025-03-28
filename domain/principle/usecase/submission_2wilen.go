@@ -219,7 +219,11 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	if err != nil {
 		return
 	}
-	json.Unmarshal([]byte(config.Value), &configValue2Wilen)
+
+	if err = json.Unmarshal([]byte(config.Value), &configValue2Wilen); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config")
+		return
+	}
 
 	readjustCount := u.repository.GetReadjustCountTrxKPM(req.ProspectID)
 	if readjustCount >= configValue2Wilen.Data.MaxReadjustAttempt {
@@ -691,7 +695,10 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 				}
 
 				var configValueExpContract response.ExpiredContractConfig
-				json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+				if err = json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract); err != nil {
+					err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config expired contract")
+					return
+				}
 
 				if configValueExpContract.Data.ExpiredContractCheckEnabled && !(monthsDiff <= configValueExpContract.Data.ExpiredContractMaxMonths) {
 					// Jalur mirip seperti customer segment "REGULAR"
@@ -916,7 +923,10 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 			}
 
 			var configValueExpContract response.ExpiredContractConfig
-			json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+			if err = json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract); err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config expired contract")
+				return
+			}
 
 			if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
 				// Jalur mirip seperti customer segment "REGULAR"
@@ -1216,7 +1226,10 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		return
 	}
 
-	json.Unmarshal([]byte(config.Value), &configValue)
+	if err = json.Unmarshal([]byte(config.Value), &configValue); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config dupcheck")
+		return
+	}
 
 	customerData = append(customerData, request.CustomerData{
 		TransactionID:   req.ProspectID,
@@ -1870,7 +1883,10 @@ func (u usecase) NegativeCustomerCheck(ctx context.Context, reqs request.Dupchec
 		return
 	}
 
-	json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &negativeCustomer)
+	if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &negativeCustomer); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response negative customer")
+		return
+	}
 
 	if negativeCustomer != (response.NegativeCustomer{}) {
 		if negativeCustomer.BadType == "" {
@@ -1948,7 +1964,10 @@ func (u usecase) CheckMobilePhoneFMF(ctx context.Context, prospectID, mobilePhon
 		return
 	}
 
-	json.Unmarshal([]byte(jsoniter.Get(getListEmployee.Body(), "data").ToString()), &listEmployee)
+	if err = json.Unmarshal([]byte(jsoniter.Get(getListEmployee.Body(), "data").ToString()), &listEmployee); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response list employee")
+		return
+	}
 
 	// set default pass
 	data.SourceDecision = constant.SOURCE_DECISION_NOHP

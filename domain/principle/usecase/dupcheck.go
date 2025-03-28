@@ -122,7 +122,10 @@ func (u usecase) DupcheckIntegrator(ctx context.Context, prospectID, idNumber, l
 		return
 	}
 
-	json.Unmarshal([]byte(jsoniter.Get(custDupcheck.Body(), "data").ToString()), &spDupcheck)
+	if err = json.Unmarshal([]byte(jsoniter.Get(custDupcheck.Body(), "data").ToString()), &spDupcheck); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data dupcheck")
+		return
+	}
 
 	return
 
