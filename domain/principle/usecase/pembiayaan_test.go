@@ -3566,7 +3566,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 
 			mockRepository.On("MasterMappingDeviasiDSR", tc.totalIncome).Return(tc.mappingDeviasiDSR, tc.errGetConfig)
 
-			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.SpDupcheckMap.CustomerID.(string)+"/2", mock.Anything, mock.Anything, constant.METHOD_GET, false, 0, 30, tc.prospectID, tc.accessToken).Return(resp, tc.errLatestInstallment).Once()
+			mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.SpDupcheckMap.CustomerID.(string)+"/2", mock.Anything, mock.Anything, constant.METHOD_GET, false, 0, 30, tc.prospectID, tc.accessToken).Return(resp, tc.errLatestInstallment).Once()
 
 			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
