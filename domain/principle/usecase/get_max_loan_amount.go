@@ -115,6 +115,29 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 
 	var maxLoanAmount float64
 	if len(marsevFilterProgramRes.Data) > 0 {
+		marsevProgramData := marsevFilterProgramRes.Data[0]
+
+		if req.ReferralCode != nil {
+			miNumbers := strings.Split(os.Getenv("MI_NUMBER_WHITELIST"), ",")
+			miNumberSet := make(map[int]struct{}, len(miNumbers))
+			for _, miNumber := range miNumbers {
+				miNumberInt, _ := strconv.Atoi(miNumber)
+				miNumberSet[miNumberInt] = struct{}{}
+			}
+
+			found := false
+			for _, datum := range marsevFilterProgramRes.Data {
+				if _, exists := miNumberSet[datum.MINumber]; exists {
+					marsevProgramData = datum
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				return data, errors.New(constant.ERROR_BAD_REQUEST + " - No matching MI_NUMBER found")
+			}
+		}
 
 		var assetMP response.AssetYearList
 		assetMP, err = u.usecase.MDMGetAssetYear(ctx, req.BranchID, req.AssetCode, req.ManufactureYear, req.ProspectID, accessToken)
@@ -218,11 +241,11 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 
 		var (
 			wg             sync.WaitGroup
-			loanAmountChan = make(chan float64, len(marsevFilterProgramRes.Data[0].Tenors))
-			errChan        = make(chan error, len(marsevFilterProgramRes.Data[0].Tenors))
+			loanAmountChan = make(chan float64, len(marsevProgramData.Tenors))
+			errChan        = make(chan error, len(marsevProgramData.Tenors))
 		)
 
-		for _, tenorInfo := range marsevFilterProgramRes.Data[0].Tenors {
+		for _, tenorInfo := range marsevProgramData.Tenors {
 			wg.Add(1)
 			go func(tenorInfo response.TenorInfo) {
 				defer wg.Done()

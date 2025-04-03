@@ -112,6 +112,29 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 	}
 
 	if len(marsevFilterProgramRes.Data) > 0 {
+		marsevProgramData := marsevFilterProgramRes.Data[0]
+
+		if req.ReferralCode != nil {
+			miNumbers := strings.Split(os.Getenv("MI_NUMBER_WHITELIST"), ",")
+			miNumberSet := make(map[int]struct{}, len(miNumbers))
+			for _, miNumber := range miNumbers {
+				miNumberInt, _ := strconv.Atoi(miNumber)
+				miNumberSet[miNumberInt] = struct{}{}
+			}
+
+			found := false
+			for _, datum := range marsevFilterProgramRes.Data {
+				if _, exists := miNumberSet[datum.MINumber]; exists {
+					marsevProgramData = datum
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				return data, errors.New(constant.ERROR_BAD_REQUEST + " - No matching MI_NUMBER found")
+			}
+		}
 
 		var assetMP response.AssetYearList
 		assetMP, err = u.usecase.MDMGetAssetYear(ctx, req.BranchID, req.AssetCode, req.ManufactureYear, req.ProspectID, accessToken)
@@ -215,7 +238,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 		mappingLicensePlate := mdmMasterMappingLicensePlateRes.Data.Records[0]
 
 		payloadCalculate := request.ReqMarsevCalculateInstallment{
-			ProgramID:              marsevFilterProgramRes.Data[0].ID,
+			ProgramID:              marsevProgramData.ID,
 			BranchID:               req.BranchID,
 			CustomerOccupationCode: "KRYSW",
 			AssetUsageTypeCode:     req.AssetUsageTypeCode,
@@ -247,11 +270,11 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 
 		var (
 			wg                 sync.WaitGroup
-			availableTenorChan = make(chan response.GetAvailableTenorData, len(marsevFilterProgramRes.Data[0].Tenors))
-			errChan            = make(chan error, len(marsevFilterProgramRes.Data[0].Tenors))
+			availableTenorChan = make(chan response.GetAvailableTenorData, len(marsevProgramData.Tenors))
+			errChan            = make(chan error, len(marsevProgramData.Tenors))
 		)
 
-		for _, tenorInfo := range marsevFilterProgramRes.Data[0].Tenors {
+		for _, tenorInfo := range marsevProgramData.Tenors {
 			wg.Add(1)
 			go func(tenorInfo response.TenorInfo) {
 				defer wg.Done()
