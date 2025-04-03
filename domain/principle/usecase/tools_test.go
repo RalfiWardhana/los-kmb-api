@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"los-kmb-api/domain/principle/mocks"
@@ -668,10 +669,13 @@ func TestPublish2Wilen(t *testing.T) {
 				StatusCode: "APPROVE",
 			},
 			trxKPM: entity.TrxKPM{
-				KPMID:        1,
-				AssetCode:    "MOT",
-				BranchID:     "BR001",
-				ReferralCode: "TQ72AJ",
+				KPMID:     1,
+				AssetCode: "MOT",
+				BranchID:  "BR001",
+				ReferralCode: sql.NullString{
+					String: "TQ72AJ",
+					Valid:  true,
+				},
 			},
 		},
 		{
@@ -690,10 +694,13 @@ func TestPublish2Wilen(t *testing.T) {
 				StatusCode: "APPROVE",
 			},
 			trxKPM: entity.TrxKPM{
-				KPMID:        1,
-				AssetCode:    "MOT",
-				BranchID:     "BR001",
-				ReferralCode: "TQ72AJ",
+				KPMID:     1,
+				AssetCode: "MOT",
+				BranchID:  "BR001",
+				ReferralCode: sql.NullString{
+					String: "TQ72AJ",
+					Valid:  true,
+				},
 			},
 			errPublish:    errors.New("publish error"),
 			expectedError: errors.New("publish error"),
@@ -717,7 +724,7 @@ func TestPublish2Wilen(t *testing.T) {
 					"branch_code":                    tc.trxKPM.BranchID,
 					"asset_type_code":                "11",
 					"amount":                         0,
-					"referral_code":                  tc.trxKPM.ReferralCode,
+					"referral_code":                  tc.trxKPM.ReferralCode.String,
 					"is_2w_principle_approval_order": true,
 				}
 

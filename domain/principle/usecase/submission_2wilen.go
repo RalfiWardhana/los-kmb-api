@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -163,7 +164,10 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		trxKPM.DupcheckData = string(utils.SafeEncoding(savedDupcheckData))
 		trxKPM.NegativeCustomerData = string(utils.SafeEncoding(savedNegativeCustomerData))
 		trxKPM.KPMID = req.KPMID
-		trxKPM.ReferralCode = req.ReferralCode
+		trxKPM.ReferralCode = sql.NullString{
+			String: req.ReferralCode,
+			Valid:  req.ReferralCode != "",
+		}
 
 		if resp.ReadjustContext != nil {
 			trxKPM.ReadjustContext = *resp.ReadjustContext

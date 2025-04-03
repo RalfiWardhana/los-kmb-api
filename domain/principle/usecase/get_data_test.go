@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"los-kmb-api/domain/principle/mocks"
@@ -186,7 +187,10 @@ func TestGetDataPrinciple(t *testing.T) {
 		ResultPefindo:           "PASS",
 		BakiDebet:               0,
 		ReadjustContext:         "tenor",
-		ReferralCode:            "TQ72AJ",
+		ReferralCode: sql.NullString{
+			String: "TQ72AJ",
+			Valid:  true,
+		},
 	}
 
 	testcases := []struct {
