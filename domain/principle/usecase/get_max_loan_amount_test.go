@@ -2232,6 +2232,15 @@ func TestMDMGetMasterAsset(t *testing.T) {
 			expectedError: errors.New(constant.ERROR_UPSTREAM + " - Call Asset MDM Error"),
 		},
 		{
+			name:             "not 200 status code",
+			branchID:         "426",
+			search:           "VARIO",
+			prospectID:       "SAL-123",
+			resEngineAPICode: 200,
+			resEngineAPIBody: `-`,
+			expectedError:    errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data asset list"),
+		},
+		{
 			name:             "empty records",
 			branchID:         "426",
 			search:           "NONEXISTENT",
@@ -2387,6 +2396,16 @@ func TestMDMGetAssetYear(t *testing.T) {
 				}
 			}`,
 			expectedError: errors.New(constant.ERROR_UPSTREAM + " - Call Marketprice MDM Error"),
+		},
+		{
+			name:             "error unmarshal",
+			branchID:         "426",
+			assetCode:        "MOT001",
+			search:           "2023",
+			prospectID:       "SAL-123",
+			resEngineAPICode: 200,
+			resEngineAPIBody: `-`,
+			expectedError:    errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data marketprice"),
 		},
 		{
 			name:             "empty records",

@@ -32,7 +32,7 @@ func TestGetEmployeeData(t *testing.T) {
 	testCases := []struct {
 		name           string
 		employeeID     string
-		mockResponse   response.GetEmployeeByID
+		mockResponse   interface{}
 		mockStatusCode int
 		mockError      error
 		expectedError  error
@@ -81,6 +81,14 @@ func TestGetEmployeeData(t *testing.T) {
 			expectedError:  fmt.Errorf(errorLib.ErrBadRequest + " - Get employee data"),
 			expectedData:   response.EmployeeCMOResponse{},
 			mockError:      fmt.Errorf(errorLib.ErrBadRequest + " - Get employee data"),
+		},
+		{
+			name:           "error unmarshal",
+			employeeID:     "123",
+			mockResponse:   `-`,
+			mockStatusCode: 200,
+			expectedError:  fmt.Errorf(constant.ERROR_UPSTREAM + " - error unmarshal data response get employee"),
+			expectedData:   response.EmployeeCMOResponse{},
 		},
 		{
 			name:       "error real career date empty",
@@ -143,7 +151,7 @@ func TestGetFpdCMO(t *testing.T) {
 		name           string
 		cmoID          string
 		bpkbNameType   string
-		mockResponse   response.GetFPDCmoByID
+		mockResponse   interface{}
 		mockStatusCode int
 		mockError      error
 		expectedError  error
@@ -241,6 +249,15 @@ func TestGetFpdCMO(t *testing.T) {
 			expectedError:  fmt.Errorf(errorLib.ErrGatewayTimeout + " - Get fpd data"),
 			expectedData:   response.FpdCMOResponse{},
 			mockError:      fmt.Errorf(errorLib.ErrGatewayTimeout + " - Get fpd data"),
+		},
+		{
+			name:           "error unmarshal fpd",
+			cmoID:          "CMO03",
+			bpkbNameType:   "NAMA BEDA",
+			mockResponse:   `-`,
+			mockStatusCode: 200,
+			expectedError:  errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response get fpd cmo"),
+			expectedData:   response.FpdCMOResponse{},
 		},
 		{
 			name:           "error fpd data not found",

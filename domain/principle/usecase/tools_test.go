@@ -509,14 +509,16 @@ func TestCheckOrderPendingPrinciple(t *testing.T) {
 
 					if tc.publishCalled && tc.errUpdate == nil {
 						expectedPayload := map[string]interface{}{
-							"order_id":        order.ProspectID,
-							"kpm_id":          order.KPMID,
-							"source":          3,
-							"status_code":     "LOS-C",
-							"product_name":    order.AssetCode,
-							"branch_code":     order.BranchID,
-							"asset_type_code": "11",
-							"amount":          0,
+							"order_id":                       order.ProspectID,
+							"kpm_id":                         order.KPMID,
+							"source":                         3,
+							"status_code":                    "LOS-C",
+							"product_name":                   order.AssetCode,
+							"branch_code":                    order.BranchID,
+							"asset_type_code":                "11",
+							"amount":                         0,
+							"referral_code":                  "",
+							"is_2w_principle_approval_order": false,
 						}
 
 						mockProducer.On("PublishEvent",
@@ -607,14 +609,16 @@ func TestPrinciplePublish(t *testing.T) {
 
 			if tc.errGetPrinciple == nil {
 				expectedPayload := map[string]interface{}{
-					"order_id":        tc.request.ProspectID,
-					"kpm_id":          tc.principleStepOne.KPMID,
-					"source":          3,
-					"status_code":     tc.request.StatusCode,
-					"product_name":    tc.principleStepOne.AssetCode,
-					"branch_code":     tc.principleStepOne.BranchID,
-					"asset_type_code": "11",
-					"amount":          0,
+					"order_id":                       tc.request.ProspectID,
+					"kpm_id":                         tc.principleStepOne.KPMID,
+					"source":                         3,
+					"status_code":                    tc.request.StatusCode,
+					"product_name":                   tc.principleStepOne.AssetCode,
+					"branch_code":                    tc.principleStepOne.BranchID,
+					"asset_type_code":                "11",
+					"amount":                         0,
+					"referral_code":                  "",
+					"is_2w_principle_approval_order": false,
 				}
 
 				mockProducer.On("PublishEvent",
@@ -664,9 +668,10 @@ func TestPublish2Wilen(t *testing.T) {
 				StatusCode: "APPROVE",
 			},
 			trxKPM: entity.TrxKPM{
-				KPMID:     1,
-				AssetCode: "MOT",
-				BranchID:  "BR001",
+				KPMID:        1,
+				AssetCode:    "MOT",
+				BranchID:     "BR001",
+				ReferralCode: "TQ72AJ",
 			},
 		},
 		{
@@ -685,9 +690,10 @@ func TestPublish2Wilen(t *testing.T) {
 				StatusCode: "APPROVE",
 			},
 			trxKPM: entity.TrxKPM{
-				KPMID:     1,
-				AssetCode: "MOT",
-				BranchID:  "BR001",
+				KPMID:        1,
+				AssetCode:    "MOT",
+				BranchID:     "BR001",
+				ReferralCode: "TQ72AJ",
 			},
 			errPublish:    errors.New("publish error"),
 			expectedError: errors.New("publish error"),
@@ -703,14 +709,16 @@ func TestPublish2Wilen(t *testing.T) {
 
 			if tc.errGetTrxKPM == nil {
 				expectedPayload := map[string]interface{}{
-					"order_id":        tc.request.ProspectID,
-					"kpm_id":          tc.trxKPM.KPMID,
-					"source":          3,
-					"status_code":     tc.request.StatusCode,
-					"product_name":    tc.trxKPM.AssetCode,
-					"branch_code":     tc.trxKPM.BranchID,
-					"asset_type_code": "11",
-					"amount":          0,
+					"order_id":                       tc.request.ProspectID,
+					"kpm_id":                         tc.trxKPM.KPMID,
+					"source":                         3,
+					"status_code":                    tc.request.StatusCode,
+					"product_name":                   tc.trxKPM.AssetCode,
+					"branch_code":                    tc.trxKPM.BranchID,
+					"asset_type_code":                "11",
+					"amount":                         0,
+					"referral_code":                  tc.trxKPM.ReferralCode,
+					"is_2w_principle_approval_order": true,
 				}
 
 				mockProducer.On("PublishEvent",

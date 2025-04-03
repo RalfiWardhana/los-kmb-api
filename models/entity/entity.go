@@ -3017,6 +3017,7 @@ type TrxKPM struct {
 	AssetCategoryID             string      `gorm:"column:AssetCategoryID;type:varchar(100);"`
 	KPMID                       int         `gorm:"column:KPMID;"`
 	RentFinishDate              interface{} `gorm:"column:RentFinishDate"`
+	ReferralCode                interface{} `gorm:"column:ReferralCode"`
 	CheckNokaNosinResult        interface{} `gorm:"column:CheckNokaNosinResult;type:varchar(50);"`
 	CheckNokaNosinCode          interface{} `gorm:"column:CheckNokaNosinCode;type:varchar(50);"`
 	CheckNokaNosinReason        interface{} `gorm:"column:CheckNokaNosinReason;type:varchar(200);"`

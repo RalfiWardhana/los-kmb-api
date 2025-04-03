@@ -481,7 +481,10 @@ func (u usecase) MDMGetMasterAsset(ctx context.Context, branchID string, search 
 		return
 	}
 
-	json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &assetList)
+	if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &assetList); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data asset list")
+		return
+	}
 
 	if len(assetList.Records) == 0 {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Call Asset MDM Error")
@@ -514,7 +517,10 @@ func (u usecase) MDMGetAssetYear(ctx context.Context, branchID string, assetCode
 		return
 	}
 
-	json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &assetMP)
+	if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &assetMP); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data marketprice")
+		return
+	}
 
 	if len(assetMP.Records) == 0 {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Call Marketprice MDM Error")
