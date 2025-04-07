@@ -962,7 +962,7 @@ func (r repoHandler) GetTrxKPMStatusHistory(req request.History2Wilen) (data []e
 	}
 
 	query := fmt.Sprintf(`
-		SELECT s.ProspectID as ProspectID, s.id as id, s.Decision as Decision, s.created_at as created_at, k.KpmID as KpmID, k.IDNumber as IDNumber, k.ReferralCode as ReferralCode, k.LoanAmount as LoanAmount
+		SELECT s.ProspectID as ProspectID, s.id as id, s.Decision as Decision, s.created_at as created_at, k.KpmID as KpmID, scp.dbo.DEC_B64('SEC', k.IDNumber) as IDNumber, k.ReferralCode as ReferralCode, k.LoanAmount as LoanAmount
 		FROM trx_kpm_status AS s WITH (nolock)
 		LEFT JOIN (
 		  SELECT *, ROW_NUMBER() OVER (PARTITION BY ProspectID ORDER BY created_at DESC) AS rn
@@ -972,19 +972,6 @@ func (r repoHandler) GetTrxKPMStatusHistory(req request.History2Wilen) (data []e
 
 	if err = r.newKmb.Raw(query, args...).Scan(&data).Error; err != nil {
 		return
-	}
-
-	for i := range data {
-		if data[i].IDNumber != nil {
-			var decrypted struct {
-				IDNumber *string `gorm:"column:IDNumber;type:varchar(20)"`
-			}
-			decryptQuery := fmt.Sprintf(`SELECT scp.dbo.DEC_B64('SEC', '%s') AS IDNumber`, *data[i].IDNumber)
-			if err = r.newKmb.Raw(decryptQuery).Scan(&decrypted).Error; err != nil {
-				return
-			}
-			data[i].IDNumber = decrypted.IDNumber
-		}
 	}
 
 	return

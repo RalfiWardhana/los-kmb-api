@@ -5883,7 +5883,7 @@ func TestGetTrxKPMStatusHistory(t *testing.T) {
 			}
 
 			query := fmt.Sprintf(`
-				SELECT s.ProspectID as ProspectID, s.id as id, s.Decision as Decision, s.created_at as created_at, k.KpmID as KpmID, k.IDNumber as IDNumber, k.ReferralCode as ReferralCode, k.LoanAmount as LoanAmount
+				SELECT s.ProspectID as ProspectID, s.id as id, s.Decision as Decision, s.created_at as created_at, k.KpmID as KpmID, scp.dbo.DEC_B64('SEC', k.IDNumber) as IDNumber, k.ReferralCode as ReferralCode, k.LoanAmount as LoanAmount
 				FROM trx_kpm_status AS s WITH (nolock)
 				LEFT JOIN (
 					SELECT *, ROW_NUMBER() OVER (PARTITION BY ProspectID ORDER BY created_at DESC) AS rn
