@@ -255,6 +255,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		AssetUsageTypeCode: req.AssetUsageTypeCode,
 		LicensePlate:       req.LicensePlate,
 		LoanAmount:         req.LoanAmount,
+		ReferralCode:       &req.ReferralCode,
 	}, accessToken)
 	if err != nil {
 		return

@@ -2,13 +2,10 @@ package middlewares
 
 import (
 	"encoding/json"
-	"net/http"
 	"strings"
 	"time"
 
 	"los-kmb-api/models/entity"
-	"los-kmb-api/shared/constant"
-	"los-kmb-api/shared/utils"
 
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
@@ -106,17 +103,6 @@ func (m *bodyDumpMiddleware) BodyDumpConfig() middleware.BodyDumpConfig {
 					KpmId:      kpmId,
 					CreatedAt:  time.Now(),
 				})
-
-				if e.Response().Status == http.StatusGatewayTimeout {
-					id := utils.GenerateUUID()
-					m.db.Create(&entity.TrxKPMStatus{
-						ID:         id,
-						ProspectID: prospectID,
-						Decision:   constant.STATUS_KPM_ERROR_2WILEN,
-						CreatedAt:  time.Now(),
-						UpdatedAt:  time.Now(),
-					})
-				}
 			}
 
 		},
