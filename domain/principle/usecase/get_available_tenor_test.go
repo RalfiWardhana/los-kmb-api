@@ -25,7 +25,8 @@ func TestGetAvailableTenor(t *testing.T) {
 	ctx := context.Background()
 	reqID := utils.GenerateUUID()
 	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
-
+	referralCode := "test"
+	os.Setenv("MI_NUMBER_WHITELIST", "123")
 	accessToken := "test-token"
 
 	testCases := []struct {
@@ -226,6 +227,273 @@ func TestGetAvailableTenor(t *testing.T) {
 					OTR:               60000000,
 				},
 			},
+		},
+		{
+			name: "success case with referral cde - simulation",
+			request: request.GetAvailableTenor{
+				ProspectID:      "SIM-123",
+				BranchID:        "123",
+				AssetCode:       "MOT",
+				LicensePlate:    "B1234XX",
+				BPKBNameType:    "K",
+				ManufactureYear: "2020",
+				LoanAmount:      50000000,
+				ReferralCode:    &referralCode,
+			},
+			config: entity.AppConfig{
+				Value: "^SIM-.*",
+			},
+			dupcheckResponse: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+			},
+			assetResponse: response.AssetList{
+				Records: []struct {
+					AssetCode           string `json:"asset_code"`
+					AssetDescription    string `json:"asset_description"`
+					AssetDisplay        string `json:"asset_display"`
+					AssetTypeID         string `json:"asset_type_id"`
+					BranchID            string `json:"branch_id"`
+					Brand               string `json:"brand"`
+					CategoryID          string `json:"category_id"`
+					CategoryDescription string `json:"category_description"`
+					IsElectric          bool   `json:"is_electric"`
+					Model               string `json:"model"`
+				}{
+					{
+						AssetCode:           "MOT",
+						AssetDescription:    "HONDA VARIO 160",
+						AssetDisplay:        "HONDA VARIO 160",
+						AssetTypeID:         "2W",
+						BranchID:            "123",
+						Brand:               "HONDA",
+						CategoryID:          "CAT1",
+						CategoryDescription: "Sport",
+						IsElectric:          false,
+						Model:               "VARIO",
+					},
+				},
+			},
+			cmoResponse: response.MDMMasterMappingBranchEmployeeResponse{
+				Data: []response.MDMMasterMappingBranchEmployeeRecord{
+					{
+						CMOID: "CMO123",
+					},
+				},
+			},
+			hrisResponse: response.EmployeeCMOResponse{
+				CMOCategory: "NEW",
+			},
+			plateResponse: response.MDMMasterMappingLicensePlateResponse{
+				Data: response.MDMMasterMappingLicensePlateData{
+					Records: []response.MDMMasterMappingLicensePlateRecord{
+						{
+							AreaID: "AREA1",
+						},
+					},
+				},
+			},
+			marsevResponse: response.MarsevFilterProgramResponse{
+				Data: []response.MarsevFilterProgramData{
+					{
+						ID:       "1234",
+						MINumber: 1,
+						Tenors: []response.TenorInfo{
+							{
+								Tenor: 12,
+							},
+							{
+								Tenor: 24,
+							},
+						},
+					},
+					{
+						ID:       "12345",
+						MINumber: 123,
+						Tenors: []response.TenorInfo{
+							{
+								Tenor: 12,
+							},
+							{
+								Tenor: 24,
+							},
+						},
+					},
+				},
+			},
+			assetYearListResponse: response.AssetYearList{
+				Records: []struct {
+					AssetCode        string `json:"asset_code"`
+					BranchID         string `json:"branch_id"`
+					Brand            string `json:"brand"`
+					ManufactureYear  int    `json:"manufacturing_year"`
+					MarketPriceValue int    `json:"market_price_value"`
+				}{
+					{
+						AssetCode:        "MOT",
+						BranchID:         "123",
+						Brand:            "HONDA",
+						ManufactureYear:  2020,
+						MarketPriceValue: 60000000,
+					},
+				},
+			},
+			calculationResponse: response.MarsevCalculateInstallmentResponse{
+				Data: []response.MarsevCalculateInstallmentData{
+					{
+						Tenor:              12,
+						MonthlyInstallment: 5000000,
+						AmountOfFinance:    45000000,
+						AdminFee:           1000000,
+						DPAmount:           5000000,
+						NTF:                50000000,
+						IsPSA:              true,
+					},
+					{
+						Tenor:              24,
+						MonthlyInstallment: 3000000,
+						AmountOfFinance:    45000000,
+						AdminFee:           1000000,
+						DPAmount:           5000000,
+						NTF:                50000000,
+						IsPSA:              true,
+					},
+				},
+			},
+			mappingLTV: []entity.MappingElaborateLTV{
+				{
+					LTV: 80,
+				},
+			},
+			ltvResponse: 80,
+			loanAmountResponse: response.MarsevLoanAmountResponse{
+				Data: response.MarsevLoanAmountData{
+					LoanAmountMaximum: 60000000,
+					IsPsa:             true,
+				},
+			},
+			expectedTenors: []response.GetAvailableTenorData{
+				{
+					Tenor:             12,
+					IsPsa:             true,
+					Dealer:            "PSA",
+					InstallmentAmount: 5000000,
+					AF:                45000000,
+					AdminFee:          1000000,
+					DPAmount:          5000000,
+					NTF:               50000000,
+					AssetCategoryID:   "CAT1",
+					OTR:               60000000,
+				},
+				{
+					Tenor:             24,
+					IsPsa:             true,
+					Dealer:            "PSA",
+					InstallmentAmount: 3000000,
+					AF:                45000000,
+					AdminFee:          1000000,
+					DPAmount:          5000000,
+					NTF:               50000000,
+					AssetCategoryID:   "CAT1",
+					OTR:               60000000,
+				},
+			},
+		},
+
+		{
+			name: "error case with referral cde - simulation",
+			request: request.GetAvailableTenor{
+				ProspectID:      "SIM-123",
+				BranchID:        "123",
+				AssetCode:       "MOT",
+				LicensePlate:    "B1234XX",
+				BPKBNameType:    "K",
+				ManufactureYear: "2020",
+				LoanAmount:      50000000,
+				ReferralCode:    &referralCode,
+			},
+			config: entity.AppConfig{
+				Value: "^SIM-.*",
+			},
+			dupcheckResponse: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+			},
+			assetResponse: response.AssetList{
+				Records: []struct {
+					AssetCode           string `json:"asset_code"`
+					AssetDescription    string `json:"asset_description"`
+					AssetDisplay        string `json:"asset_display"`
+					AssetTypeID         string `json:"asset_type_id"`
+					BranchID            string `json:"branch_id"`
+					Brand               string `json:"brand"`
+					CategoryID          string `json:"category_id"`
+					CategoryDescription string `json:"category_description"`
+					IsElectric          bool   `json:"is_electric"`
+					Model               string `json:"model"`
+				}{
+					{
+						AssetCode:           "MOT",
+						AssetDescription:    "HONDA VARIO 160",
+						AssetDisplay:        "HONDA VARIO 160",
+						AssetTypeID:         "2W",
+						BranchID:            "123",
+						Brand:               "HONDA",
+						CategoryID:          "CAT1",
+						CategoryDescription: "Sport",
+						IsElectric:          false,
+						Model:               "VARIO",
+					},
+				},
+			},
+			cmoResponse: response.MDMMasterMappingBranchEmployeeResponse{
+				Data: []response.MDMMasterMappingBranchEmployeeRecord{
+					{
+						CMOID: "CMO123",
+					},
+				},
+			},
+			hrisResponse: response.EmployeeCMOResponse{
+				CMOCategory: "NEW",
+			},
+			plateResponse: response.MDMMasterMappingLicensePlateResponse{
+				Data: response.MDMMasterMappingLicensePlateData{
+					Records: []response.MDMMasterMappingLicensePlateRecord{
+						{
+							AreaID: "AREA1",
+						},
+					},
+				},
+			},
+			marsevResponse: response.MarsevFilterProgramResponse{
+				Data: []response.MarsevFilterProgramData{
+					{
+						ID:       "1234",
+						MINumber: 1,
+						Tenors: []response.TenorInfo{
+							{
+								Tenor: 12,
+							},
+							{
+								Tenor: 24,
+							},
+						},
+					},
+					{
+						ID:       "12345",
+						MINumber: 1223,
+						Tenors: []response.TenorInfo{
+							{
+								Tenor: 12,
+							},
+							{
+								Tenor: 24,
+							},
+						},
+					},
+				},
+			},
+			expectedError: errors.New(constant.ERROR_BAD_REQUEST + " - No matching MI_NUMBER found"),
 		},
 		{
 			name: "error get config",
