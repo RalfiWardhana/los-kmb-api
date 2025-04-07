@@ -1176,7 +1176,7 @@ func (_m *Repository) GetTrxKPMStatus(prospectID string) (entity.TrxKPMStatus, e
 }
 
 // GetTrxLockSystem provides a mock function with given fields: idNumber, chassisNumber, engineNumber
-func (_m *Repository) GetTrxLockSystem(idNumber string, chassisNumber string, engineNumber string) (entity.TrxLockSystem, error) {
+func (_m *Repository) GetTrxLockSystem(idNumber string, chassisNumber string, engineNumber string) (entity.TrxLockSystem, string, error) {
 	ret := _m.Called(idNumber, chassisNumber, engineNumber)
 
 	if len(ret) == 0 {
@@ -1184,8 +1184,9 @@ func (_m *Repository) GetTrxLockSystem(idNumber string, chassisNumber string, en
 	}
 
 	var r0 entity.TrxLockSystem
-	var r1 error
-	if rf, ok := ret.Get(0).(func(string, string, string) (entity.TrxLockSystem, error)); ok {
+	var r1 string
+	var r2 error
+	if rf, ok := ret.Get(0).(func(string, string, string) (entity.TrxLockSystem, string, error)); ok {
 		return rf(idNumber, chassisNumber, engineNumber)
 	}
 	if rf, ok := ret.Get(0).(func(string, string, string) entity.TrxLockSystem); ok {
@@ -1194,13 +1195,19 @@ func (_m *Repository) GetTrxLockSystem(idNumber string, chassisNumber string, en
 		r0 = ret.Get(0).(entity.TrxLockSystem)
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string, string) error); ok {
+	if rf, ok := ret.Get(1).(func(string, string, string) string); ok {
 		r1 = rf(idNumber, chassisNumber, engineNumber)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(string)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(string, string, string) error); ok {
+		r2 = rf(idNumber, chassisNumber, engineNumber)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // GetTrxReject provides a mock function with given fields: idNumber, config

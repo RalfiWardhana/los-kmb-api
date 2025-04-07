@@ -7,7 +7,6 @@ import (
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
-	"strings"
 )
 
 func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber string, engineNumber string) (data response.LockSystem, err error) {
@@ -18,16 +17,10 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber 
 		trxReject         []entity.TrxLockSystem
 		trxCancel         []entity.TrxLockSystem
 		trxLockSystem     entity.TrxLockSystem
+		bannedType        string
 	)
 
-	defer func() {
-		if err == nil && data.IsBanned {
-			data.BannedType = constant.BANNED_TYPE_NIK
-			if strings.Contains(strings.ToLower(data.Reason), "asset") {
-				data.BannedType = constant.BANNED_TYPE_ASSET
-			}
-		}
-	}()
+	// Remove the existing defer function since we'll set BannedType directly
 
 	encryptedIDNumber, err = u.repository.GetEncB64(idNumber)
 	if err != nil {
@@ -36,7 +29,7 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber 
 	}
 
 	//scan banned IDNumber
-	trxLockSystem, err = u.repository.GetTrxLockSystem(encryptedIDNumber.MyString, chassisNumber, engineNumber)
+	trxLockSystem, bannedType, err = u.repository.GetTrxLockSystem(encryptedIDNumber.MyString, chassisNumber, engineNumber)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetTrxLockSystem Error")
 		return
@@ -46,6 +39,7 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber 
 		data.IsBanned = true
 		data.Reason = trxLockSystem.Reason
 		data.UnbanDate = trxLockSystem.UnbanDate.Format(constant.FORMAT_DATE)
+		data.BannedType = bannedType
 		return
 	}
 
@@ -85,6 +79,7 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber 
 		data.IsBanned = true
 		data.Reason = trxReject[0].Reason
 		data.UnbanDate = trxReject[0].UnbanDate.Format(constant.FORMAT_DATE)
+		data.BannedType = constant.BANNED_TYPE_NIK
 
 		err = u.repository.SaveTrxLockSystem(trxReject[0])
 		if err != nil {
@@ -105,6 +100,7 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber 
 		data.IsBanned = true
 		data.Reason = trxCancel[0].Reason
 		data.UnbanDate = trxCancel[0].UnbanDate.Format(constant.FORMAT_DATE)
+		data.BannedType = constant.BANNED_TYPE_NIK
 
 		err = u.repository.SaveTrxLockSystem(trxCancel[0])
 		if err != nil {

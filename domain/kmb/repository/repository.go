@@ -15,6 +15,7 @@ import (
 	"los-kmb-api/shared/utils"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -1435,28 +1436,57 @@ func (r repoHandler) SaveTrxLockSystem(trxLockSystem entity.TrxLockSystem) (err 
 	return
 }
 
-func (r repoHandler) GetTrxLockSystem(idNumber string, chassisNumber string, engineNumber string) (data entity.TrxLockSystem, err error) {
-	query := "SELECT TOP 1 * FROM trx_lock_system tls WHERE unban_date > CAST(GETDATE() as DATE) AND IDNumber = ?"
-	args := []interface{}{idNumber}
+func (r repoHandler) GetTrxLockSystem(idNumber string, chassisNumber string, engineNumber string) (data entity.TrxLockSystem, bannedType string, err error) {
+	query1 := "SELECT TOP 1 * FROM trx_lock_system tls WHERE unban_date > CAST(GETDATE() as DATE) AND IDNumber = ? ORDER BY unban_date DESC"
 
-	if chassisNumber != "" {
-		query += " OR chassis_number = ?"
-		args = append(args, chassisNumber)
-	}
-
-	if engineNumber != "" {
-		query += " OR engine_number = ?"
-		args = append(args, engineNumber)
-	}
-
-	query += " ORDER BY unban_date DESC"
-
-	if err = r.newKmbDB.Raw(query, args...).Scan(&data).Error; err != nil {
+	if err = r.newKmbDB.Raw(query1, idNumber).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
+		} else {
+			return
 		}
+	}
+
+	if data.ProspectID != "" {
+		data.Reason = strings.TrimPrefix(data.Reason, "Asset ")
+		bannedType = constant.BANNED_TYPE_NIK
 		return
 	}
+
+	if chassisNumber != "" || engineNumber != "" {
+		query2 := "SELECT TOP 1 * FROM trx_lock_system tls WHERE unban_date > CAST(GETDATE() as DATE) AND "
+		args := []interface{}{}
+
+		if chassisNumber != "" {
+			query2 += "chassis_number = ?"
+			args = append(args, chassisNumber)
+		}
+
+		if engineNumber != "" {
+			if chassisNumber != "" {
+				query2 += " OR "
+			}
+			query2 += "engine_number = ?"
+			args = append(args, engineNumber)
+		}
+
+		query2 += " ORDER BY unban_date DESC"
+
+		if err = r.newKmbDB.Raw(query2, args...).Scan(&data).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				err = nil
+			}
+			return
+		}
+
+		if data.ProspectID != "" {
+			bannedType = constant.BANNED_TYPE_ASSET
+			if !strings.HasPrefix(data.Reason, "Asset ") {
+				data.Reason = "Asset " + data.Reason
+			}
+		}
+	}
+
 	return
 }
 

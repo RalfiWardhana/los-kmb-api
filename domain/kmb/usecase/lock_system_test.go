@@ -28,6 +28,7 @@ func TestLockSystem(t *testing.T) {
 		trxReject            []entity.TrxLockSystem
 		trxCancel            []entity.TrxLockSystem
 		trxLockSystem        entity.TrxLockSystem
+		bannedType           string
 		errGetEncB64         error
 		errGetTrxLockSystem  error
 		errGetConfig         error
@@ -71,6 +72,7 @@ func TestLockSystem(t *testing.T) {
 				ProspectID: "TEST1",
 				UnbanDate:  date,
 			},
+			bannedType: constant.BANNED_TYPE_NIK,
 			result: response.LockSystem{
 				IsBanned:   true,
 				UnbanDate:  "2025-01-02",
@@ -90,6 +92,7 @@ func TestLockSystem(t *testing.T) {
 				Reason:     constant.ASSET_PERNAH_REJECT,
 				UnbanDate:  date,
 			},
+			bannedType: constant.BANNED_TYPE_ASSET,
 			result: response.LockSystem{
 				IsBanned:   true,
 				Reason:     constant.ASSET_PERNAH_REJECT,
@@ -170,9 +173,10 @@ func TestLockSystem(t *testing.T) {
 				},
 			},
 			result: response.LockSystem{
-				IsBanned:  true,
-				Reason:    constant.PERNAH_REJECT,
-				UnbanDate: "2025-01-02",
+				IsBanned:   true,
+				Reason:     constant.PERNAH_REJECT,
+				UnbanDate:  "2025-01-02",
+				BannedType: constant.BANNED_TYPE_NIK,
 			},
 			errSaveTrxLockSystem: errors.New(constant.ERROR_UPSTREAM + " - LockSystem SaveTrxLockSystem trxReject Error"),
 			err:                  errors.New(constant.ERROR_UPSTREAM + " - LockSystem SaveTrxLockSystem trxReject Error"),
@@ -239,9 +243,10 @@ func TestLockSystem(t *testing.T) {
 				},
 			},
 			result: response.LockSystem{
-				IsBanned:  true,
-				Reason:    constant.PERNAH_CANCEL,
-				UnbanDate: "2025-01-02",
+				IsBanned:   true,
+				Reason:     constant.PERNAH_CANCEL,
+				UnbanDate:  "2025-01-02",
+				BannedType: constant.BANNED_TYPE_NIK,
 			},
 			errSaveTrxLockSystem: errors.New(constant.ERROR_UPSTREAM + " - LockSystem SaveTrxLockSystem trxCancel Error"),
 			err:                  errors.New(constant.ERROR_UPSTREAM + " - LockSystem SaveTrxLockSystem trxCancel Error"),
@@ -265,7 +270,7 @@ func TestLockSystem(t *testing.T) {
 			mockHttpClient := new(httpclient.MockHttpClient)
 
 			mockRepository.On("GetEncB64", tc.idNumber).Return(tc.encryptedIDNumber, tc.errGetEncB64)
-			mockRepository.On("GetTrxLockSystem", tc.encryptedIDNumber.MyString, tc.chassisNumber, tc.engineNumber).Return(tc.trxLockSystem, tc.errGetTrxLockSystem)
+			mockRepository.On("GetTrxLockSystem", tc.encryptedIDNumber.MyString, tc.chassisNumber, tc.engineNumber).Return(tc.trxLockSystem, tc.bannedType, tc.errGetTrxLockSystem)
 			mockRepository.On("GetConfig", "lock_system", "KMB-OFF", "lock_system_kmb").Return(tc.config, tc.errGetConfig)
 			mockRepository.On("GetTrxReject", tc.encryptedIDNumber.MyString, mock.Anything).Return(tc.trxReject, tc.errGetTrxReject)
 			mockRepository.On("SaveTrxLockSystem", mock.Anything).Return(tc.errSaveTrxLockSystem)
