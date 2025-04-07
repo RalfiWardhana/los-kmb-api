@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"los-kmb-api/domain/principle/interfaces"
 	"los-kmb-api/models/entity"
+	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
@@ -935,12 +936,55 @@ func (r repoHandler) GetTrxKPMStatus(IDNumber string) (data entity.TrxKPMStatus,
 	return
 }
 
-func (r repoHandler) GetTrxKPMStatusHistory(prospectId string) (data []entity.TrxKPMStatusHistory, err error) {
+func (r repoHandler) GetTrxKPMStatusHistory(req request.History2Wilen) (data []entity.TrxKPMStatusHistory, err error) {
+	args := make([]interface{}, 0)
+	whereQuery := "WHERE 1=1"
 
-	query := fmt.Sprintf("SELECT * FROM trx_kpm_status WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC", prospectId)
+	if req.ProspectID != nil {
+		whereQuery += " AND s.ProspectID = ?"
+		args = append(args, *req.ProspectID)
+	}
 
-	if err = r.newKmb.Raw(query).Scan(&data).Error; err != nil {
+	if req.StartDate != nil && req.EndDate != nil {
+		whereQuery += " AND s.created_at BETWEEN ? AND ?"
+		args = append(args, *req.StartDate, *req.EndDate)
+	} else if req.StartDate != nil {
+		whereQuery += " AND s.created_at >= ?"
+		args = append(args, *req.StartDate)
+	} else if req.EndDate != nil {
+		whereQuery += " AND s.created_at <= ?"
+		args = append(args, *req.EndDate)
+	}
+
+	if req.Status != nil {
+		whereQuery += " AND s.Decision = ?"
+		args = append(args, *req.Status)
+	}
+
+	query := fmt.Sprintf(`
+		SELECT s.ProspectID as ProspectID, s.id as id, s.Decision as Decision, s.created_at as created_at, k.KpmID as KpmID, k.IDNumber as IDNumber, k.ReferralCode as ReferralCode, k.LoanAmount as LoanAmount
+		FROM trx_kpm_status AS s WITH (nolock)
+		LEFT JOIN (
+		  SELECT *, ROW_NUMBER() OVER (PARTITION BY ProspectID ORDER BY created_at DESC) AS rn
+		  FROM trx_kpm
+		) AS k ON s.ProspectID = k.ProspectID AND k.rn = 1 %s
+	`, whereQuery)
+
+	if err = r.newKmb.Raw(query, args...).Scan(&data).Error; err != nil {
 		return
+	}
+
+	for i := range data {
+		if data[i].IDNumber != nil {
+			var decrypted struct {
+				IDNumber *string `gorm:"column:IDNumber;type:varchar(20)"`
+			}
+			decryptQuery := fmt.Sprintf(`SELECT scp.dbo.DEC_B64('SEC', '%s') AS IDNumber`, *data[i].IDNumber)
+			if err = r.newKmb.Raw(decryptQuery).Scan(&decrypted).Error; err != nil {
+				return
+			}
+			data[i].IDNumber = decrypted.IDNumber
+		}
 	}
 
 	return
