@@ -594,7 +594,7 @@ func (c *handler) GetMaxLoanAmount(ctx echo.Context) (err error) {
 	if err != nil {
 
 		code, err := utils.WrapError(err)
-		if strings.Contains("No matching MI_NUMBER found", err.Error()) {
+		if strings.Contains(err.Error(), "No matching MI_NUMBER found") {
 			return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", "001"), err, response.WithMessage(err.Error()))
 		}
 		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
@@ -635,7 +635,7 @@ func (c *handler) GetAvailableTenor(ctx echo.Context) (err error) {
 
 		code, err := utils.WrapError(err)
 
-		if strings.Contains("No matching MI_NUMBER found", err.Error()) {
+		if strings.Contains(err.Error(), "No matching MI_NUMBER found") {
 			return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", "001"), err, response.WithMessage(err.Error()))
 		}
 		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
