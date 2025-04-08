@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"los-kmb-api/domain/principle/mocks"
 	"los-kmb-api/models/request"
 	responses "los-kmb-api/models/response"
@@ -1567,8 +1568,9 @@ func TestHistory2Wilen(t *testing.T) {
 		responses:    libResponse,
 	}
 
+	prospectID := "SAL-1140024080800004"
 	body := request.History2Wilen{
-		ProspectID: "SAL-1140024080800004",
+		ProspectID: &prospectID,
 	}
 
 	t.Run("success", func(t *testing.T) {
@@ -1596,7 +1598,7 @@ func TestHistory2Wilen(t *testing.T) {
 			},
 		}
 
-		mockUsecase.On("History2Wilen", body.ProspectID).Return(mockResponse, nil).Once()
+		mockUsecase.On("History2Wilen", body).Return(mockResponse, nil).Once()
 
 		_ = handler.History2Wilen(c)
 
@@ -1624,8 +1626,9 @@ func TestHistory2Wilen(t *testing.T) {
 		e := echo.New()
 		e.Validator = common.NewValidator()
 
+		prospectID2 := prospectID + "SAL-1140024080800004SAL-1140024080800004"
 		invalidBody := request.History2Wilen{
-			ProspectID: "",
+			ProspectID: &prospectID2,
 		}
 
 		data, _ := json.Marshal(invalidBody)
@@ -1652,10 +1655,11 @@ func TestHistory2Wilen(t *testing.T) {
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
-		mockUsecase.On("History2Wilen", body.ProspectID).Return([]responses.History2Wilen{}, errors.New("some error")).Once()
+		mockUsecase.On("History2Wilen", body).Return([]responses.History2Wilen{}, errors.New("some error")).Once()
 
 		_ = handler.History2Wilen(c)
 
+		fmt.Println(rec.Body.String())
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 		assert.Contains(t, rec.Body.String(), "WLN-")
 
@@ -1688,7 +1692,7 @@ func TestHistory2Wilen(t *testing.T) {
 			},
 		}
 
-		mockUsecase.On("History2Wilen", body.ProspectID).Return(mockResponse, nil).Once()
+		mockUsecase.On("History2Wilen", body).Return(mockResponse, nil).Once()
 
 		_ = handler.History2Wilen(c)
 

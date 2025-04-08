@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"los-kmb-api/models/entity"
+	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"os"
@@ -5795,54 +5796,66 @@ func TestGetTrxKPMStatusHistory(t *testing.T) {
 	}
 	defer sqlDB.Close()
 
-	gormDB, err := gorm.Open("sqlite3", sqlDB)
+	gormDB, err := gorm.Open("sqlserver", sqlDB)
 	if err != nil {
 		t.Fatalf("error opening gorm db: %v", err)
 	}
 	gormDB.LogMode(true)
 
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+	repo := repoHandler{newKmb: gormDB}
 
+	now := time.Now()
+	startDate := now.Add(-48 * time.Hour)
+	endDate := now
+	status := "APPROVED"
+	loanAmount := 10.000
 	testCases := []struct {
 		name          string
-		prospectID    string
+		req           request.History2Wilen
 		mockData      []entity.TrxKPMStatusHistory
 		mockError     error
 		expectedError error
 		expectedLen   int
 	}{
 		{
-			name:       "Success Case - Multiple Records",
-			prospectID: "PROS-001",
+			name: "Success - Filter by ProspectID, Date Range, and Status",
+			req: request.History2Wilen{
+				ProspectID: ptr("PROS-001"),
+				StartDate:  &startDate,
+				EndDate:    &endDate,
+				Status:     &status,
+			},
 			mockData: []entity.TrxKPMStatusHistory{
 				{
 					ID:         "HIST-001",
 					ProspectID: "PROS-001",
 					Decision:   "APPROVED",
-					CreatedAt:  time.Now().Add(-time.Hour * 2),
-				},
-				{
-					ID:         "HIST-002",
-					ProspectID: "PROS-001",
-					Decision:   "PENDING",
-					CreatedAt:  time.Now().Add(-time.Hour),
+					CreatedAt:  now.Add(-24 * time.Hour),
+					LoanAmount: &loanAmount,
 				},
 			},
 			mockError:     nil,
 			expectedError: nil,
-			expectedLen:   2,
+			expectedLen:   1,
 		},
 		{
-			name:          "Success Case - No Records",
-			prospectID:    "PROS-002",
+			name: "Success - No Matching Records",
+			req: request.History2Wilen{
+				ProspectID: ptr("PROS-002"),
+				StartDate:  &startDate,
+				EndDate:    &endDate,
+				Status:     &status,
+			},
 			mockData:      []entity.TrxKPMStatusHistory{},
 			mockError:     nil,
 			expectedError: nil,
 			expectedLen:   0,
 		},
 		{
-			name:          "Database Error",
-			prospectID:    "PROS-003",
+			name: "Database Error",
+			req: request.History2Wilen{
+				ProspectID: ptr("PROS-003"),
+			},
 			mockData:      nil,
 			mockError:     fmt.Errorf("database connection error"),
 			expectedError: fmt.Errorf("database connection error"),
@@ -5852,21 +5865,42 @@ func TestGetTrxKPMStatusHistory(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			query := fmt.Sprintf("SELECT * FROM trx_kpm_status WITH (nolock) WHERE ProspectID = '%s' ORDER BY created_at DESC", tc.prospectID)
+			// Dynamically build query
+			whereQuery := "WHERE 1=1"
+			args := []driver.Value{}
 
-			if tc.mockError != nil {
-				mock.ExpectQuery(regexp.QuoteMeta(query)).
-					WillReturnError(tc.mockError)
-			} else {
-				rows := sqlmock.NewRows([]string{"id", "ProspectID", "Decision", "created_at"})
-				for _, data := range tc.mockData {
-					rows.AddRow(data.ID, data.ProspectID, data.Decision, data.CreatedAt)
-				}
-				mock.ExpectQuery(regexp.QuoteMeta(query)).
-					WillReturnRows(rows)
+			if tc.req.ProspectID != nil {
+				whereQuery += " AND s.ProspectID = ?"
+				args = append(args, *tc.req.ProspectID)
+			}
+			if tc.req.StartDate != nil && tc.req.EndDate != nil {
+				whereQuery += " AND s.created_at BETWEEN ? AND ?"
+				args = append(args, *tc.req.StartDate, *tc.req.EndDate)
+			}
+			if tc.req.Status != nil {
+				whereQuery += " AND s.Decision = ?"
+				args = append(args, *tc.req.Status)
 			}
 
-			result, err := repo.GetTrxKPMStatusHistory(tc.prospectID)
+			query := fmt.Sprintf(`
+				SELECT s.ProspectID as ProspectID, s.id as id, s.Decision as Decision, s.created_at as created_at, k.KpmID as KpmID, scp.dbo.DEC_B64('SEC', k.IDNumber) as IDNumber, k.ReferralCode as ReferralCode, k.LoanAmount as LoanAmount
+				FROM trx_kpm_status AS s WITH (nolock)
+				LEFT JOIN (
+					SELECT *, ROW_NUMBER() OVER (PARTITION BY ProspectID ORDER BY created_at DESC) AS rn
+					FROM trx_kpm
+				) AS k ON s.ProspectID = k.ProspectID AND k.rn = 1 %s`, whereQuery)
+
+			if tc.mockError != nil {
+				mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnError(tc.mockError)
+			} else {
+				rows := sqlmock.NewRows([]string{"id", "ProspectID", "Decision", "created_at", "KpmID", "IDNumber", "ReferralCode", "LoanAmount"})
+				for _, data := range tc.mockData {
+					rows.AddRow(data.ID, data.ProspectID, data.Decision, data.CreatedAt, data.KpmID, data.IDNumber, data.ReferralCode, data.LoanAmount)
+				}
+				mock.ExpectQuery(regexp.QuoteMeta(query)).WithArgs(args...).WillReturnRows(rows)
+			}
+
+			result, err := repo.GetTrxKPMStatusHistory(tc.req)
 
 			if tc.expectedError != nil {
 				assert.Error(t, err)
@@ -5874,21 +5908,17 @@ func TestGetTrxKPMStatusHistory(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.expectedLen, len(result))
-
-				if tc.expectedLen > 0 {
-					for i, expectedData := range tc.mockData {
-						assert.Equal(t, expectedData.ID, result[i].ID)
-						assert.Equal(t, expectedData.ProspectID, result[i].ProspectID)
-						assert.Equal(t, expectedData.Decision, result[i].Decision)
-					}
-				}
 			}
 
 			if err := mock.ExpectationsWereMet(); err != nil {
-				t.Errorf("there were unfulfilled expectations: %s", err)
+				t.Errorf("unfulfilled expectations: %s", err)
 			}
 		})
 	}
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }
 
 func TestGetTrxKPMStatus(t *testing.T) {

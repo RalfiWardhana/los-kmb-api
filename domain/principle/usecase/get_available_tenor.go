@@ -114,7 +114,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 	if len(marsevFilterProgramRes.Data) > 0 {
 		marsevProgramData := marsevFilterProgramRes.Data[0]
 
-		if req.ReferralCode != nil {
+		if req.ReferralCode != nil && *req.ReferralCode != "" {
 			miNumbers := strings.Split(os.Getenv("MI_NUMBER_WHITELIST"), ",")
 			miNumberSet := make(map[int]struct{}, len(miNumbers))
 			for _, miNumber := range miNumbers {

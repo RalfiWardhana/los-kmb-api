@@ -2,6 +2,7 @@ package interfaces
 
 import (
 	"los-kmb-api/models/entity"
+	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 )
 
@@ -59,6 +60,6 @@ type Repository interface {
 	GetTrxKPM(prospectID string) (data entity.TrxKPM, err error)
 	GetReadjustCountTrxKPM(prospectId string) int
 	GetTrxKPMStatus(IDNumber string) (data entity.TrxKPMStatus, err error)
-	GetTrxKPMStatusHistory(prospectId string) (data []entity.TrxKPMStatusHistory, err error)
+	GetTrxKPMStatusHistory(req request.History2Wilen) (data []entity.TrxKPMStatusHistory, err error)
 	UpdateTrxKPMDecision(id string, prospectID string, decision string) (err error)
 }

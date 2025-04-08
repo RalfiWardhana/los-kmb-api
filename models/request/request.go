@@ -1,6 +1,9 @@
 package request
 
-import "los-kmb-api/models/entity"
+import (
+	"los-kmb-api/models/entity"
+	"time"
+)
 
 type FilteringRequest struct {
 	ClientKey string `json:"client_key" validate:"required,key"`
@@ -1450,7 +1453,10 @@ type Submission2Wilen struct {
 }
 
 type History2Wilen struct {
-	ProspectID string `json:"prospect_id" validate:"required,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
+	ProspectID *string    `json:"prospect_id" validate:"omitempty,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
+	StartDate  *time.Time `json:"start_date" validate:"omitempty" example:"2021-07-29"`
+	EndDate    *time.Time `json:"end_date" validate:"omitempty" example:"2021-07-29"`
+	Status     *string    `json:"status" validate:"omitempty" example:"SD"`
 }
 
 type Publish2Wilen struct {

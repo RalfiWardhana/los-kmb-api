@@ -3110,8 +3110,12 @@ func (c *TrxKPMError) TableName() string {
 }
 
 type TrxKPMStatusHistory struct {
-	ID         string    `gorm:"column:id;type:varchar(50)"`
-	ProspectID string    `gorm:"column:ProspectID;type:varchar(20)"`
-	Decision   string    `gorm:"column:Decision;type:varchar(20);"`
-	CreatedAt  time.Time `gorm:"column:created_at"`
+	ID           string    `gorm:"column:id;type:varchar(50)"`
+	ProspectID   string    `gorm:"column:ProspectID;type:varchar(20)"`
+	KpmID        *int      `gorm:"column:KpmID;type:int"`
+	IDNumber     *string   `gorm:"column:IDNumber;type:varchar(20)"`
+	ReferralCode *string   `gorm:"column:ReferralCode;type:varchar(200);"`
+	LoanAmount   *float64  `gorm:"column:LoanAmount;type:float"`
+	Decision     string    `gorm:"column:Decision;type:varchar(20);"`
+	CreatedAt    time.Time `gorm:"column:created_at"`
 }
