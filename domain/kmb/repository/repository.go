@@ -1429,10 +1429,28 @@ func (r repoHandler) GetTrxCancel(idNumber string, config response.LockSystemCon
 }
 
 func (r repoHandler) SaveTrxLockSystem(trxLockSystem entity.TrxLockSystem) (err error) {
+	var count int64
 
-	if err = r.newKmbDB.Model(&entity.TrxLockSystem{}).Create(&trxLockSystem).Error; err != nil {
+	query := r.newKmbDB.Model(&entity.TrxLockSystem{})
+
+	if trxLockSystem.ProspectID != "" {
+		query = query.Where("ProspectID = ?", trxLockSystem.ProspectID)
+	}
+
+	if trxLockSystem.IDNumber != "" {
+		query = query.Where("IDNumber = ?", trxLockSystem.IDNumber)
+	}
+
+	if err = query.Count(&count).Error; err != nil {
 		return
 	}
+
+	if count == 0 {
+		if err = r.newKmbDB.Model(&entity.TrxLockSystem{}).Create(&trxLockSystem).Error; err != nil {
+			return
+		}
+	}
+
 	return
 }
 
