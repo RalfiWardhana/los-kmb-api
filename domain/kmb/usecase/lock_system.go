@@ -20,8 +20,6 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber 
 		bannedType        string
 	)
 
-	// Remove the existing defer function since we'll set BannedType directly
-
 	encryptedIDNumber, err = u.repository.GetEncB64(idNumber)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetEncB64 Error")

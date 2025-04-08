@@ -1457,6 +1457,8 @@ func (r repoHandler) GetTrxLockSystem(idNumber string, chassisNumber string, eng
 		query2 := "SELECT TOP 1 * FROM trx_lock_system tls WHERE unban_date > CAST(GETDATE() as DATE) AND "
 		args := []interface{}{}
 
+		query2 += "("
+
 		if chassisNumber != "" {
 			query2 += "chassis_number = ?"
 			args = append(args, chassisNumber)
@@ -1469,6 +1471,8 @@ func (r repoHandler) GetTrxLockSystem(idNumber string, chassisNumber string, eng
 			query2 += "engine_number = ?"
 			args = append(args, engineNumber)
 		}
+
+		query2 += ")"
 
 		query2 += " ORDER BY unban_date DESC"
 
