@@ -17,6 +17,8 @@ import (
 
 func TestLockSystem(t *testing.T) {
 	var date, _ = time.Parse("2006-01-02", "2025-01-02")
+	var pastDate, _ = time.Parse("2006-01-02", "2023-01-02")
+	var futureDate, _ = time.Parse("2006-01-02", time.Now().AddDate(0, 1, 0).Format("2006-01-02"))
 	testcases := []struct {
 		name                 string
 		idNumber             string
@@ -33,6 +35,7 @@ func TestLockSystem(t *testing.T) {
 		errGetTrxLockSystem  error
 		errGetConfig         error
 		errGetTrxReject      error
+		existingUnbanDate    time.Time
 		errSaveTrxLockSystem error
 		errGetTrxCancel      error
 		result               response.LockSystem
@@ -139,16 +142,17 @@ func TestLockSystem(t *testing.T) {
 			trxReject: []entity.TrxLockSystem{
 				{
 					ProspectID: "reject1",
-					UnbanDate:  date,
+					UnbanDate:  futureDate,
 				},
 				{
 					ProspectID: "reject2",
 				},
 			},
+			existingUnbanDate: time.Time{},
 			result: response.LockSystem{
 				IsBanned:   true,
 				Reason:     constant.PERNAH_REJECT,
-				UnbanDate:  "2025-01-02",
+				UnbanDate:  futureDate.Format(constant.FORMAT_DATE),
 				BannedType: constant.BANNED_TYPE_NIK,
 			},
 		},
@@ -209,7 +213,7 @@ func TestLockSystem(t *testing.T) {
 			trxCancel: []entity.TrxLockSystem{
 				{
 					ProspectID: "cancel1",
-					UnbanDate:  date,
+					UnbanDate:  futureDate,
 				},
 				{
 					ProspectID: "cancel1",
@@ -218,7 +222,7 @@ func TestLockSystem(t *testing.T) {
 			result: response.LockSystem{
 				IsBanned:   true,
 				Reason:     constant.PERNAH_CANCEL,
-				UnbanDate:  "2025-01-02",
+				UnbanDate:  futureDate.Format(constant.FORMAT_DATE),
 				BannedType: constant.BANNED_TYPE_NIK,
 			},
 		},
@@ -263,6 +267,61 @@ func TestLockSystem(t *testing.T) {
 				Value: `{"data":{"lock_reject_attempt":2,"lock_reject_ban":30,"lock_reject_check":30,"lock_cancel_attempt":2,"lock_cancel_ban":1,"lock_cancel_check":1,"lock_start_date":"2024-12-01"}}`,
 			},
 		},
+		{
+			name:          "test lock system RejectAttempt with existing unban date",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
+			encryptedIDNumber: entity.EncryptedString{
+				MyString: "TESTIDNUMBER",
+			},
+			config: entity.AppConfig{
+				Value: `{"data":{"lock_reject_attempt":2,"lock_reject_ban":30,"lock_reject_check":30,"lock_cancel_attempt":2,"lock_cancel_ban":1,"lock_cancel_check":1,"lock_start_date":"2024-12-01"}}`,
+			},
+			trxReject: []entity.TrxLockSystem{
+				{
+					ProspectID: "reject1",
+					UnbanDate:  futureDate,
+				},
+				{
+					ProspectID: "reject2",
+				},
+			},
+			existingUnbanDate: futureDate,
+			result: response.LockSystem{
+				IsBanned:   true,
+				Reason:     constant.PERNAH_REJECT,
+				UnbanDate:  futureDate.Format(constant.FORMAT_DATE),
+				BannedType: constant.BANNED_TYPE_NIK,
+			},
+		},
+		{
+			name:          "test lock system with expired unban date",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
+			encryptedIDNumber: entity.EncryptedString{
+				MyString: "TESTIDNUMBER",
+			},
+			config: entity.AppConfig{
+				Value: `{"data":{"lock_reject_attempt":2,"lock_reject_ban":30,"lock_reject_check":30,"lock_cancel_attempt":2,"lock_cancel_ban":1,"lock_cancel_check":1,"lock_start_date":"2024-12-01"}}`,
+			},
+			trxReject: []entity.TrxLockSystem{
+				{
+					ProspectID: "reject1",
+					UnbanDate:  pastDate,
+				},
+				{
+					ProspectID: "reject2",
+				},
+			},
+			result: response.LockSystem{
+				IsBanned:   false,
+				Reason:     "",
+				UnbanDate:  "",
+				BannedType: "",
+			},
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -273,7 +332,7 @@ func TestLockSystem(t *testing.T) {
 			mockRepository.On("GetTrxLockSystem", tc.encryptedIDNumber.MyString, tc.chassisNumber, tc.engineNumber).Return(tc.trxLockSystem, tc.bannedType, tc.errGetTrxLockSystem)
 			mockRepository.On("GetConfig", "lock_system", "KMB-OFF", "lock_system_kmb").Return(tc.config, tc.errGetConfig)
 			mockRepository.On("GetTrxReject", tc.encryptedIDNumber.MyString, mock.Anything).Return(tc.trxReject, tc.errGetTrxReject)
-			mockRepository.On("SaveTrxLockSystem", mock.Anything).Return(tc.errSaveTrxLockSystem)
+			mockRepository.On("SaveTrxLockSystem", mock.Anything).Return(tc.existingUnbanDate, tc.errSaveTrxLockSystem)
 			mockRepository.On("GetTrxCancel", tc.encryptedIDNumber.MyString, mock.Anything).Return(tc.trxCancel, tc.errGetTrxCancel)
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)

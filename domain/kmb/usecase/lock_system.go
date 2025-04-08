@@ -7,6 +7,7 @@ import (
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
+	"time"
 )
 
 func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber string, engineNumber string) (data response.LockSystem, err error) {
@@ -18,6 +19,7 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber 
 		trxCancel         []entity.TrxLockSystem
 		trxLockSystem     entity.TrxLockSystem
 		bannedType        string
+		existingUnbanDate time.Time
 	)
 
 	encryptedIDNumber, err = u.repository.GetEncB64(idNumber)
@@ -79,11 +81,24 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber 
 		data.UnbanDate = trxReject[0].UnbanDate.Format(constant.FORMAT_DATE)
 		data.BannedType = constant.BANNED_TYPE_NIK
 
-		err = u.repository.SaveTrxLockSystem(trxReject[0])
+		existingUnbanDate, err = u.repository.SaveTrxLockSystem(trxReject[0])
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - LockSystem SaveTrxLockSystem trxReject Error")
 			return
 		}
+		if !existingUnbanDate.IsZero() {
+			data.UnbanDate = existingUnbanDate.Format(constant.FORMAT_DATE)
+		}
+
+		today := time.Now()
+		unbanDate, parseErr := time.Parse(constant.FORMAT_DATE, data.UnbanDate)
+		if parseErr == nil && (unbanDate.Before(today) || unbanDate.Equal(today)) {
+			data.IsBanned = false
+			data.Reason = ""
+			data.UnbanDate = ""
+			data.BannedType = ""
+		}
+
 		return
 	}
 
@@ -100,11 +115,24 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber 
 		data.UnbanDate = trxCancel[0].UnbanDate.Format(constant.FORMAT_DATE)
 		data.BannedType = constant.BANNED_TYPE_NIK
 
-		err = u.repository.SaveTrxLockSystem(trxCancel[0])
+		existingUnbanDate, err = u.repository.SaveTrxLockSystem(trxCancel[0])
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - LockSystem SaveTrxLockSystem trxCancel Error")
 			return
 		}
+		if !existingUnbanDate.IsZero() {
+			data.UnbanDate = existingUnbanDate.Format(constant.FORMAT_DATE)
+		}
+
+		today := time.Now()
+		unbanDate, parseErr := time.Parse(constant.FORMAT_DATE, data.UnbanDate)
+		if parseErr == nil && (unbanDate.Before(today) || unbanDate.Equal(today)) {
+			data.IsBanned = false
+			data.Reason = ""
+			data.UnbanDate = ""
+			data.BannedType = ""
+		}
+
 		return
 	}
 

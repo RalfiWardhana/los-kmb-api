@@ -305,8 +305,19 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 
 		lockingSystem.IDNumber = encrypted.Encrypt
 
-		if err = db.Create(&lockingSystem).Error; err != nil {
+		var count int64
+		if err = db.Model(&entity.TrxLockSystem{}).
+			Where("ProspectID = ? AND IDNumber = ?",
+				lockingSystem.ProspectID,
+				lockingSystem.IDNumber).
+			Count(&count).Error; err != nil {
 			return
+		}
+
+		if count == 0 {
+			if err = db.Create(&lockingSystem).Error; err != nil {
+				return
+			}
 		}
 	}
 

@@ -1428,8 +1428,9 @@ func (r repoHandler) GetTrxCancel(idNumber string, config response.LockSystemCon
 	return
 }
 
-func (r repoHandler) SaveTrxLockSystem(trxLockSystem entity.TrxLockSystem) (err error) {
+func (r repoHandler) SaveTrxLockSystem(trxLockSystem entity.TrxLockSystem) (existingUnbanDate time.Time, err error) {
 	var count int64
+	var existingRecord entity.TrxLockSystem
 
 	query := r.newKmbDB.Model(&entity.TrxLockSystem{})
 
@@ -1449,6 +1450,11 @@ func (r repoHandler) SaveTrxLockSystem(trxLockSystem entity.TrxLockSystem) (err 
 		if err = r.newKmbDB.Model(&entity.TrxLockSystem{}).Create(&trxLockSystem).Error; err != nil {
 			return
 		}
+	} else {
+		if err = query.First(&existingRecord).Error; err != nil {
+			return
+		}
+		existingUnbanDate = existingRecord.UnbanDate
 	}
 
 	return

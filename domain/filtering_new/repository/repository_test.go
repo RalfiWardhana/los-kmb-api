@@ -171,6 +171,11 @@ func TestSaveFiltering(t *testing.T) {
 
 	mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','3578102808920088') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("3578102808920088"))
 
+	countQuery := regexp.QuoteMeta(`SELECT count(*) FROM "trx_lock_system" WHERE (ProspectID = ? AND IDNumber = ?)`)
+	mock.ExpectQuery(countQuery).
+		WithArgs(lockingSystem.ProspectID, lockingSystem.IDNumber).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
+
 	mock.ExpectExec(`INSERT INTO "trx_lock_system" (.*)`).
 		WithArgs(lockData...).
 		WillReturnResult(sqlmock.NewResult(1, 1))
