@@ -1857,7 +1857,7 @@ func (u usecase) AssetCanceledLast30Days(ctx context.Context, prospectID string,
 	endDateStr := endDate.Format("2006-01-02")
 
 	// order_status_id=20 it means order CANCEL in Sally
-	endpointURL := fmt.Sprintf(os.Getenv("SALLY_SUBMISSION_ORDER")+"?order_status_id=20&search_by_chassis_number=%s&search_by_machine_number=%s&start_date=%s&end_date=%s&order_by=created_at%20ASC", ChassisNumber, EngineNumber, startDateStr, endDateStr)
+	endpointURL := fmt.Sprintf(os.Getenv("SALLY_SUBMISSION_ORDER")+"?order_status_id=20&search_by_chassis_number=%s&search_by_machine_number=%s&start_date=%s&end_date=%s&order_by=created_at%%20ASC", ChassisNumber, EngineNumber, startDateStr, endDateStr)
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 
 	header := map[string]string{
