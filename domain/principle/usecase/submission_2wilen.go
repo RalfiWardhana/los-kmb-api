@@ -1166,6 +1166,30 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		return
 	}
 
+	marsevProgramData := marsevFilterProgramRes.Data[0]
+	if req.ReferralCode != "" {
+		miNumbers := strings.Split(os.Getenv("MI_NUMBER_WHITELIST"), ",")
+		miNumberSet := make(map[int]struct{}, len(miNumbers))
+		for _, miNumber := range miNumbers {
+			miNumberInt, _ := strconv.Atoi(miNumber)
+			miNumberSet[miNumberInt] = struct{}{}
+		}
+
+		found := false
+		for _, datum := range marsevFilterProgramRes.Data {
+			if _, exists := miNumberSet[datum.MINumber]; exists {
+				marsevProgramData = datum
+				found = true
+				break
+			}
+		}
+
+		if !found {
+			err = errors.New(constant.ERROR_BAD_REQUEST + " - No matching MI_NUMBER found")
+			return
+		}
+	}
+
 	var mdmMasterMappingLicensePlateRes response.MDMMasterMappingLicensePlateResponse
 	mdmMasterMappingLicensePlateRes, err = u.usecase.MDMGetMappingLicensePlate(ctx, req.LicensePlate, req.ProspectID, accessToken)
 	if err != nil {
@@ -1175,7 +1199,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	mappingLicensePlate := mdmMasterMappingLicensePlateRes.Data.Records[0]
 
 	payloadCalculate := request.ReqMarsevCalculateInstallment{
-		ProgramID:              marsevFilterProgramRes.Data[0].ID,
+		ProgramID:              marsevProgramData.ID,
 		BranchID:               req.BranchID,
 		CustomerOccupationCode: req.ProfessionID,
 		AssetUsageTypeCode:     req.AssetUsageTypeCode,
@@ -1716,10 +1740,10 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	}
 
 	payloadSubmitSally.ProgramMarketing = request.SallySubmit2wPrincipleProgramMarketing{
-		ProgramMarketingID:   marsevFilterProgramRes.Data[0].ID,
-		ProgramMarketingName: marsevFilterProgramRes.Data[0].ProgramName,
-		ProductOfferingID:    marsevFilterProgramRes.Data[0].ProductOfferingID,
-		ProductOfferingName:  marsevFilterProgramRes.Data[0].ProductOfferingDescription,
+		ProgramMarketingID:   marsevProgramData.ID,
+		ProgramMarketingName: marsevProgramData.ProgramName,
+		ProductOfferingID:    marsevProgramData.ProductOfferingID,
+		ProductOfferingName:  marsevProgramData.ProductOfferingDescription,
 		UpdatedBy:            customerIDStr,
 	}
 
