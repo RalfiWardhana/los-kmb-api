@@ -28,14 +28,14 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber 
 		return
 	}
 
-	//scan banned IDNumber
+	//scan banned IDNumber and Asset (ChassisNumber / EngineNumber)
 	trxLockSystem, bannedType, err = u.repository.GetTrxLockSystem(encryptedIDNumber.MyString, chassisNumber, engineNumber)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetTrxLockSystem Error")
 		return
 	}
 
-	if trxLockSystem.ProspectID != "" {
+	if trxLockSystem.ProspectID != "" && bannedType == constant.BANNED_TYPE_NIK {
 		data.IsBanned = true
 		data.Reason = trxLockSystem.Reason
 		data.UnbanDate = trxLockSystem.UnbanDate.Format(constant.FORMAT_DATE)
@@ -68,6 +68,7 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber 
 		configValue.Data.LockCancelCheck -= 1
 	}
 
+	// -- Start Check Lock NIK -- //
 	trxReject, err = u.repository.GetTrxReject(encryptedIDNumber.MyString, configValue)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetTrxReject Error")
@@ -135,6 +136,17 @@ func (u usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber 
 
 		return
 	}
+	// -- End Check Lock NIK -- //
+
+	// -- Start Check Lock ASSET -- //
+	if trxLockSystem.ProspectID != "" && bannedType == constant.BANNED_TYPE_ASSET {
+		data.IsBanned = true
+		data.Reason = trxLockSystem.Reason
+		data.UnbanDate = trxLockSystem.UnbanDate.Format(constant.FORMAT_DATE)
+		data.BannedType = bannedType
+		return
+	}
+	// -- End Check Lock ASSET -- //
 
 	return
 }

@@ -96,6 +96,11 @@ func TestLockSystem(t *testing.T) {
 				UnbanDate:  date,
 			},
 			bannedType: constant.BANNED_TYPE_ASSET,
+			trxReject:  []entity.TrxLockSystem{},
+			trxCancel:  []entity.TrxLockSystem{},
+			config: entity.AppConfig{
+				Value: `{"data":{"lock_reject_attempt":2,"lock_reject_ban":30,"lock_reject_check":30,"lock_cancel_attempt":2,"lock_cancel_ban":1,"lock_cancel_check":1,"lock_start_date":"2024-12-01"}}`,
+			},
 			result: response.LockSystem{
 				IsBanned:   true,
 				Reason:     constant.ASSET_PERNAH_REJECT,
@@ -296,7 +301,35 @@ func TestLockSystem(t *testing.T) {
 			},
 		},
 		{
-			name:          "test lock system with expired unban date",
+			name:          "test lock system CancelAttempt with existing unban date",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
+			encryptedIDNumber: entity.EncryptedString{
+				MyString: "TESTIDNUMBER",
+			},
+			config: entity.AppConfig{
+				Value: `{"data":{"lock_reject_attempt":2,"lock_reject_ban":30,"lock_reject_check":30,"lock_cancel_attempt":2,"lock_cancel_ban":1,"lock_cancel_check":1,"lock_start_date":"2024-12-01"}}`,
+			},
+			trxCancel: []entity.TrxLockSystem{
+				{
+					ProspectID: "cancel1",
+					UnbanDate:  futureDate,
+				},
+				{
+					ProspectID: "cancel2",
+				},
+			},
+			existingUnbanDate: futureDate,
+			result: response.LockSystem{
+				IsBanned:   true,
+				Reason:     constant.PERNAH_CANCEL,
+				UnbanDate:  futureDate.Format(constant.FORMAT_DATE),
+				BannedType: constant.BANNED_TYPE_NIK,
+			},
+		},
+		{
+			name:          "test lock system reject with expired unban date",
 			idNumber:      "1234567",
 			chassisNumber: "NOKA1234567",
 			engineNumber:  "NOSIN1234567",
@@ -313,6 +346,33 @@ func TestLockSystem(t *testing.T) {
 				},
 				{
 					ProspectID: "reject2",
+				},
+			},
+			result: response.LockSystem{
+				IsBanned:   false,
+				Reason:     "",
+				UnbanDate:  "",
+				BannedType: "",
+			},
+		},
+		{
+			name:          "test lock system cancel with expired unban date",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
+			encryptedIDNumber: entity.EncryptedString{
+				MyString: "TESTIDNUMBER",
+			},
+			config: entity.AppConfig{
+				Value: `{"data":{"lock_reject_attempt":2,"lock_reject_ban":30,"lock_reject_check":30,"lock_cancel_attempt":2,"lock_cancel_ban":1,"lock_cancel_check":1,"lock_start_date":"2024-12-01"}}`,
+			},
+			trxCancel: []entity.TrxLockSystem{
+				{
+					ProspectID: "cancel1",
+					UnbanDate:  pastDate,
+				},
+				{
+					ProspectID: "cancel2",
 				},
 			},
 			result: response.LockSystem{
