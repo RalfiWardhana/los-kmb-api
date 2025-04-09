@@ -47,10 +47,10 @@ import (
 
 	"github.com/KB-FMF/los-common-library/loslog"
 	"github.com/KB-FMF/los-common-library/platform/manager"
+	"github.com/KB-FMF/los-common-library/response"
 
 	"los-kmb-api/shared/common/platformevent"
 
-	"github.com/KB-FMF/los-common-library/response"
 	"github.com/KB-FMF/platform-library/event"
 	"github.com/allegro/bigcache/v3"
 	"github.com/labstack/echo/v4"
@@ -230,6 +230,8 @@ func main() {
 	producer := platformevent.NewPlatformEvent(producerSubmission, producerSubmissionLOS, producerInsertCustomer)
 	platformCache := platformcache.NewPlatformCache()
 
+	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+
 	// define new kmb filtering domain
 	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs, newKMB)
 	newKmbFilteringCase := newKmbFilteringUsecase.NewUsecase(newKmbFilteringRepo, httpClient)
@@ -245,7 +247,7 @@ func main() {
 	cacheRepository := cacheRepository.NewRepository(cache)
 	cmsRepositories := cmsRepository.NewRepository(core, confins, newKMB, kpLos, kpLosLogs)
 	cmsUsecases := cmsUsecase.NewUsecase(cmsRepositories, httpClient, cacheRepository)
-	cmsDelivery.CMSHandler(apiGroupv3, cmsUsecases, cmsRepositories, jsonResponse, producer, accessToken)
+	cmsDelivery.CMSHandler(apiGroupv3, cmsUsecases, cmsRepositories, jsonResponse, producer, libResponse, accessToken)
 
 	// define new kmb journey
 	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, core, staging, newKMB, scorePro)
@@ -266,7 +268,6 @@ func main() {
 		_ = libLog.Sync()
 	}()
 
-	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
 	// libTrace := tracer.Initialize(os.Getenv("APP_NAME"), tracer.IsEnable(config.IsDebug), tracer.LicenseKey(os.Getenv("NEWRELIC_CONFIG_LICENSE")))
 
 	// losLog
