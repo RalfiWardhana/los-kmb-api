@@ -283,12 +283,12 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 			isMatchWithPersonalDataSpouse := false
 
 			// Compare IDNumber && LegalName
-			if req.Spouse != nil && IDNumberSpouseStr != "" && LegalNameSpouseStr != "" {
+			if IDNumberSpouseStr != "" && LegalNameSpouseStr != "" {
 				isMatchWithSpouse = req.IDNumber == IDNumberSpouseStr && req.LegalName == LegalNameSpouseStr
 			}
 
 			// Compare BirthDate && SurgateMotherName
-			if req.Spouse != nil && BirthDateSpouseStr != "" && SurgateMotherNameSpouseStr != "" {
+			if BirthDateSpouseStr != "" && SurgateMotherNameSpouseStr != "" {
 				isMatchWithPersonalDataSpouse = req.BirthDate == BirthDateSpouseStr && req.MotherName == SurgateMotherNameSpouseStr
 			}
 
