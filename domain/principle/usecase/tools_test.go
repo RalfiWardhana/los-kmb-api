@@ -517,7 +517,7 @@ func TestCheckOrderPendingPrinciple(t *testing.T) {
 							"product_name":                   order.AssetCode,
 							"branch_code":                    order.BranchID,
 							"asset_type_code":                "11",
-							"amount":                         0,
+							"amount":                         float64(0),
 							"referral_code":                  "",
 							"is_2w_principle_approval_order": false,
 						}
@@ -617,7 +617,7 @@ func TestPrinciplePublish(t *testing.T) {
 					"product_name":                   tc.principleStepOne.AssetCode,
 					"branch_code":                    tc.principleStepOne.BranchID,
 					"asset_type_code":                "11",
-					"amount":                         0,
+					"amount":                         float64(0),
 					"referral_code":                  "",
 					"is_2w_principle_approval_order": false,
 				}
@@ -723,7 +723,7 @@ func TestPublish2Wilen(t *testing.T) {
 					"product_name":                   tc.trxKPM.AssetCode,
 					"branch_code":                    tc.trxKPM.BranchID,
 					"asset_type_code":                "11",
-					"amount":                         0,
+					"amount":                         float64(0),
 					"referral_code":                  tc.trxKPM.ReferralCode.String,
 					"is_2w_principle_approval_order": true,
 				}

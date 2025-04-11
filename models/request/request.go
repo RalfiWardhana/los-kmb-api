@@ -1324,16 +1324,16 @@ type SallySubmit2wPrincipleFiltering struct {
 }
 
 type Update2wPrincipleTransaction struct {
-	OrderID                    string `json:"order_id"`
-	KpmID                      int    `json:"kpm_id"`
-	Source                     int    `json:"source"`
-	StatusCode                 string `json:"status_code"`
-	ProductName                string `json:"product_name"`
-	Amount                     int    `json:"amount"`
-	AssetTypeCode              string `json:"asset_type_code"`
-	BranchCode                 string `json:"branch_code"`
-	ReferralCode               string `json:"referral_code"`
-	Is2wPrincipleApprovalOrder bool   `json:"is_2w_principle_approval_order"`
+	OrderID                    string  `json:"order_id"`
+	KpmID                      int     `json:"kpm_id"`
+	Source                     int     `json:"source"`
+	StatusCode                 string  `json:"status_code"`
+	ProductName                string  `json:"product_name"`
+	Amount                     float64 `json:"amount"`
+	AssetTypeCode              string  `json:"asset_type_code"`
+	BranchCode                 string  `json:"branch_code"`
+	ReferralCode               string  `json:"referral_code"`
+	Is2wPrincipleApprovalOrder bool    `json:"is_2w_principle_approval_order"`
 }
 
 type PrincipleGetData struct {

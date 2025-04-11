@@ -1418,6 +1418,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	}
 
 	u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+		Amount:                     req.LoanAmount,
 		OrderID:                    req.ProspectID,
 		KpmID:                      req.KPMID,
 		Source:                     3,

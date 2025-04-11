@@ -172,7 +172,13 @@ func (u usecase) Publish2Wilen(ctx context.Context, req request.Publish2Wilen, a
 		return
 	}
 
+	var loanAmount float64
+	if trxKPM.Decision == constant.DECISION_KPM_APPROVE {
+		loanAmount = trxKPM.LoanAmount
+	}
+
 	return u.producer.PublishEvent(ctx, accessToken, constant.TOPIC_SUBMISSION_PRINCIPLE, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
+		Amount:                     loanAmount,
 		OrderID:                    req.ProspectID,
 		KpmID:                      trxKPM.KPMID,
 		Source:                     3,
