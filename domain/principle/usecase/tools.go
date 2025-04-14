@@ -173,7 +173,7 @@ func (u usecase) Publish2Wilen(ctx context.Context, req request.Publish2Wilen, a
 	}
 
 	var loanAmount float64
-	if trxKPM.Decision == constant.DECISION_KPM_APPROVE {
+	if req.StatusCode == constant.DECISION_KPM_APPROVE {
 		loanAmount = trxKPM.LoanAmount
 	}
 

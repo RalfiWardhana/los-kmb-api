@@ -666,7 +666,7 @@ func TestPublish2Wilen(t *testing.T) {
 			name: "success",
 			request: request.Publish2Wilen{
 				ProspectID: "PROS-123",
-				StatusCode: "APPROVE",
+				StatusCode: constant.DECISION_KPM_APPROVE,
 			},
 			trxKPM: entity.TrxKPM{
 				KPMID:     1,
