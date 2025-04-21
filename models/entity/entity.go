@@ -108,6 +108,11 @@ type BranchDp struct {
 	MinimalDpValue  float64 `gorm:"column:minimal_dp_value"`
 }
 
+type BranchData struct {
+	BranchID   string `json:"branch_id" gorm:"column:BranchID"`
+	BranchName string `json:"branch_name" gorm:"column:BranchName"`
+}
+
 type AppConfig struct {
 	GroupName string    `gorm:"type:varchar(50);column:group_name"`
 	Lob       string    `gorm:"type:varchar(10);column:lob"`
