@@ -151,6 +151,13 @@ func (c *handlerCMS) PrescreeningInquiry(ctx echo.Context) (err error) {
 		MultiBranch:  ctx.QueryParam("multi_branch"),
 	}
 
+	token := ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION)
+
+	err = platformauth.PlatformVerify(token)
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry", req, err)
+	}
+
 	page, _ := strconv.Atoi(ctx.QueryParam("page"))
 	pagination := request.RequestPagination{
 		Page:  page,
@@ -326,6 +333,13 @@ func (c *handlerCMS) CaInquiry(ctx echo.Context) (err error) {
 		BranchID:     ctx.QueryParam("branch_id"),
 		MultiBranch:  ctx.QueryParam("multi_branch"),
 		UserID:       ctx.QueryParam("user_id"),
+	}
+
+	token := ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION)
+
+	err = platformauth.PlatformVerify(token)
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry", req, err)
 	}
 
 	page, _ := strconv.Atoi(ctx.QueryParam("page"))
@@ -641,6 +655,13 @@ func (c *handlerCMS) NEInquiry(ctx echo.Context) (err error) {
 		UserID:      ctx.QueryParam("user_id"),
 	}
 
+	token := ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION)
+
+	err = platformauth.PlatformVerify(token)
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - NE Inquiry", req, err)
+	}
+
 	page, _ := strconv.Atoi(ctx.QueryParam("page"))
 	pagination := request.RequestPagination{
 		Page:  page,
@@ -908,6 +929,13 @@ func (c *handlerCMS) ApprovalInquiry(ctx echo.Context) (err error) {
 		MultiBranch:  ctx.QueryParam("multi_branch"),
 		UserID:       ctx.QueryParam("user_id"),
 		Alias:        ctx.QueryParam("alias"),
+	}
+
+	token := ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION)
+
+	err = platformauth.PlatformVerify(token)
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry", req, err)
 	}
 
 	if err := ctx.Bind(&req); err != nil {
