@@ -1317,42 +1317,30 @@ func (r repoHandler) GetInquiryNE(req request.ReqInquiryNE, pagination interface
 		filter         string
 		filterBranch   string
 		filterPaginate string
-		getRegion      []entity.RegionBranch
 		encrypted      entity.EncryptString
 	)
 
 	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
 
-	if req.MultiBranch == "1" {
-		getRegion, _ = r.GetRegionBranch(req.UserID)
+	if req.MultiBranch == "1" && req.BranchID != "" {
+		var listBranches []response.BranchInfo
+		_, listBranches, err = r.GetListBranch(request.ReqListBranch{
+			UserID:         req.UserID,
+			IsMultiBranch:  1,
+			SingleBranchID: req.BranchID,
+		})
+		if err != nil {
+			return
+		}
 
-		if len(getRegion) > 0 {
-			extractBranchIDUser := ""
-			userAllRegion := false
-			for _, value := range getRegion {
-				if strings.ToUpper(value.RegionName) == constant.REGION_ALL {
-					userAllRegion = true
-					break
-				} else if value.BranchMember != "" {
-					branch := strings.Trim(strings.ReplaceAll(value.BranchMember, `"`, `'`), "'")
-					replace := strings.ReplaceAll(branch, `[`, ``)
-					branchMember := strings.ReplaceAll(replace, `]`, ``)
-					extractBranchIDUser += branchMember
-					if value != getRegion[len(getRegion)-1] {
-						extractBranchIDUser += ","
-					}
-				}
+		if len(listBranches) > 0 {
+			var branchIDs []string
+			for _, branch := range listBranches {
+				branchIDs = append(branchIDs, "'"+branch.BranchID+"'")
 			}
-			if userAllRegion {
-				filterBranch += ""
-			} else {
-				filterBranch += "WHERE tm.BranchID IN (" + extractBranchIDUser + ")"
-			}
+			filterBranch += "WHERE tm.BranchID IN (" + strings.Join(branchIDs, ",") + ")"
 		} else {
-			filterBranch += ""
-			if req.BranchID != "999" {
-				filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
-			}
+			filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
 		}
 	} else {
 		filterBranch = utils.GenerateBranchFilter(req.BranchID)
