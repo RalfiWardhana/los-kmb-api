@@ -140,7 +140,7 @@ func (c *handlerKMB) LockSystem(ctx echo.Context) (err error) {
 	})
 
 	go func() {
-		data, err := c.usecase.LockSystem(ctxWithTimeout, req.IDNumber)
+		data, err := c.usecase.LockSystem(ctxWithTimeout, req.IDNumber, req.ChassisNumber, req.EngineNumber)
 		resultChan <- struct {
 			data interface{}
 			err  error

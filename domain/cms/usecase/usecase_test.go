@@ -2329,7 +2329,7 @@ func TestSubmitNE(t *testing.T) {
 	}{
 		{
 			name:             "test submit ne success",
-			payloadFiltering: `{"prospect_id":"NE-KMB40023112200005","branch_id":"400","id_number":"","legal_name":"","birth_date":"1988-04-30","gender":"M","surgate_mother_name":"","bpkb_name":"K","spouse":{"spouse_id_number":"","spouse_legal_name":"","spouse_birth_date":"1999-12-12","spouse_gender":"F","spouse_surgate_mother_name":""}}`,
+			payloadFiltering: `{"prospect_id":"NE-KMB40023112200005","branch_id":"400","id_number":"","legal_name":"","birth_date":"1988-04-30","gender":"M","surgate_mother_name":"","bpkb_name":"K","cmo_id":"","chassis_number":"VDHDHJSJD","engine_number":"BDHEHEJEJJEJEJ","spouse":{"spouse_id_number":"","spouse_legal_name":"","spouse_birth_date":"1999-12-12","spouse_gender":"F","spouse_surgate_mother_name":""}}`,
 			payloadLTV:       `{"prospect_id":"NE-KMB40023112200005","tenor":16,"manufacturing_year":"2018"}`,
 		},
 		{

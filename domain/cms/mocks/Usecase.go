@@ -148,6 +148,34 @@ func (_m *Usecase) GenerateFormAKKK(ctx context.Context, req request.RequestGene
 	return r0, r1
 }
 
+// GetAgreementByLicensePlate provides a mock function with given fields: ctx, LicensePlate, accessToken
+func (_m *Usecase) GetAgreementByLicensePlate(ctx context.Context, LicensePlate string, accessToken string) (response.ChassisNumberOfLicensePlateResponse, error) {
+	ret := _m.Called(ctx, LicensePlate, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetAgreementByLicensePlate")
+	}
+
+	var r0 response.ChassisNumberOfLicensePlateResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) (response.ChassisNumberOfLicensePlateResponse, error)); ok {
+		return rf(ctx, LicensePlate, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string) response.ChassisNumberOfLicensePlateResponse); ok {
+		r0 = rf(ctx, LicensePlate, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.ChassisNumberOfLicensePlateResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string) error); ok {
+		r1 = rf(ctx, LicensePlate, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetAkkk provides a mock function with given fields: prospectID
 func (_m *Usecase) GetAkkk(prospectID string) (entity.Akkk, error) {
 	ret := _m.Called(prospectID)

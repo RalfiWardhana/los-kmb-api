@@ -17,27 +17,35 @@ import (
 
 func TestLockSystem(t *testing.T) {
 	var date, _ = time.Parse("2006-01-02", "2025-01-02")
+	var pastDate, _ = time.Parse("2006-01-02", "2023-01-02")
+	var futureDate, _ = time.Parse("2006-01-02", time.Now().AddDate(0, 1, 0).Format("2006-01-02"))
 	testcases := []struct {
 		name                 string
 		idNumber             string
+		chassisNumber        string
+		engineNumber         string
 		config               entity.AppConfig
 		configValue          response.LockSystemConfig
 		encryptedIDNumber    entity.EncryptedString
 		trxReject            []entity.TrxLockSystem
 		trxCancel            []entity.TrxLockSystem
 		trxLockSystem        entity.TrxLockSystem
+		bannedType           string
 		errGetEncB64         error
 		errGetTrxLockSystem  error
 		errGetConfig         error
 		errGetTrxReject      error
+		existingUnbanDate    time.Time
 		errSaveTrxLockSystem error
 		errGetTrxCancel      error
 		result               response.LockSystem
 		err                  error
 	}{
 		{
-			name:     "test lock system GetEncB64 error",
-			idNumber: "1234567",
+			name:          "test lock system GetEncB64 error",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -45,8 +53,10 @@ func TestLockSystem(t *testing.T) {
 			err:          errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetEncB64 Error"),
 		},
 		{
-			name:     "test lock system GetTrxLockSystem error",
-			idNumber: "1234567",
+			name:          "test lock system GetTrxLockSystem error",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -54,8 +64,10 @@ func TestLockSystem(t *testing.T) {
 			err:                 errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetTrxLockSystem Error"),
 		},
 		{
-			name:     "test lock system banned idnumber true",
-			idNumber: "1234567",
+			name:          "test lock system banned idnumber true",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -63,14 +75,44 @@ func TestLockSystem(t *testing.T) {
 				ProspectID: "TEST1",
 				UnbanDate:  date,
 			},
+			bannedType: constant.BANNED_TYPE_NIK,
 			result: response.LockSystem{
-				IsBanned:  true,
-				UnbanDate: "2025-01-02",
+				IsBanned:   true,
+				UnbanDate:  "2025-01-02",
+				BannedType: constant.BANNED_TYPE_NIK,
 			},
 		},
 		{
-			name:     "test lock system GetConfig error",
-			idNumber: "1234567",
+			name:          "test lock system banned asset true",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
+			encryptedIDNumber: entity.EncryptedString{
+				MyString: "TESTIDNUMBER",
+			},
+			trxLockSystem: entity.TrxLockSystem{
+				ProspectID: "TEST1",
+				Reason:     constant.ASSET_PERNAH_REJECT,
+				UnbanDate:  date,
+			},
+			bannedType: constant.BANNED_TYPE_ASSET,
+			trxReject:  []entity.TrxLockSystem{},
+			trxCancel:  []entity.TrxLockSystem{},
+			config: entity.AppConfig{
+				Value: `{"data":{"lock_reject_attempt":2,"lock_reject_ban":30,"lock_reject_check":30,"lock_cancel_attempt":2,"lock_cancel_ban":1,"lock_cancel_check":1,"lock_start_date":"2024-12-01"}}`,
+			},
+			result: response.LockSystem{
+				IsBanned:   true,
+				Reason:     constant.ASSET_PERNAH_REJECT,
+				UnbanDate:  "2025-01-02",
+				BannedType: constant.BANNED_TYPE_ASSET,
+			},
+		},
+		{
+			name:          "test lock system GetConfig error",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -78,8 +120,10 @@ func TestLockSystem(t *testing.T) {
 			err:          errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetConfig Error"),
 		},
 		{
-			name:     "test lock system GetTrxReject error",
-			idNumber: "1234567",
+			name:          "test lock system GetTrxReject error",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -90,8 +134,10 @@ func TestLockSystem(t *testing.T) {
 			err:             errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetTrxReject Error"),
 		},
 		{
-			name:     "test lock system RejectAttempt more than threshold",
-			idNumber: "1234567",
+			name:          "test lock system RejectAttempt more than threshold",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -101,21 +147,25 @@ func TestLockSystem(t *testing.T) {
 			trxReject: []entity.TrxLockSystem{
 				{
 					ProspectID: "reject1",
-					UnbanDate:  date,
+					UnbanDate:  futureDate,
 				},
 				{
 					ProspectID: "reject2",
 				},
 			},
+			existingUnbanDate: time.Time{},
 			result: response.LockSystem{
-				IsBanned:  true,
-				Reason:    constant.PERNAH_REJECT,
-				UnbanDate: "2025-01-02",
+				IsBanned:   true,
+				Reason:     constant.PERNAH_REJECT,
+				UnbanDate:  futureDate.Format(constant.FORMAT_DATE),
+				BannedType: constant.BANNED_TYPE_NIK,
 			},
 		},
 		{
-			name:     "test lock system RejectAttempt more than threshold SaveTrxLockSystem error",
-			idNumber: "1234567",
+			name:          "test lock system RejectAttempt more than threshold SaveTrxLockSystem error",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -132,16 +182,19 @@ func TestLockSystem(t *testing.T) {
 				},
 			},
 			result: response.LockSystem{
-				IsBanned:  true,
-				Reason:    constant.PERNAH_REJECT,
-				UnbanDate: "2025-01-02",
+				IsBanned:   true,
+				Reason:     constant.PERNAH_REJECT,
+				UnbanDate:  "2025-01-02",
+				BannedType: constant.BANNED_TYPE_NIK,
 			},
 			errSaveTrxLockSystem: errors.New(constant.ERROR_UPSTREAM + " - LockSystem SaveTrxLockSystem trxReject Error"),
 			err:                  errors.New(constant.ERROR_UPSTREAM + " - LockSystem SaveTrxLockSystem trxReject Error"),
 		},
 		{
-			name:     "test lock system GetTrxCancel error",
-			idNumber: "1234567",
+			name:          "test lock system GetTrxCancel error",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -152,8 +205,10 @@ func TestLockSystem(t *testing.T) {
 			err:             errors.New(constant.ERROR_UPSTREAM + " - LockSystem GetTrxCancel Error"),
 		},
 		{
-			name:     "test lock system CancelAttempt more than threshold",
-			idNumber: "1234567",
+			name:          "test lock system CancelAttempt more than threshold",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -163,21 +218,24 @@ func TestLockSystem(t *testing.T) {
 			trxCancel: []entity.TrxLockSystem{
 				{
 					ProspectID: "cancel1",
-					UnbanDate:  date,
+					UnbanDate:  futureDate,
 				},
 				{
 					ProspectID: "cancel1",
 				},
 			},
 			result: response.LockSystem{
-				IsBanned:  true,
-				Reason:    constant.PERNAH_CANCEL,
-				UnbanDate: "2025-01-02",
+				IsBanned:   true,
+				Reason:     constant.PERNAH_CANCEL,
+				UnbanDate:  futureDate.Format(constant.FORMAT_DATE),
+				BannedType: constant.BANNED_TYPE_NIK,
 			},
 		},
 		{
-			name:     "test lock system CancelAttempt more than threshold SaveTrxLockSystem error",
-			idNumber: "1234567",
+			name:          "test lock system CancelAttempt more than threshold SaveTrxLockSystem error",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
@@ -194,21 +252,134 @@ func TestLockSystem(t *testing.T) {
 				},
 			},
 			result: response.LockSystem{
-				IsBanned:  true,
-				Reason:    constant.PERNAH_CANCEL,
-				UnbanDate: "2025-01-02",
+				IsBanned:   true,
+				Reason:     constant.PERNAH_CANCEL,
+				UnbanDate:  "2025-01-02",
+				BannedType: constant.BANNED_TYPE_NIK,
 			},
 			errSaveTrxLockSystem: errors.New(constant.ERROR_UPSTREAM + " - LockSystem SaveTrxLockSystem trxCancel Error"),
 			err:                  errors.New(constant.ERROR_UPSTREAM + " - LockSystem SaveTrxLockSystem trxCancel Error"),
 		},
 		{
-			name:     "test lock system done",
-			idNumber: "1234567",
+			name:          "test lock system done",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
 			encryptedIDNumber: entity.EncryptedString{
 				MyString: "TESTIDNUMBER",
 			},
 			config: entity.AppConfig{
 				Value: `{"data":{"lock_reject_attempt":2,"lock_reject_ban":30,"lock_reject_check":30,"lock_cancel_attempt":2,"lock_cancel_ban":1,"lock_cancel_check":1,"lock_start_date":"2024-12-01"}}`,
+			},
+		},
+		{
+			name:          "test lock system RejectAttempt with existing unban date",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
+			encryptedIDNumber: entity.EncryptedString{
+				MyString: "TESTIDNUMBER",
+			},
+			config: entity.AppConfig{
+				Value: `{"data":{"lock_reject_attempt":2,"lock_reject_ban":30,"lock_reject_check":30,"lock_cancel_attempt":2,"lock_cancel_ban":1,"lock_cancel_check":1,"lock_start_date":"2024-12-01"}}`,
+			},
+			trxReject: []entity.TrxLockSystem{
+				{
+					ProspectID: "reject1",
+					UnbanDate:  futureDate,
+				},
+				{
+					ProspectID: "reject2",
+				},
+			},
+			existingUnbanDate: futureDate,
+			result: response.LockSystem{
+				IsBanned:   true,
+				Reason:     constant.PERNAH_REJECT,
+				UnbanDate:  futureDate.Format(constant.FORMAT_DATE),
+				BannedType: constant.BANNED_TYPE_NIK,
+			},
+		},
+		{
+			name:          "test lock system CancelAttempt with existing unban date",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
+			encryptedIDNumber: entity.EncryptedString{
+				MyString: "TESTIDNUMBER",
+			},
+			config: entity.AppConfig{
+				Value: `{"data":{"lock_reject_attempt":2,"lock_reject_ban":30,"lock_reject_check":30,"lock_cancel_attempt":2,"lock_cancel_ban":1,"lock_cancel_check":1,"lock_start_date":"2024-12-01"}}`,
+			},
+			trxCancel: []entity.TrxLockSystem{
+				{
+					ProspectID: "cancel1",
+					UnbanDate:  futureDate,
+				},
+				{
+					ProspectID: "cancel2",
+				},
+			},
+			existingUnbanDate: futureDate,
+			result: response.LockSystem{
+				IsBanned:   true,
+				Reason:     constant.PERNAH_CANCEL,
+				UnbanDate:  futureDate.Format(constant.FORMAT_DATE),
+				BannedType: constant.BANNED_TYPE_NIK,
+			},
+		},
+		{
+			name:          "test lock system reject with expired unban date",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
+			encryptedIDNumber: entity.EncryptedString{
+				MyString: "TESTIDNUMBER",
+			},
+			config: entity.AppConfig{
+				Value: `{"data":{"lock_reject_attempt":2,"lock_reject_ban":30,"lock_reject_check":30,"lock_cancel_attempt":2,"lock_cancel_ban":1,"lock_cancel_check":1,"lock_start_date":"2024-12-01"}}`,
+			},
+			trxReject: []entity.TrxLockSystem{
+				{
+					ProspectID: "reject1",
+					UnbanDate:  pastDate,
+				},
+				{
+					ProspectID: "reject2",
+				},
+			},
+			result: response.LockSystem{
+				IsBanned:   false,
+				Reason:     "",
+				UnbanDate:  "",
+				BannedType: "",
+			},
+		},
+		{
+			name:          "test lock system cancel with expired unban date",
+			idNumber:      "1234567",
+			chassisNumber: "NOKA1234567",
+			engineNumber:  "NOSIN1234567",
+			encryptedIDNumber: entity.EncryptedString{
+				MyString: "TESTIDNUMBER",
+			},
+			config: entity.AppConfig{
+				Value: `{"data":{"lock_reject_attempt":2,"lock_reject_ban":30,"lock_reject_check":30,"lock_cancel_attempt":2,"lock_cancel_ban":1,"lock_cancel_check":1,"lock_start_date":"2024-12-01"}}`,
+			},
+			trxCancel: []entity.TrxLockSystem{
+				{
+					ProspectID: "cancel1",
+					UnbanDate:  pastDate,
+				},
+				{
+					ProspectID: "cancel2",
+				},
+			},
+			result: response.LockSystem{
+				IsBanned:   false,
+				Reason:     "",
+				UnbanDate:  "",
+				BannedType: "",
 			},
 		},
 	}
@@ -218,15 +389,15 @@ func TestLockSystem(t *testing.T) {
 			mockHttpClient := new(httpclient.MockHttpClient)
 
 			mockRepository.On("GetEncB64", tc.idNumber).Return(tc.encryptedIDNumber, tc.errGetEncB64)
-			mockRepository.On("GetTrxLockSystem", tc.encryptedIDNumber.MyString).Return(tc.trxLockSystem, tc.errGetTrxLockSystem)
+			mockRepository.On("GetTrxLockSystem", tc.encryptedIDNumber.MyString, tc.chassisNumber, tc.engineNumber).Return(tc.trxLockSystem, tc.bannedType, tc.errGetTrxLockSystem)
 			mockRepository.On("GetConfig", "lock_system", "KMB-OFF", "lock_system_kmb").Return(tc.config, tc.errGetConfig)
 			mockRepository.On("GetTrxReject", tc.encryptedIDNumber.MyString, mock.Anything).Return(tc.trxReject, tc.errGetTrxReject)
-			mockRepository.On("SaveTrxLockSystem", mock.Anything).Return(tc.errSaveTrxLockSystem)
+			mockRepository.On("SaveTrxLockSystem", mock.Anything).Return(tc.existingUnbanDate, tc.errSaveTrxLockSystem)
 			mockRepository.On("GetTrxCancel", tc.encryptedIDNumber.MyString, mock.Anything).Return(tc.trxCancel, tc.errGetTrxCancel)
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
-			result, err := usecase.LockSystem(context.Background(), tc.idNumber)
+			result, err := usecase.LockSystem(context.Background(), tc.idNumber, tc.chassisNumber, tc.engineNumber)
 			require.Equal(t, tc.result, result)
 			require.Equal(t, tc.err, err)
 		})

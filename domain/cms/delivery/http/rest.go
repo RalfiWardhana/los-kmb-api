@@ -9,14 +9,18 @@ import (
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/common"
+	"los-kmb-api/shared/common/platformauth"
 	"los-kmb-api/shared/common/platformevent"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
+	"net/http"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	_ "github.com/KB-FMF/los-common-library/errors"
+	responses "github.com/KB-FMF/los-common-library/response"
 	"github.com/labstack/echo/v4"
 )
 
@@ -24,15 +28,17 @@ type handlerCMS struct {
 	usecase    interfaces.Usecase
 	repository interfaces.Repository
 	Json       common.JSON
+	responses  responses.Response
 	producer   platformevent.PlatformEventInterface
 }
 
-func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, producer platformevent.PlatformEventInterface, middlewares *middlewares.AccessMiddleware) {
+func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, producer platformevent.PlatformEventInterface, responses responses.Response, middlewares *middlewares.AccessMiddleware) {
 	handler := handlerCMS{
 		usecase:    usecase,
 		repository: repository,
 		Json:       json,
 		producer:   producer,
+		responses:  responses,
 	}
 
 	cmsroute.GET("/cms/prescreening/list-reason", handler.ListReason, middlewares.AccessMiddleware())
@@ -54,6 +60,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.POST("/cms/ne/submit", handler.SubmitNE, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/ne/inquiry", handler.NEInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/ne/inquiry/:prospect_id", handler.NEInquiryDetail, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/ne/check_license_plate", handler.CheckLicensePlate, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/mapping-cluster/inquiry", handler.MappingClusterInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/mapping-cluster/download", handler.DownloadMappingCluster, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/mapping-cluster/upload", handler.UploadMappingCluster, middlewares.AccessMiddleware())
@@ -68,6 +75,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.POST("/cms/quota-deviasi/reset", handler.QuotaDeviasiResetBranch, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/list-order/inquiry", handler.ListOrderInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/list-order/inquiry/:prospect_id", handler.ListOrderDetail, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/get-token", handler.GetToken, middlewares.AccessMiddleware())
 }
 
 // CMS NEW KMB Tools godoc
@@ -525,6 +533,14 @@ func (c *handlerCMS) SubmitNE(ctx echo.Context) (err error) {
 		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
 		c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/ne/submit", constant.METHOD_POST, req.Transaction.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
 	}()
+
+	token := ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION)
+
+	err = platformauth.PlatformVerify(token)
+	if err != nil {
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Error", req, err)
+		return ctxJson
+	}
 
 	if err := ctx.Bind(&req); err != nil {
 		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Submit NE Error", err)
@@ -1647,4 +1663,51 @@ func (c *handlerCMS) MappingClusterChangeLog(ctx echo.Context) (err error) {
 		RecordFiltered: len(data),
 		RecordTotal:    rowTotal,
 	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Get Chassis Number By License Plate
+// @Tags Agreement By License Plate
+// @Produce json
+// @Param license_plate path string true "License Plate"
+// @Success 200 {object} response.ApiResponse{data=response.ChassisNumberOfLicensePlateResponse}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/ne/check_license_plate/{license_plate} [get]
+func (c *handlerCMS) CheckLicensePlate(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		ctxJson     error
+	)
+
+	licensePlate := ctx.QueryParam("license_plate")
+
+	if licensePlate == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - param request `license_plate` does not exist")
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Check License Plate - param request `license_plate` does not exist", licensePlate, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.GetAgreementByLicensePlate(ctx.Request().Context(), licensePlate, accessToken)
+
+	if err != nil {
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Check License Plate", licensePlate, err)
+		return ctxJson
+	}
+
+	ctxJson, _ = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Check License Plate", licensePlate, data)
+	return ctxJson
+}
+
+func (c *handlerCMS) GetToken(ctx echo.Context) (err error) {
+
+	accessToken := middlewares.UserInfoData.AccessToken
+
+	if accessToken == "" {
+		return c.responses.Error(ctx, "CMS-500", fmt.Errorf("failed generate token"), responses.WithHttpCode(http.StatusInternalServerError), responses.WithMessage(constant.MESSAGE_INTERNAL_SERVER_ERROR))
+	}
+
+	return c.responses.Result(ctx, "CMS-200", middlewares.UserInfoData)
+
 }
