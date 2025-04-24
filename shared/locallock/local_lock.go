@@ -12,6 +12,7 @@ func (l *LocalLock) Lock(key string) func() {
 	mu.Lock()
 	return func() {
 		mu.Unlock()
+		l.m.Delete(key)
 	}
 }
 
