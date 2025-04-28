@@ -31,6 +31,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		isPrimePriority             bool
 		resultNegativeCustomerCheck response.UsecaseApi
 		negativeCustomer            response.NegativeCustomer
+		agreementAktif              response.AgreementDetailCustomer
+		agreementLunas              response.AgreementDetailCustomer
 	)
 
 	prospectID := req.ProspectID
@@ -306,7 +308,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 		}
 
 		if (req.CustomerSegment == constant.RO_AO_REGULAR && mapping.MaxOverdueDaysforActiveAgreement > configValue.Data.MaxOvdAORegular) ||
-			(strings.Contains("PRIME PRIORITY", req.CustomerSegment) && mapping.InstallmentTopup <= 0 && mapping.MaxOverdueDaysforActiveAgreement > configValue.Data.MaxOvdAOPrimePriority) {
+			(req.CustomerSegment == constant.RO_AO_PRIME && mapping.InstallmentTopup <= 0 && mapping.MaxOverdueDaysforActiveAgreement > configValue.Data.MaxOvdAOPrime) ||
+			(req.CustomerSegment == constant.RO_AO_PRIORITY && mapping.InstallmentTopup <= 0 && mapping.MaxOverdueDaysforActiveAgreement > configValue.Data.MaxOvdAOPriority) {
 			checkConfins := response.UsecaseApi{
 				Result:         constant.DECISION_REJECT,
 				Code:           constant.CODE_MENUNGGAK,
@@ -319,12 +322,69 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 			mapping.Reason = data.Reason
 			return
 		} else {
-			var skipCheckJatuhTempo bool
-			var paramCustomerID string
+			var (
+				skipCheckJatuhTempo         bool
+				AOPriorityCekOvdROAO        bool
+				belumBayarAngsuranAgreement bool
+				paramCustomerID             string
+			)
 			paramCustomerID, ok := mainCustomer.CustomerID.(string)
 			if !ok || paramCustomerID == "" {
 				err = errors.New(constant.ERROR_UPSTREAM + " - Customer AO < 6 bulan angsuran should be have CustomerID")
 				return
+			}
+
+			// cek AO pertama, kedua dst jika customer AO priority
+			if req.CustomerSegment == constant.RO_AO_PRIORITY {
+				// cek agreement aktif kmb
+				agreementAktif, _, err = u.usecase.CheckAgreementCustomer(ctx, req.ProspectID, paramCustomerID, constant.AGREEMENT_AKTIF, true, accessToken)
+				if err != nil {
+					return
+				}
+
+				if agreementAktif.Data != nil && len(*agreementAktif.Data) == 1 {
+					// cek agreement lunas kmb
+					agreementLunas, _, err = u.usecase.CheckAgreementCustomer(ctx, req.ProspectID, paramCustomerID, constant.AGREEMENT_LUNAS, true, accessToken)
+					if err != nil {
+						return
+					}
+					if agreementLunas.Data != nil && len(*agreementLunas.Data) > 0 {
+						// lanjut cek ovd 60
+						AOPriorityCekOvdROAO = true
+					} else {
+						// lanjut ke flow regular
+						isPrimePriority = false
+						mapping.IsFlowAsAORegular = true
+					}
+				} else if agreementAktif.Data != nil && len(*agreementAktif.Data) >= 2 {
+
+					// cek pembayaran setiap agreement
+					for _, v := range *agreementAktif.Data {
+						if v.NextInstallmentNumber <= 1 {
+							belumBayarAngsuranAgreement = true
+						}
+					}
+
+					if belumBayarAngsuranAgreement {
+						checkConfins := response.UsecaseApi{
+							Result:         constant.DECISION_REJECT,
+							Code:           constant.CODE_REJECT_JATUH_TEMPO_PERTAMA,
+							Reason:         fmt.Sprintf("%s dan seterusnya belum bayar angsuran pertama", reasonCustomer),
+							StatusKonsumen: customerKMB,
+							SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+						}
+
+						data = checkConfins
+						mapping.Reason = data.Reason
+						return
+					} else {
+						// lanjut cek ovd 60
+						AOPriorityCekOvdROAO = true
+					}
+				} else {
+					isPrimePriority = false
+					mapping.IsFlowAsAORegular = true
+				}
 			}
 
 			_, skipCheckJatuhTempo, err = u.usecase.CheckAgreementLunas(ctx, req.ProspectID, paramCustomerID, isPrimePriority, accessToken)
@@ -334,13 +394,12 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 
 			mapping.AgreementSettledExist = skipCheckJatuhTempo
 
-			if mapping.NumberOfPaidInstallment >= configValue.Data.AngsuranBerjalan {
-				skipCheckJatuhTempo = true
+			if AOPriorityCekOvdROAO {
 				if mapping.MaxOverdueDaysROAO > configValue.Data.MaxOvd {
 					checkConfins := response.UsecaseApi{
 						Result:         constant.DECISION_REJECT,
 						Code:           constant.CODE_MAX_OVD_CONFINS,
-						Reason:         fmt.Sprintf("%s - Current >= 6 Bulan Angsuran %s %d", reasonCustomer, constant.REASON_REJECT_CONFINS_MAXOVD, configValue.Data.MaxOvd),
+						Reason:         fmt.Sprintf("%s > 6 Bulan %s %d", reasonCustomer, constant.REASON_REJECT_CONFINS_MAXOVD, configValue.Data.MaxOvd),
 						StatusKonsumen: customerKMB,
 						SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
 					}
@@ -353,7 +412,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 					checkConfins := response.UsecaseApi{
 						Result:         constant.DECISION_PASS,
 						Code:           constant.CODE_PASS_MAX_OVD_CONFINS,
-						Reason:         fmt.Sprintf("%s - Current >= 6 Bulan Angsuran %s %d", reasonCustomer, constant.REASON_PASS_CONFINS_MAXOVD, configValue.Data.MaxOvd),
+						Reason:         fmt.Sprintf("%s > 6 Bulan %s %d", reasonCustomer, constant.REASON_PASS_CONFINS_MAXOVD, configValue.Data.MaxOvd),
 						StatusKonsumen: customerKMB,
 						SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
 					}
@@ -362,48 +421,79 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 					mapping.Reason = data.Reason
 
 				}
-			} else if mapping.NumberOfPaidInstallment > 1 && mapping.NumberOfPaidInstallment < configValue.Data.AngsuranBerjalan {
-				if mapping.MaxOverdueDaysROAO > configValue.Data.MaxOvd {
-					checkConfins := response.UsecaseApi{
-						Result:         constant.DECISION_REJECT,
-						Code:           constant.CODE_MAX_OVD_CONFINS,
-						Reason:         fmt.Sprintf("%s - Current < 6 Bulan Angsuran %s %d", reasonCustomer, constant.REASON_REJECT_CONFINS_MAXOVD, configValue.Data.MaxOvd),
-						StatusKonsumen: customerKMB,
-						SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+			} else {
+				if mapping.NumberOfPaidInstallment >= configValue.Data.AngsuranBerjalan {
+					skipCheckJatuhTempo = true
+					if mapping.MaxOverdueDaysROAO > configValue.Data.MaxOvd {
+						checkConfins := response.UsecaseApi{
+							Result:         constant.DECISION_REJECT,
+							Code:           constant.CODE_MAX_OVD_CONFINS,
+							Reason:         fmt.Sprintf("%s - Current >= 6 Bulan Angsuran %s %d", reasonCustomer, constant.REASON_REJECT_CONFINS_MAXOVD, configValue.Data.MaxOvd),
+							StatusKonsumen: customerKMB,
+							SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+						}
+
+						data = checkConfins
+						mapping.Reason = data.Reason
+						return
+
+					} else {
+						checkConfins := response.UsecaseApi{
+							Result:         constant.DECISION_PASS,
+							Code:           constant.CODE_PASS_MAX_OVD_CONFINS,
+							Reason:         fmt.Sprintf("%s - Current >= 6 Bulan Angsuran %s %d", reasonCustomer, constant.REASON_PASS_CONFINS_MAXOVD, configValue.Data.MaxOvd),
+							StatusKonsumen: customerKMB,
+							SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+						}
+
+						data = checkConfins
+						mapping.Reason = data.Reason
+
 					}
+				} else if mapping.NumberOfPaidInstallment > 1 && mapping.NumberOfPaidInstallment < configValue.Data.AngsuranBerjalan {
+					if mapping.MaxOverdueDaysROAO > configValue.Data.MaxOvd {
+						checkConfins := response.UsecaseApi{
+							Result:         constant.DECISION_REJECT,
+							Code:           constant.CODE_MAX_OVD_CONFINS,
+							Reason:         fmt.Sprintf("%s - Current < 6 Bulan Angsuran %s %d", reasonCustomer, constant.REASON_REJECT_CONFINS_MAXOVD, configValue.Data.MaxOvd),
+							StatusKonsumen: customerKMB,
+							SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+						}
 
-					data = checkConfins
-					mapping.Reason = data.Reason
-					return
+						data = checkConfins
+						mapping.Reason = data.Reason
+						return
 
-				} else {
-					checkConfins := response.UsecaseApi{
-						Result:         constant.DECISION_PASS,
-						Code:           constant.CODE_PASS_MAX_OVD_CONFINS,
-						Reason:         fmt.Sprintf("%s - Current < 6 Bulan Angsuran %s %d", reasonCustomer, constant.REASON_PASS_CONFINS_MAXOVD, configValue.Data.MaxOvd),
-						StatusKonsumen: customerKMB,
-						SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+					} else {
+						checkConfins := response.UsecaseApi{
+							Result:         constant.DECISION_PASS,
+							Code:           constant.CODE_PASS_MAX_OVD_CONFINS,
+							Reason:         fmt.Sprintf("%s - Current < 6 Bulan Angsuran %s %d", reasonCustomer, constant.REASON_PASS_CONFINS_MAXOVD, configValue.Data.MaxOvd),
+							StatusKonsumen: customerKMB,
+							SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+						}
+
+						data = checkConfins
+						mapping.Reason = data.Reason
+
 					}
+				} else if mapping.NumberOfPaidInstallment <= 1 && !skipCheckJatuhTempo {
+					if mapping.MaxOverdueDaysforActiveAgreement == 0 {
+						checkConfins := response.UsecaseApi{
+							Result:         constant.DECISION_REJECT,
+							Code:           constant.CODE_REJECT_JATUH_TEMPO_PERTAMA,
+							Reason:         fmt.Sprintf("%s - Current < 6 Bulan Angsuran - Belum Jatuh Tempo Pertama", reasonCustomer),
+							StatusKonsumen: customerKMB,
+							SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+						}
 
-					data = checkConfins
-					mapping.Reason = data.Reason
-
-				}
-			} else if mapping.NumberOfPaidInstallment <= 1 && !skipCheckJatuhTempo {
-				if mapping.MaxOverdueDaysforActiveAgreement == 0 {
-					checkConfins := response.UsecaseApi{
-						Result:         constant.DECISION_REJECT,
-						Code:           constant.CODE_REJECT_JATUH_TEMPO_PERTAMA,
-						Reason:         fmt.Sprintf("%s - Current < 6 Bulan Angsuran - Belum Jatuh Tempo Pertama", reasonCustomer),
-						StatusKonsumen: customerKMB,
-						SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+						data = checkConfins
+						mapping.Reason = data.Reason
+						return
 					}
-
-					data = checkConfins
-					mapping.Reason = data.Reason
-					return
 				}
 			}
+
 		}
 	} else {
 		checkConfins := response.UsecaseApi{
@@ -994,6 +1084,54 @@ func (u usecase) CheckAgreementLunas(ctx context.Context, prospectID string, cus
 
 	err = json.Unmarshal([]byte(jsoniter.Get(agreementCust.Body()).ToString()), &responseMDM)
 	if err != nil {
+		return
+	}
+
+	if responseMDM.Data != nil {
+		isDataExist = true
+	}
+
+	return
+}
+
+func (u usecase) CheckAgreementCustomer(ctx context.Context, prospectID string, customerId, contractStatus string, filterKMBOnly bool, accessToken string) (responseMDM response.AgreementDetailCustomer, isDataExist bool, err error) {
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	header := map[string]string{
+		"Authorization": accessToken,
+	}
+
+	switch contractStatus {
+	case constant.AGREEMENT_AKTIF:
+		contractStatus = "LIV"
+	case constant.AGREEMENT_LUNAS:
+		contractStatus = "RRD,EXP,ICP"
+	default:
+		contractStatus = "RRD,EXP,ICP"
+	}
+
+	assetTypeID := constant.ASSET_TYPE_ID_ALL_LOB
+	if filterKMBOnly {
+		assetTypeID = constant.ASSET_TYPE_ID_KMB_ONLY
+	}
+
+	endpointURL := fmt.Sprintf(os.Getenv("CONFINS_AGREEMENT_CUSTOMER")+"%s?asset_type_id=%s&contract_status=%s", customerId, assetTypeID, contractStatus)
+
+	agreementCust, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointURL, nil, header, constant.METHOD_GET, true, 6, timeout, prospectID, accessToken)
+
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Confins Agreement Customer Timeout")
+		return
+	}
+
+	if agreementCust.StatusCode() != 200 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Call Confins Agreement Customer Error")
+		return
+	}
+
+	err = json.Unmarshal([]byte(jsoniter.Get(agreementCust.Body()).ToString()), &responseMDM)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - parsing Confins Agreement Customer Error - " + err.Error())
 		return
 	}
 

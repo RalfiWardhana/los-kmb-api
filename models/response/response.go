@@ -370,6 +370,7 @@ type SpDupcheckMap struct {
 	Cluster                          interface{} `json:"cluster"`
 	AgreementSettledExist            bool        `json:"agreement_settled_exist"`
 	NegativeCustomer                 interface{} `json:"negative_customer"`
+	IsFlowAsAORegular                bool        `json:"is_flow_as_ao_regular"`
 }
 
 type SpDupCekCustomerByID struct {
@@ -490,7 +491,8 @@ type DupcheckConfig struct {
 type DataDupcheckConfig struct {
 	VehicleAge              int     `json:"vehicle_age"`
 	MaxOvd                  int     `json:"max_ovd"`
-	MaxOvdAOPrimePriority   int     `json:"max_ovd_ao_prime_priority"`
+	MaxOvdAOPrime           int     `json:"max_ovd_ao_prime"`
+	MaxOvdAOPriority        int     `json:"max_ovd_ao_priority"`
 	MaxOvdAORegular         int     `json:"max_ovd_ao_regular"`
 	MaxDsr                  float64 `json:"max_dsr"`
 	AngsuranBerjalan        int     `json:"angsuran_berjalan"`
@@ -1041,6 +1043,30 @@ type ConfinsAgreementCustomer struct {
 	Data     *[]AgreementData `json:"data"`
 	Errors   interface{}      `json:"errors"`
 	Metadata interface{}      `json:"metadata"`
+}
+
+type AgreementDetailCustomer struct {
+	Code     string             `json:"code"`
+	Message  string             `json:"message"`
+	Data     *[]AgreementDetail `json:"data"`
+	Errors   interface{}        `json:"errors"`
+	Metadata interface{}        `json:"metadata"`
+}
+
+type AgreementDetail struct {
+	BranchID              string  `json:"branch_id"`
+	CustomerID            string  `json:"customer_id"`
+	ApplicationID         string  `json:"application_id"`
+	AgreementNo           string  `json:"agreement_no"`
+	LegalName             string  `json:"legal_name"`
+	InstallmentAmount     float64 `json:"installment_amount"`
+	DownPayment           float64 `json:"down_payment"`
+	Tenor                 int     `json:"tenor"`
+	GoLiveDate            string  `json:"go_live_date"`
+	OutstandingPrincipal  float64 `json:"outstanding_principal"`
+	ContractStatus        string  `json:"contract_status"`
+	NextInstallmentNumber int     `json:"next_installment_number"`
+	NextInstallmentDate   string  `json:"next_installment_date"`
 }
 
 type ExpiredContractConfig struct {
