@@ -387,6 +387,21 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 				}
 			}
 
+			// ao priority as regular
+			if mapping.IsFlowAsAORegular && mapping.MaxOverdueDaysforActiveAgreement > configValue.Data.MaxOvdAORegular {
+				checkConfins := response.UsecaseApi{
+					Result:         constant.DECISION_REJECT,
+					Code:           constant.CODE_MENUNGGAK,
+					Reason:         fmt.Sprintf("%s %s", reasonCustomer, constant.REASON_MENUNGGAK),
+					StatusKonsumen: customerKMB,
+					SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
+				}
+
+				data = checkConfins
+				mapping.Reason = data.Reason
+				return
+			}
+
 			_, skipCheckJatuhTempo, err = u.usecase.CheckAgreementLunas(ctx, req.ProspectID, paramCustomerID, isPrimePriority, accessToken)
 			if err != nil {
 				return
