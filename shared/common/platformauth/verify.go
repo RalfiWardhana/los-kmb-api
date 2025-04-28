@@ -10,8 +10,14 @@ import (
 	"github.com/KB-FMF/platform-library/auth"
 )
 
-func PlatformVerify(token string) (err error) {
+// This allows for mocking in tests
+var PlatformVerifyFunc = defaultPlatformVerify
 
+func PlatformVerify(token string) error {
+	return PlatformVerifyFunc(token)
+}
+
+func defaultPlatformVerify(token string) (err error) {
 	env := os.Getenv("APP_ENV")
 
 	if strings.Contains(strings.ToLower(env), "production") {

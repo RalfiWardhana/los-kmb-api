@@ -11,6 +11,7 @@ import (
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/common"
 	mocksJson "los-kmb-api/shared/common/json/mocks"
+	"los-kmb-api/shared/common/platformauth"
 	platformEventMockery "los-kmb-api/shared/common/platformevent/mocks"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
@@ -211,17 +212,27 @@ func TestPrescreeningInquiry(t *testing.T) {
 		e := echo.New()
 		e.Validator = common.NewValidator()
 
-		// Create a request and recorder for testing
 		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/prescreening/inquiry?search=aa&user_id=abc&branch_id=426&multi_branch=0&page=1", nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+		req.Header.Set(constant.HEADER_AUTHORIZATION, "valid-token")
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
-		mockUsecase.On("GetInquiryPrescreening", mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryData{}, 0, nil).Once()
+		originalPlatformVerifyFunc := platformauth.PlatformVerifyFunc
+		platformauth.PlatformVerifyFunc = func(token string) error {
+			return nil
+		}
 
+		defer func() {
+			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
+		}()
+
+		mockUsecase.On("GetInquiryPrescreening", mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryData{}, 0, nil).Once()
 		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		// Call the handler
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
+
 		err := handler.PrescreeningInquiry(c)
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
@@ -232,11 +243,21 @@ func TestPrescreeningInquiry(t *testing.T) {
 		e := echo.New()
 		e.Validator = common.NewValidator()
 
-		// Create a request and recorder for testing
 		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/prescreening/inquiry?search=aa&user_id=abc&branch_id=426&multi_branch=0&page=1", nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+		req.Header.Set(constant.HEADER_AUTHORIZATION, "valid-token")
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
+
+		originalPlatformVerifyFunc := platformauth.PlatformVerifyFunc
+		platformauth.PlatformVerifyFunc = func(token string) error {
+			return nil
+		}
+
+		defer func() {
+			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
+		}()
 
 		mockResponse := []entity.InquiryData{}
 		statusCode := http.StatusOK
@@ -253,14 +274,25 @@ func TestPrescreeningInquiry(t *testing.T) {
 		e := echo.New()
 
 		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/prescreening/inquiry?search=aa&user_id=abc&branch_id=426&page=1", strings.NewReader("error"))
+
+		req.Header.Set(constant.HEADER_AUTHORIZATION, "valid-token")
 		rec := httptest.NewRecorder()
 
 		ctx := e.NewContext(req, rec)
 
+		originalPlatformVerifyFunc := platformauth.PlatformVerifyFunc
+		platformauth.PlatformVerifyFunc = func(token string) error {
+			return nil
+		}
+
+		defer func() {
+			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
+		}()
+
 		mockResponse := []entity.InquiryData{}
 		statusCode := http.StatusOK
 
-		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		mockUsecase.On("GetInquiryPrescreening", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
 
@@ -272,9 +304,20 @@ func TestPrescreeningInquiry(t *testing.T) {
 		e := echo.New()
 
 		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/prescreening/inquiry", nil)
+
+		req.Header.Set(constant.HEADER_AUTHORIZATION, "valid-token")
 		rec := httptest.NewRecorder()
 
 		ctx := e.NewContext(req, rec)
+
+		originalPlatformVerifyFunc := platformauth.PlatformVerifyFunc
+		platformauth.PlatformVerifyFunc = func(token string) error {
+			return nil
+		}
+
+		defer func() {
+			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
+		}()
 
 		mockResponse := []entity.InquiryData{}
 		statusCode := http.StatusBadRequest
@@ -287,6 +330,31 @@ func TestPrescreeningInquiry(t *testing.T) {
 		assert.Nil(t, err)
 	})
 
+	t.Run("token verification failure", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/prescreening/inquiry?search=aa&user_id=abc&branch_id=426&multi_branch=0&page=1", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+
+		req.Header.Set(constant.HEADER_AUTHORIZATION, "invalid-token")
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		originalPlatformVerifyFunc := platformauth.PlatformVerifyFunc
+		platformauth.PlatformVerifyFunc = func(token string) error {
+			return errors.New("unauthorized - invalid")
+		}
+
+		defer func() {
+			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
+		}()
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.PrescreeningInquiry(c)
+		assert.Nil(t, err)
+	})
 }
 
 func TestReviewPrescreening(t *testing.T) {
@@ -467,43 +535,50 @@ func TestCaInquiry(t *testing.T) {
 		e := echo.New()
 		e.Validator = common.NewValidator()
 
-		// Create a request and recorder for testing
 		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/ca/inquiry?search=aa&branch_id=426&multi_branch=0&user_id=abc123page=1", nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(constant.HEADER_AUTHORIZATION, "valid-token")
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
+		originalPlatformVerifyFunc := platformauth.PlatformVerifyFunc
+		platformauth.PlatformVerifyFunc = func(token string) error {
+			return nil
+		}
+		defer func() {
+			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
+		}()
+
 		mockUsecase.On("GetInquiryCa", mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryDataCa{}, 0, nil).Once()
-
-		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
-
-		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
-
-		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
-
 		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		// Call the handler
 		err := handler.CaInquiry(c)
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
 		}
 	})
 
-	// Create an
 	t.Run("bind request error", func(t *testing.T) {
 		e := echo.New()
 
 		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/ca/inquiry", strings.NewReader("error"))
-		rec := httptest.NewRecorder()
 
+		req.Header.Set(constant.HEADER_AUTHORIZATION, "valid-token")
+		rec := httptest.NewRecorder()
 		ctx := e.NewContext(req, rec)
 
-		mockResponse := []entity.InquiryDataCa{}
-		statusCode := http.StatusOK
-		mockUsecase.On("GetInquiryCa", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
+		originalPlatformVerifyFunc := platformauth.PlatformVerifyFunc
+		platformauth.PlatformVerifyFunc = func(token string) error {
+			return nil
+		}
+		defer func() {
+			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
+		}()
 
-		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		mockUsecase.On("GetInquiryCa", mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryDataCa{}, 0, nil).Maybe()
+		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
 
 		err := handler.CaInquiry(ctx)
 		assert.Nil(t, err)
@@ -513,15 +588,23 @@ func TestCaInquiry(t *testing.T) {
 		e := echo.New()
 
 		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/ca/inquiry", nil)
+		req.Header.Set(constant.HEADER_AUTHORIZATION, "valid-token")
 		rec := httptest.NewRecorder()
-
 		ctx := e.NewContext(req, rec)
+
+		originalPlatformVerifyFunc := platformauth.PlatformVerifyFunc
+		platformauth.PlatformVerifyFunc = func(token string) error {
+			return nil
+		}
+		defer func() {
+			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
+		}()
 
 		mockResponse := []entity.InquiryDataCa{}
 		statusCode := http.StatusBadRequest
 		mockUsecase.On("GetInquiryCa", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
 
-		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		err := handler.CaInquiry(ctx)
 		assert.Nil(t, err)
@@ -531,27 +614,56 @@ func TestCaInquiry(t *testing.T) {
 		e := echo.New()
 		e.Validator = common.NewValidator()
 
-		// Create a request and recorder for testing
 		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/ca/inquiry?search=aa&branch_id=426&multi_branch=0&user_id=abc123page=1", nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(constant.HEADER_AUTHORIZATION, "valid-token")
 		rec := httptest.NewRecorder()
 		reqID := utils.GenerateUUID()
 		c := e.NewContext(req, rec)
 		c.Set(constant.HeaderXRequestID, reqID)
+
+		originalPlatformVerifyFunc := platformauth.PlatformVerifyFunc
+		platformauth.PlatformVerifyFunc = func(token string) error {
+			return nil
+		}
+		defer func() {
+			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
+		}()
 
 		mockResponse := []entity.InquiryDataCa{}
 		statusCode := http.StatusOK
 		mockUsecase.On("GetInquiryCa", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
 		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		// Call the handler
 		err := handler.CaInquiry(c)
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
 		}
-
 	})
 
+	t.Run("token verification failure", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/ca/inquiry?search=aa&branch_id=426&multi_branch=0&user_id=abc123page=1", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(constant.HEADER_AUTHORIZATION, "invalid-token")
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		originalPlatformVerifyFunc := platformauth.PlatformVerifyFunc
+		platformauth.PlatformVerifyFunc = func(token string) error {
+			return errors.New("unauthorized - invalid")
+		}
+		defer func() {
+			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
+		}()
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.CaInquiry(c)
+		assert.Nil(t, err)
+	})
 }
 
 func TestSearchInquiry(t *testing.T) {
@@ -1099,6 +1211,7 @@ func TestApprovalInquiry(t *testing.T) {
 		repository: mockRepository,
 		Json:       mockJson,
 	}
+
 	t.Run("success_approval_inquiry", func(t *testing.T) {
 		e := echo.New()
 		e.Validator = common.NewValidator()
@@ -1106,20 +1219,22 @@ func TestApprovalInquiry(t *testing.T) {
 		// Create a request and recorder for testing
 		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/inquiry?alias=CBM&user_id=abc123&branch_id=426&multi_branch=0&search=aa&page=1", nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(constant.HEADER_AUTHORIZATION, "valid-token")
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
+		// Mock platform authentication to succeed
+		originalPlatformVerifyFunc := platformauth.PlatformVerifyFunc
+		platformauth.PlatformVerifyFunc = func(token string) error {
+			return nil // Return nil to succeed
+		}
+		defer func() {
+			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
+		}()
+
 		mockUsecase.On("GetInquiryApproval", mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryDataApproval{}, 0, nil).Once()
-
-		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
-
-		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
-
-		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
-
 		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		// Call the handler
 		err := handler.ApprovalInquiry(c)
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
@@ -1129,10 +1244,21 @@ func TestApprovalInquiry(t *testing.T) {
 	t.Run("error bind request", func(t *testing.T) {
 		e := echo.New()
 
-		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/cms/approval/inquiry", strings.NewReader("error"))
+		// Use GET method as specified in the handler implementation
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/inquiry", strings.NewReader("error"))
+		// Add authorization header for token verification
+		req.Header.Set(constant.HEADER_AUTHORIZATION, "valid-token")
 		rec := httptest.NewRecorder()
-
 		ctx := e.NewContext(req, rec)
+
+		// Mock platform authentication to succeed
+		originalPlatformVerifyFunc := platformauth.PlatformVerifyFunc
+		platformauth.PlatformVerifyFunc = func(token string) error {
+			return nil // Return nil to succeed
+		}
+		defer func() {
+			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
+		}()
 
 		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
@@ -1147,10 +1273,20 @@ func TestApprovalInquiry(t *testing.T) {
 		// Create a request and recorder for testing
 		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/inquiry?alias=CBM&user_id=abc123&branch_id=426&multi_branch=0&search=aa&page=1", nil)
 		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(constant.HEADER_AUTHORIZATION, "valid-token")
 		rec := httptest.NewRecorder()
 		reqID := utils.GenerateUUID()
 		c := e.NewContext(req, rec)
 		c.Set(constant.HeaderXRequestID, reqID)
+
+		// Mock platform authentication to succeed
+		originalPlatformVerifyFunc := platformauth.PlatformVerifyFunc
+		platformauth.PlatformVerifyFunc = func(token string) error {
+			return nil // Return nil to succeed
+		}
+		defer func() {
+			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
+		}()
 
 		mockResponse := []entity.InquiryDataApproval{}
 		statusCode := http.StatusOK
@@ -1162,26 +1298,58 @@ func TestApprovalInquiry(t *testing.T) {
 		if err != nil {
 			t.Errorf("error '%s' was not expected, but got: ", err)
 		}
-
 	})
 
 	t.Run("bad request approval", func(t *testing.T) {
 		e := echo.New()
 
 		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/inquiry?user_id=1212&search=aa&page=1", nil)
+		// Add authorization header for token verification
+		req.Header.Set(constant.HEADER_AUTHORIZATION, "valid-token")
 		rec := httptest.NewRecorder()
-
 		ctx := e.NewContext(req, rec)
+
+		// Mock platform authentication to succeed
+		originalPlatformVerifyFunc := platformauth.PlatformVerifyFunc
+		platformauth.PlatformVerifyFunc = func(token string) error {
+			return nil // Return nil to succeed
+		}
+		defer func() {
+			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
+		}()
 
 		mockResponse := []entity.InquiryDataApproval{}
 		statusCode := http.StatusBadRequest
 		mockUsecase.On("GetInquiryApproval", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
 
-		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
-
-		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		err := handler.ApprovalInquiry(ctx)
+		assert.Nil(t, err)
+	})
+
+	t.Run("token verification failure", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		req := httptest.NewRequest(http.MethodGet, "/api/v3/kmb/cms/approval/inquiry?alias=CBM&user_id=abc123&branch_id=426&multi_branch=0&search=aa&page=1", nil)
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		req.Header.Set(constant.HEADER_AUTHORIZATION, "invalid-token")
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		// Mock platform authentication to fail
+		originalPlatformVerifyFunc := platformauth.PlatformVerifyFunc
+		platformauth.PlatformVerifyFunc = func(token string) error {
+			return errors.New("unauthorized - invalid")
+		}
+		defer func() {
+			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
+		}()
+
+		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
+
+		err := handler.ApprovalInquiry(c)
 		assert.Nil(t, err)
 	})
 }
