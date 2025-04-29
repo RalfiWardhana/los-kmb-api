@@ -85,6 +85,10 @@ func (m *bodyDumpMiddleware) BodyDumpConfig() middleware.BodyDumpConfig {
 					if result.RowsAffected < 3 {
 						isSaveTrxKPMError = true
 					}
+
+					if e.Response().Status == 504 && result.RowsAffected < 3 {
+						isSaveTrxKPMError = true
+					}
 				}
 			}
 

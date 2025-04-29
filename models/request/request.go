@@ -1444,7 +1444,7 @@ type Submission2Wilen struct {
 	NTF                     float64 `json:"ntf" validate:"required,max=999999999999" example:"150528000"`
 	OTR                     float64 `json:"otr" validate:"required,max=999999999999" example:"105000000"`
 	DPAmount                float64 `json:"down_payment_amount" validate:"omitempty,max=999999999999" example:"22000000"`
-	AdminFee                float64 `json:"admin_fee" validate:"required,max=999999999999" example:"1500000"`
+	AdminFee                float64 `json:"admin_fee"`
 	Dealer                  string  `json:"dealer" validate:"omitempty,max=50"`
 	AssetCategoryID         string  `json:"asset_category_id" validate:"required,max=100" example:"BEBEK"`
 	KPMID                   int     `json:"kpm_id" validate:"required"`
