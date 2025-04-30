@@ -192,6 +192,7 @@ func TestSubmission2Wilen(t *testing.T) {
 	os.Setenv("AGREEMENT_OF_CHASSIS_NUMBER_URL", "http://localhost/")
 	os.Setenv("INTERNAL_RECORD_URL", "http://localhost/")
 	os.Setenv("NAMA_SAMA", "SAMA")
+	os.Setenv("IS_CHECK_MODIFIED_DATA_2WILEN", "true")
 	ctx := context.Background()
 
 	testcases := []struct {
