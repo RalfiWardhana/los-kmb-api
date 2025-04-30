@@ -45,13 +45,15 @@ func (m *bodyDumpMiddleware) BodyDumpConfig() middleware.BodyDumpConfig {
 		Handler: func(e echo.Context, reqBody []byte, resBody []byte) {
 
 			var (
-				isSave            bool
-				isSaveTrxKPMError bool
-				prospectID        string
-				trxKPMError       entity.TrxKPMError
-				trxError          entity.TrxPrincipleError
-				trxStepOne        entity.TrxPrincipleStepOne
-				kpmId, step       int
+				isSave             bool
+				isSaveTrxKPMError  bool
+				isSaveTrxKPMStatus bool
+				prospectID         string
+				trxKPMError        entity.TrxKPMError
+				trxKPMStatus       entity.TrxKPMStatus
+				trxError           entity.TrxPrincipleError
+				trxStepOne         entity.TrxPrincipleStepOne
+				kpmId, step        int
 			)
 			if e.Response().Status != 200 {
 
@@ -85,9 +87,9 @@ func (m *bodyDumpMiddleware) BodyDumpConfig() middleware.BodyDumpConfig {
 					if result.RowsAffected < 3 {
 						isSaveTrxKPMError = true
 					}
-
-					if e.Response().Status == 504 && result.RowsAffected < 3 {
-						isSaveTrxKPMError = true
+					resultTrxKpmStatus := m.db.Raw("SELECT ProspectID FROM trx_kpm_status WITH (nolock) WHERE ProspectID = ? AND decision = 'KPM-ERROR'", prospectID).Scan(&trxKPMStatus)
+					if e.Response().Status == 504 && resultTrxKpmStatus.RowsAffected == 0 {
+						isSaveTrxKPMStatus = true
 					}
 				}
 			}
@@ -106,6 +108,15 @@ func (m *bodyDumpMiddleware) BodyDumpConfig() middleware.BodyDumpConfig {
 					ProspectID: prospectID,
 					KpmId:      kpmId,
 					CreatedAt:  time.Now(),
+				})
+			}
+
+			if isSaveTrxKPMStatus {
+				m.db.Create(&entity.TrxKPMStatus{
+					ProspectID: prospectID,
+					Decision:   "KPM-ERROR",
+					CreatedAt:  time.Now(),
+					UpdatedAt:  time.Now(),
 				})
 			}
 

@@ -1404,8 +1404,8 @@ type Submission2Wilen struct {
 	ResidenceRW             string  `json:"residence_rw" validate:"required,min=1,max=3,number" example:"002"`
 	ResidenceProvince       string  `json:"residence_province" validate:"required,max=50,allowcharsname" example:"Jakarta"`
 	ResidenceCity           string  `json:"residence_city" validate:"required,max=30,allowcharsname" example:"Jakarta Timur"`
-	ResidenceKecamatan      string  `json:"residence_kecamatan" validate:"required,max=30,allowcharsname" example:"Duren Sawit"`
-	ResidenceKelurahan      string  `json:"residence_kelurahan" validate:"required,max=30,allowcharsname" example:"Klender"`
+	ResidenceKecamatan      string  `json:"residence_kecamatan" validate:"required,max=30,isValidNameChars" example:"Duren Sawit"`
+	ResidenceKelurahan      string  `json:"residence_kelurahan" validate:"required,max=30,isValidNameChars" example:"Klender"`
 	ResidenceZipCode        string  `json:"residence_zipcode" validate:"required,max=5,number" example:"13470"`
 	BranchID                string  `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
 	AssetCode               string  `json:"asset_code" validate:"required,max=200,htmlValidation" example:"K-HND.MOTOR.ABSOLUTE REVO"`
