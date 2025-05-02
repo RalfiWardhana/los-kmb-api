@@ -1371,8 +1371,12 @@ type Submission2Wilen struct {
 }
 
 type History2Wilen struct {
-	ID              string `json:"id"`
-	ProspectID      string `json:"prospect_id"`
-	OrderStatusName string `json:"order_status_name"`
-	CreatedAt       string `json:"created_at"`
+	ID              string   `json:"id"`
+	IDNumber        *string  `json:"id_number"`
+	KPMID           *int     `json:"kpm_id"`
+	ReferralCode    *string  `json:"referral_code"`
+	LoanAmount      *float64 `json:"loan_amount"`
+	ProspectID      string   `json:"prospect_id"`
+	OrderStatusName string   `json:"order_status_name"`
+	CreatedAt       string   `json:"created_at"`
 }

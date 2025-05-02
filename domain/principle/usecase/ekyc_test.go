@@ -158,6 +158,162 @@ func TestDukcapil(t *testing.T) {
 			},
 		},
 		{
+			label: "Test Error Unmarshal VD",
+			request: request.PrinciplePemohon{
+				ProspectID:           "SAL-123",
+				IDNumber:             "123",
+				SpouseIDNumber:       "1234",
+				MobilePhone:          "08123743211",
+				LegalName:            "Test Legal Name",
+				FullName:             "Test Full Name",
+				BirthDate:            "1999-09-08",
+				BirthPlace:           "JAKARTA",
+				SurgateMotherName:    "Test",
+				Gender:               "M",
+				LegalAddress:         "Test",
+				LegalRT:              "001",
+				LegalRW:              "001",
+				LegalProvince:        "JAWA TIMUR",
+				LegalCity:            "MALANG",
+				LegalKecamatan:       "MALANG",
+				LegalKelurahan:       "MALANG",
+				LegalZipCode:         "66192",
+				LegalPhoneArea:       "021",
+				LegalPhone:           "12345",
+				Education:            "SLTA",
+				ProfessionID:         "WRST",
+				JobType:              "TEST",
+				JobPosition:          "Test",
+				EmploymentSinceMonth: 2,
+				EmploymentSinceYear:  2024,
+				CompanyName:          "Test",
+				EconomySectorID:      "001",
+				IndustryTypeID:       "11",
+				KtpPhoto:             "http://www.example.com",
+				SelfiePhoto:          "http://www.example.com",
+			},
+			respAppConfig: entity.AppConfig{
+				Value: `{"data":{"verify_data":{"service_on":"dukcapil","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+			},
+			respDukcapilVD: respDukcapil{
+				code:     200,
+				response: `-`,
+			},
+			respDukcapilFR: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"rule_code": "6018",
+						"reason": "EKYC Sesuai",
+						"threshold": "5.0",
+						"ref_id": "7301010xxxxxxxxx",
+						"matchScore": "8.331"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
+			respGetMappingDukcapil: respGetMappingDukcapil{
+				data: entity.MappingResultDukcapil{
+					Decision: "PASS",
+					RuleCode: "1621",
+				},
+			},
+			expected: expectedResult{
+				err: errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response vd ekyc"),
+			},
+		},
+		{
+			label: "Test Error Unmarshal FR",
+			request: request.PrinciplePemohon{
+				ProspectID:           "SAL-123",
+				IDNumber:             "123",
+				SpouseIDNumber:       "1234",
+				MobilePhone:          "08123743211",
+				LegalName:            "Test Legal Name",
+				FullName:             "Test Full Name",
+				BirthDate:            "1999-09-08",
+				BirthPlace:           "JAKARTA",
+				SurgateMotherName:    "Test",
+				Gender:               "M",
+				LegalAddress:         "Test",
+				LegalRT:              "001",
+				LegalRW:              "001",
+				LegalProvince:        "JAWA TIMUR",
+				LegalCity:            "MALANG",
+				LegalKecamatan:       "MALANG",
+				LegalKelurahan:       "MALANG",
+				LegalZipCode:         "66192",
+				LegalPhoneArea:       "021",
+				LegalPhone:           "12345",
+				Education:            "SLTA",
+				ProfessionID:         "WRST",
+				JobType:              "TEST",
+				JobPosition:          "Test",
+				EmploymentSinceMonth: 2,
+				EmploymentSinceYear:  2024,
+				CompanyName:          "Test",
+				EconomySectorID:      "001",
+				IndustryTypeID:       "11",
+				KtpPhoto:             "http://www.example.com",
+				SelfiePhoto:          "http://www.example.com",
+			},
+			respAppConfig: entity.AppConfig{
+				Value: `{"data":{"verify_data":{"service_on":"dukcapil","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+			},
+			respDukcapilVD: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"threshold": "0",
+						"ref_id": "1000338d-208e-4e06-80f0-cbe8c1358a20",
+						"is_valid": true,
+						"no_kk": "Sesuai",
+						"nama_lgkp": 100,
+						"tmpt_lhr": 100,
+						"tgl_lhr": "Sesuai",
+						"prop_name": "Sesuai",
+						"kab_name": "Sesuai",
+						"kec_name": "Sesuai",
+						"kel_name": "Sesuai",
+						"no_rt": "Sesuai",
+						"no_rw": "Sesuai",
+						"alamat": 100,
+						"nama_lgkp_ibu": 100,
+						"status_kawin": "Sesuai",
+						"jenis_pkrjn": "Sesuai",
+						"jenis_klmin": "Sesuai",
+						"no_prop": "Sesuai",
+						"no_kab": "Sesuai",
+						"no_kec": "Sesuai",
+						"no_kel": "Sesuai",
+						"nik": "Sesuai"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
+			respDukcapilFR: respDukcapil{
+				code:     200,
+				response: `-`,
+			},
+			respGetMappingDukcapil: respGetMappingDukcapil{
+				data: entity.MappingResultDukcapil{
+					Decision: "PASS",
+					RuleCode: "1621",
+				},
+			},
+			expected: expectedResult{
+				err: errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response fr ekyc"),
+			},
+		},
+		{
 			label: "Test PASS FR izidata",
 			request: request.PrinciplePemohon{
 				ProspectID:           "SAL-123",
@@ -364,16 +520,12 @@ func TestDukcapil(t *testing.T) {
 				Value: `{"data":{"verify_data":{"service_on":"izidata","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
 			},
 			respDukcapilVD: respDukcapil{
-				code: 500,
-				response: `{
-					"messages": "bypass Dukcapil VD",
-				}`,
+				code:     500,
+				response: `{"messages":"bypass Dukcapil VD"}`,
 			},
 			respDukcapilFR: respDukcapil{
-				code: 500,
-				response: `{
-					"messages": "bypass Dukcapil VD",
-				}`,
+				code:     500,
+				response: `{"messages":"bypass Dukcapil FR"}`,
 			},
 			respGetMappingDukcapil: respGetMappingDukcapil{
 				data: entity.MappingResultDukcapil{
@@ -387,8 +539,118 @@ func TestDukcapil(t *testing.T) {
 					Code:   "",
 					Reason: "CONTINGENCY",
 					Source: "DCP",
-					Info:   "{\"vd\":null,\"vd_service\":\"izidata\",\"vd_error\":\"\",\"fr\":null,\"fr_service\":\"dukcapil\",\"fr_error\":\"\",\"asliri\":null,\"ktp\":null}",
+					Info:   "{\"vd\":null,\"vd_service\":\"izidata\",\"vd_error\":\"bypass Dukcapil VD\",\"fr\":null,\"fr_service\":\"dukcapil\",\"fr_error\":\"bypass Dukcapil FR\",\"asliri\":null,\"ktp\":null}",
 				},
+			},
+		},
+		{
+			label: "Test Not Check - Not Check - Error Unmarshal VD",
+			request: request.PrinciplePemohon{
+				ProspectID:           "SAL-123",
+				IDNumber:             "123",
+				SpouseIDNumber:       "1234",
+				MobilePhone:          "08123743211",
+				LegalName:            "Test Legal Name",
+				FullName:             "Test Full Name",
+				BirthDate:            "1999-09-08",
+				BirthPlace:           "JAKARTA",
+				SurgateMotherName:    "Test",
+				Gender:               "M",
+				LegalAddress:         "Test",
+				LegalRT:              "001",
+				LegalRW:              "001",
+				LegalProvince:        "JAWA TIMUR",
+				LegalCity:            "MALANG",
+				LegalKecamatan:       "MALANG",
+				LegalKelurahan:       "MALANG",
+				LegalZipCode:         "66192",
+				LegalPhoneArea:       "021",
+				LegalPhone:           "12345",
+				Education:            "SLTA",
+				ProfessionID:         "WRST",
+				JobType:              "TEST",
+				JobPosition:          "Test",
+				EmploymentSinceMonth: 2,
+				EmploymentSinceYear:  2024,
+				CompanyName:          "Test",
+				EconomySectorID:      "001",
+				IndustryTypeID:       "11",
+				KtpPhoto:             "http://www.example.com",
+				SelfiePhoto:          "http://www.example.com",
+			},
+			respAppConfig: entity.AppConfig{
+				Value: `{"data":{"verify_data":{"service_on":"izidata","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+			},
+			respDukcapilVD: respDukcapil{
+				code:     500,
+				response: `-`,
+			},
+			respDukcapilFR: respDukcapil{
+				code:     500,
+				response: `{"messages":"bypass Dukcapil FR"}`,
+			},
+			respGetMappingDukcapil: respGetMappingDukcapil{
+				data: entity.MappingResultDukcapil{
+					Decision: "CONTINGENCY",
+				},
+			},
+			expected: expectedResult{
+				err: errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response error vd ekyc"),
+			},
+		},
+		{
+			label: "Test Not Check - Not Check - Error Unmarshal FR",
+			request: request.PrinciplePemohon{
+				ProspectID:           "SAL-123",
+				IDNumber:             "123",
+				SpouseIDNumber:       "1234",
+				MobilePhone:          "08123743211",
+				LegalName:            "Test Legal Name",
+				FullName:             "Test Full Name",
+				BirthDate:            "1999-09-08",
+				BirthPlace:           "JAKARTA",
+				SurgateMotherName:    "Test",
+				Gender:               "M",
+				LegalAddress:         "Test",
+				LegalRT:              "001",
+				LegalRW:              "001",
+				LegalProvince:        "JAWA TIMUR",
+				LegalCity:            "MALANG",
+				LegalKecamatan:       "MALANG",
+				LegalKelurahan:       "MALANG",
+				LegalZipCode:         "66192",
+				LegalPhoneArea:       "021",
+				LegalPhone:           "12345",
+				Education:            "SLTA",
+				ProfessionID:         "WRST",
+				JobType:              "TEST",
+				JobPosition:          "Test",
+				EmploymentSinceMonth: 2,
+				EmploymentSinceYear:  2024,
+				CompanyName:          "Test",
+				EconomySectorID:      "001",
+				IndustryTypeID:       "11",
+				KtpPhoto:             "http://www.example.com",
+				SelfiePhoto:          "http://www.example.com",
+			},
+			respAppConfig: entity.AppConfig{
+				Value: `{"data":{"verify_data":{"service_on":"izidata","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
+			},
+			respDukcapilVD: respDukcapil{
+				code:     500,
+				response: `{"messages":"bypass Dukcapil VD"}`,
+			},
+			respDukcapilFR: respDukcapil{
+				code:     500,
+				response: `-`,
+			},
+			respGetMappingDukcapil: respGetMappingDukcapil{
+				data: entity.MappingResultDukcapil{
+					Decision: "CONTINGENCY",
+				},
+			},
+			expected: expectedResult{
+				err: errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response error fr ekyc"),
 			},
 		},
 		{
@@ -430,16 +692,12 @@ func TestDukcapil(t *testing.T) {
 				Value: `{"data":{"verify_data":{"service_on":"izidata","izidata":{"nama_lengkap":80},"dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapil","izidata":{"threshold":80},"dukcapil":{"threshold":5}}}}`,
 			},
 			respDukcapilVD: respDukcapil{
-				code: 500,
-				response: `{
-					"messages": "bypass Dukcapil VD",
-				}`,
+				code:     500,
+				response: `{"messages": "bypass Dukcapil VD"}`,
 			},
 			respDukcapilFR: respDukcapil{
-				code: 500,
-				response: `{
-					"messages": "bypass Dukcapil VD",
-				}`,
+				code:     500,
+				response: `{"messages": "bypass Dukcapil VD"}`,
 			},
 			respGetMappingDukcapil: respGetMappingDukcapil{
 				err: fmt.Errorf("error"),
@@ -1978,6 +2236,72 @@ func TestDukcapil(t *testing.T) {
 				err: errors.New(constant.ERROR_UPSTREAM + " - Get Dukcapil Config Error"),
 			},
 		},
+		{
+			label: "Test Get config ERROR Unmarshal",
+			request: request.PrinciplePemohon{
+				ProspectID:           "SAL-123",
+				IDNumber:             "123",
+				SpouseIDNumber:       "1234",
+				MobilePhone:          "08123743211",
+				LegalName:            "Test Legal Name",
+				FullName:             "Test Full Name",
+				BirthDate:            "1999-09-08",
+				BirthPlace:           "JAKARTA",
+				SurgateMotherName:    "Test",
+				Gender:               "M",
+				LegalAddress:         "Test",
+				LegalRT:              "001",
+				LegalRW:              "001",
+				LegalProvince:        "JAWA TIMUR",
+				LegalCity:            "MALANG",
+				LegalKecamatan:       "MALANG",
+				LegalKelurahan:       "MALANG",
+				LegalZipCode:         "66192",
+				LegalPhoneArea:       "021",
+				LegalPhone:           "12345",
+				Education:            "SLTA",
+				ProfessionID:         "WRST",
+				JobType:              "TEST",
+				JobPosition:          "Test",
+				EmploymentSinceMonth: 2,
+				EmploymentSinceYear:  2024,
+				CompanyName:          "Test",
+				EconomySectorID:      "001",
+				IndustryTypeID:       "11",
+				KtpPhoto:             "http://www.example.com",
+				SelfiePhoto:          "http://www.example.com",
+			},
+			respAppConfig: entity.AppConfig{
+				Value: `-`,
+			},
+			respDukcapilVD: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"threshold": "0",
+						"ref_id": "1000338d-208e-4e06-80f0-cbe8c1358a20",
+						"is_valid": false,
+						"reason": "Data Not Found"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				  }`,
+			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus: "NEW",
+				CBFound:        true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.DECISION_REJECT,
+			},
+			expected: expectedResult{
+				err: errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config threshold ekyc"),
+			},
+		},
 	}
 
 	for _, test := range testcases {
@@ -2048,14 +2372,15 @@ func TestAsliri(t *testing.T) {
 	)
 
 	testcase := []struct {
-		payload      request.PrinciplePemohon
-		expected     response.Ekyc
-		body         string
-		code         int
-		err          error
-		errGetConfig error
-		errExpected  error
-		label        string
+		payload           request.PrinciplePemohon
+		expected          response.Ekyc
+		body              string
+		code              int
+		err               error
+		responseAppConfig entity.AppConfig
+		errGetConfig      error
+		errExpected       error
+		label             string
 	}{
 		{
 			payload: request.PrinciplePemohon{
@@ -2091,6 +2416,7 @@ func TestAsliri(t *testing.T) {
 				KtpPhoto:             "http://www.example.com",
 				SelfiePhoto:          "http://www.example.com",
 			},
+			responseAppConfig: responseAppConfig,
 			body: `{
 				"message": "LOS - ASLIRI",
 				"errors": null,
@@ -2143,6 +2469,7 @@ func TestAsliri(t *testing.T) {
 				KtpPhoto:             "http://www.example.com",
 				SelfiePhoto:          "http://www.example.com",
 			},
+			responseAppConfig: responseAppConfig,
 			body: `{
 				"message": "LOS - ASLIRI",
 				"errors": null,
@@ -2195,6 +2522,7 @@ func TestAsliri(t *testing.T) {
 				KtpPhoto:             "http://www.example.com",
 				SelfiePhoto:          "http://www.example.com",
 			},
+			responseAppConfig: responseAppConfig,
 			body: `{
 				"message": "LOS - ASLIRI",
 				"errors": null,
@@ -2247,6 +2575,7 @@ func TestAsliri(t *testing.T) {
 				KtpPhoto:             "http://www.example.com",
 				SelfiePhoto:          "http://www.example.com",
 			},
+			responseAppConfig: responseAppConfig,
 			body: `{
 				"message": "LOS - ASLIRI",
 				"errors": null,
@@ -2299,9 +2628,10 @@ func TestAsliri(t *testing.T) {
 				KtpPhoto:             "http://www.example.com",
 				SelfiePhoto:          "http://www.example.com",
 			},
-			err:         fmt.Errorf(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Asliri"),
-			errExpected: fmt.Errorf(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Asliri"),
-			label:       "TEST_ASLIRI_RESPONSE_ERROR",
+			responseAppConfig: responseAppConfig,
+			err:               fmt.Errorf(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Asliri"),
+			errExpected:       fmt.Errorf(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Asliri"),
+			label:             "TEST_ASLIRI_RESPONSE_ERROR",
 		},
 		{
 			payload: request.PrinciplePemohon{
@@ -2337,9 +2667,10 @@ func TestAsliri(t *testing.T) {
 				KtpPhoto:             "http://www.example.com",
 				SelfiePhoto:          "http://www.example.com",
 			},
-			code:        503,
-			errExpected: fmt.Errorf(constant.ERROR_UPSTREAM + " - Call Asliri"),
-			label:       "TEST_ASLIRI_RESPONSE_ERROR_CODE",
+			responseAppConfig: responseAppConfig,
+			code:              503,
+			errExpected:       fmt.Errorf(constant.ERROR_UPSTREAM + " - Call Asliri"),
+			label:             "TEST_ASLIRI_RESPONSE_ERROR_CODE",
 		},
 		{
 			payload: request.PrinciplePemohon{
@@ -2375,6 +2706,7 @@ func TestAsliri(t *testing.T) {
 				KtpPhoto:             "http://www.example.com",
 				SelfiePhoto:          "http://www.example.com",
 			},
+			responseAppConfig: responseAppConfig,
 			body: `{
 				"message": "LOS - ASLIRI",
 				"errors": null,
@@ -2392,13 +2724,72 @@ func TestAsliri(t *testing.T) {
 			errExpected:  errors.New(constant.ERROR_UPSTREAM + " - Get ASLI RI Config Error"),
 			label:        "TEST_GET_CONFIG_ERROR",
 		},
+		{
+			payload: request.PrinciplePemohon{
+				ProspectID:           "SAL-123",
+				IDNumber:             idNumber,
+				SpouseIDNumber:       "1234",
+				MobilePhone:          "08123743211",
+				LegalName:            legalName,
+				FullName:             "Test Full Name",
+				BirthDate:            birthDate,
+				BirthPlace:           birthPlace,
+				SurgateMotherName:    "Test",
+				Gender:               "M",
+				LegalAddress:         "Test",
+				LegalRT:              "001",
+				LegalRW:              "001",
+				LegalProvince:        "JAWA TIMUR",
+				LegalCity:            "MALANG",
+				LegalKecamatan:       "MALANG",
+				LegalKelurahan:       "MALANG",
+				LegalZipCode:         "66192",
+				LegalPhoneArea:       "021",
+				LegalPhone:           "12345",
+				Education:            "SLTA",
+				ProfessionID:         "WRST",
+				JobType:              "TEST",
+				JobPosition:          "Test",
+				EmploymentSinceMonth: 2,
+				EmploymentSinceYear:  2024,
+				CompanyName:          "Test",
+				EconomySectorID:      "001",
+				IndustryTypeID:       "11",
+				KtpPhoto:             "http://www.example.com",
+				SelfiePhoto:          "http://www.example.com",
+			},
+			responseAppConfig: entity.AppConfig{
+				GroupName: "",
+				Lob:       "",
+				Key:       "",
+				Value:     `-`,
+				IsActive:  0,
+				CreatedAt: time.Time{},
+				UpdatedAt: time.Time{},
+			},
+			body: `{
+				"message": "LOS - ASLIRI",
+				"errors": null,
+				"data": {
+				  "name": 100,
+				  "pdob": 100,
+				  "selfie_photo": 0,
+				  "not_found": false,
+				  "ref_id": "aW50ZXJuYWw=-1675666687732"
+				},
+				"server_time": "2022-11-30T16:48:45+07:00"
+			  }`,
+			code:        200,
+			errExpected: errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config asliri"),
+			label:       "TEST_GET_CONFIG_ERROR_UNMARSHAL",
+		},
 	}
 
 	for _, test := range testcase {
 
 		timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
 		mockRepository := new(mocks.Repository)
-		mockRepository.On("GetConfig", mock.Anything, mock.Anything, mock.Anything).Return(responseAppConfig, test.errGetConfig)
+		mockRepository.On("GetConfig", mock.Anything, mock.Anything, mock.Anything).Return(test.responseAppConfig, test.errGetConfig)
 
 		rst := resty.New()
 		ctx := context.Background()

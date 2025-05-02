@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"errors"
 	"los-kmb-api/domain/principle/mocks"
@@ -186,6 +187,10 @@ func TestGetDataPrinciple(t *testing.T) {
 		ResultPefindo:           "PASS",
 		BakiDebet:               0,
 		ReadjustContext:         "tenor",
+		ReferralCode: sql.NullString{
+			String: "TQ72AJ",
+			Valid:  true,
+		},
 	}
 
 	testcases := []struct {
@@ -473,6 +478,37 @@ func TestGetDataPrinciple(t *testing.T) {
 			}`,
 			resMDMGetAssetCode: 500,
 			expectedError:      errors.New(constant.ERROR_UPSTREAM + " - Call Asset MDM Error"),
+		},
+		{
+			name: "error get biaya data - get error unmarshal asset mdm",
+			request: request.PrincipleGetData{
+				ProspectID: "SAL-123",
+				Context:    "Biaya",
+			},
+			resGetPrincipleStepOne:   samplePrincipleStepOne,
+			resGetPrincipleStepTwo:   samplePrincipleStepTwo,
+			resGetPrincipleStepThree: samplePrincipleStepThree,
+			resGetFilteringResult:    sampleFilteringKMB,
+			resMarsevLoanAmountCode:  200,
+			resMarsevLoanAmountBody: `{
+				"code": 200,
+				"message": "Success",
+				"data": {
+					"loan_amount_maximum": 80000000,
+					"amount_of_finance": 75000000,
+					"dp_amount": 20000000,
+					"dp_percent_final": 20,
+					"ltv_percent_final": 80,
+					"admin_fee_amount": 2500000,
+					"provision_fee_amount": 1500000,
+					"loan_amount_final": 75000000,
+					"is_psa": true
+				},
+				"errors": null
+			}`,
+			resMDMGetAssetCode: 200,
+			resMDMGetAssetBody: `-`,
+			expectedError:      errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data asset list"),
 		},
 		{
 			name: "error get biaya data - get empty record asset mdm",
@@ -864,6 +900,8 @@ func TestGetDataPrinciple(t *testing.T) {
 				"result_pefindo":             sampleTrxKPM.ResultPefindo,
 				"baki_debet":                 sampleTrxKPM.BakiDebet,
 				"readjust_context":           sampleTrxKPM.ReadjustContext,
+				"rent_finish_date":           sampleTrxKPM.RentFinishDate,
+				"referral_code":              sampleTrxKPM.ReferralCode,
 			},
 		},
 		{
@@ -904,6 +942,17 @@ func TestGetDataPrinciple(t *testing.T) {
 			resGetTrxKPM:       sampleTrxKPM,
 			resMDMGetAssetCode: 500,
 			expectedError:      errors.New(constant.ERROR_UPSTREAM + " - Call Asset MDM Error"),
+		},
+		{
+			name: "error get readjust data - get error unmarshal asset mdm",
+			request: request.PrincipleGetData{
+				ProspectID: "SAL-123",
+				Context:    "Readjust",
+			},
+			resGetTrxKPM:       sampleTrxKPM,
+			resMDMGetAssetCode: 200,
+			resMDMGetAssetBody: `-`,
+			expectedError:      errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data asset list"),
 		},
 		{
 			name: "error get readjust data - get empty record asset mdm",

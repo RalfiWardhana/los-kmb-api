@@ -40,7 +40,7 @@ type Usecase interface {
 	PrinciplePublish(ctx context.Context, req request.PrinciplePublish, accessToken string) (err error)
 
 	Step2Wilen(idNumber string) (step response.Step2Wilen, err error)
-	GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64) (ltv int, adjustTenor bool, err error)
+	GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64, isSimulasi bool) (ltv int, adjustTenor bool, err error)
 	MarsevGetLoanAmount(ctx context.Context, req request.ReqMarsevLoanAmount, prospectID string, accessToken string) (marsevLoanAmountRes response.MarsevLoanAmountResponse, err error)
 	MarsevGetMarketingProgram(ctx context.Context, req request.ReqMarsevFilterProgram, prospectID string, accessToken string) (marsevFilterProgramRes response.MarsevFilterProgramResponse, err error)
 	MarsevCalculateInstallment(ctx context.Context, req request.ReqMarsevCalculateInstallment, prospectID string, accessToken string) (marsevCalculateInstallmentRes response.MarsevCalculateInstallmentResponse, err error)
@@ -50,7 +50,7 @@ type Usecase interface {
 	CheckBannedChassisNumber(chassisNumber string) (data response.UsecaseApi, err error)
 	CheckAgreementChassisNumber(ctx context.Context, prospectID, chassisNumber, idNumber, spouseIDNumber string, accessToken string) (responseAgreementChassisNumber response.AgreementChassisNumber, data response.UsecaseApi, err error)
 	NegativeCustomerCheck(ctx context.Context, reqs request.DupcheckApi, accessToken string) (data response.UsecaseApi, negativeCustomer response.NegativeCustomer, err error)
-	History2Wilen(prospectID string) (data []response.History2Wilen, err error)
+	History2Wilen(req request.History2Wilen) (data []response.History2Wilen, err error)
 	Publish2Wilen(ctx context.Context, req request.Publish2Wilen, accessToken string) (err error)
 	CheckMobilePhoneFMF(ctx context.Context, prospectID, mobilePhone, idNumber, accessToken, hrisAccessToken string) (data response.UsecaseApi, err error)
 }

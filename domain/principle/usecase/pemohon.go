@@ -62,7 +62,10 @@ func (u usecase) GetEmployeeData(ctx context.Context, employeeID string) (data r
 	}
 
 	if err == nil && getDataEmployee.StatusCode() == 200 {
-		json.Unmarshal([]byte(jsoniter.Get(getDataEmployee.Body()).ToString()), &respGetEmployeeData)
+		if err = json.Unmarshal([]byte(jsoniter.Get(getDataEmployee.Body()).ToString()), &respGetEmployeeData); err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response get employee")
+			return
+		}
 
 		isCmoActive := false
 		if len(respGetEmployeeData.Data) > 0 && respGetEmployeeData.Data[0].PositionGroupCode == "AO" {
@@ -173,7 +176,10 @@ func (u usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType strin
 	}
 
 	if err == nil && getDataFpd.StatusCode() == 200 {
-		json.Unmarshal([]byte(jsoniter.Get(getDataFpd.Body()).ToString()), &respGetFPD)
+		if err = json.Unmarshal([]byte(jsoniter.Get(getDataFpd.Body()).ToString()), &respGetFPD); err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response get fpd cmo")
+			return
+		}
 
 		// Mencari nilai fpd untuk bpkb_name_type "NAMA BEDA"
 		var fpdNamaBeda float64 = 0

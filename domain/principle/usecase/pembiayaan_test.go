@@ -1101,26 +1101,37 @@ func TestRejectTenor36(t *testing.T) {
 		cluster           string
 		result            response.UsecaseApi
 		errResult         error
-		responseAppConfig error
+		responseAppConfig entity.AppConfig
+		errAppConfig      error
 		trxStatus         entity.TrxStatus
 	}{
 		{
-			name:              "handling tenor error config",
-			cluster:           "Cluster A",
-			responseAppConfig: errors.New(constant.ERROR_UPSTREAM + " - GetConfig exclusion_tenor36 Error"),
-			errResult:         errors.New(constant.ERROR_UPSTREAM + " - GetConfig exclusion_tenor36 Error"),
+			name:         "handling tenor error config",
+			cluster:      "Cluster A",
+			errAppConfig: errors.New(constant.ERROR_UPSTREAM + " - GetConfig exclusion_tenor36 Error"),
+			errResult:    errors.New(constant.ERROR_UPSTREAM + " - GetConfig exclusion_tenor36 Error"),
 		},
 		{
-			name:    "handling tenor reject",
-			cluster: "Cluster C",
+			name:    "handling tenor error unmarshal config",
+			cluster: "Cluster A",
+			responseAppConfig: entity.AppConfig{
+				Value: `-`,
+			},
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config tenor36"),
+		},
+		{
+			name:              "handling tenor reject",
+			cluster:           "Cluster C",
+			responseAppConfig: responseAppConfig,
 			result: response.UsecaseApi{
 				Code:   constant.CODE_REJECT_TENOR,
 				Result: constant.DECISION_REJECT,
 				Reason: constant.REASON_REJECT_TENOR},
 		},
 		{
-			name:    "handling tenor pass",
-			cluster: "Cluster A",
+			name:              "handling tenor pass",
+			cluster:           "Cluster A",
+			responseAppConfig: responseAppConfig,
 			result: response.UsecaseApi{
 				Code:   constant.CODE_PASS_TENOR,
 				Result: constant.DECISION_PASS,
@@ -1137,7 +1148,7 @@ func TestRejectTenor36(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
-			mockRepository.On("GetConfig", "tenor36", "KMB-OFF", "exclusion_tenor36").Return(responseAppConfig, tc.responseAppConfig)
+			mockRepository.On("GetConfig", "tenor36", "KMB-OFF", "exclusion_tenor36").Return(tc.responseAppConfig, tc.errAppConfig)
 
 			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
@@ -2741,6 +2752,16 @@ func TestDsrCheck(t *testing.T) {
 			expectedError: errors.New(constant.ERROR_UPSTREAM + " - Call Installment Pending API Error"),
 		},
 		{
+			name:         "error unmarshal",
+			customerData: newCustomer,
+			request: request.PrinciplePembiayaan{
+				ProspectID: "TEST123",
+			},
+			httpStatus:    200,
+			httpResponse:  `-`,
+			expectedError: errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response installment pending"),
+		},
+		{
 			name:         "pass top up",
 			customerData: roCustomer,
 			request: request.PrinciplePembiayaan{
@@ -3054,6 +3075,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				DSRPBK:   float64(5),
 				TotalDSR: float64(65),
 			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
 		},
 		{
 			name:                "TotalDsrFmfPbk pass new",
@@ -3082,6 +3107,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			trxFMF: response.TrxFMF{
 				DSRPBK:   float64(13.88888888888889),
 				TotalDSR: float64(45),
+			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
 			},
 		},
 		{
@@ -3118,6 +3147,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				TotalDSR:                float64(30),
 				LatestInstallmentAmount: 1000000,
 				InstallmentThreshold:    1500000,
+			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
 			},
 			codeLatestInstallment: 200,
 			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
@@ -3196,6 +3229,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				DSRPBK:   float64(0.5),
 				TotalDSR: float64(30.5),
 			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
 			codeLatestInstallment: 500,
 			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
 			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 1000000, "contract_status": "", "outstanding_principal": 0, 
@@ -3238,6 +3275,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				LatestInstallmentAmount: 10000,
 				InstallmentThreshold:    15000,
 			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
 			codeLatestInstallment: 200,
 			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
 			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 10000, "contract_status": "", "outstanding_principal": 0, 
@@ -3276,6 +3317,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				DSRPBK:   float64(0.5),
 				TotalDSR: float64(30),
 			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
 		},
 		{
 			name:                "TotalDsrFmfPbk ao top up prime",
@@ -3307,6 +3352,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				TotalDSR:                float64(30),
 				LatestInstallmentAmount: 1000000,
 				InstallmentThreshold:    1500000,
+			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
 			},
 			codeLatestInstallment: 200,
 			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
@@ -3344,6 +3393,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				LatestInstallmentAmount: 100000,
 				InstallmentThreshold:    150000,
 			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
 			codeLatestInstallment: 200,
 			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
 			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 100000, "contract_status": "", "outstanding_principal": 0, 
@@ -3378,6 +3431,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				DSRPBK:   float64(0.5),
 				TotalDSR: float64(30),
 			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
 		},
 		{
 			name:                "TotalDsrFmfPbk ao top up priority < installmentThreshold",
@@ -3407,6 +3464,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			trxFMF: response.TrxFMF{
 				DSRPBK:   float64(0.5),
 				TotalDSR: float64(30),
+			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
 			},
 		},
 		{
@@ -3438,6 +3499,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				DSRPBK:   float64(13.88888888888889),
 				TotalDSR: float64(30),
 			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
 		},
 		{
 			name:                "TotalDsrFmfPbk ro prime err",
@@ -3465,6 +3530,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			trxFMF: response.TrxFMF{
 				DSRPBK:   float64(0.5),
 				TotalDSR: float64(30.5),
+			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
 			},
 			codeLatestInstallment: 500,
 			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
@@ -3499,6 +3568,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 				DSRPBK:   float64(0.5),
 				TotalDSR: float64(30.5),
 			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
+			},
 			codeLatestInstallment: 500,
 			bodyLatestInstallment: `{ "messages": "LOS - Latest Installment", "errors": null, 
 			"data": { "customer_id": "", "application_id": "", "agreement_no": "", "installment_amount": 1000000, "contract_status": "", "outstanding_principal": 0, 
@@ -3531,6 +3604,10 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 			trxFMF: response.TrxFMF{
 				DSRPBK:   float64(0.5),
 				TotalDSR: float64(30.5),
+			},
+			config: entity.AppConfig{
+				Key:   "expired_contract_check",
+				Value: `{"data":{"expired_contract_check_enabled":true,"expired_contract_max_months":6}}`,
 			},
 			codeLatestInstallment: 200,
 			bodyLatestInstallment: `response body unmarshal error`,
@@ -3566,7 +3643,7 @@ func TestTotalDsrFmfPbk(t *testing.T) {
 
 			mockRepository.On("MasterMappingDeviasiDSR", tc.totalIncome).Return(tc.mappingDeviasiDSR, tc.errGetConfig)
 
-			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.SpDupcheckMap.CustomerID.(string)+"/2", mock.Anything, mock.Anything, constant.METHOD_GET, false, 0, 30, tc.prospectID, tc.accessToken).Return(resp, tc.errLatestInstallment).Once()
+			mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("LASTEST_PAID_INSTALLMENT_URL")+tc.SpDupcheckMap.CustomerID.(string)+"/2", mock.Anything, mock.Anything, constant.METHOD_GET, false, 0, 30, tc.prospectID, tc.accessToken).Return(resp, tc.errLatestInstallment).Once()
 
 			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 

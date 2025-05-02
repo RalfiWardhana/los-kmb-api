@@ -13,6 +13,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-resty/resty/v2"
@@ -114,6 +115,29 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 
 	var maxLoanAmount float64
 	if len(marsevFilterProgramRes.Data) > 0 {
+		marsevProgramData := marsevFilterProgramRes.Data[0]
+
+		if req.ReferralCode != nil && *req.ReferralCode != "" {
+			miNumbers := strings.Split(os.Getenv("MI_NUMBER_WHITELIST"), ",")
+			miNumberSet := make(map[int]struct{}, len(miNumbers))
+			for _, miNumber := range miNumbers {
+				miNumberInt, _ := strconv.Atoi(miNumber)
+				miNumberSet[miNumberInt] = struct{}{}
+			}
+
+			found := false
+			for _, datum := range marsevFilterProgramRes.Data {
+				if _, exists := miNumberSet[datum.MINumber]; exists {
+					marsevProgramData = datum
+					found = true
+					break
+				}
+			}
+
+			if !found {
+				return data, errors.New(constant.ERROR_BAD_REQUEST + " - No matching MI_NUMBER found")
+			}
+		}
 
 		var assetMP response.AssetYearList
 		assetMP, err = u.usecase.MDMGetAssetYear(ctx, req.BranchID, req.AssetCode, req.ManufactureYear, req.ProspectID, accessToken)
@@ -215,47 +239,74 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 			return
 		}
 
-		for _, tenorInfo := range marsevFilterProgramRes.Data[0].Tenors {
+		var (
+			wg             sync.WaitGroup
+			loanAmountChan = make(chan float64, len(marsevProgramData.Tenors))
+			errChan        = make(chan error, len(marsevProgramData.Tenors))
+		)
 
-			if tenorInfo.Tenor >= 36 {
-				var trxTenor response.UsecaseApi
-				if tenorInfo.Tenor == 36 {
-					trxTenor, err = u.usecase.RejectTenor36(clusterCMO)
-					if err != nil {
-						continue
+		for _, tenorInfo := range marsevProgramData.Tenors {
+			wg.Add(1)
+			go func(tenorInfo response.TenorInfo) {
+				defer wg.Done()
+
+				if tenorInfo.Tenor >= 36 {
+					var trxTenor response.UsecaseApi
+					if tenorInfo.Tenor == 36 {
+						trxTenor, err = u.usecase.RejectTenor36(clusterCMO)
+						if err != nil {
+							errChan <- err
+							return
+						}
+					} else if tenorInfo.Tenor > 36 {
+						return
 					}
-				} else if tenorInfo.Tenor > 36 {
-					continue
+					if trxTenor.Result == constant.DECISION_REJECT {
+						return
+					}
 				}
-				if trxTenor.Result == constant.DECISION_REJECT {
-					continue
+
+				ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet, isSimulasi)
+				if err != nil {
+					errChan <- err
+					return
 				}
-			}
 
-			ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet)
-			if err != nil {
-				return data, err
-			}
+				if ltv == 0 {
+					return
+				}
 
-			if ltv == 0 {
-				continue
-			}
+				// get loan amount
+				payloadMaxLoan := request.ReqMarsevLoanAmount{
+					BranchID:      req.BranchID,
+					OTR:           otr,
+					MaxLTV:        ltv,
+					IsRecalculate: false,
+				}
 
-			// get loan amount
-			payloadMaxLoan := request.ReqMarsevLoanAmount{
-				BranchID:      req.BranchID,
-				OTR:           otr,
-				MaxLTV:        ltv,
-				IsRecalculate: false,
-			}
+				marsevLoanAmountRes, err := u.usecase.MarsevGetLoanAmount(ctx, payloadMaxLoan, req.ProspectID, accessToken)
+				if err != nil {
+					errChan <- err
+					return
+				}
 
-			marsevLoanAmountRes, err := u.usecase.MarsevGetLoanAmount(ctx, payloadMaxLoan, req.ProspectID, accessToken)
-			if err != nil {
-				continue
-			}
+				loanAmountChan <- marsevLoanAmountRes.Data.LoanAmountMaximum
+			}(tenorInfo)
+		}
 
-			if maxLoanAmount < marsevLoanAmountRes.Data.LoanAmountMaximum {
-				maxLoanAmount = marsevLoanAmountRes.Data.LoanAmountMaximum
+		go func() {
+			wg.Wait()
+			close(loanAmountChan)
+			close(errChan)
+		}()
+
+		if err := <-errChan; err != nil {
+			return response.GetMaxLoanAmountData{}, err
+		}
+
+		for loanAmount := range loanAmountChan {
+			if loanAmount > maxLoanAmount {
+				maxLoanAmount = loanAmount
 			}
 		}
 	}
@@ -265,7 +316,7 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 	return
 }
 
-func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64) (ltv int, adjustTenor bool, err error) {
+func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64, isSimulasi bool) (ltv int, adjustTenor bool, err error) {
 	var bpkbNameType int
 	if strings.Contains(os.Getenv("NAMA_SAMA"), bpkbName) {
 		bpkbNameType = 1
@@ -362,10 +413,12 @@ func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.Mappin
 		}
 	}
 
-	err = u.repository.SaveTrxElaborateLTV(trxElaborateLTV)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " Save elaborate ltv error")
-		return
+	if !isSimulasi {
+		err = u.repository.SaveTrxElaborateLTV(trxElaborateLTV)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - save elaborate ltv error")
+			return
+		}
 	}
 
 	return
@@ -451,7 +504,10 @@ func (u usecase) MDMGetMasterAsset(ctx context.Context, branchID string, search 
 		return
 	}
 
-	json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &assetList)
+	if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &assetList); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data asset list")
+		return
+	}
 
 	if len(assetList.Records) == 0 {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Call Asset MDM Error")
@@ -484,7 +540,10 @@ func (u usecase) MDMGetAssetYear(ctx context.Context, branchID string, assetCode
 		return
 	}
 
-	json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &assetMP)
+	if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &assetMP); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data marketprice")
+		return
+	}
 
 	if len(assetMP.Records) == 0 {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Call Marketprice MDM Error")

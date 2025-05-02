@@ -283,6 +283,12 @@ func TestDupcheckIntegrator(t *testing.T) {
 			errFinal:      errors.New("upstream_service_error - Call Dupcheck Error"),
 		},
 		{
+			name:          "test error unmarshal response",
+			rDupcheckCode: 200,
+			rDupcheckBody: `-`,
+			errFinal:      errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data dupcheck"),
+		},
+		{
 			name:          "test successful response",
 			rDupcheckCode: 200,
 			rDupcheckBody: `{

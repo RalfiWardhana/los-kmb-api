@@ -16,9 +16,10 @@ import (
 )
 
 type platformEvent struct {
-	producerSubmission     *event.Client
-	producerSubmissionLOS  *event.Client
-	producerInsertCustomer *event.Client
+	producerSubmission       *event.Client
+	producerSubmissionLOS    *event.Client
+	producerInsertCustomer   *event.Client
+	producerSubmission2Wilen *event.Client
 }
 
 //counterfeiter:generate . PlatformEventInterface
@@ -26,8 +27,8 @@ type PlatformEventInterface interface {
 	PublishEvent(ctx context.Context, accessToken, topicName, key, id string, value map[string]interface{}, countRetry int) error
 }
 
-func NewPlatformEvent(producerSubmission, producerSubmissionLOS, producerInsertCustomer *event.Client) PlatformEventInterface {
-	return &platformEvent{producerSubmission, producerSubmissionLOS, producerInsertCustomer}
+func NewPlatformEvent(producerSubmission, producerSubmissionLOS, producerInsertCustomer, producerSubmission2Wilen *event.Client) PlatformEventInterface {
+	return &platformEvent{producerSubmission, producerSubmissionLOS, producerInsertCustomer, producerSubmission2Wilen}
 }
 
 func (pe platformEvent) PublishEvent(ctx context.Context, accessToken, topicName, key, id string, value map[string]interface{}, countRetry int) error {
@@ -48,6 +49,8 @@ func (pe platformEvent) PublishEvent(ctx context.Context, accessToken, topicName
 		producer = pe.producerSubmissionLOS
 	case constant.TOPIC_INSERT_CUSTOMER:
 		producer = pe.producerInsertCustomer
+	case constant.TOPIC_SUBMISSION_2WILEN:
+		producer = pe.producerSubmission2Wilen
 	default:
 		err = fmt.Errorf("producer for topic %s was not created", topicName)
 

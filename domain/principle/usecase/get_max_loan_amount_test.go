@@ -27,7 +27,8 @@ func TestGetMaxLoanAmount(t *testing.T) {
 	reqID := utils.GenerateUUID()
 	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
 	accessToken := "test-token"
-
+	referralCode := "test"
+	os.Setenv("MI_NUMBER_WHITELIST", "123,1234")
 	testCases := []struct {
 		name                      string
 		request                   request.GetMaxLoanAmount
@@ -58,6 +59,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 		errMappingElaborateLTV    error
 		getLTVResponse            int
 		adjustTenorResponse       bool
+		isSimulasi                bool
 		errGetLTV                 error
 		marsevLoanAmountRes       response.MarsevLoanAmountResponse
 		errMarsevLoanAmount       error
@@ -166,6 +168,186 @@ func TestGetMaxLoanAmount(t *testing.T) {
 				MaxLoanAmount: 40000000,
 			},
 		},
+
+		{
+			name: "success with referral code simulation case",
+			request: request.GetMaxLoanAmount{
+				ProspectID:         "SIM-123",
+				BranchID:           "123",
+				AssetCode:          "MOT",
+				IDNumber:           "1234567890",
+				LegalName:          "Test User",
+				BirthDate:          "1990-01-01",
+				SurgateMotherName:  "Mother Name",
+				BPKBNameType:       "K",
+				ManufactureYear:    "2020",
+				AssetUsageTypeCode: "P",
+				ReferralCode:       &referralCode,
+			},
+			config: entity.AppConfig{
+				Value: "^SIM-.*",
+			},
+			dupcheckResponse: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+			},
+			assetResponse: response.AssetList{
+				Records: []struct {
+					AssetCode           string `json:"asset_code"`
+					AssetDescription    string `json:"asset_description"`
+					AssetDisplay        string `json:"asset_display"`
+					AssetTypeID         string `json:"asset_type_id"`
+					BranchID            string `json:"branch_id"`
+					Brand               string `json:"brand"`
+					CategoryID          string `json:"category_id"`
+					CategoryDescription string `json:"category_description"`
+					IsElectric          bool   `json:"is_electric"`
+					Model               string `json:"model"`
+				}{
+					{
+						AssetCode:           "MOT",
+						AssetDescription:    "HONDA VARIO 160",
+						AssetDisplay:        "HONDA VARIO 160",
+						AssetTypeID:         "2W",
+						BranchID:            "123",
+						Brand:               "HONDA",
+						CategoryID:          "CAT1",
+						CategoryDescription: "Sport",
+						IsElectric:          false,
+						Model:               "VARIO",
+					},
+				},
+			},
+			marsevFilterProgramRes: response.MarsevFilterProgramResponse{
+				Data: []response.MarsevFilterProgramData{
+					{
+						MINumber: 12345,
+						Tenors: []response.TenorInfo{
+							{Tenor: 12},
+							{Tenor: 24},
+						},
+					},
+					{
+						MINumber: 123,
+						Tenors: []response.TenorInfo{
+							{Tenor: 3},
+							{Tenor: 6},
+						},
+					},
+				},
+			},
+			assetYearResponse: response.AssetYearList{
+				Records: []struct {
+					AssetCode        string `json:"asset_code"`
+					BranchID         string `json:"branch_id"`
+					Brand            string `json:"brand"`
+					ManufactureYear  int    `json:"manufacturing_year"`
+					MarketPriceValue int    `json:"market_price_value"`
+				}{
+					{
+						AssetCode:        "MOT",
+						BranchID:         "123",
+						Brand:            "HONDA",
+						ManufactureYear:  2020,
+						MarketPriceValue: 60000000,
+					},
+				},
+			},
+			mappingBranchResponse: response.MDMMasterMappingBranchEmployeeResponse{
+				Data: []response.MDMMasterMappingBranchEmployeeRecord{
+					{
+						CMOID: "CMO123",
+					},
+				},
+			},
+			hrisResponse: response.EmployeeCMOResponse{
+				CMOCategory: constant.NEW,
+			},
+			mappingElaborateLTV: []entity.MappingElaborateLTV{
+				{
+					LTV: 80,
+				},
+			},
+			getLTVResponse: 80,
+			marsevLoanAmountRes: response.MarsevLoanAmountResponse{
+				Data: response.MarsevLoanAmountData{
+					LoanAmountMaximum: 40000000,
+				},
+			},
+			expectedResponse: response.GetMaxLoanAmountData{
+				MaxLoanAmount: 40000000,
+			},
+		},
+		{
+			name: "error with referral code simulation case",
+			request: request.GetMaxLoanAmount{
+				ProspectID:         "SIM-123",
+				BranchID:           "123",
+				AssetCode:          "MOT",
+				IDNumber:           "1234567890",
+				LegalName:          "Test User",
+				BirthDate:          "1990-01-01",
+				SurgateMotherName:  "Mother Name",
+				BPKBNameType:       "K",
+				ManufactureYear:    "2020",
+				AssetUsageTypeCode: "P",
+				ReferralCode:       &referralCode,
+			},
+			config: entity.AppConfig{
+				Value: "^SIM-.*",
+			},
+			dupcheckResponse: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+			},
+			assetResponse: response.AssetList{
+				Records: []struct {
+					AssetCode           string `json:"asset_code"`
+					AssetDescription    string `json:"asset_description"`
+					AssetDisplay        string `json:"asset_display"`
+					AssetTypeID         string `json:"asset_type_id"`
+					BranchID            string `json:"branch_id"`
+					Brand               string `json:"brand"`
+					CategoryID          string `json:"category_id"`
+					CategoryDescription string `json:"category_description"`
+					IsElectric          bool   `json:"is_electric"`
+					Model               string `json:"model"`
+				}{
+					{
+						AssetCode:           "MOT",
+						AssetDescription:    "HONDA VARIO 160",
+						AssetDisplay:        "HONDA VARIO 160",
+						AssetTypeID:         "2W",
+						BranchID:            "123",
+						Brand:               "HONDA",
+						CategoryID:          "CAT1",
+						CategoryDescription: "Sport",
+						IsElectric:          false,
+						Model:               "VARIO",
+					},
+				},
+			},
+			marsevFilterProgramRes: response.MarsevFilterProgramResponse{
+				Data: []response.MarsevFilterProgramData{
+					{
+						MINumber: 1,
+						Tenors: []response.TenorInfo{
+							{Tenor: 12},
+							{Tenor: 24},
+						},
+					},
+					{
+						MINumber: 1234123,
+						Tenors: []response.TenorInfo{
+							{Tenor: 3},
+							{Tenor: 6},
+						},
+					},
+				},
+			},
+			expectedError: errors.New(constant.ERROR_BAD_REQUEST + " - No matching MI_NUMBER found"),
+		},
+
 		{
 			name: "error get config",
 			request: request.GetMaxLoanAmount{
@@ -1186,7 +1368,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 		{
 			name: "error get ltv 0",
 			request: request.GetMaxLoanAmount{
-				ProspectID:         "SIM-123",
+				ProspectID:         "SAL-123",
 				BranchID:           "123",
 				AssetCode:          "MOT",
 				IDNumber:           "1234567890",
@@ -1385,6 +1567,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 			},
 			getLTVResponse:      80,
 			errMarsevLoanAmount: errors.New("failed to get loan amount"),
+			expectedError:       errors.New("failed to get loan amount"),
 		},
 		{
 			name: "error reject tenor 36",
@@ -1740,7 +1923,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 												mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything).Return(tc.mappingElaborateLTV, tc.errMappingElaborateLTV)
 
 												if tc.errMappingElaborateLTV == nil {
-													mockUsecase.On("GetLTV", ctx, tc.mappingElaborateLTV, tc.request.ProspectID, mock.Anything, tc.request.BPKBNameType, tc.request.ManufactureYear, mock.Anything, mock.Anything).Return(tc.getLTVResponse, tc.adjustTenorResponse, tc.errGetLTV)
+													mockUsecase.On("GetLTV", ctx, tc.mappingElaborateLTV, tc.request.ProspectID, mock.Anything, tc.request.BPKBNameType, tc.request.ManufactureYear, mock.Anything, mock.Anything, mock.Anything).Return(tc.getLTVResponse, tc.adjustTenorResponse, tc.errGetLTV)
 
 													if tc.marsevFilterProgramRes.Data[0].Tenors[0].Tenor == 36 {
 														mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.rejectTenorResponse, tc.errRejectTenor)
@@ -2230,6 +2413,15 @@ func TestMDMGetMasterAsset(t *testing.T) {
 			expectedError: errors.New(constant.ERROR_UPSTREAM + " - Call Asset MDM Error"),
 		},
 		{
+			name:             "not 200 status code",
+			branchID:         "426",
+			search:           "VARIO",
+			prospectID:       "SAL-123",
+			resEngineAPICode: 200,
+			resEngineAPIBody: `-`,
+			expectedError:    errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data asset list"),
+		},
+		{
 			name:             "empty records",
 			branchID:         "426",
 			search:           "NONEXISTENT",
@@ -2385,6 +2577,16 @@ func TestMDMGetAssetYear(t *testing.T) {
 				}
 			}`,
 			expectedError: errors.New(constant.ERROR_UPSTREAM + " - Call Marketprice MDM Error"),
+		},
+		{
+			name:             "error unmarshal",
+			branchID:         "426",
+			assetCode:        "MOT001",
+			search:           "2023",
+			prospectID:       "SAL-123",
+			resEngineAPICode: 200,
+			resEngineAPIBody: `-`,
+			expectedError:    errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data marketprice"),
 		},
 		{
 			name:             "empty records",
@@ -2706,7 +2908,7 @@ func TestGetLTV(t *testing.T) {
 				},
 			},
 			errSaveTrx:    errors.New("database error"),
-			expectedError: errors.New(constant.ERROR_UPSTREAM + " Save elaborate ltv error"),
+			expectedError: errors.New(constant.ERROR_UPSTREAM + " - save elaborate ltv error"),
 			shouldSaveTrx: true,
 		},
 		{
@@ -2972,7 +3174,7 @@ func TestGetLTV(t *testing.T) {
 
 			usecase := NewUsecase(mockRepository, nil, nil)
 
-			ltv, adjustTenor, err := usecase.GetLTV(ctx, tc.mappingLTV, tc.prospectID, tc.resultPefindo, tc.bpkbName, tc.manufactureYear, tc.tenor, tc.bakiDebet)
+			ltv, adjustTenor, err := usecase.GetLTV(ctx, tc.mappingLTV, tc.prospectID, tc.resultPefindo, tc.bpkbName, tc.manufactureYear, tc.tenor, tc.bakiDebet, false)
 
 			if tc.expectedError != nil {
 				require.Error(t, err)

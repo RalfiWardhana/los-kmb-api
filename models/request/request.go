@@ -1,6 +1,9 @@
 package request
 
-import "los-kmb-api/models/entity"
+import (
+	"los-kmb-api/models/entity"
+	"time"
+)
 
 type FilteringRequest struct {
 	ClientKey string `json:"client_key" validate:"required,key"`
@@ -1321,14 +1324,16 @@ type SallySubmit2wPrincipleFiltering struct {
 }
 
 type Update2wPrincipleTransaction struct {
-	OrderID       string `json:"order_id"`
-	KpmID         int    `json:"kpm_id"`
-	Source        int    `json:"source"`
-	StatusCode    string `json:"status_code"`
-	ProductName   string `json:"product_name"`
-	Amount        int    `json:"amount"`
-	AssetTypeCode string `json:"asset_type_code"`
-	BranchCode    string `json:"branch_code"`
+	OrderID                    string  `json:"order_id"`
+	KpmID                      int     `json:"kpm_id"`
+	Source                     int     `json:"source"`
+	StatusCode                 string  `json:"status_code"`
+	ProductName                string  `json:"product_name"`
+	Amount                     float64 `json:"amount"`
+	AssetTypeCode              string  `json:"asset_type_code"`
+	BranchCode                 string  `json:"branch_code"`
+	ReferralCode               string  `json:"referral_code"`
+	Is2wPrincipleApprovalOrder bool    `json:"is_2w_principle_approval_order"`
 }
 
 type PrincipleGetData struct {
@@ -1353,17 +1358,18 @@ type CheckStep2Wilen struct {
 }
 
 type GetMaxLoanAmount struct {
-	ProspectID         string `json:"prospect_id" validate:"required,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
-	BranchID           string `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
-	IDNumber           string `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
-	BirthDate          string `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
-	SurgateMotherName  string `json:"surgate_mother_name" validate:"required,max=50,allowcharsname" example:"IBU"`
-	LegalName          string `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
-	MobilePhone        string `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"085880529100"`
-	BPKBNameType       string `json:"bpkb_name_type" validate:"required,bpkbname"`
-	ManufactureYear    string `json:"manufacture_year" validate:"required,len=4,number" example:"2020"`
-	AssetCode          string `json:"asset_code" validate:"required,max=200,htmlValidation" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
-	AssetUsageTypeCode string `json:"asset_usage_type_code" validate:"required,oneof=C N S,htmlValidation" example:"C"`
+	ProspectID         string  `json:"prospect_id" validate:"required,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
+	BranchID           string  `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
+	IDNumber           string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
+	BirthDate          string  `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
+	SurgateMotherName  string  `json:"surgate_mother_name" validate:"required,max=50,allowcharsname" example:"IBU"`
+	LegalName          string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
+	MobilePhone        string  `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"085880529100"`
+	BPKBNameType       string  `json:"bpkb_name_type" validate:"required,bpkbname"`
+	ManufactureYear    string  `json:"manufacture_year" validate:"required,len=4,number" example:"2020"`
+	AssetCode          string  `json:"asset_code" validate:"required,max=200,htmlValidation" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
+	AssetUsageTypeCode string  `json:"asset_usage_type_code" validate:"required,oneof=C N S,htmlValidation" example:"C"`
+	ReferralCode       *string `json:"referral_code" validate:"omitempty,htmlValidation"`
 }
 
 type GetAvailableTenor struct {
@@ -1380,6 +1386,7 @@ type GetAvailableTenor struct {
 	AssetUsageTypeCode string  `json:"asset_usage_type_code" validate:"required,oneof=C N S,htmlValidation" example:"C"`
 	LicensePlate       string  `json:"license_plate" validate:"required,max=50,htmlValidation" example:"B3006TBJ"`
 	LoanAmount         float64 `json:"loan_amount"  validate:"required,max=999999999999" example:"105000000"`
+	ReferralCode       *string `json:"referral_code" validate:"omitempty,max=200,htmlValidation" example:"SUZUKI"`
 }
 
 type Submission2Wilen struct {
@@ -1442,10 +1449,14 @@ type Submission2Wilen struct {
 	AssetCategoryID         string  `json:"asset_category_id" validate:"required,max=100" example:"BEBEK"`
 	KPMID                   int     `json:"kpm_id" validate:"required"`
 	RentFinishDate          string  `json:"rent_finish_date" validate:"omitempty,dateformat" example:"2021-07-29"`
+	ReferralCode            string  `json:"referral_code" validate:"omitempty,max=20,htmlValidation" example:"TQ72AJ"`
 }
 
 type History2Wilen struct {
-	ProspectID string `json:"prospect_id" validate:"required,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
+	ProspectID *string    `json:"prospect_id" validate:"omitempty,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
+	StartDate  *time.Time `json:"start_date" validate:"omitempty" example:"2021-07-29"`
+	EndDate    *time.Time `json:"end_date" validate:"omitempty" example:"2021-07-29"`
+	Status     *string    `json:"status" validate:"omitempty" example:"SD"`
 }
 
 type Publish2Wilen struct {

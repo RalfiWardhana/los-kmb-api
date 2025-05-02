@@ -39,7 +39,10 @@ func (u usecase) Dukcapil(ctx context.Context, r request.PrinciplePemohon, reqMe
 		return
 	}
 
-	json.Unmarshal([]byte(config.Value), &thresholdDukcapil)
+	if err = json.Unmarshal([]byte(config.Value), &thresholdDukcapil); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config threshold ekyc")
+		return
+	}
 
 	timeout, err = strconv.Atoi(os.Getenv("DUKCAPIL_TIMEOUT"))
 	if err != nil {
@@ -93,13 +96,20 @@ func (u usecase) Dukcapil(ctx context.Context, r request.PrinciplePemohon, reqMe
 		statusVD = constant.EKYC_NOT_CHECK
 
 		var responseIntegrator response.ApiResponse
-		json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &responseIntegrator)
+		if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &responseIntegrator); err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response error vd ekyc")
+			return
+		}
+
 		infoDukcapil.VdError = responseIntegrator.Message
 	}
 
 	if err == nil && resp.StatusCode() == 200 {
 
-		json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &verify)
+		if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &verify); err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response vd ekyc")
+			return
+		}
 
 		if serviceVD == constant.SERVICE_IZIDATA {
 			codeVD, _, decisionVD = checkEKYCIzidata(verify, thresholdDukcapil)
@@ -181,13 +191,21 @@ func (u usecase) Dukcapil(ctx context.Context, r request.PrinciplePemohon, reqMe
 	if resp.StatusCode() != 200 && resp.StatusCode() != 504 && resp.StatusCode() != 502 {
 		statusFR = constant.EKYC_NOT_CHECK
 		var responseIntegrator response.ApiResponse
-		json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &responseIntegrator)
+		if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &responseIntegrator); err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response error fr ekyc")
+			return
+		}
+
 		infoDukcapil.FrError = responseIntegrator.Message
 	}
 
 	if err == nil && resp.StatusCode() == 200 {
 
-		json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &face)
+		if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body(), "data").ToString()), &face); err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response fr ekyc")
+			return
+		}
+
 		if serviceFR == constant.SERVICE_IZIDATA {
 			_, _, decisionFR = checkRuleCodeIzidata(face)
 		} else {
@@ -300,7 +318,10 @@ func (u usecase) Asliri(ctx context.Context, r request.PrinciplePemohon, accessT
 		return
 	}
 
-	json.Unmarshal([]byte(config.Value), &asliriConfig)
+	if err = json.Unmarshal([]byte(config.Value), &asliriConfig); err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config asliri")
+		return
+	}
 
 	if asliri.NotFound {
 		data.Result = constant.DECISION_REJECT
