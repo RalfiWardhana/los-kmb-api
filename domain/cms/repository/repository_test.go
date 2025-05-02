@@ -6396,16 +6396,46 @@ func TestGetInquirySearch(t *testing.T) {
 			Search:      "SAL-12345",
 		}
 
-		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
-		INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
-		(	SELECT value 
-			FROM region_user ru WITH (nolock)
-			cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
-			WHERE ru.user_id = 'abc123' 
-		)
-		AND b.lob_id='125'`)).
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT DISTINCT region_name, branch_member 
+			FROM region_branch a WITH (nolock)
+			INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+			(   SELECT value 
+				FROM region_user ru WITH (nolock)
+				cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+				WHERE ru.user_id = ? 
+			)
+			AND b.lob_id = '125'
+			UNION ALL
+			SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
+			WHERE mb.user_id = ?`)).
+			WithArgs("abc123", "abc123").
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
-				AddRow("ALL", `["426","436","429","431","442","428","430"]`))
+				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT DISTINCT cb.BranchID, cb.BranchName
+			FROM (
+				SELECT DISTINCT branch_member FROM region_branch a WITH (nolock)
+				INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+				(   
+					SELECT value 
+					FROM region_user ru WITH (nolock)
+					cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+					WHERE ru.user_id = ? 
+				)
+				AND b.lob_id = '125'
+			) AS bm
+			CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
+			JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
+			WithArgs("abc123").
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
+				AddRow("426", "BANDUNG").
+				AddRow("436", "KOPO").
+				AddRow("429", "CIMAHI").
+				AddRow("431", "KARAWANG").
+				AddRow("442", "UJUNG BERUNG").
+				AddRow("428", "TASIKMALAYA").
+				AddRow("430", "SUKABUMI"))
 
 		// Mock SQL query and result
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT
@@ -6426,7 +6456,7 @@ func TestGetInquirySearch(t *testing.T) {
 			LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 			LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 			LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-			WHERE (tm.ProspectID = 'SAL-12345')) AS tt`)).
+			WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (tm.ProspectID = 'SAL-12345')) AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -6766,7 +6796,7 @@ func TestGetInquirySearch(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	WHERE (tm.ProspectID = 'SAL-12345')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (tm.ProspectID = 'SAL-12345')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
 				AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
@@ -6794,16 +6824,46 @@ func TestGetInquirySearch(t *testing.T) {
 			Search:      "ahmad name",
 		}
 
-		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
-		INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
-		(	SELECT value 
-			FROM region_user ru WITH (nolock)
-			cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
-			WHERE ru.user_id = 'abc123' 
-		)
-		AND b.lob_id='125'`)).
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT DISTINCT region_name, branch_member 
+			FROM region_branch a WITH (nolock)
+			INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+			(   SELECT value 
+				FROM region_user ru WITH (nolock)
+				cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+				WHERE ru.user_id = ? 
+			)
+			AND b.lob_id = '125'
+			UNION ALL
+			SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
+			WHERE mb.user_id = ?`)).
+			WithArgs("abc123", "abc123").
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT DISTINCT cb.BranchID, cb.BranchName
+			FROM (
+				SELECT DISTINCT branch_member FROM region_branch a WITH (nolock)
+				INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+				(   
+					SELECT value 
+					FROM region_user ru WITH (nolock)
+					cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+					WHERE ru.user_id = ? 
+				)
+				AND b.lob_id = '125'
+			) AS bm
+			CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
+			JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
+			WithArgs("abc123").
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
+				AddRow("426", "BANDUNG").
+				AddRow("436", "KOPO").
+				AddRow("429", "CIMAHI").
+				AddRow("431", "KARAWANG").
+				AddRow("442", "UJUNG BERUNG").
+				AddRow("428", "TASIKMALAYA").
+				AddRow("430", "SUKABUMI"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','ahmad name') AS encrypt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).
@@ -7196,15 +7256,46 @@ func TestGetInquirySearch(t *testing.T) {
 			Search:      "7171072102760001",
 		}
 
-		mock.ExpectQuery(regexp.QuoteMeta(`SELECT region_name, branch_member FROM region_branch a WITH (nolock)
-		INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
-		(	SELECT value 
-			FROM region_user ru WITH (nolock)
-			cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
-			WHERE ru.user_id = 'abc123' 
-		)
-		AND b.lob_id='125'`)).
-			WillReturnError(gorm.ErrRecordNotFound)
+		// Mock SQL query and result
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT DISTINCT region_name, branch_member 
+			FROM region_branch a WITH (nolock)
+			INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+			(   SELECT value 
+				FROM region_user ru WITH (nolock)
+				cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+				WHERE ru.user_id = ? 
+			)
+			AND b.lob_id = '125'
+			UNION ALL
+			SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
+			WHERE mb.user_id = ?`)).
+			WithArgs("abc123", "abc123").
+			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
+				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
+
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT DISTINCT cb.BranchID, cb.BranchName
+			FROM (
+				SELECT DISTINCT branch_member FROM region_branch a WITH (nolock)
+				INNER JOIN region b WITH (nolock) ON a.region = b.region_id WHERE region IN 
+				(   
+					SELECT value 
+					FROM region_user ru WITH (nolock)
+					cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
+					WHERE ru.user_id = ? 
+				)
+				AND b.lob_id = '125'
+			) AS bm
+			CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
+			JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
+			WithArgs("abc123").
+			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
+				AddRow("426", "BANDUNG").
+				AddRow("436", "KOPO").
+				AddRow("429", "CIMAHI").
+				AddRow("431", "KARAWANG").
+				AddRow("442", "UJUNG BERUNG").
+				AddRow("428", "TASIKMALAYA").
+				AddRow("430", "SUKABUMI"))
 
 		mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','7171072102760001') AS encrypt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).
@@ -7229,7 +7320,7 @@ func TestGetInquirySearch(t *testing.T) {
 		LEFT JOIN trx_customer_spouse tcs WITH (nolock) ON tm.ProspectID = tcs.ProspectID
 		LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
 		LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-		WHERE tm.BranchID = '426' AND (tcp.IDNumber = 'xxxxxx')) AS tt`)).
+		WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (tcp.IDNumber = 'xxxxxx')) AS tt`)).
 			WillReturnRows(sqlmock.NewRows([]string{"totalRow"}).
 				AddRow("27"))
 
@@ -7569,7 +7660,7 @@ func TestGetInquirySearch(t *testing.T) {
 		  WHERE
 			group_name = 'ProfessionID'
 		) pr2 ON tcs.ProfessionID = pr2.[key]
-	WHERE tm.BranchID = '426' AND (tcp.IDNumber = 'xxxxxx')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
+	WHERE tm.BranchID IN ('426','436','429','431','442','428','430') AND (tcp.IDNumber = 'xxxxxx')) AS tt ORDER BY tt.created_at DESC OFFSET 0 ROWS FETCH FIRST 0 ROWS ONLY`)).
 			WillReturnRows(sqlmock.NewRows([]string{"ProspectID", "BranchName", "BranchID"}).
 				AddRow("EFM03406412522151347", "BANDUNG", "426"))
 
