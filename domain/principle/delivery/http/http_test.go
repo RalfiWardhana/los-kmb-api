@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"los-kmb-api/domain/principle/mocks"
 	"los-kmb-api/models/request"
 	responses "los-kmb-api/models/response"
@@ -1567,8 +1568,9 @@ func TestHistory2Wilen(t *testing.T) {
 		responses:    libResponse,
 	}
 
+	prospectID := "SAL-1140024080800004"
 	body := request.History2Wilen{
-		ProspectID: "SAL-1140024080800004",
+		ProspectID: &prospectID,
 	}
 
 	t.Run("success", func(t *testing.T) {
@@ -1596,7 +1598,7 @@ func TestHistory2Wilen(t *testing.T) {
 			},
 		}
 
-		mockUsecase.On("History2Wilen", body.ProspectID).Return(mockResponse, nil).Once()
+		mockUsecase.On("History2Wilen", body).Return(mockResponse, nil).Once()
 
 		_ = handler.History2Wilen(c)
 
@@ -1624,8 +1626,9 @@ func TestHistory2Wilen(t *testing.T) {
 		e := echo.New()
 		e.Validator = common.NewValidator()
 
+		prospectID2 := prospectID + "SAL-1140024080800004SAL-1140024080800004"
 		invalidBody := request.History2Wilen{
-			ProspectID: "",
+			ProspectID: &prospectID2,
 		}
 
 		data, _ := json.Marshal(invalidBody)
@@ -1652,10 +1655,11 @@ func TestHistory2Wilen(t *testing.T) {
 		rec := httptest.NewRecorder()
 		c := e.NewContext(req, rec)
 
-		mockUsecase.On("History2Wilen", body.ProspectID).Return([]responses.History2Wilen{}, errors.New("some error")).Once()
+		mockUsecase.On("History2Wilen", body).Return([]responses.History2Wilen{}, errors.New("some error")).Once()
 
 		_ = handler.History2Wilen(c)
 
+		fmt.Println(rec.Body.String())
 		assert.Equal(t, http.StatusInternalServerError, rec.Code)
 		assert.Contains(t, rec.Body.String(), "WLN-")
 
@@ -1688,7 +1692,7 @@ func TestHistory2Wilen(t *testing.T) {
 			},
 		}
 
-		mockUsecase.On("History2Wilen", body.ProspectID).Return(mockResponse, nil).Once()
+		mockUsecase.On("History2Wilen", body).Return(mockResponse, nil).Once()
 
 		_ = handler.History2Wilen(c)
 
@@ -1830,5 +1834,324 @@ func TestPublish2Wilen(t *testing.T) {
 		assert.Contains(t, rec.Body.String(), "success publish event 2wilen")
 
 		mockUsecase.AssertExpectations(t)
+	})
+}
+
+func TestStep2Wilen(t *testing.T) {
+	os.Setenv("APP_PREFIX_NAME", "LOS")
+	os.Setenv("PLATFORM_LIBRARY_KEY", "PLATFORMS-APIToEncryptDecryptAPI")
+
+	mockUsecase := new(mocks.Usecase)
+	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+
+	handler := &handler{
+		usecase:   mockUsecase,
+		responses: libResponse,
+	}
+
+	t.Run("success with data", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		encryptedID, _ := utils.PlatformEncryptText("3505151204000001")
+		reqBody := request.CheckStep2Wilen{
+			IDNumber: encryptedID,
+		}
+		jsonBody, _ := json.Marshal(reqBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(jsonBody))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+		c.SetPath("/api/v3/kmb/step-2wilen")
+
+		mockData := responses.Step2Wilen{
+			ProspectID: "SAL-1140024080800017",
+			ColorCode:  "#00FF00",
+			Status:     "APPROVED",
+			UpdatedAt:  "2025-04-09T10:15:30Z",
+		}
+		mockUsecase.On("Step2Wilen", "3505151204000001").Return(mockData, nil).Once()
+
+		_ = handler.Step2Wilen(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-001")
+		assert.Contains(t, rec.Body.String(), "SAL-1140024080800017")
+		assert.Contains(t, rec.Body.String(), "#00FF00")
+		mockUsecase.AssertExpectations(t)
+	})
+
+	t.Run("success with empty status", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		encryptedID, _ := utils.PlatformEncryptText("3505151204000001")
+		reqBody := request.CheckStep2Wilen{
+			IDNumber: encryptedID,
+		}
+		jsonBody, _ := json.Marshal(reqBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(jsonBody))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+		c.SetPath("/api/v3/kmb/step-2wilen")
+
+		mockData := responses.Step2Wilen{
+			ProspectID: "SAL-1140024080800017",
+			ColorCode:  "#CCCCCC",
+			Status:     "",
+			UpdatedAt:  "2025-04-09T10:15:30Z",
+		}
+		mockUsecase.On("Step2Wilen", "3505151204000001").Return(mockData, nil).Once()
+
+		_ = handler.Step2Wilen(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-001")
+		mockUsecase.AssertExpectations(t)
+	})
+
+	t.Run("success with ongoing application - DECISION_KPM_READJUST", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		encryptedID, _ := utils.PlatformEncryptText("3505151204000001")
+		reqBody := request.CheckStep2Wilen{
+			IDNumber: encryptedID,
+		}
+		jsonBody, _ := json.Marshal(reqBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(jsonBody))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+		c.SetPath("/api/v3/kmb/step-2wilen")
+
+		mockData := responses.Step2Wilen{
+			ProspectID: "SAL-1140024080800017",
+			ColorCode:  "#FFCC00",
+			Status:     constant.DECISION_KPM_READJUST,
+			UpdatedAt:  "2025-04-09T10:15:30Z",
+		}
+		mockUsecase.On("Step2Wilen", "3505151204000001").Return(mockData, nil).Once()
+
+		_ = handler.Step2Wilen(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-002")
+		assert.Contains(t, rec.Body.String(), "Kamu masih memiliki pengajuan lain yang sedang diproses")
+		mockUsecase.AssertExpectations(t)
+	})
+
+	t.Run("success with ongoing application - STATUS_KPM_WAIT_2WILEN", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		encryptedID, _ := utils.PlatformEncryptText("3505151204000001")
+		reqBody := request.CheckStep2Wilen{
+			IDNumber: encryptedID,
+		}
+		jsonBody, _ := json.Marshal(reqBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(jsonBody))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+		c.SetPath("/api/v3/kmb/step-2wilen")
+
+		mockData := responses.Step2Wilen{
+			ProspectID: "SAL-1140024080800017",
+			ColorCode:  "#FFCC00",
+			Status:     constant.STATUS_KPM_WAIT_2WILEN,
+			UpdatedAt:  "2025-04-09T10:15:30Z",
+		}
+		mockUsecase.On("Step2Wilen", "3505151204000001").Return(mockData, nil).Once()
+
+		_ = handler.Step2Wilen(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-002")
+		assert.Contains(t, rec.Body.String(), "Kamu masih memiliki pengajuan lain yang sedang diproses")
+		mockUsecase.AssertExpectations(t)
+	})
+
+	t.Run("success with ongoing application - DECISION_KPM_APPROVE", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		encryptedID, _ := utils.PlatformEncryptText("3505151204000001")
+		reqBody := request.CheckStep2Wilen{
+			IDNumber: encryptedID,
+		}
+		jsonBody, _ := json.Marshal(reqBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(jsonBody))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+		c.SetPath("/api/v3/kmb/step-2wilen")
+
+		mockData := responses.Step2Wilen{
+			ProspectID: "SAL-1140024080800017",
+			ColorCode:  "#00FF00",
+			Status:     constant.DECISION_KPM_APPROVE,
+			UpdatedAt:  "2025-04-09T10:15:30Z",
+		}
+		mockUsecase.On("Step2Wilen", "3505151204000001").Return(mockData, nil).Once()
+
+		_ = handler.Step2Wilen(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-002")
+		assert.Contains(t, rec.Body.String(), "Kamu masih memiliki pengajuan lain yang sedang diproses")
+		mockUsecase.AssertExpectations(t)
+	})
+
+	t.Run("success with ongoing application - STATUS_LOS_PROCESS_2WILEN", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		encryptedID, _ := utils.PlatformEncryptText("3505151204000001")
+		reqBody := request.CheckStep2Wilen{
+			IDNumber: encryptedID,
+		}
+		jsonBody, _ := json.Marshal(reqBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(jsonBody))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+		c.SetPath("/api/v3/kmb/step-2wilen")
+
+		mockData := responses.Step2Wilen{
+			ProspectID: "SAL-1140024080800017",
+			ColorCode:  "#FFCC00",
+			Status:     constant.STATUS_LOS_PROCESS_2WILEN,
+			UpdatedAt:  "2025-04-09T10:15:30Z",
+		}
+		mockUsecase.On("Step2Wilen", "3505151204000001").Return(mockData, nil).Once()
+
+		_ = handler.Step2Wilen(c)
+
+		assert.Equal(t, http.StatusOK, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-002")
+		assert.Contains(t, rec.Body.String(), "Kamu masih memiliki pengajuan lain yang sedang diproses")
+		mockUsecase.AssertExpectations(t)
+	})
+
+	t.Run("error bind", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/step-2wilen", bytes.NewBuffer([]byte("invalid json")))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.Step2Wilen(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-799")
+	})
+
+	t.Run("error validate", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		reqBody := struct {
+			InvalidField string `json:"invalid_field"`
+		}{
+			InvalidField: "test",
+		}
+		jsonBody, _ := json.Marshal(reqBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/step-2wilen", bytes.NewBuffer(jsonBody))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.Step2Wilen(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-800")
+	})
+
+	t.Run("error usecase", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		encryptedID, _ := utils.PlatformEncryptText("3505151204000001")
+		reqBody := request.CheckStep2Wilen{
+			IDNumber: encryptedID,
+		}
+		jsonBody, _ := json.Marshal(reqBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(jsonBody))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+		c.SetPath("/api/v3/kmb/step-2wilen")
+
+		mockUsecase.On("Step2Wilen", "3505151204000001").Return(responses.Step2Wilen{}, errors.New("some error")).Once()
+
+		_ = handler.Step2Wilen(c)
+
+		assert.Equal(t, http.StatusInternalServerError, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-")
+		assert.Contains(t, rec.Body.String(), constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE)
+		mockUsecase.AssertExpectations(t)
+	})
+}
+
+func TestSubmission2Wilen(t *testing.T) {
+	os.Setenv("APP_PREFIX_NAME", "LOS")
+
+	mockMultiUsecase := new(mocks.MultiUsecase)
+	mockUsecase := new(mocks.Usecase)
+	mockRepository := new(mocks.Repository)
+	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+
+	handler := &handler{
+		multiusecase: mockMultiUsecase,
+		usecase:      mockUsecase,
+		repository:   mockRepository,
+		responses:    libResponse,
+	}
+
+	t.Run("error bind", func(t *testing.T) {
+		e := echo.New()
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/submission-2wilen", strings.NewReader("invalid json"))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.Submission2Wilen(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-799")
+	})
+
+	t.Run("error validate", func(t *testing.T) {
+		e := echo.New()
+		e.Validator = common.NewValidator()
+
+		reqBody := struct {
+			InvalidField string `json:"invalid_field"`
+		}{
+			InvalidField: "test",
+		}
+		jsonBody, _ := json.Marshal(reqBody)
+
+		req := httptest.NewRequest(http.MethodPost, "/api/v3/kmb/submission-2wilen", bytes.NewBuffer(jsonBody))
+		req.Header.Set(echo.HeaderContentType, echo.MIMEApplicationJSON)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		_ = handler.Submission2Wilen(c)
+
+		assert.Equal(t, http.StatusBadRequest, rec.Code)
+		assert.Contains(t, rec.Body.String(), "WLN-800")
 	})
 }

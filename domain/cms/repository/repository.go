@@ -3500,6 +3500,11 @@ func (r repoHandler) SubmitApproval(req request.ReqSubmitApproval, trxStatus ent
 				}
 
 				if err == nil && (len(req.ProspectID) > 2 && req.ProspectID[0:2] != "NE") {
+					// check if trx_kpm order
+					if err = updateTrxKPMAndStatus(tx, trxStatus.ProspectID, trxStatus.Decision); err != nil {
+						return err
+					}
+
 					return r.losDB.Transaction(func(tx2 *gorm.DB) error {
 						// worker insert staging
 						callbackHeaderLos, _ := json.Marshal(

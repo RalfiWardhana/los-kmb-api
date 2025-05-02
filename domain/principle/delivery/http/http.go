@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	_ "github.com/KB-FMF/los-common-library/errors"
@@ -593,7 +594,9 @@ func (c *handler) GetMaxLoanAmount(ctx echo.Context) (err error) {
 	if err != nil {
 
 		code, err := utils.WrapError(err)
-
+		if strings.Contains(err.Error(), "No matching MI_NUMBER found") {
+			return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", "001"), err, response.WithMessage(err.Error()))
+		}
 		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
 	}
 
@@ -632,6 +635,9 @@ func (c *handler) GetAvailableTenor(ctx echo.Context) (err error) {
 
 		code, err := utils.WrapError(err)
 
+		if strings.Contains(err.Error(), "No matching MI_NUMBER found") {
+			return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", "001"), err, response.WithMessage(err.Error()))
+		}
 		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
 	}
 
@@ -747,7 +753,7 @@ func (c *handler) History2Wilen(ctx echo.Context) (err error) {
 		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
 	}
 
-	data, err := c.usecase.History2Wilen(r.ProspectID)
+	data, err := c.usecase.History2Wilen(r)
 
 	if err != nil {
 

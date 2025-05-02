@@ -11201,6 +11201,10 @@ func TestSubmitApproval(t *testing.T) {
 			WithArgs(trxAgreement.ProspectID, trxAgreement.BranchID, trxAgreement.CustomerID, trxAgreement.ApplicationID, trxAgreement.AgreementNo, trxAgreement.AgreementDate, trxAgreement.NextInstallmentDate, trxAgreement.MaturityDate, trxAgreement.ContractStatus, trxAgreement.NewApplicationDate, trxAgreement.ApprovalDate, trxAgreement.PurchaseOrderDate, trxAgreement.GoLiveDate, trxAgreement.ProductID, trxAgreement.ProductOfferingID, trxAgreement.TotalOTR, trxAgreement.DownPayment, trxAgreement.NTF, trxAgreement.PayToDealerAmount, trxAgreement.PayToDealerDate, trxAgreement.CheckingStatus, trxAgreement.LastCheckingAt, sqlmock.AnyArg(), sqlmock.AnyArg(), trxAgreement.AF, trxAgreement.MobilePhone, trxAgreement.CustomerIDKreditmu).
 			WillReturnResult(sqlmock.NewResult(1, 1))
 
+		mock.ExpectQuery(regexp.QuoteMeta(`SELECT TOP 1 id, ProspectID FROM trx_kpm WITH (nolock) WHERE ProspectID = ? ORDER BY created_at DESC`)).
+			WithArgs(trxStatus.ProspectID).
+			WillReturnRows(sqlmock.NewRows([]string{"id", "ProspectID"}))
+
 		mock.ExpectBegin()
 		mock.ExpectExec(regexp.QuoteMeta(`INSERT INTO "trx_worker" ("ProspectID","activity","endpoint_target","endpoint_method","payload","header","response_timeout","api_type","max_retry","count_retry","created_at","category","action","status_code","sequence") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`)).
 			WithArgs("ppid", "UNPR", "http://10.9.100.131/los-kmb-api/api/v3/kmb/insert-staging/ppid", "POST", sqlmock.AnyArg(), sqlmock.AnyArg(), 30, "RAW", 6, 0, sqlmock.AnyArg(), "CONFINS", "INSERT_STAGING_KMB", sqlmock.AnyArg(), sqlmock.AnyArg()).
