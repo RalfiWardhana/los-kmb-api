@@ -478,9 +478,10 @@ type LowIncome struct {
 }
 
 type LockSystem struct {
-	IsBanned  bool   `json:"is_banned"`
-	Reason    string `json:"reason"`
-	UnbanDate string `json:"unban_date"`
+	IsBanned   bool   `json:"is_banned"`
+	Reason     string `json:"reason"`
+	UnbanDate  string `json:"unban_date"`
+	BannedType string `json:"banned_type"`
 }
 
 type DupcheckConfig struct {
@@ -516,6 +517,56 @@ type DataLockSystemConfig struct {
 	LockCancelBan     int    `json:"lock_cancel_ban"`
 	LockCancelCheck   int    `json:"lock_cancel_check"`
 	LockStartDate     string `json:"lock_start_date"`
+	LockAssetBan      int    `json:"lock_asset_ban"`
+	LockAssetCheck    int    `json:"lock_asset_check"`
+}
+
+type DataCheckLockAsset struct {
+	ProspectID              string     `gorm:"column:ProspectID;type:varchar(20)" json:"prospect_id"`
+	LatestRetryNumber       int        `gorm:"column:latest_retry_number" json:"latest_retry_number"`
+	ChassisNumber           string     `gorm:"column:chassis_number;type:varchar(50)" json:"chassis_number"`
+	EngineNumber            string     `gorm:"column:engine_number;type:varchar(50)" json:"engine_number"`
+	SourceService           string     `gorm:"column:source_service;type:varchar(20)" json:"source_service"`
+	Decision                string     `gorm:"column:decision;type:varchar(10)" json:"decision"`
+	Reason                  string     `gorm:"column:reason;type:varchar(250)" json:"reason"`
+	CreatedAt               time.Time  `gorm:"column:created_at" json:"created_at"`
+	IDNumber                string     `gorm:"column:IDNumber;type:varchar(100)" json:"id_number"`
+	LegalName               string     `gorm:"column:LegalName;type:varchar(200)" json:"legal_name"`
+	BirthDate               time.Time  `gorm:"column:BirthDate" json:"birth_date"`
+	SurgateMotherName       string     `gorm:"column:SurgateMotherName;type:varchar(200)" json:"surgate_mother_name"`
+	IDNumberSpouse          *string    `gorm:"column:IDNumber_spouse;type:varchar(100)" json:"id_number_spouse"`
+	LegalNameSpouse         *string    `gorm:"column:LegalName_spouse;type:varchar(200)" json:"legal_name_spouse"`
+	BirthDateSpouse         *time.Time `gorm:"column:BirthDate_spouse" json:"birth_date_spouse"`
+	SurgateMotherNameSpouse *string    `gorm:"column:SurgateMotherName_spouse;type:varchar(200)" json:"surgate_mother_name_spouse"`
+}
+
+type DataSallySubmissionCancel struct {
+	ProspectID              string `json:"prospect_id"`
+	FullName                string `json:"full_name"`
+	IDNumber                string `json:"id_number"`
+	BirthDate               string `json:"birth_date"`
+	SurgateMotherName       string `json:"surgate_mother_name"`
+	SpouseFullName          string `json:"spouse_full_name"`
+	SpouseIDNumber          string `json:"spouse_id_number"`
+	SpouseBirthDate         string `json:"spouse_birth_date"`
+	SpouseSurgateMotherName string `json:"spouse_surgate_mother_name"`
+	MaritalStatus           string `json:"marital_status"`
+	CreatedAt               string `json:"created_at"`
+}
+
+type SallySubmissionResponse struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+	Data    struct {
+		Records     []DataSallySubmissionCancel `json:"records"`
+		MaxPage     int                         `json:"max_page"`
+		Total       int                         `json:"total"`
+		PageSize    int                         `json:"page_size"`
+		CurrentPage int                         `json:"current_page"`
+	} `json:"data"`
+	Errors    interface{} `json:"errors"`
+	RequestID string      `json:"request_id"`
+	Timestamp string      `json:"timestamp"`
 }
 
 type LatestPaidInstallment struct {
@@ -1035,6 +1086,11 @@ type AgreementData struct {
 	DiscountOtr           float64   `json:"discount_otr"`
 }
 
+type ChassisNumberOfLicensePlateResponse struct {
+	ChassisNumber string `json:"chassis_number"`
+	EngineNumber  string `json:"engine_number"`
+}
+
 type ConfinsAgreementCustomer struct {
 	Code     string           `json:"code"`
 	Message  string           `json:"message"`
@@ -1191,6 +1247,14 @@ type MarsevCalculateInstallmentData struct {
 	ExternalFreightDetail      string  `json:"external_freight_detail"`
 	IsStampDutyAsLoan          *bool   `json:"is_stamp_duty_as_loan"`
 	StampDutyFee               float64 `json:"stamp_duty_fee"`
+}
+
+type MDMAgreementByLicensePlateResponse struct {
+	Code     string      `json:"code"`
+	Message  string      `json:"message"`
+	Data     interface{} `json:"data"`
+	Errors   interface{} `json:"errors"`
+	Metadata interface{} `json:"metadata,omitempty"`
 }
 
 type MDMMasterMappingLicensePlateResponse struct {

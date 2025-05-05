@@ -385,8 +385,18 @@ const (
 	ERROR_ROWS_AFFECTED   = "RowsAffected 0"
 
 	//LOCK SYSTEM
-	PERNAH_REJECT = "Pernah Reject"
-	PERNAH_CANCEL = "Pernah Cancel"
+	PERNAH_REJECT     = "Pernah Reject"
+	PERNAH_CANCEL     = "Pernah Cancel"
+	BANNED_TYPE_NIK   = "NIK"
+	BANNED_TYPE_ASSET = "ASSET"
+
+	//LOCK SYSTEM - ASSET CHECK
+	CODE_REJECT_ASSET_CHECK                = "662"
+	REASON_REJECT_ASSET_CHECK              = "Asset pernah diajukan - Bukan a.n Konsumen & Pasangan"
+	CODE_REJECT_ASSET_CHECK_DATA_CHANGED   = "663"
+	REASON_REJECT_ASSET_CHECK_DATA_CHANGED = "Asset pernah diajukan & perubahan data melebihi ketentuan"
+	ASSET_PERNAH_REJECT                    = "Asset Pernah Reject"
+	ASSET_PERNAH_CANCEL                    = "Asset Pernah Cancel"
 
 	//PRE SCREENING
 	QUICK_APPROVE      = false
@@ -536,6 +546,7 @@ const (
 	REASON_REJECT_CHASSIS_NUMBER     = "NokaNosin sudah terdaftar di KBFMF - Bukan a.n Konsumen dan Pasangan"
 	REASON_OK_CONSUMEN_MATCH         = "NokaNosin sudah terdaftar di KBFMF - Agreement Aktif a.n Konsumen"
 	REASON_REJECTION_FRAUD_POTENTIAL = "NokaNosin sudah terdaftar di KBFMF - Agreement Aktif a.n Pasangan"
+	REASON_OK_CONSUMEN_SPOUSE_MATCH  = "NokaNosin sudah terdaftar di KBFMF - Agreement Aktif a.n Konsumen/Pasangan"
 	REASON_AGREEMENT_NOT_FOUND       = "NokaNosin tidak terdaftar di KBFMF"
 	SOURCE_DECISION_NOKANOSIN        = "NKA"
 
@@ -728,6 +739,7 @@ const (
 	GROUP_PMK   = "pmk_config"
 	KEY_PMK     = "pmk_kmb_off"
 
+	// PRINCIPLE APPROVAL
 	REASON_ASSET_APPOVE       = "ASET DISETUJUI"
 	REASON_PROFIL_APPROVE     = "PROFIL DISETUJUI"
 	REASON_PEMBIAYAAN_APPROVE = "PEMBIAYAAN DISETUJUI"

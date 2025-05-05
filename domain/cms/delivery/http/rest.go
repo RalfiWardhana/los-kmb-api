@@ -54,6 +54,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.POST("/cms/ne/submit", handler.SubmitNE, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/ne/inquiry", handler.NEInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/ne/inquiry/:prospect_id", handler.NEInquiryDetail, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/ne/check_license_plate", handler.CheckLicensePlate, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/mapping-cluster/inquiry", handler.MappingClusterInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/mapping-cluster/download", handler.DownloadMappingCluster, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/mapping-cluster/upload", handler.UploadMappingCluster, middlewares.AccessMiddleware())
@@ -1647,4 +1648,39 @@ func (c *handlerCMS) MappingClusterChangeLog(ctx echo.Context) (err error) {
 		RecordFiltered: len(data),
 		RecordTotal:    rowTotal,
 	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Get Chassis Number By License Plate
+// @Tags Agreement By License Plate
+// @Produce json
+// @Param license_plate path string true "License Plate"
+// @Success 200 {object} response.ApiResponse{data=response.ChassisNumberOfLicensePlateResponse}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/ne/check_license_plate/{license_plate} [get]
+func (c *handlerCMS) CheckLicensePlate(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		ctxJson     error
+	)
+
+	licensePlate := ctx.QueryParam("license_plate")
+
+	if licensePlate == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - param request `license_plate` does not exist")
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Check License Plate - param request `license_plate` does not exist", licensePlate, err)
+		return ctxJson
+	}
+
+	data, err := c.usecase.GetAgreementByLicensePlate(ctx.Request().Context(), licensePlate, accessToken)
+
+	if err != nil {
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Check License Plate", licensePlate, err)
+		return ctxJson
+	}
+
+	ctxJson, _ = c.Json.SuccessV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Check License Plate", licensePlate, data)
+	return ctxJson
 }
