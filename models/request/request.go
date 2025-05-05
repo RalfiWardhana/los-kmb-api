@@ -664,6 +664,7 @@ type Item struct {
 type ItemNE struct {
 	AssetCode               string  `json:"asset_code" validate:"required,max=200" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
 	ManufactureYear         string  `json:"manufacture_year" validate:"len=4,number" example:"2020"`
+	LicensePlate            string  `json:"license_plate" validate:"required,max=15" example:"DK 1234 ABC"`
 	NoChassis               string  `json:"chassis_number" validate:"required,max=30" example:"MHKV1AA2JBK107322"`
 	NoEngine                string  `json:"engine_number" validate:"required,max=30" example:"73218JAJK"`
 	Condition               string  `json:"condition" validate:"required,max=10" example:"U"`
@@ -691,7 +692,9 @@ type AgentNE struct {
 }
 
 type LockSystem struct {
-	IDNumber string `json:"id_number" validate:"required,id_number" example:"ENCRYPTED NIK"`
+	IDNumber      string `json:"id_number" validate:"required,id_number" example:"ENCRYPTED NIK"`
+	ChassisNumber string `json:"chassis_number" validate:"max=50" example:"AWADW4221375G"`
+	EngineNumber  string `json:"engine_number" validate:"max=50" example:"2AZE205717"`
 }
 
 type Recalculate struct {
@@ -721,16 +724,18 @@ type RequestGenerateFormAKKK struct {
 }
 
 type Filtering struct {
-	ProspectID string           `json:"prospect_id" validate:"prospect_id" example:"SAL042600001"`
-	BranchID   string           `json:"branch_id" validate:"required,branch_id" example:"426"`
-	IDNumber   string           `json:"id_number" validate:"required,id_number" example:"ENCRYPTED NIK"`
-	LegalName  string           `json:"legal_name" validate:"required,allow_name" example:"ENCRYPTED LEGAL NAME"`
-	BirthDate  string           `json:"birth_date" validate:"required,dateformat" example:"YYYY-MM-DD"`
-	Gender     string           `json:"gender" validate:"required,gender" example:"M"`
-	MotherName string           `json:"surgate_mother_name" validate:"required,allow_name" example:"ENCRYPTED SURGATE MOTHER NAME"`
-	BPKBName   string           `json:"bpkb_name" validate:"required,bpkbname" example:"K"`
-	CMOID      string           `json:"cmo_id" validate:"required,max=20" example:"123456"`
-	Spouse     *FilteringSpouse `json:"spouse" validate:"omitempty"`
+	ProspectID    string           `json:"prospect_id" validate:"prospect_id" example:"SAL042600001"`
+	BranchID      string           `json:"branch_id" validate:"required,branch_id" example:"426"`
+	IDNumber      string           `json:"id_number" validate:"required,id_number" example:"ENCRYPTED NIK"`
+	LegalName     string           `json:"legal_name" validate:"required,allow_name" example:"ENCRYPTED LEGAL NAME"`
+	BirthDate     string           `json:"birth_date" validate:"required,dateformat" example:"YYYY-MM-DD"`
+	Gender        string           `json:"gender" validate:"required,gender" example:"M"`
+	MotherName    string           `json:"surgate_mother_name" validate:"required,allow_name" example:"ENCRYPTED SURGATE MOTHER NAME"`
+	BPKBName      string           `json:"bpkb_name" validate:"required,bpkbname" example:"K"`
+	CMOID         string           `json:"cmo_id" validate:"required,max=20" example:"123456"`
+	ChassisNumber *string          `json:"chassis_number" validate:"omitempty,max=50" example:"AWADW4221375G"`
+	EngineNumber  *string          `json:"engine_number" validate:"omitempty,max=50" example:"2AZE205717"`
+	Spouse        *FilteringSpouse `json:"spouse" validate:"omitempty"`
 }
 
 type FilteringSpouse struct {

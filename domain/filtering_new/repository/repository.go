@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"los-kmb-api/domain/filtering_new/interfaces"
 	"los-kmb-api/models/entity"
+	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
@@ -35,6 +36,58 @@ func NewRepository(kpLos, kpLosLogs, newKmb *gorm.DB) interfaces.Repository {
 	}
 }
 
+// Helper function to encrypt multiple strings in a single database call
+func encryptBatch(db *gorm.DB, values []string) ([]string, error) {
+	if len(values) == 0 {
+		return []string{}, nil
+	}
+
+	// Create query that encrypts multiple values in one go
+	query := "SELECT "
+	params := []interface{}{}
+
+	for i, val := range values {
+		if i > 0 {
+			query += ", "
+		}
+		query += fmt.Sprintf("SCP.dbo.ENC_B64('SEC', ?) AS encrypt%d", i)
+		params = append(params, val)
+	}
+
+	// Execute the query
+	rows, err := db.Raw(query, params...).Rows()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Extract results
+	if !rows.Next() {
+		return nil, fmt.Errorf("no encryption results returned")
+	}
+
+	// Prepare to scan results
+	scanArgs := make([]interface{}, len(values))
+	results := make([]sql.NullString, len(values))
+	for i := range values {
+		scanArgs[i] = &results[i]
+	}
+
+	if err := rows.Scan(scanArgs...); err != nil {
+		return nil, err
+	}
+
+	// Convert to string slice
+	encrypted := make([]string, len(values))
+	for i, v := range results {
+		if v.Valid {
+			encrypted[i] = v.String
+		}
+	}
+
+	return encrypted, nil
+}
+
 func (r repoHandler) DummyDataPbk(noktp string) (data entity.DummyPBK, err error) {
 	var x sql.TxOptions
 
@@ -53,11 +106,10 @@ func (r repoHandler) DummyDataPbk(noktp string) (data entity.DummyPBK, err error
 	return
 }
 
-func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, dataCMOnoFPD entity.TrxCmoNoFPD) (err error) {
+func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, dataCMOnoFPD entity.TrxCmoNoFPD, historyCheckAsset []entity.TrxHistoryCheckingAsset, lockingSystem entity.TrxLockSystem) (err error) {
 
 	var (
-		x         sql.TxOptions
-		encrypted entity.EncryptString
+		x sql.TxOptions
 	)
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
@@ -68,10 +120,68 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = db.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS encrypt`, data.IDNumber)).Scan(&encrypted).Error; err != nil {
-		return
+	toEncrypt := []string{}
+	fieldMap := map[int]string{}
+	pos := 0
+
+	// Required customer fields
+	toEncrypt = append(toEncrypt, data.IDNumber)
+	fieldMap[pos] = "id_number"
+	pos++
+
+	toEncrypt = append(toEncrypt, data.LegalName)
+	fieldMap[pos] = "legal_name"
+	pos++
+
+	toEncrypt = append(toEncrypt, data.SurgateMotherName)
+	fieldMap[pos] = "surgate_mother_name"
+	pos++
+
+	// Optional spouse fields
+	if data.SpouseIDNumber != nil && *data.SpouseIDNumber != "" {
+		toEncrypt = append(toEncrypt, *data.SpouseIDNumber)
+		fieldMap[pos] = "spouse_id_number"
+		pos++
 	}
-	data.IDNumber = encrypted.Encrypt
+
+	if data.SpouseLegalName != nil && *data.SpouseLegalName != "" {
+		toEncrypt = append(toEncrypt, *data.SpouseLegalName)
+		fieldMap[pos] = "spouse_legal_name"
+		pos++
+	}
+
+	if data.SpouseSurgateMotherName != nil && *data.SpouseSurgateMotherName != "" {
+		toEncrypt = append(toEncrypt, *data.SpouseSurgateMotherName)
+		fieldMap[pos] = "spouse_surgate_mother_name"
+		pos++
+	}
+
+	// Encrypt all values in a single DB call
+	encrypted, err := encryptBatch(db, toEncrypt)
+	if err != nil {
+		return err
+	}
+
+	// Apply encrypted values back to the struct
+	for pos, fieldName := range fieldMap {
+		switch fieldName {
+		case "id_number":
+			data.IDNumber = encrypted[pos]
+		case "legal_name":
+			data.LegalName = encrypted[pos]
+		case "surgate_mother_name":
+			data.SurgateMotherName = encrypted[pos]
+		case "spouse_id_number":
+			encryptedVal := encrypted[pos]
+			data.SpouseIDNumber = &encryptedVal
+		case "spouse_legal_name":
+			encryptedVal := encrypted[pos]
+			data.SpouseLegalName = &encryptedVal
+		case "spouse_surgate_mother_name":
+			encryptedVal := encrypted[pos]
+			data.SpouseSurgateMotherName = &encryptedVal
+		}
+	}
 
 	if err = db.Create(&data).Error; err != nil {
 		return
@@ -86,6 +196,126 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 	if len(trxDetailBiro) > 0 {
 		for _, v := range trxDetailBiro {
 			if err = db.Create(&v).Error; err != nil {
+				return
+			}
+		}
+	}
+
+	if len(historyCheckAsset) > 0 {
+		for i, v := range historyCheckAsset {
+			// Collect non-empty string values that need encryption
+			toEncrypt := []string{}
+			fieldMap := map[int]string{} // Maps position in batch to field name
+			pos := 0
+
+			// Collect all required fields
+			if v.IDNumber != "" {
+				toEncrypt = append(toEncrypt, v.IDNumber)
+				fieldMap[pos] = "id_number"
+				pos++
+			}
+
+			if v.LegalName != "" {
+				toEncrypt = append(toEncrypt, v.LegalName)
+				fieldMap[pos] = "legal_name"
+				pos++
+			}
+
+			if v.SurgateMotherName != "" {
+				toEncrypt = append(toEncrypt, v.SurgateMotherName)
+				fieldMap[pos] = "surgate_mother_name"
+				pos++
+			}
+
+			// Collect pointer fields
+			if v.IDNumberSpouse != nil && *v.IDNumberSpouse != "" {
+				toEncrypt = append(toEncrypt, *v.IDNumberSpouse)
+				fieldMap[pos] = "IDNumberSpouse"
+				pos++
+			}
+
+			if v.LegalNameSpouse != nil && *v.LegalNameSpouse != "" {
+				toEncrypt = append(toEncrypt, *v.LegalNameSpouse)
+				fieldMap[pos] = "LegalNameSpouse"
+				pos++
+			}
+
+			if v.SurgateMotherNameSpouse != nil && *v.SurgateMotherNameSpouse != "" {
+				toEncrypt = append(toEncrypt, *v.SurgateMotherNameSpouse)
+				fieldMap[pos] = "SurgateMotherNameSpouse"
+				pos++
+			}
+
+			// Encrypt all values in a single DB call
+			if len(toEncrypt) > 0 {
+				encrypted, err := encryptBatch(db, toEncrypt)
+				if err != nil {
+					return err
+				}
+
+				// Apply encrypted values back to the struct
+				for pos, fieldName := range fieldMap {
+					switch fieldName {
+					case "id_number":
+						historyCheckAsset[i].IDNumber = encrypted[pos]
+					case "legal_name":
+						historyCheckAsset[i].LegalName = encrypted[pos]
+					case "surgate_mother_name":
+						historyCheckAsset[i].SurgateMotherName = encrypted[pos]
+					case "IDNumberSpouse":
+						encryptedVal := encrypted[pos]
+						historyCheckAsset[i].IDNumberSpouse = &encryptedVal
+					case "LegalNameSpouse":
+						encryptedVal := encrypted[pos]
+						historyCheckAsset[i].LegalNameSpouse = &encryptedVal
+					case "SurgateMotherNameSpouse":
+						encryptedVal := encrypted[pos]
+						historyCheckAsset[i].SurgateMotherNameSpouse = &encryptedVal
+					}
+				}
+			}
+
+			// Create the record after encryption
+			if err = db.Create(&historyCheckAsset[i]).Error; err != nil {
+				return
+			}
+
+			// Update row history checking asset to locked if result of checking asset determine to locking asset
+			if historyCheckAsset[i].IsAssetLocked == 1 {
+				setUpdate := map[string]interface{}{
+					"is_asset_locked": 1,
+					"updated_at":      time.Now(),
+				}
+
+				if err = db.Model(&entity.TrxHistoryCheckingAsset{}).
+					Where("(chassis_number = ? OR engine_number = ?) AND is_asset_locked = 0",
+						historyCheckAsset[i].ChassisNumber, historyCheckAsset[i].EngineNumber).
+					Updates(setUpdate).Error; err != nil {
+					return
+				}
+			}
+		}
+	}
+
+	if lockingSystem.Reason != "" {
+		var encrypted entity.EncryptString
+		if err = db.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS encrypt`, lockingSystem.IDNumber)).Scan(&encrypted).Error; err != nil {
+			return
+		}
+
+		lockingSystem.IDNumber = encrypted.Encrypt
+
+		var count int64
+		if err = db.Model(&entity.TrxLockSystem{}).
+			Where("ProspectID = ? AND IDNumber = ?",
+				lockingSystem.ProspectID,
+				lockingSystem.IDNumber).
+			Count(&count).Error; err != nil {
+			return
+		}
+
+		if count == 0 {
+			if err = db.Create(&lockingSystem).Error; err != nil {
 				return
 			}
 		}
@@ -292,4 +522,183 @@ func (r *repoHandler) GetConfig(groupName string, lob string, key string) (appCo
 	}
 
 	return appConfig, err
+}
+
+func (r repoHandler) getLatestRetryNumber(db *gorm.DB, chassisNumber, engineNumber, decision string, startDate string) (int, error) {
+	var maxRetry struct {
+		LatestRetryNumber int `gorm:"column:latest_retry_number"`
+	}
+
+	err := db.Raw(`
+        SELECT COALESCE(MAX(number_of_retry), 0) AS latest_retry_number 
+        FROM trx_history_checking_asset WITH (NOLOCK)
+        WHERE (chassis_number = ? OR engine_number = ?)
+        AND final_decision = ? AND is_asset_locked = 0 AND created_at >= ?
+    `, chassisNumber, engineNumber, decision, startDate).Scan(&maxRetry).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	return maxRetry.LatestRetryNumber, nil
+}
+
+func (r repoHandler) GetAssetCancel(chassisNumber string, engineNumber string, lockSystemConfig response.LockSystemConfig) (historyData response.DataCheckLockAsset, found bool, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	currentDate := time.Now()
+	startDate := currentDate.AddDate(0, 0, -lockSystemConfig.Data.LockAssetCheck)
+
+	startDateStr := startDate.Format("2006-01-02")
+
+	query := `
+        SELECT TOP 1
+            tri.ProspectID, tri.chassis_number, tri.engine_number, 'JOURNEY' AS source_service, ts.decision, ts.reason, ts.created_at,
+            scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+            scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+            tcp.BirthDate,
+            scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+            tcs.IDNumber AS IDNumber_spouse,
+            tcs.LegalName AS LegalName_spouse,
+            tcs.BirthDate AS BirthDate_spouse,
+            tcs.SurgateMotherName AS SurgateMotherName_spouse
+        FROM trx_item AS tri (NOLOCK)
+        JOIN trx_status AS ts ON (tri.ProspectID = ts.ProspectID)
+        JOIN trx_customer_personal AS tcp ON (tri.ProspectID = tcp.ProspectID)
+        LEFT JOIN trx_customer_spouse AS tcs ON (tri.ProspectID = tcs.ProspectID)
+        WHERE (tri.chassis_number = ? OR tri.engine_number = ?)
+        AND ts.decision = 'CAN'
+        AND ts.created_at >= ?
+        ORDER BY ts.created_at ASC
+    `
+
+	err = db.Raw(query, chassisNumber, engineNumber, startDateStr).Scan(&historyData).Error
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			latestRetryNumber, retryErr := r.getLatestRetryNumber(db, chassisNumber, engineNumber, "CAN", startDateStr)
+			if retryErr != nil {
+				return historyData, false, retryErr
+			}
+			historyData.LatestRetryNumber = latestRetryNumber
+			return historyData, false, nil
+		}
+		return historyData, false, err
+	}
+
+	found = historyData.ProspectID != ""
+
+	// If data was found, get the latest retry number
+	if found {
+		latestRetryNumber, retryErr := r.getLatestRetryNumber(db, historyData.ChassisNumber, historyData.EngineNumber, "CAN", startDateStr)
+		if retryErr != nil {
+			return historyData, false, retryErr
+		}
+		historyData.LatestRetryNumber = latestRetryNumber
+	}
+
+	return historyData, found, nil
+}
+
+func (r repoHandler) GetAssetReject(chassisNumber string, engineNumber string, lockSystemConfig response.LockSystemConfig) (historyData response.DataCheckLockAsset, found bool, err error) {
+	var x sql.TxOptions
+	var results []response.DataCheckLockAsset
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	currentDate := time.Now()
+	startDate := currentDate.AddDate(0, 0, -lockSystemConfig.Data.LockAssetCheck)
+
+	startDateStr := startDate.Format("2006-01-02")
+
+	query := `
+		WITH journey_results AS (
+			SELECT TOP 1
+				tri.ProspectID, tri.chassis_number, tri.engine_number, 'JOURNEY' AS source_service, 
+				ts.decision, ts.reason, ts.created_at,
+				scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+				scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+				tcp.BirthDate,
+				scp.dbo.DEC_B64('SEC', tcp.SurgateMotherName) AS SurgateMotherName,
+				tcs.IDNumber AS IDNumber_spouse,
+				tcs.LegalName AS LegalName_spouse,
+				tcs.BirthDate AS BirthDate_spouse,
+				tcs.SurgateMotherName AS SurgateMotherName_spouse
+			FROM trx_item AS tri WITH (NOLOCK)
+			JOIN trx_status AS ts WITH (NOLOCK) ON (tri.ProspectID = ts.ProspectID)
+			JOIN trx_customer_personal AS tcp WITH (NOLOCK) ON (tri.ProspectID = tcp.ProspectID)
+			LEFT JOIN trx_customer_spouse AS tcs WITH (NOLOCK) ON (tri.ProspectID = tcs.ProspectID)
+			WHERE (tri.chassis_number = ? OR tri.engine_number = ?)
+			AND ts.decision = 'REJ'
+			AND ts.created_at >= ?
+			ORDER BY ts.created_at ASC
+		),
+		filtering_results AS (
+			SELECT TOP 1
+				tf.prospect_id AS ProspectID, tf.chassis_number, tf.engine_number, 'FILTERING' AS source_service,
+				CASE
+					WHEN tf.next_process = 0 THEN 'REJ'
+					ELSE NULL
+				END AS decision, 
+				tf.reason, tf.created_at,
+				scp.dbo.DEC_B64('SEC', tf.id_number) AS IDNumber,
+				scp.dbo.DEC_B64('SEC', tf.legal_name) AS LegalName,
+				tf.birth_date AS BirthDate,
+				scp.dbo.DEC_B64('SEC', tf.surgate_mother_name) AS SurgateMotherName,
+				scp.dbo.DEC_B64('SEC', tf.spouse_id_number) AS IDNumber_spouse,
+				scp.dbo.DEC_B64('SEC', tf.spouse_legal_name) AS LegalName_spouse,
+				tf.spouse_birth_date AS BirthDate_spouse,
+				scp.dbo.DEC_B64('SEC', tf.spouse_surgate_mother_name) AS SurgateMotherName_spouse
+			FROM trx_filtering AS tf WITH (NOLOCK)
+			WHERE (tf.chassis_number = ? OR tf.engine_number = ?)
+			AND tf.next_process = 0
+			AND tf.id_number IS NOT NULL
+			AND tf.legal_name IS NOT NULL
+			AND tf.surgate_mother_name IS NOT NULL
+			AND tf.birth_date IS NOT NULL
+			AND tf.created_at >= ?
+			ORDER BY tf.created_at ASC
+		)
+
+		SELECT * FROM journey_results WITH (NOLOCK)
+		UNION ALL
+		SELECT * FROM filtering_results WITH (NOLOCK)
+		ORDER BY created_at ASC
+	`
+
+	if err = db.Raw(query,
+		chassisNumber, engineNumber, startDateStr, // Parameters for first query
+		chassisNumber, engineNumber, startDateStr). // Parameters for second query
+		Scan(&results).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return historyData, false, nil
+		}
+		return historyData, false, err
+	}
+
+	if len(results) > 0 {
+		historyData = results[0]
+		found = true
+
+		latestRetryNumber, retryErr := r.getLatestRetryNumber(db, historyData.ChassisNumber, historyData.EngineNumber, "REJ", startDateStr)
+		if retryErr != nil {
+			return historyData, false, retryErr
+		}
+		historyData.LatestRetryNumber = latestRetryNumber
+	}
+
+	return historyData, found, nil
 }

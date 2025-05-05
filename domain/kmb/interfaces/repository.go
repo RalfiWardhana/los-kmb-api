@@ -4,13 +4,14 @@ import (
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
+	"time"
 )
 
 type Repository interface {
 	GetTrxReject(idNumber string, config response.LockSystemConfig) (data []entity.TrxLockSystem, err error)
 	GetTrxCancel(idNumber string, config response.LockSystemConfig) (data []entity.TrxLockSystem, err error)
-	SaveTrxLockSystem(trxLockSystem entity.TrxLockSystem) (err error)
-	GetTrxLockSystem(idNumber string) (data entity.TrxLockSystem, err error)
+	SaveTrxLockSystem(trxLockSystem entity.TrxLockSystem) (existingUnbanDate time.Time, err error)
+	GetTrxLockSystem(idNumber string, chassisNumber string, engineNumber string) (data entity.TrxLockSystem, bannedType string, err error)
 	ScanTrxMaster(prospectID string) (countMaster int, err error)
 	ScanTrxPrescreening(prospectID string) (count int, err error)
 	GetFilteringResult(prospectID string) (filtering entity.FilteringKMB, err error)
