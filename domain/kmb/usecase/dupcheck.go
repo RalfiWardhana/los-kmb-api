@@ -414,7 +414,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 					checkConfins := response.UsecaseApi{
 						Result:         constant.DECISION_REJECT,
 						Code:           constant.CODE_MAX_OVD_CONFINS,
-						Reason:         fmt.Sprintf("%s > 6 Bulan %s %d", reasonCustomer, constant.REASON_REJECT_CONFINS_MAXOVD, configValue.Data.MaxOvd),
+						Reason:         fmt.Sprintf("%s %s %d", reasonCustomer, constant.REASON_REJECT_CONFINS_MAXOVD, configValue.Data.MaxOvd),
 						StatusKonsumen: customerKMB,
 						SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
 					}
@@ -427,7 +427,7 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 					checkConfins := response.UsecaseApi{
 						Result:         constant.DECISION_PASS,
 						Code:           constant.CODE_PASS_MAX_OVD_CONFINS,
-						Reason:         fmt.Sprintf("%s > 6 Bulan %s %d", reasonCustomer, constant.REASON_PASS_CONFINS_MAXOVD, configValue.Data.MaxOvd),
+						Reason:         fmt.Sprintf("%s %s %d", reasonCustomer, constant.REASON_PASS_CONFINS_MAXOVD, configValue.Data.MaxOvd),
 						StatusKonsumen: customerKMB,
 						SourceDecision: constant.SOURCE_DECISION_DUPCHECK,
 					}
