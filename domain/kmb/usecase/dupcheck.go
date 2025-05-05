@@ -334,8 +334,8 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 				return
 			}
 
-			// cek AO pertama, kedua dst jika customer AO priority
-			if req.CustomerSegment == constant.RO_AO_PRIORITY {
+			// cek AO pertama, kedua dst jika customer AO priority dan bukan top up
+			if req.CustomerSegment == constant.RO_AO_PRIORITY && mapping.InstallmentTopup <= 0 {
 				// cek agreement aktif kmb
 				agreementAktif, _, err = u.usecase.CheckAgreementCustomer(ctx, req.ProspectID, paramCustomerID, constant.AGREEMENT_AKTIF, true, accessToken)
 				if err != nil {
