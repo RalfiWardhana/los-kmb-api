@@ -73,7 +73,20 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 	}
 
 	if customerSegment == constant.RO_AO_PRIME || customerSegment == constant.RO_AO_PRIORITY {
-		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_AO && spDupcheck.InstallmentTopup == 0 && (spDupcheck.NumberOfPaidInstallment >= 1 || spDupcheck.AgreementSettledExist) {
+		// handle priority
+		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_AO && spDupcheck.InstallmentTopup == 0 && customerSegment == constant.RO_AO_PRIORITY {
+			data = response.UsecaseApi{
+				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
+				Reason:         fmt.Sprintf("%s %s - PBK Pass", spDupcheck.StatusKonsumen, customerSegment),
+				Result:         constant.DECISION_PASS,
+				SourceDecision: constant.SOURCE_DECISION_BIRO,
+			}
+
+			return
+		}
+
+		// handle prime
+		if spDupcheck.StatusKonsumen == constant.STATUS_KONSUMEN_AO && spDupcheck.InstallmentTopup == 0 && (spDupcheck.NumberOfPaidInstallment >= 6 || spDupcheck.AgreementSettledExist) && customerSegment == constant.RO_AO_PRIME {
 			data = response.UsecaseApi{
 				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
 				Reason:         fmt.Sprintf("%s %s - PBK Pass", spDupcheck.StatusKonsumen, customerSegment),
