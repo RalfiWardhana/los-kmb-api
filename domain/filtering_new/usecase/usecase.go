@@ -153,7 +153,8 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 
 	// Dikondisikan not-required agar 2Wilen tidak blocking jika data param `ChassisNumber` dan `EngineNumber` kosong
 	// Jika data param `ChassisNumber` atau `EngineNumber` kosong, maka tidak perlu melakukan pengecekan asset
-	if req.ChassisNumber != nil && req.EngineNumber != nil && *req.ChassisNumber != "" && *req.EngineNumber != "" {
+	lockingAssetIsActive, _ := strconv.ParseBool(os.Getenv("IS_LOCKING_ASSET_ACTIVE"))
+	if lockingAssetIsActive && req.ChassisNumber != nil && req.EngineNumber != nil && *req.ChassisNumber != "" && *req.EngineNumber != "" {
 		// Start | Cek Asset Canceled and Rejected Last 30 Days
 		canceledRecord, everCancelled, configLockAssetCancel, err := u.usecase.AssetCanceledLast30Days(ctx, req.ProspectID, *req.ChassisNumber, *req.EngineNumber, accessToken)
 		if err != nil {
