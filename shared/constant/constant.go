@@ -26,6 +26,7 @@ const (
 	LOBID_KMB                        = 2
 	TAG_MAX                          = "max"
 	TAG_GT                           = "gt"
+	TAG_GTE                          = "gte"
 	TAG_REQUIRED                     = "required"
 	TAG_DATE_FORMAT                  = "dateformat"
 	TAG_LEN                          = "len"
@@ -809,4 +810,6 @@ const (
 	LOS_PROCESS_MESSAGE_2WILEN          = "Pengajuan kamu sedang dalam proses analisa ulang. Harap tunggu informasi selanjutnya."
 	LOS_APPROVE_MESSAGE_2WILEN          = "Pengajuan anda telah disetujui sebelumnya"
 	LOS_CANCEL_MESSAGE_2WILEN           = "Pengajuan anda telah dibatalkan sebelumnya"
+
+	MESSAGE_INTERNAL_SERVER_ERROR = "Terjadi kesalahan pada sistem, silahkan coba lagi"
 )

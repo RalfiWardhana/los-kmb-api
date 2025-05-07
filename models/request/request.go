@@ -613,20 +613,20 @@ type Apk struct {
 }
 
 type ApkNE struct {
-	Tenor                   int      `json:"tenor" validate:"required,max=60" example:"36"`
-	OTR                     float64  `json:"otr" validate:"required,max=999999999999" example:"105000000"`
-	DPAmount                float64  `json:"down_payment_amount" validate:"required,max=999999999999" example:"22000000"`
-	NTF                     float64  `json:"ntf" validate:"required,max=999999999999" example:"150528000"`
-	AF                      float64  `json:"af" validate:"required,max=999999999999" example:"84000000"`
-	AdminFee                *float64 `json:"admin_fee" validate:"required,max=999999999999" example:"1500000"`
-	InstallmentAmount       float64  `json:"installment_amount" validate:"required,max=999999999999" example:"4181333"`
-	PercentDP               *float64 `json:"down_payment_rate" validate:"required,max=99" example:"20.95"`
-	PremiumAmountToCustomer float64  `json:"premium_amount_to_customer" validate:"min=0,max=999999999999" example:"2184000"`
-	InsuranceAmount         float64  `json:"insurance_amount" validate:"max=999999999999" example:"3150000"`
-	ProvisionFee            *float64 `json:"provision_fee" validate:"required,max=999999999999" example:"2475000"`
+	Tenor                   int      `json:"tenor" validate:"required,min=1,max=60" example:"36"`
+	OTR                     float64  `json:"otr" validate:"required,gte=0,max=999999999999" example:"105000000"`
+	DPAmount                float64  `json:"down_payment_amount" validate:"required,gte=0,max=999999999999" example:"22000000"`
+	NTF                     float64  `json:"ntf" validate:"required,gte=0,max=999999999999" example:"150528000"`
+	AF                      float64  `json:"af" validate:"required,gte=0,max=999999999999" example:"84000000"`
+	AdminFee                *float64 `json:"admin_fee" validate:"required,gte=0,max=999999999999" example:"1500000"`
+	InstallmentAmount       float64  `json:"installment_amount" validate:"required,gte=0,max=999999999999" example:"4181333"`
+	PercentDP               *float64 `json:"down_payment_rate" validate:"required,gte=0,max=99" example:"20.95"`
+	PremiumAmountToCustomer float64  `json:"premium_amount_to_customer" validate:"gte=0,max=999999999999" example:"2184000"`
+	InsuranceAmount         float64  `json:"insurance_amount" validate:"gte=0,max=999999999999" example:"3150000"`
+	ProvisionFee            *float64 `json:"provision_fee" validate:"required,gte=0,max=999999999999" example:"2475000"`
 	FinancePurpose          string   `json:"finance_purpose" validate:"required,max=100"`
 	Dealer                  string   `json:"dealer" validate:"omitempty,max=50"`
-	LoanAmount              float64  `json:"loan_amount"  validate:"max=999999999999" example:"105000000"`
+	LoanAmount              float64  `json:"loan_amount"  validate:"gte=0,max=999999999999" example:"105000000"`
 }
 
 type Item struct {
