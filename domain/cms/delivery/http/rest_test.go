@@ -19,9 +19,11 @@ import (
 	"net/http/httptest"
 	"net/textproto"
 	"net/url"
+	"os"
 	"strings"
 	"testing"
 
+	responses "github.com/KB-FMF/los-common-library/response"
 	"github.com/labstack/echo/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -423,16 +425,18 @@ func TestCMSHandler(t *testing.T) {
 	mockRepository := new(mocks.Repository)
 	mockJson := new(mocksJson.JSON)
 	mockPlatformEvent := platformEventMockery.NewPlatformEventInterface(t)
+	libResponse := responses.NewResponse(os.Getenv("APP_PREFIX_NAME"), responses.WithDebug(true))
 	// Initialize the handler with mocks or stubs
 	handler := &handlerCMS{
 		usecase:    mockUsecase,
 		repository: mockRepository,
 		Json:       mockJson,
+		responses:  libResponse,
 	}
 
 	// Create a new Echo group and register the routes with the mock middleware
 	cmsRoute := e.Group("/cms")
-	CMSHandler(cmsRoute, mockUsecase, mockRepository, mockJson, mockPlatformEvent, mockMiddleware)
+	CMSHandler(cmsRoute, mockUsecase, mockRepository, mockJson, mockPlatformEvent, libResponse, mockMiddleware)
 
 	mockResponse := []entity.ReasonMessage{}
 	statusCode := http.StatusOK
