@@ -317,6 +317,7 @@ func TestFiltering(t *testing.T) {
 		checkChassisNumber               response.UsecaseApi
 		errCheckChassisNumber            error
 		config                           entity.AppConfig
+		lockAssetConfig                  entity.AppConfig
 		errGetConfig                     error
 	}{
 		{
@@ -377,6 +378,10 @@ func TestFiltering(t *testing.T) {
 		},
 		{
 			name: "TEST_err_FilteringPefindo_01",
+			lockAssetConfig: entity.AppConfig{
+				Key:   "is_locking_asset_active",
+				Value: `"false"`,
+			},
 			req: request.Filtering{
 				ProspectID: "SAL02400020230727001",
 				BPKBName:   "K",
@@ -757,6 +762,8 @@ func TestFiltering(t *testing.T) {
 			if tc.married {
 				mockUsecase.On("BlacklistCheck", 1, tc.spSpouse).Return(tc.resBlackList, mock.Anything).Once()
 			}
+
+			mockRepository.On("GetConfig", "lock_asset", "KMB-OFF", "is_locking_asset_active").Return(tc.lockAssetConfig, tc.errGetConfig)
 
 			mockUsecase.On("FilteringPefindo", ctx, tc.reqPefindo, mock.Anything, mock.Anything, mock.Anything, accessToken).Return(tc.respFilteringPefindo, tc.resPefindo, tc.trxDetailBiro, tc.errpefindo).Once()
 
