@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"sync"
 	"time"
 
 	"los-kmb-api/shared/common"
@@ -20,6 +21,8 @@ type platformEvent struct {
 	producerSubmissionLOS    *event.Client
 	producerInsertCustomer   *event.Client
 	producerSubmission2Wilen *event.Client
+
+	muSubmission2Wilen sync.Mutex
 }
 
 //counterfeiter:generate . PlatformEventInterface
@@ -28,10 +31,15 @@ type PlatformEventInterface interface {
 }
 
 func NewPlatformEvent(producerSubmission, producerSubmissionLOS, producerInsertCustomer, producerSubmission2Wilen *event.Client) PlatformEventInterface {
-	return &platformEvent{producerSubmission, producerSubmissionLOS, producerInsertCustomer, producerSubmission2Wilen}
+	return &platformEvent{
+		producerSubmission:       producerSubmission,
+		producerSubmissionLOS:    producerSubmissionLOS,
+		producerInsertCustomer:   producerInsertCustomer,
+		producerSubmission2Wilen: producerSubmission2Wilen,
+	}
 }
 
-func (pe platformEvent) PublishEvent(ctx context.Context, accessToken, topicName, key, id string, value map[string]interface{}, countRetry int) error {
+func (pe *platformEvent) PublishEvent(ctx context.Context, accessToken, topicName, key, id string, value map[string]interface{}, countRetry int) error {
 	var (
 		err      error
 		producer *event.Client
@@ -50,6 +58,8 @@ func (pe platformEvent) PublishEvent(ctx context.Context, accessToken, topicName
 	case constant.TOPIC_INSERT_CUSTOMER:
 		producer = pe.producerInsertCustomer
 	case constant.TOPIC_SUBMISSION_2WILEN:
+		pe.muSubmission2Wilen.Lock()
+		defer pe.muSubmission2Wilen.Unlock()
 		producer = pe.producerSubmission2Wilen
 	default:
 		err = fmt.Errorf("producer for topic %s was not created", topicName)
