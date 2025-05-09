@@ -12,6 +12,7 @@ import (
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
 	"os"
+	"regexp"
 	"strconv"
 	"testing"
 
@@ -75,6 +76,8 @@ func TestGetAvailableTenor(t *testing.T) {
 		trxDetailBiro             []entity.TrxDetailBiro
 		pbkScore                  string
 		errTrxDetailBiro          error
+		mappingPbkScoreGrade      entity.MappingPBKScoreGrade
+		errMappingPbkScoreGrade   error
 	}{
 		{
 			name: "success case - simulation",
@@ -1838,6 +1841,128 @@ func TestGetAvailableTenor(t *testing.T) {
 			expectedError:    errors.New(constant.ERROR_UPSTREAM + " - Get Trx Detail Biro Error"),
 		},
 		{
+			name: "error get mapping pbk score",
+			request: request.GetAvailableTenor{
+				ProspectID:         "SSREG-123",
+				BranchID:           "123",
+				AssetCode:          "MOT",
+				LicensePlate:       "B1234XX",
+				BPKBNameType:       "K",
+				ManufactureYear:    "2020",
+				LoanAmount:         50000000,
+				AssetUsageTypeCode: "P",
+			},
+			config: entity.AppConfig{
+				Value: "^SIM-.*",
+			},
+			dupcheckResponse: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score: "Low Risk",
+				},
+			},
+			assetResponse: response.AssetList{
+				Records: []struct {
+					AssetCode           string `json:"asset_code"`
+					AssetDescription    string `json:"asset_description"`
+					AssetDisplay        string `json:"asset_display"`
+					AssetTypeID         string `json:"asset_type_id"`
+					BranchID            string `json:"branch_id"`
+					Brand               string `json:"brand"`
+					CategoryID          string `json:"category_id"`
+					CategoryDescription string `json:"category_description"`
+					IsElectric          bool   `json:"is_electric"`
+					Model               string `json:"model"`
+				}{
+					{
+						AssetCode:           "MOT",
+						AssetDescription:    "HONDA VARIO 160",
+						AssetDisplay:        "HONDA VARIO 160",
+						AssetTypeID:         "2W",
+						BranchID:            "123",
+						Brand:               "HONDA",
+						CategoryID:          "CAT1",
+						CategoryDescription: "Sport",
+						IsElectric:          false,
+						Model:               "VARIO",
+					},
+				},
+			},
+			plateResponse: response.MDMMasterMappingLicensePlateResponse{
+				Data: response.MDMMasterMappingLicensePlateData{
+					Records: []response.MDMMasterMappingLicensePlateRecord{
+						{
+							AreaID: "AREA1",
+						},
+					},
+				},
+			},
+			marsevResponse: response.MarsevFilterProgramResponse{
+				Data: []response.MarsevFilterProgramData{
+					{
+						ID: "1234",
+						Tenors: []response.TenorInfo{
+							{
+								Tenor: 12,
+							},
+							{
+								Tenor: 24,
+							},
+						},
+					},
+				},
+			},
+			assetYearListResponse: response.AssetYearList{
+				Records: []struct {
+					AssetCode        string `json:"asset_code"`
+					BranchID         string `json:"branch_id"`
+					Brand            string `json:"brand"`
+					ManufactureYear  int    `json:"manufacturing_year"`
+					MarketPriceValue int    `json:"market_price_value"`
+				}{
+					{
+						AssetCode:        "MOT",
+						BranchID:         "123",
+						Brand:            "HONDA",
+						ManufactureYear:  2020,
+						MarketPriceValue: 60000000,
+					},
+				},
+			},
+			cmoResponse: response.MDMMasterMappingBranchEmployeeResponse{
+				Data: []response.MDMMasterMappingBranchEmployeeRecord{
+					{
+						CMOID: "12434",
+					},
+				},
+			},
+			hrisResponse: response.EmployeeCMOResponse{
+				CMOCategory: constant.CMO_LAMA,
+			},
+			getFpdCmoResponse: response.FpdCMOResponse{
+				FpdExist: false,
+			},
+			savedClusterCheckCmoNoFPD: "Cluster C",
+			calculationResponse: response.MarsevCalculateInstallmentResponse{
+				Data: []response.MarsevCalculateInstallmentData{
+					{
+						Tenor:              12,
+						IsPSA:              true,
+						MonthlyInstallment: 1000000,
+						AmountOfFinance:    1000000,
+						AdminFee:           100000,
+						DPAmount:           1000000,
+						NTF:                100000,
+					},
+				},
+			},
+			errMappingPbkScoreGrade: errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Pbk Score Error"),
+			expectedError:           errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Pbk Score Error"),
+		},
+		{
 			name: "error get mapping branch",
 			request: request.GetAvailableTenor{
 				ProspectID:         "REG-123",
@@ -2804,6 +2929,8 @@ func TestGetAvailableTenor(t *testing.T) {
 			mockRepository.On("GetConfig", constant.GROUP_2WILEN, "KMB-OFF", constant.KEY_PPID_SIMULASI).Return(tc.config, tc.errConfig)
 
 			if tc.errConfig == nil {
+				re := regexp.MustCompile(tc.config.Value)
+				isSimulasi := re.MatchString(tc.request.ProspectID)
 				mockRepository.On("GetTrxKPM", tc.request.ProspectID).Return(tc.trxKPM, tc.errTrxKPM)
 
 				if tc.errTrxKPM == nil {
@@ -2849,16 +2976,22 @@ func TestGetAvailableTenor(t *testing.T) {
 												mockRepository.On("GetTrxDetailBIro", tc.request.ProspectID).Return(tc.trxDetailBiro, tc.errTrxDetailBiro)
 
 												if tc.errTrxDetailBiro == nil {
-													mockRepository.On("GetMappingBranchByBranchID", tc.request.BranchID, mock.Anything).
-														Return(tc.mappingBranch, tc.errMappingBranchEntity)
+													if !isSimulasi {
+														mockRepository.On("GetMappingPbkScore", mock.Anything).Return(tc.mappingPbkScoreGrade, tc.errMappingPbkScoreGrade)
+													}
 
-													if tc.errMappingBranchEntity == nil {
-														mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything).Return(tc.mappingLTV, tc.errMappingLTV)
-														mockUsecase.On("MarsevGetLoanAmount", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.loanAmountResponse, tc.errLoanAmount)
-														mockUsecase.On("GetLTV", ctx, tc.mappingLTV, tc.request.ProspectID, "PASS", tc.request.BPKBNameType, tc.request.ManufactureYear, mock.AnythingOfType("int"), float64(0), mock.Anything, mock.Anything, mock.Anything).Return(tc.ltvResponse, tc.adjustTenorResponse, tc.errGetLTV)
+													if tc.errMappingPbkScoreGrade == nil {
+														mockRepository.On("GetMappingBranchByBranchID", tc.request.BranchID, mock.Anything).
+															Return(tc.mappingBranch, tc.errMappingBranchEntity)
 
-														if tc.marsevResponse.Data[0].Tenors[0].Tenor == 36 {
-															mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.rejectTenorResponse, tc.errRejectTenor)
+														if tc.errMappingBranchEntity == nil {
+															mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything).Return(tc.mappingLTV, tc.errMappingLTV)
+															mockUsecase.On("MarsevGetLoanAmount", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.loanAmountResponse, tc.errLoanAmount)
+															mockUsecase.On("GetLTV", ctx, tc.mappingLTV, tc.request.ProspectID, "PASS", tc.request.BPKBNameType, tc.request.ManufactureYear, mock.AnythingOfType("int"), float64(0), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.ltvResponse, tc.adjustTenorResponse, tc.errGetLTV)
+
+															if tc.marsevResponse.Data[0].Tenors[0].Tenor == 36 {
+																mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.rejectTenorResponse, tc.errRejectTenor)
+															}
 														}
 													}
 												}

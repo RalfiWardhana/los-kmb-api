@@ -34,6 +34,7 @@ type Repository interface {
 	GetScoreGenerator(zipCode string) (score entity.ScoreGenerator, err error)
 	GetScoreGeneratorROAO() (score entity.ScoreGenerator, err error)
 	GetTrxDetailBIro(prospectID string) (trxDetailBiro []entity.TrxDetailBiro, err error)
+	GetMappingPbkScore(pbkScores []string) (data entity.MappingPBKScoreGrade, err error)
 	GetActiveLoanTypeLast6M(customerID string) (score entity.GetActiveLoanTypeLast6M, err error)
 	GetActiveLoanTypeLast24M(customerID string) (score entity.GetActiveLoanTypeLast24M, err error)
 	GetMoblast(customerID string) (score entity.GetMoblast, err error)

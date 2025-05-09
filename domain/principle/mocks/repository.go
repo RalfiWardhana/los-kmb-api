@@ -539,6 +539,34 @@ func (_m *Repository) GetMappingNegativeCustomer(req response.NegativeCustomer) 
 	return r0, r1
 }
 
+// GetMappingPbkScore provides a mock function with given fields: pbkScores
+func (_m *Repository) GetMappingPbkScore(pbkScores []string) (entity.MappingPBKScoreGrade, error) {
+	ret := _m.Called(pbkScores)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMappingPbkScore")
+	}
+
+	var r0 entity.MappingPBKScoreGrade
+	var r1 error
+	if rf, ok := ret.Get(0).(func([]string) (entity.MappingPBKScoreGrade, error)); ok {
+		return rf(pbkScores)
+	}
+	if rf, ok := ret.Get(0).(func([]string) entity.MappingPBKScoreGrade); ok {
+		r0 = rf(pbkScores)
+	} else {
+		r0 = ret.Get(0).(entity.MappingPBKScoreGrade)
+	}
+
+	if rf, ok := ret.Get(1).(func([]string) error); ok {
+		r1 = rf(pbkScores)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetMappingVehicleAge provides a mock function with given fields: vehicleAge, cluster, bpkbNameType, tenor, resultPefindo, af
 func (_m *Repository) GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNameType int, tenor int, resultPefindo string, af float64) (entity.MappingVehicleAge, error) {
 	ret := _m.Called(vehicleAge, cluster, bpkbNameType, tenor, resultPefindo, af)

@@ -2847,6 +2847,72 @@ func TestGetMappingBranchByID_DatabaseError(t *testing.T) {
 	}
 }
 
+func TestGetMappingPbkScore(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	query := `SELECT TOP 1 * FROM m_mapping_pbk_grade WITH (nolock) WHERE score IN (?,?,?) ORDER BY grade_risk DESC`
+
+	scores := []string{"AVERAGE RISK", "LOW RISK", "VERY LOW RISK"}
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(scores[0], scores[1], scores[2]).
+		WillReturnRows(sqlmock.NewRows([]string{"grade_risk", "GRADE_SCORE"}).
+			AddRow(3, "BAD"))
+	mock.ExpectCommit()
+
+	_, err := repo.GetMappingPbkScore(scores)
+	if err != nil {
+		t.Errorf("error '%s' was not expected, but got: ", err)
+	}
+}
+
+func TestGetMappingPbkScore_DatabaseError(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	query := `SELECT TOP 1 * FROM m_mapping_pbk_grade WITH (nolock) WHERE score IN (?,?,?) ORDER BY grade_risk DESC`
+
+	scores := []string{"AVERAGE RISK", "LOW RISK", "VERY LOW RISK"}
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(scores[0], scores[1], scores[2]).
+		WillReturnError(fmt.Errorf("database error"))
+	mock.ExpectCommit()
+
+	_, err := repo.GetMappingPbkScore(scores)
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+
+	fmt.Println(err.Error())
+	if err.Error() != "database error" {
+		t.Errorf("expected error 'database error', got '%v'", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
 func TestSaveTrxElaborateLTV(t *testing.T) {
 	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 

@@ -238,19 +238,22 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 			return data, err
 		}
 
-		pbkScore := "BAD"
+		scores := make([]string, 0)
 		for _, v := range detailTrxBiro {
-			if v.Score == "NO HIT" {
-				pbkScore = "NO HIT"
-				break
-			}
+			scores = append(scores, v.Score)
 		}
-		if pbkScore == "BAD" {
-			for _, v := range detailTrxBiro {
-				if v.Score == "AVERAGE RISK" || v.Score == "LOW RISK" || v.Score == "VERY LOW RISK" {
-					pbkScore = "GOOD"
-					break
-				}
+
+		pbkScore := "GOOD"
+		if !isSimulasi {
+			pbkScoreMapping, err := u.repository.GetMappingPbkScore(scores)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Pbk Score Error")
+				return data, err
+			}
+
+			pbkScore = pbkScoreMapping.GradeScore
+			if pbkScoreMapping.GradeScore == "" {
+				pbkScore = "NO HIT"
 			}
 		}
 
@@ -296,7 +299,7 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 					}
 				}
 
-				ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet, isSimulasi, pbkScore, customerStatus)
+				ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet, isSimulasi, pbkScore, customerStatus, branch.GradeBranch)
 				if err != nil {
 					errChan <- err
 					return
@@ -346,7 +349,7 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 	return
 }
 
-func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64, isSimulasi bool, pbkScore, customerStatus string) (ltv int, adjustTenor bool, err error) {
+func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64, isSimulasi bool, pbkScore, customerStatus, gradeBranch string) (ltv int, adjustTenor bool, err error) {
 	var bpkbNameType int
 	if strings.Contains(os.Getenv("NAMA_SAMA"), bpkbName) {
 		bpkbNameType = 1
@@ -400,8 +403,8 @@ func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.Mappin
 					trxElaborateLTV.MappingElaborateLTVID = m.ID
 				}
 
-			} else if tenor == 18 && m.TenorStart <= tenor && tenor <= m.TenorEnd && m.StatusKonsumen == "NEW" && bpkbNameType == 0 && m.PbkScore == pbkScore &&
-				m.GradeBranch == "BAD" {
+			} else if tenor == 18 && m.TenorStart <= tenor && tenor <= m.TenorEnd && m.StatusKonsumen == customerStatus && bpkbNameType == 0 && m.PbkScore == pbkScore &&
+				m.GradeBranch == gradeBranch {
 				ltv = m.LTV
 				trxElaborateLTV.MappingElaborateLTVID = m.ID
 				isFixedLtv = true

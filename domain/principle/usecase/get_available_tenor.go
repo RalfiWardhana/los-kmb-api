@@ -267,19 +267,22 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 			return data, err
 		}
 
-		pbkScore := "BAD"
+		scores := make([]string, 0)
 		for _, v := range detailTrxBiro {
-			if v.Score == "NO HIT" {
-				pbkScore = "NO HIT"
-				break
-			}
+			scores = append(scores, v.Score)
 		}
-		if pbkScore == "BAD" {
-			for _, v := range detailTrxBiro {
-				if v.Score == "AVERAGE RISK" || v.Score == "LOW RISK" || v.Score == "VERY LOW RISK" {
-					pbkScore = "GOOD"
-					break
-				}
+
+		pbkScore := "GOOD"
+		if !isSimulasi {
+			pbkScoreMapping, err := u.repository.GetMappingPbkScore(scores)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Pbk Score Error")
+				return data, err
+			}
+
+			pbkScore = pbkScoreMapping.GradeScore
+			if pbkScoreMapping.GradeScore == "" {
+				pbkScore = "NO HIT"
 			}
 		}
 
@@ -325,7 +328,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 					}
 				}
 
-				ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet, isSimulasi, pbkScore, customerStatus)
+				ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet, isSimulasi, pbkScore, customerStatus, branch.GradeBranch)
 				if err != nil {
 					errChan <- err
 					return

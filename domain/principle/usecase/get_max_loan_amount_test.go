@@ -71,6 +71,8 @@ func TestGetMaxLoanAmount(t *testing.T) {
 		rejectTenorResponse       response.UsecaseApi
 		errRejectTenor            error
 		expectedResponse          response.GetMaxLoanAmountData
+		mappingPbkScoreGrade      entity.MappingPBKScoreGrade
+		errMappingPbkScoreGrade   error
 		expectedError             error
 	}{
 		{
@@ -87,7 +89,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 				ManufactureYear:    "2020",
 				AssetUsageTypeCode: "P",
 			},
-			pbkScore: "GOOD",
+			pbkScore: "NO HOT",
 			trxDetailBiro: []entity.TrxDetailBiro{
 				{
 					Score: "AVERAGE RISK",
@@ -201,6 +203,9 @@ func TestGetMaxLoanAmount(t *testing.T) {
 				{
 					Score: "NO HIT",
 				},
+			},
+			mappingPbkScoreGrade: entity.MappingPBKScoreGrade{
+				GradeScore: "GOOD",
 			},
 			mappingBranch: entity.MappingBranch{
 				GradeBranch: "GOOD",
@@ -1292,6 +1297,111 @@ func TestGetMaxLoanAmount(t *testing.T) {
 			expectedError: errors.New(constant.ERROR_UPSTREAM + " - Get Trx Detail Biro Error"),
 		},
 		{
+			name:       "error get mapping pbk score",
+			isSimulasi: false,
+			request: request.GetMaxLoanAmount{
+				ProspectID:         "sSIM-123",
+				BranchID:           "123",
+				AssetCode:          "MOT",
+				IDNumber:           "1234567890",
+				LegalName:          "Test User",
+				BirthDate:          "1990-01-01",
+				SurgateMotherName:  "Mother Name",
+				BPKBNameType:       "K",
+				ManufactureYear:    "2020",
+				AssetUsageTypeCode: "P",
+			},
+			errMappingPbkScoreGrade: errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Pbk Score Error"),
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score: "LOW RISK",
+				},
+			},
+			config: entity.AppConfig{
+				Value: "^SIM-.*",
+			},
+			dupcheckResponse: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+			},
+			assetResponse: response.AssetList{
+				Records: []struct {
+					AssetCode           string `json:"asset_code"`
+					AssetDescription    string `json:"asset_description"`
+					AssetDisplay        string `json:"asset_display"`
+					AssetTypeID         string `json:"asset_type_id"`
+					BranchID            string `json:"branch_id"`
+					Brand               string `json:"brand"`
+					CategoryID          string `json:"category_id"`
+					CategoryDescription string `json:"category_description"`
+					IsElectric          bool   `json:"is_electric"`
+					Model               string `json:"model"`
+				}{
+					{
+						AssetCode:           "MOT",
+						AssetDescription:    "HONDA VARIO 160",
+						AssetDisplay:        "HONDA VARIO 160",
+						AssetTypeID:         "2W",
+						BranchID:            "123",
+						Brand:               "HONDA",
+						CategoryID:          "CAT1",
+						CategoryDescription: "Sport",
+						IsElectric:          false,
+						Model:               "VARIO",
+					},
+				},
+			},
+			marsevFilterProgramRes: response.MarsevFilterProgramResponse{
+				Data: []response.MarsevFilterProgramData{
+					{
+						ID: "1234",
+						Tenors: []response.TenorInfo{
+							{
+								Tenor: 12,
+							},
+							{
+								Tenor: 24,
+							},
+						},
+					},
+				},
+			},
+			assetYearResponse: response.AssetYearList{
+				Records: []struct {
+					AssetCode        string `json:"asset_code"`
+					BranchID         string `json:"branch_id"`
+					Brand            string `json:"brand"`
+					ManufactureYear  int    `json:"manufacturing_year"`
+					MarketPriceValue int    `json:"market_price_value"`
+				}{
+					{
+						AssetCode:        "MOT",
+						BranchID:         "123",
+						Brand:            "HONDA",
+						ManufactureYear:  2020,
+						MarketPriceValue: 60000000,
+					},
+				},
+			},
+			mappingBranchResponse: response.MDMMasterMappingBranchEmployeeResponse{
+				Data: []response.MDMMasterMappingBranchEmployeeRecord{
+					{
+						CMOID: "12434",
+					},
+				},
+			},
+			hrisResponse: response.EmployeeCMOResponse{
+				CMOCategory: constant.CMO_LAMA,
+			},
+			fpdCMOResponse: response.FpdCMOResponse{
+				FpdExist: true,
+			},
+			mappingFpdCluster: entity.MasterMappingFpdCluster{
+				Cluster: "Cluster C",
+			},
+			expectedError: errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Pbk Score Error"),
+		},
+		{
 			name: "error get mapping branch",
 			request: request.GetMaxLoanAmount{
 				ProspectID:         "SIM-123",
@@ -2186,21 +2296,27 @@ func TestGetMaxLoanAmount(t *testing.T) {
 												mockRepository.On("GetTrxDetailBIro", tc.request.ProspectID).Return(tc.trxDetailBiro, tc.errTrxDetailBiro)
 
 												if tc.errTrxDetailBiro == nil {
-													mockRepository.On("GetMappingBranchByBranchID", tc.request.BranchID, mock.Anything).
-														Return(tc.mappingBranch, tc.errMappingBranchEntity)
+													if !isSimulasi {
+														mockRepository.On("GetMappingPbkScore", mock.Anything).Return(tc.mappingPbkScoreGrade, tc.errMappingPbkScoreGrade)
+													}
 
-													if tc.errMappingBranchEntity == nil {
-														mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything).Return(tc.mappingElaborateLTV, tc.errMappingElaborateLTV)
+													if tc.errMappingPbkScoreGrade == nil {
+														mockRepository.On("GetMappingBranchByBranchID", tc.request.BranchID, mock.Anything).
+															Return(tc.mappingBranch, tc.errMappingBranchEntity)
 
-														if tc.errMappingElaborateLTV == nil {
-															mockUsecase.On("GetLTV", ctx, tc.mappingElaborateLTV, tc.request.ProspectID, mock.Anything, tc.request.BPKBNameType, tc.request.ManufactureYear, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.getLTVResponse, tc.adjustTenorResponse, tc.errGetLTV)
+														if tc.errMappingBranchEntity == nil {
+															mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything).Return(tc.mappingElaborateLTV, tc.errMappingElaborateLTV)
 
-															if tc.marsevFilterProgramRes.Data[0].Tenors[0].Tenor == 36 {
-																mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.rejectTenorResponse, tc.errRejectTenor)
-															}
+															if tc.errMappingElaborateLTV == nil {
+																mockUsecase.On("GetLTV", ctx, tc.mappingElaborateLTV, tc.request.ProspectID, mock.Anything, tc.request.BPKBNameType, tc.request.ManufactureYear, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.getLTVResponse, tc.adjustTenorResponse, tc.errGetLTV)
 
-															if tc.errGetLTV == nil && tc.getLTVResponse > 0 {
-																mockUsecase.On("MarsevGetLoanAmount", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.marsevLoanAmountRes, tc.errMarsevLoanAmount)
+																if tc.marsevFilterProgramRes.Data[0].Tenors[0].Tenor == 36 {
+																	mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.rejectTenorResponse, tc.errRejectTenor)
+																}
+
+																if tc.errGetLTV == nil && tc.getLTVResponse > 0 {
+																	mockUsecase.On("MarsevGetLoanAmount", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.marsevLoanAmountRes, tc.errMarsevLoanAmount)
+																}
 															}
 														}
 													}
@@ -2937,6 +3053,7 @@ func TestGetLTV(t *testing.T) {
 		expectedLTV     int
 		expectedAdjust  bool
 		expectedError   error
+		gradeBranch     string
 		shouldSaveTrx   bool
 	}{
 		{
@@ -2968,6 +3085,7 @@ func TestGetLTV(t *testing.T) {
 			bpkbName:        "RAMA",
 			manufactureYear: "2022",
 			pbkScore:        "BAD",
+			gradeBranch:     "BAD",
 			statusKonsumen:  "NEW",
 			tenor:           18,
 			bakiDebet:       0,
@@ -3476,7 +3594,7 @@ func TestGetLTV(t *testing.T) {
 
 			usecase := NewUsecase(mockRepository, nil, nil)
 
-			ltv, adjustTenor, err := usecase.GetLTV(ctx, tc.mappingLTV, tc.prospectID, tc.resultPefindo, tc.bpkbName, tc.manufactureYear, tc.tenor, tc.bakiDebet, false, tc.pbkScore, tc.statusKonsumen)
+			ltv, adjustTenor, err := usecase.GetLTV(ctx, tc.mappingLTV, tc.prospectID, tc.resultPefindo, tc.bpkbName, tc.manufactureYear, tc.tenor, tc.bakiDebet, false, tc.pbkScore, tc.statusKonsumen, tc.gradeBranch)
 
 			if tc.expectedError != nil {
 				require.Error(t, err)

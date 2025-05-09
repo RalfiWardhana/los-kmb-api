@@ -434,6 +434,27 @@ func (r *repoHandler) GetMappingBranchByBranchID(branchID string, pbkScore strin
 	return
 }
 
+func (r repoHandler) GetMappingPbkScore(pbkScores []string) (data entity.MappingPBKScoreGrade, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.newKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = db.Raw("SELECT TOP 1 * FROM m_mapping_pbk_grade WITH (nolock) WHERE score IN (?) ORDER BY grade_risk DESC", pbkScores).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
+	return
+}
+
 func (r repoHandler) SaveTrxElaborateLTV(data entity.TrxElaborateLTV) (err error) {
 	data.CreatedAt = time.Now()
 	var x sql.TxOptions
