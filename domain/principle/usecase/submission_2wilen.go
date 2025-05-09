@@ -1035,15 +1035,43 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	trxKPM.ResultPefindo = resultPefindo
 	trxKPM.BakiDebet = pefindo.TotalBakiDebetNonAgunan
 
+	detailTrxBiro, err := u.repository.GetTrxDetailBIro(req.ProspectID)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Trx Detail Biro Error")
+		return resp, err
+	}
+
+	pbkScore := "BAD"
+	for _, v := range detailTrxBiro {
+		if v.Score == "NO HIT" {
+			pbkScore = "NO HIT"
+			break
+		}
+	}
+	if pbkScore == "BAD" {
+		for _, v := range detailTrxBiro {
+			if v.Score == "AVERAGE RISK" || v.Score == "LOW RISK" || v.Score == "VERY LOW RISK" {
+				pbkScore = "GOOD"
+				break
+			}
+		}
+	}
+
+	branch, err := u.repository.GetMappingBranchByBranchID(req.BranchID, pbkScore)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Branch Error")
+		return resp, err
+	}
+
 	// get loan amount
 	var mappingElaborateLTV []entity.MappingElaborateLTV
-	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, clusterCMO)
+	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, clusterCMO, branch.GradeBranch)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
 		return
 	}
 
-	ltv, adjustTenor, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, req.Tenor, pefindo.TotalBakiDebetNonAgunan, false)
+	ltv, adjustTenor, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, req.Tenor, pefindo.TotalBakiDebetNonAgunan, false, pbkScore, customerStatus)
 	if err != nil {
 		return
 	}

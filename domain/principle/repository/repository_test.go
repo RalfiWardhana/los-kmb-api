@@ -2718,19 +2718,20 @@ func TestGetMappingElaborateLTV(t *testing.T) {
 
 	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
-	query := `SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE result_pefindo = ? AND cluster = ? `
+	query := `SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE result_pefindo = ? AND cluster = ? AND grade_branch = ?`
 
 	resultPefindo := "PASS"
 	cluster := "Cluster A"
+	gradeBranch := "BAD"
 
 	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
-		WithArgs(resultPefindo, cluster).
+		WithArgs(resultPefindo, cluster, gradeBranch).
 		WillReturnRows(sqlmock.NewRows([]string{"result_pefindo", "cluster", "total_baki_debet_start"}).
 			AddRow("AVERAGE RISK", "Cluster A", 0))
 	mock.ExpectCommit()
 
-	_, err := repo.GetMappingElaborateLTV(resultPefindo, cluster)
+	_, err := repo.GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch)
 	if err != nil {
 		t.Errorf("error '%s' was not expected, but got: ", err)
 	}
@@ -2759,7 +2760,7 @@ func TestGetMappingElaborateLTV_DatabaseError(t *testing.T) {
 		WillReturnError(fmt.Errorf("database error"))
 	mock.ExpectCommit()
 
-	result, err := repo.GetMappingElaborateLTV(resultPefindo, cluster)
+	result, err := repo.GetMappingElaborateLTV(resultPefindo, cluster, "")
 
 	if err == nil {
 		t.Error("expected error, got nil")
@@ -2777,6 +2778,75 @@ func TestGetMappingElaborateLTV_DatabaseError(t *testing.T) {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
 }
+
+func TestGetMappingBranchByID(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	query := `SELECT TOP 1 * FROM m_mapping_branch WITH (nolock) WHERE branch_id = ? AND score = ?`
+
+	id := "id"
+	pbkScore := "GOOD"
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(id, pbkScore).
+		WillReturnRows(sqlmock.NewRows([]string{"result_pefindo", "cluster", "total_baki_debet_start"}).
+			AddRow("AVERAGE RISK", "Cluster A", 0))
+	mock.ExpectCommit()
+
+	_, err := repo.GetMappingBranchByBranchID(id, pbkScore)
+	if err != nil {
+		t.Errorf("error '%s' was not expected, but got: ", err)
+	}
+}
+
+func TestGetMappingBranchByID_DatabaseError(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	query := `SELECT TOP 1 * FROM m_mapping_branch WITH (nolock) WHERE branch_id = ? AND score = ?`
+
+	id := "id"
+	pbkScore := "GOOD"
+
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(id, pbkScore).
+		WillReturnError(fmt.Errorf("database error"))
+	mock.ExpectCommit()
+
+	_, err := repo.GetMappingBranchByBranchID(id, pbkScore)
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+
+	if err.Error() != "database error" {
+		t.Errorf("expected error 'database error', got '%v'", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
 func TestSaveTrxElaborateLTV(t *testing.T) {
 	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 

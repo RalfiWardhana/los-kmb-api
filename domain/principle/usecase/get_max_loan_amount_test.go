@@ -57,6 +57,11 @@ func TestGetMaxLoanAmount(t *testing.T) {
 		errCheckCmoNoFPD          error
 		mappingElaborateLTV       []entity.MappingElaborateLTV
 		errMappingElaborateLTV    error
+		mappingBranch             entity.MappingBranch
+		errMappingBranchEntity    error
+		trxDetailBiro             []entity.TrxDetailBiro
+		pbkScore                  string
+		errTrxDetailBiro          error
 		getLTVResponse            int
 		adjustTenorResponse       bool
 		isSimulasi                bool
@@ -81,6 +86,15 @@ func TestGetMaxLoanAmount(t *testing.T) {
 				BPKBNameType:       "K",
 				ManufactureYear:    "2020",
 				AssetUsageTypeCode: "P",
+			},
+			pbkScore: "GOOD",
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score: "AVERAGE RISK",
+				},
+			},
+			mappingBranch: entity.MappingBranch{
+				GradeBranch: "GOOD",
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -168,7 +182,6 @@ func TestGetMaxLoanAmount(t *testing.T) {
 				MaxLoanAmount: 40000000,
 			},
 		},
-
 		{
 			name: "success with referral code simulation case",
 			request: request.GetMaxLoanAmount{
@@ -183,6 +196,14 @@ func TestGetMaxLoanAmount(t *testing.T) {
 				ManufactureYear:    "2020",
 				AssetUsageTypeCode: "P",
 				ReferralCode:       &referralCode,
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score: "NO HIT",
+				},
+			},
+			mappingBranch: entity.MappingBranch{
+				GradeBranch: "GOOD",
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -293,6 +314,14 @@ func TestGetMaxLoanAmount(t *testing.T) {
 				AssetUsageTypeCode: "P",
 				ReferralCode:       &referralCode,
 			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score: "NO HIT",
+				},
+			},
+			mappingBranch: entity.MappingBranch{
+				GradeBranch: "GOOD",
+			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
 			},
@@ -347,7 +376,6 @@ func TestGetMaxLoanAmount(t *testing.T) {
 			},
 			expectedError: errors.New(constant.ERROR_BAD_REQUEST + " - No matching MI_NUMBER found"),
 		},
-
 		{
 			name: "error get config",
 			request: request.GetMaxLoanAmount{
@@ -1165,6 +1193,209 @@ func TestGetMaxLoanAmount(t *testing.T) {
 			expectedError:    errors.New("failed to check cmo no fpd"),
 		},
 		{
+			name: "error get trx detail biro",
+			request: request.GetMaxLoanAmount{
+				ProspectID:         "SIM-123",
+				BranchID:           "123",
+				AssetCode:          "MOT",
+				IDNumber:           "1234567890",
+				LegalName:          "Test User",
+				BirthDate:          "1990-01-01",
+				SurgateMotherName:  "Mother Name",
+				BPKBNameType:       "K",
+				ManufactureYear:    "2020",
+				AssetUsageTypeCode: "P",
+			},
+			errTrxDetailBiro: errors.New(constant.ERROR_UPSTREAM + " - Get Trx Detail Biro Error"),
+			config: entity.AppConfig{
+				Value: "^SIM-.*",
+			},
+			dupcheckResponse: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+			},
+			assetResponse: response.AssetList{
+				Records: []struct {
+					AssetCode           string `json:"asset_code"`
+					AssetDescription    string `json:"asset_description"`
+					AssetDisplay        string `json:"asset_display"`
+					AssetTypeID         string `json:"asset_type_id"`
+					BranchID            string `json:"branch_id"`
+					Brand               string `json:"brand"`
+					CategoryID          string `json:"category_id"`
+					CategoryDescription string `json:"category_description"`
+					IsElectric          bool   `json:"is_electric"`
+					Model               string `json:"model"`
+				}{
+					{
+						AssetCode:           "MOT",
+						AssetDescription:    "HONDA VARIO 160",
+						AssetDisplay:        "HONDA VARIO 160",
+						AssetTypeID:         "2W",
+						BranchID:            "123",
+						Brand:               "HONDA",
+						CategoryID:          "CAT1",
+						CategoryDescription: "Sport",
+						IsElectric:          false,
+						Model:               "VARIO",
+					},
+				},
+			},
+			marsevFilterProgramRes: response.MarsevFilterProgramResponse{
+				Data: []response.MarsevFilterProgramData{
+					{
+						ID: "1234",
+						Tenors: []response.TenorInfo{
+							{
+								Tenor: 12,
+							},
+							{
+								Tenor: 24,
+							},
+						},
+					},
+				},
+			},
+			assetYearResponse: response.AssetYearList{
+				Records: []struct {
+					AssetCode        string `json:"asset_code"`
+					BranchID         string `json:"branch_id"`
+					Brand            string `json:"brand"`
+					ManufactureYear  int    `json:"manufacturing_year"`
+					MarketPriceValue int    `json:"market_price_value"`
+				}{
+					{
+						AssetCode:        "MOT",
+						BranchID:         "123",
+						Brand:            "HONDA",
+						ManufactureYear:  2020,
+						MarketPriceValue: 60000000,
+					},
+				},
+			},
+			mappingBranchResponse: response.MDMMasterMappingBranchEmployeeResponse{
+				Data: []response.MDMMasterMappingBranchEmployeeRecord{
+					{
+						CMOID: "12434",
+					},
+				},
+			},
+			hrisResponse: response.EmployeeCMOResponse{
+				CMOCategory: constant.CMO_LAMA,
+			},
+			fpdCMOResponse: response.FpdCMOResponse{
+				FpdExist: true,
+			},
+			mappingFpdCluster: entity.MasterMappingFpdCluster{
+				Cluster: "Cluster C",
+			},
+			expectedError: errors.New(constant.ERROR_UPSTREAM + " - Get Trx Detail Biro Error"),
+		},
+		{
+			name: "error get mapping branch",
+			request: request.GetMaxLoanAmount{
+				ProspectID:         "SIM-123",
+				BranchID:           "123",
+				AssetCode:          "MOT",
+				IDNumber:           "1234567890",
+				LegalName:          "Test User",
+				BirthDate:          "1990-01-01",
+				SurgateMotherName:  "Mother Name",
+				BPKBNameType:       "K",
+				ManufactureYear:    "2020",
+				AssetUsageTypeCode: "P",
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score: "NO HIT",
+				},
+			},
+			errMappingBranch: errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Branch Error"),
+			config: entity.AppConfig{
+				Value: "^SIM-.*",
+			},
+			dupcheckResponse: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+			},
+			assetResponse: response.AssetList{
+				Records: []struct {
+					AssetCode           string `json:"asset_code"`
+					AssetDescription    string `json:"asset_description"`
+					AssetDisplay        string `json:"asset_display"`
+					AssetTypeID         string `json:"asset_type_id"`
+					BranchID            string `json:"branch_id"`
+					Brand               string `json:"brand"`
+					CategoryID          string `json:"category_id"`
+					CategoryDescription string `json:"category_description"`
+					IsElectric          bool   `json:"is_electric"`
+					Model               string `json:"model"`
+				}{
+					{
+						AssetCode:           "MOT",
+						AssetDescription:    "HONDA VARIO 160",
+						AssetDisplay:        "HONDA VARIO 160",
+						AssetTypeID:         "2W",
+						BranchID:            "123",
+						Brand:               "HONDA",
+						CategoryID:          "CAT1",
+						CategoryDescription: "Sport",
+						IsElectric:          false,
+						Model:               "VARIO",
+					},
+				},
+			},
+			marsevFilterProgramRes: response.MarsevFilterProgramResponse{
+				Data: []response.MarsevFilterProgramData{
+					{
+						ID: "1234",
+						Tenors: []response.TenorInfo{
+							{
+								Tenor: 12,
+							},
+							{
+								Tenor: 24,
+							},
+						},
+					},
+				},
+			},
+			assetYearResponse: response.AssetYearList{
+				Records: []struct {
+					AssetCode        string `json:"asset_code"`
+					BranchID         string `json:"branch_id"`
+					Brand            string `json:"brand"`
+					ManufactureYear  int    `json:"manufacturing_year"`
+					MarketPriceValue int    `json:"market_price_value"`
+				}{
+					{
+						AssetCode:        "MOT",
+						BranchID:         "123",
+						Brand:            "HONDA",
+						ManufactureYear:  2020,
+						MarketPriceValue: 60000000,
+					},
+				},
+			},
+			mappingBranchResponse: response.MDMMasterMappingBranchEmployeeResponse{
+				Data: []response.MDMMasterMappingBranchEmployeeRecord{
+					{
+						CMOID: "12434",
+					},
+				},
+			},
+			hrisResponse: response.EmployeeCMOResponse{
+				CMOCategory: constant.CMO_LAMA,
+			},
+			fpdCMOResponse: response.FpdCMOResponse{
+				FpdExist: true,
+			},
+			mappingFpdCluster: entity.MasterMappingFpdCluster{
+				Cluster: "Cluster C",
+			},
+			expectedError: errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Branch Error"),
+		},
+		{
 			name: "error get mapping elaborate ltv",
 			request: request.GetMaxLoanAmount{
 				ProspectID:         "SIM-123",
@@ -1177,6 +1408,14 @@ func TestGetMaxLoanAmount(t *testing.T) {
 				BPKBNameType:       "K",
 				ManufactureYear:    "2020",
 				AssetUsageTypeCode: "P",
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score: "NO HIT",
+				},
+			},
+			mappingBranch: entity.MappingBranch{
+				GradeBranch: "GOOD",
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -1276,6 +1515,14 @@ func TestGetMaxLoanAmount(t *testing.T) {
 				BPKBNameType:       "K",
 				ManufactureYear:    "2020",
 				AssetUsageTypeCode: "P",
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score: "NO HIT",
+				},
+			},
+			mappingBranch: entity.MappingBranch{
+				GradeBranch: "GOOD",
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -1378,6 +1625,14 @@ func TestGetMaxLoanAmount(t *testing.T) {
 				BPKBNameType:       "K",
 				ManufactureYear:    "2020",
 				AssetUsageTypeCode: "P",
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score: "NO HIT",
+				},
+			},
+			mappingBranch: entity.MappingBranch{
+				GradeBranch: "GOOD",
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -1482,6 +1737,14 @@ func TestGetMaxLoanAmount(t *testing.T) {
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score: "NO HIT",
+				},
+			},
+			mappingBranch: entity.MappingBranch{
+				GradeBranch: "GOOD",
 			},
 			dupcheckResponse: response.SpDupCekCustomerByID{
 				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
@@ -1920,21 +2183,31 @@ func TestGetMaxLoanAmount(t *testing.T) {
 											}
 
 											if tc.errCheckCmoNoFPD == nil {
-												mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything).Return(tc.mappingElaborateLTV, tc.errMappingElaborateLTV)
+												mockRepository.On("GetTrxDetailBIro", tc.request.ProspectID).Return(tc.trxDetailBiro, tc.errTrxDetailBiro)
 
-												if tc.errMappingElaborateLTV == nil {
-													mockUsecase.On("GetLTV", ctx, tc.mappingElaborateLTV, tc.request.ProspectID, mock.Anything, tc.request.BPKBNameType, tc.request.ManufactureYear, mock.Anything, mock.Anything, mock.Anything).Return(tc.getLTVResponse, tc.adjustTenorResponse, tc.errGetLTV)
+												if tc.errTrxDetailBiro == nil {
+													mockRepository.On("GetMappingBranchByBranchID", tc.request.BranchID, mock.Anything).
+														Return(tc.mappingBranch, tc.errMappingBranchEntity)
 
-													if tc.marsevFilterProgramRes.Data[0].Tenors[0].Tenor == 36 {
-														mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.rejectTenorResponse, tc.errRejectTenor)
-													}
+													if tc.errMappingBranchEntity == nil {
+														mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything).Return(tc.mappingElaborateLTV, tc.errMappingElaborateLTV)
 
-													if tc.errGetLTV == nil && tc.getLTVResponse > 0 {
-														mockUsecase.On("MarsevGetLoanAmount", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.marsevLoanAmountRes, tc.errMarsevLoanAmount)
+														if tc.errMappingElaborateLTV == nil {
+															mockUsecase.On("GetLTV", ctx, tc.mappingElaborateLTV, tc.request.ProspectID, mock.Anything, tc.request.BPKBNameType, tc.request.ManufactureYear, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.getLTVResponse, tc.adjustTenorResponse, tc.errGetLTV)
+
+															if tc.marsevFilterProgramRes.Data[0].Tenors[0].Tenor == 36 {
+																mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.rejectTenorResponse, tc.errRejectTenor)
+															}
+
+															if tc.errGetLTV == nil && tc.getLTVResponse > 0 {
+																mockUsecase.On("MarsevGetLoanAmount", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.marsevLoanAmountRes, tc.errMarsevLoanAmount)
+															}
+														}
 													}
 												}
 											}
 										}
+
 									}
 								}
 							}
@@ -2653,6 +2926,8 @@ func TestGetLTV(t *testing.T) {
 		name            string
 		prospectID      string
 		resultPefindo   string
+		pbkScore        string
+		statusKonsumen  string
 		bpkbName        string
 		manufactureYear string
 		tenor           int
@@ -2680,6 +2955,33 @@ func TestGetLTV(t *testing.T) {
 					TenorEnd:      24,
 					BPKBNameType:  1,
 					LTV:           75,
+				},
+			},
+			expectedLTV:    75,
+			expectedAdjust: true,
+			shouldSaveTrx:  true,
+		},
+		{
+			name:            "success no hit tenor < 36 nama beda, 18 tenor, bad branch, konsumen status new",
+			prospectID:      "SAL-123",
+			resultPefindo:   constant.DECISION_PBK_NO_HIT,
+			bpkbName:        "RAMA",
+			manufactureYear: "2022",
+			pbkScore:        "BAD",
+			statusKonsumen:  "NEW",
+			tenor:           18,
+			bakiDebet:       0,
+			mappingLTV: []entity.MappingElaborateLTV{
+				{
+					ID:             1,
+					ResultPefindo:  constant.DECISION_PBK_NO_HIT,
+					TenorStart:     12,
+					TenorEnd:       18,
+					GradeBranch:    "BAD",
+					BPKBNameType:   0,
+					StatusKonsumen: "NEW",
+					PbkScore:       "BAD",
+					LTV:            75,
 				},
 			},
 			expectedLTV:    75,
@@ -3174,7 +3476,7 @@ func TestGetLTV(t *testing.T) {
 
 			usecase := NewUsecase(mockRepository, nil, nil)
 
-			ltv, adjustTenor, err := usecase.GetLTV(ctx, tc.mappingLTV, tc.prospectID, tc.resultPefindo, tc.bpkbName, tc.manufactureYear, tc.tenor, tc.bakiDebet, false)
+			ltv, adjustTenor, err := usecase.GetLTV(ctx, tc.mappingLTV, tc.prospectID, tc.resultPefindo, tc.bpkbName, tc.manufactureYear, tc.tenor, tc.bakiDebet, false, tc.pbkScore, tc.statusKonsumen)
 
 			if tc.expectedError != nil {
 				require.Error(t, err)

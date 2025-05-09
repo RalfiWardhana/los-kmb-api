@@ -150,6 +150,11 @@ func TestSubmission2Wilen(t *testing.T) {
 		expectPublishEventKPMWait            bool
 		expectPublishEventKPMApprove         bool
 		expectPublishEvent                   bool
+		mappingBranch                        entity.MappingBranch
+		errMappingBranchEntity               error
+		trxDetailBiro                        []entity.TrxDetailBiro
+		pbkScore                             string
+		errTrxDetailBiro                     error
 	}{
 		{
 			name:                 "error max exceed",
@@ -7344,7 +7349,10 @@ func TestSubmission2Wilen(t *testing.T) {
 			mockRepository.On("SaveTrxKPM", mock.Anything).Return(tc.errSaveTrxKPM)
 			mockRepository.On("GetReadjustCountTrxKPM", mock.Anything).Return(tc.resGetReadjustCountTrxKPM)
 			mockRepository.On("MasterMappingFpdCluster", mock.Anything).Return(tc.resMasterMappingFpdCluster, tc.errMasterMappingFpdCluster)
-			mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything).Return(tc.resGetMappingElaborateLTV, tc.errGetMappingElaborateLTV)
+			mockRepository.On("GetTrxDetailBIro", tc.request.ProspectID).Return(tc.trxDetailBiro, tc.errTrxDetailBiro)
+			mockRepository.On("GetMappingBranchByBranchID", tc.request.BranchID, mock.Anything).
+				Return(tc.mappingBranch, tc.errMappingBranchEntity)
+			mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetMappingElaborateLTV, tc.errGetMappingElaborateLTV)
 			if tc.isGetConfigDupcheck {
 				mockRepository.On("GetConfig", mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetConfigDupcheck, tc.errGetConfigDupcheck).Once()
 			}
@@ -7368,7 +7376,7 @@ func TestSubmission2Wilen(t *testing.T) {
 			mockUsecase.On("Asliri", ctx, mock.Anything, mock.Anything).Return(tc.resAsliri, tc.errAsliri)
 			mockUsecase.On("Ktp", ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.resKtp, tc.errKtp)
 			mockUsecase.On("Scorepro", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resScsScorepro, tc.resScorepro, tc.resPefindoIDX, tc.errorScorepro)
-			mockUsecase.On("GetLTV", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetLTV, tc.resAdjustTenorGetLTV, tc.errGetLTV)
+			mockUsecase.On("GetLTV", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetLTV, tc.resAdjustTenorGetLTV, tc.errGetLTV)
 			mockUsecase.On("MarsevGetLoanAmount", ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.resMarsevGetLoanAmount, tc.errMarsevGetLoanAmount)
 			mockUsecase.On("MDMGetMasterAsset", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resMDMGetMasterAsset, tc.errMDMGetMasterAsset)
 			mockUsecase.On("MarsevGetMarketingProgram", ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.resMarsevGetMarketingProgram, tc.errMarsevGetMarketingProgram)

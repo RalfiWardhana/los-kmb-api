@@ -386,7 +386,7 @@ func (r repoHandler) GetFilteringResult(prospectID string) (filtering entity.Fil
 	return
 }
 
-func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster string) (data []entity.MappingElaborateLTV, err error) {
+func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch string) (data []entity.MappingElaborateLTV, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
@@ -397,9 +397,40 @@ func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster string) (data
 	db := r.newKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.newKmb.Raw("SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE result_pefindo = ? AND cluster = ? ", resultPefindo, cluster).Scan(&data).Error; err != nil {
+	extraWhere := ""
+	args := []any{
+		resultPefindo,
+		cluster,
+	}
+	if gradeBranch != "" {
+		extraWhere = "AND grade_branch = ?"
+		args = append(args, gradeBranch)
+	}
+
+	if err = r.newKmb.Raw(fmt.Sprintf("SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE result_pefindo = ? AND cluster = ? %s ", extraWhere), args...).Scan(&data).Error; err != nil {
 		return
 	}
+	return
+}
+
+func (r *repoHandler) GetMappingBranchByBranchID(branchID string, pbkScore string) (data entity.MappingBranch, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.newKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = db.Raw("SELECT TOP 1 * FROM m_mapping_branch WITH (nolock) WHERE branch_id = ? AND score = ?", branchID, pbkScore).Scan(&data).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = nil
+		}
+		return
+	}
+
 	return
 }
 

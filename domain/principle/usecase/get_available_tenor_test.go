@@ -70,6 +70,11 @@ func TestGetAvailableTenor(t *testing.T) {
 		errRejectTenor            error
 		expectedTenors            []response.GetAvailableTenorData
 		expectedError             error
+		mappingBranch             entity.MappingBranch
+		errMappingBranchEntity    error
+		trxDetailBiro             []entity.TrxDetailBiro
+		pbkScore                  string
+		errTrxDetailBiro          error
 	}{
 		{
 			name: "success case - simulation",
@@ -84,6 +89,15 @@ func TestGetAvailableTenor(t *testing.T) {
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
+			},
+			pbkScore: "GOOD",
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score: "AVERAGE RISK",
+				},
+			},
+			mappingBranch: entity.MappingBranch{
+				GradeBranch: "GOOD",
 			},
 			dupcheckResponse: response.SpDupCekCustomerByID{
 				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
@@ -1707,6 +1721,240 @@ func TestGetAvailableTenor(t *testing.T) {
 			calculationResponse:       response.MarsevCalculateInstallmentResponse{},
 		},
 		{
+			name: "error get trx detail biro",
+			request: request.GetAvailableTenor{
+				ProspectID:         "REG-123",
+				BranchID:           "123",
+				AssetCode:          "MOT",
+				LicensePlate:       "B1234XX",
+				BPKBNameType:       "K",
+				ManufactureYear:    "2020",
+				LoanAmount:         50000000,
+				AssetUsageTypeCode: "P",
+			},
+			config: entity.AppConfig{
+				Value: "^SIM-.*",
+			},
+			dupcheckResponse: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+			},
+			assetResponse: response.AssetList{
+				Records: []struct {
+					AssetCode           string `json:"asset_code"`
+					AssetDescription    string `json:"asset_description"`
+					AssetDisplay        string `json:"asset_display"`
+					AssetTypeID         string `json:"asset_type_id"`
+					BranchID            string `json:"branch_id"`
+					Brand               string `json:"brand"`
+					CategoryID          string `json:"category_id"`
+					CategoryDescription string `json:"category_description"`
+					IsElectric          bool   `json:"is_electric"`
+					Model               string `json:"model"`
+				}{
+					{
+						AssetCode:           "MOT",
+						AssetDescription:    "HONDA VARIO 160",
+						AssetDisplay:        "HONDA VARIO 160",
+						AssetTypeID:         "2W",
+						BranchID:            "123",
+						Brand:               "HONDA",
+						CategoryID:          "CAT1",
+						CategoryDescription: "Sport",
+						IsElectric:          false,
+						Model:               "VARIO",
+					},
+				},
+			},
+			plateResponse: response.MDMMasterMappingLicensePlateResponse{
+				Data: response.MDMMasterMappingLicensePlateData{
+					Records: []response.MDMMasterMappingLicensePlateRecord{
+						{
+							AreaID: "AREA1",
+						},
+					},
+				},
+			},
+			marsevResponse: response.MarsevFilterProgramResponse{
+				Data: []response.MarsevFilterProgramData{
+					{
+						ID: "1234",
+						Tenors: []response.TenorInfo{
+							{
+								Tenor: 12,
+							},
+							{
+								Tenor: 24,
+							},
+						},
+					},
+				},
+			},
+			assetYearListResponse: response.AssetYearList{
+				Records: []struct {
+					AssetCode        string `json:"asset_code"`
+					BranchID         string `json:"branch_id"`
+					Brand            string `json:"brand"`
+					ManufactureYear  int    `json:"manufacturing_year"`
+					MarketPriceValue int    `json:"market_price_value"`
+				}{
+					{
+						AssetCode:        "MOT",
+						BranchID:         "123",
+						Brand:            "HONDA",
+						ManufactureYear:  2020,
+						MarketPriceValue: 60000000,
+					},
+				},
+			},
+			cmoResponse: response.MDMMasterMappingBranchEmployeeResponse{
+				Data: []response.MDMMasterMappingBranchEmployeeRecord{
+					{
+						CMOID: "12434",
+					},
+				},
+			},
+			hrisResponse: response.EmployeeCMOResponse{
+				CMOCategory: constant.CMO_LAMA,
+			},
+			getFpdCmoResponse: response.FpdCMOResponse{
+				FpdExist: false,
+			},
+			savedClusterCheckCmoNoFPD: "Cluster C",
+			calculationResponse: response.MarsevCalculateInstallmentResponse{
+				Data: []response.MarsevCalculateInstallmentData{
+					{
+						Tenor:              12,
+						IsPSA:              true,
+						MonthlyInstallment: 1000000,
+						AmountOfFinance:    1000000,
+						AdminFee:           100000,
+						DPAmount:           1000000,
+						NTF:                100000,
+					},
+				},
+			},
+			errTrxDetailBiro: errors.New(constant.ERROR_UPSTREAM + " - Get Trx Detail Biro Error"),
+			expectedError:    errors.New(constant.ERROR_UPSTREAM + " - Get Trx Detail Biro Error"),
+		},
+		{
+			name: "error get mapping branch",
+			request: request.GetAvailableTenor{
+				ProspectID:         "REG-123",
+				BranchID:           "123",
+				AssetCode:          "MOT",
+				LicensePlate:       "B1234XX",
+				BPKBNameType:       "K",
+				ManufactureYear:    "2020",
+				LoanAmount:         50000000,
+				AssetUsageTypeCode: "P",
+			},
+			config: entity.AppConfig{
+				Value: "^SIM-.*",
+			},
+			dupcheckResponse: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+			},
+			assetResponse: response.AssetList{
+				Records: []struct {
+					AssetCode           string `json:"asset_code"`
+					AssetDescription    string `json:"asset_description"`
+					AssetDisplay        string `json:"asset_display"`
+					AssetTypeID         string `json:"asset_type_id"`
+					BranchID            string `json:"branch_id"`
+					Brand               string `json:"brand"`
+					CategoryID          string `json:"category_id"`
+					CategoryDescription string `json:"category_description"`
+					IsElectric          bool   `json:"is_electric"`
+					Model               string `json:"model"`
+				}{
+					{
+						AssetCode:           "MOT",
+						AssetDescription:    "HONDA VARIO 160",
+						AssetDisplay:        "HONDA VARIO 160",
+						AssetTypeID:         "2W",
+						BranchID:            "123",
+						Brand:               "HONDA",
+						CategoryID:          "CAT1",
+						CategoryDescription: "Sport",
+						IsElectric:          false,
+						Model:               "VARIO",
+					},
+				},
+			},
+			plateResponse: response.MDMMasterMappingLicensePlateResponse{
+				Data: response.MDMMasterMappingLicensePlateData{
+					Records: []response.MDMMasterMappingLicensePlateRecord{
+						{
+							AreaID: "AREA1",
+						},
+					},
+				},
+			},
+			marsevResponse: response.MarsevFilterProgramResponse{
+				Data: []response.MarsevFilterProgramData{
+					{
+						ID: "1234",
+						Tenors: []response.TenorInfo{
+							{
+								Tenor: 12,
+							},
+							{
+								Tenor: 24,
+							},
+						},
+					},
+				},
+			},
+			assetYearListResponse: response.AssetYearList{
+				Records: []struct {
+					AssetCode        string `json:"asset_code"`
+					BranchID         string `json:"branch_id"`
+					Brand            string `json:"brand"`
+					ManufactureYear  int    `json:"manufacturing_year"`
+					MarketPriceValue int    `json:"market_price_value"`
+				}{
+					{
+						AssetCode:        "MOT",
+						BranchID:         "123",
+						Brand:            "HONDA",
+						ManufactureYear:  2020,
+						MarketPriceValue: 60000000,
+					},
+				},
+			},
+			cmoResponse: response.MDMMasterMappingBranchEmployeeResponse{
+				Data: []response.MDMMasterMappingBranchEmployeeRecord{
+					{
+						CMOID: "12434",
+					},
+				},
+			},
+			hrisResponse: response.EmployeeCMOResponse{
+				CMOCategory: constant.CMO_LAMA,
+			},
+			getFpdCmoResponse: response.FpdCMOResponse{
+				FpdExist: false,
+			},
+			savedClusterCheckCmoNoFPD: "Cluster C",
+			calculationResponse: response.MarsevCalculateInstallmentResponse{
+				Data: []response.MarsevCalculateInstallmentData{
+					{
+						Tenor:              12,
+						IsPSA:              true,
+						MonthlyInstallment: 1000000,
+						AmountOfFinance:    1000000,
+						AdminFee:           100000,
+						DPAmount:           1000000,
+						NTF:                100000,
+					},
+				},
+			},
+			errMappingBranchEntity: errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Branch Error"),
+			expectedError:          errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Branch Error"),
+		},
+		{
 			name: "error get mapping elaborate ltv",
 			request: request.GetAvailableTenor{
 				ProspectID:         "REG-123",
@@ -2594,15 +2842,25 @@ func TestGetAvailableTenor(t *testing.T) {
 											}
 
 											if tc.errCheckCmoNoFPD == nil {
+
 												mockUsecase.On("MDMGetMappingLicensePlate", ctx, tc.request.LicensePlate, tc.request.ProspectID, accessToken).Return(tc.plateResponse, tc.errPlate)
 
 												mockUsecase.On("MarsevCalculateInstallment", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.calculationResponse, tc.errCalculation)
-												mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything).Return(tc.mappingLTV, tc.errMappingLTV)
-												mockUsecase.On("MarsevGetLoanAmount", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.loanAmountResponse, tc.errLoanAmount)
-												mockUsecase.On("GetLTV", ctx, tc.mappingLTV, tc.request.ProspectID, "PASS", tc.request.BPKBNameType, tc.request.ManufactureYear, mock.AnythingOfType("int"), float64(0), mock.Anything).Return(tc.ltvResponse, tc.adjustTenorResponse, tc.errGetLTV)
+												mockRepository.On("GetTrxDetailBIro", tc.request.ProspectID).Return(tc.trxDetailBiro, tc.errTrxDetailBiro)
 
-												if tc.marsevResponse.Data[0].Tenors[0].Tenor == 36 {
-													mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.rejectTenorResponse, tc.errRejectTenor)
+												if tc.errTrxDetailBiro == nil {
+													mockRepository.On("GetMappingBranchByBranchID", tc.request.BranchID, mock.Anything).
+														Return(tc.mappingBranch, tc.errMappingBranchEntity)
+
+													if tc.errMappingBranchEntity == nil {
+														mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything).Return(tc.mappingLTV, tc.errMappingLTV)
+														mockUsecase.On("MarsevGetLoanAmount", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.loanAmountResponse, tc.errLoanAmount)
+														mockUsecase.On("GetLTV", ctx, tc.mappingLTV, tc.request.ProspectID, "PASS", tc.request.BPKBNameType, tc.request.ManufactureYear, mock.AnythingOfType("int"), float64(0), mock.Anything, mock.Anything, mock.Anything).Return(tc.ltvResponse, tc.adjustTenorResponse, tc.errGetLTV)
+
+														if tc.marsevResponse.Data[0].Tenors[0].Tenor == 36 {
+															mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.rejectTenorResponse, tc.errRejectTenor)
+														}
+													}
 												}
 											}
 										}

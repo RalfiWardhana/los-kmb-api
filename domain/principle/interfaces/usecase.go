@@ -40,7 +40,7 @@ type Usecase interface {
 	PrinciplePublish(ctx context.Context, req request.PrinciplePublish, accessToken string) (err error)
 
 	Step2Wilen(idNumber string) (step response.Step2Wilen, err error)
-	GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64, isSimulasi bool) (ltv int, adjustTenor bool, err error)
+	GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear string, tenor int, bakiDebet float64, isSimulasi bool, pbkScore, customerStatus string) (ltv int, adjustTenor bool, err error)
 	MarsevGetLoanAmount(ctx context.Context, req request.ReqMarsevLoanAmount, prospectID string, accessToken string) (marsevLoanAmountRes response.MarsevLoanAmountResponse, err error)
 	MarsevGetMarketingProgram(ctx context.Context, req request.ReqMarsevFilterProgram, prospectID string, accessToken string) (marsevFilterProgramRes response.MarsevFilterProgramResponse, err error)
 	MarsevCalculateInstallment(ctx context.Context, req request.ReqMarsevCalculateInstallment, prospectID string, accessToken string) (marsevCalculateInstallmentRes response.MarsevCalculateInstallmentResponse, err error)

@@ -179,7 +179,7 @@ func (u usecase) PrincipleElaborateLTV(ctx context.Context, reqs request.Princip
 		}
 	}
 
-	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, cluster)
+	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, cluster, "")
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
 		return
