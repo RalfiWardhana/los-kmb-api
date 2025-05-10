@@ -165,8 +165,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	e.Use(middleware.BodyDumpWithConfig(middlewares.NewBodyDumpMiddleware(newKMB).BodyDumpConfig()))
-
 	common.SetDB(newKMB)
 
 	var cache *bigcache.BigCache
@@ -235,6 +233,8 @@ func main() {
 
 	producer := platformevent.NewPlatformEvent(producerSubmission, producerSubmissionLOS, producerInsertCustomer, producerSubmission2Wilen)
 	platformCache := platformcache.NewPlatformCache()
+
+	e.Use(middleware.BodyDumpWithConfig(middlewares.NewBodyDumpMiddleware(newKMB, producer).BodyDumpConfig()))
 
 	// define new kmb filtering domain
 	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs, newKMB)
