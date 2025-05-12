@@ -278,6 +278,117 @@ func (_m *Usecase) GetCancelReason(ctx context.Context, pagination interface{}) 
 	return r0, r1, r2
 }
 
+// GetDatatableApproval provides a mock function with given fields: ctx, req, pagination
+func (_m *Usecase) GetDatatableApproval(ctx context.Context, req request.ReqInquiryApproval, pagination interface{}) ([]entity.RespDatatableApproval, int, error) {
+	ret := _m.Called(ctx, req, pagination)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetDatatableApproval")
+	}
+
+	var r0 []entity.RespDatatableApproval
+	var r1 int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqInquiryApproval, interface{}) ([]entity.RespDatatableApproval, int, error)); ok {
+		return rf(ctx, req, pagination)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqInquiryApproval, interface{}) []entity.RespDatatableApproval); ok {
+		r0 = rf(ctx, req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.RespDatatableApproval)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqInquiryApproval, interface{}) int); ok {
+		r1 = rf(ctx, req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, request.ReqInquiryApproval, interface{}) error); ok {
+		r2 = rf(ctx, req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// GetDatatableCa provides a mock function with given fields: ctx, req, pagination
+func (_m *Usecase) GetDatatableCa(ctx context.Context, req request.ReqInquiryCa, pagination interface{}) ([]entity.RespDatatableCA, int, error) {
+	ret := _m.Called(ctx, req, pagination)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetDatatableCa")
+	}
+
+	var r0 []entity.RespDatatableCA
+	var r1 int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqInquiryCa, interface{}) ([]entity.RespDatatableCA, int, error)); ok {
+		return rf(ctx, req, pagination)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqInquiryCa, interface{}) []entity.RespDatatableCA); ok {
+		r0 = rf(ctx, req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.RespDatatableCA)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqInquiryCa, interface{}) int); ok {
+		r1 = rf(ctx, req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, request.ReqInquiryCa, interface{}) error); ok {
+		r2 = rf(ctx, req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// GetDatatablePrescreening provides a mock function with given fields: ctx, req, pagination
+func (_m *Usecase) GetDatatablePrescreening(ctx context.Context, req request.ReqInquiryPrescreening, pagination interface{}) ([]entity.RespDatatablePrescreening, int, error) {
+	ret := _m.Called(ctx, req, pagination)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetDatatablePrescreening")
+	}
+
+	var r0 []entity.RespDatatablePrescreening
+	var r1 int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqInquiryPrescreening, interface{}) ([]entity.RespDatatablePrescreening, int, error)); ok {
+		return rf(ctx, req, pagination)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, request.ReqInquiryPrescreening, interface{}) []entity.RespDatatablePrescreening); ok {
+		r0 = rf(ctx, req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.RespDatatablePrescreening)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, request.ReqInquiryPrescreening, interface{}) int); ok {
+		r1 = rf(ctx, req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, request.ReqInquiryPrescreening, interface{}) error); ok {
+		r2 = rf(ctx, req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // GetInquiryApproval provides a mock function with given fields: ctx, req, pagination
 func (_m *Usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryApproval, pagination interface{}) ([]entity.InquiryDataApproval, int, error) {
 	ret := _m.Called(ctx, req, pagination)

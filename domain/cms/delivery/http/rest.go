@@ -43,8 +43,10 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 
 	cmsroute.GET("/cms/prescreening/list-reason", handler.ListReason, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/prescreening/inquiry", handler.PrescreeningInquiry, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/prescreening/inquiry/:prospect_id", handler.PrescreeningDetailOrder, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/prescreening/review", handler.ReviewPrescreening, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/ca/inquiry", handler.CaInquiry, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/ca/inquiry/:prospect_id", handler.CaDetailOrder, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/save-as-draft", handler.SaveAsDraft, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/submit-decision", handler.SubmitDecision, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/akkk/view/:prospect_id", handler.GetAkkk, middlewares.AccessMiddleware())
@@ -54,6 +56,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.POST("/cms/ca/recalculate", handler.RecalculateOrder, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/search", handler.SearchInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/approval/inquiry", handler.ApprovalInquiry, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/approval/inquiry/:prospect_id/:alias", handler.ApprovalDetailOrder, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/approval/reason", handler.ApprovalReason, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/approval/submit-approval", handler.SubmitApproval, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/get-list-branch", handler.GetListBranch, middlewares.AccessMiddleware())
@@ -172,7 +175,7 @@ func (c *handlerCMS) PrescreeningInquiry(ctx echo.Context) (err error) {
 		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry", req, err)
 	}
 
-	data, rowTotal, err := c.usecase.GetInquiryPrescreening(ctx.Request().Context(), req, pagination)
+	data, rowTotal, err := c.usecase.GetDatatablePrescreening(ctx.Request().Context(), req, pagination)
 
 	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
 		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry", req, response.InquiryRow{Inquiry: data})
@@ -187,6 +190,64 @@ func (c *handlerCMS) PrescreeningInquiry(ctx echo.Context) (err error) {
 		RecordFiltered: len(data),
 		RecordTotal:    rowTotal,
 	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Prescreening Inquiry Detail
+// @Tags Prescreening Inquiry Detail - CMS
+// @Produce json
+// @Param prospect_id path string true "Prospect ID"
+// @Success 200 {object} response.ApiResponse{data=entity.InquiryData}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/prescreening/inquiry/{prospect_id} [get]
+func (c *handlerCMS) PrescreeningDetailOrder(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		ctxJson     error
+	)
+
+	req := request.ReqInquiryPrescreening{}
+
+	prospectID := ctx.Param("prospect_id")
+
+	if prospectID == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID does not exist")
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry Detail", prospectID, err)
+		return ctxJson
+	}
+
+	token := ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION)
+
+	err = platformauth.PlatformVerify(token)
+	if err != nil {
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry Detail Error", map[string]string{"prospect_id": prospectID}, err)
+		return ctxJson
+	}
+
+	req.SearchBy = "order_id"
+	req.SearchValue = prospectID
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry Detail", err)
+	}
+
+	data, _, err := c.usecase.GetInquiryPrescreening(ctx.Request().Context(), req, nil)
+
+	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry Detail", req, nil)
+	}
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry Detail", req, err)
+	}
+
+	if len(data) > 0 {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry Detail", req, data[0])
+	} else {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Pre Screening Inquiry Detail", req, nil)
+	}
 }
 
 // CMS NEW KMB Tools godoc
@@ -356,7 +417,7 @@ func (c *handlerCMS) CaInquiry(ctx echo.Context) (err error) {
 		return c.Json.BadRequestErrorValidationV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry", req, err)
 	}
 
-	data, rowTotal, err := c.usecase.GetInquiryCa(ctx.Request().Context(), req, pagination)
+	data, rowTotal, err := c.usecase.GetDatatableCa(ctx.Request().Context(), req, pagination)
 
 	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
 		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry", req, response.InquiryRow{Inquiry: data})
@@ -371,6 +432,64 @@ func (c *handlerCMS) CaInquiry(ctx echo.Context) (err error) {
 		RecordFiltered: len(data),
 		RecordTotal:    rowTotal,
 	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api CA Detail
+// @Tags CA Detail - CMS
+// @Produce json
+// @Param prospect_id path string true "Prospect ID"
+// @Success 200 {object} response.ApiResponse{data=entity.InquiryDataCa}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/ca/inquiry/{prospect_id} [get]
+func (c *handlerCMS) CaDetailOrder(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		ctxJson     error
+	)
+
+	req := request.ReqInquiryCa{}
+
+	prospectID := ctx.Param("prospect_id")
+
+	if prospectID == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID does not exist")
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry Detail", prospectID, err)
+		return ctxJson
+	}
+
+	token := ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION)
+
+	err = platformauth.PlatformVerify(token)
+	if err != nil {
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry Detail Error", map[string]string{"prospect_id": prospectID}, err)
+		return ctxJson
+	}
+
+	req.SearchBy = "order_id"
+	req.SearchValue = prospectID
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry Detail", err)
+	}
+
+	data, _, err := c.usecase.GetInquiryCa(ctx.Request().Context(), req, nil)
+
+	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry Detail", req, nil)
+	}
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry Detail", req, err)
+	}
+
+	if len(data) > 0 {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry Detail", req, data[0])
+	} else {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry Detail", req, nil)
+	}
 }
 
 // CMS NEW KMB Tools godoc
@@ -952,7 +1071,7 @@ func (c *handlerCMS) ApprovalInquiry(ctx echo.Context) (err error) {
 		Limit: 10,
 	}
 
-	data, rowTotal, err := c.usecase.GetInquiryApproval(ctx.Request().Context(), req, pagination)
+	data, rowTotal, err := c.usecase.GetDatatableApproval(ctx.Request().Context(), req, pagination)
 
 	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
 		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry", req, response.InquiryRow{Inquiry: data})
@@ -967,6 +1086,73 @@ func (c *handlerCMS) ApprovalInquiry(ctx echo.Context) (err error) {
 		RecordFiltered: len(data),
 		RecordTotal:    rowTotal,
 	})
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Credit Approval Detail
+// @Tags Credit Approval Detail - CMS
+// @Produce json
+// @Param prospect_id path string true "Prospect ID"
+// @Param alias path string true "Alias"
+// @Success 200 {object} response.ApiResponse{data=entity.InquiryDataApproval}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/approval/inquiry/{prospect_id}/{alias} [get]
+func (c *handlerCMS) ApprovalDetailOrder(ctx echo.Context) (err error) {
+
+	var (
+		accessToken = middlewares.UserInfoData.AccessToken
+		ctxJson     error
+	)
+
+	req := request.ReqInquiryApproval{}
+
+	prospectID := ctx.Param("prospect_id")
+	alias := ctx.Param("alias")
+
+	if prospectID == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - ProspectID does not exist")
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry Detail", prospectID, err)
+		return ctxJson
+	}
+
+	if alias == "" {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - Alias does not exist")
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry Detail", prospectID, err)
+		return ctxJson
+	}
+
+	token := ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION)
+
+	err = platformauth.PlatformVerify(token)
+	if err != nil {
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry Detail Error", map[string]string{"prospect_id": prospectID, "alias": alias}, err)
+		return ctxJson
+	}
+
+	req.SearchBy = "order_id"
+	req.SearchValue = prospectID
+	req.Alias = alias
+
+	if err := ctx.Bind(&req); err != nil {
+		return c.Json.InternalServerErrorCustomV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry Detail", err)
+	}
+
+	data, _, err := c.usecase.GetInquiryApproval(ctx.Request().Context(), req, nil)
+
+	if err != nil && err.Error() == constant.RECORD_NOT_FOUND {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry Detail", req, nil)
+	}
+
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry Detail", req, err)
+	}
+
+	if len(data) > 0 {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry Detail", req, data[0])
+	} else {
+		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Approval Inquiry Detail", req, nil)
+	}
 }
 
 // CMS NEW KMB Tools godoc

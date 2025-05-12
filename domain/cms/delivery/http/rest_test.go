@@ -228,7 +228,7 @@ func TestPrescreeningInquiry(t *testing.T) {
 			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
 		}()
 
-		mockUsecase.On("GetInquiryPrescreening", mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryData{}, 0, nil).Once()
+		mockUsecase.On("GetDatatablePrescreening", mock.Anything, mock.Anything, mock.Anything).Return([]entity.RespDatatablePrescreening{}, 0, nil).Once()
 		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		mockJson.On("ServerSideErrorV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
@@ -259,10 +259,10 @@ func TestPrescreeningInquiry(t *testing.T) {
 			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
 		}()
 
-		mockResponse := []entity.InquiryData{}
+		mockResponse := []entity.RespDatatablePrescreening{}
 		statusCode := http.StatusOK
 
-		mockUsecase.On("GetInquiryPrescreening", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
+		mockUsecase.On("GetDatatablePrescreening", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
 
 		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
@@ -289,12 +289,12 @@ func TestPrescreeningInquiry(t *testing.T) {
 			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
 		}()
 
-		mockResponse := []entity.InquiryData{}
+		mockResponse := []entity.RespDatatablePrescreening{}
 		statusCode := http.StatusOK
 
 		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		mockUsecase.On("GetInquiryPrescreening", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
+		mockUsecase.On("GetDatatablePrescreening", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
 
 		err := handler.PrescreeningInquiry(ctx)
 		assert.Nil(t, err)
@@ -319,12 +319,12 @@ func TestPrescreeningInquiry(t *testing.T) {
 			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
 		}()
 
-		mockResponse := []entity.InquiryData{}
+		mockResponse := []entity.RespDatatablePrescreening{}
 		statusCode := http.StatusBadRequest
 
 		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		mockUsecase.On("GetInquiryPrescreening", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
+		mockUsecase.On("GetDatatablePrescreening", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
 
 		err := handler.PrescreeningInquiry(ctx)
 		assert.Nil(t, err)
@@ -549,7 +549,7 @@ func TestCaInquiry(t *testing.T) {
 			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
 		}()
 
-		mockUsecase.On("GetInquiryCa", mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryDataCa{}, 0, nil).Once()
+		mockUsecase.On("GetDatatableCa", mock.Anything, mock.Anything, mock.Anything).Return([]entity.RespDatatableCA{}, 0, nil).Once()
 		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		err := handler.CaInquiry(c)
@@ -577,7 +577,7 @@ func TestCaInquiry(t *testing.T) {
 
 		mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
-		mockUsecase.On("GetInquiryCa", mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryDataCa{}, 0, nil).Maybe()
+		mockUsecase.On("GetDatatableCa", mock.Anything, mock.Anything, mock.Anything).Return([]entity.RespDatatableCA{}, 0, nil).Maybe()
 		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Maybe()
 
 		err := handler.CaInquiry(ctx)
@@ -600,9 +600,9 @@ func TestCaInquiry(t *testing.T) {
 			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
 		}()
 
-		mockResponse := []entity.InquiryDataCa{}
+		mockResponse := []entity.RespDatatableCA{}
 		statusCode := http.StatusBadRequest
-		mockUsecase.On("GetInquiryCa", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
+		mockUsecase.On("GetDatatableCa", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
 
 		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
@@ -630,9 +630,9 @@ func TestCaInquiry(t *testing.T) {
 			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
 		}()
 
-		mockResponse := []entity.InquiryDataCa{}
+		mockResponse := []entity.RespDatatableCA{}
 		statusCode := http.StatusOK
-		mockUsecase.On("GetInquiryCa", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
+		mockUsecase.On("GetDatatableCa", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
 		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		err := handler.CaInquiry(c)
@@ -1232,7 +1232,7 @@ func TestApprovalInquiry(t *testing.T) {
 			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
 		}()
 
-		mockUsecase.On("GetInquiryApproval", mock.Anything, mock.Anything, mock.Anything).Return([]entity.InquiryDataApproval{}, 0, nil).Once()
+		mockUsecase.On("GetDatatableApproval", mock.Anything, mock.Anything, mock.Anything).Return([]entity.RespDatatableApproval{}, 0, nil).Once()
 		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		err := handler.ApprovalInquiry(c)
@@ -1288,9 +1288,9 @@ func TestApprovalInquiry(t *testing.T) {
 			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
 		}()
 
-		mockResponse := []entity.InquiryDataApproval{}
+		mockResponse := []entity.RespDatatableApproval{}
 		statusCode := http.StatusOK
-		mockUsecase.On("GetInquiryApproval", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
+		mockUsecase.On("GetDatatableApproval", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New(constant.RECORD_NOT_FOUND)).Once()
 		mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 
 		// Call the handler
@@ -1318,9 +1318,9 @@ func TestApprovalInquiry(t *testing.T) {
 			platformauth.PlatformVerifyFunc = originalPlatformVerifyFunc
 		}()
 
-		mockResponse := []entity.InquiryDataApproval{}
+		mockResponse := []entity.RespDatatableApproval{}
 		statusCode := http.StatusBadRequest
-		mockUsecase.On("GetInquiryApproval", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
+		mockUsecase.On("GetDatatableApproval", mock.Anything, mock.Anything, mock.Anything).Return(mockResponse, statusCode, errors.New("failed")).Once()
 
 		mockJson.On("BadRequestErrorValidationV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil).Once()
 

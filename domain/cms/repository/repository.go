@@ -254,6 +254,40 @@ func (r repoHandler) GetApprovalReason(req request.ReqApprovalReason, pagination
 	return
 }
 
+func (r repoHandler) GetBulkCustomerPhotos(prospectIDs []string) (map[string][]entity.DataPhoto, error) {
+	var (
+		x       sql.TxOptions
+		results []entity.ListPhotoByProspectID
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err := r.NewKmb.Raw("SELECT tcp.ProspectID, tcp.photo_id, CASE WHEN lpi.Name IS NULL THEN 'LAINNYA' ELSE lpi.Name END AS label, tcp.url FROM trx_customer_photo tcp WITH (nolock) LEFT JOIN m_label_photo_inquiry lpi ON lpi.LabelPhotoID = tcp.photo_id WHERE tcp.ProspectID IN (?)", prospectIDs).Scan(&results).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return make(map[string][]entity.DataPhoto), nil
+		}
+		return nil, err
+	}
+
+	photoMap := make(map[string][]entity.DataPhoto)
+	for _, row := range results {
+		photo := entity.DataPhoto{
+			PhotoID: row.PhotoID,
+			Label:   row.Label,
+			Url:     row.Url,
+		}
+		photoMap[row.ProspectID] = append(photoMap[row.ProspectID], photo)
+	}
+
+	return photoMap, nil
+}
+
 func (r repoHandler) GetCustomerPhoto(prospectID string) (photo []entity.DataPhoto, err error) {
 	var x sql.TxOptions
 
@@ -274,6 +308,44 @@ func (r repoHandler) GetCustomerPhoto(prospectID string) (photo []entity.DataPho
 	}
 
 	return
+}
+
+func (r repoHandler) GetBulkSurveyorData(prospectIDs []string) (map[string][]entity.TrxSurveyor, error) {
+	var (
+		x       sql.TxOptions
+		results []entity.ListSurveyByProspectID
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err := r.NewKmb.Raw("SELECT ProspectID, destination, request_date, assign_date, surveyor_name, result_date, status, surveyor_note FROM trx_surveyor WITH (nolock) WHERE ProspectID IN (?)", prospectIDs).Scan(&results).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return make(map[string][]entity.TrxSurveyor), nil
+		}
+		return nil, err
+	}
+
+	surveyorMap := make(map[string][]entity.TrxSurveyor)
+	for _, row := range results {
+		surveyor := entity.TrxSurveyor{
+			Destination:  row.Destination,
+			RequestDate:  row.RequestDate,
+			AssignDate:   row.AssignDate,
+			SurveyorName: row.SurveyorName,
+			ResultDate:   row.ResultDate,
+			Status:       row.Status,
+			SurveyorNote: row.SurveyorNote,
+		}
+		surveyorMap[row.ProspectID] = append(surveyorMap[row.ProspectID], surveyor)
+	}
+
+	return surveyorMap, nil
 }
 
 func (r repoHandler) GetSurveyorData(prospectID string) (surveyor []entity.TrxSurveyor, err error) {
@@ -390,6 +462,167 @@ func (r repoHandler) GetListBranch(req request.ReqListBranch) (regions []string,
 	}
 
 	return regions, branches, nil
+}
+
+func (r repoHandler) GetDatatablePrescreening(req request.ReqInquiryPrescreening, pagination interface{}) (data []entity.ListDatatablePrescreening, rowTotal int, err error) {
+
+	var (
+		filter         string
+		filterBranch   string
+		filterPaginate string
+		encrypted      entity.EncryptString
+	)
+
+	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
+
+	if req.MultiBranch == "1" && req.BranchID != "" && req.BranchFilter == "" {
+		var listBranches []response.BranchInfo
+		_, listBranches, err = r.GetListBranch(request.ReqListBranch{
+			UserID:         req.UserID,
+			IsMultiBranch:  1,
+			SingleBranchID: req.BranchID,
+		})
+		if err != nil {
+			return
+		}
+
+		if len(listBranches) > 0 {
+			var branchIDs []string
+			for _, branch := range listBranches {
+				branchIDs = append(branchIDs, "'"+branch.BranchID+"'")
+			}
+			filterBranch += "WHERE tm.BranchID IN (" + strings.Join(branchIDs, ",") + ")"
+		} else {
+			filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
+		}
+	} else {
+		filterBranch = utils.GenerateBranchFilter(req.BranchID)
+	}
+
+	if req.BranchFilter != "" {
+		filterBranch = ""
+	}
+
+	// Build WHERE clause based on new parameters
+	var whereConditions []string
+
+	// Handle search parameters
+	if req.SearchBy != "" && req.SearchValue != "" {
+		switch req.SearchBy {
+		case "order_id":
+			whereConditions = append(whereConditions, fmt.Sprintf("tm.ProspectID = '%s'", req.SearchValue))
+		case "id_number":
+			encrypted, err = r.EncryptString(req.SearchValue)
+			if err == nil {
+				whereConditions = append(whereConditions, fmt.Sprintf("tcp.IDNumber = '%s'", encrypted.Encrypt))
+			}
+		case "legal_name":
+			encrypted, err = r.EncryptString(req.SearchValue)
+			if err == nil {
+				whereConditions = append(whereConditions, fmt.Sprintf("tcp.LegalName = '%s'", encrypted.Encrypt))
+			}
+		}
+	} else {
+		// If no search parameters, use date range filter as default
+		whereConditions = append(whereConditions, fmt.Sprintf("CAST(tm.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays))
+	}
+
+	// Handle branch filter
+	if req.BranchFilter != "" {
+		whereConditions = append(whereConditions, fmt.Sprintf("tm.BranchID = '%s'", req.BranchFilter))
+	}
+
+	// Handle status filter
+	if req.StatusFilter != "" {
+		switch req.StatusFilter {
+		case "CPR":
+			whereConditions = append(whereConditions, "tps.decision IS NULL")
+		case "APR":
+			whereConditions = append(whereConditions, "tps.decision = 'APR'")
+		case "REJ":
+			whereConditions = append(whereConditions, "tps.decision = 'REJ'")
+		}
+	}
+
+	// Build the complete WHERE clause
+	if len(whereConditions) > 0 {
+		if filterBranch != "" {
+			// If filterBranch already has a WHERE clause, add conditions with AND
+			filter = filterBranch + " AND " + strings.Join(whereConditions, " AND ")
+		} else {
+			// Otherwise, create a new WHERE clause
+			filter = "WHERE " + strings.Join(whereConditions, " AND ")
+		}
+	} else {
+		// If no conditions, just use filterBranch
+		filter = filterBranch
+	}
+
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT
+					tm.created_at,
+					tm.order_at,
+					tm.ProspectID,
+					scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+					scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+					tcp.BirthDate,
+					tia.info AS CMORecommend,
+					tps.decision,
+					tst.activity,
+					tst.source_decision
+				FROM
+					trx_master tm WITH (nolock)
+					INNER JOIN trx_customer_personal tcp WITH (nolock) ON tm.ProspectID = tcp.ProspectID
+					INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+					INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+					LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+				%s`, filter)).Scan(&row).Error; err != nil {
+			return
+		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
+	}
+
+	if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT
+				tm.created_at,
+				tm.order_at,
+				tm.ProspectID,
+				scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+				scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+				tcp.BirthDate,
+				tia.info AS CMORecommend,
+				tps.decision,
+				tst.activity,
+				tst.source_decision
+			FROM
+				trx_master tm WITH (nolock)
+				INNER JOIN trx_customer_personal tcp WITH (nolock) ON tm.ProspectID = tcp.ProspectID
+				INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
+				INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+				LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
+			%s
+			ORDER BY
+				tm.created_at DESC %s`, filter, filterPaginate)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	if len(data) == 0 {
+		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
+	return
 }
 
 func (r repoHandler) GetInquiryPrescreening(req request.ReqInquiryPrescreening, pagination interface{}) (data []entity.InquiryPrescreening, rowTotal int, err error) {
@@ -1043,6 +1276,80 @@ func (r repoHandler) SaveLogOrchestrator(header, request, response interface{}, 
 	return
 }
 
+func (r repoHandler) GetBulkHistoryApproval(prospectIDs []string) (map[string][]entity.HistoryApproval, error) {
+	var (
+		x       sql.TxOptions
+		results []entity.ListHistoryApprovalResult
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err := r.NewKmb.Raw(`SELECT
+                thas.ProspectID,
+                thas.decision_by,
+                thas.next_final_approval_flag,
+                CASE
+                    WHEN thas.decision = 'APR' THEN 'Approve'
+                    WHEN thas.decision = 'REJ' THEN 'Reject'
+                    WHEN thas.decision = 'CAN' THEN 'Cancel'
+                    WHEN thas.decision = 'RTN' THEN 'Return'
+                    WHEN thas.decision = 'SDP' THEN 'Submit Perubahan Data Pembiayaan'
+                    ELSE '-'
+                END AS decision,
+                CASE
+                    WHEN thas.need_escalation = 1 THEN 'Yes'
+                    ELSE 'No'
+                END AS need_escalation,
+                thas.source_decision,
+                CASE
+                    WHEN thas.next_step<>'' THEN thas.next_step
+                    ELSE '-'
+                END AS next_step,
+                CASE
+                    WHEN thas.note<>'' THEN thas.note
+                    ELSE '-'
+                END AS note,
+                thas.created_at,
+                CASE
+                  WHEN thas.source_decision = 'CRA' AND tcd.slik_result<>'' AND thas.decision<>'SDP' THEN tcd.slik_result
+                  ELSE
+                  '-'
+                END AS slik_result
+            FROM trx_history_approval_scheme thas WITH (nolock) 
+            LEFT JOIN trx_ca_decision tcd on thas.ProspectID = tcd.ProspectID 
+            WHERE thas.ProspectID IN (?) 
+            ORDER BY thas.created_at DESC`, prospectIDs).Scan(&results).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return make(map[string][]entity.HistoryApproval), nil
+		}
+		return nil, err
+	}
+
+	historyMap := make(map[string][]entity.HistoryApproval)
+	for _, row := range results {
+		history := entity.HistoryApproval{
+			DecisionBy:            row.DecisionBy,
+			NextFinalApprovalFlag: row.NextFinalApprovalFlag,
+			Decision:              row.Decision,
+			NeedEscalation:        row.NeedEscalation,
+			SourceDecision:        row.SourceDecision,
+			NextStep:              row.NextStep,
+			Note:                  row.Note,
+			CreatedAt:             row.CreatedAt,
+			SlikResult:            row.SlikResult,
+		}
+		historyMap[row.ProspectID] = append(historyMap[row.ProspectID], history)
+	}
+
+	return historyMap, nil
+}
+
 func (r repoHandler) GetHistoryApproval(prospectID string) (history []entity.HistoryApproval, err error) {
 	var x sql.TxOptions
 
@@ -1452,6 +1759,299 @@ func (r repoHandler) GetInternalRecord(prospectID string) (record []entity.TrxIn
 		return
 	}
 
+	return
+}
+
+func (r repoHandler) GetDatatableCa(req request.ReqInquiryCa, pagination interface{}) (data []entity.ListDatatableCa, rowTotal int, err error) {
+
+	var (
+		filter         string
+		filterBranch   string
+		filterPaginate string
+		query          string
+		encrypted      entity.EncryptString
+	)
+
+	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
+
+	if req.MultiBranch == "1" && req.BranchID != "" && req.BranchFilter == "" {
+		var listBranches []response.BranchInfo
+		_, listBranches, err = r.GetListBranch(request.ReqListBranch{
+			UserID:         req.UserID,
+			IsMultiBranch:  1,
+			SingleBranchID: req.BranchID,
+		})
+		if err != nil {
+			return
+		}
+
+		if len(listBranches) > 0 {
+			var branchIDs []string
+			for _, branch := range listBranches {
+				branchIDs = append(branchIDs, "'"+branch.BranchID+"'")
+			}
+			filterBranch += "WHERE tm.BranchID IN (" + strings.Join(branchIDs, ",") + ")"
+		} else {
+			filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
+		}
+	} else {
+		filterBranch = utils.GenerateBranchFilter(req.BranchID)
+	}
+
+	if req.BranchFilter != "" {
+		filterBranch = ""
+	}
+
+	// Build WHERE clause based on new parameters
+	var whereConditions []string
+
+	// Handle search parameters
+	if req.SearchBy != "" && req.SearchValue != "" {
+		switch req.SearchBy {
+		case "order_id":
+			whereConditions = append(whereConditions, fmt.Sprintf("tm.ProspectID = '%s'", req.SearchValue))
+		case "id_number":
+			encrypted, err = r.EncryptString(req.SearchValue)
+			if err == nil {
+				whereConditions = append(whereConditions, fmt.Sprintf("tcp.IDNumber = '%s'", encrypted.Encrypt))
+			}
+		case "legal_name":
+			encrypted, err = r.EncryptString(req.SearchValue)
+			if err == nil {
+				whereConditions = append(whereConditions, fmt.Sprintf("tcp.LegalName = '%s'", encrypted.Encrypt))
+			}
+		}
+	} else {
+		// If no search parameters, use date range filter as default
+		whereConditions = append(whereConditions, fmt.Sprintf("CAST(tm.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays))
+	}
+
+	// Handle branch filter
+	if req.BranchFilter != "" {
+		whereConditions = append(whereConditions, fmt.Sprintf("tm.BranchID = '%s'", req.BranchFilter))
+	}
+
+	// Filter By
+	if req.StatusFilter != "" {
+		var (
+			activity string
+		)
+		switch req.StatusFilter {
+		case constant.DECISION_APPROVE:
+			query = fmt.Sprintf(" AND tst.decision = '%s' AND tst.status_process='%s'", constant.DB_DECISION_APR, constant.STATUS_FINAL)
+
+		case constant.DECISION_REJECT:
+			query = fmt.Sprintf(" AND tst.decision = '%s' AND tst.status_process='%s'", constant.DB_DECISION_REJECT, constant.STATUS_FINAL)
+
+		case constant.DECISION_CANCEL:
+			query = fmt.Sprintf(" AND tst.decision = '%s' AND tst.status_process='%s'", constant.DB_DECISION_CANCEL, constant.STATUS_FINAL)
+
+		case constant.NEED_DECISION:
+			activity = constant.ACTIVITY_UNPROCESS
+			source := constant.DB_DECISION_CREDIT_ANALYST
+			query = fmt.Sprintf(" AND tst.activity= '%s' AND tst.decision= '%s' AND tst.source_decision = '%s' AND (tcd.decision IS NULL OR (rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'%s'))", activity, constant.DB_DECISION_CREDIT_PROCESS, source, constant.STATUS_FINAL)
+
+		case constant.SAVED_AS_DRAFT:
+			if req.UserID != "" {
+				query = fmt.Sprintf(" AND tdd.draft_created_by= '%s' ", req.UserID)
+			}
+		}
+	}
+
+	// Build the complete WHERE clause
+	if len(whereConditions) > 0 {
+		if filterBranch != "" {
+			// If filterBranch already has a WHERE clause, add conditions with AND
+			filter = filterBranch + " AND " + strings.Join(whereConditions, " AND ")
+		} else {
+			// Otherwise, create a new WHERE clause
+			filter = "WHERE " + strings.Join(whereConditions, " AND ")
+		}
+	} else {
+		// If no conditions, just use filterBranch
+		filter = filterBranch
+	}
+
+	filter = filter + query
+
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.NewKmb.Raw(fmt.Sprintf(`WITH 
+				cte_trx_ca_decision AS (
+					SELECT
+						ProspectID,
+						decision,
+						created_at,
+						created_by
+					FROM
+						trx_ca_decision WITH (nolock)
+				),
+				cte_trx_history_approval_scheme AS (
+					SELECT
+						ProspectID,
+						decision AS decision_rtn
+					FROM
+						trx_history_approval_scheme WITH (nolock)
+					WHERE
+						decision = 'RTN'
+				),
+				cte_trx_history_approval_scheme_sdp AS (
+					SELECT
+						ProspectID,
+						decision AS decision_sdp
+					FROM
+						trx_history_approval_scheme WITH (nolock)
+					WHERE
+						decision = 'SDP'
+				)
+				SELECT
+					CASE
+						WHEN tcd.created_at IS NOT NULL AND tfa.created_at IS NULL THEN FORMAT(tcd.created_at,'yyyy-MM-dd HH:mm:ss')
+						WHEN tfa.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+						ELSE NULL
+					END AS ActionDate,
+					CASE
+						WHEN tst.decision = 'CPR'
+						AND tst.source_decision = 'CRA'
+						AND tst.activity = 'UNPR'
+						AND tcd.decision IS NULL THEN 1
+						ELSE 0
+					END AS ShowAction,
+					CASE
+						WHEN tcd.decision='APR' THEN 'APPROVE'
+						WHEN tcd.decision='REJ' THEN 'REJECT'
+						WHEN tcd.decision='CAN' THEN 'CANCEL'
+						ELSE tcd.decision
+					END AS ca_decision,
+					tst.decision,
+					tst.reason,
+					tm.created_at,
+					tm.order_at,
+					tm.ProspectID,
+					scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+					scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+					tcp.BirthDate,
+					tcp.SurveyResult,
+					CASE
+						WHEN rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN' THEN 1
+						ELSE 0
+					END AS ActionEditData,
+					tde.deviasi_id,
+					mkd.deskripsi AS deviasi_description,
+					'REJECT' AS deviasi_decision,
+					tde.reason AS deviasi_reason
+				FROM
+					trx_master tm WITH (nolock)
+					INNER JOIN trx_customer_personal tcp WITH (nolock) ON tm.ProspectID = tcp.ProspectID
+					INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+					LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+					LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
+					LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+					LEFT JOIN cte_trx_history_approval_scheme rtn ON rtn.ProspectID = tm.ProspectID
+					LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
+					LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID 
+				%s AND tst.source_decision <> '%s'`, filter, constant.PRESCREENING)).Scan(&row).Error; err != nil {
+			return
+		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
+	}
+
+	if err = r.NewKmb.Raw(fmt.Sprintf(`WITH 
+			cte_trx_ca_decision AS (
+				SELECT
+					ProspectID,
+					decision,
+					created_at,
+					created_by
+				FROM
+					trx_ca_decision WITH (nolock)
+			),
+			cte_trx_history_approval_scheme AS (
+				SELECT
+					ProspectID,
+					decision AS decision_rtn
+				FROM
+					trx_history_approval_scheme WITH (nolock)
+				WHERE
+					decision = 'RTN'
+			),
+			cte_trx_history_approval_scheme_sdp AS (
+				SELECT
+					ProspectID,
+					decision AS decision_sdp
+				FROM
+					trx_history_approval_scheme WITH (nolock)
+				WHERE
+					decision = 'SDP'
+			)
+			SELECT
+				CASE
+					WHEN tcd.created_at IS NOT NULL AND tfa.created_at IS NULL THEN FORMAT(tcd.created_at,'yyyy-MM-dd HH:mm:ss')
+					WHEN tfa.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+					ELSE NULL
+				END AS ActionDate,
+				CASE
+					WHEN tst.decision = 'CPR'
+					AND tst.source_decision = 'CRA'
+					AND tst.activity = 'UNPR'
+					AND tcd.decision IS NULL THEN 1
+					ELSE 0
+				END AS ShowAction,
+				CASE
+					WHEN tcd.decision='APR' THEN 'APPROVE'
+					WHEN tcd.decision='REJ' THEN 'REJECT'
+					WHEN tcd.decision='CAN' THEN 'CANCEL'
+					ELSE tcd.decision
+				END AS ca_decision,
+				tst.decision,
+				tst.reason,
+				tm.created_at,
+				tm.order_at,
+				tm.ProspectID,
+				scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+				scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+				tcp.BirthDate,
+				tcp.SurveyResult,
+				CASE
+					WHEN rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN' THEN 1
+					ELSE 0
+				END AS ActionEditData,
+				tde.deviasi_id,
+				mkd.deskripsi AS deviasi_description,
+				'REJECT' AS deviasi_decision,
+				tde.reason AS deviasi_reason
+			FROM
+				trx_master tm WITH (nolock)
+				INNER JOIN trx_customer_personal tcp WITH (nolock) ON tm.ProspectID = tcp.ProspectID
+				INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+				LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+				LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
+				LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+				LEFT JOIN cte_trx_history_approval_scheme rtn ON rtn.ProspectID = tm.ProspectID
+				LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
+				LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID 
+			%s AND tst.source_decision <> '%s'
+			ORDER BY
+				tm.created_at DESC %s`, filter, constant.PRESCREENING, filterPaginate)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	if len(data) == 0 {
+		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
 	return
 }
 
@@ -2920,6 +3520,267 @@ func (r repoHandler) ProcessRecalculateOrder(prospectID string, trxStatus entity
 
 		return nil
 	})
+}
+
+func (r repoHandler) GetDatatableApproval(req request.ReqInquiryApproval, pagination interface{}) (data []entity.ListDatatableApproval, rowTotal int, err error) {
+
+	var (
+		filter         string
+		filterBranch   string
+		filterPaginate string
+		query          string
+		alias          string
+		encrypted      entity.EncryptString
+	)
+
+	alias = req.Alias
+
+	rangeDays := os.Getenv("DEFAULT_RANGE_DAYS")
+
+	if req.MultiBranch == "1" && req.BranchID != "" && req.BranchFilter == "" {
+		var listBranches []response.BranchInfo
+		_, listBranches, err = r.GetListBranch(request.ReqListBranch{
+			UserID:         req.UserID,
+			IsMultiBranch:  1,
+			SingleBranchID: req.BranchID,
+		})
+		if err != nil {
+			return
+		}
+
+		if len(listBranches) > 0 {
+			var branchIDs []string
+			for _, branch := range listBranches {
+				branchIDs = append(branchIDs, "'"+branch.BranchID+"'")
+			}
+			filterBranch += "WHERE tm.BranchID IN (" + strings.Join(branchIDs, ",") + ")"
+		} else {
+			filterBranch += "WHERE tm.BranchID = '" + req.BranchID + "'"
+		}
+	} else {
+		filterBranch = utils.GenerateBranchFilter(req.BranchID)
+	}
+
+	if req.BranchFilter != "" {
+		filterBranch = ""
+	}
+
+	// Build WHERE clause based on new parameters
+	var whereConditions []string
+
+	// Handle search parameters
+	if req.SearchBy != "" && req.SearchValue != "" {
+		switch req.SearchBy {
+		case "order_id":
+			whereConditions = append(whereConditions, fmt.Sprintf("tm.ProspectID = '%s'", req.SearchValue))
+		case "id_number":
+			encrypted, err = r.EncryptString(req.SearchValue)
+			if err == nil {
+				whereConditions = append(whereConditions, fmt.Sprintf("tcp.IDNumber = '%s'", encrypted.Encrypt))
+			}
+		case "legal_name":
+			encrypted, err = r.EncryptString(req.SearchValue)
+			if err == nil {
+				whereConditions = append(whereConditions, fmt.Sprintf("tcp.LegalName = '%s'", encrypted.Encrypt))
+			}
+		}
+	} else {
+		// If no search parameters, use date range filter as default
+		whereConditions = append(whereConditions, fmt.Sprintf("CAST(tm.created_at AS date) >= DATEADD(day, %s, CAST(GETDATE() AS date))", rangeDays))
+	}
+
+	// Handle branch filter
+	if req.BranchFilter != "" {
+		whereConditions = append(whereConditions, fmt.Sprintf("tm.BranchID = '%s'", req.BranchFilter))
+	}
+
+	// Filter By
+	if req.StatusFilter != "" {
+		var (
+			activity string
+		)
+		switch req.StatusFilter {
+		case constant.DECISION_APPROVE:
+			query = fmt.Sprintf(" AND tst.decision = '%s' AND tst.status_process='%s' AND has.source_decision='%s'", constant.DB_DECISION_APR, constant.STATUS_FINAL, alias)
+
+		case constant.DECISION_REJECT:
+
+			query = fmt.Sprintf(" AND tst.decision = '%s' AND tst.status_process='%s' AND has.source_decision='%s'", constant.DB_DECISION_REJECT, constant.STATUS_FINAL, alias)
+
+		case constant.DECISION_CANCEL:
+			query = fmt.Sprintf(" AND tst.decision = '%s' AND tst.status_process='%s' AND has.source_decision='%s'", constant.DB_DECISION_CANCEL, constant.STATUS_FINAL, alias)
+
+		case constant.NEED_DECISION:
+			activity = constant.ACTIVITY_UNPROCESS
+			query = fmt.Sprintf(" AND tst.activity= '%s' AND tst.decision= '%s' AND tst.source_decision = '%s'", activity, constant.DB_DECISION_CREDIT_PROCESS, alias)
+		}
+	} else {
+		query = fmt.Sprintf(" AND (has.next_step = '%s' OR has.source_decision='%s')", alias, alias)
+	}
+
+	// Build the complete WHERE clause
+	if len(whereConditions) > 0 {
+		if filterBranch != "" {
+			// If filterBranch already has a WHERE clause, add conditions with AND
+			filter = filterBranch + " AND " + strings.Join(whereConditions, " AND ")
+		} else {
+			// Otherwise, create a new WHERE clause
+			filter = "WHERE " + strings.Join(whereConditions, " AND ")
+		}
+	} else {
+		// If no conditions, just use filterBranch
+		filter = filterBranch
+	}
+
+	filter = filter + query
+
+	if pagination != nil {
+		page, _ := json.Marshal(pagination)
+		var paginationFilter request.RequestPagination
+		jsoniter.ConfigCompatibleWithStandardLibrary.Unmarshal(page, &paginationFilter)
+		if paginationFilter.Page == 0 {
+			paginationFilter.Page = 1
+		}
+
+		offset := paginationFilter.Limit * (paginationFilter.Page - 1)
+
+		var row entity.TotalRow
+
+		if err = r.NewKmb.Raw(fmt.Sprintf(`WITH 
+				cte_trx_ca_decision AS (
+					SELECT
+						ProspectID,
+						decision,
+						created_at,
+						created_by
+					FROM
+						trx_ca_decision WITH (nolock)
+				)
+				SELECT
+					tm.created_at,
+					tm.order_at,
+					tm.ProspectID,
+					scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+					scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+					tcp.BirthDate,
+					tst.decision,
+					tst.reason,
+					CASE
+						WHEN (tfa.decision IS NULL)
+						AND (tcd.decision <> 'CAN') 
+						AND (tst.source_decision='CRA') THEN 1
+						ELSE 0
+					END AS ShowAction,
+					CASE
+						WHEN tst.status_process='FIN'
+						AND tst.activity='STOP' THEN 1
+						ELSE 0
+					END AS ActionFormAkk,
+					tak.UrlFormAkkk,
+					CASE
+						WHEN tcd.decision = 'CAN' THEN tcd.created_at 
+						WHEN tcd.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+						ELSE FORMAT(tst.created_at,'yyyy-MM-dd HH:mm:ss')
+					END AS ActionDate,
+					tde.deviasi_id,
+					mkd.deskripsi AS deviasi_description,
+					'REJECT' AS deviasi_decision,
+					tde.reason AS deviasi_reason
+				FROM
+					trx_master tm WITH (nolock)
+					INNER JOIN trx_customer_personal tcp WITH (nolock) ON tm.ProspectID = tcp.ProspectID
+					INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+					LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+					LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+					LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+					LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
+					LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
+					OUTER APPLY (
+						SELECT TOP 1 *
+						FROM trx_history_approval_scheme has
+						WHERE (
+							has.next_step = '%s' OR has.source_decision = '%s'
+						)
+						AND tm.ProspectID = has.ProspectID
+						ORDER BY has.created_at DESC
+					) has 
+				%s`, alias, alias, filter)).Scan(&row).Error; err != nil {
+			return
+		}
+
+		rowTotal = row.Total
+
+		filterPaginate = fmt.Sprintf("OFFSET %d ROWS FETCH FIRST %d ROWS ONLY", offset, paginationFilter.Limit)
+	}
+
+	if err = r.NewKmb.Raw(fmt.Sprintf(`WITH 
+			cte_trx_ca_decision AS (
+				SELECT
+					ProspectID,
+					decision,
+					created_at,
+					created_by
+				FROM
+					trx_ca_decision WITH (nolock)
+			)
+			SELECT
+				tm.created_at,
+				tm.order_at,
+				tm.ProspectID,
+				scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+				scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+				tcp.BirthDate,
+				tst.decision,
+				tst.reason,
+				CASE
+					WHEN (tfa.decision IS NULL)
+					AND (tcd.decision <> 'CAN') 
+					AND (tst.source_decision='CRA') THEN 1
+					ELSE 0
+				END AS ShowAction,
+				CASE
+					WHEN tst.status_process='FIN'
+					AND tst.activity='STOP' THEN 1
+					ELSE 0
+				END AS ActionFormAkk,
+				tak.UrlFormAkkk,
+				CASE
+					WHEN tcd.decision = 'CAN' THEN tcd.created_at 
+					WHEN tcd.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+					ELSE FORMAT(tst.created_at,'yyyy-MM-dd HH:mm:ss')
+				END AS ActionDate,
+				tde.deviasi_id,
+				mkd.deskripsi AS deviasi_description,
+				'REJECT' AS deviasi_decision,
+				tde.reason AS deviasi_reason
+			FROM
+				trx_master tm WITH (nolock)
+				INNER JOIN trx_customer_personal tcp WITH (nolock) ON tm.ProspectID = tcp.ProspectID
+				INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+				LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+				LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+				LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+				LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
+				LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
+				OUTER APPLY (
+					SELECT TOP 1 *
+					FROM trx_history_approval_scheme has
+					WHERE (
+						has.next_step = '%s' OR has.source_decision = '%s'
+					)
+					AND tm.ProspectID = has.ProspectID
+					ORDER BY has.created_at DESC
+				) has
+			%s
+			ORDER BY
+				tm.created_at DESC %s`, alias, alias, filter, filterPaginate)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	if len(data) == 0 {
+		return data, 0, fmt.Errorf(constant.RECORD_NOT_FOUND)
+	}
+	return
 }
 
 func (r repoHandler) GetInquiryApproval(req request.ReqInquiryApproval, pagination interface{}) (data []entity.InquiryCa, rowTotal int, err error) {
