@@ -1315,7 +1315,7 @@ type MappingPBKScoreGrade struct {
 }
 
 func (c *MappingPBKScoreGrade) TableName() string {
-	return "m_mapping_pbk_score_grade"
+	return "m_mapping_pbk_grade"
 }
 
 type MappingBranchByPBKScore struct {

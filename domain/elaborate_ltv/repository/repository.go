@@ -122,7 +122,7 @@ func (r repoHandler) GetMappingPBKScoreGrade() (mappingPBKScoreGrade []entity.Ma
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = db.Raw("SELECT score, grade_risk, grade_score FROM m_mapping_pbk_score_grade WITH (nolock) WHERE deleted_at IS NULL").Scan(&mappingPBKScoreGrade).Error; err != nil {
+	if err = db.Raw("SELECT score, grade_risk, grade_score FROM m_mapping_pbk_grade WITH (nolock) WHERE deleted_at IS NULL").Scan(&mappingPBKScoreGrade).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
 		}
