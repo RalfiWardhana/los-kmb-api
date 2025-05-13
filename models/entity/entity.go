@@ -1301,6 +1301,40 @@ func (c *TrxElaborateLTV) TableName() string {
 	return "trx_elaborate_ltv"
 }
 
+type MappingPBKScoreGrade struct {
+	ID         int       `gorm:"column:id"`
+	Score      string    `gorm:"column:score"`
+	GradeRisk  int       `gorm:"column:grade_risk"`
+	GradeScore string    `gorm:"column:grade_score"`
+	CreatedAt  time.Time `gorm:"column:created_at"`
+	CreatedBy  string    `gorm:"column:created_by"`
+	UpdatedAt  time.Time `gorm:"column:updated_at"`
+	UpdatedBy  string    `gorm:"column:updated_by"`
+	DeletedAt  time.Time `gorm:"column:deleted_at"`
+	DeletedBy  string    `gorm:"column:deleted_by"`
+}
+
+func (c *MappingPBKScoreGrade) TableName() string {
+	return "m_mapping_pbk_score_grade"
+}
+
+type MappingBranchByPBKScore struct {
+	ID          int       `gorm:"column:id"`
+	BranchID    string    `gorm:"column:branch_id"`
+	Score       string    `gorm:"column:score"`
+	GradeBranch string    `gorm:"column:grade_branch"`
+	CreatedAt   time.Time `gorm:"column:created_at"`
+	CreatedBy   string    `gorm:"column:created_by"`
+	UpdatedAt   time.Time `gorm:"column:updated_at"`
+	UpdatedBy   string    `gorm:"column:updated_by"`
+	DeletedAt   time.Time `gorm:"column:deleted_at"`
+	DeletedBy   string    `gorm:"column:deleted_by"`
+}
+
+func (c *MappingBranchByPBKScore) TableName() string {
+	return "m_mapping_branch"
+}
+
 type TrxHistoryApprovalScheme struct {
 	ID                    string      `gorm:"type:varchar(255);column:id;primary_key:true" json:"-"`
 	ProspectID            string      `gorm:"type:varchar(20);column:ProspectID" json:"-"`

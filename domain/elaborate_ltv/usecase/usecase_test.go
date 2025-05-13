@@ -34,6 +34,12 @@ func TestElaborate(t *testing.T) {
 		errSaveTrxElaborateLTV   error
 		result                   response.ElaborateLTV
 		errFinal                 error
+		filteringDetail          []entity.TrxDetailBiro
+		errGetGetFilteringDetail error
+		mappingPBKScoreGrade     []entity.MappingPBKScoreGrade
+		errmappingPBKScoreGrade  error
+		mappingBranch            entity.MappingBranchByPBKScore
+		errmappingBranch         error
 	}{
 		{
 			name: "test elaborate err1",
@@ -276,6 +282,48 @@ func TestElaborate(t *testing.T) {
 				TotalBakiDebetNonCollateralBiro: constant.RANGE_CLUSTER_BAKI_DEBET_REJECT,
 				ScoreBiro:                       "VERY HIGH RISK",
 				CustomerSegment:                 constant.RO_AO_REGULAR,
+			},
+			filteringDetail: []entity.TrxDetailBiro{
+				{
+					ProspectID: "SAL-12345",
+					Score:      "HIGH RISK",
+				},
+				{
+					ProspectID: "SAL-12345",
+					Score:      "VERY HIGH RISK",
+				},
+			},
+			mappingPBKScoreGrade: []entity.MappingPBKScoreGrade{
+				{
+					Score:      "VERY HIGH RISK",
+					GradeRisk:  6,
+					GradeScore: "BAD",
+				},
+				{
+					Score:      "UNSCORE",
+					GradeRisk:  5,
+					GradeScore: "BAD",
+				},
+				{
+					Score:      "HIGH RISK",
+					GradeRisk:  4,
+					GradeScore: "BAD",
+				},
+				{
+					Score:      "AVERAGE RISK",
+					GradeRisk:  3,
+					GradeScore: "BAD",
+				},
+				{
+					Score:      "LOW RISK",
+					GradeRisk:  2,
+					GradeScore: "BAD",
+				},
+				{
+					Score:      "VERY LOW RISK",
+					GradeRisk:  1,
+					GradeScore: "BAD",
+				},
 			},
 			mappingElaborateLTV: []entity.MappingElaborateLTV{
 				{
@@ -844,11 +892,15 @@ func TestElaborate(t *testing.T) {
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
+			tc.filteringKMB.CustomerStatus = "NEW"
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
 			mockRepository.On("GetFilteringResult", tc.reqs.ProspectID).Return(tc.filteringKMB, tc.errGetGetFilteringResult)
-			mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything).Return(tc.mappingElaborateLTV, tc.errMapping)
+			mockRepository.On("GetFilteringDetail", tc.reqs.ProspectID).Return(tc.filteringDetail, tc.errGetGetFilteringDetail)
+			mockRepository.On("GetMappingPBKScoreGrade").Return(tc.mappingPBKScoreGrade, tc.errmappingPBKScoreGrade)
+			mockRepository.On("GetMappingBranchPBK", mock.Anything, mock.Anything).Return(tc.mappingBranch, tc.errmappingBranch)
+			mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.mappingElaborateLTV, tc.errMapping)
 			mockRepository.On("SaveTrxElaborateLTV", mock.Anything).Return(tc.errSaveTrxElaborateLTV)
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
