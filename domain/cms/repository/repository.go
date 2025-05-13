@@ -570,7 +570,12 @@ func (r repoHandler) GetDatatablePrescreening(req request.ReqInquiryPrescreening
 
 		var row entity.TotalRow
 
-		if err = r.NewKmb.Raw(fmt.Sprintf(`SELECT
+		if err = r.NewKmb.Raw(fmt.Sprintf(`
+			SELECT
+			COUNT(tt.ProspectID) AS totalRow
+			FROM
+			(
+				SELECT
 					tm.created_at,
 					tm.order_at,
 					tm.ProspectID,
@@ -587,7 +592,8 @@ func (r repoHandler) GetDatatablePrescreening(req request.ReqInquiryPrescreening
 					INNER JOIN trx_info_agent tia WITH (nolock) ON tm.ProspectID = tia.ProspectID
 					INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
 					LEFT JOIN trx_prescreening tps WITH (nolock) ON tm.ProspectID = tps.ProspectID
-				%s`, filter)).Scan(&row).Error; err != nil {
+				%s
+			) AS tt`, filter)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -1915,52 +1921,57 @@ func (r repoHandler) GetDatatableCa(req request.ReqInquiryCa, pagination interfa
 						decision = 'SDP'
 				)
 				SELECT
-					CASE
-						WHEN tcd.created_at IS NOT NULL AND tfa.created_at IS NULL THEN FORMAT(tcd.created_at,'yyyy-MM-dd HH:mm:ss')
-						WHEN tfa.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
-						ELSE NULL
-					END AS ActionDate,
-					CASE
-						WHEN tst.decision = 'CPR'
-						AND tst.source_decision = 'CRA'
-						AND tst.activity = 'UNPR'
-						AND tcd.decision IS NULL THEN 1
-						ELSE 0
-					END AS ShowAction,
-					CASE
-						WHEN tcd.decision='APR' THEN 'APPROVE'
-						WHEN tcd.decision='REJ' THEN 'REJECT'
-						WHEN tcd.decision='CAN' THEN 'CANCEL'
-						ELSE tcd.decision
-					END AS ca_decision,
-					tst.decision,
-					tst.reason,
-					tm.created_at,
-					tm.order_at,
-					tm.ProspectID,
-					scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-					scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
-					tcp.BirthDate,
-					tcp.SurveyResult,
-					CASE
-						WHEN rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN' THEN 1
-						ELSE 0
-					END AS ActionEditData,
-					tde.deviasi_id,
-					mkd.deskripsi AS deviasi_description,
-					'REJECT' AS deviasi_decision,
-					tde.reason AS deviasi_reason
+				COUNT(tt.ProspectID) AS totalRow
 				FROM
-					trx_master tm WITH (nolock)
-					INNER JOIN trx_customer_personal tcp WITH (nolock) ON tm.ProspectID = tcp.ProspectID
-					INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
-					LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
-					LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
-					LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-					LEFT JOIN cte_trx_history_approval_scheme rtn ON rtn.ProspectID = tm.ProspectID
-					LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
-					LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID 
-				%s AND tst.source_decision <> '%s'`, filter, constant.PRESCREENING)).Scan(&row).Error; err != nil {
+				(
+					SELECT
+						CASE
+							WHEN tcd.created_at IS NOT NULL AND tfa.created_at IS NULL THEN FORMAT(tcd.created_at,'yyyy-MM-dd HH:mm:ss')
+							WHEN tfa.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+							ELSE NULL
+						END AS ActionDate,
+						CASE
+							WHEN tst.decision = 'CPR'
+							AND tst.source_decision = 'CRA'
+							AND tst.activity = 'UNPR'
+							AND tcd.decision IS NULL THEN 1
+							ELSE 0
+						END AS ShowAction,
+						CASE
+							WHEN tcd.decision='APR' THEN 'APPROVE'
+							WHEN tcd.decision='REJ' THEN 'REJECT'
+							WHEN tcd.decision='CAN' THEN 'CANCEL'
+							ELSE tcd.decision
+						END AS ca_decision,
+						tst.decision,
+						tst.reason,
+						tm.created_at,
+						tm.order_at,
+						tm.ProspectID,
+						scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+						scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+						tcp.BirthDate,
+						tcp.SurveyResult,
+						CASE
+							WHEN rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN' THEN 1
+							ELSE 0
+						END AS ActionEditData,
+						tde.deviasi_id,
+						mkd.deskripsi AS deviasi_description,
+						'REJECT' AS deviasi_decision,
+						tde.reason AS deviasi_reason
+					FROM
+						trx_master tm WITH (nolock)
+						INNER JOIN trx_customer_personal tcp WITH (nolock) ON tm.ProspectID = tcp.ProspectID
+						INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+						LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+						LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
+						LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+						LEFT JOIN cte_trx_history_approval_scheme rtn ON rtn.ProspectID = tm.ProspectID
+						LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
+						LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID 
+					%s AND tst.source_decision <> '%s'
+				) AS tt`, filter, constant.PRESCREENING)).Scan(&row).Error; err != nil {
 			return
 		}
 
@@ -3657,54 +3668,59 @@ func (r repoHandler) GetDatatableApproval(req request.ReqInquiryApproval, pagina
 						trx_ca_decision WITH (nolock)
 				)
 				SELECT
-					tm.created_at,
-					tm.order_at,
-					tm.ProspectID,
-					scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-					scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
-					tcp.BirthDate,
-					tst.decision,
-					tst.reason,
-					CASE
-						WHEN (tfa.decision IS NULL)
-						AND (tcd.decision <> 'CAN') 
-						AND (tst.source_decision='CRA') THEN 1
-						ELSE 0
-					END AS ShowAction,
-					CASE
-						WHEN tst.status_process='FIN'
-						AND tst.activity='STOP' THEN 1
-						ELSE 0
-					END AS ActionFormAkk,
-					tak.UrlFormAkkk,
-					CASE
-						WHEN tcd.decision = 'CAN' THEN tcd.created_at 
-						WHEN tcd.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
-						ELSE FORMAT(tst.created_at,'yyyy-MM-dd HH:mm:ss')
-					END AS ActionDate,
-					tde.deviasi_id,
-					mkd.deskripsi AS deviasi_description,
-					'REJECT' AS deviasi_decision,
-					tde.reason AS deviasi_reason
+				COUNT(tt.ProspectID) AS totalRow
 				FROM
-					trx_master tm WITH (nolock)
-					INNER JOIN trx_customer_personal tcp WITH (nolock) ON tm.ProspectID = tcp.ProspectID
-					INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
-					LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
-					LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
-					LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
-					LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
-					LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
-					OUTER APPLY (
-						SELECT TOP 1 *
-						FROM trx_history_approval_scheme has
-						WHERE (
-							has.next_step = '%s' OR has.source_decision = '%s'
-						)
-						AND tm.ProspectID = has.ProspectID
-						ORDER BY has.created_at DESC
-					) has 
-				%s`, alias, alias, filter)).Scan(&row).Error; err != nil {
+				(
+					SELECT
+						tm.created_at,
+						tm.order_at,
+						tm.ProspectID,
+						scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
+						scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
+						tcp.BirthDate,
+						tst.decision,
+						tst.reason,
+						CASE
+							WHEN (tfa.decision IS NULL)
+							AND (tcd.decision <> 'CAN') 
+							AND (tst.source_decision='CRA') THEN 1
+							ELSE 0
+						END AS ShowAction,
+						CASE
+							WHEN tst.status_process='FIN'
+							AND tst.activity='STOP' THEN 1
+							ELSE 0
+						END AS ActionFormAkk,
+						tak.UrlFormAkkk,
+						CASE
+							WHEN tcd.decision = 'CAN' THEN tcd.created_at 
+							WHEN tcd.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
+							ELSE FORMAT(tst.created_at,'yyyy-MM-dd HH:mm:ss')
+						END AS ActionDate,
+						tde.deviasi_id,
+						mkd.deskripsi AS deviasi_description,
+						'REJECT' AS deviasi_decision,
+						tde.reason AS deviasi_reason
+					FROM
+						trx_master tm WITH (nolock)
+						INNER JOIN trx_customer_personal tcp WITH (nolock) ON tm.ProspectID = tcp.ProspectID
+						INNER JOIN trx_status tst WITH (nolock) ON tm.ProspectID = tst.ProspectID
+						LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
+						LEFT JOIN trx_akkk tak WITH (nolock) ON tm.ProspectID = tak.ProspectID
+						LEFT JOIN trx_deviasi tde WITH (nolock) ON tm.ProspectID = tde.ProspectID
+						LEFT JOIN m_kode_deviasi mkd WITH (nolock) ON tde.deviasi_id = mkd.deviasi_id
+						LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
+						OUTER APPLY (
+							SELECT TOP 1 *
+							FROM trx_history_approval_scheme has
+							WHERE (
+								has.next_step = '%s' OR has.source_decision = '%s'
+							)
+							AND tm.ProspectID = has.ProspectID
+							ORDER BY has.created_at DESC
+						) has 
+					%s
+				) AS tt`, alias, alias, filter)).Scan(&row).Error; err != nil {
 			return
 		}
 
