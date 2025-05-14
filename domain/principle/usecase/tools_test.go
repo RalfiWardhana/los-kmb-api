@@ -821,6 +821,7 @@ func TestPrincipleMarketingProgram(t *testing.T) {
 				CC:              "150",
 				NoChassis:       "CHS123",
 				NoEngine:        "ENG123",
+				STNKPhoto:       "http://test/stnk.jpg",
 			},
 			principleStepTwo: entity.TrxPrincipleStepTwo{
 				KtpPhoto:    "http://test/ktp.jpg",
@@ -832,7 +833,7 @@ func TestPrincipleMarketingProgram(t *testing.T) {
 				Tenor:             24,
 				OTR:               25000000,
 				FinancePurpose:    "PRODUCTIVE",
-				Dealer:            "NON-PSA",
+				Dealer:            constant.DEALER_PSA,
 			},
 			emergencyContact: entity.TrxPrincipleEmergencyContact{
 				CustomerID: 12345,
@@ -877,6 +878,417 @@ func TestPrincipleMarketingProgram(t *testing.T) {
 			sallyResBody: `{
 				"message": "Success"
 			}`,
+		},
+		{
+			name:       "success non psa",
+			prospectID: "PROS-123",
+			principleStepOne: entity.TrxPrincipleStepOne{
+				BranchID:        "BR001",
+				CMOID:           "CMO123",
+				CMOName:         "Test CMO",
+				LicensePlate:    "B1234CD",
+				BPKBName:        "K",
+				OwnerAsset:      "Test Owner",
+				STNKExpiredDate: sampleTime,
+				TaxDate:         sampleTime,
+				ManufactureYear: "2023",
+				AssetCode:       "MOT",
+				Color:           "BLACK",
+				CC:              "150",
+				NoChassis:       "CHS123",
+				NoEngine:        "ENG123",
+				STNKPhoto:       "http://test/stnk.jpg",
+			},
+			principleStepTwo: entity.TrxPrincipleStepTwo{
+				KtpPhoto:    "http://test/ktp.jpg",
+				SelfiePhoto: "http://test/selfie.jpg",
+			},
+			principleStepThree: entity.TrxPrincipleStepThree{
+				InstallmentAmount: 1000000,
+				AssetCategoryID:   "CAT1",
+				Tenor:             24,
+				OTR:               25000000,
+				FinancePurpose:    "PRODUCTIVE",
+				Dealer:            constant.DEALER_NON_PSA,
+			},
+			emergencyContact: entity.TrxPrincipleEmergencyContact{
+				CustomerID: 12345,
+			},
+			marketingProgram: entity.TrxPrincipleMarketingProgram{
+				ProgramID:                  "PRG001",
+				ProgramName:                "Test Program",
+				ProductOfferingID:          "OFF001",
+				ProductOfferingDescription: "Test Offering",
+				LoanAmount:                 20000000,
+				LoanAmountMaximum:          22000000,
+				AdminFee:                   500000,
+				ProvisionFee:               200000,
+				DPAmount:                   5000000,
+				FinanceAmount:              20000000,
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        "PASS",
+				Reason:                          "OK", // Initialize with non-nil value
+				CustomerStatus:                  interface{}(nil),
+				CustomerSegment:                 interface{}(nil), // Changed from stringPtr
+				IsBlacklist:                     0,
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: float64(100000),
+				CustomerStatusKMB:               interface{}(constant.STATUS_KONSUMEN_NEW),
+			},
+			elaborateLTV: entity.MappingElaborateLTV{
+				LTV: 80,
+			},
+			detailBiro: []entity.TrxDetailBiro{
+				{
+					Subject:      constant.CUSTOMER,
+					Score:        "750",
+					UrlPdfReport: "http://test/report.pdf",
+				},
+				{
+					Subject:      constant.SPOUSE,
+					Score:        "750",
+					UrlPdfReport: "http://test/report.pdf",
+				},
+			},
+			branchResStatus: 200,
+			branchResBody: `{
+				"data": {
+					"branch_name": "Test Branch"
+				}
+			}`,
+			sallyResStatus: 200,
+			sallyResBody: `{
+				"message": "Success"
+			}`,
+		},
+		{
+			name:       "error get float",
+			prospectID: "PROS-123",
+			principleStepOne: entity.TrxPrincipleStepOne{
+				BranchID:        "BR001",
+				CMOID:           "CMO123",
+				CMOName:         "Test CMO",
+				LicensePlate:    "B1234CD",
+				BPKBName:        "K",
+				OwnerAsset:      "Test Owner",
+				STNKExpiredDate: sampleTime,
+				TaxDate:         sampleTime,
+				ManufactureYear: "2023",
+				AssetCode:       "MOT",
+				Color:           "BLACK",
+				CC:              "150",
+				NoChassis:       "CHS123",
+				NoEngine:        "ENG123",
+				STNKPhoto:       "http://test/stnk.jpg",
+			},
+			principleStepTwo: entity.TrxPrincipleStepTwo{
+				KtpPhoto:    "http://test/ktp.jpg",
+				SelfiePhoto: "http://test/selfie.jpg",
+			},
+			principleStepThree: entity.TrxPrincipleStepThree{
+				InstallmentAmount: 1000000,
+				AssetCategoryID:   "CAT1",
+				Tenor:             24,
+				OTR:               25000000,
+				FinancePurpose:    "PRODUCTIVE",
+				Dealer:            constant.DEALER_NON_PSA,
+			},
+			emergencyContact: entity.TrxPrincipleEmergencyContact{
+				CustomerID: 12345,
+			},
+			marketingProgram: entity.TrxPrincipleMarketingProgram{
+				ProgramID:                  "PRG001",
+				ProgramName:                "Test Program",
+				ProductOfferingID:          "OFF001",
+				ProductOfferingDescription: "Test Offering",
+				LoanAmount:                 20000000,
+				LoanAmountMaximum:          22000000,
+				AdminFee:                   500000,
+				ProvisionFee:               200000,
+				DPAmount:                   5000000,
+				FinanceAmount:              20000000,
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        "PASS",
+				Reason:                          "OK", // Initialize with non-nil value
+				CustomerStatus:                  interface{}(nil),
+				CustomerSegment:                 interface{}(nil), // Changed from stringPtr
+				IsBlacklist:                     0,
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: "error",
+				CustomerStatusKMB:               interface{}(constant.STATUS_KONSUMEN_NEW),
+			},
+			elaborateLTV: entity.MappingElaborateLTV{
+				LTV: 80,
+			},
+			detailBiro: []entity.TrxDetailBiro{
+				{
+					Subject:      constant.CUSTOMER,
+					Score:        "750",
+					UrlPdfReport: "http://test/report.pdf",
+				},
+				{
+					Subject:      constant.SPOUSE,
+					Score:        "750",
+					UrlPdfReport: "http://test/report.pdf",
+				},
+			},
+			branchResStatus: 200,
+			branchResBody: `{
+				"data": {
+					"branch_name": "Test Branch"
+				}
+			}`,
+			sallyResStatus: 200,
+			sallyResBody: `{
+				"message": "Success"
+			}`,
+			expectedError: errors.New("upstream_service_error baki debet strconv.ParseFloat: parsing \"error\": invalid syntax"),
+		},
+		{
+			name:       "error submit to sally",
+			prospectID: "PROS-123",
+			principleStepOne: entity.TrxPrincipleStepOne{
+				BranchID:        "BR001",
+				CMOID:           "CMO123",
+				CMOName:         "Test CMO",
+				LicensePlate:    "B1234CD",
+				BPKBName:        "K",
+				OwnerAsset:      "Test Owner",
+				STNKExpiredDate: sampleTime,
+				TaxDate:         sampleTime,
+				ManufactureYear: "2023",
+				AssetCode:       "MOT",
+				Color:           "BLACK",
+				CC:              "150",
+				NoChassis:       "CHS123",
+				NoEngine:        "ENG123",
+				STNKPhoto:       "http://test/stnk.jpg",
+			},
+			principleStepTwo: entity.TrxPrincipleStepTwo{
+				KtpPhoto:    "http://test/ktp.jpg",
+				SelfiePhoto: "http://test/selfie.jpg",
+			},
+			principleStepThree: entity.TrxPrincipleStepThree{
+				InstallmentAmount: 1000000,
+				AssetCategoryID:   "CAT1",
+				Tenor:             24,
+				OTR:               25000000,
+				FinancePurpose:    "PRODUCTIVE",
+				Dealer:            constant.DEALER_NON_PSA,
+			},
+			emergencyContact: entity.TrxPrincipleEmergencyContact{
+				CustomerID: 12345,
+			},
+			marketingProgram: entity.TrxPrincipleMarketingProgram{
+				ProgramID:                  "PRG001",
+				ProgramName:                "Test Program",
+				ProductOfferingID:          "OFF001",
+				ProductOfferingDescription: "Test Offering",
+				LoanAmount:                 20000000,
+				LoanAmountMaximum:          22000000,
+				AdminFee:                   500000,
+				ProvisionFee:               200000,
+				DPAmount:                   5000000,
+				FinanceAmount:              20000000,
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        "PASS",
+				Reason:                          "OK", // Initialize with non-nil value
+				CustomerStatus:                  interface{}(nil),
+				CustomerSegment:                 interface{}(nil), // Changed from stringPtr
+				IsBlacklist:                     0,
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: float64(100000),
+				CustomerStatusKMB:               interface{}(constant.STATUS_KONSUMEN_NEW),
+			},
+			elaborateLTV: entity.MappingElaborateLTV{
+				LTV: 80,
+			},
+			detailBiro: []entity.TrxDetailBiro{
+				{
+					Subject:      constant.CUSTOMER,
+					Score:        "750",
+					UrlPdfReport: "http://test/report.pdf",
+				},
+				{
+					Subject:      constant.SPOUSE,
+					Score:        "750",
+					UrlPdfReport: "http://test/report.pdf",
+				},
+			},
+			branchResStatus: 200,
+			branchResBody: `{
+				"data": {
+					"branch_name": "Test Branch"
+				}
+			}`,
+			sallyErr:      errors.New("error submit sally"),
+			expectedError: errors.New("error submit sally"),
+		},
+		{
+			name:       "error code submit to sally",
+			prospectID: "PROS-123",
+			principleStepOne: entity.TrxPrincipleStepOne{
+				BranchID:        "BR001",
+				CMOID:           "CMO123",
+				CMOName:         "Test CMO",
+				LicensePlate:    "B1234CD",
+				BPKBName:        "K",
+				OwnerAsset:      "Test Owner",
+				STNKExpiredDate: sampleTime,
+				TaxDate:         sampleTime,
+				ManufactureYear: "2023",
+				AssetCode:       "MOT",
+				Color:           "BLACK",
+				CC:              "150",
+				NoChassis:       "CHS123",
+				NoEngine:        "ENG123",
+				STNKPhoto:       "http://test/stnk.jpg",
+			},
+			principleStepTwo: entity.TrxPrincipleStepTwo{
+				KtpPhoto:    "http://test/ktp.jpg",
+				SelfiePhoto: "http://test/selfie.jpg",
+			},
+			principleStepThree: entity.TrxPrincipleStepThree{
+				InstallmentAmount: 1000000,
+				AssetCategoryID:   "CAT1",
+				Tenor:             24,
+				OTR:               25000000,
+				FinancePurpose:    "PRODUCTIVE",
+				Dealer:            constant.DEALER_NON_PSA,
+			},
+			emergencyContact: entity.TrxPrincipleEmergencyContact{
+				CustomerID: 12345,
+			},
+			marketingProgram: entity.TrxPrincipleMarketingProgram{
+				ProgramID:                  "PRG001",
+				ProgramName:                "Test Program",
+				ProductOfferingID:          "OFF001",
+				ProductOfferingDescription: "Test Offering",
+				LoanAmount:                 20000000,
+				LoanAmountMaximum:          22000000,
+				AdminFee:                   500000,
+				ProvisionFee:               200000,
+				DPAmount:                   5000000,
+				FinanceAmount:              20000000,
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        "PASS",
+				Reason:                          "OK", // Initialize with non-nil value
+				CustomerStatus:                  interface{}(nil),
+				CustomerSegment:                 interface{}(nil), // Changed from stringPtr
+				IsBlacklist:                     0,
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: float64(100000),
+				CustomerStatusKMB:               interface{}(constant.STATUS_KONSUMEN_NEW),
+			},
+			elaborateLTV: entity.MappingElaborateLTV{
+				LTV: 80,
+			},
+			detailBiro: []entity.TrxDetailBiro{
+				{
+					Subject:      constant.CUSTOMER,
+					Score:        "750",
+					UrlPdfReport: "http://test/report.pdf",
+				},
+				{
+					Subject:      constant.SPOUSE,
+					Score:        "750",
+					UrlPdfReport: "http://test/report.pdf",
+				},
+			},
+			branchResStatus: 200,
+			branchResBody: `{
+				"data": {
+					"branch_name": "Test Branch"
+				}
+			}`,
+			sallyResStatus: 500,
+			expectedError:  errors.New(constant.ERROR_UPSTREAM + " - Sally Submit 2W Principle Error"),
+		},
+		{
+			name:       "error unmarshal submit to sally",
+			prospectID: "PROS-123",
+			principleStepOne: entity.TrxPrincipleStepOne{
+				BranchID:        "BR001",
+				CMOID:           "CMO123",
+				CMOName:         "Test CMO",
+				LicensePlate:    "B1234CD",
+				BPKBName:        "K",
+				OwnerAsset:      "Test Owner",
+				STNKExpiredDate: sampleTime,
+				TaxDate:         sampleTime,
+				ManufactureYear: "2023",
+				AssetCode:       "MOT",
+				Color:           "BLACK",
+				CC:              "150",
+				NoChassis:       "CHS123",
+				NoEngine:        "ENG123",
+				STNKPhoto:       "http://test/stnk.jpg",
+			},
+			principleStepTwo: entity.TrxPrincipleStepTwo{
+				KtpPhoto:    "http://test/ktp.jpg",
+				SelfiePhoto: "http://test/selfie.jpg",
+			},
+			principleStepThree: entity.TrxPrincipleStepThree{
+				InstallmentAmount: 1000000,
+				AssetCategoryID:   "CAT1",
+				Tenor:             24,
+				OTR:               25000000,
+				FinancePurpose:    "PRODUCTIVE",
+				Dealer:            constant.DEALER_NON_PSA,
+			},
+			emergencyContact: entity.TrxPrincipleEmergencyContact{
+				CustomerID: 12345,
+			},
+			marketingProgram: entity.TrxPrincipleMarketingProgram{
+				ProgramID:                  "PRG001",
+				ProgramName:                "Test Program",
+				ProductOfferingID:          "OFF001",
+				ProductOfferingDescription: "Test Offering",
+				LoanAmount:                 20000000,
+				LoanAmountMaximum:          22000000,
+				AdminFee:                   500000,
+				ProvisionFee:               200000,
+				DPAmount:                   5000000,
+				FinanceAmount:              20000000,
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        "PASS",
+				Reason:                          "OK", // Initialize with non-nil value
+				CustomerStatus:                  interface{}(nil),
+				CustomerSegment:                 interface{}(nil), // Changed from stringPtr
+				IsBlacklist:                     0,
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: float64(100000),
+				CustomerStatusKMB:               interface{}(constant.STATUS_KONSUMEN_NEW),
+			},
+			elaborateLTV: entity.MappingElaborateLTV{
+				LTV: 80,
+			},
+			detailBiro: []entity.TrxDetailBiro{
+				{
+					Subject:      constant.CUSTOMER,
+					Score:        "750",
+					UrlPdfReport: "http://test/report.pdf",
+				},
+				{
+					Subject:      constant.SPOUSE,
+					Score:        "750",
+					UrlPdfReport: "http://test/report.pdf",
+				},
+			},
+			branchResStatus: 200,
+			branchResBody: `{
+				"data": {
+					"branch_name": "Test Branch"
+				}
+			}`,
+			sallyResStatus: 200,
+			sallyResBody:   `-`,
+			expectedError:  errors.New("invalid character ' ' in numeric literal"),
 		},
 		{
 			name:            "error get principle step one",
@@ -928,7 +1340,13 @@ func TestPrincipleMarketingProgram(t *testing.T) {
 			expectedError: errors.New("database error"),
 		},
 		{
-			name:            "error branch api",
+			name:          "error branch api",
+			prospectID:    "PROS-123",
+			branchErr:     errors.New(constant.ERROR_UPSTREAM + " - MDM Get Master Branch Error"),
+			expectedError: errors.New(constant.ERROR_UPSTREAM + " - MDM Get Master Branch Error"),
+		},
+		{
+			name:            "error branch api code",
 			prospectID:      "PROS-123",
 			branchResStatus: 500,
 			expectedError:   errors.New(constant.ERROR_UPSTREAM + " - MDM Get Master Branch Error"),

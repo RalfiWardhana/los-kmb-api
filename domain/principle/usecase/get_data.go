@@ -127,7 +127,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 		go func() {
 			defer wg.Done()
-			principleStepOne, _ = u.repository.GetPrincipleStepOne(req.ProspectID)
+			principleStepOne, err = u.repository.GetPrincipleStepOne(req.ProspectID)
 
 			if err != nil {
 				errChan <- err
@@ -136,7 +136,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 		go func() {
 			defer wg.Done()
-			principleStepTwo, _ = u.repository.GetPrincipleStepTwo(req.ProspectID)
+			principleStepTwo, err = u.repository.GetPrincipleStepTwo(req.ProspectID)
 			if err != nil {
 				errChan <- err
 			}
@@ -144,7 +144,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 		go func() {
 			defer wg.Done()
-			principleStepThree, _ = u.repository.GetPrincipleStepThree(req.ProspectID)
+			principleStepThree, err = u.repository.GetPrincipleStepThree(req.ProspectID)
 
 			if err != nil {
 				errChan <- err

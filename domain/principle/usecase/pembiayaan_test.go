@@ -1184,35 +1184,41 @@ func TestScorepro(t *testing.T) {
 	numberOfPaidInstallment := 6
 
 	testcases := []struct {
-		name               string
-		req                request.PrinciplePembiayaan
-		principleStepOne   entity.TrxPrincipleStepOne
-		principleStepTwo   entity.TrxPrincipleStepTwo
-		filtering          entity.FilteringKMB
-		pefindoScore       string
-		customerStatus     string
-		customerSegment    string
-		installmentTopUp   float64
-		spDupcheck         response.SpDupCekCustomerByID
-		accessToken        string
-		scoreGenerator     entity.ScoreGenerator
-		errscoreGenerator  error
-		trxDetailBiro      []entity.TrxDetailBiro
-		errtrxDetailBiro   error
-		codePefindoIDX     int
-		bodyPefindoIDX     string
-		errRespPefindoIDX  error
-		codeScoreproIDX    int
-		bodyScoreproIDX    string
-		errRespScoreproIDX error
-		responseScs        response.IntegratorScorePro
-		data               response.ScorePro
-		respPefindoIDX     response.PefindoIDX
-		err                error
-		result             response.ScorePro
-		errResult          error
-		config             entity.AppConfig
-		errGetConfig       error
+		name                        string
+		req                         request.PrinciplePembiayaan
+		principleStepOne            entity.TrxPrincipleStepOne
+		principleStepTwo            entity.TrxPrincipleStepTwo
+		filtering                   entity.FilteringKMB
+		pefindoScore                string
+		customerStatus              string
+		customerSegment             string
+		installmentTopUp            float64
+		spDupcheck                  response.SpDupCekCustomerByID
+		accessToken                 string
+		scoreGenerator              entity.ScoreGenerator
+		errscoreGenerator           error
+		trxDetailBiro               []entity.TrxDetailBiro
+		errtrxDetailBiro            error
+		codePefindoIDX              int
+		bodyPefindoIDX              string
+		errRespPefindoIDX           error
+		codeScoreproIDX             int
+		bodyScoreproIDX             string
+		errRespScoreproIDX          error
+		responseScs                 response.IntegratorScorePro
+		data                        response.ScorePro
+		respPefindoIDX              response.PefindoIDX
+		errGetActiveLoanTypeLast6M  error
+		resGetActiveLoanTypeLast6M  entity.GetActiveLoanTypeLast6M
+		errGetActiveLoanTypeLast24M error
+		resGetActiveLoanTypeLast24M entity.GetActiveLoanTypeLast24M
+		errGetMoblast               error
+		resGetMoblast               entity.GetMoblast
+		err                         error
+		result                      response.ScorePro
+		errResult                   error
+		config                      entity.AppConfig
+		errGetConfig                error
 	}{
 		{
 			name: "scorepro jabo",
@@ -2517,6 +2523,560 @@ func TestScorepro(t *testing.T) {
 				Info:   `{"prospect_id":"EFMTESTAKKK0161109","score":"800-899","result":"PASS","score_band":"","score_result":"MEDIUM","status":"ASSTSH-S04","segmen":"4","is_tsi":true,"score_bin":"","deviasi":null}`,
 			},
 		},
+		{
+			name:             "error GetScoreGenerator",
+			req:              request.PrinciplePembiayaan{ProspectID: "SAL-ERROR-1"},
+			principleStepOne: entity.TrxPrincipleStepOne{ResidenceZipCode: "12908"},
+			customerStatus:   constant.STATUS_KONSUMEN_NEW,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerID: "123456",
+			},
+			errscoreGenerator: errors.New("db error"),
+			errResult:         errors.New(constant.ERROR_UPSTREAM + " - GetScoreGenerator Scorepro Error"),
+		},
+		{
+			name:             "error GetScoreGeneratorROAO",
+			req:              request.PrinciplePembiayaan{ProspectID: "SAL-ERROR-1"},
+			principleStepOne: entity.TrxPrincipleStepOne{ResidenceZipCode: "12908"},
+			customerStatus:   constant.STATUS_KONSUMEN_AO,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerID: "123456",
+			},
+			errscoreGenerator: errors.New("db error"),
+			errResult:         errors.New(constant.ERROR_UPSTREAM + " - GetScoreGeneratorROAO Scorepro Error"),
+		},
+		{
+			name:             "error GetTrxDetailBIro",
+			req:              request.PrinciplePembiayaan{ProspectID: "SAL-ERROR-2"},
+			principleStepOne: entity.TrxPrincipleStepOne{ResidenceZipCode: "12908"},
+			customerStatus:   constant.STATUS_KONSUMEN_NEW,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerID: "123456",
+			},
+			scoreGenerator:   entity.ScoreGenerator{Key: "first_residence_zipcode_2w_others"},
+			errtrxDetailBiro: errors.New("db error"),
+			errResult:        errors.New("db error"),
+		},
+		{
+			name:             "pefindo idx error status code",
+			req:              request.PrinciplePembiayaan{ProspectID: "SAL-ERROR-3"},
+			principleStepOne: entity.TrxPrincipleStepOne{ResidenceZipCode: "12908"},
+			customerStatus:   constant.STATUS_KONSUMEN_NEW,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerID: "123456",
+			},
+			scoreGenerator: entity.ScoreGenerator{Key: "first_residence_zipcode_2w_others"},
+			codePefindoIDX: 500,
+			errResult:      errors.New(constant.ERROR_UPSTREAM + " - Pefindo IDX Error"),
+		},
+		{
+			name:             "error unmarshal pefindo idx",
+			req:              request.PrinciplePembiayaan{ProspectID: "SAL-ERROR-4"},
+			principleStepOne: entity.TrxPrincipleStepOne{ResidenceZipCode: "12908"},
+			customerStatus:   constant.STATUS_KONSUMEN_NEW,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerID: "123456",
+			},
+			scoreGenerator: entity.ScoreGenerator{Key: "first_residence_zipcode_2w_others"},
+			codePefindoIDX: 200,
+			bodyPefindoIDX: `{"data": "-invalid-json-"}`,
+			errResult:      errors.New(constant.ERROR_UPSTREAM + " - Unmarshal Pefindo IDX Error"),
+		},
+		{
+			name: "error pefindo idx upstream timeout",
+			req: request.PrinciplePembiayaan{
+				ProspectID: "SAL-123",
+				NTF:        1000000,
+				OTR:        800000,
+				Tenor:      12,
+			},
+			principleStepOne: entity.TrxPrincipleStepOne{
+				ResidenceZipCode: "12908",
+				BPKBName:         "K",
+				ManufactureYear:  "2021",
+				HomeStatus:       "K",
+			},
+			principleStepTwo: entity.TrxPrincipleStepTwo{
+				MobilePhone:          "08123456789",
+				Gender:               "M",
+				MaritalStatus:        "M",
+				ProfessionID:         "KRYS",
+				BirthDate:            birthDate,
+				EmploymentSinceMonth: 10,
+				EmploymentSinceYear:  2016,
+			},
+			scoreGenerator: entity.ScoreGenerator{
+				Key: "first_residence_zipcode_2w_jabo",
+			},
+			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerID: "123456",
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score:   "LOW RISK",
+					Subject: constant.CUSTOMER,
+					BiroID:  "123456",
+				},
+			},
+			errRespPefindoIDX: errors.New("timeout"),
+			errResult:         errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Pefindo IDX Error"),
+		},
+		{
+			name: "error getActiveLoanTypeLast6M",
+			req: request.PrinciplePembiayaan{
+				ProspectID: "SAL-123",
+				NTF:        1000000,
+				OTR:        800000,
+				Tenor:      12,
+			},
+			principleStepOne: entity.TrxPrincipleStepOne{
+				ResidenceZipCode: "12908",
+				BPKBName:         "K",
+				ManufactureYear:  "2021",
+				HomeStatus:       "K",
+			},
+			principleStepTwo: entity.TrxPrincipleStepTwo{
+				MobilePhone:          "08123456789",
+				Gender:               "M",
+				MaritalStatus:        "M",
+				ProfessionID:         "KRYS",
+				BirthDate:            birthDate,
+				EmploymentSinceMonth: 10,
+				EmploymentSinceYear:  2016,
+			},
+			customerStatus: constant.STATUS_KONSUMEN_RO,
+			scoreGenerator: entity.ScoreGenerator{
+				Key: os.Getenv("KEY_SCOREPRO_IDX_2W_AORO"),
+			},
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerID: "123456",
+			},
+			codePefindoIDX: 200,
+			bodyPefindoIDX: `{"message":"success","errors":null,"data":{"worst_24mth_auto":0,"nom03_12mth_all":0}}`,
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score:   "LOW RISK",
+					Subject: constant.CUSTOMER,
+					BiroID:  "123456",
+				},
+			},
+			errGetActiveLoanTypeLast6M: errors.New("mock error"),
+			errResult:                  errors.New(constant.ERROR_UPSTREAM + " - GetActiveLoanTypeLast6M Scorepro Error"),
+		},
+		{
+			name: "error getActiveLoanTypeLast24M",
+			req: request.PrinciplePembiayaan{
+				ProspectID: "SAL-ERROR-GET24M",
+			},
+			principleStepOne: entity.TrxPrincipleStepOne{ResidenceZipCode: "12908"},
+			customerStatus:   constant.STATUS_KONSUMEN_RO,
+			scoreGenerator: entity.ScoreGenerator{
+				Key: os.Getenv("KEY_SCOREPRO_IDX_2W_AORO"),
+			},
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerID: "123456",
+			},
+			codePefindoIDX: 200,
+			bodyPefindoIDX: `{"message":"success","errors":null,"data":{"worst_24mth_auto":0,"nom03_12mth_all":0}}`,
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score:   "LOW RISK",
+					Subject: constant.CUSTOMER,
+					BiroID:  "123456",
+				},
+			},
+			resGetActiveLoanTypeLast6M: entity.GetActiveLoanTypeLast6M{
+				ActiveLoanTypeLast6M: " ; ; ",
+			},
+			errGetActiveLoanTypeLast24M: errors.New("mock error"),
+			errResult:                   errors.New(constant.ERROR_UPSTREAM + " - GetActiveLoanTypeLast24M Scorepro Error"),
+		},
+		{
+			name:             "activeLoanTypeLast6M == ';;' and getActiveLoanTypeLast24M.AgreementNo not empty",
+			req:              request.PrinciplePembiayaan{ProspectID: "SAL-TEST-999"},
+			principleStepOne: entity.TrxPrincipleStepOne{ResidenceZipCode: "12908"},
+			principleStepTwo: entity.TrxPrincipleStepTwo{
+				MobilePhone: "08123456789", Gender: "M", MaritalStatus: "M", ProfessionID: "KRYS", BirthDate: birthDate,
+			},
+			spDupcheck:     response.SpDupCekCustomerByID{CustomerStatus: constant.STATUS_KONSUMEN_RO, CustomerID: "123456"},
+			customerStatus: constant.STATUS_KONSUMEN_RO,
+			scoreGenerator: entity.ScoreGenerator{Key: os.Getenv("KEY_SCOREPRO_IDX_2W_AORO")},
+			resGetActiveLoanTypeLast6M: entity.GetActiveLoanTypeLast6M{
+				ActiveLoanTypeLast6M: " ; ; ",
+			},
+			resGetActiveLoanTypeLast24M: entity.GetActiveLoanTypeLast24M{
+				AgreementNo: "XYZ123",
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{Score: "LOW RISK", Subject: constant.CUSTOMER, BiroID: "123456"},
+			},
+			codePefindoIDX:  200,
+			bodyPefindoIDX:  `{"message":"success","errors":null,"data":{"worst_24mth_auto":0,"nom03_12mth_all":0}}`,
+			codeScoreproIDX: 200,
+			bodyScoreproIDX: `{"messages":"OK","data":{"prospect_id":"SAL-TEST-999","score":800,"result":"PASS","score_result":"HIGH","status":"ASSCB-HIGH","phone_number":"085716728933","segmen":"12","is_tsi":false},"errors":null}`,
+			result: response.ScorePro{
+				Result: constant.DECISION_PASS,
+				Code:   constant.CODE_SCOREPRO_GTEMIN_THRESHOLD,
+				Reason: constant.REASON_SCOREPRO_GTEMIN_THRESHOLD,
+				Source: constant.SOURCE_DECISION_SCOREPRO,
+				Info:   `{"prospect_id":"SAL-TEST-999","score":800,"result":"PASS","score_band":"","score_result":"HIGH","status":"ASSCB-HIGH","segmen":"12","is_tsi":false,"score_bin":null,"deviasi":null}`,
+			},
+		},
+		{
+			name:             "activeLoanTypeLast6M == ';;' and getActiveLoanTypeLast24M.AgreementNo empty",
+			req:              request.PrinciplePembiayaan{ProspectID: "SAL-TEST-9999"},
+			principleStepOne: entity.TrxPrincipleStepOne{ResidenceZipCode: "12908"},
+			principleStepTwo: entity.TrxPrincipleStepTwo{
+				MobilePhone: "08123456789", Gender: "M", MaritalStatus: "M", ProfessionID: "KRYS", BirthDate: birthDate,
+			},
+			spDupcheck:     response.SpDupCekCustomerByID{CustomerStatus: constant.STATUS_KONSUMEN_RO, CustomerID: "123456"},
+			customerStatus: constant.STATUS_KONSUMEN_RO,
+			scoreGenerator: entity.ScoreGenerator{Key: os.Getenv("KEY_SCOREPRO_IDX_2W_AORO")},
+			resGetActiveLoanTypeLast6M: entity.GetActiveLoanTypeLast6M{
+				ActiveLoanTypeLast6M: ";;",
+			},
+			resGetActiveLoanTypeLast24M: entity.GetActiveLoanTypeLast24M{
+				AgreementNo: "",
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{Score: "LOW RISK", Subject: constant.CUSTOMER, BiroID: "123456"},
+			},
+			codePefindoIDX:  200,
+			bodyPefindoIDX:  `{"message":"success","errors":null,"data":{"worst_24mth_auto":0,"nom03_12mth_all":0}}`,
+			codeScoreproIDX: 200,
+			bodyScoreproIDX: `{"messages":"OK","data":{"prospect_id":"SAL-TEST-9999","score":800,"result":"PASS","score_result":"HIGH","status":"ASSCB-HIGH","phone_number":"085716728933","segmen":"12","is_tsi":false},"errors":null}`,
+			result: response.ScorePro{
+				Result: constant.DECISION_PASS,
+				Code:   constant.CODE_SCOREPRO_GTEMIN_THRESHOLD,
+				Reason: constant.REASON_SCOREPRO_GTEMIN_THRESHOLD,
+				Source: constant.SOURCE_DECISION_SCOREPRO,
+				Info:   `{"prospect_id":"SAL-TEST-9999","score":800,"result":"PASS","score_band":"","score_result":"HIGH","status":"ASSCB-HIGH","segmen":"12","is_tsi":false,"score_bin":null,"deviasi":null}`,
+			},
+		},
+		{
+			name: "activeLoanTypeLast6M fallback to raw value, and GetMoblast returns error",
+			req:  request.PrinciplePembiayaan{ProspectID: "SAL-ERR-MOBLAST"},
+			principleStepOne: entity.TrxPrincipleStepOne{
+				ResidenceZipCode: "12908",
+				ManufactureYear:  "2021",
+				BPKBName:         "LAINNYA",
+				HomeStatus:       "MILIK SENDIRI",
+			},
+			principleStepTwo: entity.TrxPrincipleStepTwo{
+				MobilePhone:         "081234567890",
+				Gender:              "M",
+				MaritalStatus:       "M",
+				ProfessionID:        "KRYS",
+				EmploymentSinceYear: 2020,
+				BirthDate:           time.Date(1990, 9, 11, 0, 0, 0, 0, time.UTC),
+			},
+			scoreGenerator: entity.ScoreGenerator{
+				Key:               os.Getenv("KEY_SCOREPRO_IDX_2W_AORO"),
+				ScoreGeneratorsID: "GEN-ID-001",
+			},
+			customerStatus: constant.STATUS_KONSUMEN_RO,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerID: "CUST-1234",
+			},
+			resGetActiveLoanTypeLast6M: entity.GetActiveLoanTypeLast6M{
+				ActiveLoanTypeLast6M: "CASHCREDIT",
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{Score: "MEDIUM RISK", Subject: constant.CUSTOMER, BiroID: "BR-123"},
+			},
+			codePefindoIDX: 200,
+			bodyPefindoIDX: `{"data":{"worst_24mth_auto":1,"nom03_12mth_all":2}}`,
+			errGetMoblast:  errors.New(constant.ERROR_UPSTREAM + " - GetMoblast Scorepro Error"),
+			errResult:      errors.New(constant.ERROR_UPSTREAM + " - GetMoblast Scorepro Error"),
+		},
+		{
+			name: "moblast value > 24 sets moblast to 9999",
+			req: request.PrinciplePembiayaan{
+				ProspectID: "SAL-MOBLAST-9999",
+				NTF:        1000000,
+				OTR:        800000,
+				Tenor:      12,
+			},
+			principleStepOne: entity.TrxPrincipleStepOne{
+				ResidenceZipCode: "12908",
+				ManufactureYear:  "2021",
+				BPKBName:         "LAINNYA",
+				HomeStatus:       "MILIK SENDIRI",
+			},
+			principleStepTwo: entity.TrxPrincipleStepTwo{
+				MobilePhone:         "081234567890",
+				Gender:              "M",
+				MaritalStatus:       "M",
+				ProfessionID:        "KRYS",
+				EmploymentSinceYear: 2020,
+				BirthDate:           time.Date(1990, 9, 11, 0, 0, 0, 0, time.UTC),
+			},
+			customerStatus: constant.STATUS_KONSUMEN_RO,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerID: "CUST-MOBLAST-HIGH",
+			},
+			scoreGenerator: entity.ScoreGenerator{
+				Key: os.Getenv("KEY_SCOREPRO_IDX_2W_AORO"),
+			},
+			resGetActiveLoanTypeLast6M: entity.GetActiveLoanTypeLast6M{
+				ActiveLoanTypeLast6M: "KREDIT",
+			},
+			resGetMoblast: entity.GetMoblast{
+				Moblast: "30",
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{Score: "MEDIUM RISK", Subject: constant.CUSTOMER, BiroID: "BR-123"},
+			},
+			codePefindoIDX:  200,
+			bodyPefindoIDX:  `{"data":{"worst_24mth_auto":1,"nom03_12mth_all":2}}`,
+			codeScoreproIDX: 200,
+			bodyScoreproIDX: `{"messages":"OK","data":{"prospect_id":"SAL-MOBLAST-9999","score":800,"result":"PASS","score_result":"HIGH","status":"ASSCB-HIGH","phone_number":"085716728933","segmen":"12","is_tsi":false},"errors":null}`,
+			result: response.ScorePro{
+				Result: constant.DECISION_PASS,
+				Code:   constant.CODE_SCOREPRO_GTEMIN_THRESHOLD,
+				Reason: constant.REASON_SCOREPRO_GTEMIN_THRESHOLD,
+				Source: constant.SOURCE_DECISION_SCOREPRO,
+				Info:   `{"prospect_id":"SAL-MOBLAST-9999","score":800,"result":"PASS","score_band":"","score_result":"HIGH","status":"ASSCB-HIGH","segmen":"12","is_tsi":false,"score_bin":null,"deviasi":null}`,
+			},
+		},
+		{
+			name: "moblast value <= 24 sets moblast to intMob",
+			req: request.PrinciplePembiayaan{
+				ProspectID: "SAL-MOBLAST-0024",
+				NTF:        1000000,
+				OTR:        800000,
+				Tenor:      12,
+			},
+			principleStepOne: entity.TrxPrincipleStepOne{
+				ResidenceZipCode: "12908",
+				ManufactureYear:  "2021",
+				BPKBName:         "LAINNYA",
+				HomeStatus:       "MILIK SENDIRI",
+			},
+			principleStepTwo: entity.TrxPrincipleStepTwo{
+				MobilePhone:         "081234567890",
+				Gender:              "M",
+				MaritalStatus:       "M",
+				ProfessionID:        "KRYS",
+				EmploymentSinceYear: 2020,
+				BirthDate:           time.Date(1990, 9, 11, 0, 0, 0, 0, time.UTC),
+			},
+			customerStatus: constant.STATUS_KONSUMEN_RO,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerID: "CUST-MOBLAST-LOW",
+			},
+			scoreGenerator: entity.ScoreGenerator{
+				Key: os.Getenv("KEY_SCOREPRO_IDX_2W_AORO"),
+			},
+			resGetActiveLoanTypeLast6M: entity.GetActiveLoanTypeLast6M{
+				ActiveLoanTypeLast6M: "KREDIT",
+			},
+			resGetMoblast: entity.GetMoblast{
+				Moblast: "12",
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{Score: "MEDIUM RISK", Subject: constant.CUSTOMER, BiroID: "BR-123"},
+			},
+			codePefindoIDX:  200,
+			bodyPefindoIDX:  `{"data":{"worst_24mth_auto":1,"nom03_12mth_all":2}}`,
+			codeScoreproIDX: 200,
+			bodyScoreproIDX: `{"messages":"OK","data":{"prospect_id":"SAL-MOBLAST-0024","score":800,"result":"PASS","score_result":"HIGH","status":"ASSCB-HIGH","phone_number":"085716728933","segmen":"12","is_tsi":false},"errors":null}`,
+			result: response.ScorePro{
+				Result: constant.DECISION_PASS,
+				Code:   constant.CODE_SCOREPRO_GTEMIN_THRESHOLD,
+				Reason: constant.REASON_SCOREPRO_GTEMIN_THRESHOLD,
+				Source: constant.SOURCE_DECISION_SCOREPRO,
+				Info:   `{"prospect_id":"SAL-MOBLAST-0024","score":800,"result":"PASS","score_band":"","score_result":"HIGH","status":"ASSCB-HIGH","segmen":"12","is_tsi":false,"score_bin":null,"deviasi":null}`,
+			},
+		},
+		{
+			name: "error unmarshal scorepro IDX data",
+			req: request.PrinciplePembiayaan{
+				ProspectID: "SAL-ERR-UNMARSHAL-SCOREPRO",
+				NTF:        1000000,
+				OTR:        800000,
+				Tenor:      12,
+			},
+			principleStepOne: entity.TrxPrincipleStepOne{
+				ResidenceZipCode: "12908",
+				BPKBName:         "LAINNYA",
+				ManufactureYear:  "2021",
+				HomeStatus:       "MILIK SENDIRI",
+			},
+			principleStepTwo: entity.TrxPrincipleStepTwo{
+				MobilePhone:         "081234567890",
+				Gender:              "M",
+				MaritalStatus:       "M",
+				ProfessionID:        "KRYS",
+				EmploymentSinceYear: 2020,
+				BirthDate:           time.Date(1990, 9, 11, 0, 0, 0, 0, time.UTC),
+			},
+			customerStatus: constant.STATUS_KONSUMEN_RO,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerID: "CUST-UNMARSCORE",
+			},
+			scoreGenerator: entity.ScoreGenerator{
+				Key: os.Getenv("KEY_SCOREPRO_IDX_2W_AORO"),
+			},
+			resGetActiveLoanTypeLast6M: entity.GetActiveLoanTypeLast6M{
+				ActiveLoanTypeLast6M: "KREDIT",
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{Score: "LOW RISK", Subject: constant.CUSTOMER, BiroID: "BR-123"},
+			},
+			codePefindoIDX:  200,
+			bodyPefindoIDX:  `{"data":{"worst_24mth_auto":1,"nom03_12mth_all":2}}`,
+			codeScoreproIDX: 200,
+			bodyScoreproIDX: `{"messages":"OK","data":"INVALID_JSON","errors":null}`,
+			errResult:       errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data response scorepro"),
+		},
+		{
+			name: "scorepro status contains TSL sets ScoreResult to LOW",
+			req: request.PrinciplePembiayaan{
+				ProspectID: "SAL-TSL-LOW",
+			},
+			principleStepOne: entity.TrxPrincipleStepOne{
+				ResidenceZipCode: "12908",
+				BPKBName:         "LAINNYA",
+				ManufactureYear:  "2021",
+				HomeStatus:       "MILIK SENDIRI",
+			},
+			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerID: "CUST-TSL-LOW",
+			},
+			scoreGenerator: entity.ScoreGenerator{
+				Key: os.Getenv("KEY_SCOREPRO_IDX_2W_OTHERS"),
+			},
+			codePefindoIDX: 200,
+			bodyPefindoIDX: `{"data":{"worst_24mth_auto":0,"nom03_12mth_all":0}}`,
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{Score: "LOW RISK", Subject: constant.CUSTOMER, BiroID: "BR-001"},
+			},
+			codeScoreproIDX: 200,
+			bodyScoreproIDX: `{"messages":"OK","data":{"result":"PASS","score":"800-899","status":"ASSTSL-S02","segmen":"3","is_tsi":true,"score_band":"HIGH","score_bin":"BIN1","deviasi":null},"errors":null}`,
+			result: response.ScorePro{
+				Result: constant.DECISION_REJECT,
+				Code:   constant.CODE_SCOREPRO_LTMIN_THRESHOLD,
+				Reason: constant.REASON_SCOREPRO_LTMIN_THRESHOLD,
+				Source: constant.SOURCE_DECISION_SCOREPRO,
+				Info:   `{"prospect_id":"","score":"800-899","result":"PASS","score_band":"HIGH","score_result":"","status":"ASSTSL-S02","segmen":"3","is_tsi":true,"score_bin":"BIN1","deviasi":null}`,
+			},
+		},
+		{
+			name: "scorepro status not TSL sets ScoreResult to MEDIUM",
+			req: request.PrinciplePembiayaan{
+				ProspectID: "SAL-NO-TSL",
+			},
+			principleStepOne: entity.TrxPrincipleStepOne{
+				ResidenceZipCode: "12908",
+				BPKBName:         "LAINNYA",
+				ManufactureYear:  "2021",
+				HomeStatus:       "MILIK SENDIRI",
+			},
+			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerID: "CUST-NO-TSL",
+			},
+			scoreGenerator: entity.ScoreGenerator{
+				Key: os.Getenv("KEY_SCOREPRO_IDX_2W_OTHERS"),
+			},
+			codePefindoIDX: 200,
+			bodyPefindoIDX: `{"data":{"worst_24mth_auto":0,"nom03_12mth_all":0}}`,
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{Score: "LOW RISK", Subject: constant.CUSTOMER, BiroID: "BR-002"},
+			},
+			codeScoreproIDX: 200,
+			bodyScoreproIDX: `{"messages":"OK","data":{"score":"800-899","result":"PASS","status":"ASS-S03","segmen":"3","is_tsi":true},"errors":null}`,
+			result: response.ScorePro{
+				Result: constant.DECISION_PASS,
+				Code:   constant.CODE_SCOREPRO_GTEMIN_THRESHOLD,
+				Reason: constant.REASON_SCOREPRO_GTEMIN_THRESHOLD,
+				Source: constant.SOURCE_DECISION_SCOREPRO,
+				Info:   `{"prospect_id":"","score":"800-899","result":"PASS","score_band":"","score_result":"","status":"ASS-S03","segmen":"3","is_tsi":true,"score_bin":null,"deviasi":null}`,
+			},
+		},
+		{
+			name:             "error RrdDate is invalid string",
+			req:              request.PrinciplePembiayaan{ProspectID: "SAL-ERR-RRD-STR"},
+			principleStepOne: entity.TrxPrincipleStepOne{ResidenceZipCode: "12908"},
+			customerStatus:   constant.STATUS_KONSUMEN_RO,
+			customerSegment:  constant.RO_AO_PRIME,
+			installmentTopUp: 0,
+			codePefindoIDX:   200,
+			bodyPefindoIDX: `{"message":"success","errors":null,"data":{"id":"pbk_idx6541d4b0a7ea1","prospect_id":"EFM01454202307020007",
+			"created_at":"2023-11-01 11:31:44","oldestmob_pl":-999,"final_nom60_12mth":0,"tot_bakidebet_banks_active":-999,"tot_bakidebet_31_60dpd":0,
+			"worst_24mth":0,"max_limit_oth":-999,"pefindo_add_info":null},"server_time":"2023-11-01 11:31:44"}`,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerStatus:                   constant.STATUS_KONSUMEN_RO,
+				MaxOverdueDaysforActiveAgreement: &maxOverdueDaysforActiveAgreement,
+				CustomerID:                       "CUST-ERR-RRD",
+				RRDDate:                          "not-a-date",
+			},
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - Invalid RrdDate format"),
+		},
+		{
+			name:             "error RrdDate is not string or time.Time",
+			req:              request.PrinciplePembiayaan{ProspectID: "SAL-ERR-RRD-TYPE"},
+			principleStepOne: entity.TrxPrincipleStepOne{ResidenceZipCode: "12908"},
+			customerStatus:   constant.STATUS_KONSUMEN_RO,
+			customerSegment:  constant.RO_AO_PRIME,
+			installmentTopUp: 0,
+			codePefindoIDX:   200,
+			bodyPefindoIDX: `{"message":"success","errors":null,"data":{"id":"pbk_idx6541d4b0a7ea1","prospect_id":"EFM01454202307020007",
+			"created_at":"2023-11-01 11:31:44","oldestmob_pl":-999,"final_nom60_12mth":0,"tot_bakidebet_banks_active":-999,"tot_bakidebet_31_60dpd":0,
+			"worst_24mth":0,"max_limit_oth":-999,"pefindo_add_info":null},"server_time":"2023-11-01 11:31:44"}`,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerStatus:                   constant.STATUS_KONSUMEN_RO,
+				MaxOverdueDaysforActiveAgreement: &maxOverdueDaysforActiveAgreement,
+				CustomerID:                       "CUST-ERR-RRD",
+				RRDDate:                          1234567890,
+			},
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - RrdDate must be string or time.Time"),
+		},
+		{
+			name:             "error get config expired contract",
+			req:              request.PrinciplePembiayaan{ProspectID: "SAL-ERR-RRD-TYPE"},
+			principleStepOne: entity.TrxPrincipleStepOne{ResidenceZipCode: "12908"},
+			customerStatus:   constant.STATUS_KONSUMEN_RO,
+			customerSegment:  constant.RO_AO_PRIME,
+			installmentTopUp: 0,
+			codePefindoIDX:   200,
+			bodyPefindoIDX: `{"message":"success","errors":null,"data":{"id":"pbk_idx6541d4b0a7ea1","prospect_id":"EFM01454202307020007",
+			"created_at":"2023-11-01 11:31:44","oldestmob_pl":-999,"final_nom60_12mth":0,"tot_bakidebet_banks_active":-999,"tot_bakidebet_31_60dpd":0,
+			"worst_24mth":0,"max_limit_oth":-999,"pefindo_add_info":null},"server_time":"2023-11-01 11:31:44"}`,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerStatus:                   constant.STATUS_KONSUMEN_RO,
+				MaxOverdueDaysforActiveAgreement: &maxOverdueDaysforActiveAgreement,
+				CustomerID:                       "CUST-ERR-RRD",
+				RRDDate:                          sevenMonthsAgo,
+			},
+			errGetConfig: errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error"),
+			errResult:    errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error"),
+		},
+		{
+			name:             "error unmarshal get config expired contract",
+			req:              request.PrinciplePembiayaan{ProspectID: "SAL-ERR-RRD-TYPE"},
+			principleStepOne: entity.TrxPrincipleStepOne{ResidenceZipCode: "12908"},
+			customerStatus:   constant.STATUS_KONSUMEN_RO,
+			customerSegment:  constant.RO_AO_PRIME,
+			installmentTopUp: 0,
+			codePefindoIDX:   200,
+			bodyPefindoIDX: `{"message":"success","errors":null,"data":{"id":"pbk_idx6541d4b0a7ea1","prospect_id":"EFM01454202307020007",
+			"created_at":"2023-11-01 11:31:44","oldestmob_pl":-999,"final_nom60_12mth":0,"tot_bakidebet_banks_active":-999,"tot_bakidebet_31_60dpd":0,
+			"worst_24mth":0,"max_limit_oth":-999,"pefindo_add_info":null},"server_time":"2023-11-01 11:31:44"}`,
+			spDupcheck: response.SpDupCekCustomerByID{
+				CustomerStatus:                   constant.STATUS_KONSUMEN_RO,
+				MaxOverdueDaysforActiveAgreement: &maxOverdueDaysforActiveAgreement,
+				CustomerID:                       "CUST-ERR-RRD",
+				RRDDate:                          sevenMonthsAgo,
+			},
+			config: entity.AppConfig{
+				Value: `-`,
+			},
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config expired contract"),
+		},
 	}
 
 	for _, tc := range testcases {
@@ -2529,9 +3089,9 @@ func TestScorepro(t *testing.T) {
 			mockRepository.On("GetScoreGenerator", mock.Anything).Return(tc.scoreGenerator, tc.errscoreGenerator)
 			mockRepository.On("GetScoreGeneratorROAO").Return(tc.scoreGenerator, tc.errscoreGenerator)
 			mockRepository.On("GetTrxDetailBIro", tc.req.ProspectID).Return(tc.trxDetailBiro, tc.errtrxDetailBiro)
-			mockRepository.On("GetActiveLoanTypeLast6M", tc.spDupcheck.CustomerID.(string)).Return(entity.GetActiveLoanTypeLast6M{}, nil)
-			mockRepository.On("GetActiveLoanTypeLast24M", tc.spDupcheck.CustomerID.(string)).Return(entity.GetActiveLoanTypeLast24M{}, nil)
-			mockRepository.On("GetMoblast", tc.spDupcheck.CustomerID.(string)).Return(entity.GetMoblast{}, nil)
+			mockRepository.On("GetActiveLoanTypeLast6M", tc.spDupcheck.CustomerID.(string)).Return(tc.resGetActiveLoanTypeLast6M, tc.errGetActiveLoanTypeLast6M)
+			mockRepository.On("GetActiveLoanTypeLast24M", mock.Anything).Return(tc.resGetActiveLoanTypeLast24M, tc.errGetActiveLoanTypeLast24M)
+			mockRepository.On("GetMoblast", tc.spDupcheck.CustomerID.(string)).Return(tc.resGetMoblast, tc.errGetMoblast)
 			mockRepository.On("GetConfig", "expired_contract", "KMB-OFF", "expired_contract_check").Return(tc.config, tc.errGetConfig)
 
 			rst := resty.New()

@@ -11,6 +11,7 @@ import (
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/locallock"
 	"los-kmb-api/shared/utils"
 	"os"
 	"regexp"
@@ -25,6 +26,10 @@ import (
 )
 
 func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wilen, accessToken string) (resp response.Submission2Wilen, err error) {
+
+	keyLock := "submission-2wilen-" + req.ProspectID
+	unlock := locallock.GlobalLock.Lock(keyLock)
+	defer unlock()
 
 	var (
 		trxKPM            entity.TrxKPM
@@ -43,7 +48,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		return resp, err
 	}
 
-	trxKPMExist, err := u.repository.GetTrxKPM(req.ProspectID)
+	trxKPMExist, err := u.repository.GetTrxKPMWithLock(req.ProspectID)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return
 	}
@@ -63,7 +68,39 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		return
 	}
 
+	trxKPMStatusExist, err := u.repository.GetLatestTrxKPMStatusWithLock(req.ProspectID)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return
+	}
+
+	if message, exists := decisionMessages[trxKPMStatusExist.Decision]; exists {
+		err = errors.New(message)
+		return
+	}
+
+	id := utils.GenerateUUID()
 	statusCode := constant.STATUS_KPM_WAIT_2WILEN
+
+	trxKPM.ID = id
+	trxKPM.ProspectID = req.ProspectID
+	trxKPM.Decision = statusCode
+
+	err = u.repository.SaveTrxKPM(trxKPM)
+	if err != nil {
+		return
+	}
+
+	err = u.repository.SaveTrxKPMStatus(entity.TrxKPMStatus{
+		ID:         id,
+		ProspectID: req.ProspectID,
+		Decision:   statusCode,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+	})
+	if err != nil {
+		return
+	}
+
 	u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_2WILEN, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
 		OrderID:                    req.ProspectID,
 		KpmID:                      req.KPMID,
@@ -75,18 +112,6 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		ReferralCode:               req.ReferralCode,
 		Is2wPrincipleApprovalOrder: true,
 	}), 0)
-
-	id := utils.GenerateUUID()
-	err = u.repository.SaveTrxKPMStatus(entity.TrxKPMStatus{
-		ID:         id,
-		ProspectID: req.ProspectID,
-		Decision:   statusCode,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
-	})
-	if err != nil {
-		return
-	}
 
 	defer func() {
 		birthDate, _ := time.Parse(constant.FORMAT_DATE, req.BirthDate)
@@ -104,8 +129,6 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		savedDupcheckData, _ := json.Marshal(dupcheckData)
 		savedNegativeCustomerData, _ := json.Marshal(negativeCustomer)
 
-		trxKPM.ID = id
-		trxKPM.ProspectID = req.ProspectID
 		trxKPM.IDNumber = req.IDNumber
 		trxKPM.LegalName = req.LegalName
 		trxKPM.MobilePhone = req.MobilePhone
@@ -173,6 +196,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 			trxKPM.ReadjustContext = *resp.ReadjustContext
 		}
 
+		var isSaveTrxKPMStatus bool
 		if err == nil {
 			resp.ProspectID = req.ProspectID
 
@@ -182,26 +206,49 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 			trxKPM.Decision = decision
 			trxKPM.Reason = resp.Reason
 			trxKPM.RuleCode = resp.Code
+
+			if statusCode != constant.DECISION_KPM_APPROVE {
+				isSaveTrxKPMStatus = true
+			}
 		} else {
 			statusCode = constant.STATUS_KPM_ERROR_2WILEN
 
 			trxKPM.Decision = statusCode
 			trxKPMStatus.Decision = statusCode
+
+			latestTrxKPMStatus, err := u.repository.GetLatestTrxKPMStatusWithLock(req.ProspectID)
+			if err != nil && err != gorm.ErrRecordNotFound {
+				return
+			}
+
+			if latestTrxKPMStatus.Decision == constant.DECISION_KPM_APPROVE {
+				err = u.repository.UpdateTrxKPMStatus(trxKPMStatus.ID, entity.TrxKPMStatus{
+					Decision:  statusCode,
+					UpdatedAt: time.Now(),
+				})
+				if err != nil {
+					return
+				}
+			} else {
+				isSaveTrxKPMStatus = true
+			}
 		}
 
 		trxKPM.CreatedAt = trxKPMStatus.CreatedAt
 		trxKPM.UpdatedAt = trxKPMStatus.UpdatedAt
 
-		errSave := u.repository.SaveTrxKPM(trxKPM)
-		if errSave != nil {
-			err = errSave
+		errUpdate := u.repository.UpdateTrxKPM(trxKPM.ID, trxKPM)
+		if errUpdate != nil {
+			err = errUpdate
 			return
 		}
 
-		errSave = u.repository.SaveTrxKPMStatus(trxKPMStatus)
-		if errSave != nil {
-			err = errSave
-			return
+		if isSaveTrxKPMStatus {
+			errSave := u.repository.SaveTrxKPMStatus(trxKPMStatus)
+			if errSave != nil {
+				err = errSave
+				return
+			}
 		}
 
 		if statusCode != constant.DECISION_KPM_APPROVE {
@@ -1411,6 +1458,11 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		trxKPMStatus.CreatedAt = time.Now()
 		trxKPMStatus.UpdatedAt = time.Now()
 
+		return
+	}
+
+	err = u.repository.SaveTrxKPMStatus(trxKPMStatus)
+	if err != nil {
 		return
 	}
 

@@ -63,7 +63,7 @@ func TestGetDataPrinciple(t *testing.T) {
 		StaySinceMonth:     1,
 		BranchID:           "426",
 		AssetCode:          "AST001",
-		BPKBName:           "John Doe",
+		BPKBName:           "K",
 		ManufactureYear:    "2020",
 	}
 
@@ -107,6 +107,18 @@ func TestGetDataPrinciple(t *testing.T) {
 		ProspectID:      "SAL-123",
 		CustomerStatus:  "NEW",
 		CustomerSegment: "REGULAR",
+	}
+
+	sampleFilteringKMBAO := entity.FilteringKMB{
+		ProspectID:      "SAL-123",
+		CustomerStatus:  "AO",
+		CustomerSegment: "REGULAR",
+	}
+
+	sampleFilteringKMBEmpty := entity.FilteringKMB{
+		ProspectID:      "SAL-123",
+		CustomerStatus:  nil,
+		CustomerSegment: nil,
 	}
 
 	samplePrincipleEmergencyContact := entity.TrxPrincipleEmergencyContact{
@@ -220,6 +232,14 @@ func TestGetDataPrinciple(t *testing.T) {
 		expectedResult             map[string]interface{}
 		expectedError              error
 	}{
+		{
+			name: "success get unknown data",
+			request: request.PrincipleGetData{
+				ProspectID: "SAL-123",
+				Context:    "unknown",
+			},
+			expectedResult: map[string]interface{}(nil),
+		},
 		{
 			name: "success get domisili data",
 			request: request.PrincipleGetData{
@@ -369,6 +389,33 @@ func TestGetDataPrinciple(t *testing.T) {
 			resGetPrincipleStepThree: samplePrincipleStepThree,
 			resGetFilteringResult:    sampleFilteringKMB,
 			expectedError:            errors.New(constant.INTERNAL_SERVER_ERROR + " - KPM ID does not match"),
+		},
+		{
+			name: "error get biaya data - get principle step one",
+			request: request.PrincipleGetData{
+				ProspectID: "SAL-123",
+				Context:    "Biaya",
+			},
+			errGetPrincipleStepOne: errors.New("error get data"),
+			expectedError:          errors.New("error get data"),
+		},
+		{
+			name: "error get biaya data - get principle step two",
+			request: request.PrincipleGetData{
+				ProspectID: "SAL-123",
+				Context:    "Biaya",
+			},
+			errGetPrincipleStepTwo: errors.New("error get data"),
+			expectedError:          errors.New("error get data"),
+		},
+		{
+			name: "error get biaya data - get principle step three",
+			request: request.PrincipleGetData{
+				ProspectID: "SAL-123",
+				Context:    "Biaya",
+			},
+			errGetPrincipleStepThree: errors.New("error get data"),
+			expectedError:            errors.New("error get data"),
 		},
 		{
 			name: "error get biaya data - get filtering result",
@@ -553,12 +600,12 @@ func TestGetDataPrinciple(t *testing.T) {
 			request: request.PrincipleGetData{
 				ProspectID:     "SAL-123",
 				Context:        "Biaya",
-				FinancePurpose: "Multiguna Pembayaran dengan Angsuran",
+				FinancePurpose: "Modal Kerja Fasilitas Modal Usaha",
 			},
 			resGetPrincipleStepOne:   samplePrincipleStepOne,
 			resGetPrincipleStepTwo:   samplePrincipleStepTwo,
 			resGetPrincipleStepThree: samplePrincipleStepThree,
-			resGetFilteringResult:    sampleFilteringKMB,
+			resGetFilteringResult:    sampleFilteringKMBAO,
 			resMarsevLoanAmountCode:  200,
 			resMarsevLoanAmountBody: `{
 				"code": 200,
@@ -611,7 +658,7 @@ func TestGetDataPrinciple(t *testing.T) {
 			resGetPrincipleStepOne:   samplePrincipleStepOne,
 			resGetPrincipleStepTwo:   samplePrincipleStepTwo,
 			resGetPrincipleStepThree: samplePrincipleStepThree,
-			resGetFilteringResult:    sampleFilteringKMB,
+			resGetFilteringResult:    sampleFilteringKMBEmpty,
 			resMarsevLoanAmountCode:  200,
 			resMarsevLoanAmountBody: `{
 				"code": 200,
