@@ -22,7 +22,7 @@ type platformEvent struct {
 	producerInsertCustomer   *event.Client
 	producerSubmission2Wilen *event.Client
 
-	muSubmission2Wilen sync.Mutex
+	muSubmission2Wilen sync.RWMutex
 }
 
 //counterfeiter:generate . PlatformEventInterface
@@ -58,9 +58,9 @@ func (pe *platformEvent) PublishEvent(ctx context.Context, accessToken, topicNam
 	case constant.TOPIC_INSERT_CUSTOMER:
 		producer = pe.producerInsertCustomer
 	case constant.TOPIC_SUBMISSION_2WILEN:
-		pe.muSubmission2Wilen.Lock()
-		defer pe.muSubmission2Wilen.Unlock()
+		pe.muSubmission2Wilen.RLock()
 		producer = pe.producerSubmission2Wilen
+		pe.muSubmission2Wilen.RUnlock()
 	default:
 		err = fmt.Errorf("producer for topic %s was not created", topicName)
 
