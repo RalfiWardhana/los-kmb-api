@@ -212,26 +212,6 @@ func TestSubmission2Wilen(t *testing.T) {
 			expectPublishEvent:        true,
 		},
 		{
-			name: "error admin fee does not match",
-			request: request.Submission2Wilen{
-				AdminFee: 100000,
-				Tenor:    12,
-			},
-			resGetConfig: entity.AppConfig{
-				Value: `{"data":{"max_readjust_attempt":3}}`,
-			},
-			resGetReadjustCountTrxKPM: 0,
-			resGetAvailableTenor: []response.GetAvailableTenorData{
-				{
-					Tenor:    12,
-					AdminFee: 110000,
-				},
-			},
-			err:                       errors.New(constant.INTERNAL_SERVER_ERROR + " - Admin fee does not match"),
-			expectPublishEventKPMWait: true,
-			expectPublishEvent:        true,
-		},
-		{
 			name: "error check banned chassis number",
 			request: request.Submission2Wilen{
 				AdminFee: 100000,

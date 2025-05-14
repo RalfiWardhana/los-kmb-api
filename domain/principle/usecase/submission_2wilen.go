@@ -263,10 +263,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 
 	for _, avavailableTenor := range availableTenors {
 		if avavailableTenor.Tenor == req.Tenor {
-			if avavailableTenor.AdminFee != req.AdminFee {
-				err = errors.New(constant.INTERNAL_SERVER_ERROR + " - Admin fee does not match")
-				return
-			}
+			req.AdminFee = avavailableTenor.AdminFee
 		}
 	}
 

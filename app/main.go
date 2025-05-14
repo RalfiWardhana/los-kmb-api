@@ -165,8 +165,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	e.Use(middleware.BodyDumpWithConfig(middlewares.NewBodyDumpMiddleware(newKMB).BodyDumpConfig()))
-
 	common.SetDB(newKMB)
 
 	var cache *bigcache.BigCache
@@ -237,6 +235,7 @@ func main() {
 	platformCache := platformcache.NewPlatformCache()
 
 	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+	e.Use(middleware.BodyDumpWithConfig(middlewares.NewBodyDumpMiddleware(newKMB, producer).BodyDumpConfig()))
 
 	// define new kmb filtering domain
 	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs, newKMB)
