@@ -576,16 +576,7 @@ func (r repoHandler) GetDatatablePrescreening(req request.ReqInquiryPrescreening
 			FROM
 			(
 				SELECT
-					tm.created_at,
-					tm.order_at,
-					tm.ProspectID,
-					scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-					scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
-					tcp.BirthDate,
-					tia.info AS CMORecommend,
-					tps.decision,
-					tst.activity,
-					tst.source_decision
+					tm.ProspectID
 				FROM
 					trx_master tm WITH (nolock)
 					INNER JOIN trx_customer_personal tcp WITH (nolock) ON tm.ProspectID = tcp.ProspectID
@@ -1902,6 +1893,27 @@ func (r repoHandler) GetDatatableCa(req request.ReqInquiryCa, pagination interfa
 					FROM
 						trx_ca_decision WITH (nolock)
 				),
+				cte_trx_draft_ca_decision AS (
+					SELECT
+						x.ProspectID,
+						x.decision,
+						x.slik_result,
+						x.note,
+						x.created_at,
+						x.created_by,
+						x.decision_by
+					FROM
+						trx_draft_ca_decision x WITH (nolock)
+					WHERE
+						x.created_at = (
+							SELECT
+								MAX(created_at)
+							FROM
+								trx_draft_ca_decision WITH (NOLOCK)
+							WHERE
+								ProspectID = x.ProspectID
+						)
+				),
 				cte_trx_history_approval_scheme AS (
 					SELECT
 						ProspectID,
@@ -1925,41 +1937,7 @@ func (r repoHandler) GetDatatableCa(req request.ReqInquiryCa, pagination interfa
 				FROM
 				(
 					SELECT
-						CASE
-							WHEN tcd.created_at IS NOT NULL AND tfa.created_at IS NULL THEN FORMAT(tcd.created_at,'yyyy-MM-dd HH:mm:ss')
-							WHEN tfa.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
-							ELSE NULL
-						END AS ActionDate,
-						CASE
-							WHEN tst.decision = 'CPR'
-							AND tst.source_decision = 'CRA'
-							AND tst.activity = 'UNPR'
-							AND tcd.decision IS NULL THEN 1
-							ELSE 0
-						END AS ShowAction,
-						CASE
-							WHEN tcd.decision='APR' THEN 'APPROVE'
-							WHEN tcd.decision='REJ' THEN 'REJECT'
-							WHEN tcd.decision='CAN' THEN 'CANCEL'
-							ELSE tcd.decision
-						END AS ca_decision,
-						tst.decision,
-						tst.reason,
-						tm.created_at,
-						tm.order_at,
-						tm.ProspectID,
-						scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-						scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
-						tcp.BirthDate,
-						tcp.SurveyResult,
-						CASE
-							WHEN rtn.decision_rtn IS NOT NULL AND sdp.decision_sdp IS NULL AND tst.status_process<>'FIN' THEN 1
-							ELSE 0
-						END AS ActionEditData,
-						tde.deviasi_id,
-						mkd.deskripsi AS deviasi_description,
-						'REJECT' AS deviasi_decision,
-						tde.reason AS deviasi_reason
+						tm.ProspectID
 					FROM
 						trx_master tm WITH (nolock)
 						INNER JOIN trx_customer_personal tcp WITH (nolock) ON tm.ProspectID = tcp.ProspectID
@@ -1969,7 +1947,8 @@ func (r repoHandler) GetDatatableCa(req request.ReqInquiryCa, pagination interfa
 						LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 						LEFT JOIN cte_trx_history_approval_scheme rtn ON rtn.ProspectID = tm.ProspectID
 						LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
-						LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID 
+						LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
+						LEFT JOIN cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID 
 					%s AND tst.source_decision <> '%s'
 				) AS tt`, filter, constant.PRESCREENING)).Scan(&row).Error; err != nil {
 			return
@@ -1989,6 +1968,33 @@ func (r repoHandler) GetDatatableCa(req request.ReqInquiryCa, pagination interfa
 					created_by
 				FROM
 					trx_ca_decision WITH (nolock)
+			),
+			cte_trx_draft_ca_decision AS (
+				SELECT
+					x.ProspectID,
+					x.decision,
+					x.slik_result,
+					x.note,
+					x.created_at,
+					x.created_by,
+					x.decision_by,
+					x.pernyataan_1,
+					x.pernyataan_2,
+					x.pernyataan_3,
+					x.pernyataan_4,
+					x.pernyataan_5,
+					x.pernyataan_6
+				FROM
+					trx_draft_ca_decision x WITH (nolock)
+				WHERE
+					x.created_at = (
+						SELECT
+							MAX(created_at)
+						FROM
+							trx_draft_ca_decision WITH (NOLOCK)
+						WHERE
+							ProspectID = x.ProspectID
+					)
 			),
 			cte_trx_history_approval_scheme AS (
 				SELECT
@@ -2021,6 +2027,18 @@ func (r repoHandler) GetDatatableCa(req request.ReqInquiryCa, pagination interfa
 					AND tcd.decision IS NULL THEN 1
 					ELSE 0
 				END AS ShowAction,
+				tdd.decision AS draft_decision,
+				tdd.slik_result AS draft_slik_result,
+				tdd.note AS draft_note,
+				tdd.created_at AS draft_created_at,
+				tdd.created_by AS draft_created_by,
+				tdd.decision_by AS draft_decision_by,
+				tdd.pernyataan_1 AS draft_pernyataan_1,
+				tdd.pernyataan_2 AS draft_pernyataan_2,
+				tdd.pernyataan_3 AS draft_pernyataan_3,
+				tdd.pernyataan_4 AS draft_pernyataan_4,
+				tdd.pernyataan_5 AS draft_pernyataan_5,
+				tdd.pernyataan_6 AS draft_pernyataan_6,
 				CASE
 					WHEN tcd.decision='APR' THEN 'APPROVE'
 					WHEN tcd.decision='REJ' THEN 'REJECT'
@@ -2053,7 +2071,8 @@ func (r repoHandler) GetDatatableCa(req request.ReqInquiryCa, pagination interfa
 				LEFT JOIN trx_final_approval tfa WITH (nolock) ON tm.ProspectID = tfa.ProspectID
 				LEFT JOIN cte_trx_history_approval_scheme rtn ON rtn.ProspectID = tm.ProspectID
 				LEFT JOIN cte_trx_history_approval_scheme_sdp sdp ON sdp.ProspectID = tm.ProspectID
-				LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID 
+				LEFT JOIN cte_trx_ca_decision tcd ON tm.ProspectID = tcd.ProspectID
+				LEFT JOIN cte_trx_draft_ca_decision tdd ON tm.ProspectID = tdd.ProspectID 
 			%s AND tst.source_decision <> '%s'
 			ORDER BY
 				tm.created_at DESC %s`, filter, constant.PRESCREENING, filterPaginate)).Scan(&data).Error; err != nil {
@@ -3672,35 +3691,7 @@ func (r repoHandler) GetDatatableApproval(req request.ReqInquiryApproval, pagina
 				FROM
 				(
 					SELECT
-						tm.created_at,
-						tm.order_at,
-						tm.ProspectID,
-						scp.dbo.DEC_B64('SEC', tcp.IDNumber) AS IDNumber,
-						scp.dbo.DEC_B64('SEC', tcp.LegalName) AS LegalName,
-						tcp.BirthDate,
-						tst.decision,
-						tst.reason,
-						CASE
-							WHEN (tfa.decision IS NULL)
-							AND (tcd.decision <> 'CAN') 
-							AND (tst.source_decision='CRA') THEN 1
-							ELSE 0
-						END AS ShowAction,
-						CASE
-							WHEN tst.status_process='FIN'
-							AND tst.activity='STOP' THEN 1
-							ELSE 0
-						END AS ActionFormAkk,
-						tak.UrlFormAkkk,
-						CASE
-							WHEN tcd.decision = 'CAN' THEN tcd.created_at 
-							WHEN tcd.created_at IS NOT NULL THEN FORMAT(tfa.created_at,'yyyy-MM-dd HH:mm:ss')
-							ELSE FORMAT(tst.created_at,'yyyy-MM-dd HH:mm:ss')
-						END AS ActionDate,
-						tde.deviasi_id,
-						mkd.deskripsi AS deviasi_description,
-						'REJECT' AS deviasi_decision,
-						tde.reason AS deviasi_reason
+						tm.ProspectID
 					FROM
 						trx_master tm WITH (nolock)
 						INNER JOIN trx_customer_personal tcp WITH (nolock) ON tm.ProspectID = tcp.ProspectID
@@ -3751,7 +3742,7 @@ func (r repoHandler) GetDatatableApproval(req request.ReqInquiryApproval, pagina
 				CASE
 					WHEN (tfa.decision IS NULL)
 					AND (tcd.decision <> 'CAN') 
-					AND (tst.source_decision='CRA') THEN 1
+					AND (tst.source_decision='%s') THEN 1
 					ELSE 0
 				END AS ShowAction,
 				CASE
@@ -3789,7 +3780,7 @@ func (r repoHandler) GetDatatableApproval(req request.ReqInquiryApproval, pagina
 				) has
 			%s
 			ORDER BY
-				tm.created_at DESC %s`, alias, alias, filter, filterPaginate)).Scan(&data).Error; err != nil {
+				tm.created_at DESC %s`, alias, alias, alias, filter, filterPaginate)).Scan(&data).Error; err != nil {
 		return
 	}
 
