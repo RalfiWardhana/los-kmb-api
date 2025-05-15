@@ -386,7 +386,7 @@ func (r repoHandler) GetFilteringResult(prospectID string) (filtering entity.Fil
 	return
 }
 
-func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch string) (data []entity.MappingElaborateLTV, err error) {
+func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore string, bpkbNameType int) (data []entity.MappingElaborateLTV, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
@@ -403,11 +403,24 @@ func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch 
 		cluster,
 	}
 	if gradeBranch != "" {
-		extraWhere = "AND grade_branch = ?"
+		extraWhere += "AND grade_branch IN ('ALL', ?)"
 		args = append(args, gradeBranch)
 	}
 
-	if err = r.newKmb.Raw(fmt.Sprintf("SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE result_pefindo = ? AND cluster = ? %s ", extraWhere), args...).Scan(&data).Error; err != nil {
+	if customerStatus != "" {
+		extraWhere += " AND status_konsumen IN ('ALL', ?)"
+		args = append(args, customerStatus)
+	}
+
+	if pbkScore != "" {
+		extraWhere += " AND pbk_score IN ('ALL', ?)"
+		args = append(args, pbkScore)
+	}
+
+	extraWhere += " AND bpkb_name_type = ?"
+	args = append(args, bpkbNameType)
+
+	if err = r.newKmb.Raw(fmt.Sprintf("SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE deleted_at IS NULL AND result_pefindo = ? AND cluster = ? %s ", extraWhere), args...).Scan(&data).Error; err != nil {
 		return
 	}
 	return

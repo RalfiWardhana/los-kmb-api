@@ -2718,20 +2718,23 @@ func TestGetMappingElaborateLTV(t *testing.T) {
 
 	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
-	query := `SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE result_pefindo = ? AND cluster = ? AND grade_branch = ?`
+	query := `SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE deleted_at IS NULL AND result_pefindo = ? AND cluster = ? AND grade_branch IN ('ALL', ?) AND status_konsumen IN ('ALL', ?) AND pbk_score IN ('ALL', ?) AND bpkb_name_type = ?`
 
 	resultPefindo := "PASS"
 	cluster := "Cluster A"
 	gradeBranch := "BAD"
+	customerStatus := "NEW"
+	pbkScore := "GOOD"
+	bpkbNameType := 1
 
 	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
-		WithArgs(resultPefindo, cluster, gradeBranch).
+		WithArgs(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType).
 		WillReturnRows(sqlmock.NewRows([]string{"result_pefindo", "cluster", "total_baki_debet_start"}).
 			AddRow("AVERAGE RISK", "Cluster A", 0))
 	mock.ExpectCommit()
 
-	_, err := repo.GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch)
+	_, err := repo.GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType)
 	if err != nil {
 		t.Errorf("error '%s' was not expected, but got: ", err)
 	}
@@ -2749,18 +2752,22 @@ func TestGetMappingElaborateLTV_DatabaseError(t *testing.T) {
 
 	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
-	query := `SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE result_pefindo = ? AND cluster = ? `
+	query := `SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE deleted_at IS NULL AND result_pefindo = ? AND cluster = ? AND grade_branch IN ('ALL', ?) AND status_konsumen IN ('ALL', ?) AND pbk_score IN ('ALL', ?) AND bpkb_name_type = ?`
 
 	resultPefindo := "PASS"
 	cluster := "Cluster A"
+	gradeBranch := "BAD"
+	customerStatus := "NEW"
+	pbkScore := "GOOD"
+	bpkbNameType := 1
 
 	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
-		WithArgs(resultPefindo, cluster).
+		WithArgs(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType).
 		WillReturnError(fmt.Errorf("database error"))
 	mock.ExpectCommit()
 
-	result, err := repo.GetMappingElaborateLTV(resultPefindo, cluster, "")
+	result, err := repo.GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType)
 
 	if err == nil {
 		t.Error("expected error, got nil")

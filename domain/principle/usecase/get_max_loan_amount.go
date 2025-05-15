@@ -263,10 +263,15 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 			return data, err
 		}
 
+		var bpkbNameType int
+		if strings.Contains(os.Getenv("NAMA_SAMA"), req.BPKBNameType) {
+			bpkbNameType = 1
+		}
+
 		customerStatus := dataCustomer.CustomerStatus
 
 		var mappingElaborateLTV []entity.MappingElaborateLTV
-		mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, clusterCMO, branch.GradeBranch)
+		mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, clusterCMO, branch.GradeBranch, customerStatus, pbkScore, bpkbNameType)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
 			return data, err
@@ -380,59 +385,51 @@ func (u usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.Mappin
 		ManufacturingYear: manufactureYear,
 	}
 
-	isFixedLtv := false
 	maxTenor := 0
 	for _, m := range mappingElaborateLTV {
-		if !isFixedLtv {
-			if tenor >= 36 {
-				//no hit
-				if resultPefindo == constant.DECISION_PBK_NO_HIT && m.TenorStart <= tenor && tenor <= m.TenorEnd && bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
-					ltv = m.LTV
-					trxElaborateLTV.MappingElaborateLTVID = m.ID
-				}
-
-				//pass
-				if resultPefindo == constant.DECISION_PASS && m.TenorStart <= tenor && tenor <= m.TenorEnd && bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
-					ltv = m.LTV
-					trxElaborateLTV.MappingElaborateLTVID = m.ID
-				}
-
-				//reject
-				if resultPefindo == constant.DECISION_REJECT && m.TotalBakiDebetStart <= int(bakiDebet) && int(bakiDebet) <= m.TotalBakiDebetEnd && m.TenorStart <= tenor && tenor <= m.TenorEnd && bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
-					ltv = m.LTV
-					trxElaborateLTV.MappingElaborateLTVID = m.ID
-				}
-
-			} else if tenor == 18 && m.TenorStart <= tenor && tenor <= m.TenorEnd && m.StatusKonsumen == customerStatus && bpkbNameType == 0 && m.PbkScore == pbkScore &&
-				m.GradeBranch == gradeBranch {
+		if tenor >= 36 {
+			//no hit
+			if resultPefindo == constant.DECISION_PBK_NO_HIT && m.TenorStart <= tenor && tenor <= m.TenorEnd && bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
 				ltv = m.LTV
 				trxElaborateLTV.MappingElaborateLTVID = m.ID
-				isFixedLtv = true
-			} else {
-				//no hit
-				if resultPefindo == constant.DECISION_PBK_NO_HIT && m.TenorStart <= tenor && tenor <= m.TenorEnd {
-					ltv = m.LTV
-					trxElaborateLTV.MappingElaborateLTVID = m.ID
-				}
+			}
 
-				//pass
-				if resultPefindo == constant.DECISION_PASS && m.TenorStart <= tenor && tenor <= m.TenorEnd {
-					if m.BPKBNameType == 1 {
-						if bpkbNameType == m.BPKBNameType {
-							ltv = m.LTV
-							trxElaborateLTV.MappingElaborateLTVID = m.ID
-						}
-					} else {
+			//pass
+			if resultPefindo == constant.DECISION_PASS && m.TenorStart <= tenor && tenor <= m.TenorEnd && bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
+				ltv = m.LTV
+				trxElaborateLTV.MappingElaborateLTVID = m.ID
+			}
+
+			//reject
+			if resultPefindo == constant.DECISION_REJECT && m.TotalBakiDebetStart <= int(bakiDebet) && int(bakiDebet) <= m.TotalBakiDebetEnd && m.TenorStart <= tenor && tenor <= m.TenorEnd && bpkbNameType == m.BPKBNameType && ageS == m.AgeVehicle {
+				ltv = m.LTV
+				trxElaborateLTV.MappingElaborateLTVID = m.ID
+			}
+
+		} else {
+			//no hit
+			if resultPefindo == constant.DECISION_PBK_NO_HIT && m.TenorStart <= tenor && tenor <= m.TenorEnd {
+				ltv = m.LTV
+				trxElaborateLTV.MappingElaborateLTVID = m.ID
+			}
+
+			//pass
+			if resultPefindo == constant.DECISION_PASS && m.TenorStart <= tenor && tenor <= m.TenorEnd {
+				if m.BPKBNameType == 1 {
+					if bpkbNameType == m.BPKBNameType {
 						ltv = m.LTV
 						trxElaborateLTV.MappingElaborateLTVID = m.ID
 					}
-				}
-
-				//reject
-				if resultPefindo == constant.DECISION_REJECT && m.TotalBakiDebetStart <= int(bakiDebet) && int(bakiDebet) <= m.TotalBakiDebetEnd && m.TenorStart <= tenor && tenor <= m.TenorEnd {
+				} else {
 					ltv = m.LTV
 					trxElaborateLTV.MappingElaborateLTVID = m.ID
 				}
+			}
+
+			//reject
+			if resultPefindo == constant.DECISION_REJECT && m.TotalBakiDebetStart <= int(bakiDebet) && int(bakiDebet) <= m.TotalBakiDebetEnd && m.TenorStart <= tenor && tenor <= m.TenorEnd {
+				ltv = m.LTV
+				trxElaborateLTV.MappingElaborateLTVID = m.ID
 			}
 		}
 

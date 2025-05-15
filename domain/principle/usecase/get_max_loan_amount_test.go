@@ -2305,7 +2305,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 															Return(tc.mappingBranch, tc.errMappingBranchEntity)
 
 														if tc.errMappingBranchEntity == nil {
-															mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything).Return(tc.mappingElaborateLTV, tc.errMappingElaborateLTV)
+															mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.mappingElaborateLTV, tc.errMappingElaborateLTV)
 
 															if tc.errMappingElaborateLTV == nil {
 																mockUsecase.On("GetLTV", ctx, tc.mappingElaborateLTV, tc.request.ProspectID, mock.Anything, tc.request.BPKBNameType, tc.request.ManufactureYear, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.getLTVResponse, tc.adjustTenorResponse, tc.errGetLTV)

@@ -179,7 +179,35 @@ func (u usecase) PrincipleElaborateLTV(ctx context.Context, reqs request.Princip
 		}
 	}
 
-	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, cluster, "")
+	detailTrxBiro, err := u.repository.GetTrxDetailBIro(reqs.ProspectID)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Trx Detail Biro Error")
+		return data, err
+	}
+
+	scores := make([]string, 0)
+	for _, v := range detailTrxBiro {
+		scores = append(scores, v.Score)
+	}
+
+	pbkScoreMapping, err := u.repository.GetMappingPbkScore(scores)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Pbk Score Error")
+		return data, err
+	}
+
+	pbkScore := pbkScoreMapping.GradeScore
+	if pbkScoreMapping.GradeScore == "" {
+		pbkScore = "NO HIT"
+	}
+
+	branch, err := u.repository.GetMappingBranchByBranchID(principleStepOne.BranchID, pbkScore)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Branch Error")
+		return data, err
+	}
+
+	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, cluster, branch.GradeBranch, filteringKMB.CustomerStatus.(string), pbkScore, bpkbNameType)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
 		return

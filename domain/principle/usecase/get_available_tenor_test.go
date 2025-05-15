@@ -2985,7 +2985,7 @@ func TestGetAvailableTenor(t *testing.T) {
 															Return(tc.mappingBranch, tc.errMappingBranchEntity)
 
 														if tc.errMappingBranchEntity == nil {
-															mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything).Return(tc.mappingLTV, tc.errMappingLTV)
+															mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.mappingLTV, tc.errMappingLTV)
 															mockUsecase.On("MarsevGetLoanAmount", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.loanAmountResponse, tc.errLoanAmount)
 															mockUsecase.On("GetLTV", ctx, tc.mappingLTV, tc.request.ProspectID, "PASS", tc.request.BPKBNameType, tc.request.ManufactureYear, mock.AnythingOfType("int"), float64(0), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.ltvResponse, tc.adjustTenorResponse, tc.errGetLTV)
 

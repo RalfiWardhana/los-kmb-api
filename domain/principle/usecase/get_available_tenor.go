@@ -292,10 +292,15 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 			return data, err
 		}
 
+		var bpkbNameType int
+		if strings.Contains(os.Getenv("NAMA_SAMA"), req.BPKBNameType) {
+			bpkbNameType = 1
+		}
+
 		customerStatus := dataCustomer.CustomerStatus
 
 		var mappingElaborateLTV []entity.MappingElaborateLTV
-		mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, clusterCMO, branch.GradeBranch)
+		mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, clusterCMO, branch.GradeBranch, customerStatus, pbkScore, bpkbNameType)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
 			return data, err

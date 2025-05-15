@@ -481,9 +481,9 @@ func (_m *Repository) GetMappingDukcapilVD(statusVD string, customerStatus strin
 	return r0, r1
 }
 
-// GetMappingElaborateLTV provides a mock function with given fields: resultPefindo, cluster, gradeBranch
-func (_m *Repository) GetMappingElaborateLTV(resultPefindo string, cluster string, gradeBranch string) ([]entity.MappingElaborateLTV, error) {
-	ret := _m.Called(resultPefindo, cluster, gradeBranch)
+// GetMappingElaborateLTV provides a mock function with given fields: resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType
+func (_m *Repository) GetMappingElaborateLTV(resultPefindo string, cluster string, gradeBranch string, customerStatus string, pbkScore string, bpkbNameType int) ([]entity.MappingElaborateLTV, error) {
+	ret := _m.Called(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetMappingElaborateLTV")
@@ -491,19 +491,19 @@ func (_m *Repository) GetMappingElaborateLTV(resultPefindo string, cluster strin
 
 	var r0 []entity.MappingElaborateLTV
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, string, string) ([]entity.MappingElaborateLTV, error)); ok {
-		return rf(resultPefindo, cluster, gradeBranch)
+	if rf, ok := ret.Get(0).(func(string, string, string, string, string, int) ([]entity.MappingElaborateLTV, error)); ok {
+		return rf(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType)
 	}
-	if rf, ok := ret.Get(0).(func(string, string, string) []entity.MappingElaborateLTV); ok {
-		r0 = rf(resultPefindo, cluster, gradeBranch)
+	if rf, ok := ret.Get(0).(func(string, string, string, string, string, int) []entity.MappingElaborateLTV); ok {
+		r0 = rf(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]entity.MappingElaborateLTV)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string, string) error); ok {
-		r1 = rf(resultPefindo, cluster, gradeBranch)
+	if rf, ok := ret.Get(1).(func(string, string, string, string, string, int) error); ok {
+		r1 = rf(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType)
 	} else {
 		r1 = ret.Error(1)
 	}

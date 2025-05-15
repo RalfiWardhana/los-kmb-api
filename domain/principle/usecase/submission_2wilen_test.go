@@ -7355,7 +7355,7 @@ func TestSubmission2Wilen(t *testing.T) {
 			mockRepository.On("GetMappingPbkScore", mock.Anything).Return(tc.mappingPbkScoreGrade, tc.errMappingPbkScoreGrade)
 			mockRepository.On("GetMappingBranchByBranchID", tc.request.BranchID, mock.Anything).
 				Return(tc.mappingBranch, tc.errMappingBranchEntity)
-			mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetMappingElaborateLTV, tc.errGetMappingElaborateLTV)
+			mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetMappingElaborateLTV, tc.errGetMappingElaborateLTV)
 			if tc.isGetConfigDupcheck {
 				mockRepository.On("GetConfig", mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetConfigDupcheck, tc.errGetConfigDupcheck).Once()
 			}

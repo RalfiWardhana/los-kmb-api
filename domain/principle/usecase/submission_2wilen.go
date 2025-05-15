@@ -1063,9 +1063,14 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		return resp, err
 	}
 
+	var bpkbNameType int
+	if strings.Contains(os.Getenv("NAMA_SAMA"), req.BPKBNameType) {
+		bpkbNameType = 1
+	}
+
 	// get loan amount
 	var mappingElaborateLTV []entity.MappingElaborateLTV
-	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, clusterCMO, branch.GradeBranch)
+	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, clusterCMO, branch.GradeBranch, customerStatus, pbkScore, bpkbNameType)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
 		return
