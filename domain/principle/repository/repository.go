@@ -426,7 +426,7 @@ func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch,
 	return
 }
 
-func (r *repoHandler) GetMappingBranchByBranchID(branchID string, pbkScore string) (data entity.MappingBranch, err error) {
+func (r *repoHandler) GetMappingBranchByBranchID(branchID string, pbkScore string) (data entity.MappingBranchByPBKScore, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))

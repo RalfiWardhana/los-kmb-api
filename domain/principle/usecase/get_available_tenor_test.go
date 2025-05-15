@@ -71,7 +71,7 @@ func TestGetAvailableTenor(t *testing.T) {
 		errRejectTenor            error
 		expectedTenors            []response.GetAvailableTenorData
 		expectedError             error
-		mappingBranch             entity.MappingBranch
+		mappingBranch             entity.MappingBranchByPBKScore
 		errMappingBranchEntity    error
 		trxDetailBiro             []entity.TrxDetailBiro
 		pbkScore                  string
@@ -99,7 +99,7 @@ func TestGetAvailableTenor(t *testing.T) {
 					Score: "AVERAGE RISK",
 				},
 			},
-			mappingBranch: entity.MappingBranch{
+			mappingBranch: entity.MappingBranchByPBKScore{
 				GradeBranch: "GOOD",
 			},
 			dupcheckResponse: response.SpDupCekCustomerByID{

@@ -150,7 +150,7 @@ func TestSubmission2Wilen(t *testing.T) {
 		expectPublishEventKPMWait            bool
 		expectPublishEventKPMApprove         bool
 		expectPublishEvent                   bool
-		mappingBranch                        entity.MappingBranch
+		mappingBranch                        entity.MappingBranchByPBKScore
 		errMappingBranchEntity               error
 		trxDetailBiro                        []entity.TrxDetailBiro
 		pbkScore                             string

@@ -398,22 +398,22 @@ func (_m *Repository) GetLatestTrxKPMStatusWithLock(prospectId string) (entity.T
 }
 
 // GetMappingBranchByBranchID provides a mock function with given fields: branchID, pbkScore
-func (_m *Repository) GetMappingBranchByBranchID(branchID string, pbkScore string) (entity.MappingBranch, error) {
+func (_m *Repository) GetMappingBranchByBranchID(branchID string, pbkScore string) (entity.MappingBranchByPBKScore, error) {
 	ret := _m.Called(branchID, pbkScore)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetMappingBranchByBranchID")
 	}
 
-	var r0 entity.MappingBranch
+	var r0 entity.MappingBranchByPBKScore
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, string) (entity.MappingBranch, error)); ok {
+	if rf, ok := ret.Get(0).(func(string, string) (entity.MappingBranchByPBKScore, error)); ok {
 		return rf(branchID, pbkScore)
 	}
-	if rf, ok := ret.Get(0).(func(string, string) entity.MappingBranch); ok {
+	if rf, ok := ret.Get(0).(func(string, string) entity.MappingBranchByPBKScore); ok {
 		r0 = rf(branchID, pbkScore)
 	} else {
-		r0 = ret.Get(0).(entity.MappingBranch)
+		r0 = ret.Get(0).(entity.MappingBranchByPBKScore)
 	}
 
 	if rf, ok := ret.Get(1).(func(string, string) error); ok {

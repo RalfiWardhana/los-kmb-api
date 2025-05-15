@@ -28,7 +28,7 @@ type Repository interface {
 	UpdatePrincipleStepTwo(prospectID string, data entity.TrxPrincipleStepTwo) (err error)
 	GetFilteringResult(prospectID string) (filtering entity.FilteringKMB, err error)
 	GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore string, bpkbNameType int) (data []entity.MappingElaborateLTV, err error)
-	GetMappingBranchByBranchID(branchID string, pbkScore string) (data entity.MappingBranch, err error)
+	GetMappingBranchByBranchID(branchID string, pbkScore string) (data entity.MappingBranchByPBKScore, err error)
 	SaveTrxElaborateLTV(data entity.TrxElaborateLTV) (err error)
 	GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNameType, tenor int, resultPefindo string, af float64) (data entity.MappingVehicleAge, err error)
 	GetScoreGenerator(zipCode string) (score entity.ScoreGenerator, err error)

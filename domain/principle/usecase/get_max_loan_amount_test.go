@@ -57,7 +57,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 		errCheckCmoNoFPD          error
 		mappingElaborateLTV       []entity.MappingElaborateLTV
 		errMappingElaborateLTV    error
-		mappingBranch             entity.MappingBranch
+		mappingBranch             entity.MappingBranchByPBKScore
 		errMappingBranchEntity    error
 		trxDetailBiro             []entity.TrxDetailBiro
 		pbkScore                  string
@@ -95,7 +95,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 					Score: "AVERAGE RISK",
 				},
 			},
-			mappingBranch: entity.MappingBranch{
+			mappingBranch: entity.MappingBranchByPBKScore{
 				GradeBranch: "GOOD",
 			},
 			config: entity.AppConfig{
@@ -207,7 +207,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 			mappingPbkScoreGrade: entity.MappingPBKScoreGrade{
 				GradeScore: "GOOD",
 			},
-			mappingBranch: entity.MappingBranch{
+			mappingBranch: entity.MappingBranchByPBKScore{
 				GradeBranch: "GOOD",
 			},
 			config: entity.AppConfig{
@@ -324,7 +324,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 					Score: "NO HIT",
 				},
 			},
-			mappingBranch: entity.MappingBranch{
+			mappingBranch: entity.MappingBranchByPBKScore{
 				GradeBranch: "GOOD",
 			},
 			config: entity.AppConfig{
@@ -1524,7 +1524,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 					Score: "NO HIT",
 				},
 			},
-			mappingBranch: entity.MappingBranch{
+			mappingBranch: entity.MappingBranchByPBKScore{
 				GradeBranch: "GOOD",
 			},
 			config: entity.AppConfig{
@@ -1631,7 +1631,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 					Score: "NO HIT",
 				},
 			},
-			mappingBranch: entity.MappingBranch{
+			mappingBranch: entity.MappingBranchByPBKScore{
 				GradeBranch: "GOOD",
 			},
 			config: entity.AppConfig{
@@ -1741,7 +1741,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 					Score: "NO HIT",
 				},
 			},
-			mappingBranch: entity.MappingBranch{
+			mappingBranch: entity.MappingBranchByPBKScore{
 				GradeBranch: "GOOD",
 			},
 			config: entity.AppConfig{
@@ -1853,7 +1853,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 					Score: "NO HIT",
 				},
 			},
-			mappingBranch: entity.MappingBranch{
+			mappingBranch: entity.MappingBranchByPBKScore{
 				GradeBranch: "GOOD",
 			},
 			dupcheckResponse: response.SpDupCekCustomerByID{

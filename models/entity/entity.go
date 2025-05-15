@@ -1308,6 +1308,19 @@ func (c *MappingElaborateLTV) TableName() string {
 	return "m_mapping_elaborate_ltv"
 }
 
+type TrxElaborateLTV struct {
+	ProspectID            string      `gorm:"column:prospect_id"`
+	RequestID             interface{} `gorm:"column:request_id;type:varchar(100)" json:"request_id"`
+	Tenor                 int         `gorm:"column:tenor"`
+	ManufacturingYear     string      `gorm:"column:manufacturing_year"`
+	MappingElaborateLTVID int         `gorm:"column:m_mapping_elaborate_ltv_id"`
+	CreatedAt             time.Time   `gorm:"column:created_at"`
+}
+
+func (c *TrxElaborateLTV) TableName() string {
+	return "trx_elaborate_ltv"
+}
+
 type MappingPBKScoreGrade struct {
 	ID         int       `gorm:"column:id"`
 	Score      string    `gorm:"column:score"`
@@ -1325,7 +1338,7 @@ func (c *MappingPBKScoreGrade) TableName() string {
 	return "m_mapping_pbk_grade"
 }
 
-type MappingBranch struct {
+type MappingBranchByPBKScore struct {
 	ID          int       `gorm:"column:id"`
 	BranchID    string    `gorm:"column:branch_id"`
 	Score       string    `gorm:"column:score"`
@@ -1338,21 +1351,8 @@ type MappingBranch struct {
 	DeletedBy   string    `gorm:"column:deleted_by"`
 }
 
-func (c *MappingBranch) TableName() string {
+func (c *MappingBranchByPBKScore) TableName() string {
 	return "m_mapping_branch"
-}
-
-type TrxElaborateLTV struct {
-	ProspectID            string      `gorm:"column:prospect_id"`
-	RequestID             interface{} `gorm:"column:request_id;type:varchar(100)" json:"request_id"`
-	Tenor                 int         `gorm:"column:tenor"`
-	ManufacturingYear     string      `gorm:"column:manufacturing_year"`
-	MappingElaborateLTVID int         `gorm:"column:m_mapping_elaborate_ltv_id"`
-	CreatedAt             time.Time   `gorm:"column:created_at"`
-}
-
-func (c *TrxElaborateLTV) TableName() string {
-	return "trx_elaborate_ltv"
 }
 
 type TrxHistoryApprovalScheme struct {
