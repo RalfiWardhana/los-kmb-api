@@ -174,11 +174,6 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 			return respFiltering, err
 		}
 
-		rejectedRecord, everRejected, configLockAssetReject, err := u.usecase.AssetRejectedLast30Days(ctx, *req.ChassisNumber, *req.EngineNumber, accessToken)
-		if err != nil {
-			return respFiltering, err
-		}
-
 		entityLockingSystem.ProspectID = req.ProspectID
 		entityLockingSystem.IDNumber = req.IDNumber
 		entityLockingSystem.ChassisNumber = req.ChassisNumber
@@ -266,6 +261,11 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 			} else {
 				historyCheckAsset = append(historyCheckAsset, insertDataHistoryChecking(req.ProspectID, canceledRecord, 0, 0))
 			}
+		}
+
+		rejectedRecord, everRejected, configLockAssetReject, err := u.usecase.AssetRejectedLast30Days(ctx, *req.ChassisNumber, *req.EngineNumber, accessToken)
+		if err != nil {
+			return respFiltering, err
 		}
 
 		if everRejected {
@@ -356,7 +356,9 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 			}
 		}
 		// End | Cek Asset Canceled and Rejected Last 30 Days
+	}
 
+	if req.ChassisNumber != nil && *req.ChassisNumber != "" {
 		// Start | Cek NokaNosin pindahan dari "dupcheck besaran"
 		var chassisNumberStr string
 		if req.ChassisNumber != nil {
