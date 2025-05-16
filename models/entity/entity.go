@@ -1526,7 +1526,6 @@ type RespDatatablePrescreening struct {
 	CmoRecommendation string      `json:"cmo_recommendation"`
 	Decision          string      `json:"decision"`
 	ShowAction        bool        `json:"show_action"`
-	Photo             []DataPhoto `json:"photo"`
 }
 
 type InquiryData struct {

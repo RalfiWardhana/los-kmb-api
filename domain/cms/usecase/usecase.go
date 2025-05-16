@@ -352,25 +352,7 @@ func (u usecase) GetDatatablePrescreening(ctx context.Context, req request.ReqIn
 		return []entity.RespDatatablePrescreening{}, 0, err
 	}
 
-	prospectIDs := make([]string, len(result))
-	for i, inq := range result {
-		prospectIDs[i] = inq.ProspectID
-	}
-
-	photoDataMap, err := u.repository.GetBulkCustomerPhotos(prospectIDs)
-	if err != nil {
-		return []entity.RespDatatablePrescreening{}, 0, err
-	}
-
 	for _, inq := range result {
-
-		// get photo customer
-		var photoData []entity.DataPhoto
-		if photos, exists := photoDataMap[inq.ProspectID]; exists {
-			photoData = photos
-		} else {
-			photoData = []entity.DataPhoto{}
-		}
 
 		action = false
 		if req.BranchID != constant.BRANCHID_HO && inq.Activity == constant.ACTIVITY_UNPROCESS && inq.SourceDecision == constant.PRESCREENING {
@@ -399,7 +381,6 @@ func (u usecase) GetDatatablePrescreening(ctx context.Context, req request.ReqIn
 			BirthDate:         birthDate,
 			CmoRecommendation: cmoRecommendation,
 			Decision:          decision,
-			Photo:             photoData,
 			ShowAction:        action,
 		}
 
