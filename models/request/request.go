@@ -607,6 +607,7 @@ type Apk struct {
 	SupplierBankAccountID       string   `json:"supplier_bank_account_id" validate:"required" example:"1"`
 	LifeInsuranceCoyBranchID    string   `json:"life_insurance_coy_branch_id" validate:"max=20" example:"426"`
 	LifeInsuranceAmountCoverage float64  `json:"life_insurance_amount_coverage" validate:"max=999999999999" example:"105000000"`
+	UseAdditionalInsurance      bool     `json:"use_additional_insurance" validate:"omitempty"`
 	CommisionSubsidy            float64  `json:"commision_subsidi" validate:"max=999999999999" example:"0"`
 	FinancePurpose              string   `json:"finance_purpose" validate:"required,max=100"`
 	Dealer                      string   `json:"dealer" validate:"omitempty,max=50"`

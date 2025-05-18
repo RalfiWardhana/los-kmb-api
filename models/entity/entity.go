@@ -650,6 +650,7 @@ type TrxApk struct {
 	NTFTopup                    float64   `gorm:"column:NTFTopup"`
 	WayOfPayment                string    `gorm:"type:varchar(20);column:WayOfPayment"`
 	StampDutyFee                float64   `gorm:"column:stamp_duty_fee"`
+	UseAdditionalInsurance      bool      `gorm:"column:use_additional_insurance"`
 }
 
 func (c *TrxApk) TableName() string {
@@ -2156,6 +2157,7 @@ type STG_GEN_APP struct {
 	UsrCrt                string    `gorm:"type:varchar(20);column:UsrCrt" json:"usr_crt"`
 	DtmCrt                time.Time `gorm:"column:DtmCrt" json:"dtm_crt"`
 	ApplicationPriority   string    `gorm:"type:varchar(20);column:ApplicationPriority" json:"application_priority"`
+	IsHospitalCashPlan    int       `gorm:"column:IsHospitalCashPlan"`
 }
 
 func (c *STG_GEN_APP) TableName() string {

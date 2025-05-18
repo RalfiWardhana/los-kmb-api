@@ -1941,6 +1941,7 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			UsrCrt:              constant.LOS_CREATED,
 			DtmCrt:              time.Now(),
 			ApplicationPriority: constant.RG_PRIORITY,
+			IsHospitalCashPlan:  utils.BoolToInt(apk.UseAdditionalInsurance),
 		}).Error; err != nil {
 			return err
 		}
