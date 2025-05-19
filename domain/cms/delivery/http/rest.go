@@ -45,7 +45,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.GET("/cms/prescreening/inquiry", handler.PrescreeningInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/prescreening/inquiry/:prospect_id", handler.PrescreeningDetailOrder, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/prescreening/review", handler.ReviewPrescreening, middlewares.AccessMiddleware())
-	cmsroute.GET("/cms/datatable/additional-data", handler.GetAdditionalData, middlewares.AccessMiddleware())
+	cmsroute.POST("/cms/datatable/additional-data", handler.GetAdditionalData, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/ca/inquiry", handler.CaInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/ca/inquiry/:prospect_id", handler.CaDetailOrder, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/save-as-draft", handler.SaveAsDraft, middlewares.AccessMiddleware())
@@ -502,7 +502,7 @@ func (c *handlerCMS) CaDetailOrder(ctx echo.Context) (err error) {
 // @Success 200 {object} response.ApiResponse{data=entity.RespAdditionalData}
 // @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
 // @Failure 500 {object} response.ApiResponse{}
-// @Router /api/v3/kmb/cms/datatable/additional-data [get]
+// @Router /api/v3/kmb/cms/datatable/additional-data [post]
 func (c *handlerCMS) GetAdditionalData(ctx echo.Context) (err error) {
 	var (
 		resp        interface{}
