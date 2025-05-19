@@ -104,6 +104,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 		AssetYear:              manufactureYear,
 		LoanAmount:             2000000,
 		SalesMethodID:          5,
+		BirthDate:              req.BirthDate,
 	}
 
 	marsevFilterProgramRes, err := u.usecase.MarsevGetMarketingProgram(ctx, payloadFilterProgram, req.ProspectID, accessToken)
@@ -249,6 +250,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 			RegionCode:             mappingLicensePlate.AreaID,
 			AssetCategory:          categoryId,
 			CustomerBirthDate:      req.BirthDate,
+			UseAdditionalInsurance: req.IsUseAdditionalInsurance,
 		}
 
 		var marsevCalculateInstallmentRes response.MarsevCalculateInstallmentResponse
@@ -328,16 +330,19 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 					for _, installmentData := range marsevCalculateInstallmentRes.Data {
 						if installmentData.Tenor == tenorInfo.Tenor {
 							availableTenor := response.GetAvailableTenorData{
-								Tenor:             tenorInfo.Tenor,
-								IsPsa:             installmentData.IsPSA,
-								Dealer:            dealer,
-								InstallmentAmount: installmentData.MonthlyInstallment,
-								AF:                installmentData.AmountOfFinance,
-								AdminFee:          installmentData.AdminFee,
-								DPAmount:          installmentData.DPAmount,
-								NTF:               installmentData.NTF,
-								AssetCategoryID:   categoryId,
-								OTR:               otr,
+								Tenor:                    tenorInfo.Tenor,
+								IsPsa:                    installmentData.IsPSA,
+								Dealer:                   dealer,
+								InstallmentAmount:        installmentData.MonthlyInstallment,
+								AF:                       installmentData.AmountOfFinance,
+								AdminFee:                 installmentData.AdminFee,
+								DPAmount:                 installmentData.DPAmount,
+								NTF:                      installmentData.NTF,
+								AssetCategoryID:          categoryId,
+								OTR:                      otr,
+								ShowAdditionalInsurance:  tenorInfo.ShowAdditionalInsurance,
+								UseAdditionalInsurance:   tenorInfo.UseAdditionalInsurance,
+								InsuranceCompanyBranchID: tenorInfo.InsuranceCompanyBranchID,
 							}
 							availableTenorChan <- availableTenor
 						}
