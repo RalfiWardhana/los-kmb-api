@@ -741,6 +741,34 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 	return
 }
 
+func (u *usecase) GetAdditionalData(ctx context.Context, req request.ReqAdditionalData) (data entity.RespAdditionalData, err error) {
+	var result entity.RespAdditionalData
+
+	if !req.IsIncludeSurveyor && !req.IsIncludeApproval {
+		return result, errors.New("GetAdditionalData Error - At least one data type must be requested")
+	}
+
+	if req.IsIncludeSurveyor {
+		surveyorData, err := u.repository.GetBulkSurveyorData(req.ProspectIDs)
+		if err != nil {
+			return result, err
+		}
+
+		result.Surveyor = surveyorData
+	}
+
+	if req.IsIncludeApproval {
+		historyApproval, err := u.repository.GetBulkHistoryApproval(req.ProspectIDs)
+		if err != nil {
+			return result, err
+		}
+
+		result.Approval = historyApproval
+	}
+
+	return result, nil
+}
+
 func (u usecase) GetDatatableCa(ctx context.Context, req request.ReqInquiryCa, pagination interface{}) (data []entity.RespDatatableCA, rowTotal int, err error) {
 
 	var action bool
@@ -756,33 +784,7 @@ func (u usecase) GetDatatableCa(ctx context.Context, req request.ReqInquiryCa, p
 		prospectIDs[i] = inq.ProspectID
 	}
 
-	surveyorDataMap, err := u.repository.GetBulkSurveyorData(prospectIDs)
-	if err != nil {
-		return []entity.RespDatatableCA{}, 0, err
-	}
-
-	historyDataMap, err := u.repository.GetBulkHistoryApproval(prospectIDs)
-	if err != nil {
-		return []entity.RespDatatableCA{}, 0, err
-	}
-
 	for _, inq := range result {
-
-		// get trx_surveyor
-		var surveyorData []entity.TrxSurveyor
-		if surveyors, exists := surveyorDataMap[inq.ProspectID]; exists {
-			surveyorData = surveyors
-		} else {
-			surveyorData = []entity.TrxSurveyor{}
-		}
-
-		// get trx_history_approval
-		var historyData []entity.HistoryApproval
-		if histories, exists := historyDataMap[inq.ProspectID]; exists {
-			historyData = histories
-		} else {
-			historyData = []entity.HistoryApproval{}
-		}
 
 		action = inq.ShowAction
 		if req.BranchID == constant.BRANCHID_HO {
@@ -810,8 +812,6 @@ func (u usecase) GetDatatableCa(ctx context.Context, req request.ReqInquiryCa, p
 			StatusDecision: statusDecision,
 			StatusReason:   inq.StatusReason,
 			SurveyResult:   inq.SurveyResult,
-			Surveyor:       surveyorData,
-			Approval:       historyData,
 			Draft: entity.TrxDraftCaDecision{
 				Decision:    inq.DraftDecision,
 				SlikResult:  inq.DraftSlikResult,
@@ -1866,20 +1866,7 @@ func (u usecase) GetDatatableApproval(ctx context.Context, req request.ReqInquir
 		prospectIDs[i] = inq.ProspectID
 	}
 
-	historyDataMap, err := u.repository.GetBulkHistoryApproval(prospectIDs)
-	if err != nil {
-		return []entity.RespDatatableApproval{}, 0, err
-	}
-
 	for _, inq := range result {
-
-		// get trx_history_approval
-		var historyData []entity.HistoryApproval
-		if histories, exists := historyDataMap[inq.ProspectID]; exists {
-			historyData = histories
-		} else {
-			historyData = []entity.HistoryApproval{}
-		}
 
 		var statusDecision string
 		if inq.StatusDecision == constant.DB_DECISION_APR {
@@ -1904,7 +1891,6 @@ func (u usecase) GetDatatableApproval(ctx context.Context, req request.ReqInquir
 			ActionDate:     inq.ActionDate,
 			ActionFormAkk:  inq.ActionFormAkk,
 			UrlFormAkkk:    inq.UrlFormAkkk,
-			Approval:       historyData,
 			Deviasi: entity.Deviasi{
 				DeviasiID:          inq.DeviasiID,
 				DeviasiDescription: inq.DeviasiDescription,

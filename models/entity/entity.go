@@ -1790,6 +1790,11 @@ type InquiryCa struct {
 	Pernyataan6        interface{} `gorm:"column:pernyataan_6"`
 }
 
+type RespAdditionalData struct {
+	Surveyor map[string][]TrxSurveyor     `json:"surveyor,omitempty"`
+	Approval map[string][]HistoryApproval `json:"approval,omitempty"`
+}
+
 type ListDatatableCa struct {
 	ActionDate         string      `gorm:"column:ActionDate"`
 	ShowAction         bool        `gorm:"column:ShowAction"`
@@ -1837,8 +1842,6 @@ type RespDatatableCA struct {
 	ShowAction     bool               `json:"show_action"`
 	Draft          TrxDraftCaDecision `json:"draft"`
 	Deviasi        Deviasi            `json:"deviasi"`
-	Surveyor       []TrxSurveyor      `json:"surveyor"`
-	Approval       []HistoryApproval  `json:"approval"`
 }
 
 type InquiryDataCa struct {
@@ -2138,19 +2141,18 @@ type ListDatatableApproval struct {
 }
 
 type RespDatatableApproval struct {
-	OrderAt        string            `json:"order_at"`
-	ProspectID     string            `json:"prospect_id"`
-	IDNumber       string            `json:"id_number"`
-	LegalName      string            `json:"legal_name"`
-	BirthDate      interface{}       `json:"birth_date"`
-	StatusDecision string            `json:"status_decision"`
-	StatusReason   string            `json:"status_reason"`
-	ShowAction     bool              `json:"show_action"`
-	ActionDate     string            `json:"action_date"`
-	ActionFormAkk  bool              `json:"action_form_akk"`
-	UrlFormAkkk    string            `json:"url_form_akkk"`
-	Deviasi        Deviasi           `json:"deviasi"`
-	Approval       []HistoryApproval `json:"approval"`
+	OrderAt        string      `json:"order_at"`
+	ProspectID     string      `json:"prospect_id"`
+	IDNumber       string      `json:"id_number"`
+	LegalName      string      `json:"legal_name"`
+	BirthDate      interface{} `json:"birth_date"`
+	StatusDecision string      `json:"status_decision"`
+	StatusReason   string      `json:"status_reason"`
+	ShowAction     bool        `json:"show_action"`
+	ActionDate     string      `json:"action_date"`
+	ActionFormAkk  bool        `json:"action_form_akk"`
+	UrlFormAkkk    string      `json:"url_form_akkk"`
+	Deviasi        Deviasi     `json:"deviasi"`
 }
 
 type InquiryDataApproval struct {

@@ -45,6 +45,7 @@ func CMSHandler(cmsroute *echo.Group, usecase interfaces.Usecase, repository int
 	cmsroute.GET("/cms/prescreening/inquiry", handler.PrescreeningInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/prescreening/inquiry/:prospect_id", handler.PrescreeningDetailOrder, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/prescreening/review", handler.ReviewPrescreening, middlewares.AccessMiddleware())
+	cmsroute.GET("/cms/datatable/additional-data", handler.GetAdditionalData, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/ca/inquiry", handler.CaInquiry, middlewares.AccessMiddleware())
 	cmsroute.GET("/cms/ca/inquiry/:prospect_id", handler.CaDetailOrder, middlewares.AccessMiddleware())
 	cmsroute.POST("/cms/ca/save-as-draft", handler.SaveAsDraft, middlewares.AccessMiddleware())
@@ -490,6 +491,73 @@ func (c *handlerCMS) CaDetailOrder(ctx echo.Context) (err error) {
 	} else {
 		return c.Json.SuccessV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - CA Inquiry Detail", req, nil)
 	}
+}
+
+// CMS NEW KMB Tools godoc
+// @Description Api Get Additional Data (Surveyor Data and/or History Approval)
+// @Tags Additional Data
+// @Accept json
+// @Produce json
+// @Param body body request.ReqAdditionalData true "Body payload"
+// @Success 200 {object} response.ApiResponse{data=entity.RespAdditionalData}
+// @Failure 400 {object} response.ApiResponse{error=response.ErrorValidation}
+// @Failure 500 {object} response.ApiResponse{}
+// @Router /api/v3/kmb/cms/datatable/additional-data [get]
+func (c *handlerCMS) GetAdditionalData(ctx echo.Context) (err error) {
+	var (
+		resp        interface{}
+		accessToken = middlewares.UserInfoData.AccessToken
+		req         request.ReqAdditionalData
+		ctxJson     error
+	)
+
+	// Save Log Orchestrator
+	defer func() {
+		headers := map[string]string{constant.HeaderXRequestID: ctx.Get(constant.HeaderXRequestID).(string)}
+		c.repository.SaveLogOrchestrator(headers, req, resp, "/api/v3/kmb/cms/datatable/additional-data", constant.METHOD_POST, "", ctx.Get(constant.HeaderXRequestID).(string))
+	}()
+
+	token := ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION)
+
+	err = platformauth.PlatformVerify(token)
+	if err != nil {
+		return c.Json.ServerSideErrorV2(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Additional Data", req, err)
+	}
+
+	if err := ctx.Bind(&req); err != nil {
+		ctxJson, resp = c.Json.InternalServerErrorCustomV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Additional Data", err)
+		return ctxJson
+	}
+
+	if err := ctx.Validate(&req); err != nil {
+		ctxJson, resp = c.Json.BadRequestErrorValidationV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Additional Data", req, err)
+		return ctxJson
+	}
+
+	if len(req.ProspectIDs) == 0 {
+		message := "prospect_ids cannot be empty"
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - " + message)
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Additional Data Error - "+message, req, err)
+		return ctxJson
+	}
+
+	if !req.IsIncludeSurveyor && !req.IsIncludeApproval {
+		message := "At least one data type must be requested"
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - " + message)
+		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Additional Data Error - "+message, req, err)
+
+		return ctxJson
+	}
+
+	data, err := c.usecase.GetAdditionalData(ctx.Request().Context(), req)
+
+	if err != nil {
+		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Additional Data", req, err)
+		return ctxJson
+	}
+
+	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Additional Data", req, data)
+	return ctxJson
 }
 
 // CMS NEW KMB Tools godoc

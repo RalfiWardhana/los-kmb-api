@@ -899,6 +899,12 @@ type ReqInquiryCa struct {
 	UserID       string `json:"user_id" validate:"required,max=20"`
 }
 
+type ReqAdditionalData struct {
+	ProspectIDs       []string `json:"prospect_ids" validate:"required"`
+	IsIncludeSurveyor bool     `json:"is_include_surveyor"`
+	IsIncludeApproval bool     `json:"is_include_approval"`
+}
+
 type ReqInquiryNE struct {
 	Search      string `json:"search"`
 	BranchID    string `json:"branch_id" validate:"required,max=3"`
