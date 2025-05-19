@@ -707,6 +707,7 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				NTFTopup:                    trxFMF.NTFTopup,
 				WayOfPayment:                data.Apk.WayOfPayment,
 				StampDutyFee:                data.Apk.StampDutyFee,
+				AgentFee:                    data.Apk.AgentFee,
 			}
 
 			logInfo = apk
@@ -1875,16 +1876,6 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 				omset3 = omset[i].MonthlyOmset
 			}
 		}
-	} else {
-		month1, _ = strconv.Atoi(time.Now().AddDate(0, -1, 0).Format("01"))
-		month2, _ = strconv.Atoi(time.Now().AddDate(0, -2, 0).Format("01"))
-		month3, _ = strconv.Atoi(time.Now().AddDate(0, -3, 0).Format("01"))
-		year1, _ = strconv.Atoi(time.Now().AddDate(0, -1, 0).Format("2006"))
-		year2, _ = strconv.Atoi(time.Now().AddDate(0, -2, 0).Format("2006"))
-		year3, _ = strconv.Atoi(time.Now().AddDate(0, -3, 0).Format("2006"))
-		omset1 = employment.MonthlyFixedIncome
-		omset2 = employment.MonthlyFixedIncome
-		omset3 = employment.MonthlyFixedIncome
 	}
 
 	newErr = r.stagingDB.Transaction(func(tx *gorm.DB) error {
@@ -1988,11 +1979,12 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 		}
 
 		if err := tx.Create(&entity.STG_GEN_COM{
-			BranchID:              master.BranchID,
-			ProspectID:            master.ProspectID,
-			SupplierBankAccountID: apk.SupplierBankAccountID,
-			UsrCrt:                constant.LOS_CREATED,
-			DtmCrt:                time.Now(),
+			BranchID:                    master.BranchID,
+			ProspectID:                  master.ProspectID,
+			SupplierBankAccountID:       apk.SupplierBankAccountID,
+			UsrCrt:                      constant.LOS_CREATED,
+			DtmCrt:                      time.Now(),
+			SupplierEmployeeUppingBunga: apk.AgentFee,
 		}).Error; err != nil {
 			return err
 		}
@@ -2024,11 +2016,15 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 
 		}
 
+		policyNo := "-"
+		insuranceCompany := "Self Insurance"
+
 		if err := tx.Create(&entity.STG_GEN_INS_H{
 			BranchID:                master.BranchID,
 			ProspectID:              master.ProspectID,
 			ApplicationType:         constant.NG_APPLICATION_TYPE,
-			AmountCoverage:          item.AssetInsuranceAmountCoverage,
+			AmountCoverage:          0,
+			InsuranceCompany:        &insuranceCompany,
 			InsAssetInsuredBy:       item.InsAssetInsuredBy,
 			InsuranceCoyBranchID:    item.InsuranceCoyBranchID,
 			PremiumAmountToCustomer: apk.AssetInsuranceFee,
@@ -2036,6 +2032,7 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			ExpiredDate:             expiredDateIns,
 			UsrCrt:                  constant.LOS_CREATED,
 			DtmCrt:                  time.Now(),
+			PolicyNo:                &policyNo,
 		}).Error; err != nil {
 			return err
 		}
@@ -2202,6 +2199,7 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			AccountName:                      personal.AccountName,
 			UsrCrt:                           constant.LOS_CREATED,
 			DtmCrt:                           time.Now(),
+			RentFinishDate:                   personal.RentFinishDate,
 		}).Error; err != nil {
 			return err
 		}
