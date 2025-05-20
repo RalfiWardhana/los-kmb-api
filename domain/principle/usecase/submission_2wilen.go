@@ -27,11 +27,13 @@ import (
 func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wilen, accessToken string) (resp response.Submission2Wilen, err error) {
 
 	var (
-		trxKPM            entity.TrxKPM
-		trxKPMStatus      entity.TrxKPMStatus
-		dupcheckData      response.SpDupcheckMap
-		negativeCustomer  response.NegativeCustomer
-		configValue2Wilen response.Config2Wilen
+		trxKPM                   entity.TrxKPM
+		trxKPMStatus             entity.TrxKPMStatus
+		dupcheckData             response.SpDupcheckMap
+		negativeCustomer         response.NegativeCustomer
+		configValue2Wilen        response.Config2Wilen
+		isUseAdditionalInsurance bool
+		insuranceCompanyBranchID string
 	)
 
 	trxKPMStatus.ID = utils.GenerateUUID()
@@ -168,6 +170,11 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 			String: req.ReferralCode,
 			Valid:  req.ReferralCode != "",
 		}
+		trxKPM.IsUseAdditionalInsurance = isUseAdditionalInsurance
+		trxKPM.InsuranceCompanyBranchID = sql.NullString{
+			String: insuranceCompanyBranchID,
+			Valid:  insuranceCompanyBranchID != "",
+		}
 
 		if resp.ReadjustContext != nil {
 			trxKPM.ReadjustContext = *resp.ReadjustContext
@@ -218,6 +225,14 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 			}), 0)
 		}
 	}()
+
+	if req.IsUseAdditionalInsurance != nil {
+		isUseAdditionalInsurance = *req.IsUseAdditionalInsurance
+	}
+
+	if req.InsuranceCompanyBranchID != nil && *req.InsuranceCompanyBranchID != "" {
+		insuranceCompanyBranchID = *req.InsuranceCompanyBranchID
+	}
 
 	config, err := u.repository.GetConfig("2Wilen", "KMB-OFF", "2wilen_config")
 	if err != nil {
@@ -1724,20 +1739,22 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	}
 
 	payloadSubmitSally.Biaya = request.SallySubmit2wPrincipleBiaya{
-		TotalOTRAmount:        req.OTR,
-		Tenor:                 req.Tenor,
-		LoanAmount:            req.LoanAmount,
-		LoanAmountMaximum:     marsevLoanAmountRes.Data.LoanAmountMaximum,
-		AdminFee:              req.AdminFee,
-		ProvisionFee:          marsevCalculateInstallmentRes.Data[0].ProvisionFee,
-		TotalDPAmount:         req.DPAmount,
-		AmountFinance:         req.AF,
-		PaymentDay:            1,
-		RentPaymentMethod:     "Payment Point",
-		PersonalNPWPNumber:    "",
-		CorrespondenceAddress: "Rumah",
-		MaxLTVLOS:             ltv,
-		UpdatedBy:             customerIDStr,
+		TotalOTRAmount:           req.OTR,
+		Tenor:                    req.Tenor,
+		LoanAmount:               req.LoanAmount,
+		LoanAmountMaximum:        marsevLoanAmountRes.Data.LoanAmountMaximum,
+		AdminFee:                 req.AdminFee,
+		ProvisionFee:             marsevCalculateInstallmentRes.Data[0].ProvisionFee,
+		TotalDPAmount:            req.DPAmount,
+		AmountFinance:            req.AF,
+		PaymentDay:               1,
+		RentPaymentMethod:        "Payment Point",
+		PersonalNPWPNumber:       "",
+		CorrespondenceAddress:    "Rumah",
+		MaxLTVLOS:                ltv,
+		UseAdditionalInsurance:   isUseAdditionalInsurance,
+		InsuranceCompanyBranchID: insuranceCompanyBranchID,
+		UpdatedBy:                customerIDStr,
 	}
 
 	payloadSubmitSally.ProgramMarketing = request.SallySubmit2wPrincipleProgramMarketing{

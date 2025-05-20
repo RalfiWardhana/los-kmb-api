@@ -42,6 +42,9 @@ func TestSubmission2Wilen(t *testing.T) {
 	contextReadjustLoanAmount := constant.READJUST_LOAN_AMOUNT_CONTEXT_2WILEN
 	contextTenor := constant.READJUST_TENOR_CONTEXT_2WILEN
 
+	insuranceCompanyBranchID := "EQUITY"
+	isUseAdditionalInsurance := true
+
 	testcases := []struct {
 		name                                 string
 		request                              request.Submission2Wilen
@@ -7144,20 +7147,23 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error unmarshal submit to sally",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
-				MaritalStatus:           constant.MARRIED,
-				SpouseIDNumber:          "456",
-				SpouseLegalName:         "Test Spouse Legal Name",
-				SpouseBirthDate:         birthDateStr,
-				SpouseSurgateMotherName: "Test Spouse Surgate Mother Name",
-				BPKBNameType:            "K",
-				AdminFee:                100000,
-				Tenor:                   12,
-				LoanAmount:              1000000,
-				ReferralCode:            "TX92XS",
+				IDNumber:                 "123",
+				LegalName:                "Test Legal Name",
+				BirthDate:                birthDateStr,
+				SurgateMotherName:        "Test Surgate Mother Name",
+				MaritalStatus:            constant.MARRIED,
+				SpouseIDNumber:           "456",
+				SpouseLegalName:          "Test Spouse Legal Name",
+				SpouseBirthDate:          birthDateStr,
+				SpouseSurgateMotherName:  "Test Spouse Surgate Mother Name",
+				BPKBNameType:             "K",
+				AdminFee:                 100000,
+				Tenor:                    12,
+				LoanAmount:               1000000,
+				ReferralCode:             "TX92XS",
+				RentFinishDate:           "2025-06-08",
+				IsUseAdditionalInsurance: &isUseAdditionalInsurance,
+				InsuranceCompanyBranchID: &insuranceCompanyBranchID,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{

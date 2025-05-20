@@ -1292,20 +1292,22 @@ type SallySubmit2wPrincipleObjekSewa struct {
 }
 
 type SallySubmit2wPrincipleBiaya struct {
-	TotalOTRAmount        float64 `json:"total_otr_amount"`
-	Tenor                 int     `json:"tenor"`
-	LoanAmount            float64 `json:"loan_amount"`
-	AdminFee              float64 `json:"admin_fee"`
-	ProvisionFee          float64 `json:"provision_fee"`
-	TotalDPAmount         float64 `json:"total_dp_amount"`
-	AmountFinance         float64 `json:"amount_finance"`
-	CorrespondenceAddress string  `json:"correspondence_address"`
-	PaymentDay            int     `json:"payment_day"`
-	RentPaymentMethod     string  `json:"rent_payment_method"`
-	PersonalNPWPNumber    string  `json:"personal_npwp_number"`
-	MaxLTVLOS             int     `json:"max_ltv_los"`
-	UpdatedBy             string  `json:"updated_by"`
-	LoanAmountMaximum     float64 `json:"loan_amount_maximum"`
+	TotalOTRAmount           float64 `json:"total_otr_amount"`
+	Tenor                    int     `json:"tenor"`
+	LoanAmount               float64 `json:"loan_amount"`
+	AdminFee                 float64 `json:"admin_fee"`
+	ProvisionFee             float64 `json:"provision_fee"`
+	TotalDPAmount            float64 `json:"total_dp_amount"`
+	AmountFinance            float64 `json:"amount_finance"`
+	CorrespondenceAddress    string  `json:"correspondence_address"`
+	PaymentDay               int     `json:"payment_day"`
+	RentPaymentMethod        string  `json:"rent_payment_method"`
+	PersonalNPWPNumber       string  `json:"personal_npwp_number"`
+	MaxLTVLOS                int     `json:"max_ltv_los"`
+	UpdatedBy                string  `json:"updated_by"`
+	LoanAmountMaximum        float64 `json:"loan_amount_maximum"`
+	UseAdditionalInsurance   bool    `json:"use_additional_insurance"`
+	InsuranceCompanyBranchID string  `json:"insurance_company_branch_id"`
 }
 
 type SallySubmit2wPrincipleProgramMarketing struct {
@@ -1396,66 +1398,68 @@ type GetAvailableTenor struct {
 }
 
 type Submission2Wilen struct {
-	ProspectID              string  `json:"prospect_id" validate:"required,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
-	IDNumber                string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
-	LegalName               string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
-	MobilePhone             string  `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"085880529100"`
-	Email                   string  `json:"email" validate:"required,email,max=100" example:"jonathaxx@gmail.com"`
-	BirthPlace              string  `json:"birth_place" validate:"required,max=100,allowcharsname" example:"Jakarta"`
-	BirthDate               string  `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
-	SurgateMotherName       string  `json:"surgate_mother_name" validate:"required,max=50,allowcharsname" example:"IBU"`
-	Gender                  string  `json:"gender" validate:"required,max=1,allowcharsname" example:"M"`
-	ResidenceAddress        string  `json:"residence_address" validate:"required,allowcharsaddress,max=100" example:"Dermaga Baru"`
-	ResidenceRT             string  `json:"residence_rt" validate:"required,min=1,max=3,number" example:"001"`
-	ResidenceRW             string  `json:"residence_rw" validate:"required,min=1,max=3,number" example:"002"`
-	ResidenceProvince       string  `json:"residence_province" validate:"required,max=50,allowcharsname" example:"Jakarta"`
-	ResidenceCity           string  `json:"residence_city" validate:"required,max=30,allowcharsname" example:"Jakarta Timur"`
-	ResidenceKecamatan      string  `json:"residence_kecamatan" validate:"required,max=30,allowcharsname" example:"Duren Sawit"`
-	ResidenceKelurahan      string  `json:"residence_kelurahan" validate:"required,max=30,allowcharsname" example:"Klender"`
-	ResidenceZipCode        string  `json:"residence_zipcode" validate:"required,max=5,number" example:"13470"`
-	BranchID                string  `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
-	AssetCode               string  `json:"asset_code" validate:"required,max=200,htmlValidation" example:"K-HND.MOTOR.ABSOLUTE REVO"`
-	ManufactureYear         string  `json:"manufacture_year" validate:"required,len=4,number" example:"2020"`
-	LicensePlate            string  `json:"license_plate" validate:"required,max=50,htmlValidation" example:"B3006TBJ"`
-	AssetUsageTypeCode      string  `json:"asset_usage_type_code" validate:"required,oneof=C N S,htmlValidation" example:"C"`
-	BPKBNameType            string  `json:"bpkb_name_type" validate:"required,bpkbname" example:"K"`
-	OwnerAsset              string  `json:"owner_asset" validate:"required,min=2,max=50,allowcharsname" example:"JONATHAN"`
-	LoanAmount              float64 `json:"loan_amount"  validate:"required,max=999999999999" example:"105000000"`
-	MaxLoanAmount           float64 `json:"max_loan_amount"  validate:"required,max=999999999999" example:"105000000"`
-	Tenor                   int     `json:"tenor" validate:"required,max=60" example:"12"`
-	InstallmentAmount       float64 `json:"installment_amount" validate:"required,max=999999999999" example:"4181333"`
-	NumOfDependence         int     `json:"num_of_dependence" validate:"omitempty,max=50"  example:"1"`
-	MaritalStatus           string  `json:"marital_status" validate:"required,marital"  example:"M"`
-	SpouseIDNumber          string  `json:"spouse_id_number"  validate:"omitempty,number,len=16" example:"3506126712000002"`
-	SpouseLegalName         string  `json:"spouse_legal_name" validate:"omitempty,allowcharsname,max=50" example:"YULINAR NIATI"`
-	SpouseBirthDate         string  `json:"spouse_birth_date" validate:"omitempty,dateformat" example:"1992-09-11"`
-	SpouseBirthPlace        string  `json:"spouse_birth_place" validate:"omitempty,max=100,allowcharsname" example:"Jakarta"`
-	SpouseSurgateMotherName string  `json:"spouse_surgate_mother_name"  validate:"omitempty,max=100,allowcharsname"  example:"MAMA"`
-	SpouseMobilePhone       string  `json:"spouse_mobile_phone" validate:"omitempty,min=9,max=14,number" example:"085880529111"`
-	Education               string  `json:"education" validate:"required,max=10" example:"S1"`
-	ProfessionID            string  `json:"profession_id" validate:"required,max=10" example:"KRYSW"`
-	JobType                 string  `json:"job_type" validate:"required,max=10" example:"0012"`
-	JobPosition             string  `json:"job_position" validate:"required,max=10" example:"M"`
-	EmploymentSinceMonth    int     `json:"employment_since_month" validate:"required,min=1,max=12" example:"12"`
-	EmploymentSinceYear     int     `json:"employment_since_year" validate:"required" example:"2020"`
-	MonthlyFixedIncome      float64 `json:"monthly_fixed_income" validate:"required" example:"5000000"`
-	SpouseIncome            float64 `json:"spouse_income" example:"5000000"`
-	NoChassis               string  `json:"chassis_number" validate:"required,max=25,htmlValidation" example:"MHKV1AA2JBK107322"`
-	HomeStatus              string  `json:"home_status" validate:"required,max=2,allowcharsname" example:"SD"`
-	StaySinceYear           int     `json:"stay_since_year" validate:"required" example:"2024"`
-	StaySinceMonth          int     `json:"stay_since_month" validate:"required,min=1,max=12" example:"4"`
-	KtpPhoto                string  `json:"ktp_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/ktp_SAL-1140024081400003.jpg"`
-	SelfiePhoto             string  `json:"selfie_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/selfie_SAL-1140024081400003.jpg"`
-	AF                      float64 `json:"af" validate:"required,max=999999999999" example:"84000000"`
-	NTF                     float64 `json:"ntf" validate:"required,max=999999999999" example:"150528000"`
-	OTR                     float64 `json:"otr" validate:"required,max=999999999999" example:"105000000"`
-	DPAmount                float64 `json:"down_payment_amount" validate:"omitempty,max=999999999999" example:"22000000"`
-	AdminFee                float64 `json:"admin_fee" validate:"required,max=999999999999" example:"1500000"`
-	Dealer                  string  `json:"dealer" validate:"omitempty,max=50"`
-	AssetCategoryID         string  `json:"asset_category_id" validate:"required,max=100" example:"BEBEK"`
-	KPMID                   int     `json:"kpm_id" validate:"required"`
-	RentFinishDate          string  `json:"rent_finish_date" validate:"omitempty,dateformat" example:"2021-07-29"`
-	ReferralCode            string  `json:"referral_code" validate:"omitempty,max=20,htmlValidation" example:"TQ72AJ"`
+	ProspectID               string  `json:"prospect_id" validate:"required,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
+	IDNumber                 string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
+	LegalName                string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
+	MobilePhone              string  `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"085880529100"`
+	Email                    string  `json:"email" validate:"required,email,max=100" example:"jonathaxx@gmail.com"`
+	BirthPlace               string  `json:"birth_place" validate:"required,max=100,allowcharsname" example:"Jakarta"`
+	BirthDate                string  `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
+	SurgateMotherName        string  `json:"surgate_mother_name" validate:"required,max=50,allowcharsname" example:"IBU"`
+	Gender                   string  `json:"gender" validate:"required,max=1,allowcharsname" example:"M"`
+	ResidenceAddress         string  `json:"residence_address" validate:"required,allowcharsaddress,max=100" example:"Dermaga Baru"`
+	ResidenceRT              string  `json:"residence_rt" validate:"required,min=1,max=3,number" example:"001"`
+	ResidenceRW              string  `json:"residence_rw" validate:"required,min=1,max=3,number" example:"002"`
+	ResidenceProvince        string  `json:"residence_province" validate:"required,max=50,allowcharsname" example:"Jakarta"`
+	ResidenceCity            string  `json:"residence_city" validate:"required,max=30,allowcharsname" example:"Jakarta Timur"`
+	ResidenceKecamatan       string  `json:"residence_kecamatan" validate:"required,max=30,allowcharsname" example:"Duren Sawit"`
+	ResidenceKelurahan       string  `json:"residence_kelurahan" validate:"required,max=30,allowcharsname" example:"Klender"`
+	ResidenceZipCode         string  `json:"residence_zipcode" validate:"required,max=5,number" example:"13470"`
+	BranchID                 string  `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
+	AssetCode                string  `json:"asset_code" validate:"required,max=200,htmlValidation" example:"K-HND.MOTOR.ABSOLUTE REVO"`
+	ManufactureYear          string  `json:"manufacture_year" validate:"required,len=4,number" example:"2020"`
+	LicensePlate             string  `json:"license_plate" validate:"required,max=50,htmlValidation" example:"B3006TBJ"`
+	AssetUsageTypeCode       string  `json:"asset_usage_type_code" validate:"required,oneof=C N S,htmlValidation" example:"C"`
+	BPKBNameType             string  `json:"bpkb_name_type" validate:"required,bpkbname" example:"K"`
+	OwnerAsset               string  `json:"owner_asset" validate:"required,min=2,max=50,allowcharsname" example:"JONATHAN"`
+	LoanAmount               float64 `json:"loan_amount"  validate:"required,max=999999999999" example:"105000000"`
+	MaxLoanAmount            float64 `json:"max_loan_amount"  validate:"required,max=999999999999" example:"105000000"`
+	Tenor                    int     `json:"tenor" validate:"required,max=60" example:"12"`
+	InstallmentAmount        float64 `json:"installment_amount" validate:"required,max=999999999999" example:"4181333"`
+	NumOfDependence          int     `json:"num_of_dependence" validate:"omitempty,max=50"  example:"1"`
+	MaritalStatus            string  `json:"marital_status" validate:"required,marital"  example:"M"`
+	SpouseIDNumber           string  `json:"spouse_id_number"  validate:"omitempty,number,len=16" example:"3506126712000002"`
+	SpouseLegalName          string  `json:"spouse_legal_name" validate:"omitempty,allowcharsname,max=50" example:"YULINAR NIATI"`
+	SpouseBirthDate          string  `json:"spouse_birth_date" validate:"omitempty,dateformat" example:"1992-09-11"`
+	SpouseBirthPlace         string  `json:"spouse_birth_place" validate:"omitempty,max=100,allowcharsname" example:"Jakarta"`
+	SpouseSurgateMotherName  string  `json:"spouse_surgate_mother_name"  validate:"omitempty,max=100,allowcharsname"  example:"MAMA"`
+	SpouseMobilePhone        string  `json:"spouse_mobile_phone" validate:"omitempty,min=9,max=14,number" example:"085880529111"`
+	Education                string  `json:"education" validate:"required,max=10" example:"S1"`
+	ProfessionID             string  `json:"profession_id" validate:"required,max=10" example:"KRYSW"`
+	JobType                  string  `json:"job_type" validate:"required,max=10" example:"0012"`
+	JobPosition              string  `json:"job_position" validate:"required,max=10" example:"M"`
+	EmploymentSinceMonth     int     `json:"employment_since_month" validate:"required,min=1,max=12" example:"12"`
+	EmploymentSinceYear      int     `json:"employment_since_year" validate:"required" example:"2020"`
+	MonthlyFixedIncome       float64 `json:"monthly_fixed_income" validate:"required" example:"5000000"`
+	SpouseIncome             float64 `json:"spouse_income" example:"5000000"`
+	NoChassis                string  `json:"chassis_number" validate:"required,max=25,htmlValidation" example:"MHKV1AA2JBK107322"`
+	HomeStatus               string  `json:"home_status" validate:"required,max=2,allowcharsname" example:"SD"`
+	StaySinceYear            int     `json:"stay_since_year" validate:"required" example:"2024"`
+	StaySinceMonth           int     `json:"stay_since_month" validate:"required,min=1,max=12" example:"4"`
+	KtpPhoto                 string  `json:"ktp_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/ktp_SAL-1140024081400003.jpg"`
+	SelfiePhoto              string  `json:"selfie_photo" validate:"url,max=250" example:"https://dev-platform-media.kbfinansia.com/media/reference/120000/SAL-1140024081400003/selfie_SAL-1140024081400003.jpg"`
+	AF                       float64 `json:"af" validate:"required,max=999999999999" example:"84000000"`
+	NTF                      float64 `json:"ntf" validate:"required,max=999999999999" example:"150528000"`
+	OTR                      float64 `json:"otr" validate:"required,max=999999999999" example:"105000000"`
+	DPAmount                 float64 `json:"down_payment_amount" validate:"omitempty,max=999999999999" example:"22000000"`
+	AdminFee                 float64 `json:"admin_fee" validate:"required,max=999999999999" example:"1500000"`
+	Dealer                   string  `json:"dealer" validate:"omitempty,max=50"`
+	AssetCategoryID          string  `json:"asset_category_id" validate:"required,max=100" example:"BEBEK"`
+	KPMID                    int     `json:"kpm_id" validate:"required"`
+	RentFinishDate           string  `json:"rent_finish_date" validate:"omitempty,dateformat" example:"2021-07-29"`
+	ReferralCode             string  `json:"referral_code" validate:"omitempty,max=20,htmlValidation" example:"TQ72AJ"`
+	IsUseAdditionalInsurance *bool   `json:"is_use_additional_insurance" validate:"omitempty,boolean" example:"true"`
+	InsuranceCompanyBranchID *string `json:"insurance_company_branch_id" validate:"omitempty,max=50,htmlValidation" example:"EQUITY"`
 }
 
 type History2Wilen struct {
