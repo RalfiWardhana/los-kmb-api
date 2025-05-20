@@ -1194,7 +1194,10 @@ type MarsevFilterProgramData struct {
 }
 
 type TenorInfo struct {
-	Tenor int `json:"tenor"`
+	Tenor                    int    `json:"tenor"`
+	ShowAdditionalInsurance  bool   `json:"show_additional_insurance"`
+	UseAdditionalInsurance   bool   `json:"use_additional_insurance"`
+	InsuranceCompanyBranchID string `json:"insurance_company_branch_id"`
 }
 
 type MarsevCalculateInstallmentResponse struct {
@@ -1414,16 +1417,19 @@ type GetMaxLoanAmountData struct {
 }
 
 type GetAvailableTenorData struct {
-	Tenor             int     `json:"tenor"`
-	IsPsa             bool    `json:"is_psa"`
-	Dealer            string  `json:"dealer"`
-	InstallmentAmount float64 `json:"installment_amount"`
-	AF                float64 `json:"af"`
-	AdminFee          float64 `json:"admin_fee"`
-	DPAmount          float64 `json:"down_payment_amount"`
-	NTF               float64 `json:"ntf"`
-	AssetCategoryID   string  `json:"asset_category_id"`
-	OTR               float64 `json:"otr"`
+	Tenor                    int     `json:"tenor"`
+	IsPsa                    bool    `json:"is_psa"`
+	Dealer                   string  `json:"dealer"`
+	InstallmentAmount        float64 `json:"installment_amount"`
+	AF                       float64 `json:"af"`
+	AdminFee                 float64 `json:"admin_fee"`
+	DPAmount                 float64 `json:"down_payment_amount"`
+	NTF                      float64 `json:"ntf"`
+	AssetCategoryID          string  `json:"asset_category_id"`
+	OTR                      float64 `json:"otr"`
+	ShowAdditionalInsurance  bool    `json:"show_additional_insurance"`
+	UseAdditionalInsurance   bool    `json:"use_additional_insurance"`
+	InsuranceCompanyBranchID string  `json:"insurance_company_branch_id"`
 }
 
 type Submission2Wilen struct {

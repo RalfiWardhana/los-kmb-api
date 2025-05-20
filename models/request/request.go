@@ -1209,6 +1209,7 @@ type ReqMarsevFilterProgram struct {
 	Search                 string  `json:"search"`
 	Tenor                  int     `json:"tenor"`
 	SalesMethodID          int     `json:"sales_method_id"`
+	BirthDate              string  `json:"birth_date"`
 }
 
 type ReqMarsevCalculateInstallment struct {
@@ -1224,6 +1225,7 @@ type ReqMarsevCalculateInstallment struct {
 	AssetCategory          string  `json:"asset_category"`
 	CustomerBirthDate      string  `json:"customer_birth_date"`
 	Tenor                  int     `json:"tenor"`
+	UseAdditionalInsurance *bool   `json:"use_additional_insurance"`
 }
 
 type ReqSallySubmit2wPrinciple struct {
@@ -1379,20 +1381,21 @@ type GetMaxLoanAmount struct {
 }
 
 type GetAvailableTenor struct {
-	ProspectID         string  `json:"prospect_id" validate:"required,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
-	BranchID           string  `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
-	IDNumber           string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
-	BirthDate          string  `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
-	SurgateMotherName  string  `json:"surgate_mother_name" validate:"required,max=50,allowcharsname" example:"IBU"`
-	LegalName          string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
-	MobilePhone        string  `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"085880529100"`
-	BPKBNameType       string  `json:"bpkb_name_type" validate:"required,bpkbname"`
-	ManufactureYear    string  `json:"manufacture_year" validate:"required,len=4,number" example:"2020"`
-	AssetCode          string  `json:"asset_code" validate:"required,max=200,htmlValidation" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
-	AssetUsageTypeCode string  `json:"asset_usage_type_code" validate:"required,oneof=C N S,htmlValidation" example:"C"`
-	LicensePlate       string  `json:"license_plate" validate:"required,max=50,htmlValidation" example:"B3006TBJ"`
-	LoanAmount         float64 `json:"loan_amount"  validate:"required,max=999999999999" example:"105000000"`
-	ReferralCode       *string `json:"referral_code" validate:"omitempty,max=200,htmlValidation" example:"SUZUKI"`
+	ProspectID               string  `json:"prospect_id" validate:"required,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
+	BranchID                 string  `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
+	IDNumber                 string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
+	BirthDate                string  `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
+	SurgateMotherName        string  `json:"surgate_mother_name" validate:"required,max=50,allowcharsname" example:"IBU"`
+	LegalName                string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
+	MobilePhone              string  `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"085880529100"`
+	BPKBNameType             string  `json:"bpkb_name_type" validate:"required,bpkbname"`
+	ManufactureYear          string  `json:"manufacture_year" validate:"required,len=4,number" example:"2020"`
+	AssetCode                string  `json:"asset_code" validate:"required,max=200,htmlValidation" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
+	AssetUsageTypeCode       string  `json:"asset_usage_type_code" validate:"required,oneof=C N S,htmlValidation" example:"C"`
+	LicensePlate             string  `json:"license_plate" validate:"required,max=50,htmlValidation" example:"B3006TBJ"`
+	LoanAmount               float64 `json:"loan_amount"  validate:"required,max=999999999999" example:"105000000"`
+	ReferralCode             *string `json:"referral_code" validate:"omitempty,max=200,htmlValidation" example:"SUZUKI"`
+	IsUseAdditionalInsurance *bool   `json:"is_use_additional_insurance" validate:"omitempty,boolean" example:"true"`
 }
 
 type Submission2Wilen struct {
