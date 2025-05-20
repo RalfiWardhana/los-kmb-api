@@ -2786,36 +2786,6 @@ func TestGetMappingElaborateLTV_DatabaseError(t *testing.T) {
 	}
 }
 
-func TestGetMappingBranchByID(t *testing.T) {
-	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
-
-	sqlDB, mock, _ := sqlmock.New()
-	defer sqlDB.Close()
-
-	gormDB, _ := gorm.Open("sqlite3", sqlDB)
-	gormDB.LogMode(true)
-
-	gormDB = gormDB.Debug()
-
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
-
-	query := `SELECT TOP 1 * FROM m_mapping_branch WITH (nolock) WHERE branch_id = ? AND score = ?`
-
-	id := "id"
-	pbkScore := "GOOD"
-	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(query)).
-		WithArgs(id, pbkScore).
-		WillReturnRows(sqlmock.NewRows([]string{"result_pefindo", "cluster", "total_baki_debet_start"}).
-			AddRow("AVERAGE RISK", "Cluster A", 0))
-	mock.ExpectCommit()
-
-	_, err := repo.GetMappingBranchByBranchID(id, pbkScore)
-	if err != nil {
-		t.Errorf("error '%s' was not expected, but got: ", err)
-	}
-}
-
 func TestGetMappingBranchByID_DatabaseError(t *testing.T) {
 	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 
@@ -2851,6 +2821,132 @@ func TestGetMappingBranchByID_DatabaseError(t *testing.T) {
 
 	if err := mock.ExpectationsWereMet(); err != nil {
 		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetMappingBranchByID_Success(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	query := `SELECT TOP 1 * FROM m_mapping_branch WITH (nolock) WHERE branch_id = ? AND score = ?`
+
+	id := "123"
+	pbkScore := "GOOD"
+
+	rows := sqlmock.NewRows([]string{"id", "branch_id", "score"}).
+		AddRow(1, id, pbkScore)
+
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(id, pbkScore).
+		WillReturnRows(rows)
+	mock.ExpectCommit()
+
+	result, err := repo.GetMappingBranchByBranchID(id, pbkScore)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if result.BranchID != id || result.Score != pbkScore {
+		t.Errorf("unexpected result: %+v", result)
+	}
+}
+
+func TestGetMappingBranchByID_NotFound(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	query := `SELECT TOP 1 * FROM m_mapping_branch WITH (nolock) WHERE branch_id = ? AND score = ?`
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs("123", "GOOD").
+		WillReturnRows(sqlmock.NewRows([]string{"id", "branch_id", "score"}))
+	mock.ExpectCommit()
+
+	result, err := repo.GetMappingBranchByBranchID("123", "GOOD")
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+	if result.BranchID != "" {
+		t.Errorf("expected empty result, got: %+v", result)
+	}
+}
+
+func TestGetMappingPbkScore_NotFound(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	query := `SELECT TOP 1 * FROM m_mapping_pbk_grade WITH (nolock) WHERE score IN (?,?,?) ORDER BY grade_risk DESC`
+
+	scores := []string{"AVERAGE RISK", "LOW RISK", "VERY LOW RISK"}
+
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(scores[0], scores[1], scores[2]).
+		WillReturnRows(sqlmock.NewRows([]string{"grade_risk", "GRADE_SCORE"}))
+	mock.ExpectCommit()
+
+	result, err := repo.GetMappingPbkScore(scores)
+
+	if err != nil {
+		t.Errorf("expected no error, got %v", err)
+	}
+
+	if result.GradeScore != "" {
+		t.Errorf("expected empty result, got %+v", result)
+	}
+}
+
+func TestGetMappingBranchByID(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	query := `SELECT TOP 1 * FROM m_mapping_branch WITH (nolock) WHERE branch_id = ? AND score = ?`
+
+	id := "id"
+	pbkScore := "GOOD"
+	mock.ExpectBegin()
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(id, pbkScore).
+		WillReturnRows(sqlmock.NewRows([]string{"result_pefindo", "cluster", "total_baki_debet_start"}).
+			AddRow("AVERAGE RISK", "Cluster A", 0))
+	mock.ExpectCommit()
+
+	_, err := repo.GetMappingBranchByBranchID(id, pbkScore)
+	if err != nil {
+		t.Errorf("error '%s' was not expected, but got: ", err)
 	}
 }
 
@@ -5939,7 +6035,7 @@ func TestGetTrxKPMStatusHistory(t *testing.T) {
 	}
 	defer sqlDB.Close()
 
-	gormDB, err := gorm.Open("sqlserver", sqlDB)
+	gormDB, err := gorm.Open("sqlite3", sqlDB)
 	if err != nil {
 		t.Fatalf("error opening gorm db: %v", err)
 	}
@@ -5965,6 +6061,46 @@ func TestGetTrxKPMStatusHistory(t *testing.T) {
 			req: request.History2Wilen{
 				ProspectID: ptr("PROS-001"),
 				StartDate:  &startDate,
+				EndDate:    &endDate,
+				Status:     &status,
+			},
+			mockData: []entity.TrxKPMStatusHistory{
+				{
+					ID:         "HIST-001",
+					ProspectID: "PROS-001",
+					Decision:   "APPROVED",
+					CreatedAt:  now.Add(-24 * time.Hour),
+					LoanAmount: &loanAmount,
+				},
+			},
+			mockError:     nil,
+			expectedError: nil,
+			expectedLen:   1,
+		},
+		{
+			name: "Success - Filter by ProspectID, Start Date, and Status",
+			req: request.History2Wilen{
+				ProspectID: ptr("PROS-001"),
+				StartDate:  &startDate,
+				Status:     &status,
+			},
+			mockData: []entity.TrxKPMStatusHistory{
+				{
+					ID:         "HIST-001",
+					ProspectID: "PROS-001",
+					Decision:   "APPROVED",
+					CreatedAt:  now.Add(-24 * time.Hour),
+					LoanAmount: &loanAmount,
+				},
+			},
+			mockError:     nil,
+			expectedError: nil,
+			expectedLen:   1,
+		},
+		{
+			name: "Success - Filter by ProspectID, End Date, and Status",
+			req: request.History2Wilen{
+				ProspectID: ptr("PROS-001"),
 				EndDate:    &endDate,
 				Status:     &status,
 			},
@@ -6019,6 +6155,12 @@ func TestGetTrxKPMStatusHistory(t *testing.T) {
 			if tc.req.StartDate != nil && tc.req.EndDate != nil {
 				whereQuery += " AND s.created_at BETWEEN ? AND ?"
 				args = append(args, *tc.req.StartDate, *tc.req.EndDate)
+			} else if tc.req.StartDate != nil {
+				whereQuery += " AND s.created_at >= ?"
+				args = append(args, *tc.req.StartDate)
+			} else if tc.req.EndDate != nil {
+				whereQuery += " AND s.created_at <= ?"
+				args = append(args, *tc.req.EndDate)
 			}
 			if tc.req.Status != nil {
 				whereQuery += " AND s.Decision = ?"
