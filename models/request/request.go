@@ -1395,7 +1395,7 @@ type GetAvailableTenor struct {
 	LicensePlate             string  `json:"license_plate" validate:"required,max=50,htmlValidation" example:"B3006TBJ"`
 	LoanAmount               float64 `json:"loan_amount"  validate:"required,max=999999999999" example:"105000000"`
 	ReferralCode             *string `json:"referral_code" validate:"omitempty,max=200,htmlValidation" example:"SUZUKI"`
-	IsUseAdditionalInsurance *bool   `json:"is_use_additional_insurance" validate:"required,boolean" example:"true"`
+	IsUseAdditionalInsurance *bool   `json:"is_use_additional_insurance" validate:"omitempty,boolean" example:"true"`
 }
 
 type Submission2Wilen struct {
