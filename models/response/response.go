@@ -1194,10 +1194,9 @@ type MarsevFilterProgramData struct {
 }
 
 type TenorInfo struct {
-	Tenor                    int    `json:"tenor"`
-	ShowAdditionalInsurance  bool   `json:"show_additional_insurance"`
-	UseAdditionalInsurance   bool   `json:"use_additional_insurance"`
-	InsuranceCompanyBranchID string `json:"insurance_company_branch_id"`
+	Tenor                   int  `json:"tenor"`
+	ShowAdditionalInsurance bool `json:"show_additional_insurance"`
+	UseAdditionalInsurance  bool `json:"use_additional_insurance"`
 }
 
 type MarsevCalculateInstallmentResponse struct {
@@ -1250,6 +1249,9 @@ type MarsevCalculateInstallmentData struct {
 	ExternalFreightDetail      string  `json:"external_freight_detail"`
 	IsStampDutyAsLoan          *bool   `json:"is_stamp_duty_as_loan"`
 	StampDutyFee               float64 `json:"stamp_duty_fee"`
+	ShowAdditionalInsurance    bool    `json:"show_additional_insurance"`
+	UseAdditionalInsurance     bool    `json:"use_additional_insurance"`
+	InsuranceCompanyBranchID   string  `json:"insurance_company_branch_id"`
 }
 
 type MDMAgreementByLicensePlateResponse struct {

@@ -342,7 +342,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 								OTR:                      otr,
 								ShowAdditionalInsurance:  tenorInfo.ShowAdditionalInsurance,
 								UseAdditionalInsurance:   tenorInfo.UseAdditionalInsurance,
-								InsuranceCompanyBranchID: tenorInfo.InsuranceCompanyBranchID,
+								InsuranceCompanyBranchID: installmentData.InsuranceCompanyBranchID,
 							}
 							availableTenorChan <- availableTenor
 						}
