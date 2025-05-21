@@ -73,9 +73,11 @@ func TestSaveFiltering(t *testing.T) {
 
 	newDB := NewRepository(gormDB, gormDB, gormDB)
 	trxFiltering := entity.FilteringKMB{
-		ProspectID: "TST001",
-		Decision:   "PASS",
-		IDNumber:   "123456",
+		ProspectID:        "TST001",
+		Decision:          "PASS",
+		IDNumber:          "123456",
+		LegalName:         "JOHN DOE",
+		SurgateMotherName: "IBU",
 	}
 	filtering := structToSlice(trxFiltering)
 	trxDetailBiro := []entity.TrxDetailBiro{
@@ -94,9 +96,51 @@ func TestSaveFiltering(t *testing.T) {
 		DefaultClusterEndDate:   "2024-07-31",
 		CreatedAt:               time.Time{},
 	}
+	historyAssetCheck := []entity.TrxHistoryCheckingAsset{
+		{
+			ProspectID:              "SAL001",
+			NumberOfRetry:           1,
+			FinalDecision:           "REJ",
+			Reason:                  constant.REASON_REJECT_ASSET_CHECK,
+			SourceService:           "SALLY",
+			SourceDecisionCreatedAt: time.Time{},
+			IsDataChanged:           1,
+			IsAssetLocked:           1,
+			ChassisNumber:           "NOKA123456",
+			EngineNumber:            "NOMESIN123",
+			IDNumber:                "3578102808920099",
+			LegalName:               "RONALD FAGUNDES",
+			BirthDate:               time.Time{},
+			SurgateMotherName:       "SULASTRI",
+			CreatedAt:               time.Time{},
+		},
+	}
+	historyAsset := structToSlice(historyAssetCheck)
+	var date, _ = time.Parse("2006-01-02", "2025-03-07")
+	chassisNumber := "NOKA123456"
+	engineNumber := "NOMESIN123"
+	lockingSystem := entity.TrxLockSystem{
+		ProspectID:    "SAL011",
+		IDNumber:      "3578102808920088",
+		ChassisNumber: &chassisNumber,
+		EngineNumber:  &engineNumber,
+		Reason:        constant.ASSET_PERNAH_REJECT,
+		CreatedAt:     time.Now(),
+		UnbanDate:     date,
+	}
+	lockData := structToSlice(lockingSystem)
 	cmoNoFPD := structToSlice(trxCmoNoFPD)
 	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','123456') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("123456"))
+
+	// Expect encryption query
+	encryptQuery := regexp.QuoteMeta("SELECT SCP.dbo.ENC_B64('SEC', ?) AS encrypt0, SCP.dbo.ENC_B64('SEC', ?) AS encrypt1, SCP.dbo.ENC_B64('SEC', ?) AS encrypt2")
+	encryptRows := sqlmock.NewRows([]string{"encrypt0", "encrypt1", "encrypt2"}).
+		AddRow("123456", "JOHN DOE", "IBU")
+
+	mock.ExpectQuery(encryptQuery).
+		WithArgs(trxFiltering.IDNumber, trxFiltering.LegalName, trxFiltering.SurgateMotherName).
+		WillReturnRows(encryptRows)
+
 	mock.ExpectExec(`INSERT INTO "trx_filtering" (.*)`).
 		WithArgs(filtering...).
 		WillReturnResult(sqlmock.NewResult(1, 1))
@@ -106,9 +150,39 @@ func TestSaveFiltering(t *testing.T) {
 	mock.ExpectExec(`INSERT INTO "trx_detail_biro" (.*)`).
 		WithArgs(detailBiro...).
 		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	// Expect encryption query
+	encryptQuery2 := regexp.QuoteMeta("SELECT SCP.dbo.ENC_B64('SEC', ?) AS encrypt0, SCP.dbo.ENC_B64('SEC', ?) AS encrypt1, SCP.dbo.ENC_B64('SEC', ?) AS encrypt2")
+	encryptRows2 := sqlmock.NewRows([]string{"encrypt0", "encrypt1", "encrypt2"}).
+		AddRow("3578102808920099", "RONALD FAGUNDES", "SULASTRI")
+
+	mock.ExpectQuery(encryptQuery2).
+		WithArgs(historyAssetCheck[0].IDNumber, historyAssetCheck[0].LegalName, historyAssetCheck[0].SurgateMotherName).
+		WillReturnRows(encryptRows2)
+
+	mock.ExpectExec(`INSERT INTO "trx_history_checking_asset" (.*)`).
+		WithArgs(historyAsset...).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
+	updateRegex := regexp.QuoteMeta(`UPDATE "trx_history_checking_asset" SET "is_asset_locked" = ?, "updated_at" = ? WHERE ((chassis_number = ? OR engine_number = ?) AND is_asset_locked = 0)`)
+	mock.ExpectExec(updateRegex).
+		WithArgs(1, sqlmock.AnyArg(), historyAssetCheck[0].ChassisNumber, historyAssetCheck[0].EngineNumber).
+		WillReturnResult(sqlmock.NewResult(0, 1)) // No LastInsertId, 1 row affected
+
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT SCP.dbo.ENC_B64('SEC','3578102808920088') AS encrypt`)).WillReturnRows(sqlmock.NewRows([]string{"encrypt"}).AddRow("3578102808920088"))
+
+	countQuery := regexp.QuoteMeta(`SELECT count(*) FROM "trx_lock_system" WHERE (ProspectID = ? AND IDNumber = ?)`)
+	mock.ExpectQuery(countQuery).
+		WithArgs(lockingSystem.ProspectID, lockingSystem.IDNumber).
+		WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
+
+	mock.ExpectExec(`INSERT INTO "trx_lock_system" (.*)`).
+		WithArgs(lockData...).
+		WillReturnResult(sqlmock.NewResult(1, 1))
+
 	mock.ExpectCommit()
 
-	err := newDB.SaveFiltering(trxFiltering, trxDetailBiro, trxCmoNoFPD)
+	err := newDB.SaveFiltering(trxFiltering, trxDetailBiro, trxCmoNoFPD, historyAssetCheck, lockingSystem)
 	if err != nil {
 		t.Errorf("error '%s' was not expected, but got: ", err)
 	}

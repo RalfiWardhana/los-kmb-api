@@ -15,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-resty/resty/v2"
 	jsoniter "github.com/json-iterator/go"
 )
 
@@ -143,20 +142,6 @@ func (u multiUsecase) Dupcheck(ctx context.Context, req request.DupcheckApi, mar
 	}
 
 	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: ageVehicle.Code, SourceDecision: constant.SOURCE_DECISION_PMK, Reason: ageVehicle.Reason, NextStep: constant.SOURCE_DECISION_NOKANOSIN, Info: ageVehicle.Info})
-
-	// Check Chassis Number with Active Aggrement
-	checkChassisNumber, err := u.usecase.CheckAgreementChassisNumber(ctx, req, accessToken)
-	if err != nil {
-		return
-	}
-
-	if checkChassisNumber.Result == constant.DECISION_REJECT {
-		data = checkChassisNumber
-		mapping.Reason = data.Reason
-		return
-	}
-
-	trxDetail = append(trxDetail, entity.TrxDetail{ProspectID: req.ProspectID, StatusProcess: constant.STATUS_ONPROCESS, Activity: constant.ACTIVITY_PROCESS, Decision: constant.DB_DECISION_PASS, RuleCode: checkChassisNumber.Code, SourceDecision: constant.SOURCE_DECISION_NOKANOSIN, Reason: checkChassisNumber.Reason, NextStep: constant.SOURCE_DECISION_PMK})
 
 	//dataCustomer[0] is result main dupcheck customer
 	mainCustomer := dataCustomer[0]
@@ -498,133 +483,6 @@ func (u usecase) CheckRejection(idNumber, prospectID string, configValue respons
 	data.Reason = constant.REASON_BELUM_PERNAH_REJECT
 	data.SourceDecision = constant.SOURCE_DECISION_PERNAH_REJECT_PMK_DSR
 
-	return
-}
-
-func (u usecase) CheckBannedChassisNumber(chassisNumber string) (data response.UsecaseApi, err error) {
-
-	var trxReject entity.TrxBannedChassisNumber
-	trxReject, err = u.repository.GetBannedChassisNumber(chassisNumber)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Get Banned Chassis Number Error")
-		return
-	}
-
-	if trxReject != (entity.TrxBannedChassisNumber{}) {
-		data.Result = constant.DECISION_REJECT
-		data.Code = constant.CODE_REJECT_NOKA_NOSIN
-		data.Reason = constant.REASON_REJECT_NOKA_NOSIN
-		data.SourceDecision = constant.SOURCE_DECISION_NOKANOSIN
-	}
-
-	return
-}
-
-func (u usecase) CheckRejectChassisNumber(req request.DupcheckApi, configValue response.DupcheckConfig) (data response.UsecaseApi, trxBannedChassisNumber entity.TrxBannedChassisNumber, err error) {
-
-	var rejectChassisNumber []entity.RejectChassisNumber
-	rejectChassisNumber, err = u.repository.GetCurrentTrxWithRejectChassisNumber(req.RangkaNo)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Get Reject Chassis Number Error")
-		return
-	}
-
-	if len(rejectChassisNumber) > 0 {
-		trxReject := rejectChassisNumber[len(rejectChassisNumber)-1]
-		if (len(rejectChassisNumber) >= configValue.Data.AttemptChassisNumber) || (len(rejectChassisNumber) == 2 && (req.IDNumber != trxReject.IDNumber ||
-			req.LegalName != trxReject.LegalName ||
-			req.BirthDate != trxReject.BirthDate ||
-			req.BirthPlace != trxReject.BirthPlace ||
-			req.Gender != trxReject.Gender ||
-			req.MaritalStatus != trxReject.MaritalStatus ||
-			req.NumOfDependence != trxReject.NumOfDependence ||
-			req.StaySinceYear != trxReject.StaySinceYear ||
-			req.StaySinceMonth != trxReject.StaySinceMonth ||
-			req.HomeStatus != trxReject.HomeStatus ||
-			req.LegalZipCode != trxReject.LegalZipCode ||
-			req.CompanyZipCode != trxReject.CompanyZipCode ||
-			req.ProfessionID != trxReject.ProfessionID ||
-			req.MonthlyFixedIncome != trxReject.MonthlyFixedIncome ||
-			req.EmploymentSinceYear != trxReject.EmploymentSinceYear ||
-			req.EmploymentSinceMonth != trxReject.EmploymentSinceMonth ||
-			req.EngineNo != trxReject.EngineNo ||
-			req.RangkaNo != trxReject.ChassisNo ||
-			req.BPKBName != trxReject.BPKBName ||
-			req.ManufactureYear != trxReject.ManufactureYear ||
-			req.OTRPrice != trxReject.OTR ||
-			req.Tenor != trxReject.Tenor)) {
-			//banned 30 hari
-			trxBannedChassisNumber = entity.TrxBannedChassisNumber{
-				ProspectID: req.ProspectID,
-				ChassisNo:  req.RangkaNo,
-			}
-		}
-
-		data.Result = constant.DECISION_REJECT
-		data.Code = constant.CODE_REJECT_NOKA_NOSIN
-		data.Reason = constant.REASON_REJECT_NOKA_NOSIN
-		data.SourceDecision = constant.SOURCE_DECISION_NOKANOSIN
-		return
-	}
-
-	return
-}
-
-func (u usecase) CheckAgreementChassisNumber(ctx context.Context, reqs request.DupcheckApi, accessToken string) (data response.UsecaseApi, err error) {
-
-	var (
-		responseAgreementChassisNumber response.AgreementChassisNumber
-		hitChassisNumber               *resty.Response
-	)
-
-	hitChassisNumber, err = u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+reqs.RangkaNo, nil, map[string]string{}, constant.METHOD_GET, true, 6, 60, reqs.ProspectID, accessToken)
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Get Agreement of Chassis Number Timeout")
-		return
-	}
-
-	if hitChassisNumber.StatusCode() != 200 {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Call Get Agreement of Chassis Number Error")
-		return
-	}
-
-	err = json.Unmarshal([]byte(jsoniter.Get(hitChassisNumber.Body(), "data").ToString()), &responseAgreementChassisNumber)
-
-	if err != nil {
-		err = errors.New(constant.ERROR_UPSTREAM + " - Unmarshal Get Agreement of Chassis Number Error")
-		return data, err
-	}
-
-	if responseAgreementChassisNumber.IsRegistered && responseAgreementChassisNumber.IsActive && len(responseAgreementChassisNumber.IDNumber) > 0 {
-		listNikKonsumenDanPasangan := make([]string, 0)
-
-		listNikKonsumenDanPasangan = append(listNikKonsumenDanPasangan, reqs.IDNumber)
-		if reqs.Spouse != nil && reqs.Spouse.IDNumber != "" {
-			listNikKonsumenDanPasangan = append(listNikKonsumenDanPasangan, reqs.Spouse.IDNumber)
-		}
-
-		if !utils.Contains(listNikKonsumenDanPasangan, responseAgreementChassisNumber.IDNumber) {
-			data.Code = constant.CODE_REJECT_CHASSIS_NUMBER
-			data.Result = constant.DECISION_REJECT
-			data.Reason = constant.REASON_REJECT_CHASSIS_NUMBER
-		} else {
-			if responseAgreementChassisNumber.IDNumber == reqs.IDNumber {
-				data.Code = constant.CODE_OK_CONSUMEN_MATCH
-				data.Result = constant.DECISION_PASS
-				data.Reason = constant.REASON_OK_CONSUMEN_MATCH
-			} else {
-				data.Code = constant.CODE_REJECTION_FRAUD_POTENTIAL
-				data.Result = constant.DECISION_REJECT
-				data.Reason = constant.REASON_REJECTION_FRAUD_POTENTIAL
-			}
-		}
-	} else {
-		data.Code = constant.CODE_AGREEMENT_NOT_FOUND
-		data.Result = constant.DECISION_PASS
-		data.Reason = constant.REASON_AGREEMENT_NOT_FOUND
-	}
-
-	data.SourceDecision = constant.SOURCE_DECISION_NOKANOSIN
 	return
 }
 

@@ -74,6 +74,8 @@ func TestSaveFiltering(t *testing.T) {
 		transaction         entity.FilteringKMB
 		trxDetailBiro       []entity.TrxDetailBiro
 		transactionCMOnoFPD entity.TrxCmoNoFPD
+		historyCheckAsset   []entity.TrxHistoryCheckingAsset
+		lockingSystem       entity.TrxLockSystem
 		errSave             error
 		errFinal            error
 	}{
@@ -93,11 +95,11 @@ func TestSaveFiltering(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
-			mockRepository.On("SaveFiltering", mock.Anything, mock.Anything, mock.Anything).Return(tc.errSave)
+			mockRepository.On("SaveFiltering", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.errSave)
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 
-			err := usecase.SaveFiltering(tc.transaction, tc.trxDetailBiro, tc.transactionCMOnoFPD)
+			err := usecase.SaveFiltering(tc.transaction, tc.trxDetailBiro, tc.transactionCMOnoFPD, tc.historyCheckAsset, tc.lockingSystem)
 			require.Equal(t, tc.errFinal, err)
 		})
 	}
@@ -312,7 +314,10 @@ func TestFiltering(t *testing.T) {
 		rrdDate_LatestPaidInstallment    string
 		monthsDiff_LatestPaidInstallment int
 		err_LatestPaidInstallment        error
+		checkChassisNumber               response.UsecaseApi
+		errCheckChassisNumber            error
 		config                           entity.AppConfig
+		lockAssetConfig                  entity.AppConfig
 		errGetConfig                     error
 	}{
 		{
@@ -373,6 +378,10 @@ func TestFiltering(t *testing.T) {
 		},
 		{
 			name: "TEST_err_FilteringPefindo_01",
+			lockAssetConfig: entity.AppConfig{
+				Key:   "is_locking_asset_active",
+				Value: `"false"`,
+			},
 			req: request.Filtering{
 				ProspectID: "SAL02400020230727001",
 				BPKBName:   "K",
@@ -742,7 +751,7 @@ func TestFiltering(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
 
-			mockUsecase.On("SaveFiltering", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			mockUsecase.On("SaveFiltering", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 
 			mockUsecase.On("DupcheckIntegrator", ctx, tc.req.ProspectID, tc.req.IDNumber, tc.req.LegalName, tc.req.BirthDate, tc.req.MotherName, accessToken).Return(tc.spCustomer, tc.errspCustomer).Once()
 			if tc.married {
@@ -753,6 +762,8 @@ func TestFiltering(t *testing.T) {
 			if tc.married {
 				mockUsecase.On("BlacklistCheck", 1, tc.spSpouse).Return(tc.resBlackList, mock.Anything).Once()
 			}
+
+			mockRepository.On("GetConfig", "lock_asset", "KMB-OFF", "is_locking_asset_active").Return(tc.lockAssetConfig, tc.errGetConfig)
 
 			mockUsecase.On("FilteringPefindo", ctx, tc.reqPefindo, mock.Anything, mock.Anything, mock.Anything, accessToken).Return(tc.respFilteringPefindo, tc.resPefindo, tc.trxDetailBiro, tc.errpefindo).Once()
 
@@ -6205,4 +6216,131 @@ func TestCheckLatestPaidInstallment(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestCheckAgreementChassisNumber(t *testing.T) {
+	// always set the valid url
+	os.Setenv("AGREEMENT_OF_CHASSIS_NUMBER_URL", "http://localhost/")
+
+	testcases := []struct {
+		name                           string
+		body                           string
+		code                           int
+		result                         response.UsecaseApi
+		errResp                        error
+		errResult                      error
+		errGetTrx                      error
+		req                            request.DupcheckApi
+		responseAgreementChassisNumber response.AgreementChassisNumber
+	}{
+		{
+			name: "CheckAgreementChassisNumber error EngineAPI",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+				RangkaNo:   "198091461892",
+			},
+			errResp:   errors.New("Get Error"),
+			errResult: errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call Get Agreement of Chassis Number Timeout"),
+		},
+		{
+			name: "CheckAgreementChassisNumber error EngineAPI != 200",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+				RangkaNo:   "198091461892",
+			},
+			code:      502,
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - Call Get Agreement of Chassis Number Error"),
+		},
+		{
+			name: "CheckAgreementChassisNumber error Unmarshal",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+				RangkaNo:   "198091461892",
+			},
+			code:      200,
+			errResult: errors.New(constant.ERROR_UPSTREAM + " - Unmarshal Get Agreement of Chassis Number Error"),
+			body:      `{"code"}`,
+		},
+		{
+			name: "CheckAgreementChassisNumber REASON_AGREEMENT_NOT_FOUND",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+				RangkaNo:   "198091461892",
+			},
+			code: 200,
+			body: `{"code":"OK","message":"operasi berhasil dieksekusi.","data":
+			{"go_live_date":null,"id_number":"","installment_amount":0,"is_active":false,"is_registered":false,
+			"lc_installment":0,"legal_name":"","outstanding_interest":0,"outstanding_principal":0,"status":""},
+			"errors":null,"request_id":"230e9356-ef14-45bd-a41f-96e98c16b5fb","timestamp":"2023-10-10 11:48:50"}`,
+			result: response.UsecaseApi{
+				Code:           constant.CODE_AGREEMENT_NOT_FOUND,
+				Result:         constant.DECISION_PASS,
+				Reason:         constant.REASON_AGREEMENT_NOT_FOUND,
+				SourceDecision: constant.SOURCE_DECISION_NOKANOSIN,
+			},
+		},
+		{
+			name: "CheckAgreementChassisNumber REASON_OK_CONSUMEN_SPOUSE_MATCH",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+				RangkaNo:   "198091461892",
+				IDNumber:   "7612379",
+			},
+			code: 200,
+			body: `{"code":"OK","message":"operasi berhasil dieksekusi.","data":
+			{"go_live_date":null,"id_number":"7612379","installment_amount":0,"is_active":true,"is_registered":true,
+			"lc_installment":0,"legal_name":"","outstanding_interest":0,"outstanding_principal":0,"status":""},
+			"errors":null,"request_id":"230e9356-ef14-45bd-a41f-96e98c16b5fb","timestamp":"2023-10-10 11:48:50"}`,
+			result: response.UsecaseApi{
+				Code:           constant.CODE_OK_CONSUMEN_MATCH,
+				Result:         constant.DECISION_PASS,
+				Reason:         constant.REASON_OK_CONSUMEN_SPOUSE_MATCH,
+				SourceDecision: constant.SOURCE_DECISION_NOKANOSIN,
+			},
+		},
+		{
+			name: "CheckAgreementChassisNumber REASON_REJECT_CHASSIS_NUMBER",
+			req: request.DupcheckApi{
+				ProspectID: "TEST198091461892",
+				RangkaNo:   "198091461892",
+				IDNumber:   "7612379",
+			},
+			code: 200,
+			body: `{"code":"OK","message":"operasi berhasil dieksekusi.","data":
+			{"go_live_date":null,"id_number":"161234339","installment_amount":0,"is_active":true,"is_registered":true,
+			"lc_installment":0,"legal_name":"","outstanding_interest":0,"outstanding_principal":0,"status":""},
+			"errors":null,"request_id":"230e9356-ef14-45bd-a41f-96e98c16b5fb","timestamp":"2023-10-10 11:48:50"}`,
+			result: response.UsecaseApi{
+				Code:           constant.CODE_REJECT_CHASSIS_NUMBER,
+				Result:         constant.DECISION_REJECT,
+				Reason:         constant.REASON_REJECT_CHASSIS_NUMBER,
+				SourceDecision: constant.SOURCE_DECISION_NOKANOSIN,
+			},
+		},
+	}
+
+	for _, tc := range testcases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx := context.Background()
+			accessToken := "access-token"
+			mockRepository := new(mocks.Repository)
+			mockHttpClient := new(httpclient.MockHttpClient)
+
+			rst := resty.New()
+			httpmock.ActivateNonDefault(rst.GetClient())
+			defer httpmock.DeactivateAndReset()
+
+			httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+tc.req.RangkaNo, httpmock.NewStringResponder(tc.code, tc.body))
+			resp, _ := rst.R().Get(os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL") + tc.req.RangkaNo)
+
+			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+tc.req.RangkaNo, []byte(nil), map[string]string{}, constant.METHOD_GET, true, 6, 60, tc.req.ProspectID, accessToken).Return(resp, tc.errResp).Once()
+
+			usecase := NewUsecase(mockRepository, mockHttpClient)
+
+			result, err := usecase.CheckAgreementChassisNumber(ctx, tc.req, accessToken)
+			require.Equal(t, tc.result, result)
+			require.Equal(t, tc.errResult, err)
+		})
+	}
+
 }

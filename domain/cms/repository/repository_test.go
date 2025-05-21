@@ -722,8 +722,8 @@ func TestGetInquiryPrescreening(t *testing.T) {
 	ti.asset_description,
 	ti.manufacture_year,
 	ti.color,
-	chassis_number,
-	engine_number,
+	ti.chassis_number,
+	ti.engine_number,
 	CASE
 		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -1183,8 +1183,8 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 	ti.asset_description,
 	ti.manufacture_year,
 	ti.color,
-	chassis_number,
-	engine_number,
+	ti.chassis_number,
+	ti.engine_number,
 	CASE
 		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -1641,8 +1641,8 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 	ti.asset_description,
 	ti.manufacture_year,
 	ti.color,
-	chassis_number,
-	engine_number,
+	ti.chassis_number,
+	ti.engine_number,
 	CASE
 		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -2099,8 +2099,8 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
 	ti.asset_description,
 	ti.manufacture_year,
 	ti.color,
-	chassis_number,
-	engine_number,
+	ti.chassis_number,
+	ti.engine_number,
 	CASE
 		WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -2398,8 +2398,8 @@ func TestGetInquiryPrescreeningRecordNotFound(t *testing.T) {
         ti.asset_description,
         ti.manufacture_year,
         ti.color,
-        chassis_number,
-        engine_number,
+        ti.chassis_number,
+        ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -3571,8 +3571,8 @@ func TestGetInquiryCa(t *testing.T) {
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -4093,8 +4093,8 @@ func TestGetInquiryCa(t *testing.T) {
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -4615,8 +4615,8 @@ func TestGetInquiryCa(t *testing.T) {
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -5148,8 +5148,8 @@ func TestGetInquiryCa(t *testing.T) {
 				ti.asset_description,
 				ti.manufacture_year,
 				ti.color,
-				chassis_number,
-				engine_number,
+				ti.chassis_number,
+				ti.engine_number,
 				CASE
 				WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 				WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -5681,8 +5681,8 @@ func TestGetInquiryCa(t *testing.T) {
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -6315,8 +6315,8 @@ func TestGetInquirySearch(t *testing.T) {
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -6717,8 +6717,8 @@ func TestGetInquirySearch(t *testing.T) {
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -7118,8 +7118,8 @@ func TestGetInquirySearch(t *testing.T) {
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -7509,8 +7509,8 @@ func TestGetInquirySearch(t *testing.T) {
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -8534,8 +8534,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -8986,8 +8986,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -9434,8 +9434,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -9895,8 +9895,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
@@ -10356,8 +10356,8 @@ func TestGetInquiryApproval(t *testing.T) {
 		ti.asset_description,
 		ti.manufacture_year,
 		ti.color,
-		chassis_number,
-		engine_number,
+		ti.chassis_number,
+		ti.engine_number,
 		CASE
 		  WHEN ti.bpkb_name = 'K' THEN 'Sendiri'
 		  WHEN ti.bpkb_name = 'P' THEN 'Pasangan'
