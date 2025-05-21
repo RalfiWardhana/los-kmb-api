@@ -1739,22 +1739,20 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	}
 
 	payloadSubmitSally.Biaya = request.SallySubmit2wPrincipleBiaya{
-		TotalOTRAmount:           req.OTR,
-		Tenor:                    req.Tenor,
-		LoanAmount:               req.LoanAmount,
-		LoanAmountMaximum:        marsevLoanAmountRes.Data.LoanAmountMaximum,
-		AdminFee:                 req.AdminFee,
-		ProvisionFee:             marsevCalculateInstallmentRes.Data[0].ProvisionFee,
-		TotalDPAmount:            req.DPAmount,
-		AmountFinance:            req.AF,
-		PaymentDay:               1,
-		RentPaymentMethod:        "Payment Point",
-		PersonalNPWPNumber:       "",
-		CorrespondenceAddress:    "Rumah",
-		MaxLTVLOS:                ltv,
-		UseAdditionalInsurance:   isUseAdditionalInsurance,
-		InsuranceCompanyBranchID: insuranceCompanyBranchID,
-		UpdatedBy:                customerIDStr,
+		TotalOTRAmount:        req.OTR,
+		Tenor:                 req.Tenor,
+		LoanAmount:            req.LoanAmount,
+		LoanAmountMaximum:     marsevLoanAmountRes.Data.LoanAmountMaximum,
+		AdminFee:              req.AdminFee,
+		ProvisionFee:          marsevCalculateInstallmentRes.Data[0].ProvisionFee,
+		TotalDPAmount:         req.DPAmount,
+		AmountFinance:         req.AF,
+		PaymentDay:            1,
+		RentPaymentMethod:     "Payment Point",
+		PersonalNPWPNumber:    "",
+		CorrespondenceAddress: "Rumah",
+		MaxLTVLOS:             ltv,
+		UpdatedBy:             customerIDStr,
 	}
 
 	payloadSubmitSally.ProgramMarketing = request.SallySubmit2wPrincipleProgramMarketing{
@@ -1807,6 +1805,9 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		PBKReportSpouse:   PBKReportSpouse,
 		BakiDebet:         bakiDebet,
 	}
+
+	payloadSubmitSally.IsUseAdditionalInsurance = isUseAdditionalInsurance
+	payloadSubmitSally.InsuranceCompanyBranchID = insuranceCompanyBranchID
 
 	param, _ = json.Marshal(payloadSubmitSally)
 
