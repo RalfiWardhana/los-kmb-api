@@ -251,6 +251,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 			AssetCategory:          categoryId,
 			CustomerBirthDate:      req.BirthDate,
 			UseAdditionalInsurance: req.IsUseAdditionalInsurance,
+			SourceApplication:      constant.MARSEV_SOURCE_APPLICATION_KPM,
 		}
 
 		var marsevCalculateInstallmentRes response.MarsevCalculateInstallmentResponse

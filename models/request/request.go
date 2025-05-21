@@ -1226,6 +1226,7 @@ type ReqMarsevCalculateInstallment struct {
 	CustomerBirthDate      string  `json:"customer_birth_date"`
 	Tenor                  int     `json:"tenor"`
 	UseAdditionalInsurance *bool   `json:"use_additional_insurance"`
+	SourceApplication      string  `json:"source_application"`
 }
 
 type ReqSallySubmit2wPrinciple struct {

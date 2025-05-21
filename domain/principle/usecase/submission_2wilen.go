@@ -1169,6 +1169,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		AssetYear:              manufactureYear,
 		LoanAmount:             req.LoanAmount,
 		SalesMethodID:          5,
+		CustomerBirthDate:      req.BirthDate,
 	}
 
 	marsevFilterProgramRes, err := u.usecase.MarsevGetMarketingProgram(ctx, payloadFilterProgram, req.ProspectID, accessToken)
@@ -1226,6 +1227,8 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		AssetCategory:          categoryId,
 		CustomerBirthDate:      req.BirthDate,
 		Tenor:                  req.Tenor,
+		UseAdditionalInsurance: req.IsUseAdditionalInsurance,
+		SourceApplication:      constant.MARSEV_SOURCE_APPLICATION_KPM,
 	}
 
 	var marsevCalculateInstallmentRes response.MarsevCalculateInstallmentResponse
