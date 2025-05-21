@@ -1227,13 +1227,15 @@ type ReqMarsevCalculateInstallment struct {
 }
 
 type ReqSallySubmit2wPrinciple struct {
-	Document         []SallySubmit2wPrincipleDocument       `json:"documents"`
-	Order            SallySubmit2wPrincipleOrder            `json:"order"`
-	Kop              SallySubmit2wPrincipleKop              `json:"kop"`
-	ObjekSewa        SallySubmit2wPrincipleObjekSewa        `json:"objeksewa"`
-	Biaya            SallySubmit2wPrincipleBiaya            `json:"biaya"`
-	ProgramMarketing SallySubmit2wPrincipleProgramMarketing `json:"program_marketing"`
-	Filtering        SallySubmit2wPrincipleFiltering        `json:"filtering"`
+	Document                 []SallySubmit2wPrincipleDocument       `json:"documents"`
+	Order                    SallySubmit2wPrincipleOrder            `json:"order"`
+	Kop                      SallySubmit2wPrincipleKop              `json:"kop"`
+	ObjekSewa                SallySubmit2wPrincipleObjekSewa        `json:"objeksewa"`
+	Biaya                    SallySubmit2wPrincipleBiaya            `json:"biaya"`
+	ProgramMarketing         SallySubmit2wPrincipleProgramMarketing `json:"program_marketing"`
+	Filtering                SallySubmit2wPrincipleFiltering        `json:"filtering"`
+	IsUseAdditionalInsurance bool                                   `json:"is_use_additional_insurance"`
+	InsuranceCompanyBranchID string                                 `json:"insurance_company_branch_id"`
 }
 
 type SallySubmit2wPrincipleOrder struct {
@@ -1292,22 +1294,20 @@ type SallySubmit2wPrincipleObjekSewa struct {
 }
 
 type SallySubmit2wPrincipleBiaya struct {
-	TotalOTRAmount           float64 `json:"total_otr_amount"`
-	Tenor                    int     `json:"tenor"`
-	LoanAmount               float64 `json:"loan_amount"`
-	AdminFee                 float64 `json:"admin_fee"`
-	ProvisionFee             float64 `json:"provision_fee"`
-	TotalDPAmount            float64 `json:"total_dp_amount"`
-	AmountFinance            float64 `json:"amount_finance"`
-	CorrespondenceAddress    string  `json:"correspondence_address"`
-	PaymentDay               int     `json:"payment_day"`
-	RentPaymentMethod        string  `json:"rent_payment_method"`
-	PersonalNPWPNumber       string  `json:"personal_npwp_number"`
-	MaxLTVLOS                int     `json:"max_ltv_los"`
-	UpdatedBy                string  `json:"updated_by"`
-	LoanAmountMaximum        float64 `json:"loan_amount_maximum"`
-	UseAdditionalInsurance   bool    `json:"use_additional_insurance"`
-	InsuranceCompanyBranchID string  `json:"insurance_company_branch_id"`
+	TotalOTRAmount        float64 `json:"total_otr_amount"`
+	Tenor                 int     `json:"tenor"`
+	LoanAmount            float64 `json:"loan_amount"`
+	AdminFee              float64 `json:"admin_fee"`
+	ProvisionFee          float64 `json:"provision_fee"`
+	TotalDPAmount         float64 `json:"total_dp_amount"`
+	AmountFinance         float64 `json:"amount_finance"`
+	CorrespondenceAddress string  `json:"correspondence_address"`
+	PaymentDay            int     `json:"payment_day"`
+	RentPaymentMethod     string  `json:"rent_payment_method"`
+	PersonalNPWPNumber    string  `json:"personal_npwp_number"`
+	MaxLTVLOS             int     `json:"max_ltv_los"`
+	UpdatedBy             string  `json:"updated_by"`
+	LoanAmountMaximum     float64 `json:"loan_amount_maximum"`
 }
 
 type SallySubmit2wPrincipleProgramMarketing struct {
