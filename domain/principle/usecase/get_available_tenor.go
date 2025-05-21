@@ -104,7 +104,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 		AssetYear:              manufactureYear,
 		LoanAmount:             2000000,
 		SalesMethodID:          5,
-		BirthDate:              req.BirthDate,
+		CustomerBirthDate:      req.BirthDate,
 	}
 
 	marsevFilterProgramRes, err := u.usecase.MarsevGetMarketingProgram(ctx, payloadFilterProgram, req.ProspectID, accessToken)

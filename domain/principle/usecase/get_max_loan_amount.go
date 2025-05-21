@@ -106,7 +106,7 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 		AssetYear:              manufactureYear,
 		LoanAmount:             2000000,
 		SalesMethodID:          5,
-		BirthDate:              req.BirthDate,
+		CustomerBirthDate:      req.BirthDate,
 	}
 
 	marsevFilterProgramRes, err := u.usecase.MarsevGetMarketingProgram(ctx, payloadFilterProgram, req.ProspectID, accessToken)

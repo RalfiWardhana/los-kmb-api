@@ -1209,7 +1209,7 @@ type ReqMarsevFilterProgram struct {
 	Search                 string  `json:"search"`
 	Tenor                  int     `json:"tenor"`
 	SalesMethodID          int     `json:"sales_method_id"`
-	BirthDate              string  `json:"birth_date"`
+	CustomerBirthDate      string  `json:"customer_birth_date"`
 }
 
 type ReqMarsevCalculateInstallment struct {
