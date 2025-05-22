@@ -1979,12 +1979,11 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 		}
 
 		if err := tx.Create(&entity.STG_GEN_COM{
-			BranchID:                    master.BranchID,
-			ProspectID:                  master.ProspectID,
-			SupplierBankAccountID:       apk.SupplierBankAccountID,
-			UsrCrt:                      constant.LOS_CREATED,
-			DtmCrt:                      time.Now(),
-			SupplierEmployeeUppingBunga: apk.AgentFee,
+			BranchID:              master.BranchID,
+			ProspectID:            master.ProspectID,
+			SupplierBankAccountID: apk.SupplierBankAccountID,
+			UsrCrt:                constant.LOS_CREATED,
+			DtmCrt:                time.Now(),
 		}).Error; err != nil {
 			return err
 		}
