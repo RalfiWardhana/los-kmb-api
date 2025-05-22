@@ -387,16 +387,6 @@ func (r repoHandler) GetFilteringResult(prospectID string) (filtering entity.Fil
 }
 
 func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore string, bpkbNameType int) (data []entity.MappingElaborateLTV, err error) {
-	var x sql.TxOptions
-
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.newKmb.BeginTx(ctx, &x)
-	defer db.Commit()
-
 	extraWhere := ""
 	args := []any{
 		resultPefindo,
@@ -427,20 +417,7 @@ func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch,
 }
 
 func (r *repoHandler) GetMappingBranchByBranchID(branchID string, pbkScore string) (data entity.MappingBranchByPBKScore, err error) {
-	var x sql.TxOptions
-
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.newKmb.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	if err = db.Raw("SELECT TOP 1 * FROM m_mapping_branch WITH (nolock) WHERE branch_id = ? AND score = ?", branchID, pbkScore).Scan(&data).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			err = nil
-		}
+	if err = r.newKmb.Raw("SELECT TOP 1 * FROM m_mapping_branch WITH (nolock) WHERE branch_id = ? AND score = ?", branchID, pbkScore).Scan(&data).Error; err != nil {
 		return
 	}
 
@@ -448,20 +425,7 @@ func (r *repoHandler) GetMappingBranchByBranchID(branchID string, pbkScore strin
 }
 
 func (r repoHandler) GetMappingPbkScore(pbkScores []string) (data entity.MappingPBKScoreGrade, err error) {
-	var x sql.TxOptions
-
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.newKmb.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	if err = db.Raw("SELECT TOP 1 * FROM m_mapping_pbk_grade WITH (nolock) WHERE score IN (?) ORDER BY grade_risk DESC", pbkScores).Scan(&data).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			err = nil
-		}
+	if err = r.newKmb.Raw("SELECT TOP 1 * FROM m_mapping_pbk_grade WITH (nolock) WHERE score IN (?) ORDER BY grade_risk DESC", pbkScores).Scan(&data).Error; err != nil {
 		return
 	}
 

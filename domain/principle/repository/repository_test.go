@@ -2727,12 +2727,10 @@ func TestGetMappingElaborateLTV(t *testing.T) {
 	pbkScore := "GOOD"
 	bpkbNameType := 1
 
-	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType).
 		WillReturnRows(sqlmock.NewRows([]string{"result_pefindo", "cluster", "total_baki_debet_start"}).
 			AddRow("AVERAGE RISK", "Cluster A", 0))
-	mock.ExpectCommit()
 
 	_, err := repo.GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType)
 	if err != nil {
@@ -2761,11 +2759,9 @@ func TestGetMappingElaborateLTV_DatabaseError(t *testing.T) {
 	pbkScore := "GOOD"
 	bpkbNameType := 1
 
-	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType).
 		WillReturnError(fmt.Errorf("database error"))
-	mock.ExpectCommit()
 
 	result, err := repo.GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType)
 
@@ -2803,11 +2799,9 @@ func TestGetMappingBranchByID_DatabaseError(t *testing.T) {
 	id := "id"
 	pbkScore := "GOOD"
 
-	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(id, pbkScore).
 		WillReturnError(fmt.Errorf("database error"))
-	mock.ExpectCommit()
 
 	_, err := repo.GetMappingBranchByBranchID(id, pbkScore)
 
@@ -2844,11 +2838,9 @@ func TestGetMappingBranchByID_Success(t *testing.T) {
 	rows := sqlmock.NewRows([]string{"id", "branch_id", "score"}).
 		AddRow(1, id, pbkScore)
 
-	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(id, pbkScore).
 		WillReturnRows(rows)
-	mock.ExpectCommit()
 
 	result, err := repo.GetMappingBranchByBranchID(id, pbkScore)
 	if err != nil {
@@ -2858,68 +2850,6 @@ func TestGetMappingBranchByID_Success(t *testing.T) {
 		t.Errorf("unexpected result: %+v", result)
 	}
 }
-
-func TestGetMappingBranchByID_NotFound(t *testing.T) {
-	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
-
-	sqlDB, mock, _ := sqlmock.New()
-	defer sqlDB.Close()
-
-	gormDB, _ := gorm.Open("sqlite3", sqlDB)
-	gormDB.LogMode(true)
-	gormDB = gormDB.Debug()
-
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
-
-	query := `SELECT TOP 1 * FROM m_mapping_branch WITH (nolock) WHERE branch_id = ? AND score = ?`
-	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(query)).
-		WithArgs("123", "GOOD").
-		WillReturnRows(sqlmock.NewRows([]string{"id", "branch_id", "score"}))
-	mock.ExpectCommit()
-
-	result, err := repo.GetMappingBranchByBranchID("123", "GOOD")
-	if err != nil {
-		t.Errorf("expected no error, got %v", err)
-	}
-	if result.BranchID != "" {
-		t.Errorf("expected empty result, got: %+v", result)
-	}
-}
-
-func TestGetMappingPbkScore_NotFound(t *testing.T) {
-	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
-
-	sqlDB, mock, _ := sqlmock.New()
-	defer sqlDB.Close()
-
-	gormDB, _ := gorm.Open("sqlite3", sqlDB)
-	gormDB.LogMode(true)
-	gormDB = gormDB.Debug()
-
-	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
-
-	query := `SELECT TOP 1 * FROM m_mapping_pbk_grade WITH (nolock) WHERE score IN (?,?,?) ORDER BY grade_risk DESC`
-
-	scores := []string{"AVERAGE RISK", "LOW RISK", "VERY LOW RISK"}
-
-	mock.ExpectBegin()
-	mock.ExpectQuery(regexp.QuoteMeta(query)).
-		WithArgs(scores[0], scores[1], scores[2]).
-		WillReturnRows(sqlmock.NewRows([]string{"grade_risk", "GRADE_SCORE"}))
-	mock.ExpectCommit()
-
-	result, err := repo.GetMappingPbkScore(scores)
-
-	if err != nil {
-		t.Errorf("expected no error, got %v", err)
-	}
-
-	if result.GradeScore != "" {
-		t.Errorf("expected empty result, got %+v", result)
-	}
-}
-
 func TestGetMappingBranchByID(t *testing.T) {
 	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 
@@ -2937,12 +2867,10 @@ func TestGetMappingBranchByID(t *testing.T) {
 
 	id := "id"
 	pbkScore := "GOOD"
-	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(id, pbkScore).
 		WillReturnRows(sqlmock.NewRows([]string{"result_pefindo", "cluster", "total_baki_debet_start"}).
 			AddRow("AVERAGE RISK", "Cluster A", 0))
-	mock.ExpectCommit()
 
 	_, err := repo.GetMappingBranchByBranchID(id, pbkScore)
 	if err != nil {
@@ -2966,12 +2894,10 @@ func TestGetMappingPbkScore(t *testing.T) {
 	query := `SELECT TOP 1 * FROM m_mapping_pbk_grade WITH (nolock) WHERE score IN (?,?,?) ORDER BY grade_risk DESC`
 
 	scores := []string{"AVERAGE RISK", "LOW RISK", "VERY LOW RISK"}
-	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(scores[0], scores[1], scores[2]).
 		WillReturnRows(sqlmock.NewRows([]string{"grade_risk", "GRADE_SCORE"}).
 			AddRow(3, "BAD"))
-	mock.ExpectCommit()
 
 	_, err := repo.GetMappingPbkScore(scores)
 	if err != nil {
@@ -2994,11 +2920,9 @@ func TestGetMappingPbkScore_DatabaseError(t *testing.T) {
 	query := `SELECT TOP 1 * FROM m_mapping_pbk_grade WITH (nolock) WHERE score IN (?,?,?) ORDER BY grade_risk DESC`
 
 	scores := []string{"AVERAGE RISK", "LOW RISK", "VERY LOW RISK"}
-	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(scores[0], scores[1], scores[2]).
 		WillReturnError(fmt.Errorf("database error"))
-	mock.ExpectCommit()
 
 	_, err := repo.GetMappingPbkScore(scores)
 
