@@ -556,6 +556,11 @@ func (c *handlerCMS) GetAdditionalData(ctx echo.Context) (err error) {
 		return ctxJson
 	}
 
+	if len(data.Surveyor) == 0 && len(data.Approval) == 0 {
+		ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Additional Data", req, nil)
+		return ctxJson
+	}
+
 	ctxJson, resp = c.Json.SuccessV3(ctx, accessToken, constant.NEW_KMB_LOG, "LOS - Get Additional Data", req, data)
 	return ctxJson
 }
