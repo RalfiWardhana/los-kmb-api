@@ -257,20 +257,21 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	}
 
 	availableTenors, err := u.multiUsecase.GetAvailableTenor(ctx, request.GetAvailableTenor{
-		ProspectID:         prospectIDCheck,
-		BranchID:           req.BranchID,
-		IDNumber:           req.IDNumber,
-		BirthDate:          req.BirthDate,
-		SurgateMotherName:  req.SurgateMotherName,
-		LegalName:          req.LegalName,
-		MobilePhone:        req.MobilePhone,
-		BPKBNameType:       req.BPKBNameType,
-		ManufactureYear:    req.ManufactureYear,
-		AssetCode:          req.AssetCode,
-		AssetUsageTypeCode: req.AssetUsageTypeCode,
-		LicensePlate:       req.LicensePlate,
-		LoanAmount:         req.LoanAmount,
-		ReferralCode:       &req.ReferralCode,
+		ProspectID:               prospectIDCheck,
+		BranchID:                 req.BranchID,
+		IDNumber:                 req.IDNumber,
+		BirthDate:                req.BirthDate,
+		SurgateMotherName:        req.SurgateMotherName,
+		LegalName:                req.LegalName,
+		MobilePhone:              req.MobilePhone,
+		BPKBNameType:             req.BPKBNameType,
+		ManufactureYear:          req.ManufactureYear,
+		AssetCode:                req.AssetCode,
+		AssetUsageTypeCode:       req.AssetUsageTypeCode,
+		LicensePlate:             req.LicensePlate,
+		LoanAmount:               req.LoanAmount,
+		ReferralCode:             &req.ReferralCode,
+		IsUseAdditionalInsurance: req.IsUseAdditionalInsurance,
 	}, accessToken)
 	if err != nil {
 		return
