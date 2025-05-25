@@ -271,6 +271,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		LicensePlate:             req.LicensePlate,
 		LoanAmount:               req.LoanAmount,
 		ReferralCode:             &req.ReferralCode,
+		Tenor:                    &req.Tenor,
 		IsUseAdditionalInsurance: req.IsUseAdditionalInsurance,
 	}, accessToken)
 	if err != nil {

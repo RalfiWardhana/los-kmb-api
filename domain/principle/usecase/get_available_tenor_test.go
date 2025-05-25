@@ -29,6 +29,8 @@ func TestGetAvailableTenor(t *testing.T) {
 	os.Setenv("MI_NUMBER_WHITELIST", "123")
 	accessToken := "test-token"
 
+	reqTenor := 12
+
 	testCases := []struct {
 		name                      string
 		request                   request.GetAvailableTenor
@@ -2077,6 +2079,130 @@ func TestGetAvailableTenor(t *testing.T) {
 				ManufactureYear:    "2020",
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
+			},
+			config: entity.AppConfig{
+				Value: "^SIM-.*",
+			},
+			dupcheckResponse: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+			},
+			assetResponse: response.AssetList{
+				Records: []struct {
+					AssetCode           string `json:"asset_code"`
+					AssetDescription    string `json:"asset_description"`
+					AssetDisplay        string `json:"asset_display"`
+					AssetTypeID         string `json:"asset_type_id"`
+					BranchID            string `json:"branch_id"`
+					Brand               string `json:"brand"`
+					CategoryID          string `json:"category_id"`
+					CategoryDescription string `json:"category_description"`
+					IsElectric          bool   `json:"is_electric"`
+					Model               string `json:"model"`
+				}{
+					{
+						AssetCode:           "MOT",
+						AssetDescription:    "HONDA VARIO 160",
+						AssetDisplay:        "HONDA VARIO 160",
+						AssetTypeID:         "2W",
+						BranchID:            "123",
+						Brand:               "HONDA",
+						CategoryID:          "CAT1",
+						CategoryDescription: "Sport",
+						IsElectric:          false,
+						Model:               "VARIO",
+					},
+				},
+			},
+			plateResponse: response.MDMMasterMappingLicensePlateResponse{
+				Data: response.MDMMasterMappingLicensePlateData{
+					Records: []response.MDMMasterMappingLicensePlateRecord{
+						{
+							AreaID: "AREA1",
+						},
+					},
+				},
+			},
+			marsevResponse: response.MarsevFilterProgramResponse{
+				Data: []response.MarsevFilterProgramData{
+					{
+						ID: "1234",
+						Tenors: []response.TenorInfo{
+							{
+								Tenor: 12,
+							},
+							{
+								Tenor: 24,
+							},
+						},
+					},
+				},
+			},
+			assetYearListResponse: response.AssetYearList{
+				Records: []struct {
+					AssetCode        string `json:"asset_code"`
+					BranchID         string `json:"branch_id"`
+					Brand            string `json:"brand"`
+					ManufactureYear  int    `json:"manufacturing_year"`
+					MarketPriceValue int    `json:"market_price_value"`
+				}{
+					{
+						AssetCode:        "MOT",
+						BranchID:         "123",
+						Brand:            "HONDA",
+						ManufactureYear:  2020,
+						MarketPriceValue: 60000000,
+					},
+				},
+			},
+			cmoResponse: response.MDMMasterMappingBranchEmployeeResponse{
+				Data: []response.MDMMasterMappingBranchEmployeeRecord{
+					{
+						CMOID: "12434",
+					},
+				},
+			},
+			hrisResponse: response.EmployeeCMOResponse{
+				CMOCategory: constant.CMO_LAMA,
+			},
+			getFpdCmoResponse: response.FpdCMOResponse{
+				FpdExist: false,
+			},
+			savedClusterCheckCmoNoFPD: "Cluster C",
+			calculationResponse: response.MarsevCalculateInstallmentResponse{
+				Data: []response.MarsevCalculateInstallmentData{
+					{
+						Tenor:              12,
+						IsPSA:              true,
+						MonthlyInstallment: 1000000,
+						AmountOfFinance:    1000000,
+						AdminFee:           100000,
+						DPAmount:           1000000,
+						NTF:                100000,
+					},
+				},
+			},
+			mappingLTV: []entity.MappingElaborateLTV{
+				{
+					ID: 1,
+				},
+			},
+			ltvResponse:   80,
+			errLoanAmount: errors.New("failed to get loan amount"),
+			expectedError: errors.New("failed to get loan amount"),
+		},
+		{
+			name: "error marsev get loan amount with req tenor",
+			request: request.GetAvailableTenor{
+				ProspectID:         "SIM-123",
+				BranchID:           "123",
+				AssetCode:          "MOT",
+				LicensePlate:       "B1234XX",
+				BPKBNameType:       "K",
+				ManufactureYear:    "2020",
+				LoanAmount:         50000000,
+				AssetUsageTypeCode: "P",
+				Tenor:              &reqTenor,
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
