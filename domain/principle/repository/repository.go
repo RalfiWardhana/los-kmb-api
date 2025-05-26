@@ -425,6 +425,9 @@ func (r *repoHandler) GetMappingBranchByBranchID(branchID string, pbkScore strin
 }
 
 func (r repoHandler) GetMappingPbkScore(pbkScores []string) (data entity.MappingPBKScoreGrade, err error) {
+	if len(pbkScores) == 0 {
+		return data, err
+	}
 	if err = r.newKmb.Raw("SELECT TOP 1 * FROM m_mapping_pbk_grade WITH (nolock) WHERE score IN (?) ORDER BY grade_risk DESC", pbkScores).Scan(&data).Error; err != nil {
 		return
 	}

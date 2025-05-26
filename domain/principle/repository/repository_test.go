@@ -2905,6 +2905,27 @@ func TestGetMappingPbkScore(t *testing.T) {
 	}
 }
 
+func TestGetMappingPbkScore_EmptyScores(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, _, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	scores := make([]string, 0)
+
+	_, err := repo.GetMappingPbkScore(scores)
+	if err != nil {
+		t.Errorf("error '%s' was not expected, but got: ", err)
+	}
+}
+
 func TestGetMappingPbkScore_DatabaseError(t *testing.T) {
 	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 
