@@ -9,10 +9,12 @@ import (
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/platformcache"
 	"los-kmb-api/shared/common/platformevent"
+	"los-kmb-api/shared/common/platformlog"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
 
+	"github.com/KB-FMF/platform-library/auth"
 	"github.com/labstack/echo/v4"
 )
 
@@ -52,8 +54,23 @@ func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase
 func (c *handlerKmbFiltering) ProduceFiltering(ctx echo.Context) (err error) {
 
 	var (
-		req request.Filtering
+		req     request.Filtering
+		ctxJson error
 	)
+
+	auth := auth.New(platformlog.GetPlatformEnv())
+	_, errAuth := auth.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
+	if errAuth != nil {
+		if errAuth.GetErrorCode() == "401" {
+			err = fmt.Errorf(constant.ERROR_UNAUTHORIZED + " - Invalid token")
+			ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+			return ctxJson
+		} else {
+			err = fmt.Errorf("%s - %v", constant.ERROR_UNAUTHORIZED, errAuth.ErrorMessage())
+			ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+			return ctxJson
+		}
+	}
 
 	if err := ctx.Bind(&req); err != nil {
 		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", err)
