@@ -1,15 +1,16 @@
 package http
 
 import (
+	"fmt"
 	"los-kmb-api/domain/elaborate_ltv/interfaces"
 	"los-kmb-api/middlewares"
-	"los-kmb-api/models/dto"
 	"los-kmb-api/models/request"
 	"los-kmb-api/shared/authorization"
 	"los-kmb-api/shared/common"
+	"los-kmb-api/shared/common/platformlog"
 	"los-kmb-api/shared/constant"
-	"time"
 
+	"github.com/KB-FMF/platform-library/auth"
 	"github.com/labstack/echo/v4"
 )
 
@@ -52,14 +53,18 @@ func (c *handlerKmbElaborate) Elaborate(ctx echo.Context) (err error) {
 		go c.repository.SaveLogOrchestrator(ctx.Request().Header, req, resp, "/api/v3/kmb/elaborate", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
 	}()
 
-	err = c.authorization.Authorization(dto.AuthModel{
-		ClientID:   ctx.Request().Header.Get(constant.HEADER_CLIENT_ID),
-		Credential: ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION),
-	}, time.Now().Local())
-
-	if err != nil {
-		ctxJson, resp = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", req, err)
-		return ctxJson
+	auth := auth.New(platformlog.GetPlatformEnv())
+	_, errAuth := auth.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
+	if errAuth != nil {
+		if errAuth.GetErrorCode() == "401" {
+			err = fmt.Errorf(constant.ERROR_UNAUTHORIZED + " - Invalid token")
+			ctxJson, resp = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", req, err)
+			return ctxJson
+		} else {
+			err = fmt.Errorf("%s - %v", constant.ERROR_UNAUTHORIZED, errAuth.ErrorMessage())
+			ctxJson, resp = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB ELABORATE", req, err)
+			return ctxJson
+		}
 	}
 
 	if err := ctx.Bind(&req); err != nil {
