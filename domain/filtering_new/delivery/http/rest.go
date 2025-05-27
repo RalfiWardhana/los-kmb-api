@@ -22,17 +22,19 @@ type handlerKmbFiltering struct {
 	multiusecase interfaces.MultiUsecase
 	usecase      interfaces.Usecase
 	repository   interfaces.Repository
+	validator    *common.Validator
 	Json         common.JSON
 	producer     platformevent.PlatformEventInterface
 	cache        platformcache.PlatformCacheInterface
 }
 
-func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware,
+func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, validator *common.Validator, json common.JSON, middlewares *middlewares.AccessMiddleware,
 	producer platformevent.PlatformEventInterface, cache platformcache.PlatformCacheInterface) {
 	handler := handlerKmbFiltering{
 		multiusecase: multiUsecase,
 		usecase:      usecase,
 		repository:   repository,
+		validator:    validator,
 		Json:         json,
 		producer:     producer,
 		cache:        cache,
@@ -74,6 +76,36 @@ func (c *handlerKmbFiltering) ProduceFiltering(ctx echo.Context) (err error) {
 
 	if err := ctx.Bind(&req); err != nil {
 		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", err)
+	}
+
+	err = c.validator.Validate(req)
+	if err != nil {
+		ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+		return ctxJson
+	}
+
+	// decrypt request
+	req.IDNumber, _ = utils.PlatformDecryptText(req.IDNumber)
+	req.LegalName, _ = utils.PlatformDecryptText(req.LegalName)
+	req.MotherName, _ = utils.PlatformDecryptText(req.MotherName)
+
+	if req.Spouse != nil {
+		req.Spouse.IDNumber, _ = utils.PlatformDecryptText(req.Spouse.IDNumber)
+		req.Spouse.LegalName, _ = utils.PlatformDecryptText(req.Spouse.LegalName)
+		req.Spouse.MotherName, _ = utils.PlatformDecryptText(req.Spouse.MotherName)
+
+		var genderSpouse request.GenderCompare
+
+		if req.Gender != req.Spouse.Gender {
+			genderSpouse.Gender = true
+		} else {
+			genderSpouse.Gender = false
+		}
+
+		if err := c.validator.Validate(&genderSpouse); err != nil {
+			ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+			return ctxJson
+		}
 	}
 
 	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_FILTERING, req.ProspectID, utils.StructToMap(req), 0)

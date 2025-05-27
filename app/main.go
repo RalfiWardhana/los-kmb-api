@@ -242,7 +242,7 @@ func main() {
 	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs, newKMB)
 	newKmbFilteringCase := newKmbFilteringUsecase.NewUsecase(newKmbFilteringRepo, httpClient)
 	newKmbFilteringMultiCase := newKmbFilteringUsecase.NewMultiUsecase(newKmbFilteringRepo, httpClient, newKmbFilteringCase)
-	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken, producer, platformCache)
+	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, validator, jsonResponse, accessToken, producer, platformCache)
 
 	// define new kmb elaborate domain
 	newElaborateLTVRepo := elaborateLTVRepository.NewRepository(kpLos, kpLosLogs, newKMB)
