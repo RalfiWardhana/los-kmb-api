@@ -614,6 +614,7 @@ type Apk struct {
 	LoanAmount                  float64  `json:"loan_amount"  validate:"max=999999999999" example:"105000000"`
 	WayOfPayment                string   `json:"way_of_payment" validate:"required,max=2" example:"CA"`
 	StampDutyFee                float64  `json:"stamp_duty_fee" validate:"max=999999999999" example:"250000"`
+	AgentFee                    float64  `json:"agent_fee" validate:"max=999999999999" example:"250000"`
 }
 
 type ApkNE struct {
