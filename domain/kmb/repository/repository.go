@@ -708,6 +708,7 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				WayOfPayment:                data.Apk.WayOfPayment,
 				StampDutyFee:                data.Apk.StampDutyFee,
 				AgentFee:                    data.Apk.AgentFee,
+				UseAdditionalInsurance:      utils.BoolToInt(data.Apk.UseAdditionalInsurance),
 			}
 
 			logInfo = apk
@@ -1932,6 +1933,7 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			UsrCrt:              constant.LOS_CREATED,
 			DtmCrt:              time.Now(),
 			ApplicationPriority: constant.RG_PRIORITY,
+			IsHospitalCashPlan:  apk.UseAdditionalInsurance,
 		}).Error; err != nil {
 			return err
 		}
