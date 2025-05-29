@@ -488,11 +488,11 @@ func TestGetInquiryPrescreening(t *testing.T) {
             cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
             WHERE ru.user_id = ? 
         )
-        AND b.lob_id = '125'
+        AND b.lob_id = ?
         UNION ALL
         SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
         WHERE mb.user_id = ?`)).
-		WithArgs("UCUXbRzePhXkYkgfLr92", "UCUXbRzePhXkYkgfLr92").
+		WithArgs("UCUXbRzePhXkYkgfLr92", "125", "UCUXbRzePhXkYkgfLr92").
 		WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 			AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
@@ -506,11 +506,11 @@ func TestGetInquiryPrescreening(t *testing.T) {
                 cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
                 WHERE ru.user_id = ? 
             )
-            AND b.lob_id = '125'
+            AND b.lob_id = ?
         ) AS bm
         CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
         JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
-		WithArgs("UCUXbRzePhXkYkgfLr92").
+		WithArgs("UCUXbRzePhXkYkgfLr92", "125").
 		WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
 			AddRow("426", "BANDUNG").
 			AddRow("436", "KOPO").
@@ -1442,11 +1442,11 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
             cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
             WHERE ru.user_id = ? 
         )
-        AND b.lob_id = '125'
+        AND b.lob_id = ?
         UNION ALL
         SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
         WHERE mb.user_id = ?`)).
-			WithArgs("abc123", "abc123").
+			WithArgs("abc123", "125", "abc123").
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
@@ -1460,11 +1460,11 @@ func TestGetInquiryPrescreeningWithoutParam(t *testing.T) {
                 cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
                 WHERE ru.user_id = ? 
             )
-            AND b.lob_id = '125'
+            AND b.lob_id = ?
         ) AS bm
         CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
         JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
-			WithArgs("abc123").
+			WithArgs("abc123", "125").
 			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
 				AddRow("426", "BANDUNG").
 				AddRow("436", "KOPO").
@@ -3372,11 +3372,11 @@ func TestGetInquiryCa(t *testing.T) {
             cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
             WHERE ru.user_id = ? 
         )
-        AND b.lob_id = '125'
+        AND b.lob_id = ?
         UNION ALL
         SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
         WHERE mb.user_id = ?`)).
-			WithArgs("abc123", "abc123").
+			WithArgs("abc123", "125", "abc123").
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
@@ -3390,11 +3390,11 @@ func TestGetInquiryCa(t *testing.T) {
                 cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
                 WHERE ru.user_id = ? 
             )
-            AND b.lob_id = '125'
+            AND b.lob_id = ?
         ) AS bm
         CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
         JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
-			WithArgs("abc123").
+			WithArgs("abc123", "125").
 			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
 				AddRow("426", "BANDUNG").
 				AddRow("436", "KOPO").
@@ -3936,11 +3936,11 @@ func TestGetInquiryCa(t *testing.T) {
             cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
             WHERE ru.user_id = ? 
         )
-        AND b.lob_id = '125'
+        AND b.lob_id = ?
         UNION ALL
         SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
         WHERE mb.user_id = ?`)).
-			WithArgs("abc123", "abc123").
+			WithArgs("abc123", "125", "abc123").
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
@@ -3954,11 +3954,11 @@ func TestGetInquiryCa(t *testing.T) {
                 cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
                 WHERE ru.user_id = ? 
             )
-            AND b.lob_id = '125'
+            AND b.lob_id = ?
         ) AS bm
         CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
         JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
-			WithArgs("abc123").
+			WithArgs("abc123", "125").
 			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
 				AddRow("426", "BANDUNG").
 				AddRow("436", "KOPO").
@@ -5022,11 +5022,11 @@ func TestGetInquiryCa(t *testing.T) {
             cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
             WHERE ru.user_id = ? 
         )
-        AND b.lob_id = '125'
+        AND b.lob_id = ?
         UNION ALL
         SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
         WHERE mb.user_id = ?`)).
-			WithArgs("db1f4044e1dc574", "db1f4044e1dc574").
+			WithArgs("db1f4044e1dc574", "125", "db1f4044e1dc574").
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
@@ -5040,11 +5040,11 @@ func TestGetInquiryCa(t *testing.T) {
                 cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
                 WHERE ru.user_id = ? 
             )
-            AND b.lob_id = '125'
+            AND b.lob_id = ?
         ) AS bm
         CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
         JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
-			WithArgs("db1f4044e1dc574").
+			WithArgs("db1f4044e1dc574", "125").
 			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
 				AddRow("426", "BANDUNG").
 				AddRow("436", "KOPO").
@@ -5586,11 +5586,11 @@ func TestGetInquiryCa(t *testing.T) {
             cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
             WHERE ru.user_id = ? 
         )
-        AND b.lob_id = '125'
+        AND b.lob_id = ?
         UNION ALL
         SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
         WHERE mb.user_id = ?`)).
-			WithArgs("abc123", "abc123").
+			WithArgs("abc123", "125", "abc123").
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
@@ -5604,11 +5604,11 @@ func TestGetInquiryCa(t *testing.T) {
                 cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
                 WHERE ru.user_id = ? 
             )
-            AND b.lob_id = '125'
+            AND b.lob_id = ?
         ) AS bm
         CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
         JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
-			WithArgs("abc123").
+			WithArgs("abc123", "125").
 			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
 				AddRow("426", "BANDUNG").
 				AddRow("436", "KOPO").
@@ -6405,11 +6405,11 @@ func TestGetInquirySearch(t *testing.T) {
 				cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
 				WHERE ru.user_id = ? 
 			)
-			AND b.lob_id = '125'
+			AND b.lob_id = ?
 			UNION ALL
 			SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
 			WHERE mb.user_id = ?`)).
-			WithArgs("abc123", "abc123").
+			WithArgs("abc123", "125", "abc123").
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
@@ -6423,11 +6423,11 @@ func TestGetInquirySearch(t *testing.T) {
 					cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
 					WHERE ru.user_id = ? 
 				)
-				AND b.lob_id = '125'
+				AND b.lob_id = ?
 			) AS bm
 			CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
 			JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
-			WithArgs("abc123").
+			WithArgs("abc123", "125").
 			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
 				AddRow("426", "BANDUNG").
 				AddRow("436", "KOPO").
@@ -6833,11 +6833,11 @@ func TestGetInquirySearch(t *testing.T) {
 				cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
 				WHERE ru.user_id = ? 
 			)
-			AND b.lob_id = '125'
+			AND b.lob_id = ?
 			UNION ALL
 			SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
 			WHERE mb.user_id = ?`)).
-			WithArgs("abc123", "abc123").
+			WithArgs("abc123", "125", "abc123").
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
@@ -6851,11 +6851,11 @@ func TestGetInquirySearch(t *testing.T) {
 					cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
 					WHERE ru.user_id = ? 
 				)
-				AND b.lob_id = '125'
+				AND b.lob_id = ?
 			) AS bm
 			CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
 			JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
-			WithArgs("abc123").
+			WithArgs("abc123", "125").
 			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
 				AddRow("426", "BANDUNG").
 				AddRow("436", "KOPO").
@@ -7265,11 +7265,11 @@ func TestGetInquirySearch(t *testing.T) {
 				cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
 				WHERE ru.user_id = ? 
 			)
-			AND b.lob_id = '125'
+			AND b.lob_id = ?
 			UNION ALL
 			SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
 			WHERE mb.user_id = ?`)).
-			WithArgs("abc123", "abc123").
+			WithArgs("abc123", "125", "abc123").
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
@@ -7283,11 +7283,11 @@ func TestGetInquirySearch(t *testing.T) {
 					cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
 					WHERE ru.user_id = ? 
 				)
-				AND b.lob_id = '125'
+				AND b.lob_id = ?
 			) AS bm
 			CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
 			JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
-			WithArgs("abc123").
+			WithArgs("abc123", "125").
 			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
 				AddRow("426", "BANDUNG").
 				AddRow("436", "KOPO").
@@ -8696,11 +8696,11 @@ func TestGetInquiryApproval(t *testing.T) {
             cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
             WHERE ru.user_id = ? 
         )
-        AND b.lob_id = '125'
+        AND b.lob_id = ?
         UNION ALL
         SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
         WHERE mb.user_id = ?`)).
-			WithArgs("abc123", "abc123").
+			WithArgs("abc123", "125", "abc123").
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
@@ -8714,11 +8714,11 @@ func TestGetInquiryApproval(t *testing.T) {
                 cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
                 WHERE ru.user_id = ? 
             )
-            AND b.lob_id = '125'
+            AND b.lob_id = ?
         ) AS bm
         CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
         JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
-			WithArgs("abc123").
+			WithArgs("abc123", "125").
 			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
 				AddRow("426", "BANDUNG").
 				AddRow("436", "KOPO").
@@ -9188,11 +9188,11 @@ func TestGetInquiryApproval(t *testing.T) {
             cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
             WHERE ru.user_id = ? 
         )
-        AND b.lob_id = '125'
+        AND b.lob_id = ?
         UNION ALL
         SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
         WHERE mb.user_id = ?`)).
-			WithArgs("abc123", "abc123").
+			WithArgs("abc123", "125", "abc123").
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
@@ -9206,11 +9206,11 @@ func TestGetInquiryApproval(t *testing.T) {
                 cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
                 WHERE ru.user_id = ? 
             )
-            AND b.lob_id = '125'
+            AND b.lob_id = ?
         ) AS bm
         CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
         JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
-			WithArgs("abc123").
+			WithArgs("abc123", "125").
 			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
 				AddRow("426", "BANDUNG").
 				AddRow("436", "KOPO").
@@ -10129,11 +10129,11 @@ func TestGetInquiryApproval(t *testing.T) {
             cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
             WHERE ru.user_id = ? 
         )
-        AND b.lob_id = '125'
+        AND b.lob_id = ?
         UNION ALL
         SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
         WHERE mb.user_id = ?`)).
-			WithArgs("db1f4044e1dc574", "db1f4044e1dc574").
+			WithArgs("db1f4044e1dc574", "125", "db1f4044e1dc574").
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
@@ -10147,11 +10147,11 @@ func TestGetInquiryApproval(t *testing.T) {
                 cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
                 WHERE ru.user_id = ? 
             )
-            AND b.lob_id = '125'
+            AND b.lob_id = ?
         ) AS bm
         CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
         JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
-			WithArgs("db1f4044e1dc574").
+			WithArgs("db1f4044e1dc574", "125").
 			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
 				AddRow("426", "BANDUNG").
 				AddRow("436", "KOPO").
@@ -10621,11 +10621,11 @@ func TestGetInquiryApproval(t *testing.T) {
             cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
             WHERE ru.user_id = ? 
         )
-        AND b.lob_id = '125'
+        AND b.lob_id = ?
         UNION ALL
         SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
         WHERE mb.user_id = ?`)).
-			WithArgs("abc123", "abc123").
+			WithArgs("abc123", "125", "abc123").
 			WillReturnRows(sqlmock.NewRows([]string{"region_name", "branch_member"}).
 				AddRow("WEST JAVA", `["426","436","429","431","442","428","430"]`))
 
@@ -10639,11 +10639,11 @@ func TestGetInquiryApproval(t *testing.T) {
                 cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
                 WHERE ru.user_id = ? 
             )
-            AND b.lob_id = '125'
+            AND b.lob_id = ?
         ) AS bm
         CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
         JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))`)).
-			WithArgs("abc123").
+			WithArgs("abc123", "125").
 			WillReturnRows(sqlmock.NewRows([]string{"BranchID", "BranchName"}).
 				AddRow("426", "BANDUNG").
 				AddRow("436", "KOPO").

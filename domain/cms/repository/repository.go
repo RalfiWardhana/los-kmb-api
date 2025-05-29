@@ -387,13 +387,13 @@ func (r repoHandler) GetListBranch(req request.ReqListBranch) (regions []string,
                 cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
                 WHERE ru.user_id = ? 
             )
-            AND b.lob_id = '125'
+            AND b.lob_id = ?
             UNION ALL
             SELECT NULL as region_name, branches AS branch_member FROM multi_branch mb WITH (nolock)
             WHERE mb.user_id = ?
         `
 
-		if err = r.losDB.Raw(query, req.UserID, req.UserID).Scan(&regionBranches).Error; err != nil {
+		if err = r.losDB.Raw(query, req.UserID, constant.LOB_ID_NEW_KMB, req.UserID).Scan(&regionBranches).Error; err != nil {
 			return nil, nil, err
 		}
 
@@ -411,6 +411,10 @@ func (r repoHandler) GetListBranch(req request.ReqListBranch) (regions []string,
                     CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(mb.branches, '[', ''), ']', ''), '"', ''), ',') AS s
                     JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))
                 `
+
+				if err = r.losDB.Raw(multiBranchQuery, req.UserID).Scan(&branchDetails).Error; err != nil {
+					return nil, nil, err
+				}
 			} else {
 				for _, rb := range regionBranches {
 					if rb.RegionName != nil {
@@ -429,15 +433,15 @@ func (r repoHandler) GetListBranch(req request.ReqListBranch) (regions []string,
                             cross apply STRING_SPLIT(REPLACE(REPLACE(REPLACE(region,'[',''),']',''), '"',''),',')
                             WHERE ru.user_id = ? 
                         )
-                        AND b.lob_id = '125'
+                        AND b.lob_id = ?
                     ) AS bm
                     CROSS APPLY STRING_SPLIT(REPLACE(REPLACE(REPLACE(bm.branch_member, '[', ''), ']', ''), '"', ''), ',') AS s
                     JOIN confins_branch AS cb ON cb.BranchID = LTRIM(RTRIM(s.value))
                 `
-			}
 
-			if err = r.losDB.Raw(multiBranchQuery, req.UserID).Scan(&branchDetails).Error; err != nil {
-				return nil, nil, err
+				if err = r.losDB.Raw(multiBranchQuery, req.UserID, constant.LOB_ID_NEW_KMB).Scan(&branchDetails).Error; err != nil {
+					return nil, nil, err
+				}
 			}
 
 			// Convert []entity.BranchData to []response.BranchInfo
