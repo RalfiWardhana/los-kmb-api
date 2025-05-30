@@ -30,6 +30,7 @@ import (
 	authRepository "los-kmb-api/shared/authorization/repository"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/json"
+	authadapter "los-kmb-api/shared/common/platformauth/adapter"
 	"los-kmb-api/shared/common/platformcache"
 	"los-kmb-api/shared/common/platformlog"
 	"los-kmb-api/shared/config"
@@ -78,6 +79,9 @@ func main() {
 	config.LoadEnv()
 
 	env := strings.ToLower(os.Getenv("APP_ENV"))
+
+	// define auth platform
+	authPlatform := authadapter.NewPlatformAuth()
 
 	config.NewConfiguration(env)
 	e.Pre(middleware.RemoveTrailingSlash())
@@ -242,7 +246,7 @@ func main() {
 	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs, newKMB)
 	newKmbFilteringCase := newKmbFilteringUsecase.NewUsecase(newKmbFilteringRepo, httpClient)
 	newKmbFilteringMultiCase := newKmbFilteringUsecase.NewMultiUsecase(newKmbFilteringRepo, httpClient, newKmbFilteringCase)
-	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, validator, jsonResponse, accessToken, producer, platformCache)
+	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken, producer, platformCache, authPlatform)
 
 	// define new kmb elaborate domain
 	newElaborateLTVRepo := elaborateLTVRepository.NewRepository(kpLos, kpLosLogs, newKMB)

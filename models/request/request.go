@@ -577,7 +577,7 @@ type CustomerSpouseNE struct {
 }
 
 type Apk struct {
-	OtherFee                    float64  `json:"other_fee" validate:"max=999999999999" example:"0"`
+	OtherFee                    float64  `json:"other_fee" validate:"min=0,max=999999999999" example:"0"`
 	Tenor                       int      `json:"tenor" validate:"required,max=60" example:"36"`
 	ProductOfferingID           string   `json:"product_offering_id" validate:"required,max=10" example:"NLMKKAPSEP"`
 	ProductOfferingDesc         string   `json:"product_offering_desc" validate:"omitempty,max=200"`
@@ -591,10 +591,10 @@ type Apk struct {
 	InstallmentAmount           float64  `json:"installment_amount" validate:"required,max=999999999999" example:"4181333"`
 	PercentDP                   *float64 `json:"down_payment_rate" validate:"required,max=99" example:"20.95"`
 	PremiumAmountToCustomer     float64  `json:"premium_amount_to_customer" validate:"min=0,max=999999999999" example:"2184000"`
-	FidusiaFee                  *float64 `json:"fidusia_fee" validate:"max=999999999999" example:"0"`
+	FidusiaFee                  *float64 `json:"fidusia_fee" validate:"omitempty,min=0,max=999999999999" example:"0"`
 	InterestRate                *float64 `json:"interest_rate" validate:"required,max=99" example:"2.2"`
 	InterestAmount              *float64 `json:"interest_amount" validate:"required,max=999999999999" example:"66528000"`
-	InsuranceAmount             float64  `json:"insurance_amount" validate:"max=999999999999" example:"3150000"`
+	InsuranceAmount             float64  `json:"insurance_amount" validate:"min=0,max=999999999999" example:"3150000"`
 	FirstInstallment            string   `json:"first_installment" validate:"required,max=2" example:"AR"`
 	PaymentMethod               string   `json:"payment_method" validate:"required,max=2" example:"CR"`
 	SurveyFee                   *float64 `json:"survey_fee" validate:"required,max=999999999999" example:"0"`
@@ -606,14 +606,14 @@ type Apk struct {
 	SalesmanID                  string   `json:"salesman_id" validate:"required" example:"81088"`
 	SupplierBankAccountID       string   `json:"supplier_bank_account_id" validate:"required" example:"1"`
 	LifeInsuranceCoyBranchID    string   `json:"life_insurance_coy_branch_id" validate:"max=20" example:"426"`
-	LifeInsuranceAmountCoverage float64  `json:"life_insurance_amount_coverage" validate:"max=999999999999" example:"105000000"`
-	CommisionSubsidy            float64  `json:"commision_subsidi" validate:"max=999999999999" example:"0"`
+	LifeInsuranceAmountCoverage float64  `json:"life_insurance_amount_coverage" validate:"min=0,max=999999999999" example:"105000000"`
+	CommisionSubsidy            float64  `json:"commision_subsidi" validate:"min=0,max=999999999999" example:"0"`
 	FinancePurpose              string   `json:"finance_purpose" validate:"required,max=100"`
 	Dealer                      string   `json:"dealer" validate:"omitempty,max=50"`
-	LoanAmount                  float64  `json:"loan_amount"  validate:"max=999999999999" example:"105000000"`
+	LoanAmount                  float64  `json:"loan_amount"  validate:"min=0,max=999999999999" example:"105000000"`
 	WayOfPayment                string   `json:"way_of_payment" validate:"required,max=2" example:"CA"`
-	StampDutyFee                float64  `json:"stamp_duty_fee" validate:"max=999999999999" example:"250000"`
-	AgentFee                    float64  `json:"agent_fee" validate:"max=999999999999" example:"250000"`
+	StampDutyFee                float64  `json:"stamp_duty_fee" validate:"min=0,max=999999999999" example:"250000"`
+	AgentFee                    float64  `json:"agent_fee" validate:"min=0,max=999999999999" example:"250000"`
 }
 
 type ApkNE struct {

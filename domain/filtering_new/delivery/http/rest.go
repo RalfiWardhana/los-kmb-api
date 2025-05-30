@@ -7,14 +7,13 @@ import (
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
 	"los-kmb-api/shared/common"
+	authadapter "los-kmb-api/shared/common/platformauth/adapter"
 	"los-kmb-api/shared/common/platformcache"
 	"los-kmb-api/shared/common/platformevent"
-	"los-kmb-api/shared/common/platformlog"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"os"
 
-	"github.com/KB-FMF/platform-library/auth"
 	"github.com/labstack/echo/v4"
 )
 
@@ -22,22 +21,22 @@ type handlerKmbFiltering struct {
 	multiusecase interfaces.MultiUsecase
 	usecase      interfaces.Usecase
 	repository   interfaces.Repository
-	validator    *common.Validator
 	Json         common.JSON
 	producer     platformevent.PlatformEventInterface
 	cache        platformcache.PlatformCacheInterface
+	authadapter  authadapter.PlatformAuthInterface
 }
 
-func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, validator *common.Validator, json common.JSON, middlewares *middlewares.AccessMiddleware,
-	producer platformevent.PlatformEventInterface, cache platformcache.PlatformCacheInterface) {
+func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware,
+	producer platformevent.PlatformEventInterface, cache platformcache.PlatformCacheInterface, authadapter authadapter.PlatformAuthInterface) {
 	handler := handlerKmbFiltering{
 		multiusecase: multiUsecase,
 		usecase:      usecase,
 		repository:   repository,
-		validator:    validator,
 		Json:         json,
 		producer:     producer,
 		cache:        cache,
+		authadapter:  authadapter,
 	}
 	kmbroute.POST("/produce/filtering", handler.ProduceFiltering, middlewares.AccessMiddleware())
 	kmbroute.DELETE("/cache/filtering/:prospect_id", handler.RemoveCacheFiltering, middlewares.AccessMiddleware())
@@ -60,15 +59,14 @@ func (c *handlerKmbFiltering) ProduceFiltering(ctx echo.Context) (err error) {
 		ctxJson error
 	)
 
-	auth := auth.New(platformlog.GetPlatformEnv())
-	_, errAuth := auth.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
+	_, errAuth := c.authadapter.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
 	if errAuth != nil {
 		if errAuth.GetErrorCode() == "401" {
 			err = fmt.Errorf(constant.ERROR_UNAUTHORIZED + " - Invalid token")
 			ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 			return ctxJson
 		} else {
-			err = fmt.Errorf("%s - %v", constant.ERROR_UNAUTHORIZED, errAuth.ErrorMessage())
+			err = fmt.Errorf("%s - %s", constant.ERROR_UNAUTHORIZED, errAuth.ErrorMessage())
 			ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 			return ctxJson
 		}
@@ -78,21 +76,13 @@ func (c *handlerKmbFiltering) ProduceFiltering(ctx echo.Context) (err error) {
 		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", err)
 	}
 
-	err = c.validator.Validate(req)
+	err = ctx.Validate(req)
 	if err != nil {
 		ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 		return ctxJson
 	}
 
-	// decrypt request
-	req.IDNumber, _ = utils.PlatformDecryptText(req.IDNumber)
-	req.LegalName, _ = utils.PlatformDecryptText(req.LegalName)
-	req.MotherName, _ = utils.PlatformDecryptText(req.MotherName)
-
 	if req.Spouse != nil {
-		req.Spouse.IDNumber, _ = utils.PlatformDecryptText(req.Spouse.IDNumber)
-		req.Spouse.LegalName, _ = utils.PlatformDecryptText(req.Spouse.LegalName)
-		req.Spouse.MotherName, _ = utils.PlatformDecryptText(req.Spouse.MotherName)
 
 		var genderSpouse request.GenderCompare
 
@@ -102,7 +92,7 @@ func (c *handlerKmbFiltering) ProduceFiltering(ctx echo.Context) (err error) {
 			genderSpouse.Gender = false
 		}
 
-		if err := c.validator.Validate(&genderSpouse); err != nil {
+		if err := ctx.Validate(&genderSpouse); err != nil {
 			ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
 			return ctxJson
 		}

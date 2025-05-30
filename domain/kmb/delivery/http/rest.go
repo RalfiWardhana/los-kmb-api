@@ -82,6 +82,60 @@ func (c *handlerKMB) ProduceJourney(ctx echo.Context) (err error) {
 		return ctxJson
 	}
 
+	if req.Transaction.ProspectID == "" {
+		err = ctx.Validate(req)
+		if err != nil {
+			ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+			return ctxJson
+		}
+	} else if req.Transaction.ProspectID[0:2] != "NE" {
+		err = ctx.Validate(req)
+		if err != nil {
+			ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+			return ctxJson
+		}
+	}
+
+	if req.CustomerSpouse != nil {
+
+		var genderSpouse request.GenderCompare
+
+		if req.CustomerPersonal.Gender != req.CustomerSpouse.Gender {
+			genderSpouse.Gender = true
+		} else {
+			genderSpouse.Gender = false
+		}
+
+		if err := ctx.Validate(&genderSpouse); err != nil {
+			ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+			return ctxJson
+		}
+	}
+
+	if req.CustomerPersonal.MaritalStatus == constant.MARRIED {
+		var spouseVal request.MarriedValidator
+		spouseVal.CustomerSpouse = true
+		if req.CustomerSpouse == nil {
+			spouseVal.CustomerSpouse = false
+		}
+
+		if err := ctx.Validate(&spouseVal); err != nil {
+			ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+			return ctxJson
+		}
+	} else {
+		var spouseVal request.SingleValidator
+		spouseVal.CustomerSpouse = true
+		if req.CustomerSpouse != nil {
+			spouseVal.CustomerSpouse = false
+		}
+
+		if err := ctx.Validate(&spouseVal); err != nil {
+			ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+			return ctxJson
+		}
+	}
+
 	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_SUBMIT_TO_LOS, req.Transaction.ProspectID, utils.StructToMap(req), 0)
 
 	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB - Please wait, your request is being processed", req, nil)
