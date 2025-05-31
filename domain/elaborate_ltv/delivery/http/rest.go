@@ -7,10 +7,9 @@ import (
 	"los-kmb-api/models/request"
 	"los-kmb-api/shared/authorization"
 	"los-kmb-api/shared/common"
-	"los-kmb-api/shared/common/platformlog"
+	authPlatform "los-kmb-api/shared/common/platformauth/adapter"
 	"los-kmb-api/shared/constant"
 
-	"github.com/KB-FMF/platform-library/auth"
 	"github.com/labstack/echo/v4"
 )
 
@@ -19,14 +18,16 @@ type handlerKmbElaborate struct {
 	repository    interfaces.Repository
 	authorization authorization.Authorization
 	Json          common.JSON
+	authPlatform  authPlatform.PlatformAuthInterface
 }
 
-func ElaborateHandler(kmbroute *echo.Group, usecase interfaces.Usecase, repository interfaces.Repository, authorization authorization.Authorization, json common.JSON, middlewares *middlewares.AccessMiddleware) {
+func ElaborateHandler(kmbroute *echo.Group, usecase interfaces.Usecase, repository interfaces.Repository, authorization authorization.Authorization, json common.JSON, middlewares *middlewares.AccessMiddleware, authPlatform authPlatform.PlatformAuthInterface) {
 	handler := handlerKmbElaborate{
 		usecase:       usecase,
 		repository:    repository,
 		authorization: authorization,
 		Json:          json,
+		authPlatform:  authPlatform,
 	}
 	kmbroute.POST("/elaborate", handler.Elaborate, middlewares.AccessMiddleware())
 }
@@ -53,8 +54,7 @@ func (c *handlerKmbElaborate) Elaborate(ctx echo.Context) (err error) {
 		go c.repository.SaveLogOrchestrator(ctx.Request().Header, req, resp, "/api/v3/kmb/elaborate", constant.METHOD_POST, req.ProspectID, ctx.Get(constant.HeaderXRequestID).(string))
 	}()
 
-	auth := auth.New(platformlog.GetPlatformEnv())
-	_, errAuth := auth.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
+	_, errAuth := c.authPlatform.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
 	if errAuth != nil {
 		if errAuth.GetErrorCode() == "401" {
 			err = fmt.Errorf(constant.ERROR_UNAUTHORIZED + " - Invalid token")

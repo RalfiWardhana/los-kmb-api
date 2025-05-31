@@ -112,7 +112,7 @@ func TestProduceFiltering(t *testing.T) {
 				repository:   mockRepository,
 				Json:         mockJson,
 				producer:     platformEvent,
-				authadapter:  mockAuth,
+				authPlatform: mockAuth,
 			}
 			err := handler.ProduceFiltering(ctx)
 			if err != nil {

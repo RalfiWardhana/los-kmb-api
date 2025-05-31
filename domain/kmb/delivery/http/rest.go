@@ -11,12 +11,11 @@ import (
 	"los-kmb-api/shared/authorization"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/platformevent"
-	"los-kmb-api/shared/common/platformlog"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"time"
 
-	"github.com/KB-FMF/platform-library/auth"
+	authPlatform "los-kmb-api/shared/common/platformauth/adapter"
 
 	"github.com/labstack/echo/v4"
 )
@@ -28,9 +27,10 @@ type handlerKMB struct {
 	authorization authorization.Authorization
 	Json          common.JSON
 	producer      platformevent.PlatformEventInterface
+	authPlatform  authPlatform.PlatformAuthInterface
 }
 
-func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, authorization authorization.Authorization, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEventInterface) {
+func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, authorization authorization.Authorization, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEventInterface, authPlatform authPlatform.PlatformAuthInterface) {
 	handler := handlerKMB{
 		metrics:       metrics,
 		usecase:       usecase,
@@ -38,6 +38,7 @@ func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interf
 		authorization: authorization,
 		Json:          json,
 		producer:      producer,
+		authPlatform:  authPlatform,
 	}
 	kmbroute.POST("/produce/journey", handler.ProduceJourney, middlewares.AccessMiddleware())
 	kmbroute.POST("/produce/journey-after-prescreening", handler.ProduceJourneyAfterPrescreening, middlewares.AccessMiddleware())
@@ -63,8 +64,7 @@ func (c *handlerKMB) ProduceJourney(ctx echo.Context) (err error) {
 		ctxJson error
 	)
 
-	auth := auth.New(platformlog.GetPlatformEnv())
-	_, errAuth := auth.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
+	_, errAuth := c.authPlatform.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
 	if errAuth != nil {
 		if errAuth.GetErrorCode() == "401" {
 			err = fmt.Errorf(constant.ERROR_UNAUTHORIZED + " - Invalid token")
@@ -173,8 +173,7 @@ func (c *handlerKMB) LockSystem(ctx echo.Context) (err error) {
 		ctxJson error
 	)
 
-	auth := auth.New(platformlog.GetPlatformEnv())
-	_, errAuth := auth.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
+	_, errAuth := c.authPlatform.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
 	if errAuth != nil {
 		if errAuth.GetErrorCode() == "401" {
 			err = fmt.Errorf("unauthorized - Invalid token")

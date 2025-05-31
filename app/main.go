@@ -251,7 +251,7 @@ func main() {
 	// define new kmb elaborate domain
 	newElaborateLTVRepo := elaborateLTVRepository.NewRepository(kpLos, kpLosLogs, newKMB)
 	newElaborateLTVUsecase := elaborateLTVUsecase.NewUsecase(newElaborateLTVRepo, httpClient)
-	elaborateLTVDelivery.ElaborateHandler(apiGroupv3, newElaborateLTVUsecase, newElaborateLTVRepo, authorization, jsonResponse, accessToken)
+	elaborateLTVDelivery.ElaborateHandler(apiGroupv3, newElaborateLTVUsecase, newElaborateLTVRepo, authorization, jsonResponse, accessToken, authPlatform)
 
 	// define new kmb cms
 	cacheRepository := cacheRepository.NewRepository(cache)
@@ -264,7 +264,7 @@ func main() {
 	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
 	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
-	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, authorization, jsonResponse, accessToken, producer)
+	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, authorization, jsonResponse, accessToken, producer, authPlatform)
 
 	managers := manager.New(platformlog.GetPlatformEnv(), os.Getenv("PLATFORM_SECRET_KEY"), os.Getenv("PLATFORM_AUTH_BASE_URL")+"/v1/auth/login")
 

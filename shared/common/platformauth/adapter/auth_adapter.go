@@ -11,18 +11,23 @@ type AuthAdapter struct {
 	RealAuth *auth.Auth
 }
 
-func NewPlatformAuth() *AuthAdapter {
+var _ PlatformAuthInterface = (*AuthAdapter)(nil) // Compile-time check
+
+func NewAuthAdapter(authInstance *auth.Auth) *AuthAdapter {
 	return &AuthAdapter{
-		RealAuth: auth.New(platformlog.GetPlatformEnv()),
+		RealAuth: authInstance,
 	}
 }
 
-func (a *AuthAdapter) Validation(token string, appName string) (resp *platform.Response, err *platform.Error) {
-	resp, err = a.RealAuth.Validation(token, appName)
-	return resp, err
+func NewPlatformAuth() PlatformAuthInterface {
+	authInstance := auth.New(platformlog.GetPlatformEnv())
+	return NewAuthAdapter(authInstance)
 }
 
-func (a *AuthAdapter) Login(data map[string]interface{}) (resp *platform.Response, err *platform.Error) {
-	resp, err = a.RealAuth.Login(data)
-	return resp, err
+func (a *AuthAdapter) Validation(token string, appName string) (*platform.Response, *platform.Error) {
+	return a.RealAuth.Validation(token, appName)
+}
+
+func (a *AuthAdapter) Login(data map[string]interface{}) (*platform.Response, *platform.Error) {
+	return a.RealAuth.Login(data)
 }

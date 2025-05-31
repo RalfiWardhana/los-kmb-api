@@ -7,7 +7,7 @@ import (
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
 	"los-kmb-api/shared/common"
-	authadapter "los-kmb-api/shared/common/platformauth/adapter"
+	authPlatform "los-kmb-api/shared/common/platformauth/adapter"
 	"los-kmb-api/shared/common/platformcache"
 	"los-kmb-api/shared/common/platformevent"
 	"los-kmb-api/shared/constant"
@@ -24,11 +24,11 @@ type handlerKmbFiltering struct {
 	Json         common.JSON
 	producer     platformevent.PlatformEventInterface
 	cache        platformcache.PlatformCacheInterface
-	authadapter  authadapter.PlatformAuthInterface
+	authPlatform authPlatform.PlatformAuthInterface
 }
 
 func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware,
-	producer platformevent.PlatformEventInterface, cache platformcache.PlatformCacheInterface, authadapter authadapter.PlatformAuthInterface) {
+	producer platformevent.PlatformEventInterface, cache platformcache.PlatformCacheInterface, authPlatform authPlatform.PlatformAuthInterface) {
 	handler := handlerKmbFiltering{
 		multiusecase: multiUsecase,
 		usecase:      usecase,
@@ -36,7 +36,7 @@ func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase
 		Json:         json,
 		producer:     producer,
 		cache:        cache,
-		authadapter:  authadapter,
+		authPlatform: authPlatform,
 	}
 	kmbroute.POST("/produce/filtering", handler.ProduceFiltering, middlewares.AccessMiddleware())
 	kmbroute.DELETE("/cache/filtering/:prospect_id", handler.RemoveCacheFiltering, middlewares.AccessMiddleware())
@@ -59,7 +59,7 @@ func (c *handlerKmbFiltering) ProduceFiltering(ctx echo.Context) (err error) {
 		ctxJson error
 	)
 
-	_, errAuth := c.authadapter.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
+	_, errAuth := c.authPlatform.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
 	if errAuth != nil {
 		if errAuth.GetErrorCode() == "401" {
 			err = fmt.Errorf(constant.ERROR_UNAUTHORIZED + " - Invalid token")
