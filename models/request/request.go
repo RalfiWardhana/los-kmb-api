@@ -717,6 +717,8 @@ type Recalculate struct {
 	InterestAmount               float64 `json:"interest_amount" validate:"max=999999999999" example:"66528000"`
 	ProvisionFee                 float64 `json:"provision_fee" validate:"max=999999999999" example:"2475000"`
 	LoanAmount                   float64 `json:"loan_amount" validate:"max=999999999999" example:"105000000"`
+	LifeInsuranceCoyBranchID     string  `json:"life_insurance_coy_branch_id"`
+	UseAdditionalInsurance       bool    `json:"use_additional_insurance"`
 }
 
 type RequestGenerateFormAKKK struct {

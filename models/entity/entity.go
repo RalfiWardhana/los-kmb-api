@@ -651,7 +651,7 @@ type TrxApk struct {
 	WayOfPayment                string    `gorm:"type:varchar(20);column:WayOfPayment"`
 	StampDutyFee                float64   `gorm:"column:stamp_duty_fee"`
 	AgentFee                    float64   `gorm:"column:agent_fee"`
-	UseAdditionalInsurance      int       `gorm:"column:use_additional_insurance"`
+	UseAdditionalInsurance      *int      `gorm:"column:use_additional_insurance"`
 }
 
 func (c *TrxApk) TableName() string {
