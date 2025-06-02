@@ -24,21 +24,21 @@ type handlerKMB struct {
 	metrics       interfaces.Metrics
 	usecase       interfaces.Usecase
 	repository    interfaces.Repository
+	authPlatform  authPlatform.PlatformAuthInterface
 	authorization authorization.Authorization
 	Json          common.JSON
 	producer      platformevent.PlatformEventInterface
-	authPlatform  authPlatform.PlatformAuthInterface
 }
 
-func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, authorization authorization.Authorization, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEventInterface, authPlatform authPlatform.PlatformAuthInterface) {
+func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, authPlatform authPlatform.PlatformAuthInterface, authorization authorization.Authorization, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEventInterface) {
 	handler := handlerKMB{
 		metrics:       metrics,
 		usecase:       usecase,
 		repository:    repository,
+		authPlatform:  authPlatform,
 		authorization: authorization,
 		Json:          json,
 		producer:      producer,
-		authPlatform:  authPlatform,
 	}
 	kmbroute.POST("/produce/journey", handler.ProduceJourney, middlewares.AccessMiddleware())
 	kmbroute.POST("/produce/journey-after-prescreening", handler.ProduceJourneyAfterPrescreening, middlewares.AccessMiddleware())
