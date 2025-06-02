@@ -107,7 +107,7 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("prospect_id_pembiayaan_principle", prospectIdPembiayaanPrincipleNotExists)
 	v.validator.RegisterValidation("prospect_id_emcon_principle", prospectIdEmconPrincipleNotExists)
 	v.validator.RegisterValidation("allowcharstipeusaha", allowedCharsInTipeUsaha)
-	v.validator.RegisterValidation("nohtml", noHTML)
+	v.validator.RegisterValidation("noHTML", noHTML)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
