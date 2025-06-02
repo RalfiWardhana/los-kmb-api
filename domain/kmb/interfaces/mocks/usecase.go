@@ -46,34 +46,34 @@ func (_m *Usecase) Asliri(ctx context.Context, req request.Metrics, accessToken 
 	return r0, r1
 }
 
-// CheckAgreementLunas provides a mock function with given fields: ctx, prospectID, customerId, filterKMBOnly, accessToken
-func (_m *Usecase) CheckAgreementLunas(ctx context.Context, prospectID string, customerId string, filterKMBOnly bool, accessToken string) (response.ConfinsAgreementCustomer, bool, error) {
-	ret := _m.Called(ctx, prospectID, customerId, filterKMBOnly, accessToken)
+// CheckAgreementCustomer provides a mock function with given fields: ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken
+func (_m *Usecase) CheckAgreementCustomer(ctx context.Context, prospectID string, customerId string, contractStatus string, filterKMBOnly bool, accessToken string) (response.AgreementDetailCustomer, bool, error) {
+	ret := _m.Called(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
 
 	if len(ret) == 0 {
-		panic("no return value specified for CheckAgreementLunas")
+		panic("no return value specified for CheckAgreementCustomer")
 	}
 
-	var r0 response.ConfinsAgreementCustomer
+	var r0 response.AgreementDetailCustomer
 	var r1 bool
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, bool, string) (response.ConfinsAgreementCustomer, bool, error)); ok {
-		return rf(ctx, prospectID, customerId, filterKMBOnly, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, bool, string) (response.AgreementDetailCustomer, bool, error)); ok {
+		return rf(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, bool, string) response.ConfinsAgreementCustomer); ok {
-		r0 = rf(ctx, prospectID, customerId, filterKMBOnly, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, bool, string) response.AgreementDetailCustomer); ok {
+		r0 = rf(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
 	} else {
-		r0 = ret.Get(0).(response.ConfinsAgreementCustomer)
+		r0 = ret.Get(0).(response.AgreementDetailCustomer)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, bool, string) bool); ok {
-		r1 = rf(ctx, prospectID, customerId, filterKMBOnly, accessToken)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, bool, string) bool); ok {
+		r1 = rf(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, string, string, bool, string) error); ok {
-		r2 = rf(ctx, prospectID, customerId, filterKMBOnly, accessToken)
+	if rf, ok := ret.Get(2).(func(context.Context, string, string, string, bool, string) error); ok {
+		r2 = rf(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -137,34 +137,34 @@ func (_m *Usecase) CheckAgreementChassisNumber(ctx context.Context, reqs request
 	return r0, r1
 }
 
-// CheckAgreementCustomer provides a mock function with given fields: ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken
-func (_m *Usecase) CheckAgreementCustomer(ctx context.Context, prospectID string, customerId string, contractStatus string, filterKMBOnly bool, accessToken string) (response.AgreementDetailCustomer, bool, error) {
-	ret := _m.Called(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
+// CheckAgreementLunas provides a mock function with given fields: ctx, prospectID, customerId, filterKMBOnly, accessToken
+func (_m *Usecase) CheckAgreementLunas(ctx context.Context, prospectID string, customerId string, filterKMBOnly bool, accessToken string) (response.ConfinsAgreementCustomer, bool, error) {
+	ret := _m.Called(ctx, prospectID, customerId, filterKMBOnly, accessToken)
 
 	if len(ret) == 0 {
-		panic("no return value specified for CheckAgreementCustomer")
+		panic("no return value specified for CheckAgreementLunas")
 	}
 
-	var r0 response.AgreementDetailCustomer
+	var r0 response.ConfinsAgreementCustomer
 	var r1 bool
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, bool, string) (response.AgreementDetailCustomer, bool, error)); ok {
-		return rf(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, bool, string) (response.ConfinsAgreementCustomer, bool, error)); ok {
+		return rf(ctx, prospectID, customerId, filterKMBOnly, accessToken)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, bool, string) response.AgreementDetailCustomer); ok {
-		r0 = rf(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, bool, string) response.ConfinsAgreementCustomer); ok {
+		r0 = rf(ctx, prospectID, customerId, filterKMBOnly, accessToken)
 	} else {
-		r0 = ret.Get(0).(response.AgreementDetailCustomer)
+		r0 = ret.Get(0).(response.ConfinsAgreementCustomer)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, bool, string) bool); ok {
-		r1 = rf(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, bool, string) bool); ok {
+		r1 = rf(ctx, prospectID, customerId, filterKMBOnly, accessToken)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, string, string, string, bool, string) error); ok {
-		r2 = rf(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
+	if rf, ok := ret.Get(2).(func(context.Context, string, string, bool, string) error); ok {
+		r2 = rf(ctx, prospectID, customerId, filterKMBOnly, accessToken)
 	} else {
 		r2 = ret.Error(2)
 	}
