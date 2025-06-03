@@ -858,11 +858,23 @@ type RequestPagination struct {
 	Limit int `json:"limit"`
 }
 
+type ReqListBranch struct {
+	UserID           string `json:"user_id" query:"user_id" validate:"required"`
+	IsMultiBranch    int    `json:"is_multi_branch" query:"is_multi_branch"`
+	SingleBranchID   string `json:"single_branch_id" query:"single_branch_id" validate:"required"`
+	SingleBranchName string `json:"single_branch_name" query:"single_branch_name" validate:"required"`
+	RoleType         int    `json:"role_type" query:"role_type" validate:"required"`
+	RoleAlias        string `json:"role_alias" query:"role_alias" validate:"required"`
+}
+
 type ReqInquiryPrescreening struct {
-	Search      string `json:"search"`
-	UserID      string `json:"user_id" validate:"required,max=20"`
-	BranchID    string `json:"branch_id" validate:"required,max=3"`
-	MultiBranch string `json:"multi_branch" validate:"required,max=1"`
+	SearchBy     string `json:"search_by"`
+	SearchValue  string `json:"search_value"`
+	BranchFilter string `json:"branch_filter"`
+	StatusFilter string `json:"status_filter"`
+	UserID       string `json:"user_id" validate:"required,max=20"`
+	BranchID     string `json:"branch_id" validate:"required,max=3"`
+	MultiBranch  string `json:"multi_branch" validate:"required,max=1"`
 }
 
 type ReqReasonPrescreening struct {
@@ -882,11 +894,19 @@ type ReqReviewPrescreening struct {
 }
 
 type ReqInquiryCa struct {
-	Search      string `json:"search"`
-	BranchID    string `json:"branch_id" validate:"required,max=3"`
-	MultiBranch string `json:"multi_branch" validate:"required,max=1"`
-	Filter      string `json:"filter" validate:"max=15"`
-	UserID      string `json:"user_id" validate:"required,max=20"`
+	SearchBy     string `json:"search_by"`
+	SearchValue  string `json:"search_value"`
+	BranchFilter string `json:"branch_filter"`
+	StatusFilter string `json:"status_filter"`
+	BranchID     string `json:"branch_id" validate:"required,max=3"`
+	MultiBranch  string `json:"multi_branch" validate:"required,max=1"`
+	UserID       string `json:"user_id" validate:"required,max=20"`
+}
+
+type ReqAdditionalData struct {
+	ProspectIDs       []string `json:"prospect_ids" validate:"required"`
+	IsIncludeSurveyor bool     `json:"is_include_surveyor"`
+	IsIncludeApproval bool     `json:"is_include_approval"`
 }
 
 type ReqInquiryNE struct {
@@ -969,12 +989,14 @@ type ReqRecalculateOrder struct {
 }
 
 type ReqInquiryApproval struct {
-	Search      string `json:"search"`
-	BranchID    string `json:"branch_id" validate:"required,max=3"`
-	MultiBranch string `json:"multi_branch" validate:"required,max=1"`
-	Filter      string `json:"filter" validate:"max=15"`
-	UserID      string `json:"user_id" validate:"required,max=20"`
-	Alias       string `json:"alias" validate:"required,max=3"`
+	SearchBy     string `json:"search_by"`
+	SearchValue  string `json:"search_value"`
+	BranchFilter string `json:"branch_filter"`
+	StatusFilter string `json:"status_filter"`
+	BranchID     string `json:"branch_id" validate:"required,max=3"`
+	MultiBranch  string `json:"multi_branch" validate:"required,max=1"`
+	UserID       string `json:"user_id" validate:"required,max=20"`
+	Alias        string `json:"alias" validate:"required,max=3"`
 }
 
 type ReqListQuotaDeviasi struct {

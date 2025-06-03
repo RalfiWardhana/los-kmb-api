@@ -50,7 +50,7 @@ func TestPefindo(t *testing.T) {
 			},
 			result: response.UsecaseApi{
 				Code:           constant.CODE_PEFINDO_PRIME_PRIORITY,
-				Reason:         fmt.Sprintf("%s %s >= 6 bulan - PBK Pass", constant.STATUS_KONSUMEN_AO, constant.RO_AO_PRIME),
+				Reason:         fmt.Sprintf("%s %s - PBK Pass", constant.STATUS_KONSUMEN_AO, constant.RO_AO_PRIME),
 				Result:         constant.DECISION_PASS,
 				SourceDecision: constant.SOURCE_DECISION_BIRO,
 			},
