@@ -7,6 +7,7 @@ import (
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
 	"los-kmb-api/shared/common"
+	authPlatform "los-kmb-api/shared/common/platformauth/adapter"
 	"los-kmb-api/shared/common/platformcache"
 	"los-kmb-api/shared/common/platformevent"
 	"los-kmb-api/shared/constant"
@@ -23,10 +24,11 @@ type handlerKmbFiltering struct {
 	Json         common.JSON
 	producer     platformevent.PlatformEventInterface
 	cache        platformcache.PlatformCacheInterface
+	authPlatform authPlatform.PlatformAuthInterface
 }
 
 func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase, usecase interfaces.Usecase, repository interfaces.Repository, json common.JSON, middlewares *middlewares.AccessMiddleware,
-	producer platformevent.PlatformEventInterface, cache platformcache.PlatformCacheInterface) {
+	producer platformevent.PlatformEventInterface, cache platformcache.PlatformCacheInterface, authPlatform authPlatform.PlatformAuthInterface) {
 	handler := handlerKmbFiltering{
 		multiusecase: multiUsecase,
 		usecase:      usecase,
@@ -34,6 +36,7 @@ func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase
 		Json:         json,
 		producer:     producer,
 		cache:        cache,
+		authPlatform: authPlatform,
 	}
 	kmbroute.POST("/produce/filtering", handler.ProduceFiltering, middlewares.AccessMiddleware())
 	kmbroute.DELETE("/cache/filtering/:prospect_id", handler.RemoveCacheFiltering, middlewares.AccessMiddleware())
@@ -52,11 +55,47 @@ func FilteringHandler(kmbroute *echo.Group, multiUsecase interfaces.MultiUsecase
 func (c *handlerKmbFiltering) ProduceFiltering(ctx echo.Context) (err error) {
 
 	var (
-		req request.Filtering
+		req     request.Filtering
+		ctxJson error
 	)
+
+	_, errAuth := c.authPlatform.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
+	if errAuth != nil {
+		if errAuth.GetErrorCode() == "401" {
+			err = fmt.Errorf(constant.ERROR_UNAUTHORIZED + " - Invalid token")
+			ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+			return ctxJson
+		} else {
+			err = fmt.Errorf("%s - %s", constant.ERROR_UNAUTHORIZED, errAuth.ErrorMessage())
+			ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+			return ctxJson
+		}
+	}
 
 	if err := ctx.Bind(&req); err != nil {
 		return c.Json.InternalServerErrorCustomV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", err)
+	}
+
+	err = ctx.Validate(req)
+	if err != nil {
+		ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+		return ctxJson
+	}
+
+	if req.Spouse != nil {
+
+		var genderSpouse request.GenderCompare
+
+		if req.Gender != req.Spouse.Gender {
+			genderSpouse.Gender = true
+		} else {
+			genderSpouse.Gender = false
+		}
+
+		if err := ctx.Validate(&genderSpouse); err != nil {
+			ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - KMB FILTERING", req, err)
+			return ctxJson
+		}
 	}
 
 	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION, constant.KEY_PREFIX_FILTERING, req.ProspectID, utils.StructToMap(req), 0)

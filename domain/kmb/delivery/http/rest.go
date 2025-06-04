@@ -11,12 +11,11 @@ import (
 	"los-kmb-api/shared/authorization"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/platformevent"
-	"los-kmb-api/shared/common/platformlog"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"time"
 
-	"github.com/KB-FMF/platform-library/auth"
+	authPlatform "los-kmb-api/shared/common/platformauth/adapter"
 
 	"github.com/labstack/echo/v4"
 )
@@ -25,16 +24,18 @@ type handlerKMB struct {
 	metrics       interfaces.Metrics
 	usecase       interfaces.Usecase
 	repository    interfaces.Repository
+	authPlatform  authPlatform.PlatformAuthInterface
 	authorization authorization.Authorization
 	Json          common.JSON
 	producer      platformevent.PlatformEventInterface
 }
 
-func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, authorization authorization.Authorization, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEventInterface) {
+func KMBHandler(kmbroute *echo.Group, metrics interfaces.Metrics, usecase interfaces.Usecase, repository interfaces.Repository, authPlatform authPlatform.PlatformAuthInterface, authorization authorization.Authorization, json common.JSON, middlewares *middlewares.AccessMiddleware, producer platformevent.PlatformEventInterface) {
 	handler := handlerKMB{
 		metrics:       metrics,
 		usecase:       usecase,
 		repository:    repository,
+		authPlatform:  authPlatform,
 		authorization: authorization,
 		Json:          json,
 		producer:      producer,
@@ -63,9 +64,76 @@ func (c *handlerKMB) ProduceJourney(ctx echo.Context) (err error) {
 		ctxJson error
 	)
 
+	_, errAuth := c.authPlatform.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
+	if errAuth != nil {
+		if errAuth.GetErrorCode() == "401" {
+			err = fmt.Errorf(constant.ERROR_UNAUTHORIZED + " - Invalid token")
+			ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+			return ctxJson
+		} else {
+			err = fmt.Errorf("%s - %v", constant.ERROR_UNAUTHORIZED, errAuth.ErrorMessage())
+			ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+			return ctxJson
+		}
+	}
+
 	if err := ctx.Bind(&req); err != nil {
 		ctxJson, _ = c.Json.BadRequestErrorBindV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
 		return ctxJson
+	}
+
+	if req.Transaction.ProspectID == "" {
+		err = ctx.Validate(req)
+		if err != nil {
+			ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+			return ctxJson
+		}
+	} else if req.Transaction.ProspectID[0:2] != "NE" {
+		err = ctx.Validate(req)
+		if err != nil {
+			ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+			return ctxJson
+		}
+	}
+
+	if req.CustomerSpouse != nil {
+
+		var genderSpouse request.GenderCompare
+
+		if req.CustomerPersonal.Gender != req.CustomerSpouse.Gender {
+			genderSpouse.Gender = true
+		} else {
+			genderSpouse.Gender = false
+		}
+
+		if err := ctx.Validate(&genderSpouse); err != nil {
+			ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+			return ctxJson
+		}
+	}
+
+	if req.CustomerPersonal.MaritalStatus == constant.MARRIED {
+		var spouseVal request.MarriedValidator
+		spouseVal.CustomerSpouse = true
+		if req.CustomerSpouse == nil {
+			spouseVal.CustomerSpouse = false
+		}
+
+		if err := ctx.Validate(&spouseVal); err != nil {
+			ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+			return ctxJson
+		}
+	} else {
+		var spouseVal request.SingleValidator
+		spouseVal.CustomerSpouse = true
+		if req.CustomerSpouse != nil {
+			spouseVal.CustomerSpouse = false
+		}
+
+		if err := ctx.Validate(&spouseVal); err != nil {
+			ctxJson, _ = c.Json.BadRequestErrorValidationV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+			return ctxJson
+		}
 	}
 
 	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_SUBMIT_TO_LOS, req.Transaction.ProspectID, utils.StructToMap(req), 0)
@@ -105,8 +173,7 @@ func (c *handlerKMB) LockSystem(ctx echo.Context) (err error) {
 		ctxJson error
 	)
 
-	auth := auth.New(platformlog.GetPlatformEnv())
-	_, errAuth := auth.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
+	_, errAuth := c.authPlatform.Validation(ctx.Request().Header.Get(constant.HEADER_AUTHORIZATION), "")
 	if errAuth != nil {
 		if errAuth.GetErrorCode() == "401" {
 			err = fmt.Errorf("unauthorized - Invalid token")
