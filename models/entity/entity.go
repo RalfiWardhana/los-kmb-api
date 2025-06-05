@@ -1387,6 +1387,8 @@ type InquiryPrescreening struct {
 	SurgateMotherName string    `gorm:"column:SurgateMotherName"`
 	Gender            string    `gorm:"column:Gender"`
 	MobilePhone       string    `gorm:"column:MobilePhone"`
+	WhatsAppNumber    string    `gorm:"column:whatsapp_number"`
+	OtherMobilePhone  string    `gorm:"column:other_mobilephone"`
 	Email             string    `gorm:"column:Email"`
 	Education         string    `gorm:"column:Education"`
 	MaritalStatus     string    `gorm:"column:MaritalStatus"`
@@ -1691,6 +1693,8 @@ type InquiryCa struct {
 	SurgateMotherName string    `gorm:"column:SurgateMotherName"`
 	Gender            string    `gorm:"column:Gender"`
 	MobilePhone       string    `gorm:"column:MobilePhone"`
+	WhatsAppNumber    string    `gorm:"column:whatsapp_number"`
+	OtherMobilePhone  string    `gorm:"column:other_mobilephone"`
 	Email             string    `gorm:"column:Email"`
 	Education         string    `gorm:"column:Education"`
 	MaritalStatus     string    `gorm:"column:MaritalStatus"`
@@ -1946,6 +1950,8 @@ type InquirySearch struct {
 	SurgateMotherName string    `gorm:"column:SurgateMotherName"`
 	Gender            string    `gorm:"column:Gender"`
 	MobilePhone       string    `gorm:"column:MobilePhone"`
+	WhatsAppNumber    string    `gorm:"column:whatsapp_number"`
+	OtherMobilePhone  string    `gorm:"column:other_mobilephone"`
 	Email             string    `gorm:"column:Email"`
 	Education         string    `gorm:"column:Education"`
 	MaritalStatus     string    `gorm:"column:MaritalStatus"`
@@ -2072,6 +2078,8 @@ type DataPersonal struct {
 	SurgateMotherName string      `gorm:"type:varchar(100);column:SurgateMotherName" json:"surgate_mother_name"`
 	Gender            string      `gorm:"type:varchar(10);column:Gender" json:"gender"`
 	MobilePhone       string      `gorm:"type:varchar(14);column:MobilePhone" json:"mobile_phone"`
+	WhatsAppNumber    string      `gorm:"type:varchar(14);column:whatsapp_number" json:"whatsapp_number"`
+	OtherMobilePhone  string      `gorm:"type:varchar(14);column:other_mobilephone" json:"other_mobilephone"`
 	Email             string      `gorm:"type:varchar(100);column:Email" json:"email"`
 	HomeStatus        string      `gorm:"type:varchar(20);column:HomeStatus" json:"home_status"`
 	StaySinceYear     string      `gorm:"type:varchar(10);column:StaySinceYear" json:"stay_since_year"`

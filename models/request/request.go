@@ -491,6 +491,8 @@ type CustomerPersonalNE struct {
 	SurgateMotherName string  `json:"surgate_mother_name" validate:"required,min=2,allowcharsname,noHTML" example:"ENCRYPTED"`
 	Gender            string  `json:"gender" validate:"gender" example:"M"`
 	MobilePhone       string  `json:"mobile_phone" validate:"min=9,max=14,noHTML" example:"085689XXX01"`
+	WhatsAppNumber    string  `json:"whatsapp_number" validate:"min=0,max=14,noHTML" example:"085689XXX01"`
+	OtherMobilePhone  string  `json:"other_mobilephone" validate:"min=0,max=14,noHTML" example:"085689XXX01"`
 	Email             string  `json:"email" validate:"email,max=100,noHTML" example:"jonathaxx@gmail.com"`
 	StaySinceYear     string  `json:"stay_since_year" validate:"len=4,noHTML" example:"2018"`
 	StaySinceMonth    string  `json:"stay_since_month" validate:"len=2,noHTML" example:"03"`
