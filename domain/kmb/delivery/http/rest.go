@@ -136,6 +136,12 @@ func (c *handlerKMB) ProduceJourney(ctx echo.Context) (err error) {
 		}
 	}
 
+	if req.CustomerPersonal.OtherMobilePhone != "" && req.CustomerPersonal.OtherMobilePhone == req.CustomerPersonal.MobilePhone {
+		err = fmt.Errorf(constant.ERROR_BAD_REQUEST + " - OtherMobilePhone must be different from MobilePhone")
+		ctxJson, _ = c.Json.ServerSideErrorV3(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB", req, err)
+		return ctxJson
+	}
+
 	c.producer.PublishEvent(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_LOS, constant.KEY_PREFIX_SUBMIT_TO_LOS, req.Transaction.ProspectID, utils.StructToMap(req), 0)
 
 	return c.Json.SuccessV2(ctx, middlewares.UserInfoData.AccessToken, constant.NEW_KMB_LOG, "LOS - Journey KMB - Please wait, your request is being processed", req, nil)

@@ -173,6 +173,11 @@ func (u usecase) GetListBranch(ctx context.Context, req request.ReqListBranch) (
 
 func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data interface{}, err error) {
 
+	if req.CustomerPersonal.OtherMobilePhone != "" && req.CustomerPersonal.OtherMobilePhone == req.CustomerPersonal.MobilePhone {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - OtherMobilePhone must be different from MobilePhone")
+		return
+	}
+
 	filtering := request.Filtering{
 		ProspectID: req.Transaction.ProspectID,
 		BranchID:   req.Transaction.BranchID,

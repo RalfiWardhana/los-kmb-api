@@ -531,6 +531,8 @@ type CustomerPersonal struct {
 	Gender                     string      `gorm:"type:varchar(10);column:Gender" json:"gender"`
 	PersonalNPWP               *string     `gorm:"type:varchar(25);column:PersonalNPWP" json:"-"`
 	MobilePhone                string      `gorm:"type:varchar(14);column:MobilePhone" json:"mobile_phone"`
+	WhatsAppNumber             string      `gorm:"type:varchar(14);column:whatsapp_number" json:"whatsapp_number"`
+	OtherMobilePhone           string      `gorm:"type:varchar(14);column:other_mobilePhone" json:"other_mobilePhone"`
 	Email                      string      `gorm:"type:varchar(100);column:Email" json:"email"`
 	HomeStatus                 string      `gorm:"type:varchar(20);column:HomeStatus" json:"home_status"`
 	StaySinceYear              string      `gorm:"type:varchar(10);column:StaySinceYear" json:"stay_since_year"`

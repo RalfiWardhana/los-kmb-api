@@ -108,9 +108,24 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("prospect_id_emcon_principle", prospectIdEmconPrincipleNotExists)
 	v.validator.RegisterValidation("allowcharstipeusaha", allowedCharsInTipeUsaha)
 	v.validator.RegisterValidation("noHTML", noHTML)
+	v.validator.RegisterValidation("hpPrefix", hpPrefix)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
+}
+
+func hpPrefix(fl validator.FieldLevel) bool {
+	phone := fl.Field().String()
+
+	if phone == "" {
+		return true // Boleh kosong (opsional)
+	}
+
+	if len(phone) < 9 {
+		return false // minimal 9 character
+	}
+
+	return strings.HasPrefix(phone, "08")
 }
 
 // Validator custom: tolak jika ada tag HTML
