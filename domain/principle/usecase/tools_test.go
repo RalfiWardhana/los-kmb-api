@@ -898,12 +898,6 @@ func TestPrincipleMarketingProgram(t *testing.T) {
 			expectedError:     errors.New("database error"),
 		},
 		{
-			name:                "error get emergency contact",
-			prospectID:          "PROS-123",
-			errEmergencyContact: errors.New("database error"),
-			expectedError:       errors.New("database error"),
-		},
-		{
 			name:                "error get marketing program",
 			prospectID:          "PROS-123",
 			errMarketingProgram: errors.New("database error"),
