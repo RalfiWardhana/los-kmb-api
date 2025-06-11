@@ -342,7 +342,7 @@ func formatMessage(err validator.FieldError) string {
 		message = fmt.Sprintf("accepted:value=%s", common.Relation)
 	case constant.TAG_NOTHML:
 		message = "invalid input: HTML tags are not allowed"
-	case constant.TAG_HP_PREFIX:
+	case constant.TAG_MOBILEPHONE:
 		message = "accepted:value=08xxxxxxx, min = 0 or 9, max=14"
 	}
 	return message
