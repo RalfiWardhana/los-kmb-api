@@ -61,7 +61,7 @@ const (
 	TAG_RELATION                     = "relation"
 	TAG_BPKB_NAME                    = "bpkbname"
 	TAG_NOTHML                       = "nohtml"
-	TAG_HP_PREFIX                    = "hpPrefix"
+	TAG_MOBILEPHONE                  = "mobile_phone"
 	ACTIVITY_UNPROCESS               = "UNPR"
 	ACTIVITY_IDLE                    = "IDLE"
 	PRESCREENING                     = "PSI"
