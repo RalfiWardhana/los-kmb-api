@@ -7363,7 +7363,7 @@ func TestSubmission2Wilen(t *testing.T) {
 			mockUsecase.On("GetEmployeeData", ctx, mock.Anything).Return(tc.resGetEmployeeData, tc.errGetEmployeeData)
 			mockUsecase.On("GetFpdCMO", ctx, mock.Anything, mock.Anything).Return(tc.resGetFpdCMO, tc.errGetFpdCMO)
 			mockUsecase.On("CheckCmoNoFPD", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resSavedClusterCheckCmoNoFPD, tc.resEntityCheckCmoNoFPD, tc.errCheckCmoNoFPD)
-			mockUsecase.On("Pefindo", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resFilteringPefindo, tc.resPefindo, tc.resTrxDetailBiroPefindo, tc.errPefindo)
+			mockUsecase.On("Pefindo", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resFilteringPefindo, tc.resPefindo, tc.resTrxDetailBiroPefindo, tc.errPefindo)
 			mockUsecase.On("Dukcapil", ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.resDukcapil, tc.errDukcapil)
 			mockUsecase.On("Asliri", ctx, mock.Anything, mock.Anything).Return(tc.resAsliri, tc.errAsliri)
 			mockUsecase.On("Ktp", ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.resKtp, tc.errKtp)

@@ -689,6 +689,9 @@ const (
 	CODE_REJECT_RESTRUCTURE = "9435"
 	REASON_RESTRUCTURE      = "Memiliki Fasilitas Restructure PBK"
 
+	CODE_REJECT_INQUIRY_1MONTHS = "9436"
+	REASON_INQUIRY_1MONTHS      = "Reject - Number of Inquiry PBK"
+
 	// SCOREPRO
 	SOURCE_DECISION_SCOREPRO         = "SCP"
 	JOURNEY_SCOREPRO                 = "SCP1"

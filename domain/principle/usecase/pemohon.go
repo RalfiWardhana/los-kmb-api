@@ -763,7 +763,7 @@ func (u multiUsecase) PrinciplePemohon(ctx context.Context, r request.PrincipleP
 	/* Process Get Cluster based on CMO_ID ends here */
 
 	// hit ke pefindo
-	filtering, pefindo, trxDetailBiro, err = u.usecase.Pefindo(ctx, reqPefindo, mainCustomer.CustomerStatus, clusterCMO, bpkb)
+	filtering, pefindo, trxDetailBiro, err = u.usecase.Pefindo(ctx, reqPefindo, mainCustomer.CustomerStatus, mainCustomer.CustomerSegment, clusterCMO, bpkb, false)
 	if err != nil {
 		return
 	}
