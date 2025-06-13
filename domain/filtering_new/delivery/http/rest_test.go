@@ -7,6 +7,7 @@ import (
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/common"
 	mocksJson "los-kmb-api/shared/common/json/mocks"
+	mockplatformauth "los-kmb-api/shared/common/platformauth/adapter/mocks"
 	mockplatformcache "los-kmb-api/shared/common/platformcache/mocks"
 	"los-kmb-api/shared/common/platformevent"
 	mockplatformevent "los-kmb-api/shared/common/platformevent/mocks"
@@ -28,7 +29,7 @@ func TestProduceFiltering(t *testing.T) {
 		{
 			name: "test err bind",
 			reqbody: `{
-				"prospect_id": "EFM0TST0020230809013",
+				"prospect_id": "SAL-TST0020230809013",
 				"branch_id": "426",
 				"id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
 				"legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
@@ -36,26 +37,32 @@ func TestProduceFiltering(t *testing.T) {
 				"gender": "M",
 				"surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g==",
 				"bpkb_name": "K",
+				"cmo_id": "86244INH",
+				"chassis_number": "KAN23112",
+				"engine_number": "SIN3124",
 				"spouse": nil
 			}`,
 		},
 		{
 			name: "test customer spouse",
 			reqbody: `{
-				"prospect_id": "EFM0TST0020230809013",
+				"prospect_id": "SAL-TST0020230809013",
 				"branch_id": "426",
-				"id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
-				"legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
-				"birth_date": "1971-04-15",
-				"gender": "M",
-				"surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g==",
+				"id_number": "2+YBWfT+vxaYsm5074O4l+5yxnxd6nq/Nbhv+TMbpA0=",
+				"legal_name": "4PpfG0+nSmIZEeJ+a7dTgo7ON6yaH1Cnk32fxnNQbw==",
+				"birth_date": "1978-09-03",
+				"gender": "F",
+				"surgate_mother_name": "OXWbbWkFNYjsj0fT3ITJYi7T0yZ6SZY=",
 				"bpkb_name": "K",
+				"cmo_id": "86244INH",
+				"chassis_number": "KAN23112",
+				"engine_number": "SIN3124",
 				"spouse": {
-					"spouse_id_number": "Tcrz599clw886iyL3A5Boc1yM+LOVGGHBnaW9vgSvOY=",
-					"spouse_legal_name": "MGwNDewJ8HdHwdnOHXeNCVUKXoGh2Vm/f6uO8nOPpCClwUc=",
+					"spouse_id_number": "2+YBWfT+vxaYsm5074O4l+5yxnxd6nq/Nbhv+TMbpA0=",
+					"spouse_legal_name": "4PpfG0+nSmIZEeJ+a7dTgo7ON6yaH1Cnk32fxnNQbw==",
 					"spouse_birth_date": "1971-04-15",
-					"spouse_gender": "F",
-					"spouse_surgate_mother_name": "1LUjPy3GQdAs4E9rPuLVuKjGLjZqm/AqoglB5g=="
+					"spouse_gender": "M",
+					"spouse_surgate_mother_name": "OXWbbWkFNYjsj0fT3ITJYi7T0yZ6SZY="
 				}
 			}`,
 		},
@@ -68,6 +75,7 @@ func TestProduceFiltering(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockJson := new(mocksJson.JSON)
 			mockPlatformCache := new(mockplatformcache.PlatformCacheInterface)
+			mockAuth := new(mockplatformauth.PlatformAuthInterface)
 			e := echo.New()
 			e.Validator = common.NewValidator()
 
@@ -86,14 +94,17 @@ func TestProduceFiltering(t *testing.T) {
 			mockPlatformEvent := mockplatformevent.NewPlatformEventInterface(t)
 			var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
 
-			if tc.name == "test customer spouse" {
-				mockPlatformEvent.On("PublishEvent", ctx.Request().Context(), mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, 0).Return(nil).Once()
+			if tc.name == "test PublishEvent" {
+				mockPlatformEvent.On("PublishEvent", ctx.Request().Context(), mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, 0).Return(nil)
 			}
 			mockJson.On("InternalServerErrorCustomV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
 			mockJson.On("SuccessV2", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil)
+			mockJson.On("ServerSideErrorV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{})
+			mockAuth.On("Validation", mock.Anything, "").Return(nil, nil)
+			mockJson.On("BadRequestErrorValidationV3", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, response.ApiResponse{}).Once()
 
 			route := e.Group("/kmb")
-			FilteringHandler(route, mockMultiUsecase, mockUsecase, mockRepository, mockJson, mockMiddleware, platformEvent, mockPlatformCache)
+			FilteringHandler(route, mockMultiUsecase, mockUsecase, mockRepository, mockJson, mockMiddleware, platformEvent, mockPlatformCache, mockAuth)
 
 			handler := &handlerKmbFiltering{
 				multiusecase: mockMultiUsecase,
@@ -101,6 +112,7 @@ func TestProduceFiltering(t *testing.T) {
 				repository:   mockRepository,
 				Json:         mockJson,
 				producer:     platformEvent,
+				authPlatform: mockAuth,
 			}
 			err := handler.ProduceFiltering(ctx)
 			if err != nil {
