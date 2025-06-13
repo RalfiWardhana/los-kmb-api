@@ -55,6 +55,8 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		expiredContractConfig   entity.AppConfig
 	)
 
+	cacheTTL := 5 * time.Minute
+
 	// Try to get filteringKMB from cache first
 	filteringCacheKey := "filtering_result:" + reqs.ProspectID
 	filteringCacheData, err := u.cache.GetWithExpiration(filteringCacheKey)
@@ -71,7 +73,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		if err == nil {
 			cacheData, jsonErr := json.Marshal(filteringKMB)
 			if jsonErr == nil {
-				_ = u.cache.SetWithExpiration(filteringCacheKey, cacheData, 5*time.Minute)
+				_ = u.cache.SetWithExpiration(filteringCacheKey, cacheData, cacheTTL)
 			}
 		}
 	}
@@ -138,7 +140,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 				if err == nil {
 					cacheData, jsonErr := json.Marshal(expiredContractConfig)
 					if jsonErr == nil {
-						_ = u.cache.SetWithExpiration(configCacheKey, cacheData, 5*time.Minute)
+						_ = u.cache.SetWithExpiration(configCacheKey, cacheData, cacheTTL)
 					}
 				}
 			}
@@ -237,7 +239,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		if err == nil && len(filteringDetail) > 0 {
 			cacheData, jsonErr := json.Marshal(filteringDetail)
 			if jsonErr == nil {
-				_ = u.cache.SetWithExpiration(detailCacheKey, cacheData, 5*time.Minute)
+				_ = u.cache.SetWithExpiration(detailCacheKey, cacheData, cacheTTL)
 			}
 		}
 	}
@@ -266,7 +268,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 			if err == nil {
 				cacheData, jsonErr := json.Marshal(mappingPBKScoreGrade)
 				if jsonErr == nil {
-					_ = u.cache.SetWithExpiration(pbkScoreCacheKey, cacheData, 5*time.Hour)
+					_ = u.cache.SetWithExpiration(pbkScoreCacheKey, cacheData, cacheTTL)
 				}
 			}
 		}
@@ -302,7 +304,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		if err == nil {
 			cacheData, jsonErr := json.Marshal(mappingBranch)
 			if jsonErr == nil {
-				_ = u.cache.SetWithExpiration(branchCacheKey, cacheData, 5*time.Minute)
+				_ = u.cache.SetWithExpiration(branchCacheKey, cacheData, cacheTTL)
 			}
 		}
 	}
@@ -333,7 +335,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		if err == nil {
 			cacheData, jsonErr := json.Marshal(mappingElaborateLTV)
 			if jsonErr == nil {
-				_ = u.cache.SetWithExpiration(elaborateCacheKey, cacheData, 5*time.Minute)
+				_ = u.cache.SetWithExpiration(elaborateCacheKey, cacheData, cacheTTL)
 			}
 		}
 	}
