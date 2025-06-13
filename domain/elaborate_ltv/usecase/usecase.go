@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	cache "los-kmb-api/domain/cache/interfaces"
 	"los-kmb-api/domain/elaborate_ltv/interfaces"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
@@ -12,6 +13,7 @@ import (
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -22,13 +24,15 @@ type (
 	usecase struct {
 		repository interfaces.Repository
 		httpclient httpclient.HttpClient
+		cache      cache.Repository
 	}
 )
 
-func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient) interfaces.Usecase {
+func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClient, cache cache.Repository) interfaces.Usecase {
 	return &usecase{
 		repository: repository,
 		httpclient: httpclient,
+		cache:      cache,
 	}
 }
 
@@ -51,7 +55,27 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		expiredContractConfig   entity.AppConfig
 	)
 
-	filteringKMB, err = u.repository.GetFilteringResult(reqs.ProspectID)
+	// Try to get filteringKMB from cache first
+	filteringCacheKey := "filtering_result:" + reqs.ProspectID
+	filteringCacheData, err := u.cache.GetWithExpiration(filteringCacheKey)
+	// fmt.Printf("GET Cache Key: %s, Cache Data Length: %d\n", filteringCacheKey, len(filteringCacheData))
+	if err == nil && len(filteringCacheData) > 0 {
+		// Data found in cache
+		if err = json.Unmarshal(filteringCacheData, &filteringKMB); err != nil {
+			// If unmarshal fails, proceed to get from repository
+			filteringKMB, err = u.repository.GetFilteringResult(reqs.ProspectID)
+		}
+	} else {
+		// Not found in cache, get from repository
+		filteringKMB, err = u.repository.GetFilteringResult(reqs.ProspectID)
+		if err == nil {
+			cacheData, jsonErr := json.Marshal(filteringKMB)
+			if jsonErr == nil {
+				_ = u.cache.SetWithExpiration(filteringCacheKey, cacheData, 5*time.Minute)
+			}
+		}
+	}
+
 	if err != nil {
 		if err.Error() == constant.RECORD_NOT_FOUND {
 			err = errors.New(constant.ERROR_BAD_REQUEST + " - Silahkan melakukan filtering terlebih dahulu")
@@ -100,7 +124,25 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 			}
 
 			// Get config expired_contract
-			expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+			configCacheKey := "ConfigCheckExpiredContractKMB"
+			configCacheData, cacheErr := u.cache.GetWithExpiration(configCacheKey)
+			// fmt.Printf("GET Cache Key: %s, Cache Data Length: %d\n", configCacheKey, len(configCacheData))
+			if cacheErr == nil && len(configCacheData) > 0 {
+				if err = json.Unmarshal(configCacheData, &expiredContractConfig); err != nil {
+					// If unmarshal fails, proceed to get from repository
+					expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+				}
+			} else {
+				// Not found in cache, get from repository
+				expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+				if err == nil {
+					cacheData, jsonErr := json.Marshal(expiredContractConfig)
+					if jsonErr == nil {
+						_ = u.cache.SetWithExpiration(configCacheKey, cacheData, 5*time.Minute)
+					}
+				}
+			}
+
 			if err != nil {
 				err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
 				return
@@ -180,7 +222,26 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		mappingBranch        entity.MappingBranchByPBKScore
 	)
 
-	filteringDetail, err = u.repository.GetFilteringDetail(reqs.ProspectID)
+	// Try to get filteringDetail from cache
+	detailCacheKey := "filtering_detail:" + reqs.ProspectID
+	detailCacheData, err := u.cache.GetWithExpiration(detailCacheKey)
+	// fmt.Printf("GET Cache Key: %s, Cache Data Length: %d\n", detailCacheKey, len(detailCacheData))
+	if err == nil && len(detailCacheData) > 0 {
+		if err = json.Unmarshal(detailCacheData, &filteringDetail); err != nil {
+			// If unmarshal fails, proceed to get from repository
+			filteringDetail, err = u.repository.GetFilteringDetail(reqs.ProspectID)
+		}
+	} else {
+		// Not found in cache, get from repository
+		filteringDetail, err = u.repository.GetFilteringDetail(reqs.ProspectID)
+		if err == nil && len(filteringDetail) > 0 {
+			cacheData, jsonErr := json.Marshal(filteringDetail)
+			if jsonErr == nil {
+				_ = u.cache.SetWithExpiration(detailCacheKey, cacheData, 5*time.Minute)
+			}
+		}
+	}
+
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - GetFilteringDetail error - " + err.Error())
 		return
@@ -190,7 +251,26 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		gradePBK = constant.DECISION_PBK_NO_HIT
 
 	} else {
-		mappingPBKScoreGrade, err = u.repository.GetMappingPBKScoreGrade()
+		// Try to get mappingPBKScoreGrade from cache
+		pbkScoreCacheKey := "mapping_pbk_score_grade"
+		pbkScoreCacheData, cacheErr := u.cache.GetWithExpiration(pbkScoreCacheKey)
+		// fmt.Printf("GET Cache Key: %s, Cache Data Length: %d\n", pbkScoreCacheKey, len(pbkScoreCacheData))
+		if cacheErr == nil && len(pbkScoreCacheData) > 0 {
+			if err = json.Unmarshal(pbkScoreCacheData, &mappingPBKScoreGrade); err != nil {
+				// If unmarshal fails, proceed to get from repository
+				mappingPBKScoreGrade, err = u.repository.GetMappingPBKScoreGrade()
+			}
+		} else {
+			// Not found in cache, get from repository
+			mappingPBKScoreGrade, err = u.repository.GetMappingPBKScoreGrade()
+			if err == nil {
+				cacheData, jsonErr := json.Marshal(mappingPBKScoreGrade)
+				if jsonErr == nil {
+					_ = u.cache.SetWithExpiration(pbkScoreCacheKey, cacheData, 5*time.Hour)
+				}
+			}
+		}
+
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - GetMappingPBKScoreGrade error - " + err.Error())
 			return
@@ -207,7 +287,26 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		}
 	}
 
-	mappingBranch, err = u.repository.GetMappingBranchPBK(filteringKMB.BranchID, gradePBK)
+	// Try to get mappingBranch from cache
+	branchCacheKey := "mapping_branch_pbk:" + filteringKMB.BranchID + ":" + gradePBK
+	branchCacheData, err := u.cache.GetWithExpiration(branchCacheKey)
+	// fmt.Printf("GET Cache Key: %s, Cache Data Length: %d\n", branchCacheKey, len(branchCacheData))
+	if err == nil && len(branchCacheData) > 0 {
+		if err = json.Unmarshal(branchCacheData, &mappingBranch); err != nil {
+			// If unmarshal fails, proceed to get from repository
+			mappingBranch, err = u.repository.GetMappingBranchPBK(filteringKMB.BranchID, gradePBK)
+		}
+	} else {
+		// Not found in cache, get from repository
+		mappingBranch, err = u.repository.GetMappingBranchPBK(filteringKMB.BranchID, gradePBK)
+		if err == nil {
+			cacheData, jsonErr := json.Marshal(mappingBranch)
+			if jsonErr == nil {
+				_ = u.cache.SetWithExpiration(branchCacheKey, cacheData, 5*time.Minute)
+			}
+		}
+	}
+
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - GetMappingBranchPBK error - " + err.Error())
 		return
@@ -217,7 +316,28 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		mappingBranch.GradeBranch = constant.GOOD
 	}
 
-	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, cluster, bpkbNameType, filteringKMB.CustomerStatus.(string), gradePBK, mappingBranch.GradeBranch)
+	// Try to get mappingElaborateLTV from cache
+	elaborateCacheKey := "mapping_elaborate_ltv:" + resultPefindo + ":" + cluster + ":" +
+		strconv.Itoa(bpkbNameType) + ":" + filteringKMB.CustomerStatus.(string) + ":" +
+		gradePBK + ":" + mappingBranch.GradeBranch
+	elaborateCacheData, err := u.cache.GetWithExpiration(elaborateCacheKey)
+	// fmt.Printf("GET Cache Key: %s, Cache Data Length: %d\n", elaborateCacheKey, len(elaborateCacheData))
+	if err == nil && len(elaborateCacheData) > 0 {
+		if err = json.Unmarshal(elaborateCacheData, &mappingElaborateLTV); err != nil {
+			// If unmarshal fails, proceed to get from repository
+			mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, cluster, bpkbNameType, filteringKMB.CustomerStatus.(string), gradePBK, mappingBranch.GradeBranch)
+		}
+	} else {
+		// Not found in cache, get from repository
+		mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, cluster, bpkbNameType, filteringKMB.CustomerStatus.(string), gradePBK, mappingBranch.GradeBranch)
+		if err == nil {
+			cacheData, jsonErr := json.Marshal(mappingElaborateLTV)
+			if jsonErr == nil {
+				_ = u.cache.SetWithExpiration(elaborateCacheKey, cacheData, 5*time.Minute)
+			}
+		}
+	}
+
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
 		return

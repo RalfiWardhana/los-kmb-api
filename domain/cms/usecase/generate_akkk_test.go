@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	mocksCache "los-kmb-api/domain/cache/mocks"
 	"los-kmb-api/domain/cms/mocks"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
@@ -12,7 +13,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/allegro/bigcache/v3"
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/mock"
@@ -122,7 +122,7 @@ func TestGenerateFormAKKK(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
-			var cache *bigcache.BigCache
+			mockCache := new(mocksCache.Repository)
 
 			mockRepository.On("GetTrxStatus", tc.reqs.ProspectID).Return(tc.trxStatus, tc.errtrxStatus)
 			mockRepository.On("SaveUrlFormAKKK", tc.reqs.ProspectID, mock.Anything).Return(tc.errSaveUrlFormAKKK)
@@ -136,7 +136,7 @@ func TestGenerateFormAKKK(t *testing.T) {
 			resp, _ := rst.R().Post(os.Getenv("GENERATOR_FORM_AKKK_URL"))
 			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("GENERATOR_FORM_AKKK_URL"), mock.Anything, mock.Anything, constant.METHOD_POST, false, 0, 60, tc.reqs.ProspectID, accessToken).Return(resp, tc.httperr).Once()
 
-			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			result, err := usecase.GenerateFormAKKK(ctx, tc.reqs, accessToken)
 

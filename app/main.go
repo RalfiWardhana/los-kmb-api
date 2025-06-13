@@ -249,12 +249,12 @@ func main() {
 	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken, producer, platformCache, authPlatform)
 
 	// define new kmb elaborate domain
+	cacheRepository := cacheRepository.NewRepository(cache)
 	newElaborateLTVRepo := elaborateLTVRepository.NewRepository(kpLos, kpLosLogs, newKMB)
-	newElaborateLTVUsecase := elaborateLTVUsecase.NewUsecase(newElaborateLTVRepo, httpClient)
+	newElaborateLTVUsecase := elaborateLTVUsecase.NewUsecase(newElaborateLTVRepo, httpClient, cacheRepository)
 	elaborateLTVDelivery.ElaborateHandler(apiGroupv3, newElaborateLTVUsecase, newElaborateLTVRepo, authorization, jsonResponse, accessToken, authPlatform)
 
 	// define new kmb cms
-	cacheRepository := cacheRepository.NewRepository(cache)
 	cmsRepositories := cmsRepository.NewRepository(core, confins, newKMB, kpLos, kpLosLogs)
 	cmsUsecases := cmsUsecase.NewUsecase(cmsRepositories, httpClient, cacheRepository)
 	cmsDelivery.CMSHandler(apiGroupv3, cmsUsecases, cmsRepositories, jsonResponse, producer, libResponse, accessToken)
