@@ -46,6 +46,41 @@ func (_m *Usecase) Asliri(ctx context.Context, req request.Metrics, accessToken 
 	return r0, r1
 }
 
+// CheckAgreementCustomer provides a mock function with given fields: ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken
+func (_m *Usecase) CheckAgreementCustomer(ctx context.Context, prospectID string, customerId string, contractStatus string, filterKMBOnly bool, accessToken string) (response.AgreementDetailCustomer, bool, error) {
+	ret := _m.Called(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for CheckAgreementCustomer")
+	}
+
+	var r0 response.AgreementDetailCustomer
+	var r1 bool
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, bool, string) (response.AgreementDetailCustomer, bool, error)); ok {
+		return rf(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string, bool, string) response.AgreementDetailCustomer); ok {
+		r0 = rf(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.AgreementDetailCustomer)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, bool, string) bool); ok {
+		r1 = rf(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
+	} else {
+		r1 = ret.Get(1).(bool)
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, string, string, string, bool, string) error); ok {
+		r2 = rf(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
 // BlacklistCheck provides a mock function with given fields: index, spDupcheck
 func (_m *Usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerByID) (response.UsecaseApi, string) {
 	ret := _m.Called(index, spDupcheck)
@@ -69,34 +104,6 @@ func (_m *Usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustome
 		r1 = rf(index, spDupcheck)
 	} else {
 		r1 = ret.Get(1).(string)
-	}
-
-	return r0, r1
-}
-
-// CheckAgreementChassisNumber provides a mock function with given fields: ctx, reqs, accessToken
-func (_m *Usecase) CheckAgreementChassisNumber(ctx context.Context, reqs request.DupcheckApi, accessToken string) (response.UsecaseApi, error) {
-	ret := _m.Called(ctx, reqs, accessToken)
-
-	if len(ret) == 0 {
-		panic("no return value specified for CheckAgreementChassisNumber")
-	}
-
-	var r0 response.UsecaseApi
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, string) (response.UsecaseApi, error)); ok {
-		return rf(ctx, reqs, accessToken)
-	}
-	if rf, ok := ret.Get(0).(func(context.Context, request.DupcheckApi, string) response.UsecaseApi); ok {
-		r0 = rf(ctx, reqs, accessToken)
-	} else {
-		r0 = ret.Get(0).(response.UsecaseApi)
-	}
-
-	if rf, ok := ret.Get(1).(func(context.Context, request.DupcheckApi, string) error); ok {
-		r1 = rf(ctx, reqs, accessToken)
-	} else {
-		r1 = ret.Error(1)
 	}
 
 	return r0, r1
@@ -135,34 +142,6 @@ func (_m *Usecase) CheckAgreementLunas(ctx context.Context, prospectID string, c
 	}
 
 	return r0, r1, r2
-}
-
-// CheckBannedChassisNumber provides a mock function with given fields: chassisNumber
-func (_m *Usecase) CheckBannedChassisNumber(chassisNumber string) (response.UsecaseApi, error) {
-	ret := _m.Called(chassisNumber)
-
-	if len(ret) == 0 {
-		panic("no return value specified for CheckBannedChassisNumber")
-	}
-
-	var r0 response.UsecaseApi
-	var r1 error
-	if rf, ok := ret.Get(0).(func(string) (response.UsecaseApi, error)); ok {
-		return rf(chassisNumber)
-	}
-	if rf, ok := ret.Get(0).(func(string) response.UsecaseApi); ok {
-		r0 = rf(chassisNumber)
-	} else {
-		r0 = ret.Get(0).(response.UsecaseApi)
-	}
-
-	if rf, ok := ret.Get(1).(func(string) error); ok {
-		r1 = rf(chassisNumber)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
 }
 
 // CheckBannedPMKDSR provides a mock function with given fields: idNumber
@@ -219,41 +198,6 @@ func (_m *Usecase) CheckMobilePhoneFMF(ctx context.Context, reqs request.Dupchec
 	}
 
 	return r0, r1
-}
-
-// CheckRejectChassisNumber provides a mock function with given fields: req, configValue
-func (_m *Usecase) CheckRejectChassisNumber(req request.DupcheckApi, configValue response.DupcheckConfig) (response.UsecaseApi, entity.TrxBannedChassisNumber, error) {
-	ret := _m.Called(req, configValue)
-
-	if len(ret) == 0 {
-		panic("no return value specified for CheckRejectChassisNumber")
-	}
-
-	var r0 response.UsecaseApi
-	var r1 entity.TrxBannedChassisNumber
-	var r2 error
-	if rf, ok := ret.Get(0).(func(request.DupcheckApi, response.DupcheckConfig) (response.UsecaseApi, entity.TrxBannedChassisNumber, error)); ok {
-		return rf(req, configValue)
-	}
-	if rf, ok := ret.Get(0).(func(request.DupcheckApi, response.DupcheckConfig) response.UsecaseApi); ok {
-		r0 = rf(req, configValue)
-	} else {
-		r0 = ret.Get(0).(response.UsecaseApi)
-	}
-
-	if rf, ok := ret.Get(1).(func(request.DupcheckApi, response.DupcheckConfig) entity.TrxBannedChassisNumber); ok {
-		r1 = rf(req, configValue)
-	} else {
-		r1 = ret.Get(1).(entity.TrxBannedChassisNumber)
-	}
-
-	if rf, ok := ret.Get(2).(func(request.DupcheckApi, response.DupcheckConfig) error); ok {
-		r2 = rf(req, configValue)
-	} else {
-		r2 = ret.Error(2)
-	}
-
-	return r0, r1, r2
 }
 
 // CheckRejection provides a mock function with given fields: idNumber, prospectID, configValue
@@ -543,9 +487,9 @@ func (_m *Usecase) Ktp(ctx context.Context, req request.Metrics, reqMetricsEkyc 
 	return r0, r1
 }
 
-// LockSystem provides a mock function with given fields: ctx, idNumber
-func (_m *Usecase) LockSystem(ctx context.Context, idNumber string) (response.LockSystem, error) {
-	ret := _m.Called(ctx, idNumber)
+// LockSystem provides a mock function with given fields: ctx, idNumber, chassisNumber, engineNumber
+func (_m *Usecase) LockSystem(ctx context.Context, idNumber string, chassisNumber string, engineNumber string) (response.LockSystem, error) {
+	ret := _m.Called(ctx, idNumber, chassisNumber, engineNumber)
 
 	if len(ret) == 0 {
 		panic("no return value specified for LockSystem")
@@ -553,17 +497,17 @@ func (_m *Usecase) LockSystem(ctx context.Context, idNumber string) (response.Lo
 
 	var r0 response.LockSystem
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, string) (response.LockSystem, error)); ok {
-		return rf(ctx, idNumber)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) (response.LockSystem, error)); ok {
+		return rf(ctx, idNumber, chassisNumber, engineNumber)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, string) response.LockSystem); ok {
-		r0 = rf(ctx, idNumber)
+	if rf, ok := ret.Get(0).(func(context.Context, string, string, string) response.LockSystem); ok {
+		r0 = rf(ctx, idNumber, chassisNumber, engineNumber)
 	} else {
 		r0 = ret.Get(0).(response.LockSystem)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, string) error); ok {
-		r1 = rf(ctx, idNumber)
+	if rf, ok := ret.Get(1).(func(context.Context, string, string, string) error); ok {
+		r1 = rf(ctx, idNumber, chassisNumber, engineNumber)
 	} else {
 		r1 = ret.Error(1)
 	}

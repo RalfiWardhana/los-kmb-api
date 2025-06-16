@@ -14,6 +14,7 @@ import (
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
 	"mime/multipart"
+	"net/url"
 	"os"
 	"regexp"
 	"strconv"
@@ -153,6 +154,23 @@ func (u usecase) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 	return
 }
 
+func (u usecase) GetListBranch(ctx context.Context, req request.ReqListBranch) (data response.ListBranchResponse, err error) {
+	regions, branches, err := u.repository.GetListBranch(req)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - " + err.Error())
+		return
+	}
+
+	data = response.ListBranchResponse{
+		RegisteredOnRegion: regions,
+		RegisteredOnBranch: branches,
+		RoleType:           req.RoleType,
+		RoleAlias:          req.RoleAlias,
+	}
+
+	return
+}
+
 func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data interface{}, err error) {
 
 	filtering := request.Filtering{
@@ -167,6 +185,11 @@ func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data inte
 	filtering.IDNumber, _ = utils.PlatformEncryptText(req.CustomerPersonal.IDNumber)
 	filtering.LegalName, _ = utils.PlatformEncryptText(req.CustomerPersonal.LegalName)
 	filtering.MotherName, _ = utils.PlatformEncryptText(req.CustomerPersonal.SurgateMotherName)
+
+	chassisNumber := req.Item.NoChassis
+	engineNumber := req.Item.NoEngine
+	filtering.ChassisNumber = &chassisNumber
+	filtering.EngineNumber = &engineNumber
 
 	if req.CustomerSpouse != nil {
 		IDNumber, _ := utils.PlatformEncryptText(req.CustomerSpouse.IDNumber)
@@ -205,6 +228,14 @@ func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data inte
 		IDNumber, _ := utils.PlatformEncryptText(req.CustomerSpouse.IDNumber)
 		LegalName, _ := utils.PlatformEncryptText(req.CustomerSpouse.LegalName)
 		MotherName, _ := utils.PlatformEncryptText(req.CustomerSpouse.SurgateMotherName)
+
+		filtering.Spouse = &request.FilteringSpouse{
+			IDNumber:   IDNumber,
+			LegalName:  LegalName,
+			MotherName: MotherName,
+			BirthDate:  req.CustomerSpouse.BirthDate,
+			Gender:     req.CustomerSpouse.Gender,
+		}
 
 		spouse := &request.CustomerSpouse{
 			IDNumber:          IDNumber,
@@ -302,6 +333,58 @@ func (u usecase) GetApprovalReason(ctx context.Context, req request.ReqApprovalR
 
 	if err != nil {
 		return
+	}
+
+	return
+}
+
+func (u usecase) GetDatatablePrescreening(ctx context.Context, req request.ReqInquiryPrescreening, pagination interface{}) (data []entity.RespDatatablePrescreening, rowTotal int, err error) {
+
+	var (
+		action            bool
+		cmoRecommendation string
+		decision          string
+	)
+
+	result, rowTotal, err := u.repository.GetDatatablePrescreening(req, pagination)
+
+	if err != nil {
+		return []entity.RespDatatablePrescreening{}, 0, err
+	}
+
+	for _, inq := range result {
+
+		action = false
+		if req.BranchID != constant.BRANCHID_HO && inq.Activity == constant.ACTIVITY_UNPROCESS && inq.SourceDecision == constant.PRESCREENING {
+			action = true
+		}
+		if inq.CmoRecommendation == 1 {
+			cmoRecommendation = "Recommended"
+		} else {
+			cmoRecommendation = "Not Recommended"
+		}
+
+		decision = ""
+		if inq.Decision == constant.DB_DECISION_APR {
+			decision = "Sesuai"
+		} else if inq.Decision == constant.DB_DECISION_REJECT {
+			decision = "Tidak Sesuai"
+		}
+
+		birthDate := inq.BirthDate.Format("02-01-2006")
+
+		row := entity.RespDatatablePrescreening{
+			OrderAt:           inq.OrderAt,
+			ProspectID:        inq.ProspectID,
+			IDNumber:          inq.IDNumber,
+			LegalName:         inq.LegalName,
+			BirthDate:         birthDate,
+			CmoRecommendation: cmoRecommendation,
+			Decision:          decision,
+			ShowAction:        action,
+		}
+
+		data = append(data, row)
 	}
 
 	return
@@ -653,6 +736,105 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 	} else {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dalam prescreening")
 		return
+	}
+
+	return
+}
+
+func (u *usecase) GetAdditionalData(ctx context.Context, req request.ReqAdditionalData) (data entity.RespAdditionalData, err error) {
+	var result entity.RespAdditionalData
+
+	if !req.IsIncludeSurveyor && !req.IsIncludeApproval {
+		return result, errors.New("GetAdditionalData Error - At least one data type must be requested")
+	}
+
+	if req.IsIncludeSurveyor {
+		surveyorData, err := u.repository.GetBulkSurveyorData(req.ProspectIDs)
+		if err != nil {
+			return result, err
+		}
+
+		result.Surveyor = surveyorData
+	}
+
+	if req.IsIncludeApproval {
+		historyApproval, err := u.repository.GetBulkHistoryApproval(req.ProspectIDs)
+		if err != nil {
+			return result, err
+		}
+
+		result.Approval = historyApproval
+	}
+
+	return result, nil
+}
+
+func (u usecase) GetDatatableCa(ctx context.Context, req request.ReqInquiryCa, pagination interface{}) (data []entity.RespDatatableCA, rowTotal int, err error) {
+
+	var action bool
+
+	result, rowTotal, err := u.repository.GetDatatableCa(req, pagination)
+
+	if err != nil {
+		return []entity.RespDatatableCA{}, 0, err
+	}
+
+	prospectIDs := make([]string, len(result))
+	for i, inq := range result {
+		prospectIDs[i] = inq.ProspectID
+	}
+
+	for _, inq := range result {
+
+		action = inq.ShowAction
+		if req.BranchID == constant.BRANCHID_HO {
+			action = false
+		}
+
+		birthDate := inq.BirthDate.Format("02-01-2006")
+
+		var statusDecision string
+		if inq.StatusDecision == constant.DB_DECISION_APR {
+			statusDecision = constant.DECISION_APPROVE
+		} else if inq.StatusDecision == constant.DB_DECISION_REJECT {
+			statusDecision = constant.DECISION_REJECT
+		} else if inq.StatusDecision == constant.DB_DECISION_CANCEL {
+			statusDecision = constant.DECISION_CANCEL
+		}
+
+		row := entity.RespDatatableCA{
+			OrderAt:        inq.OrderAt,
+			ProspectID:     inq.ProspectID,
+			IDNumber:       inq.IDNumber,
+			LegalName:      inq.LegalName,
+			BirthDate:      birthDate,
+			CaDecision:     inq.CaDecision,
+			StatusDecision: statusDecision,
+			StatusReason:   inq.StatusReason,
+			SurveyResult:   inq.SurveyResult,
+			Draft: entity.TrxDraftCaDecision{
+				Decision:    inq.DraftDecision,
+				SlikResult:  inq.DraftSlikResult,
+				Note:        inq.DraftNote,
+				Pernyataan1: inq.DraftPernyataan1,
+				Pernyataan2: inq.DraftPernyataan2,
+				Pernyataan3: inq.DraftPernyataan3,
+				Pernyataan4: inq.DraftPernyataan4,
+				Pernyataan5: inq.DraftPernyataan5,
+				Pernyataan6: inq.DraftPernyataan6,
+			},
+			Deviasi: entity.Deviasi{
+				DeviasiID:          inq.DeviasiID,
+				DeviasiDescription: inq.DeviasiDescription,
+				DeviasiDecision:    inq.DeviasiDecision,
+				DeviasiReason:      inq.DeviasiReason,
+			},
+			ActionEditData: inq.ActionEditData,
+			ActionDate:     inq.ActionDate,
+			ShowAction:     action,
+		}
+
+		data = append(data, row)
 	}
 
 	return
@@ -1666,6 +1848,58 @@ func (u usecase) RecalculateOrder(ctx context.Context, req request.ReqRecalculat
 	} else {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Submit Recalculate to Sally Error")
 		return
+	}
+
+	return
+}
+
+func (u usecase) GetDatatableApproval(ctx context.Context, req request.ReqInquiryApproval, pagination interface{}) (data []entity.RespDatatableApproval, rowTotal int, err error) {
+
+	result, rowTotal, err := u.repository.GetDatatableApproval(req, pagination)
+
+	if err != nil {
+		return []entity.RespDatatableApproval{}, 0, err
+	}
+
+	prospectIDs := make([]string, len(result))
+	for i, inq := range result {
+		prospectIDs[i] = inq.ProspectID
+	}
+
+	for _, inq := range result {
+
+		var statusDecision string
+		if inq.StatusDecision == constant.DB_DECISION_APR {
+			statusDecision = constant.DECISION_APPROVE
+		} else if inq.StatusDecision == constant.DB_DECISION_REJECT {
+			statusDecision = constant.DECISION_REJECT
+		} else if inq.StatusDecision == constant.DB_DECISION_CANCEL {
+			statusDecision = constant.DECISION_CANCEL
+		}
+
+		birthDate := inq.BirthDate.Format("02-01-2006")
+
+		row := entity.RespDatatableApproval{
+			OrderAt:        inq.OrderAt,
+			ProspectID:     inq.ProspectID,
+			IDNumber:       inq.IDNumber,
+			LegalName:      inq.LegalName,
+			BirthDate:      birthDate,
+			StatusDecision: statusDecision,
+			StatusReason:   inq.StatusReason,
+			ShowAction:     inq.ShowAction,
+			ActionDate:     inq.ActionDate,
+			ActionFormAkk:  inq.ActionFormAkk,
+			UrlFormAkkk:    inq.UrlFormAkkk,
+			Deviasi: entity.Deviasi{
+				DeviasiID:          inq.DeviasiID,
+				DeviasiDescription: inq.DeviasiDescription,
+				DeviasiDecision:    inq.DeviasiDecision,
+				DeviasiReason:      inq.DeviasiReason,
+			},
+		}
+
+		data = append(data, row)
 	}
 
 	return
@@ -2772,6 +3006,63 @@ func (u usecase) GetMappingClusterChangeLog(pagination interface{}) (data []enti
 
 	if err != nil {
 		return
+	}
+
+	return
+}
+
+func (u usecase) GetAgreementByLicensePlate(ctx context.Context, LicensePlate string, accessToken string) (data response.ChassisNumberOfLicensePlateResponse, err error) {
+
+	var (
+		respAgreementLicensePlate response.MDMAgreementByLicensePlateResponse
+	)
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	header := map[string]string{
+		"Authorization": accessToken,
+	}
+
+	lobID := constant.ASSET_TYPE_ID_KMB_ONLY
+	encodedLicensePlate := url.QueryEscape(LicensePlate)
+	endpointURL := fmt.Sprintf(os.Getenv("CONFINS_AGREEMENT_LICENSE_PLATE")+"?lob_id=%s&license_plate=%s", lobID, encodedLicensePlate)
+
+	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, endpointURL, nil, header, constant.METHOD_GET, false, 0, timeout, "", accessToken)
+
+	if err != nil {
+		return
+	}
+
+	switch resp.StatusCode() {
+	case 200, 400:
+		// Success cases - 200 and 400 both treated as successful responses, because possibility data not found is using 400 status code
+		json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &respAgreementLicensePlate)
+
+		// Process the response data
+		if respAgreementLicensePlate.Data != nil {
+			// Try to convert the data to a slice of maps
+			if dataSlice, ok := respAgreementLicensePlate.Data.([]interface{}); ok && len(dataSlice) > 0 {
+				// Get the first element and try to extract serial numbers
+				if record, ok := dataSlice[0].(map[string]interface{}); ok {
+					if chassisNumber, exists := record["serial_no_1"]; exists && chassisNumber != nil {
+						data.ChassisNumber = fmt.Sprintf("%v", chassisNumber)
+					}
+					if engineNumber, exists := record["serial_no_2"]; exists && engineNumber != nil {
+						data.EngineNumber = fmt.Sprintf("%v", engineNumber)
+					}
+				}
+			}
+		}
+		// Note: if Data is nil or doesn't contain the expected fields,
+		// ChassisNumber and EngineNumber will remain as their default values (empty strings)
+	case 401:
+		err = errors.New(constant.ERROR_UNAUTHORIZED + " - Get Agreement by LicensePlate Unauthorized")
+	case 408:
+		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Get Agreement by LicensePlate Request Timeout")
+	case 500:
+		err = errors.New(constant.INTERNAL_SERVER_ERROR + " - Get Agreement by LicensePlate Internal Server Error")
+	default:
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Agreement by LicensePlate Error")
 	}
 
 	return

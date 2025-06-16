@@ -15,6 +15,7 @@ import (
 	"los-kmb-api/shared/utils"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -706,6 +707,7 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				NTFTopup:                    trxFMF.NTFTopup,
 				WayOfPayment:                data.Apk.WayOfPayment,
 				StampDutyFee:                data.Apk.StampDutyFee,
+				AgentFee:                    data.Apk.AgentFee,
 			}
 
 			logInfo = apk
@@ -1427,23 +1429,93 @@ func (r repoHandler) GetTrxCancel(idNumber string, config response.LockSystemCon
 	return
 }
 
-func (r repoHandler) SaveTrxLockSystem(trxLockSystem entity.TrxLockSystem) (err error) {
+func (r repoHandler) SaveTrxLockSystem(trxLockSystem entity.TrxLockSystem) (existingUnbanDate time.Time, err error) {
+	var count int64
+	var existingRecord entity.TrxLockSystem
 
-	if err = r.newKmbDB.Model(&entity.TrxLockSystem{}).Create(&trxLockSystem).Error; err != nil {
+	query := r.newKmbDB.Model(&entity.TrxLockSystem{})
+
+	if trxLockSystem.ProspectID != "" {
+		query = query.Where("ProspectID = ?", trxLockSystem.ProspectID)
+	}
+
+	if trxLockSystem.IDNumber != "" {
+		query = query.Where("IDNumber = ?", trxLockSystem.IDNumber)
+	}
+
+	if err = query.Count(&count).Error; err != nil {
 		return
 	}
+
+	if count == 0 {
+		if err = r.newKmbDB.Model(&entity.TrxLockSystem{}).Create(&trxLockSystem).Error; err != nil {
+			return
+		}
+	} else {
+		if err = query.First(&existingRecord).Error; err != nil {
+			return
+		}
+		existingUnbanDate = existingRecord.UnbanDate
+	}
+
 	return
 }
 
-func (r repoHandler) GetTrxLockSystem(idNumber string) (data entity.TrxLockSystem, err error) {
+func (r repoHandler) GetTrxLockSystem(idNumber string, chassisNumber string, engineNumber string) (data entity.TrxLockSystem, bannedType string, err error) {
+	query1 := "SELECT TOP 1 * FROM trx_lock_system tls WITH (nolock) WHERE tls.unban_date > CAST(GETDATE() as DATE) AND tls.IDNumber = ? AND tls.reason NOT LIKE 'Asset %' ORDER BY tls.unban_date DESC"
 
-	if err = r.newKmbDB.Raw(fmt.Sprintf(`SELECT * FROM trx_lock_system tls 
-			WHERE IDNumber = '%s' AND unban_date > CAST(GETDATE() as DATE)`, idNumber)).Scan(&data).Error; err != nil {
+	if err = r.newKmbDB.Raw(query1, idNumber).Scan(&data).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = nil
+		} else {
+			return
 		}
+	}
+
+	if data.ProspectID != "" {
+		data.Reason = strings.TrimPrefix(data.Reason, "Asset ")
+		bannedType = constant.BANNED_TYPE_NIK
 		return
 	}
+
+	if chassisNumber != "" || engineNumber != "" {
+		query2 := "SELECT TOP 1 * FROM trx_lock_system tls WITH (nolock) WHERE tls.unban_date > CAST(GETDATE() as DATE) AND "
+		args := []interface{}{}
+
+		query2 += "("
+
+		if chassisNumber != "" {
+			query2 += "tls.chassis_number = ?"
+			args = append(args, chassisNumber)
+		}
+
+		if engineNumber != "" {
+			if chassisNumber != "" {
+				query2 += " OR "
+			}
+			query2 += "tls.engine_number = ?"
+			args = append(args, engineNumber)
+		}
+
+		query2 += ")"
+
+		query2 += " AND tls.reason LIKE 'Asset %' ORDER BY tls.unban_date DESC"
+
+		if err = r.newKmbDB.Raw(query2, args...).Scan(&data).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				err = nil
+			}
+			return
+		}
+
+		if data.ProspectID != "" {
+			bannedType = constant.BANNED_TYPE_ASSET
+			if !strings.HasPrefix(data.Reason, "Asset ") {
+				data.Reason = "Asset " + data.Reason
+			}
+		}
+	}
+
 	return
 }
 
@@ -1804,16 +1876,6 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 				omset3 = omset[i].MonthlyOmset
 			}
 		}
-	} else {
-		month1, _ = strconv.Atoi(time.Now().AddDate(0, -1, 0).Format("01"))
-		month2, _ = strconv.Atoi(time.Now().AddDate(0, -2, 0).Format("01"))
-		month3, _ = strconv.Atoi(time.Now().AddDate(0, -3, 0).Format("01"))
-		year1, _ = strconv.Atoi(time.Now().AddDate(0, -1, 0).Format("2006"))
-		year2, _ = strconv.Atoi(time.Now().AddDate(0, -2, 0).Format("2006"))
-		year3, _ = strconv.Atoi(time.Now().AddDate(0, -3, 0).Format("2006"))
-		omset1 = employment.MonthlyFixedIncome
-		omset2 = employment.MonthlyFixedIncome
-		omset3 = employment.MonthlyFixedIncome
 	}
 
 	newErr = r.stagingDB.Transaction(func(tx *gorm.DB) error {
@@ -1953,11 +2015,15 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 
 		}
 
+		policyNo := "-"
+		insuranceCompany := "Self Insurance"
+
 		if err := tx.Create(&entity.STG_GEN_INS_H{
 			BranchID:                master.BranchID,
 			ProspectID:              master.ProspectID,
 			ApplicationType:         constant.NG_APPLICATION_TYPE,
-			AmountCoverage:          item.AssetInsuranceAmountCoverage,
+			AmountCoverage:          0,
+			InsuranceCompany:        &insuranceCompany,
 			InsAssetInsuredBy:       item.InsAssetInsuredBy,
 			InsuranceCoyBranchID:    item.InsuranceCoyBranchID,
 			PremiumAmountToCustomer: apk.AssetInsuranceFee,
@@ -1965,6 +2031,7 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			ExpiredDate:             expiredDateIns,
 			UsrCrt:                  constant.LOS_CREATED,
 			DtmCrt:                  time.Now(),
+			PolicyNo:                &policyNo,
 		}).Error; err != nil {
 			return err
 		}
@@ -2131,6 +2198,7 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			AccountName:                      personal.AccountName,
 			UsrCrt:                           constant.LOS_CREATED,
 			DtmCrt:                           time.Now(),
+			RentFinishDate:                   personal.RentFinishDate,
 		}).Error; err != nil {
 			return err
 		}

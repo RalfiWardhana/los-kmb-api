@@ -271,6 +271,8 @@ func formatMessage(err validator.FieldError) string {
 		message = fmt.Sprintf("accepted:max=%s", param)
 	case constant.TAG_GT:
 		message = fmt.Sprintf("accepted:gt=%s", param)
+	case constant.TAG_GTE:
+		message = fmt.Sprintf("accepted:gte=%s", param)
 	case constant.TAG_REQUIRED:
 		message = "required"
 	case constant.TAG_DATE_FORMAT:
@@ -338,6 +340,8 @@ func formatMessage(err validator.FieldError) string {
 		message = "accepted:customer_spouse must be null"
 	case constant.TAG_RELATION:
 		message = fmt.Sprintf("accepted:value=%s", common.Relation)
+	case constant.TAG_NOTHML:
+		message = "invalid input: HTML tags are not allowed"
 	}
 	return message
 }

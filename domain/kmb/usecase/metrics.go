@@ -419,6 +419,12 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 	trxFMF.TrxBannedChassisNumber = trxFMFDupcheck.TrxBannedChassisNumber
 	trxFMF.TrxEDD = trxFMFDupcheck.TrxEDD
 
+	// cek tread AO as regular customer
+	if dupcheckData.IsFlowAsAORegular {
+		customerSegment = constant.RO_AO_REGULAR
+		filtering.CustomerSegment = constant.RO_AO_REGULAR
+	}
+
 	// internal record
 	if dupcheckData.CustomerID != nil {
 		if dupcheckData.CustomerID.(string) != "" {

@@ -30,6 +30,7 @@ import (
 	authRepository "los-kmb-api/shared/authorization/repository"
 	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/common/json"
+	authadapter "los-kmb-api/shared/common/platformauth/adapter"
 	"los-kmb-api/shared/common/platformcache"
 	"los-kmb-api/shared/common/platformlog"
 	"los-kmb-api/shared/config"
@@ -47,10 +48,10 @@ import (
 
 	"github.com/KB-FMF/los-common-library/loslog"
 	"github.com/KB-FMF/los-common-library/platform/manager"
+	"github.com/KB-FMF/los-common-library/response"
 
 	"los-kmb-api/shared/common/platformevent"
 
-	"github.com/KB-FMF/los-common-library/response"
 	"github.com/KB-FMF/platform-library/event"
 	"github.com/allegro/bigcache/v3"
 	"github.com/labstack/echo/v4"
@@ -78,6 +79,9 @@ func main() {
 	config.LoadEnv()
 
 	env := strings.ToLower(os.Getenv("APP_ENV"))
+
+	// define auth platform
+	authPlatform := authadapter.NewPlatformAuth()
 
 	config.NewConfiguration(env)
 	e.Pre(middleware.RemoveTrailingSlash())
@@ -236,29 +240,31 @@ func main() {
 	producer := platformevent.NewPlatformEvent(producerSubmission, producerSubmissionLOS, producerInsertCustomer, producerSubmission2Wilen)
 	platformCache := platformcache.NewPlatformCache()
 
+	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+
 	// define new kmb filtering domain
 	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs, newKMB)
 	newKmbFilteringCase := newKmbFilteringUsecase.NewUsecase(newKmbFilteringRepo, httpClient)
 	newKmbFilteringMultiCase := newKmbFilteringUsecase.NewMultiUsecase(newKmbFilteringRepo, httpClient, newKmbFilteringCase)
-	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken, producer, platformCache)
+	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken, producer, platformCache, authPlatform)
 
 	// define new kmb elaborate domain
 	newElaborateLTVRepo := elaborateLTVRepository.NewRepository(kpLos, kpLosLogs, newKMB)
 	newElaborateLTVUsecase := elaborateLTVUsecase.NewUsecase(newElaborateLTVRepo, httpClient)
-	elaborateLTVDelivery.ElaborateHandler(apiGroupv3, newElaborateLTVUsecase, newElaborateLTVRepo, authorization, jsonResponse, accessToken)
+	elaborateLTVDelivery.ElaborateHandler(apiGroupv3, newElaborateLTVUsecase, newElaborateLTVRepo, authorization, jsonResponse, accessToken, authPlatform)
 
 	// define new kmb cms
 	cacheRepository := cacheRepository.NewRepository(cache)
 	cmsRepositories := cmsRepository.NewRepository(core, confins, newKMB, kpLos, kpLosLogs)
 	cmsUsecases := cmsUsecase.NewUsecase(cmsRepositories, httpClient, cacheRepository)
-	cmsDelivery.CMSHandler(apiGroupv3, cmsUsecases, cmsRepositories, jsonResponse, producer, accessToken)
+	cmsDelivery.CMSHandler(apiGroupv3, cmsUsecases, cmsRepositories, jsonResponse, producer, libResponse, accessToken)
 
 	// define new kmb journey
 	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, core, staging, newKMB, scorePro)
 	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
 	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
-	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, authorization, jsonResponse, accessToken, producer)
+	kmbDelivery.KMBHandler(apiGroupv3, kmbMetrics, kmbUsecases, kmbRepositories, authPlatform, authorization, jsonResponse, accessToken, producer)
 
 	managers := manager.New(platformlog.GetPlatformEnv(), os.Getenv("PLATFORM_SECRET_KEY"), os.Getenv("PLATFORM_AUTH_BASE_URL")+"/v1/auth/login")
 
@@ -272,7 +278,6 @@ func main() {
 		_ = libLog.Sync()
 	}()
 
-	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
 	// libTrace := tracer.Initialize(os.Getenv("APP_NAME"), tracer.IsEnable(config.IsDebug), tracer.LicenseKey(os.Getenv("NEWRELIC_CONFIG_LICENSE")))
 
 	// losLog
