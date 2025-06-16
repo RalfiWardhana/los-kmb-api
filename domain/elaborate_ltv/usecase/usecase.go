@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	cache "los-kmb-api/domain/cache/interfaces"
 	"los-kmb-api/domain/elaborate_ltv/interfaces"
 	"los-kmb-api/models/entity"
@@ -166,9 +165,6 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 			expiredContractConfig = configResult.(entity.AppConfig)
 			var configValueExpContract response.ExpiredContractConfig
 			json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
-
-			fmt.Printf("RrdDate: %s", RrdDate)
-			fmt.Printf("MonthsOfExpiredContract: %d", MonthsOfExpiredContract)
 
 			if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
 				// Jalur mirip seperti customer segment "REGULAR"
