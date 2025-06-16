@@ -60,7 +60,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 	// Try to get filteringKMB from cache first
 	filteringCacheKey := "filtering_result:" + reqs.ProspectID
 	filteringCacheData, err := u.cache.GetWithExpiration(filteringCacheKey)
-	// fmt.Printf("GET Cache Key: %s, Cache Data Length: %d\n", filteringCacheKey, len(filteringCacheData))
+
 	if err == nil && len(filteringCacheData) > 0 {
 		// Data found in cache
 		if err = json.Unmarshal(filteringCacheData, &filteringKMB); err != nil {
@@ -128,7 +128,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 			// Get config expired_contract
 			configCacheKey := "ConfigCheckExpiredContractKMB"
 			configCacheData, cacheErr := u.cache.GetWithExpiration(configCacheKey)
-			// fmt.Printf("GET Cache Key: %s, Cache Data Length: %d\n", configCacheKey, len(configCacheData))
+
 			if cacheErr == nil && len(configCacheData) > 0 {
 				if err = json.Unmarshal(configCacheData, &expiredContractConfig); err != nil {
 					// If unmarshal fails, proceed to get from repository
@@ -227,7 +227,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 	// Try to get filteringDetail from cache
 	detailCacheKey := "filtering_detail:" + reqs.ProspectID
 	detailCacheData, err := u.cache.GetWithExpiration(detailCacheKey)
-	// fmt.Printf("GET Cache Key: %s, Cache Data Length: %d\n", detailCacheKey, len(detailCacheData))
+
 	if err == nil && len(detailCacheData) > 0 {
 		if err = json.Unmarshal(detailCacheData, &filteringDetail); err != nil {
 			// If unmarshal fails, proceed to get from repository
@@ -256,7 +256,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		// Try to get mappingPBKScoreGrade from cache
 		pbkScoreCacheKey := "mapping_pbk_score_grade"
 		pbkScoreCacheData, cacheErr := u.cache.GetWithExpiration(pbkScoreCacheKey)
-		// fmt.Printf("GET Cache Key: %s, Cache Data Length: %d\n", pbkScoreCacheKey, len(pbkScoreCacheData))
+
 		if cacheErr == nil && len(pbkScoreCacheData) > 0 {
 			if err = json.Unmarshal(pbkScoreCacheData, &mappingPBKScoreGrade); err != nil {
 				// If unmarshal fails, proceed to get from repository
@@ -292,7 +292,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 	// Try to get mappingBranch from cache
 	branchCacheKey := "mapping_branch_pbk:" + filteringKMB.BranchID + ":" + gradePBK
 	branchCacheData, err := u.cache.GetWithExpiration(branchCacheKey)
-	// fmt.Printf("GET Cache Key: %s, Cache Data Length: %d\n", branchCacheKey, len(branchCacheData))
+
 	if err == nil && len(branchCacheData) > 0 {
 		if err = json.Unmarshal(branchCacheData, &mappingBranch); err != nil {
 			// If unmarshal fails, proceed to get from repository
@@ -323,7 +323,7 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		strconv.Itoa(bpkbNameType) + ":" + filteringKMB.CustomerStatus.(string) + ":" +
 		gradePBK + ":" + mappingBranch.GradeBranch
 	elaborateCacheData, err := u.cache.GetWithExpiration(elaborateCacheKey)
-	// fmt.Printf("GET Cache Key: %s, Cache Data Length: %d\n", elaborateCacheKey, len(elaborateCacheData))
+
 	if err == nil && len(elaborateCacheData) > 0 {
 		if err = json.Unmarshal(elaborateCacheData, &mappingElaborateLTV); err != nil {
 			// If unmarshal fails, proceed to get from repository
