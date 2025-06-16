@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	cache "los-kmb-api/domain/cache/interfaces"
 	"los-kmb-api/domain/elaborate_ltv/interfaces"
 	"los-kmb-api/models/entity"
@@ -18,6 +19,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"golang.org/x/sync/singleflight"
 )
 
 type (
@@ -25,6 +27,7 @@ type (
 		repository interfaces.Repository
 		httpclient httpclient.HttpClient
 		cache      cache.Repository
+		sfGroup    *singleflight.Group
 	}
 )
 
@@ -33,6 +36,7 @@ func NewUsecase(repository interfaces.Repository, httpclient httpclient.HttpClie
 		repository: repository,
 		httpclient: httpclient,
 		cache:      cache,
+		sfGroup:    &singleflight.Group{},
 	}
 }
 
@@ -57,26 +61,28 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 
 	cacheTTL := 5 * time.Minute
 
-	// Try to get filteringKMB from cache first
 	filteringCacheKey := "filtering_result:" + reqs.ProspectID
-	filteringCacheData, err := u.cache.GetWithExpiration(filteringCacheKey)
 
-	if err == nil && len(filteringCacheData) > 0 {
-		// Data found in cache
-		if err = json.Unmarshal(filteringCacheData, &filteringKMB); err != nil {
-			// If unmarshal fails, proceed to get from repository
-			filteringKMB, err = u.repository.GetFilteringResult(reqs.ProspectID)
+	filteringResult, err, _ := u.sfGroup.Do(filteringCacheKey, func() (interface{}, error) {
+		// Try to get from cache first
+		filteringCacheData, cacheErr := u.cache.GetWithExpiration(filteringCacheKey)
+		if cacheErr == nil && len(filteringCacheData) > 0 {
+			var cachedFiltering entity.FilteringKMB
+			if jsonErr := json.Unmarshal(filteringCacheData, &cachedFiltering); jsonErr == nil {
+				return cachedFiltering, nil
+			}
 		}
-	} else {
-		// Not found in cache, get from repository
-		filteringKMB, err = u.repository.GetFilteringResult(reqs.ProspectID)
-		if err == nil {
-			cacheData, jsonErr := json.Marshal(filteringKMB)
+
+		// Not found in cache or unmarshal error, get from repository
+		repoFiltering, repoErr := u.repository.GetFilteringResult(reqs.ProspectID)
+		if repoErr == nil {
+			cacheData, jsonErr := json.Marshal(repoFiltering)
 			if jsonErr == nil {
 				_ = u.cache.SetWithExpiration(filteringCacheKey, cacheData, cacheTTL)
 			}
 		}
-	}
+		return repoFiltering, repoErr
+	})
 
 	if err != nil {
 		if err.Error() == constant.RECORD_NOT_FOUND {
@@ -86,6 +92,8 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		}
 		return
 	}
+
+	filteringKMB = filteringResult.(entity.FilteringKMB)
 
 	if filteringKMB.NextProcess != 1 {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Tidak bisa lanjut proses")
@@ -127,31 +135,40 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 
 			// Get config expired_contract
 			configCacheKey := "ConfigCheckExpiredContractKMB"
-			configCacheData, cacheErr := u.cache.GetWithExpiration(configCacheKey)
 
-			if cacheErr == nil && len(configCacheData) > 0 {
-				if err = json.Unmarshal(configCacheData, &expiredContractConfig); err != nil {
-					// If unmarshal fails, proceed to get from repository
-					expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+			var configResult interface{}
+			configResult, err, _ = u.sfGroup.Do(configCacheKey, func() (interface{}, error) {
+				// Try to get from cache first
+				configCacheData, cacheErr := u.cache.GetWithExpiration(configCacheKey)
+				if cacheErr == nil && len(configCacheData) > 0 {
+					var cachedConfig entity.AppConfig
+					if jsonErr := json.Unmarshal(configCacheData, &cachedConfig); jsonErr == nil {
+						return cachedConfig, nil
+					}
 				}
-			} else {
-				// Not found in cache, get from repository
-				expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
-				if err == nil {
-					cacheData, jsonErr := json.Marshal(expiredContractConfig)
+
+				// Not found in cache or unmarshal error, get from repository
+				repoConfig, repoErr := u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+				if repoErr == nil {
+					cacheData, jsonErr := json.Marshal(repoConfig)
 					if jsonErr == nil {
 						_ = u.cache.SetWithExpiration(configCacheKey, cacheData, cacheTTL)
 					}
 				}
-			}
+				return repoConfig, repoErr
+			})
 
 			if err != nil {
 				err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
 				return
 			}
 
+			expiredContractConfig = configResult.(entity.AppConfig)
 			var configValueExpContract response.ExpiredContractConfig
 			json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract)
+
+			fmt.Printf("RrdDate: %s", RrdDate)
+			fmt.Printf("MonthsOfExpiredContract: %d", MonthsOfExpiredContract)
 
 			if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
 				// Jalur mirip seperti customer segment "REGULAR"
@@ -226,28 +243,34 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 
 	// Try to get filteringDetail from cache
 	detailCacheKey := "filtering_detail:" + reqs.ProspectID
-	detailCacheData, err := u.cache.GetWithExpiration(detailCacheKey)
 
-	if err == nil && len(detailCacheData) > 0 {
-		if err = json.Unmarshal(detailCacheData, &filteringDetail); err != nil {
-			// If unmarshal fails, proceed to get from repository
-			filteringDetail, err = u.repository.GetFilteringDetail(reqs.ProspectID)
+	detailResult, err, _ := u.sfGroup.Do(detailCacheKey, func() (interface{}, error) {
+		// Try to get from cache first
+		detailCacheData, cacheErr := u.cache.GetWithExpiration(detailCacheKey)
+		if cacheErr == nil && len(detailCacheData) > 0 {
+			var cachedDetails []entity.TrxDetailBiro
+			if jsonErr := json.Unmarshal(detailCacheData, &cachedDetails); jsonErr == nil {
+				return cachedDetails, nil
+			}
 		}
-	} else {
-		// Not found in cache, get from repository
-		filteringDetail, err = u.repository.GetFilteringDetail(reqs.ProspectID)
-		if err == nil && len(filteringDetail) > 0 {
-			cacheData, jsonErr := json.Marshal(filteringDetail)
+
+		// Not found in cache or unmarshal error, get from repository
+		repoDetails, repoErr := u.repository.GetFilteringDetail(reqs.ProspectID)
+		if repoErr == nil && len(repoDetails) > 0 {
+			cacheData, jsonErr := json.Marshal(repoDetails)
 			if jsonErr == nil {
 				_ = u.cache.SetWithExpiration(detailCacheKey, cacheData, cacheTTL)
 			}
 		}
-	}
+		return repoDetails, repoErr
+	})
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - GetFilteringDetail error - " + err.Error())
 		return
 	}
+
+	filteringDetail = detailResult.([]entity.TrxDetailBiro)
 
 	if len(filteringDetail) == 0 {
 		gradePBK = constant.DECISION_PBK_NO_HIT
@@ -255,28 +278,35 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 	} else {
 		// Try to get mappingPBKScoreGrade from cache
 		pbkScoreCacheKey := "mapping_pbk_score_grade"
-		pbkScoreCacheData, cacheErr := u.cache.GetWithExpiration(pbkScoreCacheKey)
 
-		if cacheErr == nil && len(pbkScoreCacheData) > 0 {
-			if err = json.Unmarshal(pbkScoreCacheData, &mappingPBKScoreGrade); err != nil {
-				// If unmarshal fails, proceed to get from repository
-				mappingPBKScoreGrade, err = u.repository.GetMappingPBKScoreGrade()
+		var pbkScoreResult interface{}
+		pbkScoreResult, err, _ = u.sfGroup.Do(pbkScoreCacheKey, func() (interface{}, error) {
+			// Try to get from cache first
+			pbkScoreCacheData, cacheErr := u.cache.GetWithExpiration(pbkScoreCacheKey)
+			if cacheErr == nil && len(pbkScoreCacheData) > 0 {
+				var cachedPBKScore []entity.MappingPBKScoreGrade
+				if jsonErr := json.Unmarshal(pbkScoreCacheData, &cachedPBKScore); jsonErr == nil {
+					return cachedPBKScore, nil
+				}
 			}
-		} else {
-			// Not found in cache, get from repository
-			mappingPBKScoreGrade, err = u.repository.GetMappingPBKScoreGrade()
-			if err == nil {
-				cacheData, jsonErr := json.Marshal(mappingPBKScoreGrade)
+
+			// Not found in cache or unmarshal error, get from repository
+			repoPBKScore, repoErr := u.repository.GetMappingPBKScoreGrade()
+			if repoErr == nil {
+				cacheData, jsonErr := json.Marshal(repoPBKScore)
 				if jsonErr == nil {
 					_ = u.cache.SetWithExpiration(pbkScoreCacheKey, cacheData, cacheTTL)
 				}
 			}
-		}
+			return repoPBKScore, repoErr
+		})
 
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - GetMappingPBKScoreGrade error - " + err.Error())
 			return
 		}
+
+		mappingPBKScoreGrade = pbkScoreResult.([]entity.MappingPBKScoreGrade)
 
 		var gradeRisk int
 		for _, v := range filteringDetail {
@@ -291,28 +321,34 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 
 	// Try to get mappingBranch from cache
 	branchCacheKey := "mapping_branch_pbk:" + filteringKMB.BranchID + ":" + gradePBK
-	branchCacheData, err := u.cache.GetWithExpiration(branchCacheKey)
 
-	if err == nil && len(branchCacheData) > 0 {
-		if err = json.Unmarshal(branchCacheData, &mappingBranch); err != nil {
-			// If unmarshal fails, proceed to get from repository
-			mappingBranch, err = u.repository.GetMappingBranchPBK(filteringKMB.BranchID, gradePBK)
+	branchResult, err, _ := u.sfGroup.Do(branchCacheKey, func() (interface{}, error) {
+		// Try to get from cache first
+		branchCacheData, cacheErr := u.cache.GetWithExpiration(branchCacheKey)
+		if cacheErr == nil && len(branchCacheData) > 0 {
+			var cachedBranch entity.MappingBranchByPBKScore
+			if jsonErr := json.Unmarshal(branchCacheData, &cachedBranch); jsonErr == nil {
+				return cachedBranch, nil
+			}
 		}
-	} else {
-		// Not found in cache, get from repository
-		mappingBranch, err = u.repository.GetMappingBranchPBK(filteringKMB.BranchID, gradePBK)
-		if err == nil {
-			cacheData, jsonErr := json.Marshal(mappingBranch)
+
+		// Not found in cache or unmarshal error, get from repository
+		repoBranch, repoErr := u.repository.GetMappingBranchPBK(filteringKMB.BranchID, gradePBK)
+		if repoErr == nil {
+			cacheData, jsonErr := json.Marshal(repoBranch)
 			if jsonErr == nil {
 				_ = u.cache.SetWithExpiration(branchCacheKey, cacheData, cacheTTL)
 			}
 		}
-	}
+		return repoBranch, repoErr
+	})
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - GetMappingBranchPBK error - " + err.Error())
 		return
 	}
+
+	mappingBranch = branchResult.(entity.MappingBranchByPBKScore)
 
 	if mappingBranch.GradeBranch == "" {
 		mappingBranch.GradeBranch = constant.GOOD
@@ -322,28 +358,34 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 	elaborateCacheKey := "mapping_elaborate_ltv:" + resultPefindo + ":" + cluster + ":" +
 		strconv.Itoa(bpkbNameType) + ":" + filteringKMB.CustomerStatus.(string) + ":" +
 		gradePBK + ":" + mappingBranch.GradeBranch
-	elaborateCacheData, err := u.cache.GetWithExpiration(elaborateCacheKey)
 
-	if err == nil && len(elaborateCacheData) > 0 {
-		if err = json.Unmarshal(elaborateCacheData, &mappingElaborateLTV); err != nil {
-			// If unmarshal fails, proceed to get from repository
-			mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, cluster, bpkbNameType, filteringKMB.CustomerStatus.(string), gradePBK, mappingBranch.GradeBranch)
+	elaborateResult, err, _ := u.sfGroup.Do(elaborateCacheKey, func() (interface{}, error) {
+		// Try to get from cache first
+		elaborateCacheData, cacheErr := u.cache.GetWithExpiration(elaborateCacheKey)
+		if cacheErr == nil && len(elaborateCacheData) > 0 {
+			var cachedElaborate []entity.MappingElaborateLTV
+			if jsonErr := json.Unmarshal(elaborateCacheData, &cachedElaborate); jsonErr == nil {
+				return cachedElaborate, nil
+			}
 		}
-	} else {
-		// Not found in cache, get from repository
-		mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, cluster, bpkbNameType, filteringKMB.CustomerStatus.(string), gradePBK, mappingBranch.GradeBranch)
-		if err == nil {
-			cacheData, jsonErr := json.Marshal(mappingElaborateLTV)
+
+		// Not found in cache or unmarshal error, get from repository
+		repoElaborate, repoErr := u.repository.GetMappingElaborateLTV(resultPefindo, cluster, bpkbNameType, filteringKMB.CustomerStatus.(string), gradePBK, mappingBranch.GradeBranch)
+		if repoErr == nil {
+			cacheData, jsonErr := json.Marshal(repoElaborate)
 			if jsonErr == nil {
 				_ = u.cache.SetWithExpiration(elaborateCacheKey, cacheData, cacheTTL)
 			}
 		}
-	}
+		return repoElaborate, repoErr
+	})
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
 		return
 	}
+
+	mappingElaborateLTV = elaborateResult.([]entity.MappingElaborateLTV)
 
 	for _, m := range mappingElaborateLTV {
 		if reqs.Tenor >= 36 {
