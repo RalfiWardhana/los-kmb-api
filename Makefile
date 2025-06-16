@@ -31,5 +31,7 @@ mock_platformlog:
 	@mockery --name PlatformLogInterface --dir=shared/common/platformlog --output shared/common/platformlog/mocks --case underscore
 mock_platformcache:
 	@mockery --name PlatformCacheInterface --dir=shared/common/platformcache --output shared/common/platformcache/mocks --case underscore
+mock_platformauth:
+	@mockery --name PlatformAuthInterface --dir=shared/common/platformauth/adapter --output shared/common/platformauth/adapter/mocks --case underscore
 mock_principle:
 	@mockery --all --dir=domain/principle/interfaces --output domain/principle/mocks --case underscore

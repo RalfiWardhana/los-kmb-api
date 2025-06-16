@@ -154,6 +154,23 @@ func (u usecase) GetAkkk(prospectID string) (data entity.Akkk, err error) {
 	return
 }
 
+func (u usecase) GetListBranch(ctx context.Context, req request.ReqListBranch) (data response.ListBranchResponse, err error) {
+	regions, branches, err := u.repository.GetListBranch(req)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - " + err.Error())
+		return
+	}
+
+	data = response.ListBranchResponse{
+		RegisteredOnRegion: regions,
+		RegisteredOnBranch: branches,
+		RoleType:           req.RoleType,
+		RoleAlias:          req.RoleAlias,
+	}
+
+	return
+}
+
 func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data interface{}, err error) {
 
 	filtering := request.Filtering{
@@ -316,6 +333,58 @@ func (u usecase) GetApprovalReason(ctx context.Context, req request.ReqApprovalR
 
 	if err != nil {
 		return
+	}
+
+	return
+}
+
+func (u usecase) GetDatatablePrescreening(ctx context.Context, req request.ReqInquiryPrescreening, pagination interface{}) (data []entity.RespDatatablePrescreening, rowTotal int, err error) {
+
+	var (
+		action            bool
+		cmoRecommendation string
+		decision          string
+	)
+
+	result, rowTotal, err := u.repository.GetDatatablePrescreening(req, pagination)
+
+	if err != nil {
+		return []entity.RespDatatablePrescreening{}, 0, err
+	}
+
+	for _, inq := range result {
+
+		action = false
+		if req.BranchID != constant.BRANCHID_HO && inq.Activity == constant.ACTIVITY_UNPROCESS && inq.SourceDecision == constant.PRESCREENING {
+			action = true
+		}
+		if inq.CmoRecommendation == 1 {
+			cmoRecommendation = "Recommended"
+		} else {
+			cmoRecommendation = "Not Recommended"
+		}
+
+		decision = ""
+		if inq.Decision == constant.DB_DECISION_APR {
+			decision = "Sesuai"
+		} else if inq.Decision == constant.DB_DECISION_REJECT {
+			decision = "Tidak Sesuai"
+		}
+
+		birthDate := inq.BirthDate.Format("02-01-2006")
+
+		row := entity.RespDatatablePrescreening{
+			OrderAt:           inq.OrderAt,
+			ProspectID:        inq.ProspectID,
+			IDNumber:          inq.IDNumber,
+			LegalName:         inq.LegalName,
+			BirthDate:         birthDate,
+			CmoRecommendation: cmoRecommendation,
+			Decision:          decision,
+			ShowAction:        action,
+		}
+
+		data = append(data, row)
 	}
 
 	return
@@ -667,6 +736,105 @@ func (u usecase) ReviewPrescreening(ctx context.Context, req request.ReqReviewPr
 	} else {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dalam prescreening")
 		return
+	}
+
+	return
+}
+
+func (u *usecase) GetAdditionalData(ctx context.Context, req request.ReqAdditionalData) (data entity.RespAdditionalData, err error) {
+	var result entity.RespAdditionalData
+
+	if !req.IsIncludeSurveyor && !req.IsIncludeApproval {
+		return result, errors.New("GetAdditionalData Error - At least one data type must be requested")
+	}
+
+	if req.IsIncludeSurveyor {
+		surveyorData, err := u.repository.GetBulkSurveyorData(req.ProspectIDs)
+		if err != nil {
+			return result, err
+		}
+
+		result.Surveyor = surveyorData
+	}
+
+	if req.IsIncludeApproval {
+		historyApproval, err := u.repository.GetBulkHistoryApproval(req.ProspectIDs)
+		if err != nil {
+			return result, err
+		}
+
+		result.Approval = historyApproval
+	}
+
+	return result, nil
+}
+
+func (u usecase) GetDatatableCa(ctx context.Context, req request.ReqInquiryCa, pagination interface{}) (data []entity.RespDatatableCA, rowTotal int, err error) {
+
+	var action bool
+
+	result, rowTotal, err := u.repository.GetDatatableCa(req, pagination)
+
+	if err != nil {
+		return []entity.RespDatatableCA{}, 0, err
+	}
+
+	prospectIDs := make([]string, len(result))
+	for i, inq := range result {
+		prospectIDs[i] = inq.ProspectID
+	}
+
+	for _, inq := range result {
+
+		action = inq.ShowAction
+		if req.BranchID == constant.BRANCHID_HO {
+			action = false
+		}
+
+		birthDate := inq.BirthDate.Format("02-01-2006")
+
+		var statusDecision string
+		if inq.StatusDecision == constant.DB_DECISION_APR {
+			statusDecision = constant.DECISION_APPROVE
+		} else if inq.StatusDecision == constant.DB_DECISION_REJECT {
+			statusDecision = constant.DECISION_REJECT
+		} else if inq.StatusDecision == constant.DB_DECISION_CANCEL {
+			statusDecision = constant.DECISION_CANCEL
+		}
+
+		row := entity.RespDatatableCA{
+			OrderAt:        inq.OrderAt,
+			ProspectID:     inq.ProspectID,
+			IDNumber:       inq.IDNumber,
+			LegalName:      inq.LegalName,
+			BirthDate:      birthDate,
+			CaDecision:     inq.CaDecision,
+			StatusDecision: statusDecision,
+			StatusReason:   inq.StatusReason,
+			SurveyResult:   inq.SurveyResult,
+			Draft: entity.TrxDraftCaDecision{
+				Decision:    inq.DraftDecision,
+				SlikResult:  inq.DraftSlikResult,
+				Note:        inq.DraftNote,
+				Pernyataan1: inq.DraftPernyataan1,
+				Pernyataan2: inq.DraftPernyataan2,
+				Pernyataan3: inq.DraftPernyataan3,
+				Pernyataan4: inq.DraftPernyataan4,
+				Pernyataan5: inq.DraftPernyataan5,
+				Pernyataan6: inq.DraftPernyataan6,
+			},
+			Deviasi: entity.Deviasi{
+				DeviasiID:          inq.DeviasiID,
+				DeviasiDescription: inq.DeviasiDescription,
+				DeviasiDecision:    inq.DeviasiDecision,
+				DeviasiReason:      inq.DeviasiReason,
+			},
+			ActionEditData: inq.ActionEditData,
+			ActionDate:     inq.ActionDate,
+			ShowAction:     action,
+		}
+
+		data = append(data, row)
 	}
 
 	return
@@ -1680,6 +1848,58 @@ func (u usecase) RecalculateOrder(ctx context.Context, req request.ReqRecalculat
 	} else {
 		err = errors.New(constant.ERROR_BAD_REQUEST + " - Submit Recalculate to Sally Error")
 		return
+	}
+
+	return
+}
+
+func (u usecase) GetDatatableApproval(ctx context.Context, req request.ReqInquiryApproval, pagination interface{}) (data []entity.RespDatatableApproval, rowTotal int, err error) {
+
+	result, rowTotal, err := u.repository.GetDatatableApproval(req, pagination)
+
+	if err != nil {
+		return []entity.RespDatatableApproval{}, 0, err
+	}
+
+	prospectIDs := make([]string, len(result))
+	for i, inq := range result {
+		prospectIDs[i] = inq.ProspectID
+	}
+
+	for _, inq := range result {
+
+		var statusDecision string
+		if inq.StatusDecision == constant.DB_DECISION_APR {
+			statusDecision = constant.DECISION_APPROVE
+		} else if inq.StatusDecision == constant.DB_DECISION_REJECT {
+			statusDecision = constant.DECISION_REJECT
+		} else if inq.StatusDecision == constant.DB_DECISION_CANCEL {
+			statusDecision = constant.DECISION_CANCEL
+		}
+
+		birthDate := inq.BirthDate.Format("02-01-2006")
+
+		row := entity.RespDatatableApproval{
+			OrderAt:        inq.OrderAt,
+			ProspectID:     inq.ProspectID,
+			IDNumber:       inq.IDNumber,
+			LegalName:      inq.LegalName,
+			BirthDate:      birthDate,
+			StatusDecision: statusDecision,
+			StatusReason:   inq.StatusReason,
+			ShowAction:     inq.ShowAction,
+			ActionDate:     inq.ActionDate,
+			ActionFormAkk:  inq.ActionFormAkk,
+			UrlFormAkkk:    inq.UrlFormAkkk,
+			Deviasi: entity.Deviasi{
+				DeviasiID:          inq.DeviasiID,
+				DeviasiDescription: inq.DeviasiDescription,
+				DeviasiDecision:    inq.DeviasiDecision,
+				DeviasiReason:      inq.DeviasiReason,
+			},
+		}
+
+		data = append(data, row)
 	}
 
 	return

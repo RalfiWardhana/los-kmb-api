@@ -808,6 +808,11 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 
 	save.Reason = filtering.Reason
 
+	if pefindo.NewKoRules != (response.ResultNewKoRules{}) {
+		jsonNewKoRules, _ := json.Marshal(pefindo.NewKoRules)
+		save.NewKoRules = jsonNewKoRules
+	}
+
 	var cbFound bool
 
 	if pefindo.Score != "" && pefindo.Score != constant.DECISION_PBK_NO_HIT && pefindo.Score != constant.PEFINDO_UNSCORE {

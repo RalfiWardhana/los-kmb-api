@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"los-kmb-api/domain/filtering_new/interfaces"
+	"los-kmb-api/middlewares"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
@@ -335,8 +336,7 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 			// header los kmb api
 			callbackHeaderLos, _ := json.Marshal(
 				map[string]string{
-					"X-Client-ID":   os.Getenv("CLIENT_LOS"),
-					"Authorization": os.Getenv("AUTH_LOS"),
+					"Authorization": middlewares.UserInfoData.AccessToken,
 				})
 
 			// elaborate
@@ -366,6 +366,7 @@ func (r repoHandler) SaveFiltering(data entity.FilteringKMB, trxDetailBiro []ent
 				APIType:         "RAW",
 				EndPointTarget:  os.Getenv("NE_JOURNEY_URL"),
 				EndPointMethod:  constant.METHOD_POST,
+				Header:          string(callbackHeaderLos),
 				Payload:         trxNewEntry.PayloadJourney,
 				ResponseTimeout: 30,
 				MaxRetry:        6,

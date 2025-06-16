@@ -108,9 +108,17 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("prospect_id_pembiayaan_principle", prospectIdPembiayaanPrincipleNotExists)
 	v.validator.RegisterValidation("prospect_id_emcon_principle", prospectIdEmconPrincipleNotExists)
 	v.validator.RegisterValidation("allowcharstipeusaha", allowedCharsInTipeUsaha)
+	v.validator.RegisterValidation("noHTML", noHTML)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
+}
+
+// Validator custom: tolak jika ada tag HTML
+func noHTML(fl validator.FieldLevel) bool {
+	// Regex untuk mendeteksi tag HTML seperti <div>, <script>, <b>, dll.
+	var htmlTagRegex = regexp.MustCompile(`(?i)<[^>]+>`)
+	return !htmlTagRegex.MatchString(fl.Field().String())
 }
 
 func prospectIDValidation(fl validator.FieldLevel) (validator bool) {

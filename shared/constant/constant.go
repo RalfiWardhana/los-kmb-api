@@ -60,6 +60,7 @@ const (
 	TAG_SPOUSE_NOT_NULL              = "notnull"
 	TAG_RELATION                     = "relation"
 	TAG_BPKB_NAME                    = "bpkbname"
+	TAG_NOTHML                       = "nohtml"
 	ACTIVITY_UNPROCESS               = "UNPR"
 	ACTIVITY_IDLE                    = "IDLE"
 	PRESCREENING                     = "PSI"
