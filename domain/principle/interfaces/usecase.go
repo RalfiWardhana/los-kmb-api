@@ -53,6 +53,7 @@ type Usecase interface {
 	History2Wilen(req request.History2Wilen) (data []response.History2Wilen, err error)
 	Publish2Wilen(ctx context.Context, req request.Publish2Wilen, accessToken string) (err error)
 	CheckMobilePhoneFMF(ctx context.Context, prospectID, mobilePhone, idNumber, accessToken, hrisAccessToken string) (data response.UsecaseApi, err error)
+	MDMGetDetailCustomerKPM(ctx context.Context, prospectID string, KPMID int, accessToken string) (mdmGetDetailCustomerKPMRes response.MDMGetDetailCustomerKPMResponse, err error)
 }
 
 type MultiUsecase interface {

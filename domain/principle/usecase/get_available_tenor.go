@@ -26,6 +26,11 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 		bakiDebet     float64
 	)
 
+	mdmGetDetailCustomerKPMRes, err := u.usecase.MDMGetDetailCustomerKPM(ctx, req.ProspectID, req.KPMID, accessToken)
+	if err != nil {
+		return
+	}
+
 	config, err := u.repository.GetConfig(constant.GROUP_2WILEN, "KMB-OFF", constant.KEY_PPID_SIMULASI)
 	if err != nil {
 		return
@@ -48,7 +53,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 	}
 
 	// get data customer
-	dataCustomer, err := u.usecase.DupcheckIntegrator(ctx, req.ProspectID, req.IDNumber, req.LegalName, req.BirthDate, req.SurgateMotherName, accessToken)
+	dataCustomer, err := u.usecase.DupcheckIntegrator(ctx, req.ProspectID, mdmGetDetailCustomerKPMRes.Data.Customer.IdNumber, mdmGetDetailCustomerKPMRes.Data.Customer.LegalName, mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate, mdmGetDetailCustomerKPMRes.Data.Customer.SurgateMotherName, accessToken)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get Data Customer Error")
 		return data, err
@@ -248,7 +253,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 			Otr:                    otr,
 			RegionCode:             mappingLicensePlate.AreaID,
 			AssetCategory:          categoryId,
-			CustomerBirthDate:      req.BirthDate,
+			CustomerBirthDate:      mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate,
 		}
 
 		var marsevCalculateInstallmentRes response.MarsevCalculateInstallmentResponse

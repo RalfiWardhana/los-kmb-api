@@ -28,6 +28,11 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 		bakiDebet     float64
 	)
 
+	mdmGetDetailCustomerKPMRes, err := u.usecase.MDMGetDetailCustomerKPM(ctx, req.ProspectID, req.KPMID, accessToken)
+	if err != nil {
+		return
+	}
+
 	config, err := u.repository.GetConfig(constant.GROUP_2WILEN, "KMB-OFF", constant.KEY_PPID_SIMULASI)
 	if err != nil {
 		return
@@ -50,7 +55,7 @@ func (u multiUsecase) GetMaxLoanAmout(ctx context.Context, req request.GetMaxLoa
 	}
 
 	// get data customer
-	dataCustomer, err := u.usecase.DupcheckIntegrator(ctx, req.ProspectID, req.IDNumber, req.LegalName, req.BirthDate, req.SurgateMotherName, accessToken)
+	dataCustomer, err := u.usecase.DupcheckIntegrator(ctx, req.ProspectID, mdmGetDetailCustomerKPMRes.Data.Customer.IdNumber, mdmGetDetailCustomerKPMRes.Data.Customer.LegalName, mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate, mdmGetDetailCustomerKPMRes.Data.Customer.SurgateMotherName, accessToken)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get Data Customer Error")
 		return data, err
@@ -587,6 +592,33 @@ func (u usecase) MDMGetAssetYear(ctx context.Context, branchID string, assetCode
 	if len(assetMP.Records) == 0 {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Call Marketprice MDM Error")
 		return
+	}
+
+	return
+}
+
+func (u usecase) MDMGetDetailCustomerKPM(ctx context.Context, prospectID string, KPMID int, accessToken string) (mdmGetDetailCustomerKPMRes response.MDMGetDetailCustomerKPMResponse, err error) {
+
+	timeOut, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+	headerMDM := map[string]string{
+		"Content-Type":  "application/json",
+		"Authorization": accessToken,
+	}
+
+	resp, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("MDM_GET_DETAIL_CUSTOMER_KPM_URL")+"/"+strconv.Itoa(KPMID), nil, headerMDM, constant.METHOD_GET, false, 0, timeOut, prospectID, accessToken)
+	if err != nil {
+		return
+	}
+
+	if resp.StatusCode() != 200 {
+		err = errors.New(constant.ERROR_UPSTREAM + " - MDM Get Detail Customer KPM Error")
+		return
+	}
+
+	if resp.StatusCode() == 200 {
+		if err = json.Unmarshal([]byte(jsoniter.Get(resp.Body()).ToString()), &mdmGetDetailCustomerKPMRes); err != nil {
+			return
+		}
 	}
 
 	return

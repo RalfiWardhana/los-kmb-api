@@ -712,6 +712,34 @@ func (_m *Usecase) MDMGetAssetYear(ctx context.Context, branchID string, assetCo
 	return r0, r1
 }
 
+// MDMGetDetailCustomerKPM provides a mock function with given fields: ctx, prospectID, KPMID, accessToken
+func (_m *Usecase) MDMGetDetailCustomerKPM(ctx context.Context, prospectID string, KPMID int, accessToken string) (response.MDMGetDetailCustomerKPMResponse, error) {
+	ret := _m.Called(ctx, prospectID, KPMID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MDMGetDetailCustomerKPM")
+	}
+
+	var r0 response.MDMGetDetailCustomerKPMResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, int, string) (response.MDMGetDetailCustomerKPMResponse, error)); ok {
+		return rf(ctx, prospectID, KPMID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, int, string) response.MDMGetDetailCustomerKPMResponse); ok {
+		r0 = rf(ctx, prospectID, KPMID, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.MDMGetDetailCustomerKPMResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, int, string) error); ok {
+		r1 = rf(ctx, prospectID, KPMID, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // MDMGetMappingLicensePlate provides a mock function with given fields: ctx, licensePlate, prospectID, accessToken
 func (_m *Usecase) MDMGetMappingLicensePlate(ctx context.Context, licensePlate string, prospectID string, accessToken string) (response.MDMMasterMappingLicensePlateResponse, error) {
 	ret := _m.Called(ctx, licensePlate, prospectID, accessToken)
