@@ -77,7 +77,7 @@ func (u usecase) Recalculate(ctx context.Context, req request.Recalculate) (data
 
 	afterRec.NTFAkumulasi = afterRec.NTF + (beforeRec.NTFAkumulasi - beforeRec.NTF)
 
-	err = u.repository.SaveRecalculate(saveBeforeRecalculate, afterRec)
+	err = u.repository.SaveRecalculate(saveBeforeRecalculate, afterRec, req)
 	if err == nil {
 		data.ProspectID = req.ProspectID
 	}

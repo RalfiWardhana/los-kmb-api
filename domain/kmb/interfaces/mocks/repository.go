@@ -1409,16 +1409,16 @@ func (_m *Repository) SaveLogOrchestrator(header interface{}, _a1 interface{}, _
 }
 
 // SaveRecalculate provides a mock function with given fields: beforeRecalculate, afterRecalculate
-func (_m *Repository) SaveRecalculate(beforeRecalculate entity.TrxRecalculate, afterRecalculate entity.TrxRecalculate) error {
-	ret := _m.Called(beforeRecalculate, afterRecalculate)
+func (_m *Repository) SaveRecalculate(beforeRecalculate entity.TrxRecalculate, afterRecalculate entity.TrxRecalculate, payload request.Recalculate) error {
+	ret := _m.Called(beforeRecalculate, afterRecalculate, payload)
 
 	if len(ret) == 0 {
 		panic("no return value specified for SaveRecalculate")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(entity.TrxRecalculate, entity.TrxRecalculate) error); ok {
-		r0 = rf(beforeRecalculate, afterRecalculate)
+	if rf, ok := ret.Get(0).(func(entity.TrxRecalculate, entity.TrxRecalculate, request.Recalculate) error); ok {
+		r0 = rf(beforeRecalculate, afterRecalculate, payload)
 	} else {
 		r0 = ret.Error(0)
 	}
