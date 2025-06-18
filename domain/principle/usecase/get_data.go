@@ -431,6 +431,13 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			assetDisplay = assetList.Records[0].AssetDisplay
 		}
 
+		var referralCode interface{}
+		if trxKPM.ReferralCode.Valid {
+			referralCode = trxKPM.ReferralCode.String
+		} else {
+			referralCode = nil
+		}
+
 		data = map[string]interface{}{
 			"id_number":                  trxKPM.IDNumber,
 			"legal_name":                 trxKPM.LegalName,
@@ -494,7 +501,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			"baki_debet":                 trxKPM.BakiDebet,
 			"readjust_context":           trxKPM.ReadjustContext,
 			"rent_finish_date":           trxKPM.RentFinishDate,
-			"referral_code":              trxKPM.ReferralCode,
+			"referral_code":              referralCode,
 		}
 
 		return data, err
