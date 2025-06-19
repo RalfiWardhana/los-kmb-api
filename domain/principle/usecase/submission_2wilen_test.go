@@ -27,6 +27,7 @@ import (
 )
 
 func TestSubmission2Wilen(t *testing.T) {
+	os.Setenv("NAMA_SAMA", "K,P")
 	os.Setenv("MI_NUMBER_WHITELIST", "321,768")
 	os.Setenv("CUSTOMER_V3_BASE_URL", "http://example.com")
 	os.Setenv("DEFAULT_TIMEOUT_30S", "30")

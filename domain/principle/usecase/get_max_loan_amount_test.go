@@ -30,6 +30,8 @@ func TestGetMaxLoanAmount(t *testing.T) {
 	accessToken := "test-token"
 	referralCode := "test"
 	os.Setenv("MI_NUMBER_WHITELIST", "123,1234")
+	os.Setenv("NAMA_SAMA", "K,P")
+
 	testCases := []struct {
 		name                      string
 		request                   request.GetMaxLoanAmount
@@ -1581,7 +1583,7 @@ func TestGetMaxLoanAmount(t *testing.T) {
 					Score: "NO HIT",
 				},
 			},
-			errMappingBranch: errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Branch Error"),
+			errMappingBranchEntity: errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Branch Error"),
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
 			},

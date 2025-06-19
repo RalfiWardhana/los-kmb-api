@@ -28,6 +28,7 @@ func TestGetAvailableTenor(t *testing.T) {
 	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
 	referralCode := "test"
 	os.Setenv("MI_NUMBER_WHITELIST", "123")
+	os.Setenv("NAMA_SAMA", "K,P")
 	accessToken := "test-token"
 
 	testCases := []struct {
