@@ -65,7 +65,7 @@ type Repository interface {
 	GetCurrentTrxWithRejectChassisNumber(chassisNumber string) (data []entity.RejectChassisNumber, err error)
 
 	GetRecalculate(prospectID string) (getRecalculate entity.GetRecalculate, err error)
-	SaveRecalculate(beforeRecalculate entity.TrxRecalculate, afterRecalculate entity.TrxRecalculate) (err error)
+	SaveRecalculate(beforeRecalculate entity.TrxRecalculate, afterRecalculate entity.TrxRecalculate, payload request.Recalculate) (err error)
 	SaveToStaging(prospectID string) (err error)
 
 	GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNameType, tenor int, resultPefindo string, af float64) (data entity.MappingVehicleAge, err error)

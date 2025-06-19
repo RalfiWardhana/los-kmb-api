@@ -10,7 +10,7 @@ github.com/DATA-DOG/go-sqlmock v1.5.2/go.mod h1:88MAG/4G7SMwSE3CeA0ZKzrT5CiOU3OJ
 github.com/KB-FMF/los-common-library v1.0.8-rc h1:g3vsY/eaJBQMlwJ51nrCFbt4a97Q0mnHme3cuvgoEPw=
 github.com/KB-FMF/los-common-library v1.0.8-rc/go.mod h1:PbbFXZRs11BItDJ+nnA9Giz/fBx2wFnD7/YKTNaM3uU=
 github.com/KB-FMF/platform-library v1.0.20/go.mod h1:UuA86SioNq0yXtWMydqu+3LSWAheonMrtsbJvn4tZBA=
-github.com/KB-FMF/platform-library v1.0.22 h1:p4jrjib/urj9CsnNIx6qCSbA54c5hjYIy8KI3IvFEwo=
+github.com/KB-FMF/platform-library v1.0.22 h1:l3tc1hJUwuLznAwJpFcr3dUcMhfU3PcEUyVZD7y8UrE=
 github.com/KB-FMF/platform-library v1.0.22/go.mod h1:10nA7Sryczpx6MJ2+g1ox/46smRuD3nVrueHgsva18o=
 github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc=
 github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6XgeJcm8brE=
