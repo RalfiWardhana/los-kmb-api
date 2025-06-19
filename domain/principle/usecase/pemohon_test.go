@@ -127,7 +127,7 @@ func TestGetEmployeeData(t *testing.T) {
 			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), httpmock.NewStringResponder(tc.mockStatusCode, mockResponseBody))
 			resp, _ := rst.R().Post(os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"))
 
-			mockHttpClient.On("EngineAPI", mock.Anything, constant.DILEN_KMB_LOG, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), mock.Anything, map[string]string{"Authorization": "Bearer "}, constant.METHOD_POST, false, 0, timeout, "", "").Return(resp, tc.mockError).Once()
+			mockHttpClient.On("EngineAPI", mock.Anything, constant.DILEN_KMB_LOG, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), mock.Anything, map[string]string{"Authorization": "Bearer "}, constant.METHOD_POST, false, 0, timeout, "", mock.Anything).Return(resp, tc.mockError).Once()
 
 			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
@@ -288,7 +288,7 @@ func TestGetFpdCMO(t *testing.T) {
 			httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=2&cmo_id="+tc.cmoID, httpmock.NewStringResponder(tc.mockStatusCode, mockResponseBody))
 			resp, _ := rst.R().SetHeaders(map[string]string{"Content-Type": "application/json", "Authorization": ""}).Get(os.Getenv("AGREEMENT_LTV_FPD") + "?lob_id=2&cmo_id=" + tc.cmoID)
 
-			mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=2&cmo_id="+tc.cmoID, []byte(nil), map[string]string{"Authorization": ""}, constant.METHOD_GET, false, 0, timeout, "", "").Return(resp, tc.mockError).Once()
+			mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=2&cmo_id="+tc.cmoID, []byte(nil), mock.Anything, constant.METHOD_GET, false, 0, timeout, "", mock.Anything).Return(resp, tc.mockError).Once()
 			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
 			data, err := usecase.GetFpdCMO(ctx, tc.cmoID, tc.bpkbNameType)
@@ -1407,7 +1407,7 @@ func TestPrinciplePemohon(t *testing.T) {
 			mockRepository.On("GetEncB64", tc.request.IDNumber).Return(entity.EncryptedString{MyString: "encryted"}, nil)
 			mockUsecase.On("BannedPMKOrDSR", mock.Anything).Return(tc.resBannedPMKOrDSR, tc.errBannedPMKOrDSR)
 			mockUsecase.On("Rejection", tc.request.ProspectID, mock.Anything, mock.Anything).Return(tc.resRejection, entity.TrxBannedPMKDSR{}, tc.errRejection)
-			mockUsecase.On("DupcheckIntegrator", ctx, tc.request.ProspectID, mock.Anything, mock.Anything, mock.Anything, mock.Anything, "").Return(tc.resDupcheckIntegrator, tc.errDupcheckIntegrator)
+			mockUsecase.On("DupcheckIntegrator", ctx, tc.request.ProspectID, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resDupcheckIntegrator, tc.errDupcheckIntegrator)
 			mockUsecase.On("BlacklistCheck", mock.Anything, tc.resDupcheckIntegrator).Return(tc.resBlacklistCheck, mock.Anything)
 			if tc.resBlacklistCheck.Result == constant.DECISION_REJECT {
 				mockUsecase.On("Save", mock.AnythingOfType("entity.FilteringKMB"), mock.AnythingOfType("[]entity.TrxDetailBiro"), mock.AnythingOfType("entity.TrxCmoNoFPD")).Return(nil)
