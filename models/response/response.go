@@ -259,7 +259,7 @@ type PefindoResult struct {
 	Category                      interface{}      `json:"category"`
 	MaxOverdueKORules             interface{}      `json:"max_overdue_ko_rules"`
 	MaxOverdueLast12MonthsKORules interface{}      `json:"max_overdue_last12months_ko_rules"`
-	InquiriesLast1Month           int              `json:"inquiries_last1months"`
+	InquiriesLast1Month           int              `json:"number_of_inquiries_last1_month"`
 	NewKoRules                    ResultNewKoRules `json:"new_ko_rules"`
 }
 
