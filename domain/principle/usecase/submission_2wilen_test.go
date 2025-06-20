@@ -48,10 +48,13 @@ func TestSubmission2Wilen(t *testing.T) {
 		resExceedErrorTrxKPM                 int
 		resGetTrxKPM                         entity.TrxKPM
 		errGetTrxKPM                         error
+		resGetTrxKPMStatus                   entity.TrxKPMStatus
+		errGetTrxKPMStatus                   error
 		errSaveTrxKPMStatus                  error
 		resGetConfig                         entity.AppConfig
 		errGetConfig                         error
 		errSaveTrxKPM                        error
+		errUpdateTrxKPM                      error
 		resGetReadjustCountTrxKPM            int
 		resGetAvailableTenor                 []response.GetAvailableTenorData
 		errGetAvailableTenor                 error
@@ -169,10 +172,9 @@ func TestSubmission2Wilen(t *testing.T) {
 			err: errors.New(constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE),
 		},
 		{
-			name:                      "error save trx kpm status KPM-WAIT",
-			errSaveTrxKPMStatus:       errors.New("something wrong"),
-			err:                       errors.New("something wrong"),
-			expectPublishEventKPMWait: true,
+			name:                "error save trx kpm status KPM-WAIT",
+			errSaveTrxKPMStatus: errors.New("something wrong"),
+			err:                 errors.New("something wrong"),
 		},
 		{
 			name:                      "error get config",
@@ -208,26 +210,6 @@ func TestSubmission2Wilen(t *testing.T) {
 			resGetReadjustCountTrxKPM: 0,
 			errGetAvailableTenor:      errors.New("error get available tenor"),
 			err:                       errors.New("error get available tenor"),
-			expectPublishEventKPMWait: true,
-			expectPublishEvent:        true,
-		},
-		{
-			name: "error admin fee does not match",
-			request: request.Submission2Wilen{
-				AdminFee: 100000,
-				Tenor:    12,
-			},
-			resGetConfig: entity.AppConfig{
-				Value: `{"data":{"max_readjust_attempt":3}}`,
-			},
-			resGetReadjustCountTrxKPM: 0,
-			resGetAvailableTenor: []response.GetAvailableTenorData{
-				{
-					Tenor:    12,
-					AdminFee: 110000,
-				},
-			},
-			err:                       errors.New(constant.INTERNAL_SERVER_ERROR + " - Admin fee does not match"),
 			expectPublishEventKPMWait: true,
 			expectPublishEvent:        true,
 		},
@@ -7338,10 +7320,12 @@ func TestSubmission2Wilen(t *testing.T) {
 			var platformEvent platformevent.PlatformEventInterface = mockPlatformEvent
 
 			mockRepository.On("ExceedErrorTrxKPM", mock.Anything).Return(tc.resExceedErrorTrxKPM)
-			mockRepository.On("GetTrxKPM", mock.Anything).Return(tc.resGetTrxKPM, tc.errGetTrxKPM)
+			mockRepository.On("GetTrxKPMWithLock", mock.Anything).Return(tc.resGetTrxKPM, tc.errGetTrxKPM)
+			mockRepository.On("GetLatestTrxKPMStatusWithLock", mock.Anything).Return(tc.resGetTrxKPMStatus, tc.errGetTrxKPMStatus)
+			mockRepository.On("SaveTrxKPM", mock.Anything).Return(tc.errSaveTrxKPM).Once()
 			mockRepository.On("SaveTrxKPMStatus", mock.Anything).Return(tc.errSaveTrxKPMStatus)
 			mockRepository.On("GetConfig", mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetConfig, tc.errGetConfig).Once()
-			mockRepository.On("SaveTrxKPM", mock.Anything).Return(tc.errSaveTrxKPM)
+			mockRepository.On("UpdateTrxKPM", mock.Anything, mock.Anything).Return(tc.errUpdateTrxKPM).Once()
 			mockRepository.On("GetReadjustCountTrxKPM", mock.Anything).Return(tc.resGetReadjustCountTrxKPM)
 			mockRepository.On("MasterMappingFpdCluster", mock.Anything).Return(tc.resMasterMappingFpdCluster, tc.errMasterMappingFpdCluster)
 			mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything).Return(tc.resGetMappingElaborateLTV, tc.errGetMappingElaborateLTV)

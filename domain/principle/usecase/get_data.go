@@ -127,7 +127,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 		go func() {
 			defer wg.Done()
-			principleStepOne, _ = u.repository.GetPrincipleStepOne(req.ProspectID)
+			principleStepOne, err = u.repository.GetPrincipleStepOne(req.ProspectID)
 
 			if err != nil {
 				errChan <- err
@@ -136,7 +136,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 		go func() {
 			defer wg.Done()
-			principleStepTwo, _ = u.repository.GetPrincipleStepTwo(req.ProspectID)
+			principleStepTwo, err = u.repository.GetPrincipleStepTwo(req.ProspectID)
 			if err != nil {
 				errChan <- err
 			}
@@ -144,7 +144,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 
 		go func() {
 			defer wg.Done()
-			principleStepThree, _ = u.repository.GetPrincipleStepThree(req.ProspectID)
+			principleStepThree, err = u.repository.GetPrincipleStepThree(req.ProspectID)
 
 			if err != nil {
 				errChan <- err
@@ -431,6 +431,13 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			assetDisplay = assetList.Records[0].AssetDisplay
 		}
 
+		var referralCode interface{}
+		if trxKPM.ReferralCode.Valid {
+			referralCode = trxKPM.ReferralCode.String
+		} else {
+			referralCode = nil
+		}
+
 		data = map[string]interface{}{
 			"id_number":                  trxKPM.IDNumber,
 			"legal_name":                 trxKPM.LegalName,
@@ -494,7 +501,7 @@ func (u usecase) GetDataPrinciple(ctx context.Context, req request.PrincipleGetD
 			"baki_debet":                 trxKPM.BakiDebet,
 			"readjust_context":           trxKPM.ReadjustContext,
 			"rent_finish_date":           trxKPM.RentFinishDate,
-			"referral_code":              trxKPM.ReferralCode,
+			"referral_code":              referralCode,
 		}
 
 		return data, err

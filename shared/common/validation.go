@@ -56,6 +56,7 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("key", checkClientKey)
 	v.validator.RegisterValidation("dateformat", dateFormatValidation)
 	v.validator.RegisterValidation("allowcharsname", allowedCharsInName)
+	v.validator.RegisterValidation("isValidNameChars", isValidNameChars)
 	v.validator.RegisterValidation("marital", maritalValidation)
 	v.validator.RegisterValidation("gender", genderValidation)
 	v.validator.RegisterValidation("spouse_gender", spouseGenderValidation)
@@ -159,6 +160,11 @@ func allowedCharsInName(fl validator.FieldLevel) bool {
 
 	return re.MatchString(fl.Field().String())
 
+}
+
+func isValidNameChars(fl validator.FieldLevel) bool {
+	re := regexp.MustCompile("^[a-zA-Z0-9.,'`_ -]*$")
+	return re.MatchString(fl.Field().String())
 }
 
 func checkClientKey(fl validator.FieldLevel) (validator bool) {

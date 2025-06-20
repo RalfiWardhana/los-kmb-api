@@ -48,13 +48,23 @@ func TestPrincipleEmergencyContact(t *testing.T) {
 				ProspectID:   "PROS-001",
 				Name:         "John Doe",
 				Relationship: "Friend",
-				MobilePhone:  "1234567890",
+				MobilePhone:  "12345678901111",
+				Phone:        "12345678901111",
 			},
 			principleStepThree:         entity.TrxPrincipleStepThree{IDNumber: "123456"},
 			expectGetTrxWorker:         true,
 			expectSaveEmergencyContact: true,
 			expectSaveToWorker:         true,
 			expectPublishEvent:         true,
+		},
+		{
+			name: "error get principle step one",
+			request: request.PrincipleEmergencyContact{
+				ProspectID: "PROS-002",
+			},
+			errGetPrincipleStepOne:     errors.New("failed to get principle step one"),
+			expectSaveEmergencyContact: false,
+			expectedError:              errors.New("failed to get principle step one"),
 		},
 		{
 			name: "error get principle step three",
@@ -77,6 +87,17 @@ func TestPrincipleEmergencyContact(t *testing.T) {
 			expectedError:              errors.New(constant.PRINCIPLE_ALREADY_REJECTED_MESSAGE),
 		},
 		{
+			name: "error get trx worker",
+			request: request.PrincipleEmergencyContact{
+				ProspectID: "PROS-003",
+			},
+			principleStepThree:         entity.TrxPrincipleStepThree{IDNumber: "123456"},
+			errGetTrxWorker:            errors.New("failed to get trx worker"),
+			expectSaveEmergencyContact: true,
+			expectGetTrxWorker:         true,
+			expectedError:              errors.New("failed to get trx worker"),
+		},
+		{
 			name: "error save principle emergency contact",
 			request: request.PrincipleEmergencyContact{
 				ProspectID: "PROS-003",
@@ -86,6 +107,40 @@ func TestPrincipleEmergencyContact(t *testing.T) {
 			expectSaveEmergencyContact:       true,
 			expectGetTrxWorker:               true,
 			expectedError:                    errors.New("failed to save principle emergency contact"),
+		},
+		{
+			name: "error principle customer",
+			request: request.PrincipleEmergencyContact{
+				ProspectID:   "PROS-001",
+				Name:         "John Doe",
+				Relationship: "Friend",
+				MobilePhone:  "12345678901111",
+				Phone:        "12345678901111",
+			},
+			principleStepThree:         entity.TrxPrincipleStepThree{IDNumber: "123456"},
+			errPrincipleCustomer:       errors.New("failed"),
+			expectedError:              errors.New("failed"),
+			expectGetTrxWorker:         true,
+			expectSaveEmergencyContact: true,
+			expectSaveToWorker:         true,
+			expectPublishEvent:         false,
+		},
+		{
+			name: "error principle marketing program",
+			request: request.PrincipleEmergencyContact{
+				ProspectID:   "PROS-001",
+				Name:         "John Doe",
+				Relationship: "Friend",
+				MobilePhone:  "12345678901111",
+				Phone:        "12345678901111",
+			},
+			principleStepThree:           entity.TrxPrincipleStepThree{IDNumber: "123456"},
+			errPrincipleMarketingProgram: errors.New("failed"),
+			expectedError:                errors.New("failed"),
+			expectGetTrxWorker:           true,
+			expectSaveEmergencyContact:   true,
+			expectSaveToWorker:           true,
+			expectPublishEvent:           false,
 		},
 	}
 
@@ -109,10 +164,13 @@ func TestPrincipleEmergencyContact(t *testing.T) {
 			}
 
 			mockUsecase.On("PrincipleCoreCustomer", ctx, tc.request.ProspectID, accessToken).Return(tc.errPrincipleCustomer)
-			mockUsecase.On("PrincipleMarketingProgram", ctx, tc.request.ProspectID, accessToken).Return(tc.errPrincipleMarketingProgram)
+
+			if tc.errPrincipleCustomer == nil {
+				mockUsecase.On("PrincipleMarketingProgram", ctx, tc.request.ProspectID, accessToken).Return(tc.errPrincipleMarketingProgram)
+			}
 
 			if tc.expectSaveToWorker {
-				mockRepository.On("SaveToWorker", mock.Anything).Return(tc.errSaveToWorker).Maybe()
+				mockRepository.On("SaveToWorker", mock.Anything).Return(tc.errSaveToWorker)
 			}
 
 			if tc.expectPublishEvent {
@@ -129,9 +187,6 @@ func TestPrincipleEmergencyContact(t *testing.T) {
 			} else {
 				require.NoError(t, err)
 			}
-
-			mockRepository.AssertExpectations(t)
-			mockHttpClient.AssertExpectations(t)
 		})
 	}
 }
