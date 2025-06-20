@@ -386,20 +386,52 @@ func (r repoHandler) GetFilteringResult(prospectID string) (filtering entity.Fil
 	return
 }
 
-func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster string) (data []entity.MappingElaborateLTV, err error) {
-	var x sql.TxOptions
+func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore string, bpkbNameType int) (data []entity.MappingElaborateLTV, err error) {
+	extraWhere := ""
+	args := []any{
+		resultPefindo,
+		cluster,
+	}
+	if gradeBranch != "" {
+		extraWhere += "AND grade_branch IN ('ALL', ?)"
+		args = append(args, gradeBranch)
+	}
 
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+	if customerStatus != "" {
+		extraWhere += " AND status_konsumen IN ('ALL', ?)"
+		args = append(args, customerStatus)
+	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
+	if pbkScore != "" {
+		extraWhere += " AND pbk_score IN ('ALL', ?)"
+		args = append(args, pbkScore)
+	}
 
-	db := r.newKmb.BeginTx(ctx, &x)
-	defer db.Commit()
+	extraWhere += " AND bpkb_name_type = ?"
+	args = append(args, bpkbNameType)
 
-	if err = r.newKmb.Raw("SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE result_pefindo = ? AND cluster = ? ", resultPefindo, cluster).Scan(&data).Error; err != nil {
+	if err = r.newKmb.Raw(fmt.Sprintf("SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE deleted_at IS NULL AND result_pefindo = ? AND cluster = ? %s ", extraWhere), args...).Scan(&data).Error; err != nil {
 		return
 	}
+	return
+}
+
+func (r *repoHandler) GetMappingBranchByBranchID(branchID string, pbkScore string) (data entity.MappingBranchByPBKScore, err error) {
+	if err = r.newKmb.Raw("SELECT TOP 1 * FROM m_mapping_branch WITH (nolock) WHERE branch_id = ? AND score = ?", branchID, pbkScore).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetMappingPbkScore(pbkScores []string) (data entity.MappingPBKScoreGrade, err error) {
+	if len(pbkScores) == 0 {
+		return data, err
+	}
+	if err = r.newKmb.Raw("SELECT TOP 1 * FROM m_mapping_pbk_grade WITH (nolock) WHERE score IN (?) ORDER BY grade_risk DESC", pbkScores).Scan(&data).Error; err != nil {
+		return
+	}
+
 	return
 }
 

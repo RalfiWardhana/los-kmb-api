@@ -27,6 +27,7 @@ import (
 )
 
 func TestSubmission2Wilen(t *testing.T) {
+	os.Setenv("NAMA_SAMA", "K,P")
 	os.Setenv("MI_NUMBER_WHITELIST", "321,768")
 	os.Setenv("CUSTOMER_V3_BASE_URL", "http://example.com")
 	os.Setenv("DEFAULT_TIMEOUT_30S", "30")
@@ -51,6 +52,8 @@ func TestSubmission2Wilen(t *testing.T) {
 		resGetTrxKPMStatus                   entity.TrxKPMStatus
 		errGetTrxKPMStatus                   error
 		errSaveTrxKPMStatus                  error
+		customerDetailResponse               response.MDMGetDetailCustomerKPMResponse
+		errCustomerDetail                    error
 		resGetConfig                         entity.AppConfig
 		errGetConfig                         error
 		errSaveTrxKPM                        error
@@ -153,6 +156,13 @@ func TestSubmission2Wilen(t *testing.T) {
 		expectPublishEventKPMWait            bool
 		expectPublishEventKPMApprove         bool
 		expectPublishEvent                   bool
+		mappingBranch                        entity.MappingBranchByPBKScore
+		errMappingBranchEntity               error
+		trxDetailBiro                        []entity.TrxDetailBiro
+		pbkScore                             string
+		errTrxDetailBiro                     error
+		mappingPbkScoreGrade                 entity.MappingPBKScoreGrade
+		errMappingPbkScoreGrade              error
 	}{
 		{
 			name:                 "error max exceed",
@@ -175,6 +185,13 @@ func TestSubmission2Wilen(t *testing.T) {
 			name:                "error save trx kpm status KPM-WAIT",
 			errSaveTrxKPMStatus: errors.New("something wrong"),
 			err:                 errors.New("something wrong"),
+		},
+		{
+			name:                      "error get detail customer kpm",
+			errCustomerDetail:         errors.New("get detail customer kpm error"),
+			err:                       errors.New("get detail customer kpm error"),
+			expectPublishEventKPMWait: true,
+			expectPublishEvent:        true,
 		},
 		{
 			name:                      "error get config",
@@ -310,10 +327,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error dupcheck integrator",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -321,6 +334,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				SpouseSurgateMotherName: "Test Spouse Surgate Mother Name",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -345,10 +359,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "reject check blacklist",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -356,6 +366,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				SpouseSurgateMotherName: "Test Spouse Surgate Mother Name",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -384,10 +395,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error save reject check blacklist",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -395,6 +402,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				SpouseSurgateMotherName: "Test Spouse Surgate Mother Name",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -422,10 +430,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error check negative customer",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -433,6 +437,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				SpouseSurgateMotherName: "Test Spouse Surgate Mother Name",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -460,10 +465,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "reject check negative customer",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -471,6 +472,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				SpouseSurgateMotherName: "Test Spouse Surgate Mother Name",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -502,10 +504,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error check mobile phone fmf",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -513,6 +511,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				SpouseSurgateMotherName: "Test Spouse Surgate Mother Name",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -543,10 +542,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "reject check mobile phone fmf",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -554,6 +549,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				SpouseSurgateMotherName: "Test Spouse Surgate Mother Name",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -588,10 +584,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error get customer kmb",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -599,6 +591,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				SpouseSurgateMotherName: "Test Spouse Surgate Mother Name",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -632,10 +625,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error check pmk",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -643,6 +632,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				SpouseSurgateMotherName: "Test Spouse Surgate Mother Name",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -677,10 +667,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "reject check pmk",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -688,6 +674,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				SpouseSurgateMotherName: "Test Spouse Surgate Mother Name",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -726,10 +713,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error get mdm master mapping branch employee",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -737,6 +720,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				SpouseSurgateMotherName: "Test Spouse Surgate Mother Name",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -774,10 +758,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error cmo dedicated not found",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -785,6 +765,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				SpouseSurgateMotherName: "Test Spouse Surgate Mother Name",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -822,10 +803,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error get employee data",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -833,6 +810,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				SpouseSurgateMotherName: "Test Spouse Surgate Mother Name",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -878,10 +856,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error cmo not found",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -889,6 +863,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				SpouseSurgateMotherName: "Test Spouse Surgate Mother Name",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -936,10 +911,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error get fpd cmo",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -948,6 +919,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				BPKBNameType:            "K",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -996,10 +968,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error get master mapping fpd cluster",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -1008,6 +976,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				BPKBNameType:            "K",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -1059,10 +1028,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error check cmo no fpd",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -1071,6 +1036,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				BPKBNameType:            "K",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -1122,10 +1088,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error pefindo",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -1134,6 +1096,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				BPKBNameType:            "K",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -1186,10 +1149,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error check ekyc dukcapil",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -1198,6 +1157,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				BPKBNameType:            "K",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -1267,10 +1227,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "reject check ekyc asliri",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -1279,6 +1235,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				BPKBNameType:            "K",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -1344,10 +1301,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error check ekyc ktp",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -1356,6 +1309,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				BPKBNameType:            "K",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -1418,10 +1372,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "reject check ekyc ktp",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -1430,6 +1380,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				BPKBNameType:            "K",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -1496,10 +1447,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error save after check ekyc",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -1508,6 +1455,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				BPKBNameType:            "K",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -1573,10 +1521,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "reject pefindo",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -1585,6 +1529,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				BPKBNameType:            "K",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -1655,10 +1600,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error scorepro",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -1667,6 +1608,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				BPKBNameType:            "K",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -1736,10 +1678,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "reject scorepro",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -1748,6 +1686,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				BPKBNameType:            "K",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -1821,10 +1760,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error get mapping elaborate ltv",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -1833,6 +1768,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				BPKBNameType:            "K",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -1905,10 +1841,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error get ltv",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -1917,6 +1849,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				BPKBNameType:            "K",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetConfig: entity.AppConfig{
 				Value: `{"data":{"max_readjust_attempt":3}}`,
@@ -1994,10 +1927,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "reject max readjust attempt",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -2006,6 +1935,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				BPKBNameType:            "K",
 				AdminFee:                100000,
 				Tenor:                   12,
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -2089,10 +2019,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "reject marsev get loan amount",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -2102,6 +2028,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				AdminFee:                100000,
 				Tenor:                   12,
 				LoanAmount:              1000000,
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -2181,10 +2108,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "reject max readjust attempt loan amount",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -2194,6 +2117,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				AdminFee:                100000,
 				Tenor:                   12,
 				LoanAmount:              1000000,
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -2282,10 +2206,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error mdm get master asset",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -2295,6 +2215,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				AdminFee:                100000,
 				Tenor:                   12,
 				LoanAmount:              1000000,
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -2379,10 +2300,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error marsev get program",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -2392,6 +2309,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				AdminFee:                100000,
 				Tenor:                   12,
 				LoanAmount:              1000000,
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -2503,10 +2421,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error marsev get program not found",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -2516,6 +2430,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				AdminFee:                100000,
 				Tenor:                   12,
 				LoanAmount:              1000000,
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -2626,10 +2541,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error marsev get program not matching mi number found",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -2639,6 +2550,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				AdminFee:                100000,
 				Tenor:                   12,
 				LoanAmount:              1000000,
+				KPMID:                   6287,
 				ReferralCode:            "TX92XS",
 			},
 			resGetReadjustCountTrxKPM: 2,
@@ -2757,10 +2669,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error mdm get mapping license plate",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -2771,6 +2679,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -2889,10 +2798,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error marsev calculate installment",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -2903,6 +2808,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -3030,10 +2936,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "readjust after marsev calculate installment",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -3044,6 +2946,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 1,
 			resGetConfig: entity.AppConfig{
@@ -3175,10 +3078,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "reject readjust after marsev calculate installment",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -3189,6 +3088,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -3320,10 +3220,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error get config dupcheck",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -3334,6 +3230,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -3469,10 +3366,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error unmarshal get config dupcheck",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -3483,6 +3376,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -3620,10 +3514,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error check dsr",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -3634,6 +3524,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -3773,10 +3664,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "reject check dsr",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -3787,6 +3674,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -3930,10 +3818,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error check dsr fmf pbk",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -3944,6 +3828,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -4087,10 +3972,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "reject check dsr fmf pbk",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -4101,6 +3982,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -4248,10 +4130,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error get master mapping cluster",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -4262,6 +4140,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -4408,10 +4287,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error vehicle check",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -4422,6 +4297,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -4571,10 +4447,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "reject vehicle check",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -4585,6 +4457,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -4738,10 +4611,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error customer validate data",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -4752,6 +4621,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -4905,10 +4775,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error upstream customer validate data",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -4919,6 +4785,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -5072,10 +4939,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error unmarshal customer validate data",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -5086,6 +4949,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -5240,10 +5104,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error insert customer transaction",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -5254,6 +5114,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -5409,10 +5270,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error code insert customer transaction",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -5423,6 +5280,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -5578,10 +5436,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error unmarshal insert customer transaction",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -5592,6 +5446,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -5748,10 +5603,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error update customer transaction",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -5762,6 +5613,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -5919,10 +5771,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error code update customer transaction",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -5933,6 +5781,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -6090,10 +5939,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error unmarshal update customer transaction",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -6104,6 +5949,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -6262,10 +6108,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error mdm master branch",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -6276,6 +6118,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -6435,10 +6278,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error code mdm master branch",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -6449,6 +6288,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -6608,10 +6448,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error unmarshal mdm master branch",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -6622,6 +6458,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -6782,10 +6619,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error submit to sally",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -6799,6 +6632,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				KtpPhoto:                "http://image.com",
 				SelfiePhoto:             "http://image.com",
 				Dealer:                  constant.DEALER_PSA,
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -6960,10 +6794,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error code submit to sally",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -6974,6 +6804,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -7135,10 +6966,6 @@ func TestSubmission2Wilen(t *testing.T) {
 		{
 			name: "error unmarshal submit to sally",
 			request: request.Submission2Wilen{
-				IDNumber:                "123",
-				LegalName:               "Test Legal Name",
-				BirthDate:               birthDateStr,
-				SurgateMotherName:       "Test Surgate Mother Name",
 				MaritalStatus:           constant.MARRIED,
 				SpouseIDNumber:          "456",
 				SpouseLegalName:         "Test Spouse Legal Name",
@@ -7149,6 +6976,7 @@ func TestSubmission2Wilen(t *testing.T) {
 				Tenor:                   12,
 				LoanAmount:              1000000,
 				ReferralCode:            "TX92XS",
+				KPMID:                   6287,
 			},
 			resGetReadjustCountTrxKPM: 2,
 			resGetConfig: entity.AppConfig{
@@ -7328,12 +7156,17 @@ func TestSubmission2Wilen(t *testing.T) {
 			mockRepository.On("UpdateTrxKPM", mock.Anything, mock.Anything).Return(tc.errUpdateTrxKPM).Once()
 			mockRepository.On("GetReadjustCountTrxKPM", mock.Anything).Return(tc.resGetReadjustCountTrxKPM)
 			mockRepository.On("MasterMappingFpdCluster", mock.Anything).Return(tc.resMasterMappingFpdCluster, tc.errMasterMappingFpdCluster)
-			mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything).Return(tc.resGetMappingElaborateLTV, tc.errGetMappingElaborateLTV)
+			mockRepository.On("GetTrxDetailBIro", tc.request.ProspectID).Return(tc.trxDetailBiro, tc.errTrxDetailBiro)
+			mockRepository.On("GetMappingPbkScore", mock.Anything).Return(tc.mappingPbkScoreGrade, tc.errMappingPbkScoreGrade)
+			mockRepository.On("GetMappingBranchByBranchID", tc.request.BranchID, mock.Anything).
+				Return(tc.mappingBranch, tc.errMappingBranchEntity)
+			mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetMappingElaborateLTV, tc.errGetMappingElaborateLTV)
 			if tc.isGetConfigDupcheck {
 				mockRepository.On("GetConfig", mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetConfigDupcheck, tc.errGetConfigDupcheck).Once()
 			}
 			mockRepository.On("MasterMappingCluster", mock.Anything).Return(tc.resMasterMappingCluster, tc.errMasterMappingCluster)
 
+			mockUsecase.On("MDMGetDetailCustomerKPM", ctx, tc.request.ProspectID, tc.request.KPMID, accessToken).Return(tc.customerDetailResponse, tc.errCustomerDetail)
 			mockUsecase.On("CheckBannedChassisNumber", mock.Anything).Return(tc.resCheckBannedChassisNumber, tc.errCheckBannedChassisNumber)
 			mockUsecase.On("CheckAgreementChassisNumber", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resAgreementChassisNumber, tc.resCheckAgreementChassisNumber, tc.errCheckAgreementChassisNumber)
 			mockUsecase.On("DupcheckIntegrator", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resDupcheckIntegrator, tc.errDupcheckIntegrator)
@@ -7352,7 +7185,7 @@ func TestSubmission2Wilen(t *testing.T) {
 			mockUsecase.On("Asliri", ctx, mock.Anything, mock.Anything).Return(tc.resAsliri, tc.errAsliri)
 			mockUsecase.On("Ktp", ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.resKtp, tc.errKtp)
 			mockUsecase.On("Scorepro", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resScsScorepro, tc.resScorepro, tc.resPefindoIDX, tc.errorScorepro)
-			mockUsecase.On("GetLTV", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetLTV, tc.resAdjustTenorGetLTV, tc.errGetLTV)
+			mockUsecase.On("GetLTV", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resGetLTV, tc.resAdjustTenorGetLTV, tc.errGetLTV)
 			mockUsecase.On("MarsevGetLoanAmount", ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.resMarsevGetLoanAmount, tc.errMarsevGetLoanAmount)
 			mockUsecase.On("MDMGetMasterAsset", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resMDMGetMasterAsset, tc.errMDMGetMasterAsset)
 			mockUsecase.On("MarsevGetMarketingProgram", ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.resMarsevGetMarketingProgram, tc.errMarsevGetMarketingProgram)

@@ -1296,6 +1296,9 @@ type MappingElaborateLTV struct {
 	TotalBakiDebetStart int    `gorm:"column:total_baki_debet_start"`
 	TotalBakiDebetEnd   int    `gorm:"column:total_baki_debet_end"`
 	TenorStart          int    `gorm:"column:tenor_start"`
+	GradeBranch         string `gorm:"column:grade_branch"`
+	PbkScore            string `gorm:"column:pbk_score"`
+	StatusKonsumen      string `gorm:"column:status_konsumen"`
 	TenorEnd            int    `gorm:"column:tenor_end"`
 	BPKBNameType        int    `gorm:"column:bpkb_name_type"`
 	AgeVehicle          string `gorm:"type:varchar(5);column:age_vehicle"`
@@ -1317,6 +1320,40 @@ type TrxElaborateLTV struct {
 
 func (c *TrxElaborateLTV) TableName() string {
 	return "trx_elaborate_ltv"
+}
+
+type MappingPBKScoreGrade struct {
+	ID         int       `gorm:"column:id"`
+	Score      string    `gorm:"column:score"`
+	GradeRisk  int       `gorm:"column:grade_risk"`
+	GradeScore string    `gorm:"column:grade_score"`
+	CreatedAt  time.Time `gorm:"column:created_at"`
+	CreatedBy  string    `gorm:"column:created_by"`
+	UpdatedAt  time.Time `gorm:"column:updated_at"`
+	UpdatedBy  string    `gorm:"column:updated_by"`
+	DeletedAt  time.Time `gorm:"column:deleted_at"`
+	DeletedBy  string    `gorm:"column:deleted_by"`
+}
+
+func (c *MappingPBKScoreGrade) TableName() string {
+	return "m_mapping_pbk_grade"
+}
+
+type MappingBranchByPBKScore struct {
+	ID          int       `gorm:"column:id"`
+	BranchID    string    `gorm:"column:branch_id"`
+	Score       string    `gorm:"column:score"`
+	GradeBranch string    `gorm:"column:grade_branch"`
+	CreatedAt   time.Time `gorm:"column:created_at"`
+	CreatedBy   string    `gorm:"column:created_by"`
+	UpdatedAt   time.Time `gorm:"column:updated_at"`
+	UpdatedBy   string    `gorm:"column:updated_by"`
+	DeletedAt   time.Time `gorm:"column:deleted_at"`
+	DeletedBy   string    `gorm:"column:deleted_by"`
+}
+
+func (c *MappingBranchByPBKScore) TableName() string {
+	return "m_mapping_branch"
 }
 
 type TrxHistoryApprovalScheme struct {
