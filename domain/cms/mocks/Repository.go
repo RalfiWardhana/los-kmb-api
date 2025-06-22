@@ -167,6 +167,96 @@ func (_m *Repository) GetApprovalReason(req request.ReqApprovalReason, paginatio
 	return r0, r1, r2
 }
 
+// GetBulkCustomerPhotos provides a mock function with given fields: prospectIDs
+func (_m *Repository) GetBulkCustomerPhotos(prospectIDs []string) (map[string][]entity.DataPhoto, error) {
+	ret := _m.Called(prospectIDs)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBulkCustomerPhotos")
+	}
+
+	var r0 map[string][]entity.DataPhoto
+	var r1 error
+	if rf, ok := ret.Get(0).(func([]string) (map[string][]entity.DataPhoto, error)); ok {
+		return rf(prospectIDs)
+	}
+	if rf, ok := ret.Get(0).(func([]string) map[string][]entity.DataPhoto); ok {
+		r0 = rf(prospectIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string][]entity.DataPhoto)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func([]string) error); ok {
+		r1 = rf(prospectIDs)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetBulkHistoryApproval provides a mock function with given fields: prospectIDs
+func (_m *Repository) GetBulkHistoryApproval(prospectIDs []string) (map[string][]entity.HistoryApproval, error) {
+	ret := _m.Called(prospectIDs)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBulkHistoryApproval")
+	}
+
+	var r0 map[string][]entity.HistoryApproval
+	var r1 error
+	if rf, ok := ret.Get(0).(func([]string) (map[string][]entity.HistoryApproval, error)); ok {
+		return rf(prospectIDs)
+	}
+	if rf, ok := ret.Get(0).(func([]string) map[string][]entity.HistoryApproval); ok {
+		r0 = rf(prospectIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string][]entity.HistoryApproval)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func([]string) error); ok {
+		r1 = rf(prospectIDs)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetBulkSurveyorData provides a mock function with given fields: prospectIDs
+func (_m *Repository) GetBulkSurveyorData(prospectIDs []string) (map[string][]entity.TrxSurveyor, error) {
+	ret := _m.Called(prospectIDs)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBulkSurveyorData")
+	}
+
+	var r0 map[string][]entity.TrxSurveyor
+	var r1 error
+	if rf, ok := ret.Get(0).(func([]string) (map[string][]entity.TrxSurveyor, error)); ok {
+		return rf(prospectIDs)
+	}
+	if rf, ok := ret.Get(0).(func([]string) map[string][]entity.TrxSurveyor); ok {
+		r0 = rf(prospectIDs)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[string][]entity.TrxSurveyor)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func([]string) error); ok {
+		r1 = rf(prospectIDs)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetCancelReason provides a mock function with given fields: pagination
 func (_m *Repository) GetCancelReason(pagination interface{}) ([]entity.CancelReason, int, error) {
 	ret := _m.Called(pagination)
@@ -232,6 +322,117 @@ func (_m *Repository) GetCustomerPhoto(prospectID string) ([]entity.DataPhoto, e
 	}
 
 	return r0, r1
+}
+
+// GetDatatableApproval provides a mock function with given fields: req, pagination
+func (_m *Repository) GetDatatableApproval(req request.ReqInquiryApproval, pagination interface{}) ([]entity.ListDatatableApproval, int, error) {
+	ret := _m.Called(req, pagination)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetDatatableApproval")
+	}
+
+	var r0 []entity.ListDatatableApproval
+	var r1 int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(request.ReqInquiryApproval, interface{}) ([]entity.ListDatatableApproval, int, error)); ok {
+		return rf(req, pagination)
+	}
+	if rf, ok := ret.Get(0).(func(request.ReqInquiryApproval, interface{}) []entity.ListDatatableApproval); ok {
+		r0 = rf(req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.ListDatatableApproval)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(request.ReqInquiryApproval, interface{}) int); ok {
+		r1 = rf(req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	if rf, ok := ret.Get(2).(func(request.ReqInquiryApproval, interface{}) error); ok {
+		r2 = rf(req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// GetDatatableCa provides a mock function with given fields: req, pagination
+func (_m *Repository) GetDatatableCa(req request.ReqInquiryCa, pagination interface{}) ([]entity.ListDatatableCa, int, error) {
+	ret := _m.Called(req, pagination)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetDatatableCa")
+	}
+
+	var r0 []entity.ListDatatableCa
+	var r1 int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(request.ReqInquiryCa, interface{}) ([]entity.ListDatatableCa, int, error)); ok {
+		return rf(req, pagination)
+	}
+	if rf, ok := ret.Get(0).(func(request.ReqInquiryCa, interface{}) []entity.ListDatatableCa); ok {
+		r0 = rf(req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.ListDatatableCa)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(request.ReqInquiryCa, interface{}) int); ok {
+		r1 = rf(req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	if rf, ok := ret.Get(2).(func(request.ReqInquiryCa, interface{}) error); ok {
+		r2 = rf(req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// GetDatatablePrescreening provides a mock function with given fields: req, pagination
+func (_m *Repository) GetDatatablePrescreening(req request.ReqInquiryPrescreening, pagination interface{}) ([]entity.ListDatatablePrescreening, int, error) {
+	ret := _m.Called(req, pagination)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetDatatablePrescreening")
+	}
+
+	var r0 []entity.ListDatatablePrescreening
+	var r1 int
+	var r2 error
+	if rf, ok := ret.Get(0).(func(request.ReqInquiryPrescreening, interface{}) ([]entity.ListDatatablePrescreening, int, error)); ok {
+		return rf(req, pagination)
+	}
+	if rf, ok := ret.Get(0).(func(request.ReqInquiryPrescreening, interface{}) []entity.ListDatatablePrescreening); ok {
+		r0 = rf(req, pagination)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.ListDatatablePrescreening)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(request.ReqInquiryPrescreening, interface{}) int); ok {
+		r1 = rf(req, pagination)
+	} else {
+		r1 = ret.Get(1).(int)
+	}
+
+	if rf, ok := ret.Get(2).(func(request.ReqInquiryPrescreening, interface{}) error); ok {
+		r2 = rf(req, pagination)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // GetHistoryApproval provides a mock function with given fields: prospectID
@@ -730,6 +931,45 @@ func (_m *Repository) GetLimitApprovalDeviasi(prospectID string) (entity.Mapping
 	}
 
 	return r0, r1
+}
+
+// GetListBranch provides a mock function with given fields: req
+func (_m *Repository) GetListBranch(req request.ReqListBranch) ([]string, []response.BranchInfo, error) {
+	ret := _m.Called(req)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetListBranch")
+	}
+
+	var r0 []string
+	var r1 []response.BranchInfo
+	var r2 error
+	if rf, ok := ret.Get(0).(func(request.ReqListBranch) ([]string, []response.BranchInfo, error)); ok {
+		return rf(req)
+	}
+	if rf, ok := ret.Get(0).(func(request.ReqListBranch) []string); ok {
+		r0 = rf(req)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]string)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(request.ReqListBranch) []response.BranchInfo); ok {
+		r1 = rf(req)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]response.BranchInfo)
+		}
+	}
+
+	if rf, ok := ret.Get(2).(func(request.ReqListBranch) error); ok {
+		r2 = rf(req)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // GetMappingCluster provides a mock function with given fields:

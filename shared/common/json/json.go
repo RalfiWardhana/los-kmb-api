@@ -340,6 +340,8 @@ func formatMessage(err validator.FieldError) string {
 		message = "accepted:customer_spouse must be null"
 	case constant.TAG_RELATION:
 		message = fmt.Sprintf("accepted:value=%s", common.Relation)
+	case constant.TAG_NOTHML:
+		message = "invalid input: HTML tags are not allowed"
 	}
 	return message
 }

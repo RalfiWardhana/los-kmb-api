@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	cacheMocks "los-kmb-api/domain/cache/mocks"
 	"los-kmb-api/domain/elaborate_ltv/interfaces/mocks"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
@@ -1144,6 +1145,7 @@ func TestElaborate(t *testing.T) {
 			}
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
+			mockCache := new(cacheMocks.Repository)
 
 			mockRepository.On("GetConfig", "expired_contract", "KMB-OFF", "expired_contract_check").Return(tc.expiredContractConfig, tc.errExpiredContractConfig)
 			mockRepository.On("GetFilteringResult", tc.reqs.ProspectID).Return(tc.filteringKMB, tc.errGetGetFilteringResult)
@@ -1153,7 +1155,10 @@ func TestElaborate(t *testing.T) {
 			mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.mappingElaborateLTV, tc.errMapping)
 			mockRepository.On("SaveTrxElaborateLTV", mock.Anything).Return(tc.errSaveTrxElaborateLTV)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			mockCache.On("GetWithExpiration", mock.Anything).Return([]byte{}, errors.New("cache miss"))
+			mockCache.On("SetWithExpiration", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			result, err := usecase.Elaborate(ctx, tc.reqs, accessToken)
 			require.Equal(t, tc.result, result)
