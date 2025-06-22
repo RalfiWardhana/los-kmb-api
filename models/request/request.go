@@ -599,21 +599,22 @@ type Apk struct {
 	PaymentMethod               string   `json:"payment_method" validate:"required,max=2,noHTML" example:"CR"`
 	SurveyFee                   *float64 `json:"survey_fee" validate:"required,max=999999999999,gte=0" example:"0"`
 	IsFidusiaCovered            string   `json:"is_fidusia_covered" validate:"required,len=1" example:"Y"`
-	ProvisionFee                *float64 `json:"provision_fee" validate:"required,max=999999999999,gte=0" example:"2475000"`
-	InsAssetPaidBy              string   `json:"ins_asset_paid_by" validate:"required,noHTML" example:"CU"`
-	InsAssetPeriod              string   `json:"ins_asset_period" validate:"required,noHTML" example:"FT"`
-	EffectiveRate               float64  `json:"effective_rate" validate:"required,max=99,gte=0" example:"26.4"`
-	SalesmanID                  string   `json:"salesman_id" validate:"required,noHTML" example:"81088"`
-	SupplierBankAccountID       string   `json:"supplier_bank_account_id" validate:"required,noHTML" example:"1"`
-	LifeInsuranceCoyBranchID    string   `json:"life_insurance_coy_branch_id" validate:"max=20,noHTML" example:"426"`
-	LifeInsuranceAmountCoverage float64  `json:"life_insurance_amount_coverage" validate:"min=0,max=999999999999,gte=0" example:"105000000"`
-	CommisionSubsidy            float64  `json:"commision_subsidi" validate:"min=0,max=999999999999,gte=0" example:"0"`
-	FinancePurpose              string   `json:"finance_purpose" validate:"required,max=100,noHTML"`
-	Dealer                      string   `json:"dealer" validate:"omitempty,max=50,noHTML"`
-	LoanAmount                  float64  `json:"loan_amount"  validate:"min=0,max=999999999999,gte=0" example:"105000000"`
-	WayOfPayment                string   `json:"way_of_payment" validate:"required,max=2,noHTML" example:"CA"`
-	StampDutyFee                float64  `json:"stamp_duty_fee" validate:"min=0,max=999999999999,gte=0" example:"250000"`
-	AgentFee                    float64  `json:"agent_fee" validate:"min=0,max=999999999999,gte=0" example:"250000"`
+	ProvisionFee                *float64 `json:"provision_fee" validate:"required,max=999999999999" example:"2475000"`
+	InsAssetPaidBy              string   `json:"ins_asset_paid_by" validate:"required" example:"CU"`
+	InsAssetPeriod              string   `json:"ins_asset_period" validate:"required" example:"FT"`
+	EffectiveRate               float64  `json:"effective_rate" validate:"required,max=99" example:"26.4"`
+	SalesmanID                  string   `json:"salesman_id" validate:"required" example:"81088"`
+	SupplierBankAccountID       string   `json:"supplier_bank_account_id" validate:"required" example:"1"`
+	LifeInsuranceCoyBranchID    string   `json:"life_insurance_coy_branch_id" validate:"max=20" example:"426"`
+	LifeInsuranceAmountCoverage float64  `json:"life_insurance_amount_coverage" validate:"max=999999999999" example:"105000000"`
+	UseAdditionalInsurance      bool     `json:"use_additional_insurance" validate:"omitempty"`
+	CommisionSubsidy            float64  `json:"commision_subsidi" validate:"max=999999999999" example:"0"`
+	FinancePurpose              string   `json:"finance_purpose" validate:"required,max=100"`
+	Dealer                      string   `json:"dealer" validate:"omitempty,max=50"`
+	LoanAmount                  float64  `json:"loan_amount"  validate:"max=999999999999" example:"105000000"`
+	WayOfPayment                string   `json:"way_of_payment" validate:"required,max=2" example:"CA"`
+	StampDutyFee                float64  `json:"stamp_duty_fee" validate:"max=999999999999" example:"250000"`
+	AgentFee                    float64  `json:"agent_fee" validate:"max=999999999999" example:"250000"`
 }
 
 type ApkNE struct {
@@ -716,6 +717,8 @@ type Recalculate struct {
 	InterestAmount               float64 `json:"interest_amount" validate:"max=999999999999" example:"66528000"`
 	ProvisionFee                 float64 `json:"provision_fee" validate:"max=999999999999" example:"2475000"`
 	LoanAmount                   float64 `json:"loan_amount" validate:"max=999999999999" example:"105000000"`
+	LifeInsuranceCoyBranchID     string  `json:"life_insurance_coy_branch_id"`
+	UseAdditionalInsurance       bool    `json:"use_additional_insurance"`
 }
 
 type RequestGenerateFormAKKK struct {
