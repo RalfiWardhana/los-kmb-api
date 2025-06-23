@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	cacheMocks "los-kmb-api/domain/cache/mocks"
 	"los-kmb-api/domain/elaborate_ltv/interfaces/mocks"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/models/request"
@@ -29,11 +30,19 @@ func TestElaborate(t *testing.T) {
 		reqs                     request.ElaborateLTV
 		filteringKMB             entity.FilteringKMB
 		errGetGetFilteringResult error
+		expiredContractConfig    entity.AppConfig
+		errExpiredContractConfig error
 		mappingElaborateLTV      []entity.MappingElaborateLTV
 		errMapping               error
 		errSaveTrxElaborateLTV   error
 		result                   response.ElaborateLTV
 		errFinal                 error
+		filteringDetail          []entity.TrxDetailBiro
+		errGetGetFilteringDetail error
+		mappingPBKScoreGrade     []entity.MappingPBKScoreGrade
+		errmappingPBKScoreGrade  error
+		mappingBranch            entity.MappingBranchByPBKScore
+		errmappingBranch         error
 	}{
 		{
 			name: "test elaborate err1",
@@ -276,6 +285,48 @@ func TestElaborate(t *testing.T) {
 				TotalBakiDebetNonCollateralBiro: constant.RANGE_CLUSTER_BAKI_DEBET_REJECT,
 				ScoreBiro:                       "VERY HIGH RISK",
 				CustomerSegment:                 constant.RO_AO_REGULAR,
+			},
+			filteringDetail: []entity.TrxDetailBiro{
+				{
+					ProspectID: "SAL-12345",
+					Score:      "HIGH RISK",
+				},
+				{
+					ProspectID: "SAL-12345",
+					Score:      "VERY HIGH RISK",
+				},
+			},
+			mappingPBKScoreGrade: []entity.MappingPBKScoreGrade{
+				{
+					Score:      "VERY HIGH RISK",
+					GradeRisk:  6,
+					GradeScore: "BAD",
+				},
+				{
+					Score:      "UNSCORE",
+					GradeRisk:  5,
+					GradeScore: "BAD",
+				},
+				{
+					Score:      "HIGH RISK",
+					GradeRisk:  4,
+					GradeScore: "BAD",
+				},
+				{
+					Score:      "AVERAGE RISK",
+					GradeRisk:  3,
+					GradeScore: "BAD",
+				},
+				{
+					Score:      "LOW RISK",
+					GradeRisk:  2,
+					GradeScore: "BAD",
+				},
+				{
+					Score:      "VERY LOW RISK",
+					GradeRisk:  1,
+					GradeScore: "BAD",
+				},
 			},
 			mappingElaborateLTV: []entity.MappingElaborateLTV{
 				{
@@ -841,17 +892,273 @@ func TestElaborate(t *testing.T) {
 				MaxTenor:    36,
 			},
 		},
+		{
+			name: "test elaborate rrd null error",
+			reqs: request.ElaborateLTV{
+				ProspectID:        "SAL-TST0020230809011",
+				Tenor:             36,
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        constant.DECISION_REJECT,
+				CMOCluster:                      "Cluster E",
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: constant.RANGE_CLUSTER_BAKI_DEBET_REJECT,
+				ScoreBiro:                       "HIGH RISK",
+				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_PRIORITY,
+				CustomerStatus:                  constant.STATUS_KONSUMEN_RO,
+			},
+			errFinal: errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty"),
+		},
+		{
+			name: "test elaborate rrd parse error",
+			reqs: request.ElaborateLTV{
+				ProspectID:        "SAL-TST0020230809011",
+				Tenor:             36,
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        constant.DECISION_REJECT,
+				CMOCluster:                      "Cluster E",
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: constant.RANGE_CLUSTER_BAKI_DEBET_REJECT,
+				ScoreBiro:                       "HIGH RISK",
+				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_PRIORITY,
+				CustomerStatus:                  constant.STATUS_KONSUMEN_RO,
+				RrdDate:                         "2024-06-09 13:45:00",
+			},
+			errFinal: errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of RrdDate (2024-06-09 13:45:00)"),
+		},
+		{
+			name: "test elaborate rrd negative error",
+			reqs: request.ElaborateLTV{
+				ProspectID:        "SAL-TST0020230809011",
+				Tenor:             36,
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        constant.DECISION_REJECT,
+				CMOCluster:                      "Cluster E",
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: constant.RANGE_CLUSTER_BAKI_DEBET_REJECT,
+				ScoreBiro:                       "HIGH RISK",
+				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_PRIORITY,
+				CustomerStatus:                  constant.STATUS_KONSUMEN_RO,
+				RrdDate:                         time.Now().Format(time.RFC3339),
+				CreatedAt:                       time.Now().Add(-24 * time.Hour),
+			},
+			errFinal: errors.New(constant.ERROR_UPSTREAM + " - Difference of months RrdDate and CreatedAt is negative (-)"),
+		},
+		{
+			name: "test elaborate get config error",
+			reqs: request.ElaborateLTV{
+				ProspectID:        "SAL-TST0020230809011",
+				Tenor:             36,
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        constant.DECISION_REJECT,
+				CMOCluster:                      "Cluster E",
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: constant.RANGE_CLUSTER_BAKI_DEBET_REJECT,
+				ScoreBiro:                       "HIGH RISK",
+				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_PRIORITY,
+				CustomerStatus:                  constant.STATUS_KONSUMEN_RO,
+				RrdDate:                         "2024-05-14T13:45:00Z",
+				CreatedAt:                       time.Now(),
+			},
+			errExpiredContractConfig: errors.New("error"),
+			errFinal:                 errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error"),
+		},
+		{
+			name: "test elaborate get config ok",
+			reqs: request.ElaborateLTV{
+				ProspectID:        "SAL-TST0020230809011",
+				Tenor:             36,
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        constant.DECISION_REJECT,
+				CMOCluster:                      "Cluster E",
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: constant.RANGE_CLUSTER_BAKI_DEBET_REJECT,
+				ScoreBiro:                       "HIGH RISK",
+				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_PRIORITY,
+				CustomerStatus:                  constant.STATUS_KONSUMEN_RO,
+				RrdDate:                         time.Now().AddDate(0, -7, 0).Format(time.RFC3339),
+				CreatedAt:                       time.Now(),
+				MaxOverdueBiro:                  int64(50),
+				MaxOverdueLast12monthsBiro:      int64(100),
+			},
+			expiredContractConfig: entity.AppConfig{
+				Value: `{ "data": { "expired_contract_check_enabled": true, "expired_contract_max_months": 6 } }`,
+			},
+		},
+		{
+			name: "test elaborate tahun kendaraan error",
+			reqs: request.ElaborateLTV{
+				ProspectID:        "SAL-TST0020230809011",
+				Tenor:             36,
+				ManufacturingYear: "90",
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        constant.DECISION_REJECT,
+				CMOCluster:                      "Cluster E",
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: constant.RANGE_CLUSTER_BAKI_DEBET_REJECT,
+				ScoreBiro:                       "HIGH RISK",
+				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_PRIORITY,
+			},
+			errFinal: errors.New(constant.ERROR_BAD_REQUEST + " - Format tahun kendaraan tidak sesuai"),
+		},
+		{
+			name: "test elaborate baki debet error",
+			reqs: request.ElaborateLTV{
+				ProspectID:        "SAL-TST0020230809011",
+				Tenor:             36,
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        constant.DECISION_REJECT,
+				CMOCluster:                      "Cluster E",
+				NextProcess:                     1,
+				ScoreBiro:                       "HIGH RISK",
+				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_PRIORITY,
+				TotalBakiDebetNonCollateralBiro: "ini error",
+			},
+			errFinal: errors.New(constant.ERROR_UPSTREAM + " baki debet strconv.ParseFloat: parsing \"ini error\": invalid syntax"),
+		},
+		{
+			name: "test elaborate OverrideFlowLikeRegular ok",
+			reqs: request.ElaborateLTV{
+				ProspectID:        "SAL-TST0020230809011",
+				Tenor:             36,
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        constant.DECISION_REJECT,
+				CMOCluster:                      "Cluster E",
+				NextProcess:                     1,
+				TotalBakiDebetNonCollateralBiro: 19999999,
+				ScoreBiro:                       "HIGH RISK",
+				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_PRIORITY,
+				CustomerStatus:                  constant.STATUS_KONSUMEN_RO,
+				RrdDate:                         time.Now().AddDate(0, -7, 0).Format(time.RFC3339),
+				CreatedAt:                       time.Now(),
+				MaxOverdueBiro:                  int64(50),
+				MaxOverdueLast12monthsBiro:      int64(100),
+			},
+			expiredContractConfig: entity.AppConfig{
+				Value: `{ "data": { "expired_contract_check_enabled": true, "expired_contract_max_months": 6 } }`,
+			},
+		},
+		{
+			name: "test elaborate filtering detail error",
+			reqs: request.ElaborateLTV{
+				ProspectID:        "SAL-TST0020230809011",
+				Tenor:             36,
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        constant.DECISION_REJECT,
+				CMOCluster:                      "Cluster E",
+				NextProcess:                     1,
+				ScoreBiro:                       "HIGH RISK",
+				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_PRIORITY,
+				TotalBakiDebetNonCollateralBiro: constant.RANGE_CLUSTER_BAKI_DEBET_REJECT,
+			},
+			errGetGetFilteringDetail: errors.New("bad"),
+			errFinal:                 errors.New(constant.ERROR_UPSTREAM + " - GetFilteringDetail error - bad"),
+		},
+		{
+			name: "test elaborate pbk grade error",
+			reqs: request.ElaborateLTV{
+				ProspectID:        "SAL-TST0020230809011",
+				Tenor:             36,
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        constant.DECISION_REJECT,
+				CMOCluster:                      "Cluster E",
+				NextProcess:                     1,
+				ScoreBiro:                       "HIGH RISK",
+				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_PRIORITY,
+				TotalBakiDebetNonCollateralBiro: constant.RANGE_CLUSTER_BAKI_DEBET_REJECT,
+			},
+			filteringDetail: []entity.TrxDetailBiro{
+				{
+					ProspectID: "SAL-12345",
+					Score:      "HIGH RISK",
+				},
+				{
+					ProspectID: "SAL-12345",
+					Score:      "VERY HIGH RISK",
+				},
+			},
+			errmappingPBKScoreGrade: errors.New("bad"),
+			errFinal:                errors.New(constant.ERROR_UPSTREAM + " - GetMappingPBKScoreGrade error - bad"),
+		},
+		{
+			name: "test elaborate mapping branch error",
+			reqs: request.ElaborateLTV{
+				ProspectID:        "SAL-TST0020230809011",
+				Tenor:             36,
+				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
+			},
+			filteringKMB: entity.FilteringKMB{
+				Decision:                        constant.DECISION_REJECT,
+				CMOCluster:                      "Cluster E",
+				NextProcess:                     1,
+				ScoreBiro:                       "HIGH RISK",
+				BpkbName:                        "K",
+				CustomerSegment:                 constant.RO_AO_PRIORITY,
+				TotalBakiDebetNonCollateralBiro: constant.RANGE_CLUSTER_BAKI_DEBET_REJECT,
+			},
+			filteringDetail: []entity.TrxDetailBiro{
+				{
+					ProspectID: "SAL-12345",
+					Score:      "HIGH RISK",
+				},
+				{
+					ProspectID: "SAL-12345",
+					Score:      "VERY HIGH RISK",
+				},
+			},
+			errmappingBranch: errors.New("bad"),
+			errFinal:         errors.New(constant.ERROR_UPSTREAM + " - GetMappingBranchPBK error - bad"),
+		},
 	}
 	for _, tc := range testcases {
 		t.Run(tc.name, func(t *testing.T) {
+			if tc.filteringKMB.CustomerStatus == nil {
+				tc.filteringKMB.CustomerStatus = "NEW"
+			}
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
+			mockCache := new(cacheMocks.Repository)
 
+			mockRepository.On("GetConfig", "expired_contract", "KMB-OFF", "expired_contract_check").Return(tc.expiredContractConfig, tc.errExpiredContractConfig)
 			mockRepository.On("GetFilteringResult", tc.reqs.ProspectID).Return(tc.filteringKMB, tc.errGetGetFilteringResult)
-			mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything).Return(tc.mappingElaborateLTV, tc.errMapping)
+			mockRepository.On("GetFilteringDetail", tc.reqs.ProspectID).Return(tc.filteringDetail, tc.errGetGetFilteringDetail)
+			mockRepository.On("GetMappingPBKScoreGrade").Return(tc.mappingPBKScoreGrade, tc.errmappingPBKScoreGrade)
+			mockRepository.On("GetMappingBranchPBK", mock.Anything, mock.Anything).Return(tc.mappingBranch, tc.errmappingBranch)
+			mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.mappingElaborateLTV, tc.errMapping)
 			mockRepository.On("SaveTrxElaborateLTV", mock.Anything).Return(tc.errSaveTrxElaborateLTV)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient)
+			mockCache.On("GetWithExpiration", mock.Anything).Return([]byte{}, errors.New("cache miss"))
+			mockCache.On("SetWithExpiration", mock.Anything, mock.Anything, mock.Anything).Return(nil)
+
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			result, err := usecase.Elaborate(ctx, tc.reqs, accessToken)
 			require.Equal(t, tc.result, result)

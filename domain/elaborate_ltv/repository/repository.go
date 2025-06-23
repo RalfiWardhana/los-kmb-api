@@ -80,7 +80,7 @@ func (r repoHandler) GetFilteringResult(prospectID string) (filtering entity.Fil
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.NewKmb.Raw("SELECT bpkb_name, customer_status, decision, next_process, max_overdue_biro, max_overdue_last12months_biro, customer_segment, total_baki_debet_non_collateral_biro, score_biro, cluster, cmo_cluster, FORMAT(rrd_date, 'yyyy-MM-ddTHH:mm:ss') + 'Z' AS rrd_date, created_at FROM trx_filtering WITH (nolock) WHERE prospect_id = ?", prospectID).Scan(&filtering).Error; err != nil {
+	if err = r.NewKmb.Raw("SELECT branch_id, bpkb_name, customer_status, decision, next_process, max_overdue_biro, max_overdue_last12months_biro, customer_segment, total_baki_debet_non_collateral_biro, score_biro, cluster, cmo_cluster, FORMAT(rrd_date, 'yyyy-MM-ddTHH:mm:ss') + 'Z' AS rrd_date, created_at FROM trx_filtering WITH (nolock) WHERE prospect_id = ?", prospectID).Scan(&filtering).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			err = errors.New(constant.RECORD_NOT_FOUND)
 		}
@@ -90,7 +90,7 @@ func (r repoHandler) GetFilteringResult(prospectID string) (filtering entity.Fil
 	return
 }
 
-func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster string) (data []entity.MappingElaborateLTV, err error) {
+func (r repoHandler) GetFilteringDetail(prospectID string) (filtering []entity.TrxDetailBiro, err error) {
 	var x sql.TxOptions
 
 	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
@@ -101,7 +101,70 @@ func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster string) (data
 	db := r.NewKmb.BeginTx(ctx, &x)
 	defer db.Commit()
 
-	if err = r.NewKmb.Raw("SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE result_pefindo = ? AND cluster = ? ", resultPefindo, cluster).Scan(&data).Error; err != nil {
+	if err = db.Raw("SELECT prospect_id, score FROM trx_detail_biro WITH (nolock) WHERE prospect_id = ?", prospectID).Scan(&filtering).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetMappingPBKScoreGrade() (mappingPBKScoreGrade []entity.MappingPBKScoreGrade, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = db.Raw("SELECT score, grade_risk, grade_score FROM m_mapping_pbk_grade WITH (nolock) WHERE deleted_at IS NULL").Scan(&mappingPBKScoreGrade).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetMappingBranchPBK(branchID string, gradePBK string) (mappingBranchByPBKScore entity.MappingBranchByPBKScore, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = db.Raw("SELECT branch_id, score, grade_branch FROM m_mapping_branch mmb WHERE deleted_at IS NULL AND  branch_id = ? AND score = ?", branchID, gradePBK).Scan(&mappingBranchByPBKScore).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = errors.New(constant.RECORD_NOT_FOUND)
+		}
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster string, bpkb_name_type int, customerStatus, gradePBK, gradeBranch string) (data []entity.MappingElaborateLTV, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(config.Env("DEFAULT_TIMEOUT_10S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = r.NewKmb.Raw(fmt.Sprintf("SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE deleted_at IS NULL AND result_pefindo = '%s' AND cluster = '%s' AND bpkb_name_type = %d AND status_konsumen IN ('ALL','%s') AND pbk_score IN ('ALL','%s') AND grade_branch IN ('ALL','%s')", resultPefindo, cluster, bpkb_name_type, customerStatus, gradePBK, gradeBranch)).Scan(&data).Error; err != nil {
 		return
 	}
 	return
