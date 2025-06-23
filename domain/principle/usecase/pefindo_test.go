@@ -3981,7 +3981,7 @@ func TestPefindo(t *testing.T) {
 				Category:                      float64(1),
 				MaxOverdueKORules:             float64(0),
 				MaxOverdueLast12MonthsKORules: float64(0),
-				NumberOfInquiriesLast1Month:   int(11),
+				NumberOfInquiriesLast1Month:   float64(11),
 				NewKoRules: response.ResultNewKoRules{
 					CategoryPBK:       "restructure",
 					ContractCode:      "1070007119003",
