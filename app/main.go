@@ -250,7 +250,7 @@ func main() {
 	// define new kmb elaborate domain
 	cacheRepository := cacheRepository.NewRepository(cache)
 	newElaborateLTVRepo := elaborateLTVRepository.NewRepository(kpLos, kpLosLogs, newKMB)
-	newElaborateLTVUsecase := elaborateLTVUsecase.NewUsecase(newElaborateLTVRepo, httpClient, cacheRepository)
+	newElaborateLTVUsecase := elaborateLTVUsecase.NewUsecase(newElaborateLTVRepo, httpClient)
 	elaborateLTVDelivery.ElaborateHandler(apiGroupv3, newElaborateLTVUsecase, newElaborateLTVRepo, authorization, jsonResponse, accessToken, authPlatform)
 
 	// define new kmb cms
