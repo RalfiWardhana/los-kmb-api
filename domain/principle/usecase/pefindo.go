@@ -89,8 +89,13 @@ func (u usecase) Pefindo(ctx context.Context, r request.Pefindo, customerStatus,
 	if checkPefindo.Code == strconv.Itoa(http.StatusOK) && pefindoResult.Score != constant.PEFINDO_UNSCORE {
 		isRejectPefindo := false
 		// check inquiry pbk
+		var inquiriesLast1Month int
+		if pefindoResult.NumberOfInquiriesLast1Month != nil {
+			inquiriesLast1Month = int(pefindoResult.NumberOfInquiriesLast1Month.(float64))
+		}
+
 		primePriority, _ := utils.ItemExists(customerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
-		if (!((customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO) && primePriority) || isOverrideFlowLikeRegular) && pefindoResult.InquiriesLast1Month > 10 {
+		if (!((customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO) && primePriority) || isOverrideFlowLikeRegular) && inquiriesLast1Month > 10 {
 			data.Code = constant.CODE_REJECT_INQUIRY_1MONTHS
 			data.Reason = constant.REASON_INQUIRY_1MONTHS
 			isRejectPefindo = true
