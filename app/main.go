@@ -169,8 +169,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	e.Use(middleware.BodyDumpWithConfig(middlewares.NewBodyDumpMiddleware(newKMB).BodyDumpConfig()))
-
 	common.SetDB(newKMB)
 
 	var cache *bigcache.BigCache
@@ -241,6 +239,7 @@ func main() {
 	platformCache := platformcache.NewPlatformCache()
 
 	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
+	e.Use(middleware.BodyDumpWithConfig(middlewares.NewBodyDumpMiddleware(newKMB, producer).BodyDumpConfig()))
 
 	// define new kmb filtering domain
 	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs, newKMB)
@@ -249,12 +248,12 @@ func main() {
 	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken, producer, platformCache, authPlatform)
 
 	// define new kmb elaborate domain
+	cacheRepository := cacheRepository.NewRepository(cache)
 	newElaborateLTVRepo := elaborateLTVRepository.NewRepository(kpLos, kpLosLogs, newKMB)
 	newElaborateLTVUsecase := elaborateLTVUsecase.NewUsecase(newElaborateLTVRepo, httpClient)
 	elaborateLTVDelivery.ElaborateHandler(apiGroupv3, newElaborateLTVUsecase, newElaborateLTVRepo, authorization, jsonResponse, accessToken, authPlatform)
 
 	// define new kmb cms
-	cacheRepository := cacheRepository.NewRepository(cache)
 	cmsRepositories := cmsRepository.NewRepository(core, confins, newKMB, kpLos, kpLosLogs)
 	cmsUsecases := cmsUsecase.NewUsecase(cmsRepositories, httpClient, cacheRepository)
 	cmsDelivery.CMSHandler(apiGroupv3, cmsUsecases, cmsRepositories, jsonResponse, producer, libResponse, accessToken)

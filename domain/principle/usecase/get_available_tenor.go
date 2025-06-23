@@ -26,6 +26,11 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 		bakiDebet     float64
 	)
 
+	mdmGetDetailCustomerKPMRes, err := u.usecase.MDMGetDetailCustomerKPM(ctx, req.ProspectID, req.KPMID, accessToken)
+	if err != nil {
+		return
+	}
+
 	config, err := u.repository.GetConfig(constant.GROUP_2WILEN, "KMB-OFF", constant.KEY_PPID_SIMULASI)
 	if err != nil {
 		return
@@ -48,7 +53,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 	}
 
 	// get data customer
-	dataCustomer, err := u.usecase.DupcheckIntegrator(ctx, req.ProspectID, req.IDNumber, req.LegalName, req.BirthDate, req.SurgateMotherName, accessToken)
+	dataCustomer, err := u.usecase.DupcheckIntegrator(ctx, req.ProspectID, mdmGetDetailCustomerKPMRes.Data.Customer.IdNumber, mdmGetDetailCustomerKPMRes.Data.Customer.LegalName, mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate, mdmGetDetailCustomerKPMRes.Data.Customer.SurgateMotherName, accessToken)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get Data Customer Error")
 		return data, err
@@ -248,7 +253,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 			Otr:                    otr,
 			RegionCode:             mappingLicensePlate.AreaID,
 			AssetCategory:          categoryId,
-			CustomerBirthDate:      req.BirthDate,
+			CustomerBirthDate:      mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate,
 		}
 
 		var marsevCalculateInstallmentRes response.MarsevCalculateInstallmentResponse
@@ -261,11 +266,49 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 			return data, nil
 		}
 
+		detailTrxBiro, err := u.repository.GetTrxDetailBIro(req.ProspectID)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get Trx Detail Biro Error")
+			return data, err
+		}
+
+		scores := make([]string, 0)
+		for _, v := range detailTrxBiro {
+			scores = append(scores, v.Score)
+		}
+
+		pbkScore := "GOOD"
+		if !isSimulasi {
+			pbkScoreMapping, err := u.repository.GetMappingPbkScore(scores)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Pbk Score Error")
+				return data, err
+			}
+
+			pbkScore = pbkScoreMapping.GradeScore
+			if pbkScoreMapping.GradeScore == "" {
+				pbkScore = "NO HIT"
+			}
+		}
+
+		branch, err := u.repository.GetMappingBranchByBranchID(req.BranchID, pbkScore)
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Branch Error")
+			return data, err
+		}
+
+		var bpkbNameType int
+		if strings.Contains(os.Getenv("NAMA_SAMA"), req.BPKBNameType) {
+			bpkbNameType = 1
+		}
+
+		customerStatus := dataCustomer.CustomerStatus
+
 		var mappingElaborateLTV []entity.MappingElaborateLTV
-		mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, clusterCMO)
+		mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, clusterCMO, branch.GradeBranch, customerStatus, pbkScore, bpkbNameType)
 		if err != nil {
 			err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
-			return
+			return data, err
 		}
 
 		var (
@@ -295,7 +338,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 					}
 				}
 
-				ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet, isSimulasi)
+				ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet, isSimulasi, pbkScore, customerStatus, branch.GradeBranch)
 				if err != nil {
 					errChan <- err
 					return

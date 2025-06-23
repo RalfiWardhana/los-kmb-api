@@ -47,6 +47,15 @@ func TestCheckNokaNosin(t *testing.T) {
 		expectSavePrincipleStepOne   bool
 	}{
 		{
+			name: "exceed max error step one",
+			request: request.PrincipleAsset{
+				ProspectID: "SAL-123",
+				KPMID:      1234,
+			},
+			resExceedErrorStepOne: 3,
+			err:                   errors.New(constant.ERROR_MAX_EXCEED),
+		},
+		{
 			name: "error get agreement chassis number",
 			request: request.PrincipleAsset{
 				ProspectID: "SAL-123",
@@ -171,6 +180,7 @@ func TestCheckNokaNosin(t *testing.T) {
 				IDNumber:       "7612379",
 				NoChassis:      "123",
 				SpouseIDNumber: "161234339",
+				ResidencePhone: "1234567891011",
 			},
 			resAgreementChasisNumberCode: 200,
 			resAgreementChasisNumberBody: `{"code":"OK","message":"operasi berhasil dieksekusi.","data":
@@ -198,31 +208,33 @@ func TestCheckNokaNosin(t *testing.T) {
 
 			mockRepository.On("ExceedErrorStepOne", tc.request.KPMID).Return(tc.resExceedErrorStepOne)
 
-			rst := resty.New()
-			httpmock.ActivateNonDefault(rst.GetClient())
-			defer httpmock.DeactivateAndReset()
+			if tc.resExceedErrorStepOne < 3 {
 
-			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL"), httpmock.NewStringResponder(tc.resAgreementChasisNumberCode, tc.resAgreementChasisNumberBody))
-			resp, _ := rst.R().Post(os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL"))
-
-			mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+tc.request.NoChassis, []byte(nil), map[string]string{}, constant.METHOD_GET, true, 6, 60, tc.request.ProspectID, accessToken).Return(resp, tc.errAgreementChasisNumber)
-
-			if tc.expectGetMasterBranchCMO {
-				rst2 := resty.New()
-				httpmock.ActivateNonDefault(rst2.GetClient())
+				rst := resty.New()
+				httpmock.ActivateNonDefault(rst.GetClient())
 				defer httpmock.DeactivateAndReset()
 
-				httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("MDM_MASTER_MAPPING_BRANCH_EMPLOYEE_URL"), httpmock.NewStringResponder(tc.resGetMasterBranchCMOCode, tc.resGetMasterBranchCMOBody))
-				resp2, _ := rst2.R().Get(os.Getenv("MDM_MASTER_MAPPING_BRANCH_EMPLOYEE_URL"))
+				httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL"), httpmock.NewStringResponder(tc.resAgreementChasisNumberCode, tc.resAgreementChasisNumberBody))
+				resp, _ := rst.R().Post(os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL"))
 
-				mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("MDM_MASTER_MAPPING_BRANCH_EMPLOYEE_URL")+"?lob_id="+strconv.Itoa(constant.LOBID_KMB)+"&branch_id="+tc.request.BranchID, []byte(nil), map[string]string{"Authorization": "", "Content-Type": "application/json"}, constant.METHOD_GET, false, 0, 0, tc.request.ProspectID, accessToken).Return(resp2, tc.errGetMasterBranchCMO)
+				mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("AGREEMENT_OF_CHASSIS_NUMBER_URL")+tc.request.NoChassis, []byte(nil), map[string]string{}, constant.METHOD_GET, true, 6, 60, tc.request.ProspectID, accessToken).Return(resp, tc.errAgreementChasisNumber)
+
+				if tc.expectGetMasterBranchCMO {
+					rst2 := resty.New()
+					httpmock.ActivateNonDefault(rst2.GetClient())
+					defer httpmock.DeactivateAndReset()
+
+					httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("MDM_MASTER_MAPPING_BRANCH_EMPLOYEE_URL"), httpmock.NewStringResponder(tc.resGetMasterBranchCMOCode, tc.resGetMasterBranchCMOBody))
+					resp2, _ := rst2.R().Get(os.Getenv("MDM_MASTER_MAPPING_BRANCH_EMPLOYEE_URL"))
+
+					mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("MDM_MASTER_MAPPING_BRANCH_EMPLOYEE_URL")+"?lob_id="+strconv.Itoa(constant.LOBID_KMB)+"&branch_id="+tc.request.BranchID, []byte(nil), map[string]string{"Authorization": "", "Content-Type": "application/json"}, constant.METHOD_GET, false, 0, 0, tc.request.ProspectID, accessToken).Return(resp2, tc.errGetMasterBranchCMO)
+				}
+
+				if tc.expectSavePrincipleStepOne {
+					mockRepository.On("SavePrincipleStepOne", mock.AnythingOfType("entity.TrxPrincipleStepOne")).Return(nil).Once()
+					mockPlatformEvent.On("PublishEvent", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, 0).Return(nil).Once()
+				}
 			}
-
-			if tc.expectSavePrincipleStepOne {
-				mockRepository.On("SavePrincipleStepOne", mock.AnythingOfType("entity.TrxPrincipleStepOne")).Return(nil).Once()
-				mockPlatformEvent.On("PublishEvent", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, 0).Return(nil).Once()
-			}
-
 			usecase := NewUsecase(mockRepository, mockHttpClient, platformEvent)
 
 			result, err := usecase.CheckNokaNosin(ctx, tc.request)

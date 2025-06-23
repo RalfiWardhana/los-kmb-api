@@ -386,20 +386,52 @@ func (r repoHandler) GetFilteringResult(prospectID string) (filtering entity.Fil
 	return
 }
 
-func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster string) (data []entity.MappingElaborateLTV, err error) {
-	var x sql.TxOptions
+func (r repoHandler) GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore string, bpkbNameType int) (data []entity.MappingElaborateLTV, err error) {
+	extraWhere := ""
+	args := []any{
+		resultPefindo,
+		cluster,
+	}
+	if gradeBranch != "" {
+		extraWhere += "AND grade_branch IN ('ALL', ?)"
+		args = append(args, gradeBranch)
+	}
 
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_10S"))
+	if customerStatus != "" {
+		extraWhere += " AND status_konsumen IN ('ALL', ?)"
+		args = append(args, customerStatus)
+	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
+	if pbkScore != "" {
+		extraWhere += " AND pbk_score IN ('ALL', ?)"
+		args = append(args, pbkScore)
+	}
 
-	db := r.newKmb.BeginTx(ctx, &x)
-	defer db.Commit()
+	extraWhere += " AND bpkb_name_type = ?"
+	args = append(args, bpkbNameType)
 
-	if err = r.newKmb.Raw("SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE result_pefindo = ? AND cluster = ? ", resultPefindo, cluster).Scan(&data).Error; err != nil {
+	if err = r.newKmb.Raw(fmt.Sprintf("SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE deleted_at IS NULL AND result_pefindo = ? AND cluster = ? %s ", extraWhere), args...).Scan(&data).Error; err != nil {
 		return
 	}
+	return
+}
+
+func (r *repoHandler) GetMappingBranchByBranchID(branchID string, pbkScore string) (data entity.MappingBranchByPBKScore, err error) {
+	if err = r.newKmb.Raw("SELECT TOP 1 * FROM m_mapping_branch WITH (nolock) WHERE branch_id = ? AND score = ?", branchID, pbkScore).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetMappingPbkScore(pbkScores []string) (data entity.MappingPBKScoreGrade, err error) {
+	if len(pbkScores) == 0 {
+		return data, err
+	}
+	if err = r.newKmb.Raw("SELECT TOP 1 * FROM m_mapping_pbk_grade WITH (nolock) WHERE score IN (?) ORDER BY grade_risk DESC", pbkScores).Scan(&data).Error; err != nil {
+		return
+	}
+
 	return
 }
 
@@ -1005,4 +1037,77 @@ func (r repoHandler) UpdateTrxKPMDecision(id string, prospectID string, decision
 		return nil
 	})
 
+}
+
+func (r repoHandler) GetLatestTrxKPMStatusWithLock(prospectId string) (data entity.TrxKPMStatus, err error) {
+	if err = r.newKmb.Raw(fmt.Sprintf("SELECT TOP 1 tks.* FROM trx_kpm_status tks WHERE tks.ProspectID = '%s' ORDER BY tks.created_at DESC", prospectId)).Scan(&data).Error; err != nil {
+		return
+	}
+	return
+}
+
+func (r repoHandler) UpdateTrxKPMStatus(id string, data entity.TrxKPMStatus) (err error) {
+	return r.newKmb.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&entity.TrxKPMStatus{}).
+			Where("id = ?", id).
+			Updates(data).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
+func (r repoHandler) GetTrxKPMWithLock(prospectID string) (data entity.TrxKPM, err error) {
+
+	query := fmt.Sprintf(`SELECT TOP 1 * FROM trx_kpm WHERE ProspectID = '%s' ORDER BY created_at DESC`, prospectID)
+
+	if err = r.newKmb.Raw(query).Scan(&data).Error; err != nil {
+		return
+	}
+
+	var decrypted entity.Encrypted
+
+	if err = r.newKmb.Raw(fmt.Sprintf(`SELECT scp.dbo.DEC_B64('SEC', '%s') AS LegalName, scp.dbo.DEC_B64('SEC','%s') AS SurgateMotherName,
+		scp.dbo.DEC_B64('SEC', '%s') AS MobilePhone, scp.dbo.DEC_B64('SEC', '%s') AS Email,
+		scp.dbo.DEC_B64('SEC', '%s') AS BirthPlace, scp.dbo.DEC_B64('SEC','%s') AS ResidenceAddress,
+		scp.dbo.DEC_B64('SEC', '%s') AS IDNumber`, data.LegalName, data.SurgateMotherName, data.MobilePhone,
+		data.Email, data.BirthPlace, data.ResidenceAddress, data.IDNumber)).Scan(&decrypted).Error; err != nil {
+		return
+	}
+
+	data.LegalName = decrypted.LegalName
+	data.SurgateMotherName = decrypted.SurgateMotherName
+	data.MobilePhone = decrypted.MobilePhone
+	data.Email = decrypted.Email
+	data.BirthPlace = decrypted.BirthPlace
+	data.ResidenceAddress = decrypted.ResidenceAddress
+	data.IDNumber = decrypted.IDNumber
+
+	return
+}
+
+func (r repoHandler) UpdateTrxKPM(id string, data entity.TrxKPM) (err error) {
+	return r.newKmb.Transaction(func(tx *gorm.DB) error {
+		var encrypted entity.Encrypted
+		if err := tx.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS LegalName, SCP.dbo.ENC_B64('SEC','%s') AS SurgateMotherName, SCP.dbo.ENC_B64('SEC','%s') AS MobilePhone, 
+			SCP.dbo.ENC_B64('SEC','%s') AS Email, SCP.dbo.ENC_B64('SEC','%s') AS BirthPlace, SCP.dbo.ENC_B64('SEC','%s') AS ResidenceAddress, SCP.dbo.ENC_B64('SEC','%s') AS IDNumber`,
+			data.LegalName, data.SurgateMotherName, data.MobilePhone, data.Email, data.BirthPlace, data.ResidenceAddress, data.IDNumber)).Scan(&encrypted).Error; err != nil {
+			return err
+		}
+
+		data.LegalName = encrypted.LegalName
+		data.SurgateMotherName = encrypted.SurgateMotherName
+		data.MobilePhone = encrypted.MobilePhone
+		data.Email = encrypted.Email
+		data.BirthPlace = encrypted.BirthPlace
+		data.ResidenceAddress = encrypted.ResidenceAddress
+		data.IDNumber = encrypted.IDNumber
+
+		if err := tx.Model(&entity.TrxKPM{}).
+			Where("id = ?", id).
+			Updates(data).Error; err != nil {
+			return err
+		}
+		return nil
+	})
 }

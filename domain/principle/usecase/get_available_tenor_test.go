@@ -12,6 +12,7 @@ import (
 	"los-kmb-api/shared/httpclient"
 	"los-kmb-api/shared/utils"
 	"os"
+	"regexp"
 	"strconv"
 	"testing"
 
@@ -27,6 +28,7 @@ func TestGetAvailableTenor(t *testing.T) {
 	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)
 	referralCode := "test"
 	os.Setenv("MI_NUMBER_WHITELIST", "123")
+	os.Setenv("NAMA_SAMA", "K,P")
 	accessToken := "test-token"
 
 	testCases := []struct {
@@ -36,6 +38,8 @@ func TestGetAvailableTenor(t *testing.T) {
 		errConfig                 error
 		trxKPM                    entity.TrxKPM
 		errTrxKPM                 error
+		customerDetailResponse    response.MDMGetDetailCustomerKPMResponse
+		errCustomerDetail         error
 		dupcheckResponse          response.SpDupCekCustomerByID
 		errDupcheck               error
 		assetResponse             response.AssetList
@@ -70,6 +74,13 @@ func TestGetAvailableTenor(t *testing.T) {
 		errRejectTenor            error
 		expectedTenors            []response.GetAvailableTenorData
 		expectedError             error
+		mappingBranch             entity.MappingBranchByPBKScore
+		errMappingBranchEntity    error
+		trxDetailBiro             []entity.TrxDetailBiro
+		pbkScore                  string
+		errTrxDetailBiro          error
+		mappingPbkScoreGrade      entity.MappingPBKScoreGrade
+		errMappingPbkScoreGrade   error
 	}{
 		{
 			name: "success case - simulation",
@@ -82,8 +93,27 @@ func TestGetAvailableTenor(t *testing.T) {
 				ManufactureYear: "2020",
 				LoanAmount:      50000000,
 			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
+			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
+			},
+			pbkScore: "GOOD",
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score: "AVERAGE RISK",
+				},
+			},
+			mappingBranch: entity.MappingBranchByPBKScore{
+				GradeBranch: "GOOD",
 			},
 			dupcheckResponse: response.SpDupCekCustomerByID{
 				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
@@ -239,6 +269,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				ManufactureYear: "2020",
 				LoanAmount:      50000000,
 				ReferralCode:    &referralCode,
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -412,6 +452,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				LoanAmount:      50000000,
 				ReferralCode:    &referralCode,
 			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
+			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
 			},
@@ -496,6 +546,14 @@ func TestGetAvailableTenor(t *testing.T) {
 			expectedError: errors.New(constant.ERROR_BAD_REQUEST + " - No matching MI_NUMBER found"),
 		},
 		{
+			name: "error get detail customer kpm",
+			request: request.GetAvailableTenor{
+				ProspectID: "SIM-123",
+			},
+			errCustomerDetail: errors.New("get detail customer kpm error"),
+			expectedError:     errors.New("get detail customer kpm error"),
+		},
+		{
 			name: "error get config",
 			request: request.GetAvailableTenor{
 				ProspectID: "SIM-123",
@@ -508,6 +566,16 @@ func TestGetAvailableTenor(t *testing.T) {
 			request: request.GetAvailableTenor{
 				ProspectID: "REG-123",
 			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
+			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
 			},
@@ -518,6 +586,16 @@ func TestGetAvailableTenor(t *testing.T) {
 			name: "error dupcheck",
 			request: request.GetAvailableTenor{
 				ProspectID: "REG-123",
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -535,6 +613,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				BPKBNameType:    "K",
 				ManufactureYear: "2020",
 				LoanAmount:      50000000,
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -556,6 +644,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				ManufactureYear:    "2020",
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -624,6 +722,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				ManufactureYear:    "2020",
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -707,6 +815,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				ManufactureYear:    "2020",
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -808,6 +926,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
 			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
+			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
 			},
@@ -902,6 +1030,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				ManufactureYear:    "2020",
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -1000,6 +1138,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
 			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
+			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
 			},
@@ -1096,6 +1244,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				ManufactureYear:    "2020",
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -1196,6 +1354,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				ManufactureYear:    "2020",
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -1299,6 +1467,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				ManufactureYear:    "2020",
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -1406,6 +1584,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
 			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
+			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
 			},
@@ -1512,6 +1700,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
 			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
+			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
 			},
@@ -1615,6 +1813,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
 			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
+			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
 			},
@@ -1707,6 +1915,392 @@ func TestGetAvailableTenor(t *testing.T) {
 			calculationResponse:       response.MarsevCalculateInstallmentResponse{},
 		},
 		{
+			name: "error get trx detail biro",
+			request: request.GetAvailableTenor{
+				ProspectID:         "REG-123",
+				BranchID:           "123",
+				AssetCode:          "MOT",
+				LicensePlate:       "B1234XX",
+				BPKBNameType:       "K",
+				ManufactureYear:    "2020",
+				LoanAmount:         50000000,
+				AssetUsageTypeCode: "P",
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
+			},
+			config: entity.AppConfig{
+				Value: "^SIM-.*",
+			},
+			dupcheckResponse: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+			},
+			assetResponse: response.AssetList{
+				Records: []struct {
+					AssetCode           string `json:"asset_code"`
+					AssetDescription    string `json:"asset_description"`
+					AssetDisplay        string `json:"asset_display"`
+					AssetTypeID         string `json:"asset_type_id"`
+					BranchID            string `json:"branch_id"`
+					Brand               string `json:"brand"`
+					CategoryID          string `json:"category_id"`
+					CategoryDescription string `json:"category_description"`
+					IsElectric          bool   `json:"is_electric"`
+					Model               string `json:"model"`
+				}{
+					{
+						AssetCode:           "MOT",
+						AssetDescription:    "HONDA VARIO 160",
+						AssetDisplay:        "HONDA VARIO 160",
+						AssetTypeID:         "2W",
+						BranchID:            "123",
+						Brand:               "HONDA",
+						CategoryID:          "CAT1",
+						CategoryDescription: "Sport",
+						IsElectric:          false,
+						Model:               "VARIO",
+					},
+				},
+			},
+			plateResponse: response.MDMMasterMappingLicensePlateResponse{
+				Data: response.MDMMasterMappingLicensePlateData{
+					Records: []response.MDMMasterMappingLicensePlateRecord{
+						{
+							AreaID: "AREA1",
+						},
+					},
+				},
+			},
+			marsevResponse: response.MarsevFilterProgramResponse{
+				Data: []response.MarsevFilterProgramData{
+					{
+						ID: "1234",
+						Tenors: []response.TenorInfo{
+							{
+								Tenor: 12,
+							},
+							{
+								Tenor: 24,
+							},
+						},
+					},
+				},
+			},
+			assetYearListResponse: response.AssetYearList{
+				Records: []struct {
+					AssetCode        string `json:"asset_code"`
+					BranchID         string `json:"branch_id"`
+					Brand            string `json:"brand"`
+					ManufactureYear  int    `json:"manufacturing_year"`
+					MarketPriceValue int    `json:"market_price_value"`
+				}{
+					{
+						AssetCode:        "MOT",
+						BranchID:         "123",
+						Brand:            "HONDA",
+						ManufactureYear:  2020,
+						MarketPriceValue: 60000000,
+					},
+				},
+			},
+			cmoResponse: response.MDMMasterMappingBranchEmployeeResponse{
+				Data: []response.MDMMasterMappingBranchEmployeeRecord{
+					{
+						CMOID: "12434",
+					},
+				},
+			},
+			hrisResponse: response.EmployeeCMOResponse{
+				CMOCategory: constant.CMO_LAMA,
+			},
+			getFpdCmoResponse: response.FpdCMOResponse{
+				FpdExist: false,
+			},
+			savedClusterCheckCmoNoFPD: "Cluster C",
+			calculationResponse: response.MarsevCalculateInstallmentResponse{
+				Data: []response.MarsevCalculateInstallmentData{
+					{
+						Tenor:              12,
+						IsPSA:              true,
+						MonthlyInstallment: 1000000,
+						AmountOfFinance:    1000000,
+						AdminFee:           100000,
+						DPAmount:           1000000,
+						NTF:                100000,
+					},
+				},
+			},
+			errTrxDetailBiro: errors.New(constant.ERROR_UPSTREAM + " - Get Trx Detail Biro Error"),
+			expectedError:    errors.New(constant.ERROR_UPSTREAM + " - Get Trx Detail Biro Error"),
+		},
+		{
+			name: "error get mapping pbk score",
+			request: request.GetAvailableTenor{
+				ProspectID:         "SSREG-123",
+				BranchID:           "123",
+				AssetCode:          "MOT",
+				LicensePlate:       "B1234XX",
+				BPKBNameType:       "K",
+				ManufactureYear:    "2020",
+				LoanAmount:         50000000,
+				AssetUsageTypeCode: "P",
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
+			},
+			config: entity.AppConfig{
+				Value: "^SIM-.*",
+			},
+			dupcheckResponse: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+			},
+			trxDetailBiro: []entity.TrxDetailBiro{
+				{
+					Score: "Low Risk",
+				},
+			},
+			assetResponse: response.AssetList{
+				Records: []struct {
+					AssetCode           string `json:"asset_code"`
+					AssetDescription    string `json:"asset_description"`
+					AssetDisplay        string `json:"asset_display"`
+					AssetTypeID         string `json:"asset_type_id"`
+					BranchID            string `json:"branch_id"`
+					Brand               string `json:"brand"`
+					CategoryID          string `json:"category_id"`
+					CategoryDescription string `json:"category_description"`
+					IsElectric          bool   `json:"is_electric"`
+					Model               string `json:"model"`
+				}{
+					{
+						AssetCode:           "MOT",
+						AssetDescription:    "HONDA VARIO 160",
+						AssetDisplay:        "HONDA VARIO 160",
+						AssetTypeID:         "2W",
+						BranchID:            "123",
+						Brand:               "HONDA",
+						CategoryID:          "CAT1",
+						CategoryDescription: "Sport",
+						IsElectric:          false,
+						Model:               "VARIO",
+					},
+				},
+			},
+			plateResponse: response.MDMMasterMappingLicensePlateResponse{
+				Data: response.MDMMasterMappingLicensePlateData{
+					Records: []response.MDMMasterMappingLicensePlateRecord{
+						{
+							AreaID: "AREA1",
+						},
+					},
+				},
+			},
+			marsevResponse: response.MarsevFilterProgramResponse{
+				Data: []response.MarsevFilterProgramData{
+					{
+						ID: "1234",
+						Tenors: []response.TenorInfo{
+							{
+								Tenor: 12,
+							},
+							{
+								Tenor: 24,
+							},
+						},
+					},
+				},
+			},
+			assetYearListResponse: response.AssetYearList{
+				Records: []struct {
+					AssetCode        string `json:"asset_code"`
+					BranchID         string `json:"branch_id"`
+					Brand            string `json:"brand"`
+					ManufactureYear  int    `json:"manufacturing_year"`
+					MarketPriceValue int    `json:"market_price_value"`
+				}{
+					{
+						AssetCode:        "MOT",
+						BranchID:         "123",
+						Brand:            "HONDA",
+						ManufactureYear:  2020,
+						MarketPriceValue: 60000000,
+					},
+				},
+			},
+			cmoResponse: response.MDMMasterMappingBranchEmployeeResponse{
+				Data: []response.MDMMasterMappingBranchEmployeeRecord{
+					{
+						CMOID: "12434",
+					},
+				},
+			},
+			hrisResponse: response.EmployeeCMOResponse{
+				CMOCategory: constant.CMO_LAMA,
+			},
+			getFpdCmoResponse: response.FpdCMOResponse{
+				FpdExist: false,
+			},
+			savedClusterCheckCmoNoFPD: "Cluster C",
+			calculationResponse: response.MarsevCalculateInstallmentResponse{
+				Data: []response.MarsevCalculateInstallmentData{
+					{
+						Tenor:              12,
+						IsPSA:              true,
+						MonthlyInstallment: 1000000,
+						AmountOfFinance:    1000000,
+						AdminFee:           100000,
+						DPAmount:           1000000,
+						NTF:                100000,
+					},
+				},
+			},
+			errMappingPbkScoreGrade: errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Pbk Score Error"),
+			expectedError:           errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Pbk Score Error"),
+		},
+		{
+			name: "error get mapping branch",
+			request: request.GetAvailableTenor{
+				ProspectID:         "REG-123",
+				BranchID:           "123",
+				AssetCode:          "MOT",
+				LicensePlate:       "B1234XX",
+				BPKBNameType:       "K",
+				ManufactureYear:    "2020",
+				LoanAmount:         50000000,
+				AssetUsageTypeCode: "P",
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
+			},
+			config: entity.AppConfig{
+				Value: "^SIM-.*",
+			},
+			dupcheckResponse: response.SpDupCekCustomerByID{
+				CustomerStatus:  constant.STATUS_KONSUMEN_RO_AO,
+				CustomerSegment: constant.RO_AO_REGULAR,
+			},
+			assetResponse: response.AssetList{
+				Records: []struct {
+					AssetCode           string `json:"asset_code"`
+					AssetDescription    string `json:"asset_description"`
+					AssetDisplay        string `json:"asset_display"`
+					AssetTypeID         string `json:"asset_type_id"`
+					BranchID            string `json:"branch_id"`
+					Brand               string `json:"brand"`
+					CategoryID          string `json:"category_id"`
+					CategoryDescription string `json:"category_description"`
+					IsElectric          bool   `json:"is_electric"`
+					Model               string `json:"model"`
+				}{
+					{
+						AssetCode:           "MOT",
+						AssetDescription:    "HONDA VARIO 160",
+						AssetDisplay:        "HONDA VARIO 160",
+						AssetTypeID:         "2W",
+						BranchID:            "123",
+						Brand:               "HONDA",
+						CategoryID:          "CAT1",
+						CategoryDescription: "Sport",
+						IsElectric:          false,
+						Model:               "VARIO",
+					},
+				},
+			},
+			plateResponse: response.MDMMasterMappingLicensePlateResponse{
+				Data: response.MDMMasterMappingLicensePlateData{
+					Records: []response.MDMMasterMappingLicensePlateRecord{
+						{
+							AreaID: "AREA1",
+						},
+					},
+				},
+			},
+			marsevResponse: response.MarsevFilterProgramResponse{
+				Data: []response.MarsevFilterProgramData{
+					{
+						ID: "1234",
+						Tenors: []response.TenorInfo{
+							{
+								Tenor: 12,
+							},
+							{
+								Tenor: 24,
+							},
+						},
+					},
+				},
+			},
+			assetYearListResponse: response.AssetYearList{
+				Records: []struct {
+					AssetCode        string `json:"asset_code"`
+					BranchID         string `json:"branch_id"`
+					Brand            string `json:"brand"`
+					ManufactureYear  int    `json:"manufacturing_year"`
+					MarketPriceValue int    `json:"market_price_value"`
+				}{
+					{
+						AssetCode:        "MOT",
+						BranchID:         "123",
+						Brand:            "HONDA",
+						ManufactureYear:  2020,
+						MarketPriceValue: 60000000,
+					},
+				},
+			},
+			cmoResponse: response.MDMMasterMappingBranchEmployeeResponse{
+				Data: []response.MDMMasterMappingBranchEmployeeRecord{
+					{
+						CMOID: "12434",
+					},
+				},
+			},
+			hrisResponse: response.EmployeeCMOResponse{
+				CMOCategory: constant.CMO_LAMA,
+			},
+			getFpdCmoResponse: response.FpdCMOResponse{
+				FpdExist: false,
+			},
+			savedClusterCheckCmoNoFPD: "Cluster C",
+			calculationResponse: response.MarsevCalculateInstallmentResponse{
+				Data: []response.MarsevCalculateInstallmentData{
+					{
+						Tenor:              12,
+						IsPSA:              true,
+						MonthlyInstallment: 1000000,
+						AmountOfFinance:    1000000,
+						AdminFee:           100000,
+						DPAmount:           1000000,
+						NTF:                100000,
+					},
+				},
+			},
+			errMappingBranchEntity: errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Branch Error"),
+			expectedError:          errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Branch Error"),
+		},
+		{
 			name: "error get mapping elaborate ltv",
 			request: request.GetAvailableTenor{
 				ProspectID:         "REG-123",
@@ -1717,6 +2311,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				ManufactureYear:    "2020",
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -1834,6 +2438,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				ManufactureYear:    "2020",
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -1957,6 +2571,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
 			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
+			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
 			},
@@ -2077,6 +2701,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				ManufactureYear:    "2020",
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
+			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
 			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
@@ -2201,6 +2835,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
 			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
+			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
 			},
@@ -2320,6 +2964,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
 			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
+			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
 			},
@@ -2437,6 +3091,16 @@ func TestGetAvailableTenor(t *testing.T) {
 				LoanAmount:         50000000,
 				AssetUsageTypeCode: "P",
 			},
+			customerDetailResponse: response.MDMGetDetailCustomerKPMResponse{
+				Data: response.GetCustomerByKpmID{
+					Customer: response.Customer{
+						IdNumber:          "1234567890",
+						LegalName:         "Test User",
+						BirthDate:         "1990-01-01",
+						SurgateMotherName: "Mother Name",
+					},
+				},
+			},
 			config: entity.AppConfig{
 				Value: "^SIM-.*",
 			},
@@ -2553,56 +3217,78 @@ func TestGetAvailableTenor(t *testing.T) {
 			mockHttpClient := new(httpclient.MockHttpClient)
 			mockUsecase := new(mocks.Usecase)
 
-			mockRepository.On("GetConfig", constant.GROUP_2WILEN, "KMB-OFF", constant.KEY_PPID_SIMULASI).Return(tc.config, tc.errConfig)
+			mockUsecase.On("MDMGetDetailCustomerKPM", ctx, tc.request.ProspectID, tc.request.KPMID, accessToken).Return(tc.customerDetailResponse, tc.errCustomerDetail)
 
-			if tc.errConfig == nil {
-				mockRepository.On("GetTrxKPM", tc.request.ProspectID).Return(tc.trxKPM, tc.errTrxKPM)
+			if tc.errCustomerDetail == nil {
+				mockRepository.On("GetConfig", constant.GROUP_2WILEN, "KMB-OFF", constant.KEY_PPID_SIMULASI).Return(tc.config, tc.errConfig)
 
-				if tc.errTrxKPM == nil {
-					mockUsecase.On("DupcheckIntegrator", ctx, tc.request.ProspectID, tc.request.IDNumber, tc.request.LegalName, tc.request.BirthDate, tc.request.SurgateMotherName, accessToken).Return(tc.dupcheckResponse, tc.errDupcheck)
+				if tc.errConfig == nil {
+					re := regexp.MustCompile(tc.config.Value)
+					isSimulasi := re.MatchString(tc.request.ProspectID)
+					mockRepository.On("GetTrxKPM", tc.request.ProspectID).Return(tc.trxKPM, tc.errTrxKPM)
 
-					if tc.errDupcheck == nil {
-						mockUsecase.On("MDMGetMasterAsset", ctx, tc.request.BranchID, tc.request.AssetCode, tc.request.ProspectID, accessToken).Return(tc.assetResponse, tc.errAsset)
+					if tc.errTrxKPM == nil {
+						mockUsecase.On("DupcheckIntegrator", ctx, tc.request.ProspectID, mock.Anything, mock.Anything, mock.Anything, mock.Anything, accessToken).Return(tc.dupcheckResponse, tc.errDupcheck)
 
-						if tc.errAsset == nil {
-							mockUsecase.On("MarsevGetMarketingProgram", ctx, mock.MatchedBy(func(req request.ReqMarsevFilterProgram) bool {
-								return req.BranchID == tc.request.BranchID &&
-									req.AssetCategory == "CAT1" &&
-									req.AssetUsageTypeCode == tc.request.AssetUsageTypeCode
-							}), tc.request.ProspectID, accessToken).Return(tc.marsevResponse, tc.errMarsev)
+						if tc.errDupcheck == nil {
+							mockUsecase.On("MDMGetMasterAsset", ctx, tc.request.BranchID, tc.request.AssetCode, tc.request.ProspectID, accessToken).Return(tc.assetResponse, tc.errAsset)
 
-							if tc.errMarsev == nil {
-								mockUsecase.On("MDMGetAssetYear", ctx, tc.request.BranchID, tc.request.AssetCode, tc.request.ManufactureYear, tc.request.ProspectID, accessToken).Return(tc.assetYearListResponse, tc.errAssetYearList)
+							if tc.errAsset == nil {
+								mockUsecase.On("MarsevGetMarketingProgram", ctx, mock.MatchedBy(func(req request.ReqMarsevFilterProgram) bool {
+									return req.BranchID == tc.request.BranchID &&
+										req.AssetCategory == "CAT1" &&
+										req.AssetUsageTypeCode == tc.request.AssetUsageTypeCode
+								}), tc.request.ProspectID, accessToken).Return(tc.marsevResponse, tc.errMarsev)
 
-								if tc.errAssetYearList == nil {
-									mockUsecase.On("MDMGetMasterMappingBranchEmployee", ctx, tc.request.ProspectID, tc.request.BranchID, accessToken).Return(tc.cmoResponse, tc.errCmo)
+								if tc.errMarsev == nil {
+									mockUsecase.On("MDMGetAssetYear", ctx, tc.request.BranchID, tc.request.AssetCode, tc.request.ManufactureYear, tc.request.ProspectID, accessToken).Return(tc.assetYearListResponse, tc.errAssetYearList)
 
-									if tc.errCmo == nil {
-										mockUsecase.On("GetEmployeeData", ctx, mock.Anything).Return(tc.hrisResponse, tc.errHris)
+									if tc.errAssetYearList == nil {
+										mockUsecase.On("MDMGetMasterMappingBranchEmployee", ctx, tc.request.ProspectID, tc.request.BranchID, accessToken).Return(tc.cmoResponse, tc.errCmo)
 
-										if tc.errHris == nil {
-											if tc.hrisResponse.CMOCategory != constant.NEW {
-												mockUsecase.On("GetFpdCMO", ctx, mock.Anything, mock.Anything).Return(tc.getFpdCmoResponse, tc.errGetFpdCmo)
-											}
+										if tc.errCmo == nil {
+											mockUsecase.On("GetEmployeeData", ctx, mock.Anything).Return(tc.hrisResponse, tc.errHris)
 
-											if tc.getFpdCmoResponse.FpdExist {
-												mockRepository.On("MasterMappingFpdCluster", mock.Anything).Return(tc.mappingFpdCluster, tc.errFpdCluster)
-											}
+											if tc.errHris == nil {
+												if tc.hrisResponse.CMOCategory != constant.NEW {
+													mockUsecase.On("GetFpdCMO", ctx, mock.Anything, mock.Anything).Return(tc.getFpdCmoResponse, tc.errGetFpdCmo)
+												}
 
-											if !tc.getFpdCmoResponse.FpdExist || (tc.getFpdCmoResponse.FpdExist && tc.mappingFpdCluster.Cluster == "") {
-												mockUsecase.On("CheckCmoNoFPD", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.savedClusterCheckCmoNoFPD, tc.entitySaveTrxNoFPd, tc.errCheckCmoNoFPD)
-											}
+												if tc.getFpdCmoResponse.FpdExist {
+													mockRepository.On("MasterMappingFpdCluster", mock.Anything).Return(tc.mappingFpdCluster, tc.errFpdCluster)
+												}
 
-											if tc.errCheckCmoNoFPD == nil {
-												mockUsecase.On("MDMGetMappingLicensePlate", ctx, tc.request.LicensePlate, tc.request.ProspectID, accessToken).Return(tc.plateResponse, tc.errPlate)
+												if !tc.getFpdCmoResponse.FpdExist || (tc.getFpdCmoResponse.FpdExist && tc.mappingFpdCluster.Cluster == "") {
+													mockUsecase.On("CheckCmoNoFPD", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.savedClusterCheckCmoNoFPD, tc.entitySaveTrxNoFPd, tc.errCheckCmoNoFPD)
+												}
 
-												mockUsecase.On("MarsevCalculateInstallment", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.calculationResponse, tc.errCalculation)
-												mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything).Return(tc.mappingLTV, tc.errMappingLTV)
-												mockUsecase.On("MarsevGetLoanAmount", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.loanAmountResponse, tc.errLoanAmount)
-												mockUsecase.On("GetLTV", ctx, tc.mappingLTV, tc.request.ProspectID, "PASS", tc.request.BPKBNameType, tc.request.ManufactureYear, mock.AnythingOfType("int"), float64(0), mock.Anything).Return(tc.ltvResponse, tc.adjustTenorResponse, tc.errGetLTV)
+												if tc.errCheckCmoNoFPD == nil {
 
-												if tc.marsevResponse.Data[0].Tenors[0].Tenor == 36 {
-													mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.rejectTenorResponse, tc.errRejectTenor)
+													mockUsecase.On("MDMGetMappingLicensePlate", ctx, tc.request.LicensePlate, tc.request.ProspectID, accessToken).Return(tc.plateResponse, tc.errPlate)
+
+													mockUsecase.On("MarsevCalculateInstallment", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.calculationResponse, tc.errCalculation)
+													mockRepository.On("GetTrxDetailBIro", tc.request.ProspectID).Return(tc.trxDetailBiro, tc.errTrxDetailBiro)
+
+													if tc.errTrxDetailBiro == nil {
+														if !isSimulasi {
+															mockRepository.On("GetMappingPbkScore", mock.Anything).Return(tc.mappingPbkScoreGrade, tc.errMappingPbkScoreGrade)
+														}
+
+														if tc.errMappingPbkScoreGrade == nil {
+															mockRepository.On("GetMappingBranchByBranchID", tc.request.BranchID, mock.Anything).
+																Return(tc.mappingBranch, tc.errMappingBranchEntity)
+
+															if tc.errMappingBranchEntity == nil {
+																mockRepository.On("GetMappingElaborateLTV", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.mappingLTV, tc.errMappingLTV)
+																mockUsecase.On("MarsevGetLoanAmount", ctx, mock.Anything, tc.request.ProspectID, accessToken).Return(tc.loanAmountResponse, tc.errLoanAmount)
+																mockUsecase.On("GetLTV", ctx, tc.mappingLTV, tc.request.ProspectID, "PASS", tc.request.BPKBNameType, tc.request.ManufactureYear, mock.AnythingOfType("int"), float64(0), mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.ltvResponse, tc.adjustTenorResponse, tc.errGetLTV)
+
+																if tc.marsevResponse.Data[0].Tenors[0].Tenor == 36 {
+																	mockUsecase.On("RejectTenor36", mock.Anything).Return(tc.rejectTenorResponse, tc.errRejectTenor)
+																}
+															}
+														}
+													}
 												}
 											}
 										}

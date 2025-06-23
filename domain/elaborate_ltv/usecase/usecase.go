@@ -173,7 +173,51 @@ func (u usecase) Elaborate(ctx context.Context, reqs request.ElaborateLTV, acces
 		}
 	}
 
-	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, cluster)
+	var (
+		filteringDetail      []entity.TrxDetailBiro
+		mappingPBKScoreGrade []entity.MappingPBKScoreGrade
+		gradePBK             string
+		mappingBranch        entity.MappingBranchByPBKScore
+	)
+
+	filteringDetail, err = u.repository.GetFilteringDetail(reqs.ProspectID)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - GetFilteringDetail error - " + err.Error())
+		return
+	}
+
+	if len(filteringDetail) == 0 {
+		gradePBK = constant.DECISION_PBK_NO_HIT
+
+	} else {
+		mappingPBKScoreGrade, err = u.repository.GetMappingPBKScoreGrade()
+		if err != nil {
+			err = errors.New(constant.ERROR_UPSTREAM + " - GetMappingPBKScoreGrade error - " + err.Error())
+			return
+		}
+
+		var gradeRisk int
+		for _, v := range filteringDetail {
+			for _, mapp := range mappingPBKScoreGrade {
+				if strings.EqualFold(v.Score, mapp.Score) && mapp.GradeRisk > gradeRisk {
+					gradeRisk = mapp.GradeRisk
+					gradePBK = mapp.GradeScore
+				}
+			}
+		}
+	}
+
+	mappingBranch, err = u.repository.GetMappingBranchPBK(filteringKMB.BranchID, gradePBK)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - GetMappingBranchPBK error - " + err.Error())
+		return
+	}
+
+	if mappingBranch.GradeBranch == "" {
+		mappingBranch.GradeBranch = constant.GOOD
+	}
+
+	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, cluster, bpkbNameType, filteringKMB.CustomerStatus.(string), gradePBK, mappingBranch.GradeBranch)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
 		return

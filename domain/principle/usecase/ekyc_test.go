@@ -2302,6 +2302,78 @@ func TestDukcapil(t *testing.T) {
 				err: errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config threshold ekyc"),
 			},
 		},
+		{
+			label: "Test VD Unknown Reason falls to default",
+			request: request.PrinciplePemohon{
+				ProspectID:           "SAL-123",
+				IDNumber:             "123",
+				SpouseIDNumber:       "1234",
+				MobilePhone:          "08123743211",
+				LegalName:            "Test Legal Name",
+				FullName:             "Test Full Name",
+				BirthDate:            "1999-09-08",
+				BirthPlace:           "JAKARTA",
+				SurgateMotherName:    "Test",
+				Gender:               "M",
+				LegalAddress:         "Test",
+				LegalRT:              "001",
+				LegalRW:              "001",
+				LegalProvince:        "JAWA TIMUR",
+				LegalCity:            "MALANG",
+				LegalKecamatan:       "MALANG",
+				LegalKelurahan:       "MALANG",
+				LegalZipCode:         "66192",
+				LegalPhoneArea:       "021",
+				LegalPhone:           "12345",
+				Education:            "SLTA",
+				ProfessionID:         "WRST",
+				JobType:              "TEST",
+				JobPosition:          "Test",
+				EmploymentSinceMonth: 2,
+				EmploymentSinceYear:  2024,
+				CompanyName:          "Test",
+				EconomySectorID:      "001",
+				IndustryTypeID:       "11",
+				KtpPhoto:             "http://www.example.com",
+				SelfiePhoto:          "http://www.example.com",
+			},
+			respAppConfig: entity.AppConfig{
+				Value: `{"data":{"verify_data":{"service_on":"dukcapill","dukcapil":{"nama_lengkap":80,"alamat":0}},"face_recognition":{"service_on":"dukcapill","dukcapil":{"threshold":5}}}}`,
+			},
+			respDukcapilVD: respDukcapil{
+				code: 200,
+				response: `{
+					"data": {
+						"transaction_id": "EFM01108902308030001",
+						"threshold": "0",
+						"ref_id": "1000338d-208e-4e06-80f0-cbe8c1358a20",
+						"is_valid": false,
+						"reason": "Some Unknown Reason"
+					},
+					"errors": {},
+					"messages": "string",
+					"request_id": "string",
+					"server_time": "string"
+				}`,
+			},
+			reqMetricsEkyc: request.MetricsEkyc{
+				CustomerStatus: "NEW",
+				CBFound:        true,
+			},
+			MappingResultDukcapilVD: entity.MappingResultDukcapilVD{
+				ResultVD: constant.DECISION_REJECT,
+				Decision: constant.DECISION_REJECT,
+			},
+			expected: expectedResult{
+				data: response.Ekyc{
+					Result: "REJECT",
+					Code:   "",
+					Reason: constant.REASON_EKYC_INVALID,
+					Source: "DCP",
+					Info:   `{"vd":{"transaction_id":"EFM01108902308030001","threshold":"0","ref_id":"1000338d-208e-4e06-80f0-cbe8c1358a20","is_valid":false,"reason":"Some Unknown Reason"},"vd_service":"dukcapill","vd_error":null,"fr":null,"fr_service":null,"fr_error":null,"asliri":null,"ktp":null}`,
+				},
+			},
+		},
 	}
 
 	for _, test := range testcases {
