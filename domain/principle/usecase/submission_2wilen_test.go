@@ -7831,7 +7831,7 @@ func TestNegativeCustomerCheck(t *testing.T) {
 			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("API_NEGATIVE_CUSTOMER"), httpmock.NewStringResponder(200, tc.respBody))
 			resp, _ := rst.R().Post(os.Getenv("API_NEGATIVE_CUSTOMER"))
 
-			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("API_NEGATIVE_CUSTOMER"), req, header, constant.METHOD_POST, true, 6, timeout, tc.req.ProspectID, accessToken).Return(resp, tc.errResp).Once()
+			mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("API_NEGATIVE_CUSTOMER"), req, header, constant.METHOD_POST, true, 6, timeout, tc.req.ProspectID, accessToken).Return(resp, tc.errResp).Once()
 			mockRepository.On("GetMappingNegativeCustomer", mock.Anything).Return(tc.mappingNegativeCustomer, tc.errRepo)
 
 			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
@@ -7940,7 +7940,7 @@ func TestCheckMobilePhoneFMF(t *testing.T) {
 			resp, _ := rst.R().Post(os.Getenv("HRIS_LIST_EMPLOYEE"))
 
 			ctx := context.Background()
-			mockHttp.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("HRIS_LIST_EMPLOYEE"),
+			mockHttp.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("HRIS_LIST_EMPLOYEE"),
 				mock.Anything, mock.Anything, constant.METHOD_POST, false, 0, timeout, "", accessToken).
 				Return(resp, tc.httpErr).Once()
 

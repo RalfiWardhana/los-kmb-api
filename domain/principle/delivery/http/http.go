@@ -10,6 +10,7 @@ import (
 	"los-kmb-api/domain/principle/interfaces"
 	"los-kmb-api/middlewares"
 	"los-kmb-api/models/request"
+	"los-kmb-api/shared/common"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
 	"net/http"
@@ -434,21 +435,23 @@ func (c *handler) GetPrincipleData(ctx echo.Context) (err error) {
 	}()
 
 	if err = ctx.Bind(&r); err != nil {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "799"), err)
 	}
+
 	if err = ctx.Validate(&r); err != nil {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.BadRequest(ctx, fmt.Sprintf("PRINCIPLE-%s", "800"), err)
 	}
 
 	data, err := c.usecase.GetDataPrinciple(ctx.Request().Context(), r, middlewares.UserInfoData.AccessToken)
-
 	if err != nil {
-
-		code, err := utils.WrapError(err)
-
-		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), err)
+		code, wrappedErr := utils.WrapError(err)
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": wrappedErr.Error()})
+		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), wrappedErr)
 	}
 
+	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": data})
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
 
 }
@@ -534,9 +537,11 @@ func (c *handler) Step2Wilen(ctx echo.Context) (err error) {
 	}()
 
 	if err = ctx.Bind(&r); err != nil {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
 	}
 	if err = ctx.Validate(&r); err != nil {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
 	}
 
@@ -548,18 +553,22 @@ func (c *handler) Step2Wilen(ctx echo.Context) (err error) {
 
 		code, err := utils.WrapError(err)
 
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err, response.WithHttpCode(http.StatusInternalServerError), response.WithMessage(constant.PRINCIPLE_ERROR_RESPONSE_MESSAGE))
 	}
 
 	if data.Status == "" {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": data})
 		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), nil)
 	}
 
 	if data.Status == constant.DECISION_KPM_READJUST || data.Status == constant.STATUS_KPM_WAIT_2WILEN || data.Status == constant.DECISION_KPM_APPROVE || data.Status == constant.STATUS_LOS_PROCESS_2WILEN {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": data})
 		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "002"), data, response.WithMessage("Kamu masih memiliki pengajuan lain yang sedang diproses"))
 
 	}
 
+	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": data})
 	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
 
 }
@@ -583,9 +592,11 @@ func (c *handler) GetMaxLoanAmount(ctx echo.Context) (err error) {
 	}()
 
 	if err = ctx.Bind(&r); err != nil {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
 	}
 	if err = ctx.Validate(&r); err != nil {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
 	}
 
@@ -595,11 +606,14 @@ func (c *handler) GetMaxLoanAmount(ctx echo.Context) (err error) {
 
 		code, err := utils.WrapError(err)
 		if strings.Contains(err.Error(), "No matching MI_NUMBER found") {
+			logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 			return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", "001"), err, response.WithMessage(err.Error()))
 		}
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
 	}
 
+	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": data})
 	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
 
 }
@@ -623,9 +637,11 @@ func (c *handler) GetAvailableTenor(ctx echo.Context) (err error) {
 	}()
 
 	if err = ctx.Bind(&r); err != nil {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
 	}
 	if err = ctx.Validate(&r); err != nil {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
 	}
 
@@ -636,11 +652,14 @@ func (c *handler) GetAvailableTenor(ctx echo.Context) (err error) {
 		code, err := utils.WrapError(err)
 
 		if strings.Contains(err.Error(), "No matching MI_NUMBER found") {
+			logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 			return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", "001"), err, response.WithMessage(err.Error()))
 		}
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
 	}
 
+	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": data})
 	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
 
 }
@@ -665,9 +684,11 @@ func (c *handler) Submission2Wilen(ctx echo.Context) (err error) {
 	}()
 
 	if err = ctx.Bind(&r); err != nil {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
 	}
 	if err = ctx.Validate(&r); err != nil {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
 	}
 
@@ -691,6 +712,7 @@ func (c *handler) Submission2Wilen(ctx echo.Context) (err error) {
 	case result := <-resultChan:
 		if result.err != nil {
 			if result.err.Error() == constant.ERROR_MAX_EXCEED {
+				logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": result.err.Error()})
 				return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", "429"), result.err,
 					response.WithHttpCode(http.StatusInternalServerError),
 					response.WithMessage(constant.PRINCIPLE_ERROR_EXCEED_RESPONSE_MESSAGE))
@@ -711,15 +733,18 @@ func (c *handler) Submission2Wilen(ctx echo.Context) (err error) {
 
 			code, err := utils.WrapError(result.err)
 
+			logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 			return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err,
 				response.WithHttpCode(http.StatusInternalServerError),
 				response.WithMessage(errorMessage))
 		}
 
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": result.data})
 		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), result.data)
 
 	case <-ctxWithTimeout.Done():
 		if ctxWithTimeout.Err() == context.DeadlineExceeded {
+			logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 			return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", "504"), fmt.Errorf("service timeout"),
 				response.WithHttpCode(http.StatusGatewayTimeout),
 				response.WithMessage("Request timeout exceeded"))
@@ -747,9 +772,11 @@ func (c *handler) History2Wilen(ctx echo.Context) (err error) {
 	}()
 
 	if err = ctx.Bind(&r); err != nil {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
 	}
 	if err = ctx.Validate(&r); err != nil {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
 	}
 
@@ -759,9 +786,11 @@ func (c *handler) History2Wilen(ctx echo.Context) (err error) {
 
 		code, err := utils.WrapError(err)
 
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
 	}
 
+	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": data})
 	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
 }
 
@@ -784,9 +813,11 @@ func (c *handler) Publish2Wilen(ctx echo.Context) (err error) {
 	}()
 
 	if err = ctx.Bind(&r); err != nil {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "799"), err)
 	}
 	if err = ctx.Validate(&r); err != nil {
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.BadRequest(ctx, fmt.Sprintf("WLN-%s", "800"), err)
 	}
 
@@ -796,9 +827,23 @@ func (c *handler) Publish2Wilen(ctx echo.Context) (err error) {
 
 		code, err := utils.WrapError(err)
 
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_ERROR, r, map[string]interface{}{"errors": err.Error()})
 		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
 	}
 
+	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{})
 	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), "success publish event 2wilen")
 
+}
+
+func logWithResponse(ctx echo.Context, logLevel string, request interface{}, response interface{}) {
+	_ = common.CentralizeLog(ctx.Request().Context(), middlewares.UserInfoData.AccessToken, common.CentralizeLogParameter{
+		Action:     "2WILEN",
+		Type:       constant.USECASE_API,
+		LogFile:    constant.DILEN_KMB_LOG,
+		MsgLogFile: constant.MSG_INCOMING_REQUEST,
+		LevelLog:   logLevel,
+		Request:    request,
+		Response:   response,
+	})
 }

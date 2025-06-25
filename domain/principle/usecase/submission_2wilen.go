@@ -1911,7 +1911,7 @@ func (u usecase) NegativeCustomerCheck(ctx context.Context, reqs request.Dupchec
 		JobPosition:       reqs.JobPosition,
 	})
 
-	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("API_NEGATIVE_CUSTOMER"), req, header, constant.METHOD_POST, true, 6, timeout, reqs.ProspectID, accessToken)
+	resp, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("API_NEGATIVE_CUSTOMER"), req, header, constant.METHOD_POST, true, 6, timeout, reqs.ProspectID, accessToken)
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call API Negative Customer Error")
@@ -1992,7 +1992,7 @@ func (u usecase) CheckMobilePhoneFMF(ctx context.Context, prospectID, mobilePhon
 	}
 
 	param, _ := json.Marshal(payload)
-	getListEmployee, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("HRIS_LIST_EMPLOYEE"), param, header, constant.METHOD_POST, false, 0, timeout, "", accessToken)
+	getListEmployee, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("HRIS_LIST_EMPLOYEE"), param, header, constant.METHOD_POST, false, 0, timeout, "", accessToken)
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Call API HRIS List Employee Error")
