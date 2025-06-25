@@ -451,7 +451,7 @@ func (c *handler) GetPrincipleData(ctx echo.Context) (err error) {
 		return c.responses.Error(ctx, fmt.Sprintf("PRINCIPLE-%s", code), wrappedErr)
 	}
 
-	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, data)
+	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": data})
 	return c.responses.Result(ctx, fmt.Sprintf("PRINCIPLE-%s", "001"), data)
 
 }
@@ -558,17 +558,17 @@ func (c *handler) Step2Wilen(ctx echo.Context) (err error) {
 	}
 
 	if data.Status == "" {
-		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, data)
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": data})
 		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), nil)
 	}
 
 	if data.Status == constant.DECISION_KPM_READJUST || data.Status == constant.STATUS_KPM_WAIT_2WILEN || data.Status == constant.DECISION_KPM_APPROVE || data.Status == constant.STATUS_LOS_PROCESS_2WILEN {
-		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, data)
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": data})
 		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "002"), data, response.WithMessage("Kamu masih memiliki pengajuan lain yang sedang diproses"))
 
 	}
 
-	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, data)
+	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": data})
 	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
 
 }
@@ -613,7 +613,7 @@ func (c *handler) GetMaxLoanAmount(ctx echo.Context) (err error) {
 		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
 	}
 
-	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, data)
+	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": data})
 	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
 
 }
@@ -659,7 +659,7 @@ func (c *handler) GetAvailableTenor(ctx echo.Context) (err error) {
 		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
 	}
 
-	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, data)
+	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": data})
 	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
 
 }
@@ -739,7 +739,7 @@ func (c *handler) Submission2Wilen(ctx echo.Context) (err error) {
 				response.WithMessage(errorMessage))
 		}
 
-		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, result.data)
+		logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": result.data})
 		return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), result.data)
 
 	case <-ctxWithTimeout.Done():
@@ -790,7 +790,7 @@ func (c *handler) History2Wilen(ctx echo.Context) (err error) {
 		return c.responses.Error(ctx, fmt.Sprintf("WLN-%s", code), err)
 	}
 
-	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, data)
+	logWithResponse(ctx, constant.PLATFORM_LOG_LEVEL_INFO, r, map[string]interface{}{"data": data})
 	return c.responses.Result(ctx, fmt.Sprintf("WLN-%s", "001"), data)
 }
 
