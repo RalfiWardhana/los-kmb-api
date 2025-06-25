@@ -62,4 +62,5 @@ type Repository interface {
 	GetTrxKPMStatus(IDNumber string) (data entity.TrxKPMStatus, err error)
 	GetTrxKPMStatusHistory(req request.History2Wilen) (data []entity.TrxKPMStatusHistory, err error)
 	UpdateTrxKPMDecision(id string, prospectID string, decision string) (err error)
+	GetMappingRiskLevel(numberOfInquiry int) (data entity.MappingRiskLevel, err error)
 }

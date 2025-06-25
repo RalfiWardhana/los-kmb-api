@@ -42,6 +42,8 @@ func TestSubmission2Wilen(t *testing.T) {
 	contextReadjustLoanAmount := constant.READJUST_LOAN_AMOUNT_CONTEXT_2WILEN
 	contextTenor := constant.READJUST_TENOR_CONTEXT_2WILEN
 
+	numberOfInquiriesLast1Month := float64(11)
+
 	testcases := []struct {
 		name                                 string
 		request                              request.Submission2Wilen
@@ -1276,6 +1278,7 @@ func TestSubmission2Wilen(t *testing.T) {
 					ConditionDate:     "2023-10-11",
 					RestructuringDate: "2024-11-11",
 				},
+				NumberOfInquiriesLast1Month: numberOfInquiriesLast1Month,
 			},
 			errDukcapil:               errors.New("failed check dukcapil"),
 			err:                       errors.New("failed check dukcapil"),

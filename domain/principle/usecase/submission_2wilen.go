@@ -825,6 +825,11 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		save.NewKoRules = jsonNewKoRules
 	}
 
+	if pefindo.NumberOfInquiriesLast1Month != nil {
+		numberOfInquiriesLast1Month := int(pefindo.NumberOfInquiriesLast1Month.(float64))
+		save.NumberOfInquiriesLast1Month = &numberOfInquiriesLast1Month
+	}
+
 	var cbFound bool
 
 	if pefindo.Score != "" && pefindo.Score != constant.DECISION_PBK_NO_HIT && pefindo.Score != constant.PEFINDO_UNSCORE {

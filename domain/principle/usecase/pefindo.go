@@ -94,8 +94,14 @@ func (u usecase) Pefindo(ctx context.Context, r request.Pefindo, customerStatus,
 			inquiriesLast1Month = int(pefindoResult.NumberOfInquiriesLast1Month.(float64))
 		}
 
+		mappingRiskLevel, errMappingRiskLevel := u.repository.GetMappingRiskLevel(inquiriesLast1Month)
+		if errMappingRiskLevel != nil {
+			err = errMappingRiskLevel
+			return
+		}
+
 		primePriority, _ := utils.ItemExists(customerSegment, []string{constant.RO_AO_PRIME, constant.RO_AO_PRIORITY})
-		if (!((customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO) && primePriority) || isOverrideFlowLikeRegular) && inquiriesLast1Month > 10 {
+		if (!((customerStatus == constant.STATUS_KONSUMEN_AO || customerStatus == constant.STATUS_KONSUMEN_RO) && primePriority) || isOverrideFlowLikeRegular) && mappingRiskLevel.Decision == constant.DECISION_REJECT {
 			data.Code = constant.CODE_REJECT_INQUIRY_1MONTHS
 			data.Reason = constant.REASON_INQUIRY_1MONTHS
 			isRejectPefindo = true

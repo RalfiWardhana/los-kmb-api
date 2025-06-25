@@ -17,6 +17,7 @@ import (
 
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -53,6 +54,8 @@ func TestPefindo(t *testing.T) {
 		reqMappingCluster         entity.MasterMappingCluster
 		resMappingCluster         entity.MasterMappingCluster
 		errMappingCluster         error
+		resMappingRiskLevel       entity.MappingRiskLevel
+		errMappingRiskLevel       error
 		errFinal                  error
 	}{
 		{
@@ -3921,6 +3924,51 @@ func TestPefindo(t *testing.T) {
 			},
 		},
 		{
+			name:           "error get mapping risk level",
+			customerStatus: constant.STATUS_KONSUMEN_NEW,
+			clusterCMO:     constant.CLUSTER_C,
+			bpkbName:       constant.BPKB_NAMA_BEDA,
+			reqPefindo: request.Pefindo{
+				ClientKey:               os.Getenv("CLIENTKEY_CORE_PBK"),
+				IDMember:                constant.USER_PBK_KMB_FILTEERING,
+				User:                    constant.USER_PBK_KMB_FILTEERING,
+				ProspectID:              "SAL02400020230727001",
+				BPKBName:                "KK",
+				BranchID:                "426",
+				IDNumber:                "3275066006789999",
+				LegalName:               "EMI LegalName",
+				BirthDate:               "1971-04-15",
+				Gender:                  "M",
+				SurgateMotherName:       "HAROEMI MotherName",
+				SpouseIDNumber:          "3345270510910123",
+				SpouseLegalName:         "DIANA LegalName",
+				SpouseBirthDate:         "1995-08-28",
+				SpouseGender:            "F",
+				SpouseSurgateMotherName: "ELSA",
+				MaritalStatus:           "M",
+			},
+			rPefindoCode: 200,
+			rPefindoBody: `{"code":"200","status":"SUCCESS","result":{"search_id":"kp_64bb79a65a904","pefindo_id":"6108521441","score":"AVERAGE RISK","max_overdue":40,"max_overdue_last12months":45,"angsuran_aktif_pbk":702009,"wo_contract":true,"wo_ada_agunan":false,"total_baki_debet_non_agunan":21000000,"detail_report":"http://10.0.0.170/los-symlink/pefindo/pdf/pdf_kp_64bb79a65a904_6108521441.pdf","category":1,"max_overdue_ko_rules":0,"max_overdue_last12months_ko_rules":0,"new_ko_rules":{"category_pbk":"restructure","contract_code":"1070007119003","contract_status":"Settled","creditor_type":"NotSpecified","creditor":"PT.MANDIRI Finance","condition_date":"2023-10-11","restructuring_date":"2024-11-11"},"number_of_inquiries_last1_month":11},"konsumen":{"search_id":"kp_64bb79a65a904","pefindo_id":"6108521441","score":"AVERAGE RISK","max_overdue":40,"max_overdue_last12months":45,"angsuran_aktif_pbk":0,"wo_contract":0,"wo_ada_agunan":0,"baki_debet_non_agunan":21000000,"detail_report":"http://10.0.0.170/los-symlink/pefindo/pdf/pdf_kp_64bb79a65a904_6108521441.pdf","new_ko_rules":{"category_pbk":"restructure","contract_code":"1070007119003","contract_status":"Settled","creditor_type":"NotSpecified","creditor":"PT.MANDIRI Finance","condition_date":"2023-10-11","restructuring_date":"2024-11-11"}},"pasangan":{"search_id":"kp_64bb79ab36b6d","pefindo_id":"5793480682","score":"AVERAGE RISK","max_overdue":0,"max_overdue_last12months":0,"angsuran_aktif_pbk":702009,"wo_contract":0,"wo_ada_agunan":0,"baki_debet_non_agunan":0,"detail_report":"http://10.0.0.170/los-symlink/pefindo/pdf/pdf_kp_64bb79ab36b6d_5793480682.pdf"},"server_time":"2023-07-22T13:39:45+07:00","duration_time":"11000 ms"}`,
+			reqMappingCluster: entity.MasterMappingCluster{
+				BranchID:       "426",
+				CustomerStatus: "NEW",
+				BpkbNameType:   0,
+			},
+			resMappingCluster: entity.MasterMappingCluster{
+				BranchID:       "426",
+				CustomerStatus: "NEW",
+				BpkbNameType:   0,
+				Cluster:        "Cluster B",
+			},
+			errMappingRiskLevel: errors.New("something wrong"),
+			respFilteringPefindo: response.Filtering{
+				ProspectID:     "SAL02400020230727001",
+				CustomerStatus: "NEW",
+				Cluster:        "Cluster B",
+			},
+			errFinal: errors.New("something wrong"),
+		},
+		{
 			name:           "reject inquiry 1 months",
 			customerStatus: constant.STATUS_KONSUMEN_NEW,
 			clusterCMO:     constant.CLUSTER_C,
@@ -3956,6 +4004,9 @@ func TestPefindo(t *testing.T) {
 				CustomerStatus: "NEW",
 				BpkbNameType:   0,
 				Cluster:        "Cluster B",
+			},
+			resMappingRiskLevel: entity.MappingRiskLevel{
+				Decision: constant.DECISION_REJECT,
 			},
 			respFilteringPefindo: response.Filtering{
 				ProspectID:        "SAL02400020230727001",
@@ -4140,6 +4191,7 @@ func TestPefindo(t *testing.T) {
 			mockHttpClient := new(httpclient.MockHttpClient)
 
 			mockRepository.On("MasterMappingCluster", tc.reqMappingCluster).Return(tc.resMappingCluster, tc.errMappingCluster)
+			mockRepository.On("GetMappingRiskLevel", mock.Anything).Return(tc.resMappingRiskLevel, tc.errMappingRiskLevel)
 
 			rst := resty.New()
 			httpmock.ActivateNonDefault(rst.GetClient())
