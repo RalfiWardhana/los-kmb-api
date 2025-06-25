@@ -16,6 +16,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/allegro/bigcache/v3"
 	"github.com/jinzhu/gorm"
 )
 
@@ -27,13 +28,15 @@ type repoHandler struct {
 	KpLos     *gorm.DB
 	KpLosLogs *gorm.DB
 	NewKmb    *gorm.DB
+	cache     *bigcache.BigCache
 }
 
-func NewRepository(kpLos, kpLosLogs, newKmb *gorm.DB) interfaces.Repository {
+func NewRepository(kpLos, kpLosLogs, newKmb *gorm.DB, cache *bigcache.BigCache) interfaces.Repository {
 	return &repoHandler{
 		KpLos:     kpLos,
 		KpLosLogs: kpLosLogs,
 		NewKmb:    newKmb,
+		cache:     cache,
 	}
 }
 
@@ -401,6 +404,33 @@ func (r repoHandler) GetFilteringByID(prospectID string) (row int, err error) {
 	row = len(data)
 
 	return
+}
+
+func (r repoHandler) GetMappingRiskLevel() (data []entity.MappingRiskLevel, err error) {
+	var x sql.TxOptions
+
+	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
+	defer cancel()
+
+	db := r.NewKmb.BeginTx(ctx, &x)
+	defer db.Commit()
+
+	if err = db.Raw("SELECT inquiry_start, inquiry_end, risk_level, decision FROM dbo.m_mapping_risk_level WHERE decision = 'REJECT' AND deleted_at IS NULL").Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetCache(key string) ([]byte, error) {
+	data, err := r.cache.Get(key)
+	return data, err
+}
+
+func (r repoHandler) SetCache(key string, entry []byte) error {
+	return r.cache.Set(key, entry)
 }
 
 func (r repoHandler) MasterMappingCluster(req entity.MasterMappingCluster) (data entity.MasterMappingCluster, err error) {

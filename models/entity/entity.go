@@ -908,6 +908,7 @@ type FilteringKMB struct {
 	SpouseSurgateMotherName         *string     `gorm:"column:spouse_surgate_mother_name" json:"spouse_surgate_mother_name"`
 	ChassisNumber                   *string     `gorm:"column:chassis_number;type:varchar(50)" json:"chassis_number"`
 	EngineNumber                    *string     `gorm:"column:engine_number;type:varchar(50)" json:"engine_number"`
+	NumberOfInquiriesLast1Month     *int        `gorm:"column:number_of_inquiries_last1_month" json:"number_of_inquiries_last1_month"`
 	CreatedAt                       time.Time   `gorm:"column:created_at" json:"created_at"`
 }
 
@@ -1011,6 +1012,17 @@ type TrxDetailBiro struct {
 
 func (c *TrxDetailBiro) TableName() string {
 	return "trx_detail_biro"
+}
+
+type MappingRiskLevel struct {
+	InquiryStart int    `gorm:"column:inquiry_start"`
+	InquiryEnd   int    `gorm:"column:inquiry_end"`
+	RiskLevel    string `gorm:"column:risk_level"`
+	Decision     string `gorm:"column:decision"`
+}
+
+func (c *MappingRiskLevel) TableName() string {
+	return "m_mapping_risk_level"
 }
 
 type MasterMappingCluster struct {

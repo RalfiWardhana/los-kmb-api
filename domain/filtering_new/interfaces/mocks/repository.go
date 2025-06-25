@@ -141,6 +141,36 @@ func (_m *Repository) GetAssetReject(chassisNumber string, engineNumber string, 
 	return r0, r1, r2
 }
 
+// GetCache provides a mock function with given fields: key
+func (_m *Repository) GetCache(key string) ([]byte, error) {
+	ret := _m.Called(key)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCache")
+	}
+
+	var r0 []byte
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) ([]byte, error)); ok {
+		return rf(key)
+	}
+	if rf, ok := ret.Get(0).(func(string) []byte); ok {
+		r0 = rf(key)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(key)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetConfig provides a mock function with given fields: groupName, lob, key
 func (_m *Repository) GetConfig(groupName string, lob string, key string) (entity.AppConfig, error) {
 	ret := _m.Called(groupName, lob, key)
@@ -190,6 +220,36 @@ func (_m *Repository) GetFilteringByID(prospectID string) (int, error) {
 
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMappingRiskLevel provides a mock function with given fields:
+func (_m *Repository) GetMappingRiskLevel() ([]entity.MappingRiskLevel, error) {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMappingRiskLevel")
+	}
+
+	var r0 []entity.MappingRiskLevel
+	var r1 error
+	if rf, ok := ret.Get(0).(func() ([]entity.MappingRiskLevel, error)); ok {
+		return rf()
+	}
+	if rf, ok := ret.Get(0).(func() []entity.MappingRiskLevel); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.MappingRiskLevel)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -312,6 +372,24 @@ func (_m *Repository) SaveLogOrchestrator(header interface{}, request interface{
 	var r0 error
 	if rf, ok := ret.Get(0).(func(interface{}, interface{}, interface{}, string, string, string, string) error); ok {
 		r0 = rf(header, request, _a2, path, method, prospectID, requestID)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// SetCache provides a mock function with given fields: key, entry
+func (_m *Repository) SetCache(key string, entry []byte) error {
+	ret := _m.Called(key, entry)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetCache")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, []byte) error); ok {
+		r0 = rf(key, entry)
 	} else {
 		r0 = ret.Error(0)
 	}

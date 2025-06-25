@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/allegro/bigcache/v3"
 	"github.com/jinzhu/gorm"
 )
 
@@ -46,7 +47,8 @@ func TestDummyDataPbk(t *testing.T) {
 
 	gormDB = gormDB.Debug()
 
-	newDB := NewRepository(gormDB, gormDB, gormDB)
+	var mCache *bigcache.BigCache
+	newDB := NewRepository(gormDB, gormDB, gormDB, mCache)
 	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT * FROM dbo.dummy_pefindo_kmb WITH (nolock) WHERE IDNumber = ?")).
 		WithArgs("TST001").
@@ -71,7 +73,8 @@ func TestSaveFiltering(t *testing.T) {
 
 	_ = gormDB
 
-	newDB := NewRepository(gormDB, gormDB, gormDB)
+	var mCache *bigcache.BigCache
+	newDB := NewRepository(gormDB, gormDB, gormDB, mCache)
 	trxFiltering := entity.FilteringKMB{
 		ProspectID:        "TST001",
 		Decision:          "PASS",
@@ -199,7 +202,8 @@ func TestGetFilteringByID(t *testing.T) {
 
 	gormDB = gormDB.Debug()
 
-	newDB := NewRepository(gormDB, gormDB, gormDB)
+	var mCache *bigcache.BigCache
+	newDB := NewRepository(gormDB, gormDB, gormDB, mCache)
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT prospect_id FROM dbo.trx_filtering WITH (nolock) WHERE prospect_id = 'TST001'")).
 		WillReturnRows(sqlmock.NewRows([]string{"prospect_id"}).
 			AddRow("TST001"))
@@ -220,7 +224,8 @@ func TestMasterMappingCluster(t *testing.T) {
 
 	gormDB = gormDB.Debug()
 
-	newDB := NewRepository(gormDB, gormDB, gormDB)
+	var mCache *bigcache.BigCache
+	newDB := NewRepository(gormDB, gormDB, gormDB, mCache)
 	req := entity.MasterMappingCluster{
 		BranchID:       "426",
 		CustomerStatus: constant.STATUS_KONSUMEN_NEW,
@@ -251,7 +256,8 @@ func TestSaveLogOrchestrator(t *testing.T) {
 
 	gormDB = gormDB.Debug()
 
-	newDB := NewRepository(gormDB, gormDB, gormDB)
+	var mCache *bigcache.BigCache
+	newDB := NewRepository(gormDB, gormDB, gormDB, mCache)
 
 	header := "{'header':'header-id'}"
 	request := "{'request':'request-id'}"
@@ -286,7 +292,8 @@ func TestMasterMappingFpdCluster(t *testing.T) {
 
 	gormDB = gormDB.Debug()
 
-	newDB := NewRepository(gormDB, gormDB, gormDB)
+	var mCache *bigcache.BigCache
+	newDB := NewRepository(gormDB, gormDB, gormDB, mCache)
 	FpdValue := 5.0
 
 	mock.ExpectBegin()
@@ -315,7 +322,8 @@ func TestCheckCMONoFPD(t *testing.T) {
 
 	gormDB = gormDB.Debug()
 
-	newDB := NewRepository(gormDB, gormDB, gormDB)
+	var mCache *bigcache.BigCache
+	newDB := NewRepository(gormDB, gormDB, gormDB, mCache)
 	cmoID := "CMO001"
 	bpkbName := "NAMA SAMA"
 
@@ -364,7 +372,8 @@ func TestGetResultFiltering(t *testing.T) {
 
 	gormDB = gormDB.Debug()
 
-	repo := NewRepository(gormDB, gormDB, gormDB)
+	var mCache *bigcache.BigCache
+	repo := NewRepository(gormDB, gormDB, gormDB, mCache)
 
 	prospectID := "TST001"
 
@@ -397,7 +406,8 @@ func TestGetConfig(t *testing.T) {
 
 	jsonValue := `{ "data": { "expired_contract_check_enabled": true, "expired_contract_max_months": 6 } }`
 
-	newDB := NewRepository(gormDB, gormDB, gormDB)
+	var mCache *bigcache.BigCache
+	newDB := NewRepository(gormDB, gormDB, gormDB, mCache)
 	mock.ExpectQuery(regexp.QuoteMeta("SELECT [value] FROM app_config WITH (nolock) WHERE group_name = 'expired_contract' AND lob = 'KMB-OFF' AND [key]= 'expired_contract_check' AND is_active = 1")).
 		WillReturnRows(sqlmock.NewRows([]string{"value"}).
 			AddRow(jsonValue))

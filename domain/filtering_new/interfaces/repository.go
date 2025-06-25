@@ -6,9 +6,12 @@ import (
 )
 
 type Repository interface {
+	GetCache(key string) ([]byte, error)
+	SetCache(key string, entry []byte) error
 	DummyDataPbk(query string) (data entity.DummyPBK, err error)
 	SaveFiltering(data entity.FilteringKMB, trxDetailBiro []entity.TrxDetailBiro, dataCMOnoFPD entity.TrxCmoNoFPD, historyCheckAsset []entity.TrxHistoryCheckingAsset, lockingSystem entity.TrxLockSystem) (err error)
 	GetFilteringByID(prospectID string) (row int, err error)
+	GetMappingRiskLevel() (data []entity.MappingRiskLevel, err error)
 	MasterMappingCluster(req entity.MasterMappingCluster) (data entity.MasterMappingCluster, err error)
 	SaveLogOrchestrator(header, request, response interface{}, path, method, prospectID string, requestID string) (err error)
 	GetResultFiltering(prospectID string) (data []entity.ResultFiltering, err error)
