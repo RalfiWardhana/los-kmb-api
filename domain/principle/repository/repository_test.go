@@ -2718,19 +2718,21 @@ func TestGetMappingElaborateLTV(t *testing.T) {
 
 	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
-	query := `SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE result_pefindo = ? AND cluster = ? `
+	query := `SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE deleted_at IS NULL AND result_pefindo = ? AND cluster = ? AND grade_branch IN ('ALL', ?) AND status_konsumen IN ('ALL', ?) AND pbk_score IN ('ALL', ?) AND bpkb_name_type = ?`
 
 	resultPefindo := "PASS"
 	cluster := "Cluster A"
+	gradeBranch := "BAD"
+	customerStatus := "NEW"
+	pbkScore := "GOOD"
+	bpkbNameType := 1
 
-	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
-		WithArgs(resultPefindo, cluster).
+		WithArgs(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType).
 		WillReturnRows(sqlmock.NewRows([]string{"result_pefindo", "cluster", "total_baki_debet_start"}).
 			AddRow("AVERAGE RISK", "Cluster A", 0))
-	mock.ExpectCommit()
 
-	_, err := repo.GetMappingElaborateLTV(resultPefindo, cluster)
+	_, err := repo.GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType)
 	if err != nil {
 		t.Errorf("error '%s' was not expected, but got: ", err)
 	}
@@ -2748,18 +2750,20 @@ func TestGetMappingElaborateLTV_DatabaseError(t *testing.T) {
 
 	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
 
-	query := `SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE result_pefindo = ? AND cluster = ? `
+	query := `SELECT * FROM m_mapping_elaborate_ltv WITH (nolock) WHERE deleted_at IS NULL AND result_pefindo = ? AND cluster = ? AND grade_branch IN ('ALL', ?) AND status_konsumen IN ('ALL', ?) AND pbk_score IN ('ALL', ?) AND bpkb_name_type = ?`
 
 	resultPefindo := "PASS"
 	cluster := "Cluster A"
+	gradeBranch := "BAD"
+	customerStatus := "NEW"
+	pbkScore := "GOOD"
+	bpkbNameType := 1
 
-	mock.ExpectBegin()
 	mock.ExpectQuery(regexp.QuoteMeta(query)).
-		WithArgs(resultPefindo, cluster).
+		WithArgs(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType).
 		WillReturnError(fmt.Errorf("database error"))
-	mock.ExpectCommit()
 
-	result, err := repo.GetMappingElaborateLTV(resultPefindo, cluster)
+	result, err := repo.GetMappingElaborateLTV(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType)
 
 	if err == nil {
 		t.Error("expected error, got nil")
@@ -2777,6 +2781,186 @@ func TestGetMappingElaborateLTV_DatabaseError(t *testing.T) {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
 }
+
+func TestGetMappingBranchByID_DatabaseError(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	query := `SELECT TOP 1 * FROM m_mapping_branch WITH (nolock) WHERE branch_id = ? AND score = ?`
+
+	id := "id"
+	pbkScore := "GOOD"
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(id, pbkScore).
+		WillReturnError(fmt.Errorf("database error"))
+
+	_, err := repo.GetMappingBranchByBranchID(id, pbkScore)
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+
+	if err.Error() != "database error" {
+		t.Errorf("expected error 'database error', got '%v'", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetMappingBranchByID_Success(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	query := `SELECT TOP 1 * FROM m_mapping_branch WITH (nolock) WHERE branch_id = ? AND score = ?`
+
+	id := "123"
+	pbkScore := "GOOD"
+
+	rows := sqlmock.NewRows([]string{"id", "branch_id", "score"}).
+		AddRow(1, id, pbkScore)
+
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(id, pbkScore).
+		WillReturnRows(rows)
+
+	result, err := repo.GetMappingBranchByBranchID(id, pbkScore)
+	if err != nil {
+		t.Errorf("unexpected error: %v", err)
+	}
+	if result.BranchID != id || result.Score != pbkScore {
+		t.Errorf("unexpected result: %+v", result)
+	}
+}
+func TestGetMappingBranchByID(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	query := `SELECT TOP 1 * FROM m_mapping_branch WITH (nolock) WHERE branch_id = ? AND score = ?`
+
+	id := "id"
+	pbkScore := "GOOD"
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(id, pbkScore).
+		WillReturnRows(sqlmock.NewRows([]string{"result_pefindo", "cluster", "total_baki_debet_start"}).
+			AddRow("AVERAGE RISK", "Cluster A", 0))
+
+	_, err := repo.GetMappingBranchByBranchID(id, pbkScore)
+	if err != nil {
+		t.Errorf("error '%s' was not expected, but got: ", err)
+	}
+}
+
+func TestGetMappingPbkScore(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	query := `SELECT TOP 1 * FROM m_mapping_pbk_grade WITH (nolock) WHERE score IN (?,?,?) ORDER BY grade_risk DESC`
+
+	scores := []string{"AVERAGE RISK", "LOW RISK", "VERY LOW RISK"}
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(scores[0], scores[1], scores[2]).
+		WillReturnRows(sqlmock.NewRows([]string{"grade_risk", "GRADE_SCORE"}).
+			AddRow(3, "BAD"))
+
+	_, err := repo.GetMappingPbkScore(scores)
+	if err != nil {
+		t.Errorf("error '%s' was not expected, but got: ", err)
+	}
+}
+
+func TestGetMappingPbkScore_EmptyScores(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, _, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	scores := make([]string, 0)
+
+	_, err := repo.GetMappingPbkScore(scores)
+	if err != nil {
+		t.Errorf("error '%s' was not expected, but got: ", err)
+	}
+}
+
+func TestGetMappingPbkScore_DatabaseError(t *testing.T) {
+	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
+
+	sqlDB, mock, _ := sqlmock.New()
+	defer sqlDB.Close()
+
+	gormDB, _ := gorm.Open("sqlite3", sqlDB)
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	query := `SELECT TOP 1 * FROM m_mapping_pbk_grade WITH (nolock) WHERE score IN (?,?,?) ORDER BY grade_risk DESC`
+
+	scores := []string{"AVERAGE RISK", "LOW RISK", "VERY LOW RISK"}
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
+		WithArgs(scores[0], scores[1], scores[2]).
+		WillReturnError(fmt.Errorf("database error"))
+
+	_, err := repo.GetMappingPbkScore(scores)
+
+	if err == nil {
+		t.Error("expected error, got nil")
+	}
+
+	fmt.Println(err.Error())
+	if err.Error() != "database error" {
+		t.Errorf("expected error 'database error', got '%v'", err)
+	}
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
 func TestSaveTrxElaborateLTV(t *testing.T) {
 	os.Setenv("DEFAULT_TIMEOUT_10S", "10")
 
@@ -5796,7 +5980,7 @@ func TestGetTrxKPMStatusHistory(t *testing.T) {
 	}
 	defer sqlDB.Close()
 
-	gormDB, err := gorm.Open("sqlserver", sqlDB)
+	gormDB, err := gorm.Open("sqlite3", sqlDB)
 	if err != nil {
 		t.Fatalf("error opening gorm db: %v", err)
 	}
@@ -5822,6 +6006,46 @@ func TestGetTrxKPMStatusHistory(t *testing.T) {
 			req: request.History2Wilen{
 				ProspectID: ptr("PROS-001"),
 				StartDate:  &startDate,
+				EndDate:    &endDate,
+				Status:     &status,
+			},
+			mockData: []entity.TrxKPMStatusHistory{
+				{
+					ID:         "HIST-001",
+					ProspectID: "PROS-001",
+					Decision:   "APPROVED",
+					CreatedAt:  now.Add(-24 * time.Hour),
+					LoanAmount: &loanAmount,
+				},
+			},
+			mockError:     nil,
+			expectedError: nil,
+			expectedLen:   1,
+		},
+		{
+			name: "Success - Filter by ProspectID, Start Date, and Status",
+			req: request.History2Wilen{
+				ProspectID: ptr("PROS-001"),
+				StartDate:  &startDate,
+				Status:     &status,
+			},
+			mockData: []entity.TrxKPMStatusHistory{
+				{
+					ID:         "HIST-001",
+					ProspectID: "PROS-001",
+					Decision:   "APPROVED",
+					CreatedAt:  now.Add(-24 * time.Hour),
+					LoanAmount: &loanAmount,
+				},
+			},
+			mockError:     nil,
+			expectedError: nil,
+			expectedLen:   1,
+		},
+		{
+			name: "Success - Filter by ProspectID, End Date, and Status",
+			req: request.History2Wilen{
+				ProspectID: ptr("PROS-001"),
 				EndDate:    &endDate,
 				Status:     &status,
 			},
@@ -5876,6 +6100,12 @@ func TestGetTrxKPMStatusHistory(t *testing.T) {
 			if tc.req.StartDate != nil && tc.req.EndDate != nil {
 				whereQuery += " AND s.created_at BETWEEN ? AND ?"
 				args = append(args, *tc.req.StartDate, *tc.req.EndDate)
+			} else if tc.req.StartDate != nil {
+				whereQuery += " AND s.created_at >= ?"
+				args = append(args, *tc.req.StartDate)
+			} else if tc.req.EndDate != nil {
+				whereQuery += " AND s.created_at <= ?"
+				args = append(args, *tc.req.EndDate)
 			}
 			if tc.req.Status != nil {
 				whereQuery += " AND s.Decision = ?"
@@ -6133,6 +6363,445 @@ func TestUpdateTrxKPMDecision(t *testing.T) {
 
 		err := repo.UpdateTrxKPMDecision(testID, "", testDecision)
 		assert.Error(t, err)
+	})
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetLatestTrxKPMStatusWithLock(t *testing.T) {
+	sqlDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("error creating mock db: %v", err)
+	}
+	defer sqlDB.Close()
+
+	gormDB, err := gorm.Open("sqlite3", sqlDB)
+	if err != nil {
+		t.Fatalf("error opening gorm db: %v", err)
+	}
+	gormDB.LogMode(true)
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	testCases := []struct {
+		name          string
+		prospectID    string
+		mockData      entity.TrxKPMStatus
+		mockError     error
+		expectedError error
+	}{
+		{
+			name:       "Success Case",
+			prospectID: "PROS-001",
+			mockData: entity.TrxKPMStatus{
+				ID:         "STATUS-001",
+				ProspectID: "PROS-001",
+				Decision:   "APPROVED",
+				CreatedAt:  time.Now(),
+			},
+			mockError:     nil,
+			expectedError: nil,
+		},
+		{
+			name:          "Record Not Found",
+			prospectID:    "PROS-999",
+			mockData:      entity.TrxKPMStatus{},
+			mockError:     gorm.ErrRecordNotFound,
+			expectedError: gorm.ErrRecordNotFound,
+		},
+		{
+			name:          "Database Error",
+			prospectID:    "PROS-888",
+			mockData:      entity.TrxKPMStatus{},
+			mockError:     fmt.Errorf("database error"),
+			expectedError: fmt.Errorf("database error"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			query := fmt.Sprintf("SELECT TOP 1 tks.* FROM trx_kpm_status tks WHERE tks.ProspectID = '%s' ORDER BY tks.created_at DESC", tc.prospectID)
+
+			if tc.mockError != nil {
+				mock.ExpectQuery(regexp.QuoteMeta(query)).
+					WillReturnError(tc.mockError)
+			} else {
+				rows := sqlmock.NewRows([]string{"id", "ProspectID", "Decision", "created_at"}).
+					AddRow(tc.mockData.ID, tc.mockData.ProspectID, tc.mockData.Decision, tc.mockData.CreatedAt)
+				mock.ExpectQuery(regexp.QuoteMeta(query)).
+					WillReturnRows(rows)
+			}
+
+			result, err := repo.GetLatestTrxKPMStatusWithLock(tc.prospectID)
+
+			if tc.expectedError != nil {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectedError.Error(), err.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.mockData.ID, result.ID)
+				assert.Equal(t, tc.mockData.ProspectID, result.ProspectID)
+				assert.Equal(t, tc.mockData.Decision, result.Decision)
+			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
+
+func TestUpdateTrxKPMStatus(t *testing.T) {
+	sqlDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock DB: %v", err)
+	}
+	defer sqlDB.Close()
+
+	gormDB, err := gorm.Open("sqlite3", sqlDB)
+	if err != nil {
+		t.Fatalf("Failed to open GORM DB: %v", err)
+	}
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	testID := "STATUS-123"
+	testData := entity.TrxKPMStatus{
+		ProspectID: "PROS-123",
+		Decision:   "REJECTED",
+		UpdatedBy:  "system",
+	}
+
+	t.Run("Successful Update", func(t *testing.T) {
+		mock.ExpectBegin()
+
+		mock.ExpectExec(`UPDATE "trx_kpm_status" SET "Decision" = \?, "ProspectID" = \?, "updated_at" = \?, "updated_by" = \? WHERE "trx_kpm_status"."deleted_at" IS NULL AND \(\(id = \?\)\)`).
+			WithArgs(testData.Decision, testData.ProspectID, sqlmock.AnyArg(), testData.UpdatedBy, testID).
+			WillReturnResult(sqlmock.NewResult(0, 1))
+
+		mock.ExpectCommit()
+
+		err := repo.UpdateTrxKPMStatus(testID, testData)
+		assert.NoError(t, err)
+	})
+
+	t.Run("Error - Update Fails", func(t *testing.T) {
+		mock.ExpectBegin()
+
+		expectedError := fmt.Errorf("failed to update TrxKPMStatus")
+		mock.ExpectExec(`UPDATE "trx_kpm_status" SET "Decision" = \?, "ProspectID" = \?, "updated_at" = \?, "updated_by" = \? WHERE "trx_kpm_status"."deleted_at" IS NULL AND \(\(id = \?\)\)`).
+			WithArgs(testData.Decision, testData.ProspectID, sqlmock.AnyArg(), testData.UpdatedBy, testID).
+			WillReturnError(expectedError)
+
+		mock.ExpectRollback()
+
+		err := repo.UpdateTrxKPMStatus(testID, testData)
+		assert.Error(t, err)
+		assert.Equal(t, expectedError, err)
+	})
+
+	t.Run("Error - Empty ID", func(t *testing.T) {
+		mock.ExpectBegin()
+
+		mock.ExpectExec(`UPDATE "trx_kpm_status" SET "Decision" = \?, "ProspectID" = \?, "updated_at" = \?, "updated_by" = \? WHERE "trx_kpm_status"."deleted_at" IS NULL AND \(\(id = \?\)\)`).
+			WithArgs(testData.Decision, testData.ProspectID, sqlmock.AnyArg(), testData.UpdatedBy, "").
+			WillReturnError(fmt.Errorf("invalid ID"))
+
+		mock.ExpectRollback()
+
+		err := repo.UpdateTrxKPMStatus("", testData)
+		assert.Error(t, err)
+	})
+
+	t.Run("Error - No Rows Affected", func(t *testing.T) {
+		mock.ExpectBegin()
+
+		mock.ExpectExec(`UPDATE "trx_kpm_status" SET "Decision" = \?, "ProspectID" = \?, "updated_at" = \?, "updated_by" = \? WHERE "trx_kpm_status"."deleted_at" IS NULL AND \(\(id = \?\)\)`).
+			WithArgs(testData.Decision, testData.ProspectID, sqlmock.AnyArg(), testData.UpdatedBy, testID).
+			WillReturnResult(sqlmock.NewResult(0, 0))
+
+		mock.ExpectCommit()
+
+		err := repo.UpdateTrxKPMStatus(testID, testData)
+		assert.NoError(t, err)
+	})
+
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unfulfilled expectations: %s", err)
+	}
+}
+
+func TestGetTrxKPMWithLock(t *testing.T) {
+	sqlDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("error creating mock db: %v", err)
+	}
+	defer sqlDB.Close()
+
+	gormDB, err := gorm.Open("sqlite3", sqlDB)
+	if err != nil {
+		t.Fatalf("error opening gorm db: %v", err)
+	}
+	gormDB.LogMode(true)
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	testCases := []struct {
+		name          string
+		prospectID    string
+		mockData      entity.TrxKPM
+		decryptedData entity.Encrypted
+		mockError     error
+		decryptError  error
+		expectedError error
+	}{
+		{
+			name:       "Success Case",
+			prospectID: "PROS-001",
+			mockData: entity.TrxKPM{
+				ID:                "TRX-001",
+				ProspectID:        "PROS-001",
+				LegalName:         "ENC_NAME",
+				SurgateMotherName: "ENC_MOTHER",
+				MobilePhone:       "ENC_PHONE",
+				Email:             "ENC_EMAIL",
+				BirthPlace:        "ENC_BIRTHPLACE",
+				ResidenceAddress:  "ENC_ADDRESS",
+				IDNumber:          "ENC_ID",
+			},
+			decryptedData: entity.Encrypted{
+				LegalName:         "John Doe",
+				SurgateMotherName: "Jane Doe",
+				MobilePhone:       "1234567890",
+				Email:             "john@example.com",
+				BirthPlace:        "New York",
+				ResidenceAddress:  "123 Main St",
+				IDNumber:          "ID123456",
+			},
+			mockError:     nil,
+			decryptError:  nil,
+			expectedError: nil,
+		},
+		{
+			name:          "Record Not Found",
+			prospectID:    "PROS-002",
+			mockData:      entity.TrxKPM{},
+			mockError:     gorm.ErrRecordNotFound,
+			expectedError: gorm.ErrRecordNotFound,
+		},
+		{
+			name:       "Decrypt Error",
+			prospectID: "PROS-003",
+			mockData: entity.TrxKPM{
+				ID:                "TRX-003",
+				ProspectID:        "PROS-003",
+				LegalName:         "ENC_NAME",
+				SurgateMotherName: "ENC_MOTHER",
+				MobilePhone:       "ENC_PHONE",
+				Email:             "ENC_EMAIL",
+				BirthPlace:        "ENC_BIRTHPLACE",
+				ResidenceAddress:  "ENC_ADDRESS",
+				IDNumber:          "ENC_ID",
+			},
+			decryptError:  fmt.Errorf("decrypt error"),
+			expectedError: fmt.Errorf("decrypt error"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			initialQuery := fmt.Sprintf("SELECT TOP 1 * FROM trx_kpm WHERE ProspectID = '%s' ORDER BY created_at DESC", tc.prospectID)
+
+			if tc.mockError != nil {
+				mock.ExpectQuery(regexp.QuoteMeta(initialQuery)).
+					WillReturnError(tc.mockError)
+			} else {
+				mock.ExpectQuery(regexp.QuoteMeta(initialQuery)).
+					WillReturnRows(sqlmock.NewRows([]string{
+						"id", "ProspectID", "LegalName", "SurgateMotherName", "MobilePhone",
+						"Email", "BirthPlace", "ResidenceAddress", "IDNumber",
+					}).AddRow(
+						tc.mockData.ID,
+						tc.mockData.ProspectID,
+						tc.mockData.LegalName,
+						tc.mockData.SurgateMotherName,
+						tc.mockData.MobilePhone,
+						tc.mockData.Email,
+						tc.mockData.BirthPlace,
+						tc.mockData.ResidenceAddress,
+						tc.mockData.IDNumber,
+					))
+
+				if tc.mockError == nil && tc.decryptError == nil {
+					decryptQuery := fmt.Sprintf(`SELECT scp.dbo.DEC_B64('SEC', '%s') AS LegalName, scp.dbo.DEC_B64('SEC','%s') AS SurgateMotherName,
+                        scp.dbo.DEC_B64('SEC', '%s') AS MobilePhone, scp.dbo.DEC_B64('SEC', '%s') AS Email,
+                        scp.dbo.DEC_B64('SEC', '%s') AS BirthPlace, scp.dbo.DEC_B64('SEC','%s') AS ResidenceAddress,
+                        scp.dbo.DEC_B64('SEC', '%s') AS IDNumber`,
+						tc.mockData.LegalName,
+						tc.mockData.SurgateMotherName,
+						tc.mockData.MobilePhone,
+						tc.mockData.Email,
+						tc.mockData.BirthPlace,
+						tc.mockData.ResidenceAddress,
+						tc.mockData.IDNumber)
+
+					mock.ExpectQuery(regexp.QuoteMeta(decryptQuery)).
+						WillReturnRows(sqlmock.NewRows([]string{
+							"LegalName", "SurgateMotherName", "MobilePhone",
+							"Email", "BirthPlace", "ResidenceAddress", "IDNumber",
+						}).AddRow(
+							tc.decryptedData.LegalName,
+							tc.decryptedData.SurgateMotherName,
+							tc.decryptedData.MobilePhone,
+							tc.decryptedData.Email,
+							tc.decryptedData.BirthPlace,
+							tc.decryptedData.ResidenceAddress,
+							tc.decryptedData.IDNumber,
+						))
+				} else if tc.decryptError != nil {
+					mock.ExpectQuery("SELECT scp.dbo.DEC_B64").
+						WillReturnError(tc.decryptError)
+				}
+			}
+
+			result, err := repo.GetTrxKPMWithLock(tc.prospectID)
+
+			if tc.expectedError != nil {
+				assert.Error(t, err)
+				assert.Equal(t, tc.expectedError.Error(), err.Error())
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.decryptedData.LegalName, result.LegalName)
+				assert.Equal(t, tc.decryptedData.SurgateMotherName, result.SurgateMotherName)
+				assert.Equal(t, tc.decryptedData.IDNumber, result.IDNumber)
+				assert.Equal(t, tc.decryptedData.MobilePhone, result.MobilePhone)
+				assert.Equal(t, tc.decryptedData.Email, result.Email)
+				assert.Equal(t, tc.decryptedData.BirthPlace, result.BirthPlace)
+				assert.Equal(t, tc.decryptedData.ResidenceAddress, result.ResidenceAddress)
+			}
+
+			if err := mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("there were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
+
+func TestUpdateTrxKPM(t *testing.T) {
+	sqlDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("Failed to create mock DB: %v", err)
+	}
+	defer sqlDB.Close()
+
+	gormDB, err := gorm.Open("sqlite3", sqlDB)
+	if err != nil {
+		t.Fatalf("Failed to open GORM DB: %v", err)
+	}
+	gormDB.LogMode(true)
+	gormDB = gormDB.Debug()
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	testID := "TRX-123"
+	testData := entity.TrxKPM{
+		ProspectID:        "PROS-123",
+		LegalName:         "John Doe",
+		SurgateMotherName: "Jane Doe",
+		MobilePhone:       "1234567890",
+		Email:             "john@example.com",
+		BirthPlace:        "New York",
+		ResidenceAddress:  "123 Main St",
+		IDNumber:          "ID123456",
+		Decision:          "APPROVED",
+	}
+
+	encryptedData := entity.Encrypted{
+		LegalName:         "ENC_NAME",
+		SurgateMotherName: "ENC_MOTHER",
+		MobilePhone:       "ENC_PHONE",
+		Email:             "ENC_EMAIL",
+		BirthPlace:        "ENC_BIRTHPLACE",
+		ResidenceAddress:  "ENC_ADDRESS",
+		IDNumber:          "ENC_ID",
+	}
+
+	t.Run("Successful Update", func(t *testing.T) {
+		mock.ExpectBegin()
+
+		mock.ExpectQuery("SELECT SCP.dbo.ENC_B64").
+			WillReturnRows(sqlmock.NewRows([]string{
+				"LegalName", "SurgateMotherName", "MobilePhone",
+				"Email", "BirthPlace", "ResidenceAddress", "IDNumber",
+			}).AddRow(
+				encryptedData.LegalName,
+				encryptedData.SurgateMotherName,
+				encryptedData.MobilePhone,
+				encryptedData.Email,
+				encryptedData.BirthPlace,
+				encryptedData.ResidenceAddress,
+				encryptedData.IDNumber,
+			))
+
+		mock.ExpectExec(`UPDATE "trx_kpm" SET`).
+			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(),
+				sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(),
+				sqlmock.AnyArg(), sqlmock.AnyArg(), testID).
+			WillReturnResult(sqlmock.NewResult(0, 1))
+
+		mock.ExpectCommit()
+
+		err := repo.UpdateTrxKPM(testID, testData)
+		assert.NoError(t, err)
+	})
+
+	t.Run("Encryption Error", func(t *testing.T) {
+		mock.ExpectBegin()
+		expectedError := fmt.Errorf("encryption failed")
+		mock.ExpectQuery("SELECT SCP.dbo.ENC_B64").WillReturnError(expectedError)
+		mock.ExpectRollback()
+
+		err := repo.UpdateTrxKPM(testID, testData)
+		assert.EqualError(t, err, expectedError.Error())
+
+		if err := mock.ExpectationsWereMet(); err != nil {
+			t.Errorf("unfulfilled expectations: %v", err)
+		}
+	})
+
+	t.Run("Update Error", func(t *testing.T) {
+		mock.ExpectBegin()
+
+		mock.ExpectQuery("SELECT SCP.dbo.ENC_B64").
+			WillReturnRows(sqlmock.NewRows([]string{
+				"LegalName", "SurgateMotherName", "MobilePhone",
+				"Email", "BirthPlace", "ResidenceAddress", "IDNumber",
+			}).AddRow(
+				encryptedData.LegalName,
+				encryptedData.SurgateMotherName,
+				encryptedData.MobilePhone,
+				encryptedData.Email,
+				encryptedData.BirthPlace,
+				encryptedData.ResidenceAddress,
+				encryptedData.IDNumber,
+			))
+
+		expectedError := fmt.Errorf("update failed")
+		mock.ExpectExec(`UPDATE "trx_kpm" SET`).
+			WithArgs(sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(),
+				sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(), sqlmock.AnyArg(),
+				sqlmock.AnyArg(), sqlmock.AnyArg(), testID).
+			WillReturnError(expectedError)
+
+		mock.ExpectRollback()
+
+		err := repo.UpdateTrxKPM(testID, testData)
+		assert.Error(t, err)
+		assert.Equal(t, expectedError, err)
 	})
 
 	if err := mock.ExpectationsWereMet(); err != nil {

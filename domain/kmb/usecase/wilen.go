@@ -38,7 +38,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Metrics, acce
 		dupcheckData         response.SpDupcheckMap
 		negativeCustomerData response.NegativeCustomer
 		trxKPM               entity.TrxKPM
-		isModified           bool
+		isPrescreeningFlow   bool
 	)
 
 	defer func() {
@@ -102,27 +102,33 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Metrics, acce
 		bpkbNameTypeReq = 1
 	}
 
-	if trxKPM.Education != req.CustomerPersonal.Education ||
-		!compareNumOfDependence(trxKPM.NumOfDependence, req.CustomerPersonal.NumOfDependence) ||
-		trxKPM.HomeStatus != req.CustomerPersonal.HomeStatus ||
-		staySinceYear != req.CustomerPersonal.StaySinceYear ||
-		staySinceMonth != req.CustomerPersonal.StaySinceMonth ||
-		trxKPM.ProfessionID != req.CustomerEmployment.ProfessionID ||
-		trxKPM.JobType != req.CustomerEmployment.JobType ||
-		trxKPM.JobPosition != req.CustomerEmployment.JobPosition ||
-		trxKPM.MonthlyFixedIncome != req.CustomerEmployment.MonthlyFixedIncome ||
-		!compareMonthlyVariableIncome(0, req.CustomerEmployment.MonthlyVariableIncome) ||
-		!compareSpouseIncome(trxKPM.SpouseIncome, req.CustomerEmployment.SpouseIncome) ||
-		trxKPM.AssetUsageTypeCode != req.Item.AssetUsage ||
-		trxKPM.AssetCategoryID != req.Item.CategoryID ||
-		trxKPM.AssetCode != req.Item.AssetCode ||
-		trxKPM.ManufactureYear != req.Item.ManufactureYear ||
-		trxKPM.NoChassis != req.Item.NoChassis ||
-		bpkbNameTypeKPM != bpkbNameTypeReq {
-		isModified = true
+	isCheckModifiedData, err := strconv.ParseBool(os.Getenv("IS_CHECK_MODIFIED_DATA_2WILEN"))
+	if err != nil {
+		isCheckModifiedData = false
 	}
 
-	if isModified {
+	isPrescreeningFlow = true
+	if isCheckModifiedData {
+		isPrescreeningFlow = trxKPM.Education != req.CustomerPersonal.Education ||
+			!compareNumOfDependence(trxKPM.NumOfDependence, req.CustomerPersonal.NumOfDependence) ||
+			trxKPM.HomeStatus != req.CustomerPersonal.HomeStatus ||
+			staySinceYear != req.CustomerPersonal.StaySinceYear ||
+			staySinceMonth != req.CustomerPersonal.StaySinceMonth ||
+			trxKPM.ProfessionID != req.CustomerEmployment.ProfessionID ||
+			trxKPM.JobType != req.CustomerEmployment.JobType ||
+			trxKPM.JobPosition != req.CustomerEmployment.JobPosition ||
+			trxKPM.MonthlyFixedIncome != req.CustomerEmployment.MonthlyFixedIncome ||
+			!compareMonthlyVariableIncome(0, req.CustomerEmployment.MonthlyVariableIncome) ||
+			!compareSpouseIncome(trxKPM.SpouseIncome, req.CustomerEmployment.SpouseIncome) ||
+			trxKPM.AssetUsageTypeCode != req.Item.AssetUsage ||
+			trxKPM.AssetCategoryID != req.Item.CategoryID ||
+			trxKPM.AssetCode != req.Item.AssetCode ||
+			trxKPM.ManufactureYear != req.Item.ManufactureYear ||
+			trxKPM.NoChassis != req.Item.NoChassis ||
+			bpkbNameTypeKPM != bpkbNameTypeReq
+	}
+
+	if isPrescreeningFlow {
 		// STEP 1 CMO not recommend
 		if req.Agent.CmoRecom == constant.CMO_NOT_RECOMMEDED {
 			details = append(details, entity.TrxDetail{

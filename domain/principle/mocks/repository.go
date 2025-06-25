@@ -369,6 +369,62 @@ func (_m *Repository) GetFilteringResult(prospectID string) (entity.FilteringKMB
 	return r0, r1
 }
 
+// GetLatestTrxKPMStatusWithLock provides a mock function with given fields: prospectId
+func (_m *Repository) GetLatestTrxKPMStatusWithLock(prospectId string) (entity.TrxKPMStatus, error) {
+	ret := _m.Called(prospectId)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLatestTrxKPMStatusWithLock")
+	}
+
+	var r0 entity.TrxKPMStatus
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (entity.TrxKPMStatus, error)); ok {
+		return rf(prospectId)
+	}
+	if rf, ok := ret.Get(0).(func(string) entity.TrxKPMStatus); ok {
+		r0 = rf(prospectId)
+	} else {
+		r0 = ret.Get(0).(entity.TrxKPMStatus)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectId)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMappingBranchByBranchID provides a mock function with given fields: branchID, pbkScore
+func (_m *Repository) GetMappingBranchByBranchID(branchID string, pbkScore string) (entity.MappingBranchByPBKScore, error) {
+	ret := _m.Called(branchID, pbkScore)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMappingBranchByBranchID")
+	}
+
+	var r0 entity.MappingBranchByPBKScore
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string, string) (entity.MappingBranchByPBKScore, error)); ok {
+		return rf(branchID, pbkScore)
+	}
+	if rf, ok := ret.Get(0).(func(string, string) entity.MappingBranchByPBKScore); ok {
+		r0 = rf(branchID, pbkScore)
+	} else {
+		r0 = ret.Get(0).(entity.MappingBranchByPBKScore)
+	}
+
+	if rf, ok := ret.Get(1).(func(string, string) error); ok {
+		r1 = rf(branchID, pbkScore)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetMappingDukcapil provides a mock function with given fields: statusVD, statusFR, customerStatus, customerSegment
 func (_m *Repository) GetMappingDukcapil(statusVD string, statusFR string, customerStatus string, customerSegment string) (entity.MappingResultDukcapil, error) {
 	ret := _m.Called(statusVD, statusFR, customerStatus, customerSegment)
@@ -425,9 +481,9 @@ func (_m *Repository) GetMappingDukcapilVD(statusVD string, customerStatus strin
 	return r0, r1
 }
 
-// GetMappingElaborateLTV provides a mock function with given fields: resultPefindo, cluster
-func (_m *Repository) GetMappingElaborateLTV(resultPefindo string, cluster string) ([]entity.MappingElaborateLTV, error) {
-	ret := _m.Called(resultPefindo, cluster)
+// GetMappingElaborateLTV provides a mock function with given fields: resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType
+func (_m *Repository) GetMappingElaborateLTV(resultPefindo string, cluster string, gradeBranch string, customerStatus string, pbkScore string, bpkbNameType int) ([]entity.MappingElaborateLTV, error) {
+	ret := _m.Called(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetMappingElaborateLTV")
@@ -435,19 +491,19 @@ func (_m *Repository) GetMappingElaborateLTV(resultPefindo string, cluster strin
 
 	var r0 []entity.MappingElaborateLTV
 	var r1 error
-	if rf, ok := ret.Get(0).(func(string, string) ([]entity.MappingElaborateLTV, error)); ok {
-		return rf(resultPefindo, cluster)
+	if rf, ok := ret.Get(0).(func(string, string, string, string, string, int) ([]entity.MappingElaborateLTV, error)); ok {
+		return rf(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType)
 	}
-	if rf, ok := ret.Get(0).(func(string, string) []entity.MappingElaborateLTV); ok {
-		r0 = rf(resultPefindo, cluster)
+	if rf, ok := ret.Get(0).(func(string, string, string, string, string, int) []entity.MappingElaborateLTV); ok {
+		r0 = rf(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).([]entity.MappingElaborateLTV)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(string, string) error); ok {
-		r1 = rf(resultPefindo, cluster)
+	if rf, ok := ret.Get(1).(func(string, string, string, string, string, int) error); ok {
+		r1 = rf(resultPefindo, cluster, gradeBranch, customerStatus, pbkScore, bpkbNameType)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -476,6 +532,34 @@ func (_m *Repository) GetMappingNegativeCustomer(req response.NegativeCustomer) 
 
 	if rf, ok := ret.Get(1).(func(response.NegativeCustomer) error); ok {
 		r1 = rf(req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMappingPbkScore provides a mock function with given fields: pbkScores
+func (_m *Repository) GetMappingPbkScore(pbkScores []string) (entity.MappingPBKScoreGrade, error) {
+	ret := _m.Called(pbkScores)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMappingPbkScore")
+	}
+
+	var r0 entity.MappingPBKScoreGrade
+	var r1 error
+	if rf, ok := ret.Get(0).(func([]string) (entity.MappingPBKScoreGrade, error)); ok {
+		return rf(pbkScores)
+	}
+	if rf, ok := ret.Get(0).(func([]string) entity.MappingPBKScoreGrade); ok {
+		r0 = rf(pbkScores)
+	} else {
+		r0 = ret.Get(0).(entity.MappingPBKScoreGrade)
+	}
+
+	if rf, ok := ret.Get(1).(func([]string) error); ok {
+		r1 = rf(pbkScores)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -953,6 +1037,34 @@ func (_m *Repository) GetTrxKPMStatusHistory(req request.History2Wilen) ([]entit
 	return r0, r1
 }
 
+// GetTrxKPMWithLock provides a mock function with given fields: prospectID
+func (_m *Repository) GetTrxKPMWithLock(prospectID string) (entity.TrxKPM, error) {
+	ret := _m.Called(prospectID)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetTrxKPMWithLock")
+	}
+
+	var r0 entity.TrxKPM
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) (entity.TrxKPM, error)); ok {
+		return rf(prospectID)
+	}
+	if rf, ok := ret.Get(0).(func(string) entity.TrxKPM); ok {
+		r0 = rf(prospectID)
+	} else {
+		r0 = ret.Get(0).(entity.TrxKPM)
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(prospectID)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetTrxPrincipleStatus provides a mock function with given fields: nik
 func (_m *Repository) GetTrxPrincipleStatus(nik string) (entity.TrxPrincipleStatus, error) {
 	ret := _m.Called(nik)
@@ -1359,6 +1471,24 @@ func (_m *Repository) UpdateToCancel(prospectID string) error {
 	return r0
 }
 
+// UpdateTrxKPM provides a mock function with given fields: id, data
+func (_m *Repository) UpdateTrxKPM(id string, data entity.TrxKPM) error {
+	ret := _m.Called(id, data)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateTrxKPM")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, entity.TrxKPM) error); ok {
+		r0 = rf(id, data)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // UpdateTrxKPMDecision provides a mock function with given fields: id, prospectID, decision
 func (_m *Repository) UpdateTrxKPMDecision(id string, prospectID string, decision string) error {
 	ret := _m.Called(id, prospectID, decision)
@@ -1370,6 +1500,24 @@ func (_m *Repository) UpdateTrxKPMDecision(id string, prospectID string, decisio
 	var r0 error
 	if rf, ok := ret.Get(0).(func(string, string, string) error); ok {
 		r0 = rf(id, prospectID, decision)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// UpdateTrxKPMStatus provides a mock function with given fields: id, data
+func (_m *Repository) UpdateTrxKPMStatus(id string, data entity.TrxKPMStatus) error {
+	ret := _m.Called(id, data)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateTrxKPMStatus")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, entity.TrxKPMStatus) error); ok {
+		r0 = rf(id, data)
 	} else {
 		r0 = ret.Error(0)
 	}

@@ -591,9 +591,9 @@ func (_m *Usecase) GetFpdCMO(ctx context.Context, CmoID string, BPKBNameType str
 	return r0, r1
 }
 
-// GetLTV provides a mock function with given fields: ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi
-func (_m *Usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID string, resultPefindo string, bpkbName string, manufactureYear string, tenor int, bakiDebet float64, isSimulasi bool) (int, bool, error) {
-	ret := _m.Called(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi)
+// GetLTV provides a mock function with given fields: ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi, pbkScore, customerStatus, gradeBranch
+func (_m *Usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.MappingElaborateLTV, prospectID string, resultPefindo string, bpkbName string, manufactureYear string, tenor int, bakiDebet float64, isSimulasi bool, pbkScore string, customerStatus string, gradeBranch string) (int, bool, error) {
+	ret := _m.Called(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi, pbkScore, customerStatus, gradeBranch)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetLTV")
@@ -602,23 +602,23 @@ func (_m *Usecase) GetLTV(ctx context.Context, mappingElaborateLTV []entity.Mapp
 	var r0 int
 	var r1 bool
 	var r2 error
-	if rf, ok := ret.Get(0).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64, bool) (int, bool, error)); ok {
-		return rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi)
+	if rf, ok := ret.Get(0).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64, bool, string, string, string) (int, bool, error)); ok {
+		return rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi, pbkScore, customerStatus, gradeBranch)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64, bool) int); ok {
-		r0 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi)
+	if rf, ok := ret.Get(0).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64, bool, string, string, string) int); ok {
+		r0 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi, pbkScore, customerStatus, gradeBranch)
 	} else {
 		r0 = ret.Get(0).(int)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64, bool) bool); ok {
-		r1 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi)
+	if rf, ok := ret.Get(1).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64, bool, string, string, string) bool); ok {
+		r1 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi, pbkScore, customerStatus, gradeBranch)
 	} else {
 		r1 = ret.Get(1).(bool)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64, bool) error); ok {
-		r2 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi)
+	if rf, ok := ret.Get(2).(func(context.Context, []entity.MappingElaborateLTV, string, string, string, string, int, float64, bool, string, string, string) error); ok {
+		r2 = rf(ctx, mappingElaborateLTV, prospectID, resultPefindo, bpkbName, manufactureYear, tenor, bakiDebet, isSimulasi, pbkScore, customerStatus, gradeBranch)
 	} else {
 		r2 = ret.Error(2)
 	}
@@ -705,6 +705,34 @@ func (_m *Usecase) MDMGetAssetYear(ctx context.Context, branchID string, assetCo
 
 	if rf, ok := ret.Get(1).(func(context.Context, string, string, string, string, string) error); ok {
 		r1 = rf(ctx, branchID, assetCode, search, prospectID, accessToken)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MDMGetDetailCustomerKPM provides a mock function with given fields: ctx, prospectID, KPMID, accessToken
+func (_m *Usecase) MDMGetDetailCustomerKPM(ctx context.Context, prospectID string, KPMID int, accessToken string) (response.MDMGetDetailCustomerKPMResponse, error) {
+	ret := _m.Called(ctx, prospectID, KPMID, accessToken)
+
+	if len(ret) == 0 {
+		panic("no return value specified for MDMGetDetailCustomerKPM")
+	}
+
+	var r0 response.MDMGetDetailCustomerKPMResponse
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, string, int, string) (response.MDMGetDetailCustomerKPMResponse, error)); ok {
+		return rf(ctx, prospectID, KPMID, accessToken)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, string, int, string) response.MDMGetDetailCustomerKPMResponse); ok {
+		r0 = rf(ctx, prospectID, KPMID, accessToken)
+	} else {
+		r0 = ret.Get(0).(response.MDMGetDetailCustomerKPMResponse)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, string, int, string) error); ok {
+		r1 = rf(ctx, prospectID, KPMID, accessToken)
 	} else {
 		r1 = ret.Error(1)
 	}

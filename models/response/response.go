@@ -1483,3 +1483,130 @@ type History2Wilen struct {
 	OrderStatusName string   `json:"order_status_name"`
 	CreatedAt       string   `json:"created_at"`
 }
+
+type MDMGetDetailCustomerKPMResponse struct {
+	Code      string             `json:"code"`
+	Message   string             `json:"message"`
+	Data      GetCustomerByKpmID `json:"data"`
+	Errors    interface{}        `json:"errors"`
+	RequestID string             `json:"request_id"`
+	Timestamp string             `json:"timestamp"`
+}
+
+type (
+	GetCustomerByKpmID struct {
+		CustomerKpm CustomerKpm `json:"customer_kpm"`
+		Customer    Customer    `json:"customer"`
+	}
+
+	CustomerKpm struct {
+		KpmId       int    `json:"kmp_id"`
+		CustomerId  int    `json:"customer_id"`
+		FullName    string `json:"full_name"`
+		MobilePhone string `json:"mobile_phone"`
+		MigratedAt  string `json:"migrated_at"`
+	}
+
+	Customer struct {
+		Id                     int                `json:"id"`
+		CustomerIdConfins      string             `json:"customer_id_confins"`
+		IdType                 string             `json:"id_type"`
+		IdNumber               string             `json:"id_number"`
+		ExpiredDate            string             `json:"expired_date"`
+		LegalName              string             `json:"legal_name"`
+		FullName               string             `json:"full_name"`
+		Gender                 string             `json:"gender"`
+		BirthDate              string             `json:"birth_date"`
+		BirthPlace             string             `json:"birth_place"`
+		SurgateMotherName      string             `json:"surgate_mother_name"`
+		PersonalCustomerType   string             `json:"personal_customer_type"`
+		PersonalNpwpNumber     string             `json:"personal_npwp_number"`
+		MobilePhone            string             `json:"mobile_phone"`
+		Email                  string             `json:"email"`
+		Religion               string             `json:"religion"`
+		MaritalStatus          string             `json:"marital_status"`
+		NumOfDependence        int                `json:"num_of_dependence"`
+		NoKk                   string             `json:"no_kk"`
+		Education              string             `json:"education"`
+		Nationality            string             `json:"nationality"`
+		WnaCountry             string             `json:"wna_country"`
+		HomeStatus             string             `json:"home_status"`
+		RentFinishDate         string             `json:"rent_finish_date"`
+		HomeLocation           string             `json:"home_location"`
+		HomePrice              *float64           `json:"home_price"`
+		StaySinceMonth         *int               `json:"stay_since_month"`
+		StaySinceYear          *int               `json:"stay_since_year"`
+		NumOfAssetOwned        int                `json:"num_of_asset_owned"`
+		LivingCostAmount       *int               `json:"living_cost_amount"`
+		BankId                 string             `json:"bank_id"`
+		AccountNo              string             `json:"account_no"`
+		AccountName            string             `json:"account_name"`
+		ProfessionId           string             `json:"profession_id"`
+		IndustryTypeId         string             `json:"industry_type_id"`
+		MainBusinessSinceYear  interface{}        `json:"main_business_since_year"`
+		JobPosition            string             `json:"job_position"`
+		JobType                string             `json:"job_type"`
+		EmploymentSinceYear    *int               `json:"employment_since_year"`
+		MonthlyFixedIncome     *float64           `json:"monthly_fixed_income"`
+		MonthlyVariableIncome  *float64           `json:"monthly_variable_income"`
+		SpouseIncome           *float64           `json:"spouse_income"`
+		CompanyName            string             `json:"company_name"`
+		EmploymentSinceMonth   *int               `json:"employment_since_month"`
+		EmployeeStatusId       string             `json:"employee_status_id"`
+		SourceVariableIncomeId string             `json:"source_variable_income_id"`
+		BankBranch             string             `json:"bank_branch"`
+		JobTitle               string             `json:"job_title"`
+		OthersProfessionId     string             `json:"others_profession_id"`
+		CustomerAddress        CustomerKpmAddress `json:"customer_address"`
+		CustomerEmcon          interface{}        `json:"customer_emcon"`
+		CustomerOmset          interface{}        `json:"customer_omset"`
+		CustomerPhoto          interface{}        `json:"customer_photo"`
+		CustomerSpouse         interface{}        `json:"customer_spouse"`
+		CustomerSegment        interface{}        `json:"customer_kmp_segment"`
+	}
+
+	CustomerKpmAddress struct {
+		ResidenceAddress                string `json:"residence_address"`
+		ResidenceRt                     string `json:"residence_rt"`
+		ResidenceRw                     string `json:"residence_rw"`
+		ResidenceKelurahan              string `json:"residence_kelurahan"`
+		ResidenceKecamatan              string `json:"residence_kecamatan"`
+		ResidenceCity                   string `json:"residence_city"`
+		ResidenceZipCode                string `json:"residence_zip_code"`
+		ResidenceAreaPhone              string `json:"residence_area_phone"`
+		ResidencePhone                  string `json:"residence_phone"`
+		LegalAddress                    string `json:"legal_address"`
+		LegalRt                         string `json:"legal_rt"`
+		LegalRw                         string `json:"legal_rw"`
+		LegalKelurahan                  string `json:"legal_kelurahan"`
+		LegalKecamatan                  string `json:"legal_kecamatan"`
+		LegalCity                       string `json:"legal_city"`
+		LegalZipCode                    string `json:"legal_zip_code"`
+		LegalAreaPhone                  string `json:"legal_area_phone"`
+		LegalPhone                      string `json:"legal_phone"`
+		CompanyAddress                  string `json:"company_address"`
+		CompanyRt                       string `json:"company_rt"`
+		CompanyRw                       string `json:"company_rw"`
+		CompanyKelurahan                string `json:"company_kelurahan"`
+		CompanyKecamatan                string `json:"company_kecamatan"`
+		CompanyCity                     string `json:"company_city"`
+		CompanyZipCode                  string `json:"company_zip_code"`
+		CompanyAreaPhone                string `json:"company_area_phone"`
+		CompanyPhone                    string `json:"company_phone"`
+		EmergencyContactAddress         string `json:"emergency_contact_address"`
+		EmergencyContactRt              string `json:"emergency_contact_rt"`
+		EmergencyContactRw              string `json:"emergency_contact_rw"`
+		EmergencyContactKelurahan       string `json:"emergency_contact_kelurahan"`
+		EmergencyContactKecamatan       string `json:"emergency_contact_kecamatan"`
+		EmergencyContactCity            string `json:"emergency_contact_city"`
+		EmergencyContactZipCode         string `json:"emergency_contact_zip_code"`
+		EmergencyContactHomePhoneArea   string `json:"emergency_contact_home_phone_area"`
+		EmergencyContactHomePhone       string `json:"emergency_contact_home_phone"`
+		EmergencyContactOfficePhoneArea string `json:"emergency_contact_office_phone_area"`
+		EmergencyContactOfficePhone     string `json:"emergency_contact_office_phone"`
+		LegalProvince                   string `json:"legal_province"`
+		ResidenceProvince               string `json:"residence_province"`
+		CompanyProvince                 string `json:"company_province"`
+		EmergencyContactProvince        string `json:"emergency_contact_province"`
+	}
+)

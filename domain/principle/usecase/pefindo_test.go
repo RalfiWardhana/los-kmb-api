@@ -27,7 +27,7 @@ func TestPefindo(t *testing.T) {
 	os.Setenv("DUMMY_PBK", "false")
 	timeOut, _ := strconv.Atoi(os.Getenv("DUPCHECK_API_TIMEOUT"))
 
-	accessToken := ""
+	accessToken := "test-token"
 	ctx := context.Background()
 	reqID := utils.GenerateUUID()
 	ctx = context.WithValue(ctx, constant.HeaderXRequestID, reqID)

@@ -108,6 +108,83 @@ func TestGetEmployeeData(t *testing.T) {
 			expectedData:   response.EmployeeCMOResponse{},
 			mockError:      fmt.Errorf(errorLib.ErrServiceUnavailable + " - Get employee data"),
 		},
+		{
+			name:       "no CMO AO position in employee history",
+			employeeID: "456",
+			mockResponse: response.GetEmployeeByID{
+				Data: []response.EmployeeCareerHistory{
+					{
+						EmployeeID:        "456",
+						EmployeeName:      "Jane Smith",
+						PositionGroupCode: "IT",
+						RealCareerDate:    "2023-01-01T00:00:00",
+					},
+					{
+						EmployeeID:        "456",
+						EmployeeName:      "Jane Smith",
+						PositionGroupCode: "HR",
+						RealCareerDate:    "2022-06-01T00:00:00",
+					},
+				},
+			},
+			mockStatusCode: 200,
+			expectedError:  nil,
+			expectedData:   response.EmployeeCMOResponse{},
+		},
+		{
+			name:       "realCareerDate is empty for AO employee",
+			employeeID: "789",
+			mockResponse: response.GetEmployeeByID{
+				Data: []response.EmployeeCareerHistory{
+					{
+						EmployeeID:        "789",
+						EmployeeName:      "Charlie",
+						PositionGroupCode: "AO",
+						PositionGroupName: "Credit Marketing Officer",
+						RealCareerDate:    "",
+					},
+				},
+			},
+			mockStatusCode: 200,
+			expectedError:  fmt.Errorf(errorLib.ErrServiceUnavailable + " - RealCareerDate empty"),
+			expectedData:   response.EmployeeCMOResponse{},
+		},
+		{
+			name:       "error parse invalid realCareerDate format",
+			employeeID: "900",
+			mockResponse: response.GetEmployeeByID{
+				Data: []response.EmployeeCareerHistory{
+					{
+						EmployeeID:        "900",
+						EmployeeName:      "Invalid Date Emp",
+						PositionGroupCode: "AO",
+						PositionGroupName: "Credit Marketing Officer",
+						RealCareerDate:    "01-01-2022",
+					},
+				},
+			},
+			mockStatusCode: 200,
+			expectedError:  fmt.Errorf(errorLib.ErrServiceUnavailable + " - Error parse realCareerDate"),
+			expectedData:   response.EmployeeCMOResponse{},
+		},
+		{
+			name:       "error validate monthYear of realCareerDate",
+			employeeID: "901",
+			mockResponse: response.GetEmployeeByID{
+				Data: []response.EmployeeCareerHistory{
+					{
+						EmployeeID:        "901",
+						EmployeeName:      "Future CMO",
+						PositionGroupCode: "AO",
+						PositionGroupName: "Credit Marketing Officer",
+						RealCareerDate:    "2099-12-01T00:00:00",
+					},
+				},
+			},
+			mockStatusCode: 200,
+			expectedError:  fmt.Errorf(errorLib.ErrServiceUnavailable + " - Error validate monthYear of realCareerDate"),
+			expectedData:   response.EmployeeCMOResponse{},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -127,7 +204,7 @@ func TestGetEmployeeData(t *testing.T) {
 			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), httpmock.NewStringResponder(tc.mockStatusCode, mockResponseBody))
 			resp, _ := rst.R().Post(os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"))
 
-			mockHttpClient.On("EngineAPI", mock.Anything, constant.DILEN_KMB_LOG, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), mock.Anything, map[string]string{"Authorization": "Bearer "}, constant.METHOD_POST, false, 0, timeout, "", "").Return(resp, tc.mockError).Once()
+			mockHttpClient.On("EngineAPI", mock.Anything, constant.DILEN_KMB_LOG, os.Getenv("HRIS_GET_EMPLOYEE_DATA_URL"), mock.Anything, map[string]string{"Authorization": "Bearer "}, constant.METHOD_POST, false, 0, timeout, "", mock.Anything).Return(resp, tc.mockError).Once()
 
 			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
@@ -269,6 +346,16 @@ func TestGetFpdCMO(t *testing.T) {
 			expectedData:   response.FpdCMOResponse{},
 			mockError:      fmt.Errorf(errorLib.ErrBadRequest + " - Get fpd data"),
 		},
+		{
+			name:           "error http client returns non-nil error with 200 status",
+			cmoID:          "CMO05",
+			bpkbNameType:   "NAMA SAMA",
+			mockResponse:   response.GetFPDCmoByID{},
+			mockStatusCode: 200,
+			mockError:      errors.New("http client error"),
+			expectedError:  errors.New("http client error"),
+			expectedData:   response.FpdCMOResponse{},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -288,7 +375,7 @@ func TestGetFpdCMO(t *testing.T) {
 			httpmock.RegisterResponder(constant.METHOD_GET, os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=2&cmo_id="+tc.cmoID, httpmock.NewStringResponder(tc.mockStatusCode, mockResponseBody))
 			resp, _ := rst.R().SetHeaders(map[string]string{"Content-Type": "application/json", "Authorization": ""}).Get(os.Getenv("AGREEMENT_LTV_FPD") + "?lob_id=2&cmo_id=" + tc.cmoID)
 
-			mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=2&cmo_id="+tc.cmoID, []byte(nil), map[string]string{"Authorization": ""}, constant.METHOD_GET, false, 0, timeout, "", "").Return(resp, tc.mockError).Once()
+			mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("AGREEMENT_LTV_FPD")+"?lob_id=2&cmo_id="+tc.cmoID, []byte(nil), mock.Anything, constant.METHOD_GET, false, 0, timeout, "", mock.Anything).Return(resp, tc.mockError).Once()
 			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
 
 			data, err := usecase.GetFpdCMO(ctx, tc.cmoID, tc.bpkbNameType)
@@ -300,6 +387,8 @@ func TestGetFpdCMO(t *testing.T) {
 }
 
 func TestCheckCmoNoFPD(t *testing.T) {
+	os.Setenv("DEFAULT_CLUSTER_MONTHS_DURATION", "3")
+
 	testcases := []struct {
 		name               string
 		prospectID         string
@@ -332,7 +421,12 @@ func TestCheckCmoNoFPD(t *testing.T) {
 				CmoJoinDate:             "2024-05-28",
 				DefaultCluster:          "Cluster C",
 				DefaultClusterStartDate: "2024-05-28",
-				DefaultClusterEndDate:   "2024-04-30",
+				DefaultClusterEndDate: time.Date(
+					time.Date(2024, 5, 28, 0, 0, 0, 0, time.UTC).AddDate(0, 3, 0).Year(),
+					time.Date(2024, 5, 28, 0, 0, 0, 0, time.UTC).AddDate(0, 3, 0).Month(),
+					0, 0, 0, 0, 0,
+					time.UTC,
+				).Format(constant.FORMAT_DATE),
 			},
 			expectedError: nil,
 		},
@@ -349,6 +443,57 @@ func TestCheckCmoNoFPD(t *testing.T) {
 			expectedCluster:    "",
 			expectedEntitySave: entity.TrxCmoNoFPD{},
 			expectedError:      errors.New("repository error"),
+		},
+		{
+			name:           "existing CMO with valid cluster date range",
+			prospectID:     "SAL0004",
+			cmoID:          "CMO04",
+			cmoCategory:    constant.CMO_LAMA,
+			cmoJoinDate:    "2024-01-01",
+			defaultCluster: "Cluster A",
+			bpkbName:       "NAMA SAMA",
+			mockReturnData: entity.TrxCmoNoFPD{
+				CMOID:                   "CMO04",
+				DefaultCluster:          "Cluster-X",
+				DefaultClusterStartDate: time.Now().AddDate(0, -1, 0).Format(constant.FORMAT_DATE),
+				DefaultClusterEndDate:   time.Now().AddDate(0, 1, 0).Format(constant.FORMAT_DATE),
+			},
+			expectedCluster:    "Cluster-X",
+			expectedEntitySave: entity.TrxCmoNoFPD{},
+			expectedError:      nil,
+		},
+		{
+			name:           "existing CMO but outside cluster date range",
+			prospectID:     "SAL0005",
+			cmoID:          "CMO05",
+			cmoCategory:    constant.CMO_LAMA,
+			cmoJoinDate:    "2024-03-01",
+			defaultCluster: "Cluster Z",
+			bpkbName:       "NAMA BEDA",
+			mockReturnData: entity.TrxCmoNoFPD{
+				CMOID:                   "CMO05",
+				DefaultCluster:          "Cluster-Old",
+				DefaultClusterStartDate: "2023-01-01",
+				DefaultClusterEndDate:   "2023-03-01",
+			},
+			expectedCluster: "",
+			expectedEntitySave: entity.TrxCmoNoFPD{
+				ProspectID:              "SAL0005",
+				BPKBName:                "NAMA BEDA",
+				CMOID:                   "CMO05",
+				CmoCategory:             constant.CMO_LAMA,
+				CmoJoinDate:             "2024-03-01",
+				DefaultCluster:          "Cluster Z",
+				DefaultClusterStartDate: time.Now().Format(constant.FORMAT_DATE),
+				DefaultClusterEndDate: time.Date(
+					time.Now().AddDate(0, 3, 0).Year(),
+					time.Now().AddDate(0, 3, 0).Month(),
+					0, 0, 0, 0, 0,
+					time.Now().Location(),
+				).Format(constant.FORMAT_DATE),
+				CreatedAt: time.Time{},
+			},
+			expectedError: nil,
 		},
 	}
 
@@ -1407,7 +1552,7 @@ func TestPrinciplePemohon(t *testing.T) {
 			mockRepository.On("GetEncB64", tc.request.IDNumber).Return(entity.EncryptedString{MyString: "encryted"}, nil)
 			mockUsecase.On("BannedPMKOrDSR", mock.Anything).Return(tc.resBannedPMKOrDSR, tc.errBannedPMKOrDSR)
 			mockUsecase.On("Rejection", tc.request.ProspectID, mock.Anything, mock.Anything).Return(tc.resRejection, entity.TrxBannedPMKDSR{}, tc.errRejection)
-			mockUsecase.On("DupcheckIntegrator", ctx, tc.request.ProspectID, mock.Anything, mock.Anything, mock.Anything, mock.Anything, "").Return(tc.resDupcheckIntegrator, tc.errDupcheckIntegrator)
+			mockUsecase.On("DupcheckIntegrator", ctx, tc.request.ProspectID, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resDupcheckIntegrator, tc.errDupcheckIntegrator)
 			mockUsecase.On("BlacklistCheck", mock.Anything, tc.resDupcheckIntegrator).Return(tc.resBlacklistCheck, mock.Anything)
 			if tc.resBlacklistCheck.Result == constant.DECISION_REJECT {
 				mockUsecase.On("Save", mock.AnythingOfType("entity.FilteringKMB"), mock.AnythingOfType("[]entity.TrxDetailBiro"), mock.AnythingOfType("entity.TrxCmoNoFPD")).Return(nil)
