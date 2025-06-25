@@ -183,6 +183,50 @@ func StructToMap(item interface{}) map[string]interface{} {
 	return res
 }
 
+func ToInt(v interface{}) (int, error) {
+	switch val := v.(type) {
+	case int:
+		return val, nil
+	case int8:
+		return int(val), nil
+	case int16:
+		return int(val), nil
+	case int32:
+		return int(val), nil
+	case int64:
+		// overflow check (optional for 32-bit)
+		if val > int64(int(^uint(0)>>1)) || val < int64(-int(^uint(0)>>1)-1) {
+			return 0, fmt.Errorf("int64 value out of int range: %v", val)
+		}
+		return int(val), nil
+	case uint:
+		return int(val), nil
+	case uint8:
+		return int(val), nil
+	case uint16:
+		return int(val), nil
+	case uint32:
+		return int(val), nil
+	case uint64:
+		if val > uint64(int(^uint(0)>>1)) {
+			return 0, fmt.Errorf("uint64 value out of int range: %v", val)
+		}
+		return int(val), nil
+	case float32:
+		return int(val), nil
+	case float64:
+		return int(val), nil
+	case string:
+		i, err := strconv.Atoi(val)
+		if err != nil {
+			return 0, fmt.Errorf("cannot convert string to int: %v", err)
+		}
+		return i, nil
+	default:
+		return 0, fmt.Errorf("unsupported type: %T", val)
+	}
+}
+
 func GenerateTimeInMilisecond() int64 {
 	return time.Now().Local().UnixNano() / int64(time.Millisecond)
 }

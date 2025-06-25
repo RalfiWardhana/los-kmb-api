@@ -625,7 +625,8 @@ func (u multiUsecase) Filtering(ctx context.Context, req request.Filtering, marr
 	}
 
 	if resPefindo.NumberOfInquiriesLast1Month != nil {
-		entityFiltering.NumberOfInquiriesLast1Month = resPefindo.NumberOfInquiriesLast1Month
+		numberOfInquiriesLast1Month, _ := utils.ToInt(resPefindo.NumberOfInquiriesLast1Month)
+		entityFiltering.NumberOfInquiriesLast1Month = &numberOfInquiriesLast1Month
 	}
 
 	err = u.usecase.SaveFiltering(entityFiltering, trxDetailBiro, entityTransactionCMOnoFPD, historyCheckAsset, entityLockingSystem)
@@ -736,7 +737,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 					reasonRiskLevel  string
 				)
 
-				inquiries = *pefindoResult.NumberOfInquiriesLast1Month
+				inquiries, _ = utils.ToInt(pefindoResult.NumberOfInquiriesLast1Month)
 
 				cacheRiskLevel, _ := u.repository.GetCache("GetMappingRiskLevel")
 				json.Unmarshal(cacheRiskLevel, &mappingRiskLevel)
