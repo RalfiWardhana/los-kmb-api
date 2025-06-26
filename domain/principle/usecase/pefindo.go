@@ -88,6 +88,7 @@ func (u usecase) Pefindo(ctx context.Context, r request.Pefindo, customerStatus,
 
 	if checkPefindo.Code == strconv.Itoa(http.StatusOK) && pefindoResult.Score != constant.PEFINDO_UNSCORE {
 		isRejectPefindo := false
+
 		// check inquiry pbk
 		var inquiriesLast1Month int
 		if pefindoResult.NumberOfInquiriesLast1Month != nil {
