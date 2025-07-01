@@ -763,7 +763,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 					data.Decision = constant.DECISION_REJECT
 					data.NextProcess = false
 					data.Reason = reasonRiskLevel
-					data.Code = constant.CODE_REJECT_LUNAS_DISKON
+					data.Code = constant.CODE_REJECT_INQUIRIES
 
 					if checkPefindo.Konsumen != (response.PefindoResultKonsumen{}) {
 						trxDetailBiroC := entity.TrxDetailBiro{

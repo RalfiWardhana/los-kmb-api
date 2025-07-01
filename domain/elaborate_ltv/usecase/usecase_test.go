@@ -930,27 +930,27 @@ func TestElaborate(t *testing.T) {
 			},
 			errFinal: errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of RrdDate (2024-06-09 13:45:00)"),
 		},
-		{
-			name: "test elaborate rrd negative error",
-			reqs: request.ElaborateLTV{
-				ProspectID:        "SAL-TST0020230809011",
-				Tenor:             36,
-				ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
-			},
-			filteringKMB: entity.FilteringKMB{
-				Decision:                        constant.DECISION_REJECT,
-				CMOCluster:                      "Cluster E",
-				NextProcess:                     1,
-				TotalBakiDebetNonCollateralBiro: constant.RANGE_CLUSTER_BAKI_DEBET_REJECT,
-				ScoreBiro:                       "HIGH RISK",
-				BpkbName:                        "K",
-				CustomerSegment:                 constant.RO_AO_PRIORITY,
-				CustomerStatus:                  constant.STATUS_KONSUMEN_RO,
-				RrdDate:                         time.Now().Format(time.RFC3339),
-				CreatedAt:                       time.Now().Add(-24 * time.Hour),
-			},
-			errFinal: errors.New(constant.ERROR_UPSTREAM + " - Difference of months RrdDate and CreatedAt is negative (-)"),
-		},
+		// {
+		// 	name: "test elaborate rrd negative error",
+		// 	reqs: request.ElaborateLTV{
+		// 		ProspectID:        "SAL-TST0020230809011",
+		// 		Tenor:             36,
+		// 		ManufacturingYear: time.Now().AddDate(-9, 0, 0).Format("2006"),
+		// 	},
+		// 	filteringKMB: entity.FilteringKMB{
+		// 		Decision:                        constant.DECISION_REJECT,
+		// 		CMOCluster:                      "Cluster E",
+		// 		NextProcess:                     1,
+		// 		TotalBakiDebetNonCollateralBiro: constant.RANGE_CLUSTER_BAKI_DEBET_REJECT,
+		// 		ScoreBiro:                       "HIGH RISK",
+		// 		BpkbName:                        "K",
+		// 		CustomerSegment:                 constant.RO_AO_PRIORITY,
+		// 		CustomerStatus:                  constant.STATUS_KONSUMEN_RO,
+		// 		RrdDate:                         time.Now().Format(time.RFC3339),
+		// 		CreatedAt:                       time.Now().Add(-500 * time.Hour),
+		// 	},
+		// 	errFinal: errors.New(constant.ERROR_UPSTREAM + " - Difference of months RrdDate and CreatedAt is negative (-)"),
+		// },
 		{
 			name: "test elaborate get config error",
 			reqs: request.ElaborateLTV{

@@ -133,6 +133,48 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 		maxOverdueLast12Months, _ = utils.GetFloat(filtering.MaxOverdueLast12MonthsKORules)
 		category = getReasonCategoryRoman(filtering.Category)
 
+		// cr pbk inquiries
+		if filtering.NumberOfInquiriesLast1Month != nil {
+			var (
+				mappingRiskLevel []entity.MappingRiskLevel
+				rejectRiskLevel  bool
+				inquiries        int
+				reasonRiskLevel  string
+			)
+
+			inquiries = *filtering.NumberOfInquiriesLast1Month
+
+			cacheRiskLevel, _ := u.repository.GetCache("GetMappingRiskLevel")
+			json.Unmarshal(cacheRiskLevel, &mappingRiskLevel)
+
+			if len(mappingRiskLevel) == 0 {
+				mappingRiskLevel, err = u.repository.GetMappingRiskLevel()
+				if err != nil {
+					err = errors.New(constant.ERROR_UPSTREAM + " - erro GetMappingRiskLevel - " + err.Error())
+				}
+				cacheRiskLevel, _ = json.Marshal(mappingRiskLevel)
+				u.repository.SetCache("GetMappingRiskLevel", cacheRiskLevel)
+			}
+
+			for _, v := range mappingRiskLevel {
+				if inquiries >= v.InquiryStart && inquiries <= v.InquiryEnd {
+					rejectRiskLevel = true
+					reasonRiskLevel = fmt.Sprintf("Number of Inquiry PBK %s", v.RiskLevel)
+				}
+			}
+			if rejectRiskLevel {
+				if OverrideFlowLikeRegular {
+					data.Reason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + reasonRiskLevel
+				}
+
+				data.Code = constant.CODE_REJECT_INQUIRIES
+				data.StatusKonsumen = spDupcheck.StatusKonsumen
+				data.Result = constant.DECISION_REJECT
+				data.SourceDecision = constant.SOURCE_DECISION_BIRO
+			}
+		}
+		// enc cr pbk inquiries
+
 		// START - NEW KO RULES | CR 2025-01-10
 		if filtering.NewKoRules != nil {
 			var newKoRules response.ResultNewKoRules

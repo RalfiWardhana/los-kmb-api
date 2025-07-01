@@ -67,6 +67,9 @@ type Repository interface {
 	GetRecalculate(prospectID string) (getRecalculate entity.GetRecalculate, err error)
 	SaveRecalculate(beforeRecalculate entity.TrxRecalculate, afterRecalculate entity.TrxRecalculate, payload request.Recalculate) (err error)
 	SaveToStaging(prospectID string) (err error)
+	GetCache(key string) ([]byte, error)
+	SetCache(key string, entry []byte) error
+	GetMappingRiskLevel() (data []entity.MappingRiskLevel, err error)
 
 	GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNameType, tenor int, resultPefindo string, af float64) (data entity.MappingVehicleAge, err error)
 

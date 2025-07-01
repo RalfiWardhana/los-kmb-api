@@ -46,6 +46,34 @@ func (_m *Usecase) Asliri(ctx context.Context, req request.Metrics, accessToken 
 	return r0, r1
 }
 
+// BlacklistCheck provides a mock function with given fields: index, spDupcheck
+func (_m *Usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerByID) (response.UsecaseApi, string) {
+	ret := _m.Called(index, spDupcheck)
+
+	if len(ret) == 0 {
+		panic("no return value specified for BlacklistCheck")
+	}
+
+	var r0 response.UsecaseApi
+	var r1 string
+	if rf, ok := ret.Get(0).(func(int, response.SpDupCekCustomerByID) (response.UsecaseApi, string)); ok {
+		return rf(index, spDupcheck)
+	}
+	if rf, ok := ret.Get(0).(func(int, response.SpDupCekCustomerByID) response.UsecaseApi); ok {
+		r0 = rf(index, spDupcheck)
+	} else {
+		r0 = ret.Get(0).(response.UsecaseApi)
+	}
+
+	if rf, ok := ret.Get(1).(func(int, response.SpDupCekCustomerByID) string); ok {
+		r1 = rf(index, spDupcheck)
+	} else {
+		r1 = ret.Get(1).(string)
+	}
+
+	return r0, r1
+}
+
 // CheckAgreementCustomer provides a mock function with given fields: ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken
 func (_m *Usecase) CheckAgreementCustomer(ctx context.Context, prospectID string, customerId string, contractStatus string, filterKMBOnly bool, accessToken string) (response.AgreementDetailCustomer, bool, error) {
 	ret := _m.Called(ctx, prospectID, customerId, contractStatus, filterKMBOnly, accessToken)
@@ -79,34 +107,6 @@ func (_m *Usecase) CheckAgreementCustomer(ctx context.Context, prospectID string
 	}
 
 	return r0, r1, r2
-}
-
-// BlacklistCheck provides a mock function with given fields: index, spDupcheck
-func (_m *Usecase) BlacklistCheck(index int, spDupcheck response.SpDupCekCustomerByID) (response.UsecaseApi, string) {
-	ret := _m.Called(index, spDupcheck)
-
-	if len(ret) == 0 {
-		panic("no return value specified for BlacklistCheck")
-	}
-
-	var r0 response.UsecaseApi
-	var r1 string
-	if rf, ok := ret.Get(0).(func(int, response.SpDupCekCustomerByID) (response.UsecaseApi, string)); ok {
-		return rf(index, spDupcheck)
-	}
-	if rf, ok := ret.Get(0).(func(int, response.SpDupCekCustomerByID) response.UsecaseApi); ok {
-		r0 = rf(index, spDupcheck)
-	} else {
-		r0 = ret.Get(0).(response.UsecaseApi)
-	}
-
-	if rf, ok := ret.Get(1).(func(int, response.SpDupCekCustomerByID) string); ok {
-		r1 = rf(index, spDupcheck)
-	} else {
-		r1 = ret.Get(1).(string)
-	}
-
-	return r0, r1
 }
 
 // CheckAgreementLunas provides a mock function with given fields: ctx, prospectID, customerId, filterKMBOnly, accessToken
