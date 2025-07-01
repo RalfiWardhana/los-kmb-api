@@ -134,7 +134,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 		category = getReasonCategoryRoman(filtering.Category)
 
 		// cr pbk inquiries
-		if filtering.NumberOfInquiriesLast1Month != nil {
+		if (customerSegment == constant.RO_AO_REGULAR || customerSegment == "") && filtering.NumberOfInquiriesLast1Month != nil {
 			var (
 				mappingRiskLevel []entity.MappingRiskLevel
 				rejectRiskLevel  bool
@@ -162,13 +162,9 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 					reasonRiskLevel = fmt.Sprintf("Number of Inquiry PBK %s", v.RiskLevel)
 				}
 			}
+
 			if rejectRiskLevel {
 				data.Reason = reasonRiskLevel
-
-				if OverrideFlowLikeRegular {
-					data.Reason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + data.Reason
-				}
-
 				data.Code = constant.CODE_REJECT_INQUIRIES
 				data.StatusKonsumen = spDupcheck.StatusKonsumen
 				data.Result = constant.DECISION_REJECT
