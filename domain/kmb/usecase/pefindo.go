@@ -164,7 +164,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 			}
 			if rejectRiskLevel {
 				if OverrideFlowLikeRegular {
-					data.Reason = constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS + reasonRiskLevel
+					data.Reason = fmt.Sprintf("%s%s", constant.EXPIRED_CONTRACT_HIGHERTHAN_6MONTHS, reasonRiskLevel)
 				}
 
 				data.Code = constant.CODE_REJECT_INQUIRIES
