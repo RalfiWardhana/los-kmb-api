@@ -171,6 +171,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 				data.StatusKonsumen = spDupcheck.StatusKonsumen
 				data.Result = constant.DECISION_REJECT
 				data.SourceDecision = constant.SOURCE_DECISION_BIRO
+				return
 			}
 		}
 		// enc cr pbk inquiries
