@@ -11,6 +11,7 @@ import (
 	"los-kmb-api/models/request"
 	"los-kmb-api/models/response"
 	"los-kmb-api/shared/constant"
+	"los-kmb-api/shared/locallock"
 	"los-kmb-api/shared/utils"
 	"os"
 	"regexp"
@@ -26,12 +27,17 @@ import (
 
 func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wilen, accessToken string) (resp response.Submission2Wilen, err error) {
 
+	keyLock := "submission-2wilen-" + req.ProspectID
+	unlock := locallock.GlobalLock.Lock(keyLock)
+	defer unlock()
+
 	var (
-		trxKPM            entity.TrxKPM
-		trxKPMStatus      entity.TrxKPMStatus
-		dupcheckData      response.SpDupcheckMap
-		negativeCustomer  response.NegativeCustomer
-		configValue2Wilen response.Config2Wilen
+		trxKPM                     entity.TrxKPM
+		trxKPMStatus               entity.TrxKPMStatus
+		dupcheckData               response.SpDupcheckMap
+		negativeCustomer           response.NegativeCustomer
+		configValue2Wilen          response.Config2Wilen
+		mdmGetDetailCustomerKPMRes response.MDMGetDetailCustomerKPMResponse
 	)
 
 	trxKPMStatus.ID = utils.GenerateUUID()
@@ -43,7 +49,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		return resp, err
 	}
 
-	trxKPMExist, err := u.repository.GetTrxKPM(req.ProspectID)
+	trxKPMExist, err := u.repository.GetTrxKPMWithLock(req.ProspectID)
 	if err != nil && err != gorm.ErrRecordNotFound {
 		return
 	}
@@ -63,7 +69,39 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		return
 	}
 
+	trxKPMStatusExist, err := u.repository.GetLatestTrxKPMStatusWithLock(req.ProspectID)
+	if err != nil && err != gorm.ErrRecordNotFound {
+		return
+	}
+
+	if message, exists := decisionMessages[trxKPMStatusExist.Decision]; exists {
+		err = errors.New(message)
+		return
+	}
+
+	id := utils.GenerateUUID()
 	statusCode := constant.STATUS_KPM_WAIT_2WILEN
+
+	trxKPM.ID = id
+	trxKPM.ProspectID = req.ProspectID
+	trxKPM.Decision = statusCode
+
+	err = u.repository.SaveTrxKPM(trxKPM)
+	if err != nil {
+		return
+	}
+
+	err = u.repository.SaveTrxKPMStatus(entity.TrxKPMStatus{
+		ID:         id,
+		ProspectID: req.ProspectID,
+		Decision:   statusCode,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+	})
+	if err != nil {
+		return
+	}
+
 	u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_2WILEN, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
 		OrderID:                    req.ProspectID,
 		KpmID:                      req.KPMID,
@@ -76,20 +114,8 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		Is2wPrincipleApprovalOrder: true,
 	}), 0)
 
-	id := utils.GenerateUUID()
-	err = u.repository.SaveTrxKPMStatus(entity.TrxKPMStatus{
-		ID:         id,
-		ProspectID: req.ProspectID,
-		Decision:   statusCode,
-		CreatedAt:  time.Now(),
-		UpdatedAt:  time.Now(),
-	})
-	if err != nil {
-		return
-	}
-
 	defer func() {
-		birthDate, _ := time.Parse(constant.FORMAT_DATE, req.BirthDate)
+		birthDate, _ := time.Parse(constant.FORMAT_DATE, mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate)
 
 		if req.SpouseBirthDate != "" {
 			spouseBirthDate, _ := time.Parse(constant.FORMAT_DATE, req.SpouseBirthDate)
@@ -104,15 +130,13 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		savedDupcheckData, _ := json.Marshal(dupcheckData)
 		savedNegativeCustomerData, _ := json.Marshal(negativeCustomer)
 
-		trxKPM.ID = id
-		trxKPM.ProspectID = req.ProspectID
-		trxKPM.IDNumber = req.IDNumber
-		trxKPM.LegalName = req.LegalName
-		trxKPM.MobilePhone = req.MobilePhone
-		trxKPM.Email = req.Email
+		trxKPM.IDNumber = mdmGetDetailCustomerKPMRes.Data.Customer.IdNumber
+		trxKPM.LegalName = mdmGetDetailCustomerKPMRes.Data.Customer.LegalName
+		trxKPM.MobilePhone = mdmGetDetailCustomerKPMRes.Data.Customer.MobilePhone
+		trxKPM.Email = mdmGetDetailCustomerKPMRes.Data.Customer.Email
 		trxKPM.BirthPlace = req.BirthPlace
 		trxKPM.BirthDate = birthDate
-		trxKPM.SurgateMotherName = req.SurgateMotherName
+		trxKPM.SurgateMotherName = mdmGetDetailCustomerKPMRes.Data.Customer.SurgateMotherName
 		trxKPM.Gender = req.Gender
 		trxKPM.ResidenceAddress = req.ResidenceAddress
 		trxKPM.ResidenceRT = req.ResidenceRT
@@ -173,6 +197,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 			trxKPM.ReadjustContext = *resp.ReadjustContext
 		}
 
+		var isSaveTrxKPMStatus bool
 		if err == nil {
 			resp.ProspectID = req.ProspectID
 
@@ -182,26 +207,49 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 			trxKPM.Decision = decision
 			trxKPM.Reason = resp.Reason
 			trxKPM.RuleCode = resp.Code
+
+			if statusCode != constant.DECISION_KPM_APPROVE {
+				isSaveTrxKPMStatus = true
+			}
 		} else {
 			statusCode = constant.STATUS_KPM_ERROR_2WILEN
 
 			trxKPM.Decision = statusCode
 			trxKPMStatus.Decision = statusCode
+
+			latestTrxKPMStatus, err := u.repository.GetLatestTrxKPMStatusWithLock(req.ProspectID)
+			if err != nil && err != gorm.ErrRecordNotFound {
+				return
+			}
+
+			if latestTrxKPMStatus.Decision == constant.DECISION_KPM_APPROVE {
+				err = u.repository.UpdateTrxKPMStatus(trxKPMStatus.ID, entity.TrxKPMStatus{
+					Decision:  statusCode,
+					UpdatedAt: time.Now(),
+				})
+				if err != nil {
+					return
+				}
+			} else {
+				isSaveTrxKPMStatus = true
+			}
 		}
 
 		trxKPM.CreatedAt = trxKPMStatus.CreatedAt
 		trxKPM.UpdatedAt = trxKPMStatus.UpdatedAt
 
-		errSave := u.repository.SaveTrxKPM(trxKPM)
-		if errSave != nil {
-			err = errSave
+		errUpdate := u.repository.UpdateTrxKPM(trxKPM.ID, trxKPM)
+		if errUpdate != nil {
+			err = errUpdate
 			return
 		}
 
-		errSave = u.repository.SaveTrxKPMStatus(trxKPMStatus)
-		if errSave != nil {
-			err = errSave
-			return
+		if isSaveTrxKPMStatus {
+			errSave := u.repository.SaveTrxKPMStatus(trxKPMStatus)
+			if errSave != nil {
+				err = errSave
+				return
+			}
 		}
 
 		if statusCode != constant.DECISION_KPM_APPROVE {
@@ -218,6 +266,11 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 			}), 0)
 		}
 	}()
+
+	mdmGetDetailCustomerKPMRes, err = u.usecase.MDMGetDetailCustomerKPM(ctx, req.ProspectID, req.KPMID, accessToken)
+	if err != nil {
+		return
+	}
 
 	config, err := u.repository.GetConfig("2Wilen", "KMB-OFF", "2wilen_config")
 	if err != nil {
@@ -244,11 +297,6 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	availableTenors, err := u.multiUsecase.GetAvailableTenor(ctx, request.GetAvailableTenor{
 		ProspectID:         prospectIDCheck,
 		BranchID:           req.BranchID,
-		IDNumber:           req.IDNumber,
-		BirthDate:          req.BirthDate,
-		SurgateMotherName:  req.SurgateMotherName,
-		LegalName:          req.LegalName,
-		MobilePhone:        req.MobilePhone,
 		BPKBNameType:       req.BPKBNameType,
 		ManufactureYear:    req.ManufactureYear,
 		AssetCode:          req.AssetCode,
@@ -256,6 +304,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		LicensePlate:       req.LicensePlate,
 		LoanAmount:         req.LoanAmount,
 		ReferralCode:       &req.ReferralCode,
+		KPMID:              req.KPMID,
 	}, accessToken)
 	if err != nil {
 		return
@@ -263,10 +312,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 
 	for _, avavailableTenor := range availableTenors {
 		if avavailableTenor.Tenor == req.Tenor {
-			if avavailableTenor.AdminFee != req.AdminFee {
-				err = errors.New(constant.INTERNAL_SERVER_ERROR + " - Admin fee does not match")
-				return
-			}
+			req.AdminFee = avavailableTenor.AdminFee
 		}
 	}
 
@@ -292,7 +338,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	}
 
 	// Check Chassis Number with Active Aggrement
-	agereementChassisNumber, checkChassisNumber, err := u.usecase.CheckAgreementChassisNumber(ctx, req.ProspectID, req.NoChassis, req.IDNumber, req.SpouseIDNumber, accessToken)
+	agereementChassisNumber, checkChassisNumber, err := u.usecase.CheckAgreementChassisNumber(ctx, req.ProspectID, req.NoChassis, mdmGetDetailCustomerKPMRes.Data.Customer.IdNumber, req.SpouseIDNumber, accessToken)
 	if err != nil {
 		return
 	}
@@ -327,7 +373,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 
 	income := req.MonthlyFixedIncome + req.SpouseIncome
 	save := entity.FilteringKMB{ProspectID: req.ProspectID, RequestID: ctx.Value(echo.HeaderXRequestID).(string), BranchID: req.BranchID, BpkbName: req.BPKBNameType}
-	customer = append(customer, request.SpouseDupcheck{IDNumber: req.IDNumber, LegalName: req.LegalName, BirthDate: req.BirthDate, MotherName: req.SurgateMotherName})
+	customer = append(customer, request.SpouseDupcheck{IDNumber: mdmGetDetailCustomerKPMRes.Data.Customer.IdNumber, LegalName: mdmGetDetailCustomerKPMRes.Data.Customer.LegalName, BirthDate: mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate, MotherName: mdmGetDetailCustomerKPMRes.Data.Customer.SurgateMotherName})
 
 	if req.MaritalStatus == constant.MARRIED {
 		married = true
@@ -390,10 +436,10 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 
 	reqNegativeCustomer := request.DupcheckApi{
 		ProspectID:   req.ProspectID,
-		IDNumber:     req.IDNumber,
-		LegalName:    req.LegalName,
-		BirthDate:    req.BirthDate,
-		MotherName:   req.SurgateMotherName,
+		IDNumber:     mdmGetDetailCustomerKPMRes.Data.Customer.IdNumber,
+		LegalName:    mdmGetDetailCustomerKPMRes.Data.Customer.LegalName,
+		BirthDate:    mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate,
+		MotherName:   mdmGetDetailCustomerKPMRes.Data.Customer.SurgateMotherName,
 		ProfessionID: req.ProfessionID,
 		JobType:      req.JobType,
 		JobPosition:  req.JobPosition,
@@ -422,7 +468,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	}
 
 	//Check mobilephone fmf
-	checkMobilePhoneFMF, err := u.usecase.CheckMobilePhoneFMF(ctx, req.ProspectID, req.MobilePhone, req.IDNumber, accessToken, middlewares.HrisApiData.Token)
+	checkMobilePhoneFMF, err := u.usecase.CheckMobilePhoneFMF(ctx, req.ProspectID, mdmGetDetailCustomerKPMRes.Data.Customer.MobilePhone, mdmGetDetailCustomerKPMRes.Data.Customer.IdNumber, accessToken, middlewares.HrisApiData.Token)
 	if err != nil {
 		return
 	}
@@ -496,7 +542,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 
 	mainCustomer.CustomerStatus = mainCustomer.CustomerStatusKMB
 
-	pmk, err := u.usecase.CheckPMK(req.BranchID, mainCustomer.CustomerStatusKMB, income, req.HomeStatus, req.ProfessionID, req.BirthDate, req.Tenor, req.MaritalStatus, req.EmploymentSinceYear, req.EmploymentSinceMonth, req.StaySinceYear, req.StaySinceMonth)
+	pmk, err := u.usecase.CheckPMK(req.BranchID, mainCustomer.CustomerStatusKMB, income, req.HomeStatus, req.ProfessionID, mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate, req.Tenor, req.MaritalStatus, req.EmploymentSinceYear, req.EmploymentSinceMonth, req.StaySinceYear, req.StaySinceMonth)
 	if err != nil {
 		return
 	}
@@ -558,10 +604,10 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		User:              constant.USER_PBK_KMB_FILTEERING,
 		ProspectID:        req.ProspectID,
 		BranchID:          req.BranchID,
-		IDNumber:          req.IDNumber,
-		LegalName:         req.LegalName,
-		BirthDate:         req.BirthDate,
-		SurgateMotherName: req.SurgateMotherName,
+		IDNumber:          mdmGetDetailCustomerKPMRes.Data.Customer.IdNumber,
+		LegalName:         mdmGetDetailCustomerKPMRes.Data.Customer.LegalName,
+		BirthDate:         mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate,
+		SurgateMotherName: mdmGetDetailCustomerKPMRes.Data.Customer.SurgateMotherName,
 		Gender:            req.Gender,
 		BPKBName:          req.BPKBNameType,
 	}
@@ -784,20 +830,20 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	reqDukcapil := request.PrinciplePemohon{
 		ProspectID:        req.ProspectID,
 		LegalAddress:      " ",
-		BirthDate:         req.BirthDate,
+		BirthDate:         mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate,
 		BirthPlace:        req.BirthPlace,
 		Gender:            req.Gender,
 		MaritalStatus:     req.MaritalStatus,
-		IDNumber:          req.IDNumber,
+		IDNumber:          mdmGetDetailCustomerKPMRes.Data.Customer.IdNumber,
 		LegalCity:         " ",
 		LegalKecamatan:    " ",
 		LegalKelurahan:    " ",
-		LegalName:         req.LegalName,
+		LegalName:         mdmGetDetailCustomerKPMRes.Data.Customer.LegalName,
 		ProfessionID:      req.ProfessionID,
 		LegalProvince:     " ",
 		LegalRT:           " ",
 		LegalRW:           " ",
-		SurgateMotherName: req.SurgateMotherName,
+		SurgateMotherName: mdmGetDetailCustomerKPMRes.Data.Customer.SurgateMotherName,
 		BpkbName:          req.BPKBNameType,
 		SelfiePhoto:       req.SelfiePhoto,
 		KtpPhoto:          req.KtpPhoto,
@@ -988,9 +1034,9 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		HomeStatus:       req.HomeStatus,
 	}
 
-	birthDate, _ := time.Parse("2006-01-02", req.BirthDate)
+	birthDate, _ := time.Parse("2006-01-02", mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate)
 	reqTwoScp := entity.TrxPrincipleStepTwo{
-		MobilePhone:         req.MobilePhone,
+		MobilePhone:         mdmGetDetailCustomerKPMRes.Data.Customer.MobilePhone,
 		Gender:              req.Gender,
 		MaritalStatus:       req.MaritalStatus,
 		ProfessionID:        req.ProfessionID,
@@ -1035,15 +1081,48 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	trxKPM.ResultPefindo = resultPefindo
 	trxKPM.BakiDebet = pefindo.TotalBakiDebetNonAgunan
 
+	detailTrxBiro, err := u.repository.GetTrxDetailBIro(req.ProspectID)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Trx Detail Biro Error")
+		return resp, err
+	}
+
+	scores := make([]string, 0)
+	for _, v := range detailTrxBiro {
+		scores = append(scores, v.Score)
+	}
+
+	pbkScoreMapping, err := u.repository.GetMappingPbkScore(scores)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Pbk Score Error")
+		return resp, err
+	}
+
+	pbkScore := pbkScoreMapping.GradeScore
+	if pbkScoreMapping.GradeScore == "" {
+		pbkScore = "NO HIT"
+	}
+
+	branch, err := u.repository.GetMappingBranchByBranchID(req.BranchID, pbkScore)
+	if err != nil {
+		err = errors.New(constant.ERROR_UPSTREAM + " - Get Mapping Branch Error")
+		return resp, err
+	}
+
+	var bpkbNameType int
+	if strings.Contains(os.Getenv("NAMA_SAMA"), req.BPKBNameType) {
+		bpkbNameType = 1
+	}
+
 	// get loan amount
 	var mappingElaborateLTV []entity.MappingElaborateLTV
-	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, clusterCMO)
+	mappingElaborateLTV, err = u.repository.GetMappingElaborateLTV(resultPefindo, clusterCMO, branch.GradeBranch, customerStatus, pbkScore, bpkbNameType)
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Get mapping elaborate error")
 		return
 	}
 
-	ltv, adjustTenor, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, req.Tenor, pefindo.TotalBakiDebetNonAgunan, false)
+	ltv, adjustTenor, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, req.Tenor, pefindo.TotalBakiDebetNonAgunan, false, pbkScore, customerStatus, branch.GradeBranch)
 	if err != nil {
 		return
 	}
@@ -1214,7 +1293,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		Otr:                    req.OTR,
 		RegionCode:             mappingLicensePlate.AreaID,
 		AssetCategory:          categoryId,
-		CustomerBirthDate:      req.BirthDate,
+		CustomerBirthDate:      mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate,
 		Tenor:                  req.Tenor,
 	}
 
@@ -1269,10 +1348,10 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		TransactionID:   req.ProspectID,
 		StatusKonsumen:  customerStatus,
 		CustomerSegment: customerSegment,
-		IDNumber:        req.IDNumber,
-		LegalName:       req.LegalName,
-		BirthDate:       req.BirthDate,
-		MotherName:      req.SurgateMotherName,
+		IDNumber:        mdmGetDetailCustomerKPMRes.Data.Customer.IdNumber,
+		LegalName:       mdmGetDetailCustomerKPMRes.Data.Customer.LegalName,
+		BirthDate:       mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate,
+		MotherName:      mdmGetDetailCustomerKPMRes.Data.Customer.SurgateMotherName,
 	})
 
 	installmentAmountFMF = dataCustomer[0].TotalInstallment
@@ -1283,7 +1362,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 			IDNumber:      req.SpouseIDNumber,
 			LegalName:     req.SpouseLegalName,
 			BirthDate:     req.SpouseBirthDate,
-			MotherName:    req.SurgateMotherName,
+			MotherName:    mdmGetDetailCustomerKPMRes.Data.Customer.SurgateMotherName,
 		})
 
 		installmentAmountSpouseFMF = dataCustomer[1].TotalInstallment
@@ -1422,6 +1501,11 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		return
 	}
 
+	err = u.repository.SaveTrxKPMStatus(trxKPMStatus)
+	if err != nil {
+		return
+	}
+
 	u.producer.PublishEvent(ctx, middlewares.UserInfoData.AccessToken, constant.TOPIC_SUBMISSION_2WILEN, constant.KEY_PREFIX_UPDATE_TRANSACTION_PRINCIPLE, req.ProspectID, utils.StructToMap(request.Update2wPrincipleTransaction{
 		Amount:                     req.LoanAmount,
 		OrderID:                    req.ProspectID,
@@ -1453,11 +1537,11 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 
 	// validate data customer
 	param, _ := json.Marshal(map[string]interface{}{
-		"id_number":           req.IDNumber,
-		"legal_name":          req.LegalName,
-		"birth_date":          req.BirthDate,
-		"surgate_mother_name": req.SurgateMotherName,
-		"mobile_phone":        req.MobilePhone,
+		"id_number":           mdmGetDetailCustomerKPMRes.Data.Customer.IdNumber,
+		"legal_name":          mdmGetDetailCustomerKPMRes.Data.Customer.LegalName,
+		"birth_date":          mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate,
+		"surgate_mother_name": mdmGetDetailCustomerKPMRes.Data.Customer.SurgateMotherName,
+		"mobile_phone":        mdmGetDetailCustomerKPMRes.Data.Customer.MobilePhone,
 	})
 
 	respValidate, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("CUSTOMER_V3_BASE_URL")+"/api/v3/customer/validate-data", param, header, constant.METHOD_POST, false, 0, timeOut, req.ProspectID, accessToken)
@@ -1491,15 +1575,15 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		"prospect_id":          req.ProspectID,
 		"no_kk":                "",
 		"lob_id":               constant.LOBID_KMB,
-		"id_number":            req.IDNumber,
-		"legal_name":           req.LegalName,
-		"birth_date":           req.BirthDate,
+		"id_number":            mdmGetDetailCustomerKPMRes.Data.Customer.IdNumber,
+		"legal_name":           mdmGetDetailCustomerKPMRes.Data.Customer.LegalName,
+		"birth_date":           mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate,
 		"birth_place":          req.BirthPlace,
 		"gender":               req.Gender,
 		"profession_id":        req.ProfessionID,
-		"mobile_phone":         req.MobilePhone,
+		"mobile_phone":         mdmGetDetailCustomerKPMRes.Data.Customer.MobilePhone,
 		"marital_status_id":    req.MaritalStatus,
-		"surgate_mother_name":  req.SurgateMotherName,
+		"surgate_mother_name":  mdmGetDetailCustomerKPMRes.Data.Customer.SurgateMotherName,
 		"personal_npwp_number": "",
 		"ktp_media_url":        req.KtpPhoto,
 		"kk_media_url":         "",
@@ -1513,7 +1597,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 			"id_number":            req.SpouseIDNumber,
 			"full_name":            req.SpouseLegalName,
 			"mobile_phone":         req.SpouseMobilePhone,
-			"birth_date":           req.BirthDate,
+			"birth_date":           mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate,
 			"birth_place":          req.SpouseBirthPlace,
 			"gender":               spouseGender,
 			"surgate_mother_name":  req.SpouseSurgateMotherName,
@@ -1547,11 +1631,11 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 
 	// update data customer transaction
 	customerPersonal := map[string]interface{}{
-		"birth_date":              req.BirthDate,
+		"birth_date":              mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate,
 		"birth_place":             req.BirthPlace,
 		"gender":                  req.Gender,
-		"mobile_phone":            req.MobilePhone,
-		"email":                   req.Email,
+		"mobile_phone":            mdmGetDetailCustomerKPMRes.Data.Customer.MobilePhone,
+		"email":                   mdmGetDetailCustomerKPMRes.Data.Customer.Email,
 		"education":               req.Education,
 		"marital_status":          req.MaritalStatus,
 		"home_status":             req.HomeStatus,

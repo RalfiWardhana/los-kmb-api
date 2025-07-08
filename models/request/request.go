@@ -603,21 +603,22 @@ type Apk struct {
 	PaymentMethod               string   `json:"payment_method" validate:"required,max=2,noHTML" example:"CR"`
 	SurveyFee                   *float64 `json:"survey_fee" validate:"required,max=999999999999,gte=0" example:"0"`
 	IsFidusiaCovered            string   `json:"is_fidusia_covered" validate:"required,len=1" example:"Y"`
-	ProvisionFee                *float64 `json:"provision_fee" validate:"required,max=999999999999,gte=0" example:"2475000"`
-	InsAssetPaidBy              string   `json:"ins_asset_paid_by" validate:"required,noHTML" example:"CU"`
-	InsAssetPeriod              string   `json:"ins_asset_period" validate:"required,noHTML" example:"FT"`
-	EffectiveRate               float64  `json:"effective_rate" validate:"required,max=99,gte=0" example:"26.4"`
-	SalesmanID                  string   `json:"salesman_id" validate:"required,noHTML" example:"81088"`
-	SupplierBankAccountID       string   `json:"supplier_bank_account_id" validate:"required,noHTML" example:"1"`
-	LifeInsuranceCoyBranchID    string   `json:"life_insurance_coy_branch_id" validate:"max=20,noHTML" example:"426"`
-	LifeInsuranceAmountCoverage float64  `json:"life_insurance_amount_coverage" validate:"min=0,max=999999999999,gte=0" example:"105000000"`
-	CommisionSubsidy            float64  `json:"commision_subsidi" validate:"min=0,max=999999999999,gte=0" example:"0"`
-	FinancePurpose              string   `json:"finance_purpose" validate:"required,max=100,noHTML"`
-	Dealer                      string   `json:"dealer" validate:"omitempty,max=50,noHTML"`
-	LoanAmount                  float64  `json:"loan_amount"  validate:"min=0,max=999999999999,gte=0" example:"105000000"`
-	WayOfPayment                string   `json:"way_of_payment" validate:"required,max=2,noHTML" example:"CA"`
-	StampDutyFee                float64  `json:"stamp_duty_fee" validate:"min=0,max=999999999999,gte=0" example:"250000"`
-	AgentFee                    float64  `json:"agent_fee" validate:"min=0,max=999999999999,gte=0" example:"250000"`
+	ProvisionFee                *float64 `json:"provision_fee" validate:"required,max=999999999999" example:"2475000"`
+	InsAssetPaidBy              string   `json:"ins_asset_paid_by" validate:"required" example:"CU"`
+	InsAssetPeriod              string   `json:"ins_asset_period" validate:"required" example:"FT"`
+	EffectiveRate               float64  `json:"effective_rate" validate:"required,max=99" example:"26.4"`
+	SalesmanID                  string   `json:"salesman_id" validate:"required" example:"81088"`
+	SupplierBankAccountID       string   `json:"supplier_bank_account_id" validate:"required" example:"1"`
+	LifeInsuranceCoyBranchID    string   `json:"life_insurance_coy_branch_id" validate:"max=20" example:"426"`
+	LifeInsuranceAmountCoverage float64  `json:"life_insurance_amount_coverage" validate:"max=999999999999" example:"105000000"`
+	UseAdditionalInsurance      bool     `json:"use_additional_insurance" validate:"omitempty"`
+	CommisionSubsidy            float64  `json:"commision_subsidi" validate:"max=999999999999" example:"0"`
+	FinancePurpose              string   `json:"finance_purpose" validate:"required,max=100"`
+	Dealer                      string   `json:"dealer" validate:"omitempty,max=50"`
+	LoanAmount                  float64  `json:"loan_amount"  validate:"max=999999999999" example:"105000000"`
+	WayOfPayment                string   `json:"way_of_payment" validate:"required,max=2" example:"CA"`
+	StampDutyFee                float64  `json:"stamp_duty_fee" validate:"max=999999999999" example:"250000"`
+	AgentFee                    float64  `json:"agent_fee" validate:"max=999999999999" example:"250000"`
 }
 
 type ApkNE struct {
@@ -720,6 +721,8 @@ type Recalculate struct {
 	InterestAmount               float64 `json:"interest_amount" validate:"max=999999999999" example:"66528000"`
 	ProvisionFee                 float64 `json:"provision_fee" validate:"max=999999999999" example:"2475000"`
 	LoanAmount                   float64 `json:"loan_amount" validate:"max=999999999999" example:"105000000"`
+	LifeInsuranceCoyBranchID     string  `json:"life_insurance_coy_branch_id"`
+	UseAdditionalInsurance       bool    `json:"use_additional_insurance"`
 }
 
 type RequestGenerateFormAKKK struct {
@@ -1392,26 +1395,17 @@ type CheckStep2Wilen struct {
 type GetMaxLoanAmount struct {
 	ProspectID         string  `json:"prospect_id" validate:"required,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
 	BranchID           string  `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
-	IDNumber           string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
-	BirthDate          string  `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
-	SurgateMotherName  string  `json:"surgate_mother_name" validate:"required,max=50,allowcharsname" example:"IBU"`
-	LegalName          string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
-	MobilePhone        string  `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"085880529100"`
 	BPKBNameType       string  `json:"bpkb_name_type" validate:"required,bpkbname"`
 	ManufactureYear    string  `json:"manufacture_year" validate:"required,len=4,number" example:"2020"`
 	AssetCode          string  `json:"asset_code" validate:"required,max=200,htmlValidation" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
 	AssetUsageTypeCode string  `json:"asset_usage_type_code" validate:"required,oneof=C N S,htmlValidation" example:"C"`
 	ReferralCode       *string `json:"referral_code" validate:"omitempty,htmlValidation"`
+	KPMID              int     `json:"kpm_id" validate:"required"`
 }
 
 type GetAvailableTenor struct {
 	ProspectID         string  `json:"prospect_id" validate:"required,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
 	BranchID           string  `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
-	IDNumber           string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
-	BirthDate          string  `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
-	SurgateMotherName  string  `json:"surgate_mother_name" validate:"required,max=50,allowcharsname" example:"IBU"`
-	LegalName          string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
-	MobilePhone        string  `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"085880529100"`
 	BPKBNameType       string  `json:"bpkb_name_type" validate:"required,bpkbname"`
 	ManufactureYear    string  `json:"manufacture_year" validate:"required,len=4,number" example:"2020"`
 	AssetCode          string  `json:"asset_code" validate:"required,max=200,htmlValidation" example:"SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT"`
@@ -1419,25 +1413,20 @@ type GetAvailableTenor struct {
 	LicensePlate       string  `json:"license_plate" validate:"required,max=50,htmlValidation" example:"B3006TBJ"`
 	LoanAmount         float64 `json:"loan_amount"  validate:"required,max=999999999999" example:"105000000"`
 	ReferralCode       *string `json:"referral_code" validate:"omitempty,max=200,htmlValidation" example:"SUZUKI"`
+	KPMID              int     `json:"kpm_id" validate:"required"`
 }
 
 type Submission2Wilen struct {
 	ProspectID              string  `json:"prospect_id" validate:"required,prospect_id,max=20,htmlValidation" example:"SAL-1140024080800004"`
-	IDNumber                string  `json:"id_number"  validate:"required,number,len=16" example:"3506126712000001"`
-	LegalName               string  `json:"legal_name" validate:"required,allowcharsname,max=50" example:"Arya Danu"`
-	MobilePhone             string  `json:"mobile_phone" validate:"required,min=9,max=14,number" example:"085880529100"`
-	Email                   string  `json:"email" validate:"required,email,max=100" example:"jonathaxx@gmail.com"`
 	BirthPlace              string  `json:"birth_place" validate:"required,max=100,allowcharsname" example:"Jakarta"`
-	BirthDate               string  `json:"birth_date" validate:"required,dateformat" example:"1992-09-11"`
-	SurgateMotherName       string  `json:"surgate_mother_name" validate:"required,max=50,allowcharsname" example:"IBU"`
 	Gender                  string  `json:"gender" validate:"required,max=1,allowcharsname" example:"M"`
 	ResidenceAddress        string  `json:"residence_address" validate:"required,allowcharsaddress,max=100" example:"Dermaga Baru"`
 	ResidenceRT             string  `json:"residence_rt" validate:"required,min=1,max=3,number" example:"001"`
 	ResidenceRW             string  `json:"residence_rw" validate:"required,min=1,max=3,number" example:"002"`
 	ResidenceProvince       string  `json:"residence_province" validate:"required,max=50,allowcharsname" example:"Jakarta"`
 	ResidenceCity           string  `json:"residence_city" validate:"required,max=30,allowcharsname" example:"Jakarta Timur"`
-	ResidenceKecamatan      string  `json:"residence_kecamatan" validate:"required,max=30,allowcharsname" example:"Duren Sawit"`
-	ResidenceKelurahan      string  `json:"residence_kelurahan" validate:"required,max=30,allowcharsname" example:"Klender"`
+	ResidenceKecamatan      string  `json:"residence_kecamatan" validate:"required,max=30,isValidNameChars" example:"Duren Sawit"`
+	ResidenceKelurahan      string  `json:"residence_kelurahan" validate:"required,max=30,isValidNameChars" example:"Klender"`
 	ResidenceZipCode        string  `json:"residence_zipcode" validate:"required,max=5,number" example:"13470"`
 	BranchID                string  `json:"branch_id" validate:"required,max=10,htmlValidation" example:"426"`
 	AssetCode               string  `json:"asset_code" validate:"required,max=200,htmlValidation" example:"K-HND.MOTOR.ABSOLUTE REVO"`
@@ -1476,7 +1465,7 @@ type Submission2Wilen struct {
 	NTF                     float64 `json:"ntf" validate:"required,max=999999999999" example:"150528000"`
 	OTR                     float64 `json:"otr" validate:"required,max=999999999999" example:"105000000"`
 	DPAmount                float64 `json:"down_payment_amount" validate:"omitempty,max=999999999999" example:"22000000"`
-	AdminFee                float64 `json:"admin_fee" validate:"required,max=999999999999" example:"1500000"`
+	AdminFee                float64 `json:"admin_fee"`
 	Dealer                  string  `json:"dealer" validate:"omitempty,max=50"`
 	AssetCategoryID         string  `json:"asset_category_id" validate:"required,max=100" example:"BEBEK"`
 	KPMID                   int     `json:"kpm_id" validate:"required"`

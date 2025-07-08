@@ -677,6 +677,8 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				surveyFee = *data.Apk.SurveyFee
 			}
 
+			useAdditionalInsurance := utils.BoolToInt(data.Apk.UseAdditionalInsurance)
+
 			apk := entity.TrxApk{
 				ProspectID:                  data.Transaction.ProspectID,
 				Tenor:                       &data.Apk.Tenor,
@@ -724,6 +726,7 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				WayOfPayment:                data.Apk.WayOfPayment,
 				StampDutyFee:                data.Apk.StampDutyFee,
 				AgentFee:                    data.Apk.AgentFee,
+				UseAdditionalInsurance:      &useAdditionalInsurance,
 			}
 
 			logInfo = apk
@@ -1643,7 +1646,7 @@ func (r repoHandler) GetRecalculate(prospectID string) (getRecalculate entity.Ge
 	return
 }
 
-func (r repoHandler) SaveRecalculate(beforeRecalculate entity.TrxRecalculate, afterRecalculate entity.TrxRecalculate) (err error) {
+func (r repoHandler) SaveRecalculate(beforeRecalculate entity.TrxRecalculate, afterRecalculate entity.TrxRecalculate, payload request.Recalculate) (err error) {
 
 	var logInfo interface{}
 	err = r.newKmbDB.Transaction(func(tx *gorm.DB) error {
@@ -1663,25 +1666,29 @@ func (r repoHandler) SaveRecalculate(beforeRecalculate entity.TrxRecalculate, af
 		}
 
 		// update trx_apk
+		useAdditionalInsurance := utils.BoolToInt(payload.UseAdditionalInsurance)
+
 		TrxApk := entity.TrxApk{
-			ProductOfferingID:   afterRecalculate.ProductOfferingID,
-			ProductOfferingDesc: afterRecalculate.ProductOfferingDesc,
-			Tenor:               afterRecalculate.Tenor,
-			LoanAmount:          afterRecalculate.LoanAmount,
-			AF:                  afterRecalculate.AF,
-			InstallmentAmount:   afterRecalculate.InstallmentAmount,
-			DPAmount:            afterRecalculate.DPAmount,
-			PercentDP:           afterRecalculate.PercentDP,
-			AdminFee:            afterRecalculate.AdminFee,
-			ProvisionFee:        afterRecalculate.ProvisionFee,
-			FidusiaFee:          afterRecalculate.FidusiaFee,
-			AssetInsuranceFee:   afterRecalculate.AssetInsuranceFee,
-			LifeInsuranceFee:    afterRecalculate.LifeInsuranceFee,
-			InsuranceAmount:     afterRecalculate.LifeInsuranceFee + afterRecalculate.AssetInsuranceFee,
-			NTF:                 afterRecalculate.NTF,
-			NTFAkumulasi:        afterRecalculate.NTFAkumulasi,
-			InterestRate:        afterRecalculate.InterestRate,
-			InterestAmount:      afterRecalculate.InterestAmount,
+			ProductOfferingID:        afterRecalculate.ProductOfferingID,
+			ProductOfferingDesc:      afterRecalculate.ProductOfferingDesc,
+			Tenor:                    afterRecalculate.Tenor,
+			LoanAmount:               afterRecalculate.LoanAmount,
+			AF:                       afterRecalculate.AF,
+			InstallmentAmount:        afterRecalculate.InstallmentAmount,
+			DPAmount:                 afterRecalculate.DPAmount,
+			PercentDP:                afterRecalculate.PercentDP,
+			AdminFee:                 afterRecalculate.AdminFee,
+			ProvisionFee:             afterRecalculate.ProvisionFee,
+			FidusiaFee:               afterRecalculate.FidusiaFee,
+			AssetInsuranceFee:        afterRecalculate.AssetInsuranceFee,
+			LifeInsuranceFee:         afterRecalculate.LifeInsuranceFee,
+			InsuranceAmount:          afterRecalculate.LifeInsuranceFee + afterRecalculate.AssetInsuranceFee,
+			NTF:                      afterRecalculate.NTF,
+			NTFAkumulasi:             afterRecalculate.NTFAkumulasi,
+			InterestRate:             afterRecalculate.InterestRate,
+			InterestAmount:           afterRecalculate.InterestAmount,
+			LifeInsuranceCoyBranchID: payload.LifeInsuranceCoyBranchID,
+			UseAdditionalInsurance:   &useAdditionalInsurance,
 		}
 		logInfo = TrxApk
 		result = tx.Model(&entity.TrxApk{}).Where("ProspectID = ?", afterRecalculate.ProspectID).Updates(TrxApk)
@@ -1948,6 +1955,7 @@ func (r repoHandler) SaveToStaging(prospectID string) (newErr error) {
 			UsrCrt:              constant.LOS_CREATED,
 			DtmCrt:              time.Now(),
 			ApplicationPriority: constant.RG_PRIORITY,
+			IsHospitalCashPlan:  *apk.UseAdditionalInsurance,
 		}).Error; err != nil {
 			return err
 		}

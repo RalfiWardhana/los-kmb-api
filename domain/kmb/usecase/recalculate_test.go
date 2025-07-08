@@ -342,7 +342,7 @@ func TestRecalculate(t *testing.T) {
 			}
 
 			mockRepository.On("GetRecalculate", tc.req.ProspectID).Return(tc.beforeRec, tc.errGetRecalculate)
-			mockRepository.On("SaveRecalculate", saveBeforeRecalculate, tc.afterRec).Return(tc.errFinal)
+			mockRepository.On("SaveRecalculate", saveBeforeRecalculate, tc.afterRec, tc.req).Return(tc.errFinal)
 
 			usecase := NewUsecase(mockRepository, mockHttpClient)
 

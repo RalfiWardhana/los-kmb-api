@@ -19,7 +19,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/allegro/bigcache/v3"
 	"github.com/go-resty/resty/v2"
 	"github.com/jarcoal/httpmock"
 	"github.com/jinzhu/copier"
@@ -66,11 +65,11 @@ func TestGetReasonPrescreening(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
-			var cache *bigcache.BigCache
+			mockCache := new(mocksCache.Repository)
 
 			mockRepository.On("GetReasonPrescreening", mock.Anything, mock.Anything).Return(tc.data, tc.row, tc.errGet)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			result, _, err := usecase.GetReasonPrescreening(context.Background(), tc.req, mock.Anything)
 			require.Equal(t, tc.data, result)
@@ -109,11 +108,11 @@ func TestGetCancelReason(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
-			var cache *bigcache.BigCache
+			mockCache := new(mocksCache.Repository)
 
 			mockRepository.On("GetCancelReason", mock.Anything, mock.Anything).Return(tc.data, tc.row, tc.errGet)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			result, _, err := usecase.GetCancelReason(context.Background(), mock.Anything)
 			require.Equal(t, tc.data, result)
@@ -157,11 +156,11 @@ func TestGetApprovalReason(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
-			var cache *bigcache.BigCache
+			mockCache := new(mocksCache.Repository)
 
 			mockRepository.On("GetApprovalReason", mock.Anything, mock.Anything).Return(tc.data, tc.row, tc.errGet)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			result, _, err := usecase.GetApprovalReason(context.Background(), tc.req, mock.Anything)
 			require.Equal(t, tc.data, result)
@@ -185,8 +184,8 @@ func TestReviewPrescreening(t *testing.T) {
 	t.Run("ValidReviewCaseApprove", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 		req := request.ReqReviewPrescreening{
 			ProspectID: "TST-DEV", // Ganti dengan ID yang sesuai
 			Decision:   constant.DECISION_APPROVE,
@@ -298,8 +297,8 @@ func TestReviewPrescreening(t *testing.T) {
 	t.Run("ValidReviewCaseReject", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 		req := request.ReqReviewPrescreening{
 			ProspectID: "TST-DEV", // Ganti dengan ID yang sesuai
 			Decision:   constant.DECISION_REJECT,
@@ -412,8 +411,8 @@ func TestReviewPrescreening(t *testing.T) {
 	t.Run("InvalidDecisionCase", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 		req := request.ReqReviewPrescreening{
 			ProspectID: "TST-DEV", // Ganti dengan ID yang sesuai
 			Decision:   "InvalidDecision",
@@ -437,8 +436,8 @@ func TestReviewPrescreening(t *testing.T) {
 	t.Run("InvalidStatusCase", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 		req := request.ReqReviewPrescreening{
 			ProspectID: "TST-DEV", // Ganti dengan ID yang sesuai
 			Decision:   constant.DECISION_APPROVE,
@@ -462,8 +461,8 @@ func TestReviewPrescreening(t *testing.T) {
 	t.Run("ErrorStatusCase", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		req := request.ReqReviewPrescreening{
 			ProspectID: "TST-DEV", // Ganti dengan ID yang sesuai
@@ -484,8 +483,8 @@ func TestReviewPrescreening(t *testing.T) {
 	t.Run("ErrorSavePrescreening", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		req := request.ReqReviewPrescreening{
 			ProspectID: "TST-DEV", // Ganti dengan ID yang sesuai
@@ -514,8 +513,8 @@ func TestReviewPrescreeningInvalidStatus(t *testing.T) {
 	// Persiapkan objek usecase dengan mock repository
 	mockRepository := new(mocks.Repository)
 	mockHttpClient := new(httpclient.MockHttpClient)
-	var cache *bigcache.BigCache
-	usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+	mockCache := new(mocksCache.Repository)
+	usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 	var (
 		errSave error
@@ -1204,8 +1203,8 @@ func TestSaveAsDraft(t *testing.T) {
 	t.Run("ValidSaveApprove", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 		req := request.ReqSaveAsDraft{
 			ProspectID: "TST-DEV", // Ganti dengan ID yang sesuai
 			Decision:   constant.DECISION_APPROVE,
@@ -1248,8 +1247,8 @@ func TestSaveAsDraft(t *testing.T) {
 	t.Run("ValidSaveReject", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 		req := request.ReqSaveAsDraft{
 			ProspectID: "TST-DEV", // Ganti dengan ID yang sesuai
 			Decision:   constant.DECISION_REJECT,
@@ -1292,8 +1291,8 @@ func TestSaveAsDraft(t *testing.T) {
 	t.Run("ErrorSaveDraft", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		req := request.ReqSaveAsDraft{
 			ProspectID: "TST-DEV", // Ganti dengan ID yang sesuai
@@ -1351,8 +1350,8 @@ func TestReturnOrder(t *testing.T) {
 	t.Run("ValidSaveApprove", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		mockRepository.On("ProcessReturnOrder", mock.Anything, trxStatus, trxDetail).Return(errSave).Once()
 
@@ -1371,8 +1370,8 @@ func TestReturnOrder(t *testing.T) {
 	t.Run("ErrorProcessReturnOrder", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Process Return Order error")
 
@@ -1409,8 +1408,8 @@ func TestCancelOrder(t *testing.T) {
 	t.Run("ValidCancelCase", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		trxCaDecision = entity.TrxCaDecision{
 			ProspectID: req.ProspectID,
@@ -1462,8 +1461,8 @@ func TestCancelOrder(t *testing.T) {
 	t.Run("ErrorGetTrxStatusCase", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Get status order error")
 
@@ -1478,8 +1477,8 @@ func TestCancelOrder(t *testing.T) {
 	t.Run("ErrorProcessTransaction", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		mockRepository.On("GetTrxStatus", mock.Anything).Return(entity.TrxStatus{
 			Activity:       constant.ACTIVITY_UNPROCESS,
@@ -1499,8 +1498,8 @@ func TestCancelOrder(t *testing.T) {
 	t.Run("InvalidStatusCase", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		errFinal := errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak dapat dicancel")
 
@@ -1533,8 +1532,8 @@ func TestSubmitDecision(t *testing.T) {
 	t.Run("ValidSubmitCaseApprove", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 		req := request.ReqSubmitDecision{
 			ProspectID:   "TST-DEV",
 			NTFAkumulasi: 123456.55,
@@ -1615,8 +1614,8 @@ func TestSubmitDecision(t *testing.T) {
 	t.Run("ValidSubmitCaseReject", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 		req := request.ReqSubmitDecision{
 			ProspectID:   "TST-DEV",
 			NTFAkumulasi: 123456.55,
@@ -1698,8 +1697,8 @@ func TestSubmitDecision(t *testing.T) {
 	t.Run("InvalidStatusCase", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		errFinal := errors.New(constant.ERROR_BAD_REQUEST + " - Status order tidak sedang dalam credit process")
 
@@ -1727,8 +1726,8 @@ func TestSubmitDecision(t *testing.T) {
 	t.Run("ErrorGetTrxStatusCase", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Get status order error")
 
@@ -1752,8 +1751,8 @@ func TestSubmitDecision(t *testing.T) {
 	t.Run("ErrorGetLimitApprovalDeviasiCase", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Get limit approval deviasi error")
 
@@ -1785,8 +1784,8 @@ func TestSubmitDecision(t *testing.T) {
 	t.Run("ErrorGetLimitApprovalCase", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		errFinal := errors.New(constant.ERROR_UPSTREAM + " - Get limit approval error")
 
@@ -1818,8 +1817,8 @@ func TestSubmitDecision(t *testing.T) {
 	t.Run("ErrorProcessTransaction", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		req := request.ReqSubmitDecision{
 			ProspectID:   "TST-DEV",
@@ -2674,8 +2673,8 @@ func TestSubmitApproval(t *testing.T) {
 	t.Run("ValidSubmitApprovalCaseApprove", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 		req := request.ReqSubmitApproval{
 			ProspectID:    "TST-DEV",
 			FinalApproval: "GMC",
@@ -2735,8 +2734,8 @@ func TestSubmitApproval(t *testing.T) {
 	t.Run("ValidSubmitApprovalCaseDeviasiREJECT", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 		req := request.ReqSubmitApproval{
 			ProspectID:    "TST-DEV",
 			FinalApproval: "GMC",
@@ -2800,8 +2799,8 @@ func TestSubmitApproval(t *testing.T) {
 	t.Run("ErrorSubmitApproval", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		req := request.ReqSubmitApproval{
 			ProspectID:    "TST-DEV",
@@ -2888,8 +2887,8 @@ func TestRecalculateOrder(t *testing.T) {
 	t.Run("error_timeout", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		responseCode := 504
 		errMsg := errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Submit Recalculate to Sally Timeout")
@@ -2913,8 +2912,8 @@ func TestRecalculateOrder(t *testing.T) {
 	t.Run("error_500", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		responseCode := 500
 		errMsg := errors.New(constant.ERROR_UPSTREAM + " - Submit Recalculate to Sally Error")
@@ -2938,8 +2937,8 @@ func TestRecalculateOrder(t *testing.T) {
 	t.Run("bad_request", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		responseCode := 200
 
@@ -2971,8 +2970,8 @@ func TestRecalculateOrder(t *testing.T) {
 	t.Run("success_200_err_save_process", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		responseCode := 200
 
@@ -3004,8 +3003,8 @@ func TestRecalculateOrder(t *testing.T) {
 	t.Run("success_200", func(t *testing.T) {
 		mockRepository := new(mocks.Repository)
 		mockHttpClient := new(httpclient.MockHttpClient)
-		var cache *bigcache.BigCache
-		usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+		mockCache := new(mocksCache.Repository)
+		usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 		responseCode := 200
 
@@ -3185,11 +3184,11 @@ func TestGetInquiryQuotaDeviasi(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
-			var cache *bigcache.BigCache
+			mockCache := new(mocksCache.Repository)
 
 			mockRepository.On("GetInquiryQuotaDeviasi", tc.req, tc.pagination).Return(tc.expectedData, tc.expectedRow, tc.mockError)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			resultData, resultRow, err := usecase.GetInquiryQuotaDeviasi(tc.req, tc.pagination)
 
@@ -3241,11 +3240,11 @@ func TestGetQuotaDeviasiBranch(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
-			var cache *bigcache.BigCache
+			mockCache := new(mocksCache.Repository)
 
 			mockRepository.On("GetQuotaDeviasiBranch", tc.req).Return(tc.expectedData, tc.mockError)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			resultData, err := usecase.GetQuotaDeviasiBranch(tc.req)
 
@@ -3305,11 +3304,11 @@ func TestGenerateExcelQuotaDeviasi(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
-			var cache *bigcache.BigCache
+			mockCache := new(mocksCache.Repository)
 
 			mockRepository.On("GetInquiryQuotaDeviasi", mock.Anything, mock.Anything).Return(tc.mockReturnData, len(tc.mockReturnData), tc.mockReturnErr)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			genName, fileName, err := usecase.GenerateExcelQuotaDeviasi()
 
@@ -3616,11 +3615,11 @@ func TestGetInquiryListOrder(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
-			var cache *bigcache.BigCache
+			mockCache := new(mocksCache.Repository)
 
 			mockRepository.On("GetInquiryListOrder", tc.req, tc.pagination).Return(tc.expectedData, tc.expectedRow, tc.mockError)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			resultData, resultRow, err := usecase.GetInquiryListOrder(context.Background(), tc.req, tc.pagination)
 
@@ -3704,11 +3703,11 @@ func TestGetInquiryListOrderDetail(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
-			var cache *bigcache.BigCache
+			mockCache := new(mocksCache.Repository)
 
 			mockRepository.On("GetInquiryListOrderDetail", tc.prospectID).Return(tc.expectedData, tc.mockError)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			resultData, err := usecase.GetInquiryListOrderDetail(context.Background(), tc.prospectID)
 
@@ -3765,11 +3764,11 @@ func TestGetInquiryMappingCluster(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
-			var cache *bigcache.BigCache
+			mockCache := new(mocksCache.Repository)
 
 			mockRepository.On("GetInquiryMappingCluster", tc.req, mock.Anything).Return(tc.expectedData, tc.expectedRow, tc.mockError)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			resultData, resultRow, err := usecase.GetInquiryMappingCluster(tc.req, mock.Anything)
 
@@ -3830,11 +3829,11 @@ func TestGenerateExcelMappingCluster(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
-			var cache *bigcache.BigCache
+			mockCache := new(mocksCache.Repository)
 
 			mockRepository.On("GetInquiryMappingCluster", mock.Anything, mock.Anything).Return(tc.mockReturnData, len(tc.mockReturnData), tc.mockReturnErr)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			genName, fileName, err := usecase.GenerateExcelMappingCluster()
 
@@ -4019,14 +4018,14 @@ func TestUpdateMappingCluster(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
-			var cache *bigcache.BigCache
+			mockCache := new(mocksCache.Repository)
 
 			if tc.prepare != nil {
 				tc.prepare(mockRepository)
 			}
 
 			file := newBytesCloser(tc.excelContent)
-			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			err := usecase.UpdateMappingCluster(tc.req, file)
 
@@ -4076,11 +4075,11 @@ func TestGetMappingClusterBranch(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
-			var cache *bigcache.BigCache
+			mockCache := new(mocksCache.Repository)
 
 			mockRepository.On("GetMappingClusterBranch", tc.req, mock.Anything).Return(tc.expectedData, tc.mockError)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			resultData, err := usecase.GetMappingClusterBranch(tc.req)
 
@@ -4129,11 +4128,11 @@ func TestGetMappingClusterChangeLog(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			mockRepository := new(mocks.Repository)
 			mockHttpClient := new(httpclient.MockHttpClient)
-			var cache *bigcache.BigCache
+			mockCache := new(mocksCache.Repository)
 
 			mockRepository.On("GetMappingClusterChangeLog", mock.Anything).Return(tc.expectedData, tc.expectedRow, tc.mockError)
 
-			usecase := NewUsecase(mockRepository, mockHttpClient, cache)
+			usecase := NewUsecase(mockRepository, mockHttpClient, mockCache)
 
 			resultData, resultRow, err := usecase.GetMappingClusterChangeLog(mock.Anything)
 
