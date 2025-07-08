@@ -16,6 +16,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/gorm"
+	"github.com/microcosm-cc/bluemonday"
 )
 
 var Key, ClientKey, Gender, StatusKonsumen, Channel, Lob, Incoming, Home, Education, Marital, ProfID, Photo, Relationship, AppSource, Address, Tenor, Relation, Decision string
@@ -136,13 +137,13 @@ func prospectIDValidation(fl validator.FieldLevel) (validator bool) {
 }
 
 func noXssValidation(fl validator.FieldLevel) bool {
-	var xssRegex = regexp.MustCompile(`(?i).+(<\s*script|on\w+\s*=|javascript:|vbscript:|data:text/html|expression\(|innerHTML|document\.|window\.).*`)
-
-	value := fl.Field().String()
-	if value == "" {
-		return true // Izinkan string kosong
+	input := fl.Field().String()
+	if input == "" {
+		return true // kosong boleh
 	}
-	return !xssRegex.MatchString(value)
+
+	sanitized := bluemonday.UGCPolicy().Sanitize(input)
+	return input == sanitized
 }
 
 func htmlValidation(fl validator.FieldLevel) (validator bool) {
