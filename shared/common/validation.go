@@ -53,6 +53,7 @@ func (v *Validator) Validate(i interface{}) error {
 
 	v.sync.Lock()
 	v.validator.RegisterValidation("prospect_id", prospectIDValidation)
+	v.validator.RegisterValidation("xss_validation", noXssValidation)
 	v.validator.RegisterValidation("key", checkClientKey)
 	v.validator.RegisterValidation("dateformat", dateFormatValidation)
 	v.validator.RegisterValidation("allowcharsname", allowedCharsInName)
@@ -109,7 +110,6 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("prospect_id_emcon_principle", prospectIdEmconPrincipleNotExists)
 	v.validator.RegisterValidation("allowcharstipeusaha", allowedCharsInTipeUsaha)
 	v.validator.RegisterValidation("noHTML", noHTML)
-	v.validator.RegisterValidation("xss_validation", noXssValidation)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
