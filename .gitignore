@@ -29,3 +29,5 @@ unit_test*
 
 # conf
 sql
+
+go.sum
