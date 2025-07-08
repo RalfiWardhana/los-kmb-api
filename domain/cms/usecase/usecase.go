@@ -958,7 +958,7 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 					NeedEscalation:        history.NeedEscalation,
 					SourceDecision:        history.SourceDecision,
 					NextStep:              history.NextStep,
-					Note:                  history.Note,
+					Note:                  utils.SanitizeString(history.Note),
 					SlikResult:            history.SlikResult,
 				}
 				historyData = append(historyData, historyEntry)
@@ -2026,7 +2026,7 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 					NeedEscalation:        history.NeedEscalation,
 					SourceDecision:        history.SourceDecision,
 					NextStep:              history.NextStep,
-					Note:                  history.Note,
+					Note:                  utils.SanitizeString(history.Note),
 					SlikResult:            history.SlikResult,
 				}
 				historyData = append(historyData, historyEntry)

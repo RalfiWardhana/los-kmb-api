@@ -600,37 +600,7 @@ func BoolToInt(b bool) int {
 	return 0
 }
 
-func Sanitize(sanitizer *bluemonday.Policy, data interface{}) {
-	switch d := data.(type) {
-	case map[string]interface{}:
-		for k, v := range d {
-			switch tv := v.(type) {
-			case string:
-				d[k] = sanitizer.Sanitize(tv)
-			case map[string]interface{}:
-				Sanitize(sanitizer, tv)
-			case []interface{}:
-				Sanitize(sanitizer, tv)
-			case nil:
-				delete(d, k)
-			}
-		}
-	case []interface{}:
-		if len(d) > 0 {
-			switch d[0].(type) {
-			case string:
-				for i, s := range d {
-					d[i] = sanitizer.Sanitize(s.(string))
-				}
-			case map[string]interface{}:
-				for _, t := range d {
-					Sanitize(sanitizer, t)
-				}
-			case []interface{}:
-				for _, t := range d {
-					Sanitize(sanitizer, t)
-				}
-			}
-		}
-	}
+func SanitizeString(str string) string {
+	p := bluemonday.UGCPolicy()
+	return p.Sanitize(str)
 }
