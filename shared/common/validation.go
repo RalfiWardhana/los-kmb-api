@@ -122,16 +122,6 @@ func noHTML(fl validator.FieldLevel) bool {
 	return !htmlTagRegex.MatchString(fl.Field().String())
 }
 
-func noXssValidation(fl validator.FieldLevel) bool {
-	var xssRegex = regexp.MustCompile(`(?i).+(<\s*script|on\w+\s*=|javascript:|vbscript:|data:text/html|expression\(|innerHTML|document\.|window\.).*`)
-
-	value := fl.Field().String()
-	if value == "" {
-		return true // Izinkan string kosong
-	}
-	return !xssRegex.MatchString(value)
-}
-
 func prospectIDValidation(fl validator.FieldLevel) (validator bool) {
 
 	prospectID := fl.Field().String()
@@ -143,6 +133,16 @@ func prospectIDValidation(fl validator.FieldLevel) (validator bool) {
 	}
 
 	return validator
+}
+
+func noXssValidation(fl validator.FieldLevel) bool {
+	var xssRegex = regexp.MustCompile(`(?i).+(<\s*script|on\w+\s*=|javascript:|vbscript:|data:text/html|expression\(|innerHTML|document\.|window\.).*`)
+
+	value := fl.Field().String()
+	if value == "" {
+		return true // Izinkan string kosong
+	}
+	return !xssRegex.MatchString(value)
 }
 
 func htmlValidation(fl validator.FieldLevel) (validator bool) {
