@@ -3,6 +3,7 @@ package common
 import (
 	"errors"
 	"fmt"
+	"html"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
@@ -142,7 +143,9 @@ func noXssValidation(fl validator.FieldLevel) bool {
 		return true // kosong boleh
 	}
 
-	sanitized := bluemonday.UGCPolicy().Sanitize(input)
+	decoded := html.UnescapeString(input)
+
+	sanitized := bluemonday.UGCPolicy().Sanitize(decoded)
 	return input == sanitized
 }
 
