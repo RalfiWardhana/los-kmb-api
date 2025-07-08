@@ -109,6 +109,7 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("prospect_id_emcon_principle", prospectIdEmconPrincipleNotExists)
 	v.validator.RegisterValidation("allowcharstipeusaha", allowedCharsInTipeUsaha)
 	v.validator.RegisterValidation("noHTML", noHTML)
+	v.validator.RegisterValidation("xss_validation", noXssValidation)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
@@ -119,6 +120,16 @@ func noHTML(fl validator.FieldLevel) bool {
 	// Regex untuk mendeteksi tag HTML seperti <div>, <script>, <b>, dll.
 	var htmlTagRegex = regexp.MustCompile(`(?i)<[^>]+>`)
 	return !htmlTagRegex.MatchString(fl.Field().String())
+}
+
+func noXssValidation(fl validator.FieldLevel) bool {
+	var xssRegex = regexp.MustCompile(`(?i).+(<\s*script|on\w+\s*=|javascript:|vbscript:|data:text/html|expression\(|innerHTML|document\.|window\.).*`)
+
+	value := fl.Field().String()
+	if value == "" {
+		return true // Izinkan string kosong
+	}
+	return !xssRegex.MatchString(value)
 }
 
 func prospectIDValidation(fl validator.FieldLevel) (validator bool) {

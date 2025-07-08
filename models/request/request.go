@@ -948,7 +948,7 @@ type ReqSubmitDecision struct {
 	NTFAkumulasi float64     `json:"ntf_akumulasi" validate:"required,max=9999999999999"`
 	Decision     string      `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
 	SlikResult   string      `json:"slik_result" validate:"required,max=30"`
-	Note         string      `json:"note" validate:"max=525"`
+	Note         string      `json:"note" validate:"max=525,xss_validation"`
 	CreatedBy    string      `json:"decision_by" validate:"required,max=100"`
 	DecisionBy   string      `json:"decision_by_name" validate:"required,max=250"`
 	Edd          interface{} `json:"edd"`
