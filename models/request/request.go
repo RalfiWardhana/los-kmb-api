@@ -535,7 +535,7 @@ type Address struct {
 
 type CustomerPhoto struct {
 	ID  string `json:"id" validate:"photo,noHTML" example:"KTP"`
-	Url string `json:"url" validate:"url,max=250,noHTML" example:"https://dev-media.kreditplus.com/media/reference/20000/KPM-3677/ktp_EFM-3677.jpg"`
+	Url string `json:"url" validate:"url,max=250,noHTML,validate_url_platform" example:"https://dev-media.kreditplus.com/media/reference/20000/KPM-3677/ktp_EFM-3677.jpg"`
 }
 
 type CustomerEmcon struct {
