@@ -173,6 +173,11 @@ func (u usecase) GetListBranch(ctx context.Context, req request.ReqListBranch) (
 
 func (u usecase) SubmitNE(ctx context.Context, req request.MetricsNE) (data interface{}, err error) {
 
+	if req.CustomerPersonal.OtherMobilePhone != "" && req.CustomerPersonal.OtherMobilePhone == req.CustomerPersonal.MobilePhone {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - OtherMobilePhone must be different from MobilePhone")
+		return
+	}
+
 	filtering := request.Filtering{
 		ProspectID: req.Transaction.ProspectID,
 		BranchID:   req.Transaction.BranchID,
@@ -526,6 +531,8 @@ func (u usecase) GetInquiryPrescreening(ctx context.Context, req request.ReqInqu
 				SurgateMotherName: inq.SurgateMotherName,
 				Gender:            inq.Gender,
 				MobilePhone:       inq.MobilePhone,
+				WhatsAppNumber:    inq.WhatsAppNumber,
+				OtherMobilePhone:  inq.OtherMobilePhone,
 				Email:             inq.Email,
 				NumOfDependence:   inq.NumOfDependence,
 				StaySinceYear:     inq.StaySinceYear,
@@ -951,7 +958,7 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 					NeedEscalation:        history.NeedEscalation,
 					SourceDecision:        history.SourceDecision,
 					NextStep:              history.NextStep,
-					Note:                  history.Note,
+					Note:                  utils.SanitizeString(history.Note),
 					SlikResult:            history.SlikResult,
 				}
 				historyData = append(historyData, historyEntry)
@@ -1056,6 +1063,8 @@ func (u usecase) GetInquiryCa(ctx context.Context, req request.ReqInquiryCa, pag
 				SurgateMotherName: inq.SurgateMotherName,
 				Gender:            inq.Gender,
 				MobilePhone:       inq.MobilePhone,
+				WhatsAppNumber:    inq.WhatsAppNumber,
+				OtherMobilePhone:  inq.OtherMobilePhone,
 				Email:             inq.Email,
 				NumOfDependence:   inq.NumOfDependence,
 				StaySinceYear:     inq.StaySinceYear,
@@ -1510,6 +1519,8 @@ func (u usecase) GetSearchInquiry(ctx context.Context, req request.ReqSearchInqu
 				SurgateMotherName: inq.SurgateMotherName,
 				Gender:            inq.Gender,
 				MobilePhone:       inq.MobilePhone,
+				WhatsAppNumber:    inq.WhatsAppNumber,
+				OtherMobilePhone:  inq.OtherMobilePhone,
 				Email:             inq.Email,
 				NumOfDependence:   inq.NumOfDependence,
 				StaySinceYear:     inq.StaySinceYear,
@@ -2015,7 +2026,7 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 					NeedEscalation:        history.NeedEscalation,
 					SourceDecision:        history.SourceDecision,
 					NextStep:              history.NextStep,
-					Note:                  history.Note,
+					Note:                  utils.SanitizeString(history.Note),
 					SlikResult:            history.SlikResult,
 				}
 				historyData = append(historyData, historyEntry)
@@ -2107,6 +2118,8 @@ func (u usecase) GetInquiryApproval(ctx context.Context, req request.ReqInquiryA
 				SurgateMotherName: inq.SurgateMotherName,
 				Gender:            inq.Gender,
 				MobilePhone:       inq.MobilePhone,
+				WhatsAppNumber:    inq.WhatsAppNumber,
+				OtherMobilePhone:  inq.OtherMobilePhone,
 				Email:             inq.Email,
 				NumOfDependence:   inq.NumOfDependence,
 				StaySinceYear:     inq.StaySinceYear,

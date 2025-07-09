@@ -3,6 +3,7 @@ package common
 import (
 	"errors"
 	"fmt"
+	"html"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/gorm"
+	"github.com/microcosm-cc/bluemonday"
 )
 
 var Key, ClientKey, Gender, StatusKonsumen, Channel, Lob, Incoming, Home, Education, Marital, ProfID, Photo, Relationship, AppSource, Address, Tenor, Relation, Decision string
@@ -53,6 +55,7 @@ func (v *Validator) Validate(i interface{}) error {
 
 	v.sync.Lock()
 	v.validator.RegisterValidation("prospect_id", prospectIDValidation)
+	v.validator.RegisterValidation("xss_validation", noXssValidation)
 	v.validator.RegisterValidation("key", checkClientKey)
 	v.validator.RegisterValidation("dateformat", dateFormatValidation)
 	v.validator.RegisterValidation("allowcharsname", allowedCharsInName)
@@ -132,6 +135,18 @@ func prospectIDValidation(fl validator.FieldLevel) (validator bool) {
 	}
 
 	return validator
+}
+
+func noXssValidation(fl validator.FieldLevel) bool {
+	input := fl.Field().String()
+	if input == "" {
+		return true // kosong boleh
+	}
+
+	decoded := html.UnescapeString(input)
+
+	sanitized := bluemonday.UGCPolicy().Sanitize(decoded)
+	return input == sanitized
 }
 
 func htmlValidation(fl validator.FieldLevel) (validator bool) {

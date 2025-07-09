@@ -450,7 +450,9 @@ type CustomerPersonal struct {
 	BirthDate                  string   `json:"birth_date" validate:"dateformat" example:"1991-01-12"`
 	SurgateMotherName          string   `json:"surgate_mother_name" validate:"required,allow_name,noHTML" example:"ENCRYPTED"`
 	Gender                     string   `json:"gender" validate:"gender" example:"M"`
-	MobilePhone                string   `json:"mobile_phone" validate:"min=9,max=14" example:"085689XXX01"`
+	MobilePhone                string   `json:"mobile_phone" validate:"min=9,max=14,noHTML,mobile_phone" example:"085689XXX01"`
+	WhatsAppNumber             string   `json:"whatsapp_number" validate:"min=0,max=14,noHTML,mobile_phone" example:"085689XXX01"`
+	OtherMobilePhone           string   `json:"other_mobilephone" validate:"min=0,max=14,noHTML,mobile_phone" example:"085689XXX01"`
 	Email                      string   `json:"email" validate:"email,max=100,noHTML" example:"jonathaxx@gmail.com"`
 	StaySinceYear              string   `json:"stay_since_year" validate:"len=4,noHTML" example:"2018"`
 	StaySinceMonth             string   `json:"stay_since_month" validate:"len=2,noHTML" example:"03"`
@@ -490,7 +492,9 @@ type CustomerPersonalNE struct {
 	BirthDate         string  `json:"birth_date" validate:"dateformat" example:"1991-01-12"`
 	SurgateMotherName string  `json:"surgate_mother_name" validate:"required,min=2,allowcharsname,noHTML" example:"ENCRYPTED"`
 	Gender            string  `json:"gender" validate:"gender" example:"M"`
-	MobilePhone       string  `json:"mobile_phone" validate:"min=9,max=14,noHTML" example:"085689XXX01"`
+	MobilePhone       string  `json:"mobile_phone" validate:"min=9,max=14,noHTML,mobile_phone" example:"085689XXX01"`
+	WhatsAppNumber    string  `json:"whatsapp_number" validate:"min=0,max=14,noHTML,mobile_phone" example:"085689XXX01"`
+	OtherMobilePhone  string  `json:"other_mobilephone" validate:"min=0,max=14,noHTML,mobile_phone" example:"085689XXX01"`
 	Email             string  `json:"email" validate:"email,max=100,noHTML" example:"jonathaxx@gmail.com"`
 	StaySinceYear     string  `json:"stay_since_year" validate:"len=4,noHTML" example:"2018"`
 	StaySinceMonth    string  `json:"stay_since_month" validate:"len=2,noHTML" example:"03"`
@@ -944,7 +948,7 @@ type ReqSubmitDecision struct {
 	NTFAkumulasi float64     `json:"ntf_akumulasi" validate:"required,max=9999999999999"`
 	Decision     string      `json:"decision" validate:"required,decision,max=7" example:"APPROVE,REJECT"`
 	SlikResult   string      `json:"slik_result" validate:"required,max=30"`
-	Note         string      `json:"note" validate:"max=525"`
+	Note         string      `json:"note" validate:"max=525,xss_validation"`
 	CreatedBy    string      `json:"decision_by" validate:"required,max=100"`
 	DecisionBy   string      `json:"decision_by_name" validate:"required,max=250"`
 	Edd          interface{} `json:"edd"`
