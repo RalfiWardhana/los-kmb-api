@@ -3284,6 +3284,8 @@ type TrxKPM struct {
 	KPMID                       int            `gorm:"column:KPMID;"`
 	RentFinishDate              interface{}    `gorm:"column:RentFinishDate"`
 	ReferralCode                sql.NullString `gorm:"column:ReferralCode"`
+	IsUseAdditionalInsurance    bool           `gorm:"column:IsUseAdditionalInsurance;"`
+	InsuranceCompanyBranchID    sql.NullString `gorm:"column:InsuranceCompanyBranchID"`
 	CheckNokaNosinResult        interface{}    `gorm:"column:CheckNokaNosinResult;type:varchar(50);"`
 	CheckNokaNosinCode          interface{}    `gorm:"column:CheckNokaNosinCode;type:varchar(50);"`
 	CheckNokaNosinReason        interface{}    `gorm:"column:CheckNokaNosinReason;type:varchar(200);"`
