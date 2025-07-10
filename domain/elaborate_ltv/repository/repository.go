@@ -145,7 +145,7 @@ func (r repoHandler) GetMappingBranchPBK(branchID string, gradePBK string) (mapp
 
 	if err = db.Raw("SELECT branch_id, score, grade_branch FROM m_mapping_branch mmb WHERE deleted_at IS NULL AND  branch_id = ? AND score = ?", branchID, gradePBK).Scan(&mappingBranchByPBKScore).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
-			err = errors.New(constant.RECORD_NOT_FOUND)
+			err = nil
 		}
 		return
 	}

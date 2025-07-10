@@ -3,6 +3,7 @@ package common
 import (
 	"errors"
 	"fmt"
+	"html"
 	"los-kmb-api/models/entity"
 	"los-kmb-api/shared/constant"
 	"los-kmb-api/shared/utils"
@@ -16,6 +17,7 @@ import (
 
 	"github.com/go-playground/validator/v10"
 	"github.com/jinzhu/gorm"
+	"github.com/microcosm-cc/bluemonday"
 )
 
 var Key, ClientKey, Gender, StatusKonsumen, Channel, Lob, Incoming, Home, Education, Marital, ProfID, Photo, Relationship, AppSource, Address, Tenor, Relation, Decision string
@@ -53,6 +55,7 @@ func (v *Validator) Validate(i interface{}) error {
 
 	v.sync.Lock()
 	v.validator.RegisterValidation("prospect_id", prospectIDValidation)
+	v.validator.RegisterValidation("xss_validation", noXssValidation)
 	v.validator.RegisterValidation("key", checkClientKey)
 	v.validator.RegisterValidation("dateformat", dateFormatValidation)
 	v.validator.RegisterValidation("allowcharsname", allowedCharsInName)
@@ -109,6 +112,7 @@ func (v *Validator) Validate(i interface{}) error {
 	v.validator.RegisterValidation("prospect_id_emcon_principle", prospectIdEmconPrincipleNotExists)
 	v.validator.RegisterValidation("allowcharstipeusaha", allowedCharsInTipeUsaha)
 	v.validator.RegisterValidation("noHTML", noHTML)
+	v.validator.RegisterValidation("validate_url_platform", ValidateUrlPlatform)
 	v.sync.Unlock()
 
 	return v.validator.Struct(i)
@@ -119,6 +123,15 @@ func noHTML(fl validator.FieldLevel) bool {
 	// Regex untuk mendeteksi tag HTML seperti <div>, <script>, <b>, dll.
 	var htmlTagRegex = regexp.MustCompile(`(?i)<[^>]+>`)
 	return !htmlTagRegex.MatchString(fl.Field().String())
+}
+
+func ValidateUrlPlatform(fl validator.FieldLevel) bool {
+	value := fl.Field().String()
+	if value != "" {
+		regex := regexp.MustCompile(`^https?://([a-zA-Z0-9-]+\.)?(kbfinansia\.com|kreditplus\.com)(/.*)?$`)
+		return regex.MatchString(value)
+	}
+	return true
 }
 
 func prospectIDValidation(fl validator.FieldLevel) (validator bool) {
@@ -132,6 +145,18 @@ func prospectIDValidation(fl validator.FieldLevel) (validator bool) {
 	}
 
 	return validator
+}
+
+func noXssValidation(fl validator.FieldLevel) bool {
+	input := fl.Field().String()
+	if input == "" {
+		return true // kosong boleh
+	}
+
+	decoded := html.UnescapeString(input)
+
+	sanitized := bluemonday.UGCPolicy().Sanitize(decoded)
+	return input == sanitized
 }
 
 func htmlValidation(fl validator.FieldLevel) (validator bool) {

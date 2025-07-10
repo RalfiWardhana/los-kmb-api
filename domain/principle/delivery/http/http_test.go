@@ -1386,16 +1386,19 @@ func TestGetAvailableTenor(t *testing.T) {
 		responses:    libResponse,
 	}
 
+	isUseInsurance := true
+
 	body := request.GetAvailableTenor{
-		ProspectID:         "SAL-1140024080800004",
-		BranchID:           "426",
-		BPKBNameType:       "K",
-		ManufactureYear:    "2020",
-		AssetCode:          "SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT",
-		AssetUsageTypeCode: "C",
-		LicensePlate:       "B3006TBJ",
-		LoanAmount:         105000000,
-		KPMID:              6287,
+		ProspectID:               "SAL-1140024080800004",
+		BranchID:                 "426",
+		BPKBNameType:             "K",
+		ManufactureYear:          "2020",
+		AssetCode:                "SUZUKI,KMOBIL,GRAND VITARA.JLX 2,0 AT",
+		AssetUsageTypeCode:       "C",
+		LicensePlate:             "B3006TBJ",
+		LoanAmount:               105000000,
+		KPMID:                    6287,
+		IsUseAdditionalInsurance: &isUseInsurance,
 	}
 
 	t.Run("success", func(t *testing.T) {
