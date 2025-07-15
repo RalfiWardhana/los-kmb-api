@@ -754,7 +754,7 @@ func (u usecase) FilteringPefindo(ctx context.Context, reqs request.Pefindo, cus
 				for _, v := range mappingRiskLevel {
 					if inquiries >= v.InquiryStart && inquiries <= v.InquiryEnd {
 						rejectRiskLevel = true
-						reasonRiskLevel = fmt.Sprintf("Number of Inquiry PBK %s", v.RiskLevel)
+						reasonRiskLevel = fmt.Sprintf("%s PBK", v.RiskLevel)
 					}
 				}
 

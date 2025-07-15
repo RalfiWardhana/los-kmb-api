@@ -159,7 +159,7 @@ func (u usecase) Pefindo(cbFound bool, bpkbName string, filtering entity.Filteri
 			for _, v := range mappingRiskLevel {
 				if inquiries >= v.InquiryStart && inquiries <= v.InquiryEnd {
 					rejectRiskLevel = true
-					reasonRiskLevel = fmt.Sprintf("Number of Inquiry PBK %s", v.RiskLevel)
+					reasonRiskLevel = fmt.Sprintf("%s PBK", v.RiskLevel)
 				}
 			}
 
