@@ -2277,17 +2277,8 @@ func (r repoHandler) GetMappingNegativeCustomer(req response.NegativeCustomer) (
 }
 
 func (r repoHandler) GetMappingRiskLevel() (data []entity.MappingRiskLevel, err error) {
-	var x sql.TxOptions
 
-	timeout, _ := strconv.Atoi(os.Getenv("DEFAULT_TIMEOUT_30S"))
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
-	defer cancel()
-
-	db := r.newKmbDB.BeginTx(ctx, &x)
-	defer db.Commit()
-
-	if err = db.Raw("SELECT inquiry_start, inquiry_end, risk_level, decision FROM dbo.m_mapping_risk_level WHERE decision = 'REJECT' AND deleted_at IS NULL").Scan(&data).Error; err != nil {
+	if err = r.newKmbDB.Raw(fmt.Sprintf("SELECT inquiry_start, inquiry_end, risk_level, decision FROM dbo.m_mapping_risk_level WITH (nolock) WHERE decision = '%s' AND deleted_at IS NULL", constant.DECISION_REJECT)).Scan(&data).Error; err != nil {
 		return
 	}
 

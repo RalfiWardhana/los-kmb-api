@@ -408,7 +408,7 @@ func (r repoHandler) GetFilteringByID(prospectID string) (row int, err error) {
 
 func (r repoHandler) GetMappingRiskLevel() (data []entity.MappingRiskLevel, err error) {
 
-	if err = r.NewKmb.Raw("SELECT inquiry_start, inquiry_end, risk_level, decision FROM dbo.m_mapping_risk_level WITH (nolock) WHERE decision = 'REJECT' AND deleted_at IS NULL").Scan(&data).Error; err != nil {
+	if err = r.NewKmb.Raw(fmt.Sprintf("SELECT inquiry_start, inquiry_end, risk_level, decision FROM dbo.m_mapping_risk_level WITH (nolock) WHERE decision = '%s' AND deleted_at IS NULL", constant.DECISION_REJECT)).Scan(&data).Error; err != nil {
 		return
 	}
 
