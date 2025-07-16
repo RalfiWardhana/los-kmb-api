@@ -440,6 +440,20 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				return err
 			}
 
+			var whatsAppNumber entity.EncryptString
+			if data.CustomerPersonal.WhatsAppNumber != "" {
+				if err := tx.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS encrypt`, data.CustomerPersonal.WhatsAppNumber)).Scan(&whatsAppNumber).Error; err != nil {
+					return err
+				}
+			}
+
+			var otherMobilePhone entity.EncryptString
+			if data.CustomerPersonal.OtherMobilePhone != "" {
+				if err := tx.Raw(fmt.Sprintf(`SELECT SCP.dbo.ENC_B64('SEC','%s') AS encrypt`, data.CustomerPersonal.OtherMobilePhone)).Scan(&otherMobilePhone).Error; err != nil {
+					return err
+				}
+			}
+
 			master := entity.TrxMaster{
 				ProspectID:        data.Transaction.ProspectID,
 				BranchID:          data.Transaction.BranchID,
@@ -551,6 +565,8 @@ func (r repoHandler) SaveTransaction(countTrx int, data request.Metrics, trxPres
 				Gender:                     data.CustomerPersonal.Gender,
 				PersonalNPWP:               data.CustomerPersonal.NPWP,
 				MobilePhone:                encrypted.MobilePhone,
+				WhatsAppNumber:             whatsAppNumber.Encrypt,
+				OtherMobilePhone:           otherMobilePhone.Encrypt,
 				Email:                      encrypted.Email,
 				HomeStatus:                 data.CustomerPersonal.HomeStatus,
 				StaySinceYear:              data.CustomerPersonal.StaySinceYear,
