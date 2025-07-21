@@ -109,6 +109,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 		AssetYear:              manufactureYear,
 		LoanAmount:             2000000,
 		SalesMethodID:          5,
+		CustomerBirthDate:      mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate,
 	}
 
 	marsevFilterProgramRes, err := u.usecase.MarsevGetMarketingProgram(ctx, payloadFilterProgram, req.ProspectID, accessToken)
@@ -242,6 +243,11 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 
 		mappingLicensePlate := mdmMasterMappingLicensePlateRes.Data.Records[0]
 
+		var reqTenor int
+		if req.Tenor != nil {
+			reqTenor = *req.Tenor
+		}
+
 		payloadCalculate := request.ReqMarsevCalculateInstallment{
 			ProgramID:              marsevProgramData.ID,
 			BranchID:               req.BranchID,
@@ -254,6 +260,9 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 			RegionCode:             mappingLicensePlate.AreaID,
 			AssetCategory:          categoryId,
 			CustomerBirthDate:      mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate,
+			UseAdditionalInsurance: req.IsUseAdditionalInsurance,
+			SourceApplication:      constant.MARSEV_SOURCE_APPLICATION_KPM,
+			Tenor:                  reqTenor,
 		}
 
 		var marsevCalculateInstallmentRes response.MarsevCalculateInstallmentResponse
@@ -317,20 +326,30 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 			errChan            = make(chan error, len(marsevProgramData.Tenors))
 		)
 
-		for _, tenorInfo := range marsevProgramData.Tenors {
+		var tenors []int
+		if reqTenor > 0 {
+			tenors = []int{reqTenor}
+		} else {
+			tenors = make([]int, len(marsevProgramData.Tenors))
+			for i, tenorInfo := range marsevProgramData.Tenors {
+				tenors[i] = tenorInfo.Tenor
+			}
+		}
+
+		for _, tenor := range tenors {
 			wg.Add(1)
-			go func(tenorInfo response.TenorInfo) {
+			go func(tenor int) {
 				defer wg.Done()
 
-				if tenorInfo.Tenor >= 36 {
+				if tenor >= 36 {
 					var trxTenor response.UsecaseApi
-					if tenorInfo.Tenor == 36 {
+					if tenor == 36 {
 						trxTenor, err = u.usecase.RejectTenor36(clusterCMO)
 						if err != nil {
 							errChan <- err
 							return
 						}
-					} else if tenorInfo.Tenor > 36 {
+					} else if tenor > 36 {
 						return
 					}
 					if trxTenor.Result == constant.DECISION_REJECT {
@@ -338,7 +357,7 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 					}
 				}
 
-				ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenorInfo.Tenor, bakiDebet, isSimulasi, pbkScore, customerStatus, branch.GradeBranch)
+				ltv, _, err := u.usecase.GetLTV(ctx, mappingElaborateLTV, req.ProspectID, resultPefindo, req.BPKBNameType, req.ManufactureYear, tenor, bakiDebet, isSimulasi, pbkScore, customerStatus, branch.GradeBranch)
 				if err != nil {
 					errChan <- err
 					return
@@ -369,24 +388,27 @@ func (u multiUsecase) GetAvailableTenor(ctx context.Context, req request.GetAvai
 
 				if marsevLoanAmountRes.Data.LoanAmountMaximum >= req.LoanAmount {
 					for _, installmentData := range marsevCalculateInstallmentRes.Data {
-						if installmentData.Tenor == tenorInfo.Tenor {
+						if installmentData.Tenor == tenor {
 							availableTenor := response.GetAvailableTenorData{
-								Tenor:             tenorInfo.Tenor,
-								IsPsa:             installmentData.IsPSA,
-								Dealer:            dealer,
-								InstallmentAmount: installmentData.MonthlyInstallment,
-								AF:                installmentData.AmountOfFinance,
-								AdminFee:          installmentData.AdminFee,
-								DPAmount:          installmentData.DPAmount,
-								NTF:               installmentData.NTF,
-								AssetCategoryID:   categoryId,
-								OTR:               otr,
+								Tenor:                    tenor,
+								IsPsa:                    installmentData.IsPSA,
+								Dealer:                   dealer,
+								InstallmentAmount:        installmentData.MonthlyInstallment,
+								AF:                       installmentData.AmountOfFinance,
+								AdminFee:                 installmentData.AdminFee,
+								DPAmount:                 installmentData.DPAmount,
+								NTF:                      installmentData.NTF,
+								AssetCategoryID:          categoryId,
+								OTR:                      otr,
+								ShowAdditionalInsurance:  installmentData.ShowAdditionalInsurance,
+								UseAdditionalInsurance:   installmentData.UseAdditionalInsurance,
+								InsuranceCompanyBranchID: installmentData.InsuranceCompanyBranchID,
 							}
 							availableTenorChan <- availableTenor
 						}
 					}
 				}
-			}(tenorInfo)
+			}(tenor)
 		}
 
 		go func() {

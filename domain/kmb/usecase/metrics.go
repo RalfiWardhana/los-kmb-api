@@ -40,6 +40,11 @@ func (u metrics) MetricsLos(ctx context.Context, reqMetrics request.Metrics, acc
 		mappingMaxDSR     entity.MasterMappingIncomeMaxDSR
 	)
 
+	if reqMetrics.CustomerPersonal.OtherMobilePhone != "" && reqMetrics.CustomerPersonal.OtherMobilePhone == reqMetrics.CustomerPersonal.MobilePhone {
+		err = errors.New(constant.ERROR_BAD_REQUEST + " - OtherMobilePhone must be different from MobilePhone")
+		return
+	}
+
 	// cek principle order
 	var countTrxPrinciple int
 	countTrxPrinciple, err = u.repository.ScanTrxPrinciple(reqMetrics.Transaction.ProspectID)
