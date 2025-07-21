@@ -721,8 +721,64 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 
 	/* Process Get Cluster based on CMO_ID ends here */
 
+	var OverrideFlowLikeRegular bool
+
+	if save.CustomerSegment != nil && strings.Contains("PRIME PRIORITY", save.CustomerSegment.(string)) {
+		cluster = constant.CLUSTER_PRIME_PRIORITY
+
+		// Cek apakah customer RO PRIME/PRIORITY ini termasuk jalur `expired_contract tidak <= 6 bulan`
+		if save.CustomerStatus == constant.STATUS_KONSUMEN_RO {
+			if mainCustomer.RRDDate == nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
+				return
+			}
+
+			RrdDateString := mainCustomer.RRDDate.(string)
+			CreatedAtString := time.Now().Format(time.RFC3339)
+
+			var RrdDate time.Time
+			RrdDate, err = time.Parse(time.RFC3339, RrdDateString)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of RrdDate (" + RrdDateString + ")")
+				return
+			}
+
+			var CreatedAt time.Time
+			CreatedAt, err = time.Parse(time.RFC3339, CreatedAtString)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of CreatedAt (" + CreatedAtString + ")")
+				return
+			}
+
+			var MonthsOfExpiredContract int
+			MonthsOfExpiredContract, err = utils.PreciseMonthsDifference(RrdDate, CreatedAt)
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Difference of months RrdDate and CreatedAt is negative (-)")
+				return
+			}
+
+			// Get config expired_contract
+			expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
+			if err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
+				return
+			}
+
+			var configValueExpContract response.ExpiredContractConfig
+			if err = json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract); err != nil {
+				err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config expired contract")
+				return
+			}
+
+			if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
+				// Jalur mirip seperti customer segment "REGULAR"
+				OverrideFlowLikeRegular = true
+			}
+		}
+	}
+
 	// hit ke pefindo
-	filtering, pefindo, trxDetailBiro, err = u.usecase.Pefindo(ctx, reqPefindo, mainCustomer.CustomerStatus, clusterCMO, bpkb)
+	filtering, pefindo, trxDetailBiro, err = u.usecase.Pefindo(ctx, reqPefindo, mainCustomer.CustomerStatus, mainCustomer.CustomerSegment, clusterCMO, bpkb, OverrideFlowLikeRegular)
 	if err != nil {
 		return
 	}
@@ -830,6 +886,11 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	if pefindo.NewKoRules != (response.ResultNewKoRules{}) {
 		jsonNewKoRules, _ := json.Marshal(pefindo.NewKoRules)
 		save.NewKoRules = jsonNewKoRules
+	}
+
+	if pefindo.NumberOfInquiriesLast1Month != nil {
+		numberOfInquiriesLast1Month := int(pefindo.NumberOfInquiriesLast1Month.(float64))
+		save.NumberOfInquiriesLast1Month = &numberOfInquiriesLast1Month
 	}
 
 	var cbFound bool
@@ -950,63 +1011,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		return
 	}
 
-	var OverrideFlowLikeRegular bool
-
 	resultPefindo := save.Decision
-
-	if save.CustomerSegment != nil && strings.Contains("PRIME PRIORITY", save.CustomerSegment.(string)) {
-		cluster = constant.CLUSTER_PRIME_PRIORITY
-
-		// Cek apakah customer RO PRIME/PRIORITY ini termasuk jalur `expired_contract tidak <= 6 bulan`
-		if save.CustomerStatus == constant.STATUS_KONSUMEN_RO {
-			if mainCustomer.RRDDate == nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Customer RO then rrd_date should not be empty")
-				return
-			}
-
-			RrdDateString := mainCustomer.RRDDate.(string)
-			CreatedAtString := time.Now().Format(time.RFC3339)
-
-			var RrdDate time.Time
-			RrdDate, err = time.Parse(time.RFC3339, RrdDateString)
-			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of RrdDate (" + RrdDateString + ")")
-				return
-			}
-
-			var CreatedAt time.Time
-			CreatedAt, err = time.Parse(time.RFC3339, CreatedAtString)
-			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Error parsing date of CreatedAt (" + CreatedAtString + ")")
-				return
-			}
-
-			var MonthsOfExpiredContract int
-			MonthsOfExpiredContract, err = utils.PreciseMonthsDifference(RrdDate, CreatedAt)
-			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Difference of months RrdDate and CreatedAt is negative (-)")
-				return
-			}
-
-			// Get config expired_contract
-			expiredContractConfig, err = u.repository.GetConfig("expired_contract", "KMB-OFF", "expired_contract_check")
-			if err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - Get Expired Contract Config Error")
-				return
-			}
-
-			var configValueExpContract response.ExpiredContractConfig
-			if err = json.Unmarshal([]byte(expiredContractConfig.Value), &configValueExpContract); err != nil {
-				err = errors.New(constant.ERROR_UPSTREAM + " - error unmarshal data config expired contract")
-				return
-			}
-
-			if configValueExpContract.Data.ExpiredContractCheckEnabled && !(MonthsOfExpiredContract <= configValueExpContract.Data.ExpiredContractMaxMonths) {
-				// Jalur mirip seperti customer segment "REGULAR"
-				OverrideFlowLikeRegular = true
-			}
-		}
-	}
 
 	if (save.CustomerSegment != nil && !strings.Contains("PRIME PRIORITY", save.CustomerSegment.(string))) || (OverrideFlowLikeRegular) {
 		if save.ScoreBiro == nil || save.ScoreBiro == "" || save.ScoreBiro == constant.UNSCORE_PBK {
@@ -2018,7 +2023,7 @@ func (u usecase) NegativeCustomerCheck(ctx context.Context, reqs request.Dupchec
 		JobPosition:       reqs.JobPosition,
 	})
 
-	resp, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("API_NEGATIVE_CUSTOMER"), req, header, constant.METHOD_POST, true, 6, timeout, reqs.ProspectID, accessToken)
+	resp, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("API_NEGATIVE_CUSTOMER"), req, header, constant.METHOD_POST, true, 6, timeout, reqs.ProspectID, accessToken)
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM_TIMEOUT + " - Call API Negative Customer Error")
@@ -2099,7 +2104,7 @@ func (u usecase) CheckMobilePhoneFMF(ctx context.Context, prospectID, mobilePhon
 	}
 
 	param, _ := json.Marshal(payload)
-	getListEmployee, err := u.httpclient.EngineAPI(ctx, constant.NEW_KMB_LOG, os.Getenv("HRIS_LIST_EMPLOYEE"), param, header, constant.METHOD_POST, false, 0, timeout, "", accessToken)
+	getListEmployee, err := u.httpclient.EngineAPI(ctx, constant.DILEN_KMB_LOG, os.Getenv("HRIS_LIST_EMPLOYEE"), param, header, constant.METHOD_POST, false, 0, timeout, "", accessToken)
 
 	if err != nil {
 		err = errors.New(constant.ERROR_UPSTREAM + " - Call API HRIS List Employee Error")

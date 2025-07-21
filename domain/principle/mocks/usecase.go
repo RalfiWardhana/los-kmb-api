@@ -943,9 +943,9 @@ func (_m *Usecase) NegativeCustomerCheck(ctx context.Context, reqs request.Dupch
 	return r0, r1, r2
 }
 
-// Pefindo provides a mock function with given fields: ctx, r, customerStatus, clusterCMO, bpkbName
-func (_m *Usecase) Pefindo(ctx context.Context, r request.Pefindo, customerStatus string, clusterCMO string, bpkbName string) (response.Filtering, response.PefindoResult, []entity.TrxDetailBiro, error) {
-	ret := _m.Called(ctx, r, customerStatus, clusterCMO, bpkbName)
+// Pefindo provides a mock function with given fields: ctx, r, customerStatus, customerSegment, clusterCMO, bpkbName, isOverrideFlowLikeRegular
+func (_m *Usecase) Pefindo(ctx context.Context, r request.Pefindo, customerStatus string, customerSegment string, clusterCMO string, bpkbName string, isOverrideFlowLikeRegular bool) (response.Filtering, response.PefindoResult, []entity.TrxDetailBiro, error) {
+	ret := _m.Called(ctx, r, customerStatus, customerSegment, clusterCMO, bpkbName, isOverrideFlowLikeRegular)
 
 	if len(ret) == 0 {
 		panic("no return value specified for Pefindo")
@@ -955,31 +955,31 @@ func (_m *Usecase) Pefindo(ctx context.Context, r request.Pefindo, customerStatu
 	var r1 response.PefindoResult
 	var r2 []entity.TrxDetailBiro
 	var r3 error
-	if rf, ok := ret.Get(0).(func(context.Context, request.Pefindo, string, string, string) (response.Filtering, response.PefindoResult, []entity.TrxDetailBiro, error)); ok {
-		return rf(ctx, r, customerStatus, clusterCMO, bpkbName)
+	if rf, ok := ret.Get(0).(func(context.Context, request.Pefindo, string, string, string, string, bool) (response.Filtering, response.PefindoResult, []entity.TrxDetailBiro, error)); ok {
+		return rf(ctx, r, customerStatus, customerSegment, clusterCMO, bpkbName, isOverrideFlowLikeRegular)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, request.Pefindo, string, string, string) response.Filtering); ok {
-		r0 = rf(ctx, r, customerStatus, clusterCMO, bpkbName)
+	if rf, ok := ret.Get(0).(func(context.Context, request.Pefindo, string, string, string, string, bool) response.Filtering); ok {
+		r0 = rf(ctx, r, customerStatus, customerSegment, clusterCMO, bpkbName, isOverrideFlowLikeRegular)
 	} else {
 		r0 = ret.Get(0).(response.Filtering)
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, request.Pefindo, string, string, string) response.PefindoResult); ok {
-		r1 = rf(ctx, r, customerStatus, clusterCMO, bpkbName)
+	if rf, ok := ret.Get(1).(func(context.Context, request.Pefindo, string, string, string, string, bool) response.PefindoResult); ok {
+		r1 = rf(ctx, r, customerStatus, customerSegment, clusterCMO, bpkbName, isOverrideFlowLikeRegular)
 	} else {
 		r1 = ret.Get(1).(response.PefindoResult)
 	}
 
-	if rf, ok := ret.Get(2).(func(context.Context, request.Pefindo, string, string, string) []entity.TrxDetailBiro); ok {
-		r2 = rf(ctx, r, customerStatus, clusterCMO, bpkbName)
+	if rf, ok := ret.Get(2).(func(context.Context, request.Pefindo, string, string, string, string, bool) []entity.TrxDetailBiro); ok {
+		r2 = rf(ctx, r, customerStatus, customerSegment, clusterCMO, bpkbName, isOverrideFlowLikeRegular)
 	} else {
 		if ret.Get(2) != nil {
 			r2 = ret.Get(2).([]entity.TrxDetailBiro)
 		}
 	}
 
-	if rf, ok := ret.Get(3).(func(context.Context, request.Pefindo, string, string, string) error); ok {
-		r3 = rf(ctx, r, customerStatus, clusterCMO, bpkbName)
+	if rf, ok := ret.Get(3).(func(context.Context, request.Pefindo, string, string, string, string, bool) error); ok {
+		r3 = rf(ctx, r, customerStatus, customerSegment, clusterCMO, bpkbName, isOverrideFlowLikeRegular)
 	} else {
 		r3 = ret.Error(3)
 	}

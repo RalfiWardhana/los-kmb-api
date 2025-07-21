@@ -1111,3 +1111,12 @@ func (r repoHandler) UpdateTrxKPM(id string, data entity.TrxKPM) (err error) {
 		return nil
 	})
 }
+
+func (r repoHandler) GetMappingRiskLevel(numberOfInquiry int) (data entity.MappingRiskLevel, err error) {
+
+	if err = r.newKmb.Raw(fmt.Sprintf("SELECT TOP 1 inquiry_start, inquiry_end, risk_level, decision FROM dbo.m_mapping_risk_level WHERE %d >= inquiry_start AND %d <= inquiry_end AND deleted_at IS NULL", numberOfInquiry, numberOfInquiry)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}

@@ -567,6 +567,34 @@ func (_m *Repository) GetMappingPbkScore(pbkScores []string) (entity.MappingPBKS
 	return r0, r1
 }
 
+// GetMappingRiskLevel provides a mock function with given fields: numberOfInquiry
+func (_m *Repository) GetMappingRiskLevel(numberOfInquiry int) (entity.MappingRiskLevel, error) {
+	ret := _m.Called(numberOfInquiry)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMappingRiskLevel")
+	}
+
+	var r0 entity.MappingRiskLevel
+	var r1 error
+	if rf, ok := ret.Get(0).(func(int) (entity.MappingRiskLevel, error)); ok {
+		return rf(numberOfInquiry)
+	}
+	if rf, ok := ret.Get(0).(func(int) entity.MappingRiskLevel); ok {
+		r0 = rf(numberOfInquiry)
+	} else {
+		r0 = ret.Get(0).(entity.MappingRiskLevel)
+	}
+
+	if rf, ok := ret.Get(1).(func(int) error); ok {
+		r1 = rf(numberOfInquiry)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetMappingVehicleAge provides a mock function with given fields: vehicleAge, cluster, bpkbNameType, tenor, resultPefindo, af
 func (_m *Repository) GetMappingVehicleAge(vehicleAge int, cluster string, bpkbNameType int, tenor int, resultPefindo string, af float64) (entity.MappingVehicleAge, error) {
 	ret := _m.Called(vehicleAge, cluster, bpkbNameType, tenor, resultPefindo, af)

@@ -68,4 +68,5 @@ type Repository interface {
 	GetLatestTrxKPMStatusWithLock(prospectId string) (data entity.TrxKPMStatus, err error)
 	UpdateTrxKPMStatus(id string, data entity.TrxKPMStatus) (err error)
 	UpdateTrxKPM(id string, data entity.TrxKPM) (err error)
+	GetMappingRiskLevel(numberOfInquiry int) (data entity.MappingRiskLevel, err error)
 }

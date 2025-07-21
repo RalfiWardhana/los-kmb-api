@@ -43,6 +43,8 @@ func TestSubmission2Wilen(t *testing.T) {
 	contextReadjustLoanAmount := constant.READJUST_LOAN_AMOUNT_CONTEXT_2WILEN
 	contextTenor := constant.READJUST_TENOR_CONTEXT_2WILEN
 
+	numberOfInquiriesLast1Month := float64(11)
+
 	insuranceCompanyBranchID := "EQUITY"
 	isUseAdditionalInsurance := true
 
@@ -1221,6 +1223,7 @@ func TestSubmission2Wilen(t *testing.T) {
 					ConditionDate:     "2023-10-11",
 					RestructuringDate: "2024-11-11",
 				},
+				NumberOfInquiriesLast1Month: numberOfInquiriesLast1Month,
 			},
 			errDukcapil:               errors.New("failed check dukcapil"),
 			err:                       errors.New("failed check dukcapil"),
@@ -7186,7 +7189,7 @@ func TestSubmission2Wilen(t *testing.T) {
 			mockUsecase.On("GetEmployeeData", ctx, mock.Anything).Return(tc.resGetEmployeeData, tc.errGetEmployeeData)
 			mockUsecase.On("GetFpdCMO", ctx, mock.Anything, mock.Anything).Return(tc.resGetFpdCMO, tc.errGetFpdCMO)
 			mockUsecase.On("CheckCmoNoFPD", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resSavedClusterCheckCmoNoFPD, tc.resEntityCheckCmoNoFPD, tc.errCheckCmoNoFPD)
-			mockUsecase.On("Pefindo", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resFilteringPefindo, tc.resPefindo, tc.resTrxDetailBiroPefindo, tc.errPefindo)
+			mockUsecase.On("Pefindo", ctx, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(tc.resFilteringPefindo, tc.resPefindo, tc.resTrxDetailBiroPefindo, tc.errPefindo)
 			mockUsecase.On("Dukcapil", ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.resDukcapil, tc.errDukcapil)
 			mockUsecase.On("Asliri", ctx, mock.Anything, mock.Anything).Return(tc.resAsliri, tc.errAsliri)
 			mockUsecase.On("Ktp", ctx, mock.Anything, mock.Anything, mock.Anything).Return(tc.resKtp, tc.errKtp)
@@ -7654,7 +7657,7 @@ func TestNegativeCustomerCheck(t *testing.T) {
 			httpmock.RegisterResponder(constant.METHOD_POST, os.Getenv("API_NEGATIVE_CUSTOMER"), httpmock.NewStringResponder(200, tc.respBody))
 			resp, _ := rst.R().Post(os.Getenv("API_NEGATIVE_CUSTOMER"))
 
-			mockHttpClient.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("API_NEGATIVE_CUSTOMER"), req, header, constant.METHOD_POST, true, 6, timeout, tc.req.ProspectID, accessToken).Return(resp, tc.errResp).Once()
+			mockHttpClient.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("API_NEGATIVE_CUSTOMER"), req, header, constant.METHOD_POST, true, 6, timeout, tc.req.ProspectID, accessToken).Return(resp, tc.errResp).Once()
 			mockRepository.On("GetMappingNegativeCustomer", mock.Anything).Return(tc.mappingNegativeCustomer, tc.errRepo)
 
 			usecase := NewUsecase(mockRepository, mockHttpClient, nil)
@@ -7763,7 +7766,7 @@ func TestCheckMobilePhoneFMF(t *testing.T) {
 			resp, _ := rst.R().Post(os.Getenv("HRIS_LIST_EMPLOYEE"))
 
 			ctx := context.Background()
-			mockHttp.On("EngineAPI", ctx, constant.NEW_KMB_LOG, os.Getenv("HRIS_LIST_EMPLOYEE"),
+			mockHttp.On("EngineAPI", ctx, constant.DILEN_KMB_LOG, os.Getenv("HRIS_LIST_EMPLOYEE"),
 				mock.Anything, mock.Anything, constant.METHOD_POST, false, 0, timeout, "", accessToken).
 				Return(resp, tc.httpErr).Once()
 

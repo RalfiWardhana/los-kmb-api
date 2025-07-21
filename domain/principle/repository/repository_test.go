@@ -6808,3 +6808,85 @@ func TestUpdateTrxKPM(t *testing.T) {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
 }
+
+func TestGetMappingRiskLevel(t *testing.T) {
+	sqlDB, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("error creating mock db: %v", err)
+	}
+	defer sqlDB.Close()
+
+	gormDB, err := gorm.Open("sqlite3", sqlDB)
+	if err != nil {
+		t.Fatalf("error opening gorm db: %v", err)
+	}
+	gormDB.LogMode(true)
+
+	repo := NewRepository(gormDB, gormDB, gormDB, gormDB)
+
+	testCases := []struct {
+		name             string
+		numberOfInquiry  int
+		expectedData     entity.MappingRiskLevel
+		shouldReturnData bool
+		expectError      bool
+	}{
+		{
+			name:            "Mapping Found - Low Risk",
+			numberOfInquiry: 2,
+			expectedData: entity.MappingRiskLevel{
+				InquiryStart: 1,
+				InquiryEnd:   5,
+				RiskLevel:    "LOW",
+				Decision:     "APPROVE",
+			},
+			shouldReturnData: true,
+			expectError:      false,
+		},
+		{
+			name:            "Mapping Found - High Risk",
+			numberOfInquiry: 8,
+			expectedData: entity.MappingRiskLevel{
+				InquiryStart: 6,
+				InquiryEnd:   10,
+				RiskLevel:    "HIGH",
+				Decision:     "REJECT",
+			},
+			shouldReturnData: true,
+			expectError:      false,
+		},
+		{
+			name:             "No Mapping Found",
+			numberOfInquiry:  15,
+			expectedData:     entity.MappingRiskLevel{},
+			shouldReturnData: false,
+			expectError:      true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			rows := sqlmock.NewRows([]string{"inquiry_start", "inquiry_end", "risk_level", "decision"})
+
+			if tc.shouldReturnData {
+				rows.AddRow(tc.expectedData.InquiryStart, tc.expectedData.InquiryEnd, tc.expectedData.RiskLevel, tc.expectedData.Decision)
+			}
+
+			mock.ExpectQuery(`SELECT TOP 1 inquiry_start, inquiry_end, risk_level, decision FROM dbo\.m_mapping_risk_level WHERE \d+ >= inquiry_start AND \d+ <= inquiry_end AND deleted_at IS NULL`).
+				WillReturnRows(rows)
+
+			result, err := repo.GetMappingRiskLevel(tc.numberOfInquiry)
+
+			if tc.expectError {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), "record not found")
+			} else {
+				assert.NoError(t, err)
+				assert.Equal(t, tc.expectedData.InquiryStart, result.InquiryStart)
+				assert.Equal(t, tc.expectedData.InquiryEnd, result.InquiryEnd)
+				assert.Equal(t, tc.expectedData.RiskLevel, result.RiskLevel)
+				assert.Equal(t, tc.expectedData.Decision, result.Decision)
+			}
+		})
+	}
+}
