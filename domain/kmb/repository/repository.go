@@ -18,6 +18,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/allegro/bigcache/v3"
 	"github.com/jinzhu/gorm"
 )
 
@@ -34,9 +35,10 @@ type repoHandler struct {
 	kmbOffDB   *gorm.DB
 	newKmbDB   *gorm.DB
 	scoreProDB *gorm.DB
+	cache      *bigcache.BigCache
 }
 
-func NewRepository(los, logs, confins, staging, newKmbDB, scorePro *gorm.DB) interfaces.Repository {
+func NewRepository(los, logs, confins, staging, newKmbDB, scorePro *gorm.DB, cache *bigcache.BigCache) interfaces.Repository {
 	return &repoHandler{
 		losDB:      los,
 		logsDB:     logs,
@@ -44,6 +46,7 @@ func NewRepository(los, logs, confins, staging, newKmbDB, scorePro *gorm.DB) int
 		stagingDB:  staging,
 		newKmbDB:   newKmbDB,
 		scoreProDB: scorePro,
+		cache:      cache,
 	}
 }
 
@@ -2271,6 +2274,24 @@ func (r repoHandler) GetMappingNegativeCustomer(req response.NegativeCustomer) (
 		}
 	}
 	return
+}
+
+func (r repoHandler) GetMappingRiskLevel() (data []entity.MappingRiskLevel, err error) {
+
+	if err = r.newKmbDB.Raw(fmt.Sprintf("SELECT inquiry_start, inquiry_end, risk_level, decision FROM dbo.m_mapping_risk_level WITH (nolock) WHERE decision = '%s' AND deleted_at IS NULL", constant.DECISION_REJECT)).Scan(&data).Error; err != nil {
+		return
+	}
+
+	return
+}
+
+func (r repoHandler) GetCache(key string) ([]byte, error) {
+	data, err := r.cache.Get(key)
+	return data, err
+}
+
+func (r repoHandler) SetCache(key string, entry []byte) error {
+	return r.cache.Set(key, entry)
 }
 
 func (r repoHandler) MasterMappingIncomeMaxDSR(totalIncome float64) (data entity.MasterMappingIncomeMaxDSR, err error) {

@@ -668,6 +668,7 @@ const (
 	CODE_PEFINDO_PRIME_PRIORITY_EXP_CONTRACT_6MONTHS = "9423"
 	CUSTOMER                                         = "CUSTOMER"
 	SPOUSE                                           = "SPOUSE"
+	CODE_REJECT_INQUIRIES                            = "9436"
 
 	// REASON NEW KO RULES
 	REJECT_LUNAS_DISKON      = "lunas_diskon"

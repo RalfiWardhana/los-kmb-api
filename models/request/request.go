@@ -756,7 +756,7 @@ type FilteringSpouse struct {
 
 type ElaborateLTV struct {
 	ProspectID        string `json:"prospect_id" validate:"prospect_id"`
-	Tenor             int    `json:"tenor" validate:"required,max=60"`
+	Tenor             int    `json:"tenor" validate:"required,min=1,max=60"`
 	ManufacturingYear string `json:"manufacturing_year" validate:"required,len=4,number"`
 }
 

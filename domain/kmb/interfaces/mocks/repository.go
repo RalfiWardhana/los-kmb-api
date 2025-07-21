@@ -189,6 +189,36 @@ func (_m *Repository) GetBranchDeviasi(BranchID string, customerStatus string, N
 	return r0, r1
 }
 
+// GetCache provides a mock function with given fields: key
+func (_m *Repository) GetCache(key string) ([]byte, error) {
+	ret := _m.Called(key)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetCache")
+	}
+
+	var r0 []byte
+	var r1 error
+	if rf, ok := ret.Get(0).(func(string) ([]byte, error)); ok {
+		return rf(key)
+	}
+	if rf, ok := ret.Get(0).(func(string) []byte); ok {
+		r0 = rf(key)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]byte)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(string) error); ok {
+		r1 = rf(key)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetCheckingRejectAttempt provides a mock function with given fields: idNumber, blackListDate
 func (_m *Repository) GetCheckingRejectAttempt(idNumber string, blackListDate string) (entity.DupcheckRejectionPMK, error) {
 	ret := _m.Called(idNumber, blackListDate)
@@ -718,6 +748,36 @@ func (_m *Repository) GetMappingNegativeCustomer(req response.NegativeCustomer) 
 
 	if rf, ok := ret.Get(1).(func(response.NegativeCustomer) error); ok {
 		r1 = rf(req)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMappingRiskLevel provides a mock function with given fields:
+func (_m *Repository) GetMappingRiskLevel() ([]entity.MappingRiskLevel, error) {
+	ret := _m.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMappingRiskLevel")
+	}
+
+	var r0 []entity.MappingRiskLevel
+	var r1 error
+	if rf, ok := ret.Get(0).(func() ([]entity.MappingRiskLevel, error)); ok {
+		return rf()
+	}
+	if rf, ok := ret.Get(0).(func() []entity.MappingRiskLevel); ok {
+		r0 = rf()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]entity.MappingRiskLevel)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -1408,7 +1468,7 @@ func (_m *Repository) SaveLogOrchestrator(header interface{}, _a1 interface{}, _
 	return r0
 }
 
-// SaveRecalculate provides a mock function with given fields: beforeRecalculate, afterRecalculate
+// SaveRecalculate provides a mock function with given fields: beforeRecalculate, afterRecalculate, payload
 func (_m *Repository) SaveRecalculate(beforeRecalculate entity.TrxRecalculate, afterRecalculate entity.TrxRecalculate, payload request.Recalculate) error {
 	ret := _m.Called(beforeRecalculate, afterRecalculate, payload)
 
@@ -1748,6 +1808,24 @@ func (_m *Repository) ScanWgOnl(query string) (entity.ScanInstallmentAmount, err
 	}
 
 	return r0, r1
+}
+
+// SetCache provides a mock function with given fields: key, entry
+func (_m *Repository) SetCache(key string, entry []byte) error {
+	ret := _m.Called(key, entry)
+
+	if len(ret) == 0 {
+		panic("no return value specified for SetCache")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(string, []byte) error); ok {
+		r0 = rf(key, entry)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // UpdateTrxKPMDecision provides a mock function with given fields: id, prospectID, decision

@@ -241,8 +241,15 @@ func main() {
 	libResponse := response.NewResponse(os.Getenv("APP_PREFIX_NAME"), response.WithDebug(true))
 	e.Use(middleware.BodyDumpWithConfig(middlewares.NewBodyDumpMiddleware(newKMB, producer).BodyDumpConfig()))
 
+	// inisialisasi cache 5 menit
+	ctx := context.Background()
+	mCache, err := bigcache.New(ctx, bigcache.DefaultConfig(5*time.Minute))
+	if err != nil {
+		log.Fatalf("Failed Init bigcache mCache with Error : %s", err.Error())
+	}
+
 	// define new kmb filtering domain
-	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs, newKMB)
+	newKmbFilteringRepo := newKmbFilteringRepository.NewRepository(kpLos, kpLosLogs, newKMB, mCache)
 	newKmbFilteringCase := newKmbFilteringUsecase.NewUsecase(newKmbFilteringRepo, httpClient)
 	newKmbFilteringMultiCase := newKmbFilteringUsecase.NewMultiUsecase(newKmbFilteringRepo, httpClient, newKmbFilteringCase)
 	newKmbFilteringDelivery.FilteringHandler(apiGroupv3, newKmbFilteringMultiCase, newKmbFilteringCase, newKmbFilteringRepo, jsonResponse, accessToken, producer, platformCache, authPlatform)
@@ -259,7 +266,7 @@ func main() {
 	cmsDelivery.CMSHandler(apiGroupv3, cmsUsecases, cmsRepositories, jsonResponse, producer, libResponse, accessToken)
 
 	// define new kmb journey
-	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, core, staging, newKMB, scorePro)
+	kmbRepositories := kmbRepository.NewRepository(kpLos, kpLosLogs, core, staging, newKMB, scorePro, mCache)
 	kmbUsecases := kmbUsecase.NewUsecase(kmbRepositories, httpClient)
 	kmbMultiUsecases := kmbUsecase.NewMultiUsecase(kmbRepositories, httpClient, kmbUsecases)
 	kmbMetrics := kmbUsecase.NewMetrics(kmbRepositories, httpClient, kmbUsecases, kmbMultiUsecases)
