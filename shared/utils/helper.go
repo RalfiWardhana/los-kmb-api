@@ -19,6 +19,7 @@ import (
 	"unicode"
 
 	"github.com/google/uuid"
+	"github.com/microcosm-cc/bluemonday"
 )
 
 func DiffTwoDate(date time.Time) time.Duration {
@@ -597,4 +598,9 @@ func BoolToInt(b bool) int {
 		return 1
 	}
 	return 0
+}
+
+func SanitizeString(str string) string {
+	p := bluemonday.UGCPolicy()
+	return p.Sanitize(str)
 }

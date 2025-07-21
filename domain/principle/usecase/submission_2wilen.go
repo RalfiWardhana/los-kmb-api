@@ -38,6 +38,8 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		negativeCustomer           response.NegativeCustomer
 		configValue2Wilen          response.Config2Wilen
 		mdmGetDetailCustomerKPMRes response.MDMGetDetailCustomerKPMResponse
+		isUseAdditionalInsurance   bool
+		insuranceCompanyBranchID   string
 	)
 
 	trxKPMStatus.ID = utils.GenerateUUID()
@@ -192,6 +194,11 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 			String: req.ReferralCode,
 			Valid:  req.ReferralCode != "",
 		}
+		trxKPM.IsUseAdditionalInsurance = isUseAdditionalInsurance
+		trxKPM.InsuranceCompanyBranchID = sql.NullString{
+			String: insuranceCompanyBranchID,
+			Valid:  insuranceCompanyBranchID != "",
+		}
 
 		if resp.ReadjustContext != nil {
 			trxKPM.ReadjustContext = *resp.ReadjustContext
@@ -272,6 +279,14 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		return
 	}
 
+	if req.IsUseAdditionalInsurance != nil {
+		isUseAdditionalInsurance = *req.IsUseAdditionalInsurance
+	}
+
+	if req.InsuranceCompanyBranchID != nil && *req.InsuranceCompanyBranchID != "" {
+		insuranceCompanyBranchID = *req.InsuranceCompanyBranchID
+	}
+
 	config, err := u.repository.GetConfig("2Wilen", "KMB-OFF", "2wilen_config")
 	if err != nil {
 		return
@@ -295,16 +310,18 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 	}
 
 	availableTenors, err := u.multiUsecase.GetAvailableTenor(ctx, request.GetAvailableTenor{
-		ProspectID:         prospectIDCheck,
-		BranchID:           req.BranchID,
-		BPKBNameType:       req.BPKBNameType,
-		ManufactureYear:    req.ManufactureYear,
-		AssetCode:          req.AssetCode,
-		AssetUsageTypeCode: req.AssetUsageTypeCode,
-		LicensePlate:       req.LicensePlate,
-		LoanAmount:         req.LoanAmount,
-		ReferralCode:       &req.ReferralCode,
-		KPMID:              req.KPMID,
+		ProspectID:               prospectIDCheck,
+		BranchID:                 req.BranchID,
+		BPKBNameType:             req.BPKBNameType,
+		ManufactureYear:          req.ManufactureYear,
+		AssetCode:                req.AssetCode,
+		AssetUsageTypeCode:       req.AssetUsageTypeCode,
+		LicensePlate:             req.LicensePlate,
+		LoanAmount:               req.LoanAmount,
+		ReferralCode:             &req.ReferralCode,
+		KPMID:                    req.KPMID,
+		Tenor:                    &req.Tenor,
+		IsUseAdditionalInsurance: req.IsUseAdditionalInsurance,
 	}, accessToken)
 	if err != nil {
 		return
@@ -1238,6 +1255,7 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		AssetYear:              manufactureYear,
 		LoanAmount:             req.LoanAmount,
 		SalesMethodID:          5,
+		CustomerBirthDate:      mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate,
 	}
 
 	marsevFilterProgramRes, err := u.usecase.MarsevGetMarketingProgram(ctx, payloadFilterProgram, req.ProspectID, accessToken)
@@ -1295,6 +1313,8 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		AssetCategory:          categoryId,
 		CustomerBirthDate:      mdmGetDetailCustomerKPMRes.Data.Customer.BirthDate,
 		Tenor:                  req.Tenor,
+		UseAdditionalInsurance: req.IsUseAdditionalInsurance,
+		SourceApplication:      constant.MARSEV_SOURCE_APPLICATION_KPM,
 	}
 
 	var marsevCalculateInstallmentRes response.MarsevCalculateInstallmentResponse
@@ -1879,6 +1899,9 @@ func (u metrics) Submission2Wilen(ctx context.Context, req request.Submission2Wi
 		PBKReportSpouse:   PBKReportSpouse,
 		BakiDebet:         bakiDebet,
 	}
+
+	payloadSubmitSally.IsUseAdditionalInsurance = isUseAdditionalInsurance
+	payloadSubmitSally.InsuranceCompanyBranchID = insuranceCompanyBranchID
 
 	param, _ = json.Marshal(payloadSubmitSally)
 
